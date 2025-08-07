@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Token Otomatis</title>
+    <!-- Tailwind CSS untuk styling modern dan responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome untuk ikon -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Mengimpor font Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f3ffef; /* Warna latar belakang yang lebih terang */
+        }
+        /* Gaya dasar untuk modal, disembunyikan secara default */
+        .modal { 
+            display: none; 
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease-in-out;
+        }
+        /* Tampilkan modal saat class 'open' ditambahkan */
+        .modal.open { 
+            display: flex; 
+        }
+        /* Gaya untuk menyembunyikan elemen */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- Container Utama Aplikasi -->
+    <div class="w-full max-w-xl p-8 space-y-6 bg-white rounded-xl shadow-2xl">
+        <h2 class="text-3xl font-bold text-center text-gray-800">Generator Token Otomatis</h2>
+        
+        <!-- Bagian Login -->
+        <div id="login-section" class="space-y-6">
+            <h3 class="text-2xl font-semibold text-center text-gray-700">Login</h3>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700">Username:</label>
+                    <input type="text" id="username" name="username" required 
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" 
+                           placeholder="Masukkan username">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password:</label>
+                    <input type="password" id="password" name="password" required 
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" 
+                           placeholder="Masukkan password">
+                </div>
+                <button type="submit" id="login-btn" 
+                        class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-300">
+                    <i class="fas fa-sign-in-alt mr-2 self-center"></i> Login
+                </button>
+            </form>
+        </div>
+
+        <!-- Bagian Generator Token (disembunyikan secara default) -->
+        <div id="generator-section" class="hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <h3 class="text-2xl font-semibold text-gray-700">Generator Token</h3>
+                <button id="logout-btn" 
+                        class="py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-300">
+                    <i class="fas fa-sign-out-alt mr-2 self-center"></i> Logout
+                </button>
+            </div>
+
+            <!-- Formulir Input -->
+            <form id="token-form" class="space-y-6">
+                <!-- Nama Tabel -->
+                <div>
+                    <label for="namaTabel" class="block text-sm font-medium text-gray-700">Nama Tabel:</label>
+                    <input type="text" id="namaTabel" name="namaTabel" required 
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" 
+                           value="nilai1" placeholder="Misalnya: nilai1">
+                </div>
+
+                <!-- Nomor Mulai -->
+                <div>
+                    <label for="nomorMulai" class="block text-sm font-medium text-gray-700">Nomor Mulai:</label>
+                    <input type="number" id="nomorMulai" name="nomorMulai" required 
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                           min="1" placeholder="Misalnya: 101">
+                </div>
+
+                <!-- Jumlah Nomor -->
+                <div>
+                    <label for="jumlahNomor" class="block text-sm font-medium text-gray-700">Jumlah Nomor:</label>
+                    <input type="number" id="jumlahNomor" name="jumlahNomor" required 
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                           min="1" placeholder="Misalnya: 50">
+                </div>
+
+                <!-- Huruf Input -->
+                <div>
+                    <label for="inputHuruf" class="block text-sm font-medium text-gray-700">Huruf Input:</label>
+                    <input type="text" id="inputHuruf" name="inputHuruf" maxlength="1" required 
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 uppercase"
+                           placeholder="Misalnya: A">
+                </div>
+                
+                <!-- Tombol Submit -->
+                <button type="submit" id="submit-btn" 
+                        class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-300">
+                    <i class="fas fa-play mr-2 self-center"></i> Mulai Generate Token
+                </button>
+            </form>
+
+            <!-- Area untuk Menampilkan Hasil/Log -->
+            <div id="results-container" class="mt-6 hidden bg-gray-50 p-4 rounded-lg shadow-inner">
+                <h3 class="text-lg font-semibold mb-2 text-gray-700">Status Proses</h3>
+                <div id="progress-bar-container" class="w-full h-2 bg-gray-200 rounded-full mb-4 overflow-hidden">
+                    <div id="progress-bar" class="h-full bg-indigo-500 transition-all duration-300 ease-in-out" style="width: 0%;"></div>
+                </div>
+                <div id="status-log" class="text-sm text-gray-600 space-y-1 max-h-48 overflow-y-auto">
+                    <!-- Log akan dimasukkan di sini -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal untuk Alert/Pesan -->
+    <div id="alertModal" class="modal fixed inset-0 z-50 overflow-y-auto items-center justify-center">
+        <div class="relative p-8 border w-full max-w-sm mx-auto rounded-xl shadow-lg bg-white transform transition-all scale-95 duration-300">
+            <div class="mt-3 text-center">
+                <div id="alertIcon" class="mx-auto flex items-center justify-center h-16 w-16 rounded-full text-white"></div>
+                <h3 id="alertModalTitle" class="text-xl leading-6 font-bold text-gray-900 mt-4"></h3>
+                <div class="mt-2 px-4 py-3">
+                    <p id="alertModalBody" class="text-sm text-gray-500"></p>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button id="closeAlertBtn" class="px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-lg w-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors duration-300">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Konfigurasi API ---
+            // URL API yang Anda berikan
+            const apiUrl = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis'; 
+
+            // --- Seleksi Elemen DOM ---
+            const loginSection = document.getElementById('login-section');
+            const generatorSection = document.getElementById('generator-section');
+            const loginForm = document.getElementById('login-form');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const logoutBtn = document.getElementById('logout-btn');
+
+            const tokenForm = document.getElementById('token-form');
+            const submitBtn = document.getElementById('submit-btn');
+            const resultsContainer = document.getElementById('results-container');
+            const statusLog = document.getElementById('status-log');
+            const progressBar = document.getElementById('progress-bar');
+            
+            // Modal Alert
+            const alertModal = document.getElementById('alertModal');
+            const closeAlertBtn = document.getElementById('closeAlertBtn');
+            const alertModalTitle = document.getElementById('alertModalTitle');
+            const alertModalBody = document.getElementById('alertModalBody');
+            const alertIcon = document.getElementById('alertIcon');
+
+            // --- Fungsi Utilitas ---
+            // Fungsi untuk menampilkan modal alert
+            function showAlert(title, message, type) {
+                alertModalTitle.textContent = title;
+                alertModalBody.textContent = message;
+
+                let iconHtml = '';
+                let bgColor = '';
+                
+                if (type === 'success') {
+                    iconHtml = `<i class="fas fa-check-circle text-green-600 text-3xl"></i>`;
+                    bgColor = 'bg-green-100';
+                } else {
+                    iconHtml = `<i class="fas fa-exclamation-triangle text-red-600 text-3xl"></i>`;
+                    bgColor = 'bg-red-100';
+                }
+
+                alertIcon.innerHTML = iconHtml;
+                alertIcon.className = `mx-auto flex items-center justify-center h-16 w-16 rounded-full ${bgColor}`;
+                alertModal.classList.add('open');
+            }
+
+            // Fungsi untuk menambahkan pesan ke log
+            function addLog(message, type = 'info') {
+                const logItem = document.createElement('div');
+                let colorClass = 'text-gray-600';
+                if (type === 'success') colorClass = 'text-green-600 font-medium';
+                if (type === 'error') colorClass = 'text-red-600 font-bold';
+                
+                logItem.className = `p-2 rounded-lg bg-gray-100 ${colorClass}`;
+                logItem.textContent = message;
+                statusLog.appendChild(logItem);
+                statusLog.scrollTop = statusLog.scrollHeight; // Auto-scroll ke bawah
+            }
+
+            // Fungsi untuk memperbarui progress bar
+            function updateProgressBar(progress) {
+                progressBar.style.width = `${progress}%`;
+            }
+
+            // Fungsi untuk menampilkan bagian generator token dan menyembunyikan login
+            function showGenerator() {
+                loginSection.classList.add('hidden');
+                generatorSection.classList.remove('hidden');
+            }
+
+            // Fungsi untuk menampilkan bagian login dan menyembunyikan generator token
+            function showLogin() {
+                loginSection.classList.remove('hidden');
+                generatorSection.classList.add('hidden');
+                usernameInput.value = ''; // Bersihkan input
+                passwordInput.value = ''; // Bersihkan input
+            }
+
+            // --- Logika Autentikasi ---
+            // Periksa status login saat halaman dimuat
+            if (localStorage.getItem('isLoggedIn') === 'true') {
+                showGenerator();
+            } else {
+                showLogin();
+            }
+
+            // Event listener untuk formulir login
+            loginForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const username = usernameInput.value;
+                const password = passwordInput.value;
+
+                if (username === 'admin' && password === 'admin') {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    showGenerator();
+                } else {
+                    showAlert('Login Gagal', 'Username atau password salah.', 'error');
+                }
+            });
+
+            // Event listener untuk tombol logout
+            logoutBtn.addEventListener('click', function() {
+                localStorage.removeItem('isLoggedIn');
+                showLogin();
+                // Opsional: Bersihkan log dan progress bar saat logout
+                statusLog.innerHTML = '';
+                resultsContainer.classList.add('hidden');
+                updateProgressBar(0);
+            });
+
+            // --- Fungsi untuk memeriksa keberadaan token ---
+            async function checkTokenExists(token, tableName) {
+                const requestUrl = `${apiUrl}?table=${tableName}&x_01_eq=${encodeURIComponent(token)}`;
+                try {
+                    const response = await fetch(requestUrl, {
+                        method: 'GET',
+                        headers: { 'X-Table-Name': tableName }
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    return data.success && data.data && data.data.length > 0;
+                } catch (error) {
+                    console.error('Error checking token existence:', error);
+                    addLog(`Error saat memeriksa token: ${error.message}`, 'error');
+                    return true; // Asumsikan ada duplikat atau error untuk mencegah pembuatan token yang bermasalah
+                }
+            }
+
+            // Fungsi untuk menghasilkan token x_01 baru
+            function generateX01(nomor, inputHuruf) {
+                const randomDigit = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+                const randomLetter = String.fromCharCode(97 + Math.floor(Math.random() * 26));
+                return `${randomDigit}${randomLetter}${inputHuruf}${nomor}`;
+            }
+
+            // --- Fungsi Utama Generasi Token ---
+            tokenForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+
+                // Dapatkan data dari formulir
+                const namaTabel = document.getElementById('namaTabel').value;
+                const nomorMulai = parseInt(document.getElementById('nomorMulai').value);
+                const jumlahNomor = parseInt(document.getElementById('jumlahNomor').value);
+                const inputHuruf = document.getElementById('inputHuruf').value.toLowerCase();
+
+                // Validasi input
+                if (nomorMulai < 1 || jumlahNomor < 1 || inputHuruf.length !== 1) {
+                    showAlert('Input Tidak Valid', 'Pastikan semua input diisi dengan benar.', 'error');
+                    return;
+                }
+                
+                // Reset UI
+                statusLog.innerHTML = '';
+                resultsContainer.classList.remove('hidden');
+                updateProgressBar(0);
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Proses...';
+
+                const maxRetries = 10; // Batas percobaan untuk menghasilkan token unik
+
+                // Loop untuk membuat token satu per satu
+                for (let i = 0; i < jumlahNomor; i++) {
+                    const nomor = nomorMulai + i;
+                    let x_01 = '';
+                    let isDuplicate = true;
+                    let retryCount = 0;
+
+                    // Loop untuk memastikan token unik
+                    do {
+                        x_01 = generateX01(nomor, inputHuruf);
+                        addLog(`[${i + 1}/${jumlahNomor}] Memeriksa token: ${x_01} (Percobaan: ${retryCount + 1})...`);
+                        isDuplicate = await checkTokenExists(x_01, namaTabel);
+                        if (isDuplicate) {
+                            addLog(`[${i + 1}/${jumlahNomor}] Token ${x_01} sudah ada. Mencoba membuat yang lain.`, 'warning');
+                            retryCount++;
+                            if (retryCount >= maxRetries) {
+                                addLog(`[${i + 1}/${jumlahNomor}] Gagal membuat token unik setelah ${maxRetries} percobaan. Melewati token ini.`, 'error');
+                                x_01 = null; // Tandai sebagai gagal
+                                break; // Keluar dari do-while loop
+                            }
+                        }
+                    } while (isDuplicate && retryCount < maxRetries);
+
+                    if (x_01 === null) {
+                        // Jika gagal membuat token unik, lanjutkan ke iterasi berikutnya
+                        const progress = ((i + 1) / jumlahNomor) * 100;
+                        updateProgressBar(progress);
+                        continue; 
+                    }
+
+                    const x_03 = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
+                    const x_04 = '0'; // Angka 0
+
+                    // Nilai string yang diminta untuk x_02, x_05, x_06, x_07, x_08
+                    const specialString = '|||||||||||||||||||||||||||';
+
+                    // Objek tokenData yang diperbarui dengan bidang tambahan
+                    const tokenData = {
+                        x_01: x_01,
+                        x_02: specialString, // Bidang baru
+                        x_03: x_03,
+                        x_04: x_04,
+                        x_05: specialString, // Bidang baru
+                        x_06: specialString, // Bidang baru
+                        x_07: specialString, // Bidang baru
+                        x_08: specialString, // Bidang baru
+                        // Bidang lainnya yang tidak disebutkan akan diisi dengan string kosong jika diperlukan oleh API
+                        // Contoh: x_09: '', x_10: ''
+                    };
+
+                    addLog(`[${i + 1}/${jumlahNomor}] Mencoba membuat token: ${x_01}...`);
+
+                    try {
+                        const response = await fetch(`${apiUrl}?table=${namaTabel}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Table-Name': namaTabel
+                            },
+                            body: JSON.stringify(tokenData)
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            addLog(`[${i + 1}/${jumlahNomor}] Berhasil: Token ${x_01} dibuat. ID: ${result.id_x}`, 'success');
+                        } else {
+                            throw new Error(result.error || 'Terjadi kesalahan');
+                        }
+                    } catch (error) {
+                        console.error(`Error membuat token ${x_01}:`, error);
+                        addLog(`[${i + 1}/${jumlahNomor}] Gagal: ${x_01} - ${error.message}`, 'error');
+                    }
+
+                    // Perbarui progress bar
+                    const progress = ((i + 1) / jumlahNomor) * 100;
+                    updateProgressBar(progress);
+                }
+
+                // Selesai
+                addLog('Semua proses selesai!', 'success');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-play mr-2 self-center"></i> Mulai Generate Token';
+            });
+
+            // Menangani tombol tutup modal alert
+            closeAlertBtn.addEventListener('click', function() {
+                alertModal.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>
