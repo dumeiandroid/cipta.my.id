@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Data - Tampilan Nilai 1</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- CSS untuk DataTables -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css"/>
+    <style>
+        /* Menyesuaikan CSS untuk DataTables */
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter,
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_processing,
+        .dataTables_wrapper .dataTables_paginate {
+            margin-bottom: 1rem;
+            padding-top: 1rem;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+            background: #0d6efd !important;
+            color: white !important;
+            border-color: #0d6efd !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background-color: #f8f9fa !important;
+            border-color: #dee2e6 !important;
+        }
+        .table-responsive-custom {
+            /* Hapus max-height dan overflow-y karena DataTables menangani ini */
+            /* max-height: 70vh; */
+            /* overflow-y: auto; */
+        }
+        
+        .btn-sm { padding: .25rem .5rem; font-size: .875rem; }
+        .form-control-sm { padding: .25rem .5rem; font-size: .875rem; }
+        .modal-body { max-height: 60vh; overflow-y: auto; }
+        .sticky-top { position: sticky; top: 0; z-index: 1020; }
+        th { background-color: #343a40; color: white; }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0"><i class="fas fa-database me-2"></i>Manajemen Data - <span id="tableNameDisplay">nilai1</span></h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="tableContainer" class="table-responsive">
+                            <p class="text-center text-muted py-4">Memuat data...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery adalah prasyarat untuk DataTables -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript untuk DataTables -->
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script>
+        // --- Konfigurasi Aplikasi ---
+        const currentTable = 'nilai1';
+        const apiUrl = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis';
+        const updateInterval = 5000; // Interval pembaruan otomatis dalam milidetik (5 detik)
+        let lastLoadedData = null; // Menyimpan data terakhir yang dimuat untuk perbandingan
+
+        // Tentukan kolom yang ingin ditampilkan dalam tabel
+        const displayColumns = [
+            'id_x', 'x_01', 'x_02', 'x_05', 'x_06'
+        ];
+
+        // Tentukan filter yang akan diterapkan saat memuat data.
+        const currentFilters = {};
+
+        // --- Event Listener Dokumen ---
+        $(document).ready(function() {
+            document.getElementById('tableNameDisplay').textContent = currentTable;
+            // Muat data saat dokumen selesai dimuat
+            loadData(currentFilters);
+            // Atur interval untuk memuat ulang data secara otomatis
+            setInterval(() => loadData(currentFilters), updateInterval);
+        });
+
+        // --- Fungsi Utama ---
+
+        /**
+         * Memuat data dari API berdasarkan filter yang diberikan.
+         * @param {Object} filters - Objek berisi parameter filter.
+         */
+        async function loadData(filters = {}) {
+            const tableContainer = document.getElementById('tableContainer');
+            
+            let requestUrl = `${apiUrl}?table=${currentTable}`;
+            for (const key in filters) {
+                requestUrl += `&${key}=${encodeURIComponent(filters[key])}`;
+            }
+
+            try {
+                const response = await fetch(requestUrl, {
+                    method: 'GET',
+                    headers: { 'X-Table-Name': currentTable }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    const currentDataString = JSON.stringify(data.data);
+                    if (currentDataString !== lastLoadedData) {
+                        lastLoadedData = currentDataString;
+                        if (data.data.length > 0) {
+                            renderTable(data.data);
+                        } else {
+                            // Hapus instance DataTable yang lama jika ada
+                            if ($.fn.DataTable.isDataTable('#dataTable')) {
+                                $('#dataTable').DataTable().destroy();
+                            }
+                            tableContainer.innerHTML = '<p class="text-center text-muted py-4">Tidak ada data ditemukan.</p>';
+                        }
+                    }
+                } else {
+                    if ($.fn.DataTable.isDataTable('#dataTable')) {
+                        $('#dataTable').DataTable().destroy();
+                    }
+                    tableContainer.innerHTML = '<p class="text-center text-muted py-4">Tidak ada data ditemukan.</p>';
+                }
+            } catch (error) {
+                console.error('Error memuat data:', error);
+                if (!lastLoadedData) {
+                    tableContainer.innerHTML = `<p class="text-center text-danger py-4">Error memuat data: ${error.message || error}</p>`;
+                }
+                showAlert(`Error memuat data: ${error.message || error}`, 'danger');
+            }
+        }
+
+        /**
+         * Merender data ke dalam tabel HTML dengan pemrosesan khusus dan menginisialisasi DataTables.
+         * @param {Array} data - Array objek data yang akan ditampilkan.
+         */
+        function renderTable(data) {
+            const tableContainer = document.getElementById('tableContainer');
+            
+            // Hancurkan instance DataTable yang ada sebelum merender ulang
+            if ($.fn.DataTable.isDataTable('#dataTable')) {
+                $('#dataTable').DataTable().destroy();
+            }
+
+            let tableHtml = `
+                <table id="dataTable" class="table table-striped table-hover mb-0" style="width:100%">
+                    <thead class="table-dark">
+                        <tr>
+            `;
+
+            // Buat header tabel berdasarkan displayColumns
+            displayColumns.forEach(header => {
+                tableHtml += `<th>${header.toUpperCase()}</th>`;
+            });
+            tableHtml += `
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            // Isi baris tabel dengan data
+            data.forEach(item => {
+                tableHtml += `<tr>`;
+                displayColumns.forEach(colName => {
+                    let cellData = item[colName];
+
+                    // --- Logika Pemrosesan Khusus ---
+                    if (colName === 'x_02' && cellData) {
+                        const semicolonIndex = cellData.indexOf(';');
+                        if (semicolonIndex !== -1) {
+                            cellData = cellData.substring(0, semicolonIndex);
+                        }
+                    } else if (colName === 'x_06' && cellData) {
+                        let counter = 1;
+                        cellData = cellData.split('|').map(text => {
+                            if (text) {
+                                return `V${counter++}`;
+                            } else {
+                                return '';
+                            }
+                        }).join('|');
+                    }
+                    // --- Akhir Logika Pemrosesan Khusus ---
+                    
+                    // --- Logika Tautan Khusus untuk x_01 ---
+                    if (colName === 'x_01' && item['id_x']) {
+                        // Tambahkan target="_blank" untuk membuka di tab baru
+                        const link = `<a href="psikogram.html?id_x=${item['id_x']}" target="_blank">${cellData}</a>`;
+                        tableHtml += `<td>${link}</td>`;
+                    } else {
+                        tableHtml += `<td>${(cellData !== undefined && cellData !== null) ? cellData : ''}</td>`;
+                    }
+                });
+                tableHtml += `</tr>`;
+            });
+
+            tableHtml += `
+                    </tbody>
+                </table>
+            `;
+            tableContainer.innerHTML = tableHtml;
+
+            // Inisialisasi DataTables pada tabel yang baru dibuat dengan konfigurasi baru
+            $('#dataTable').DataTable({
+                "pageLength": 25, // Menampilkan 25 baris per halaman
+                "order": [[0, "desc"]] // Mengurutkan berdasarkan kolom pertama (id_x) secara menurun
+            });
+        }
+
+        /**
+         * Menampilkan pesan alert sementara di sudut kanan atas layar.
+         * @param {string} message - Pesan yang akan ditampilkan.
+         * @param {string} type - Tipe alert (e.g., 'success', 'danger', 'warning', 'info').
+         */
+        function showAlert(message, type) {
+            const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show position-fixed" style="top:20px;right:20px;z-index:9999">
+                ${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+            document.body.insertAdjacentHTML('beforeend', alertHtml);
+            setTimeout(() => {
+                const alertElement = document.querySelector('.alert');
+                if (alertElement) {
+                    new bootstrap.Alert(alertElement).close();
+                }
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
