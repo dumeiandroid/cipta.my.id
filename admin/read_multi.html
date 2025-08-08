@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Data - Tampilan Hanya-Baca</title>
+    <!-- Tailwind CSS untuk styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome untuk ikon -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Font Inter dari Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom CSS untuk styling scrollbar */
+        .horizontal-scroll-container::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .horizontal-scroll-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .horizontal-scroll-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        .horizontal-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-7xl">
+        <div class="bg-white shadow-xl rounded-2xl overflow-hidden">
+            <!-- Header Card -->
+            <div class="bg-blue-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
+                <h4 class="text-2xl font-bold flex items-center">
+                    <i class="fas fa-eye mr-3"></i>
+                    <span>Tampilan Data - <span id="tableNameDisplay"></span></span>
+                </h4>
+            </div>
+
+            <!-- Card Body -->
+            <div class="p-6">
+                <!-- Loading & Error Message Container -->
+                <div id="messageContainer" class="text-center text-gray-500 py-8">
+                    <i class="fas fa-spinner fa-spin text-4xl mb-4"></i>
+                    <p class="text-lg">Memuat data...</p>
+                </div>
+
+                <!-- Kontainer untuk menampilkan data -->
+                <div id="dataContainer" class="hidden">
+                    <div id="formFieldsContainer" class="flex gap-6 overflow-x-auto pb-4 horizontal-scroll-container">
+                        <!-- Konten data akan di-generate di sini -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Alert (tetap ada untuk pesan error) -->
+    <div id="alertModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+            <div id="alertIcon" class="text-4xl text-center mb-4"></div>
+            <p id="alertMessage" class="text-lg text-center font-medium"></p>
+            <div class="mt-6 text-center">
+                <button onclick="closeAlert()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Konfigurasi Aplikasi ---
+        // Mendapatkan parameter dari URL
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Mendapatkan nama tabel dari URL, defaultnya 'nilai1'
+        const currentTable = urlParams.get('tabel') || 'nilai1';
+        
+        // Mendapatkan nama kolom dari URL, defaultnya 'x_06'
+        const dynamicColumnName = urlParams.get('kolom') || 'x_06';
+
+        // Mendapatkan ID data dari URL, defaultnya 1
+        const dataToUpdateId = parseInt(urlParams.get('id')) || 1;
+
+        const apiUrl = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis';
+
+        // --- Event Listener Dokumen ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Tampilkan nama tabel dan kolom
+            document.getElementById('tableNameDisplay').textContent = `${currentTable} - Kolom: ${dynamicColumnName} - ID: ${dataToUpdateId}`;
+            // Muat data saat halaman dimuat
+            loadDataForView(dataToUpdateId);
+        });
+
+        // --- Fungsi Utama ---
+
+        /**
+         * Memuat data tunggal dari API untuk mengisi tampilan hanya-baca.
+         * @param {number} id - ID data yang akan dimuat.
+         */
+        async function loadDataForView(id) {
+            const messageContainer = document.getElementById('messageContainer');
+            const dataContainer = document.getElementById('dataContainer');
+            messageContainer.classList.remove('hidden');
+            dataContainer.classList.add('hidden');
+
+            const url = `${apiUrl}?table=${currentTable}&id_x_eq=${id}`;
+            console.log('Fetching data from URL:', url);
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'X-Table-Name': currentTable }
+                });
+
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Received data:', data);
+
+                if (data.success && data.data && data.data.length > 0) {
+                    const item = data.data[0];
+                    renderData(item[dynamicColumnName]); 
+                    messageContainer.classList.add('hidden');
+                    dataContainer.classList.remove('hidden');
+                } else {
+                    showMessage('Data tidak ditemukan. Silakan periksa respons API di konsol.', 'warning');
+                }
+            } catch (error) {
+                console.error('Error memuat data:', error);
+                showMessage(`Error memuat data: ${error.message || error}`, 'danger');
+            }
+        }
+
+        /**
+         * Mengurai data dan merender tampilan hanya-baca.
+         * @param {string} rawValue - Nilai mentah dari kolom yang dipilih.
+         */
+        function renderData(rawValue) {
+            const container = document.getElementById('formFieldsContainer');
+            container.innerHTML = '';
+            
+            if (!rawValue) {
+                container.innerHTML = '<p class="text-center text-gray-500">Tidak ada data untuk ditampilkan.</p>';
+                return;
+            }
+
+            // Explode pertama dengan delimiter '|' untuk membuat "kolom"
+            const explodedColumns = rawValue.split('|');
+            
+            let dataHtml = '';
+            explodedColumns.forEach((columnValue, colIndex) => {
+                // Explode kedua dengan delimiter ';' untuk membuat "baris"
+                const explodedRows = columnValue.split(';');
+                dataHtml += `
+                    <div class="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 min-w-[250px] flex flex-col">
+                        <p class="text-md font-semibold text-blue-600 mb-3">Data ${colIndex + 1}</p>
+                        <div class="space-y-3 flex-grow">
+                `;
+
+                explodedRows.forEach((rowValue, rowIndex) => {
+                    dataHtml += `
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Baris ${rowIndex + 1}:</label>
+                            <p class="mt-1 block w-full rounded-md bg-white border border-gray-300 shadow-sm p-2 text-gray-900">${rowValue.trim()}</p>
+                        </div>
+                    `;
+                });
+
+                dataHtml += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = dataHtml;
+        }
+
+        /**
+         * Menampilkan pesan di modal alert.
+         * @param {string} message - Pesan yang akan ditampilkan.
+         * @param {string} type - Tipe alert ('success', 'danger', 'info', 'warning').
+         */
+        function showAlert(message, type) {
+            const modal = document.getElementById('alertModal');
+            const alertMessage = document.getElementById('alertMessage');
+            const alertIcon = document.getElementById('alertIcon');
+
+            alertMessage.textContent = message;
+            alertIcon.innerHTML = '';
+            alertIcon.className = 'text-4xl text-center mb-4';
+
+            switch (type) {
+                case 'success':
+                    alertIcon.classList.add('text-green-500');
+                    alertIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                    break;
+                case 'danger':
+                    alertIcon.classList.add('text-red-500');
+                    alertIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
+                    break;
+                case 'warning':
+                    alertIcon.classList.add('text-yellow-500');
+                    alertIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                    break;
+                case 'info':
+                default:
+                    alertIcon.classList.add('text-blue-500');
+                    alertIcon.innerHTML = '<i class="fas fa-info-circle"></i>';
+                    break;
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        /**
+         * Menutup modal alert.
+         */
+        function closeAlert() {
+            const modal = document.getElementById('alertModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        /**
+         * Menampilkan pesan di kontainer utama saat memuat atau error.
+         * @param {string} message - Pesan yang akan ditampilkan.
+         * @param {string} type - Tipe pesan ('danger' atau 'warning').
+         */
+        function showMessage(message, type) {
+            const messageContainer = document.getElementById('messageContainer');
+            const dataContainer = document.getElementById('dataContainer');
+            messageContainer.classList.remove('hidden');
+            dataContainer.classList.add('hidden');
+
+            let iconHtml = '';
+            let textColor = '';
+
+            if (type === 'danger') {
+                iconHtml = '<i class="fas fa-times-circle text-red-500 text-4xl mb-4"></i>';
+                textColor = 'text-red-500';
+            } else if (type === 'warning') {
+                iconHtml = '<i class="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i>';
+                textColor = 'text-yellow-500';
+            } else {
+                iconHtml = '<i class="fas fa-info-circle text-gray-500 text-4xl mb-4"></i>';
+                textColor = 'text-gray-500';
+            }
+
+            messageContainer.innerHTML = `${iconHtml}<p class="text-lg ${textColor}">${message}</p>`;
+        }
+    </script>
+</body>
+</html>
