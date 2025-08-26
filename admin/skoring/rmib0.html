@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Skor RMIB</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Set default font to Inter -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-4xl text-center rounded-2xl">
+        <h1 class="text-3xl font-bold mb-4 text-gray-800">Kalkulator Skor RMIB</h1>
+        <p class="text-lg text-gray-600">
+            Perhitungan telah selesai. Silakan buka <strong>Console</strong> pada browser Anda (biasanya dengan menekan F12 atau Ctrl+Shift+I) untuk melihat hasilnya.
+        </p>
+    </div>
+
+    <script>
+        // =======================================================
+        // Konversi dari file rmib0.php
+        // =======================================================
+
+        // Data jawaban dari tes RMIB (contoh data dengan 96 elemen).
+        // Setiap elemen adalah jawaban untuk satu soal ('1' = Suka, '0' = Tidak Suka).
+        // Pertanyaan 1-12 adalah blok pertama.
+        const soal_rmib = [
+    // Grup 1 (pertanyaan 1-12)
+    7, 3, 11, 1, 9, 5, 12, 2, 8, 6, 4, 10,
+    
+    // Grup 2 (pertanyaan 13-24)
+    4, 9, 1, 12, 6, 3, 10, 7, 2, 11, 5, 8,
+    
+    // Grup 3 (pertanyaan 25-36)
+    12, 5, 8, 3, 11, 1, 6, 9, 4, 7, 10, 2,
+    
+    // Grup 4 (pertanyaan 37-48)
+    2, 8, 6, 10, 4, 12, 3, 1, 7, 9, 11, 5,
+    
+    // Grup 5 (pertanyaan 49-60)
+    9, 1, 5, 7, 12, 4, 8, 11, 3, 2, 6, 10,
+    
+    // Grup 6 (pertanyaan 61-72)
+    6, 11, 2, 9, 1, 8, 5, 4, 12, 3, 7, 10,
+    
+    // Grup 7 (pertanyaan 73-84)
+    10, 4, 7, 2, 5, 9, 1, 12, 6, 8, 3, 11,
+    
+    // Grup 8 (pertanyaan 85-96)
+    3, 12, 9, 6, 8, 2, 11, 10, 1, 4, 5, 7
+];
+
+        /**
+         * Menghitung skor total dari soal-soal RMIB yang ditentukan.
+         * @param {Array<number>} indices - Array berisi indeks soal (1-based).
+         * @returns {number} Skor total.
+         */
+        const getRmibScore = (indices) => {
+            // Memastikan array soal_rmib ada dan merupakan array
+            if (!Array.isArray(soal_rmib)) {
+                console.error("Variabel 'soal_rmib' tidak ditemukan atau bukan array.");
+                return 0;
+            }
+            
+            return indices.reduce((sum, index) => {
+                // Mengkonversi ke integer setelah menghilangkan spasi
+                // Menggunakan operator OR (|| 0) untuk mencegah error jika nilai tidak valid
+                const answer = soal_rmib[index - 1];
+                return sum + (parseInt(String(answer).trim()) || 0);
+            }, 0);
+        };
+
+        // Definisi skor untuk setiap kategori (total 12 kategori)
+        const out = getRmibScore([1, 24, 35, 46, 57, 68, 79, 90]);
+        const mech = getRmibScore([2, 13, 36, 47, 58, 69, 80, 91]);
+        const comp = getRmibScore([3, 14, 25, 48, 59, 70, 81, 92]);
+        const sci = getRmibScore([4, 15, 26, 37, 60, 71, 82, 93]);
+        const pers = getRmibScore([5, 16, 27, 38, 49, 72, 83, 94]);
+        const art = getRmibScore([6, 17, 28, 39, 50, 61, 84, 95]);
+        const lit = getRmibScore([7, 18, 29, 40, 51, 62, 73, 96]);
+        const mus = getRmibScore([8, 19, 30, 41, 52, 63, 74, 85]);
+        const soc = getRmibScore([9, 20, 31, 42, 53, 64, 75, 86]);
+        const clerk = getRmibScore([10, 21, 32, 43, 54, 65, 76, 87]);
+        const prac = getRmibScore([11, 22, 33, 44, 55, 66, 77, 88]);
+        const med = getRmibScore([12, 23, 34, 45, 56, 67, 78, 89]);
+
+        // Fungsi untuk mencetak hasil ke konsol
+        function logResults() {
+            console.log("=====================================");
+            console.log("Hasil Perhitungan Skor RMIB");
+            console.log("=====================================");
+
+            console.log(`Skor Outdoor (out): ${out}`);
+            console.log(`Skor Mechanical (mech): ${mech}`);
+            console.log(`Skor Computational (comp): ${comp}`);
+            console.log(`Skor Scientific (sci): ${sci}`);
+            console.log(`Skor Persuasive (pers): ${pers}`);
+            console.log(`Skor Artistic (art): ${art}`);
+            console.log(`Skor Literary (lit): ${lit}`);
+            console.log(`Skor Musical (mus): ${mus}`);
+            console.log(`Skor Social Service (soc): ${soc}`);
+            console.log(`Skor Clerical (clerk): ${clerk}`);
+            console.log(`Skor Practical (prac): ${prac}`);
+            console.log(`Skor Medical (med): ${med}`);
+            
+            console.log("=====================================");
+            console.log("Skor ini menunjukkan minat seseorang pada setiap kategori.");
+        }
+
+        // Jalankan fungsi logging saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', logResults);
+    </script>
+</body>
+</html>

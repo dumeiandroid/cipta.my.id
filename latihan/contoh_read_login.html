@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cek Status Login</title>
+</head>
+<body>
+    <script>
+        // URL API untuk operasi READ/FILTER
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis?table=nilai1';
+        
+        // Fungsi untuk mengambil data pengguna dari API dan menampilkannya di konsol
+        async function fetchUserData(userToken) {
+            try {
+                // Buat URL dengan filter yang benar berdasarkan kode API Anda
+                // Parameter filter untuk "sama dengan" adalah _eq.
+                const fetchURL = `${API_URL}&x_01_eq=${userToken}`;
+                
+                // Melakukan fetch ke API
+                const response = await fetch(fetchURL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                // Mengurai respons sebagai JSON
+                const result = await response.json();
+
+                // Memeriksa apakah data ditemukan
+                if (result && result.data && result.data.length > 0) {
+                    const userData = result.data[0];
+                    console.log('Anda telah login!');
+                    console.log('Berikut data pengguna Anda:', userData);
+                } else {
+                    // Jika token tidak valid atau data tidak ditemukan
+                    console.error('Token login tidak valid atau data pengguna tidak ditemukan.');
+                    console.error('Silakan login kembali.');
+                    // Hapus token yang tidak valid
+                    localStorage.removeItem('loginToken');
+                }
+
+            } catch (error) {
+                console.error('Terjadi kesalahan saat mengambil data:', error);
+            }
+        }
+
+        // Fungsi utama yang akan dijalankan saat halaman dimuat
+        function checkLoginStatus() {
+            // Dapatkan nilai 'loginToken' dari localStorage
+            const userToken = localStorage.getItem('loginToken');
+
+            if (userToken) {
+                // Jika token ada, panggil fungsi untuk mengambil data pengguna
+                console.log('Memeriksa status login...');
+                fetchUserData(userToken);
+            } else {
+                // Jika token tidak ada, beri tahu pengguna
+                console.log('Anda belum login.');
+            }
+        }
+
+        // Memanggil fungsi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+</body>
+</html>

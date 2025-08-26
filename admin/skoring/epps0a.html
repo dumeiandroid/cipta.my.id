@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Skor EPPS</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Set default font to Inter -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-4xl text-center rounded-2xl">
+        <h1 class="text-3xl font-bold mb-4 text-gray-800">Kalkulator Skor EPPS</h1>
+        <p class="text-lg text-gray-600">
+            Perhitungan telah selesai. Silakan buka <strong>Console</strong> pada browser Anda (biasanya dengan menekan F12 atau Ctrl+Shift+I) untuk melihat hasilnya.
+        </p>
+    </div>
+
+    <script>
+        // =======================================================
+        // Konversi dari file epps0.php
+        // =======================================================
+        
+        // Array jawaban yang disediakan oleh pengguna
+        const soal_epps = [
+            'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', 'B', 'A', // 1-10
+            'B', 'A', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 11-20
+            'A', 'B', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 21-30
+            'B', 'A', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 31-40
+            'A', 'B', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 41-50
+            'B', 'A', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 51-60
+            'A', 'B', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 61-70
+            'B', 'A', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 71-80
+            'A', 'B', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 81-90
+            'B', 'A', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 91-100
+            'A', 'B', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 101-110
+            'B', 'A', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 111-120
+            'A', 'B', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 121-130
+            'B', 'A', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 131-140
+            'A', 'B', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 141-150
+            'B', 'A', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 151-160
+            'A', 'B', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 161-170
+            'B', 'A', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 171-180
+            'A', 'B', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 181-190
+            'B', 'A', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 191-200
+            'A', 'B', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 201-210
+            'B', 'A', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', // 211-220
+            'A', 'B', 'A', 'B', 'A'                            // 221-225
+        ];
+
+        /**
+         * Menghitung skor total untuk setiap array jawaban.
+         * @param {Array<string>} arr - Array jawaban untuk satu kategori.
+         * @returns {number} Jumlah jawaban 'A' dalam array.
+         */
+        function getScore(arr) {
+            if (Array.isArray(arr)) {
+                return arr.filter(item => item === 'A').length;
+            }
+            return 0;
+        }
+
+        /**
+         * Mendapatkan nilai WS (Wajib Standar) berdasarkan skor dan tipe kategori.
+         * @param {number} score - Skor mentah.
+         * @param {string} type - Tipe kategori.
+         * @returns {number} Nilai WS.
+         */
+        function getWS(score, type) {
+            // Ini adalah tabel WS contoh. Silakan lengkapi dengan data yang sebenarnya.
+            const wsTable = {
+                'ACH_s': { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 12, 12: 15, 13: 17, 14: 19, 15: 22, 16: 25 },
+                'DEF_s': { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 10, 10: 12, 11: 14, 12: 16, 13: 18, 14: 20, 15: 22, 16: 24 },
+                'ORD_s': { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 9, 9: 11, 10: 14, 11: 15, 12: 17, 13: 19, 14: 21, 15: 23, 16: 25 },
+                'EXH_s': { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 9, 9: 11, 10: 13, 11: 15, 12: 17, 13: 19, 14: 21, 15: 23, 16: 25 },
+                'AUT_s': { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 9, 9: 11, 10: 13, 11: 15, 12: 17, 13: 19, 14: 21, 15: 23, 16: 25 },
+                'AFF_s': { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 9, 9: 11, 10: 13, 11: 15, 12: 17, 13: 19, 14: 21, 15: 23, 16: 25 },
+                'INT_s': { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 9, 9: 11, 10: 13, 11: 15, 12: 17, 13: 19, 14: 21, 15: 23, 16: 25 },
+                'SUC_s': { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 9, 9: 11, 10: 13, 11: 15, 12: 17, 13: 19, 14: 21, 15: 23, 16: 25 },
+                'DOM_s': { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 9, 9: 11, 10: 13, 11: 15, 12: 17, 13: 19, 14: 21, 15: 23, 16: 25 },
+                'ABA_s': { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 9, 9: 11, 10: 13, 11: 15, 12: 17, 13: 19, 14: 21, 15: 23, 16: 25 },
+                'NUR_s': { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 9, 9: 11, 10: 13, 11: 15, 12: 17, 13: 19, 14: 21, 15: 23, 16: 25 },
+                'CHG_s': { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 9, 9: 11, 10: 13, 11: 15, 12: 17, 13: 19, 14: 21, 15: 23, 16: 25 },
+                'END_s': { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 9, 9: 11, 10: 13, 11: 15, 12: 17, 13: 19, 14: 21, 15: 23, 16: 25 },
+                'HET_s': { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 9, 9: 11, 10: 13, 11: 15, 12: 17, 13: 19, 14: 21, 15: 23, 16: 25 },
+                'AGG_s': { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 9, 9: 11, 10: 13, 11: 15, 12: 17, 13: 19, 14: 21, 15: 23, 16: 25 },
+            };
+
+            return wsTable[type] ? wsTable[type][score] || 0 : 0;
+        }
+
+        /**
+         * Helper function to get the question value from a 0-based array.
+         * @param {number} index - The 1-based index of the question.
+         * @returns {string} The answer value ('A' or 'B').
+         */
+        const getSoalValue = (index) => {
+            if (Array.isArray(soal_epps)) {
+                return soal_epps[index - 1];
+            }
+            return '';
+        };
+
+        // Definitions of answer arrays for each category.
+        const ach_r = [getSoalValue(1), getSoalValue(16), getSoalValue(31), getSoalValue(46), getSoalValue(61), getSoalValue(76), getSoalValue(91), getSoalValue(106), getSoalValue(121), getSoalValue(136), getSoalValue(151), getSoalValue(166), getSoalValue(181), getSoalValue(196), getSoalValue(211)];
+        const def_r = [getSoalValue(2), getSoalValue(17), getSoalValue(32), getSoalValue(47), getSoalValue(62), getSoalValue(77), getSoalValue(92), getSoalValue(107), getSoalValue(122), getSoalValue(137), getSoalValue(152), getSoalValue(167), getSoalValue(182), getSoalValue(197), getSoalValue(212)];
+        const ord_r = [getSoalValue(3), getSoalValue(18), getSoalValue(33), getSoalValue(48), getSoalValue(63), getSoalValue(78), getSoalValue(93), getSoalValue(108), getSoalValue(123), getSoalValue(138), getSoalValue(153), getSoalValue(168), getSoalValue(183), getSoalValue(198), getSoalValue(213)];
+        const exh_r = [getSoalValue(4), getSoalValue(19), getSoalValue(34), getSoalValue(49), getSoalValue(64), getSoalValue(79), getSoalValue(94), getSoalValue(109), getSoalValue(124), getSoalValue(139), getSoalValue(154), getSoalValue(169), getSoalValue(184), getSoalValue(199), getSoalValue(214)];
+        const aut_r = [getSoalValue(5), getSoalValue(20), getSoalValue(35), getSoalValue(50), getSoalValue(65), getSoalValue(80), getSoalValue(95), getSoalValue(110), getSoalValue(125), getSoalValue(140), getSoalValue(155), getSoalValue(170), getSoalValue(185), getSoalValue(200), getSoalValue(215)];
+        const aff_r = [getSoalValue(6), getSoalValue(21), getSoalValue(36), getSoalValue(51), getSoalValue(66), getSoalValue(81), getSoalValue(96), getSoalValue(111), getSoalValue(126), getSoalValue(141), getSoalValue(156), getSoalValue(171), getSoalValue(186), getSoalValue(201), getSoalValue(216)];
+        const int_r = [getSoalValue(7), getSoalValue(22), getSoalValue(37), getSoalValue(52), getSoalValue(67), getSoalValue(82), getSoalValue(97), getSoalValue(112), getSoalValue(127), getSoalValue(142), getSoalValue(157), getSoalValue(172), getSoalValue(187), getSoalValue(202), getSoalValue(217)];
+        const suc_r = [getSoalValue(8), getSoalValue(23), getSoalValue(38), getSoalValue(53), getSoalValue(68), getSoalValue(83), getSoalValue(98), getSoalValue(113), getSoalValue(128), getSoalValue(143), getSoalValue(158), getSoalValue(173), getSoalValue(188), getSoalValue(203), getSoalValue(218)];
+        const dom_r = [getSoalValue(9), getSoalValue(24), getSoalValue(39), getSoalValue(54), getSoalValue(69), getSoalValue(84), getSoalValue(99), getSoalValue(114), getSoalValue(129), getSoalValue(144), getSoalValue(159), getSoalValue(174), getSoalValue(189), getSoalValue(204), getSoalValue(219)];
+        const aba_r = [getSoalValue(10), getSoalValue(25), getSoalValue(40), getSoalValue(55), getSoalValue(70), getSoalValue(85), getSoalValue(100), getSoalValue(115), getSoalValue(130), getSoalValue(145), getSoalValue(160), getSoalValue(175), getSoalValue(190), getSoalValue(205), getSoalValue(220)];
+        const nur_r = [getSoalValue(11), getSoalValue(26), getSoalValue(41), getSoalValue(56), getSoalValue(71), getSoalValue(86), getSoalValue(101), getSoalValue(116), getSoalValue(131), getSoalValue(146), getSoalValue(161), getSoalValue(176), getSoalValue(191), getSoalValue(206), getSoalValue(221)];
+        const chg_r = [getSoalValue(12), getSoalValue(27), getSoalValue(42), getSoalValue(57), getSoalValue(72), getSoalValue(87), getSoalValue(102), getSoalValue(117), getSoalValue(132), getSoalValue(147), getSoalValue(162), getSoalValue(177), getSoalValue(192), getSoalValue(207), getSoalValue(222)];
+        const end_r = [getSoalValue(13), getSoalValue(28), getSoalValue(43), getSoalValue(58), getSoalValue(73), getSoalValue(88), getSoalValue(103), getSoalValue(118), getSoalValue(133), getSoalValue(148), getSoalValue(163), getSoalValue(178), getSoalValue(193), getSoalValue(208), getSoalValue(223)];
+        const het_r = [getSoalValue(14), getSoalValue(29), getSoalValue(44), getSoalValue(59), getSoalValue(74), getSoalValue(89), getSoalValue(104), getSoalValue(119), getSoalValue(134), getSoalValue(149), getSoalValue(164), getSoalValue(179), getSoalValue(194), getSoalValue(209), getSoalValue(224)];
+        const agg_r = [getSoalValue(15), getSoalValue(30), getSoalValue(45), getSoalValue(60), getSoalValue(75), getSoalValue(90), getSoalValue(105), getSoalValue(120), getSoalValue(135), getSoalValue(150), getSoalValue(165), getSoalValue(180), getSoalValue(195), getSoalValue(210), getSoalValue(225)];
+        
+        // Menghitung skor mentah (raw score)
+        const ach_s = getScore(ach_r);
+        const def_s = getScore(def_r);
+        const ord_s = getScore(ord_r);
+        const exh_s = getScore(exh_r);
+        const aut_s = getScore(aut_r);
+        const aff_s = getScore(aff_r);
+        const int_s = getScore(int_r);
+        const suc_s = getScore(suc_r);
+        const dom_s = getScore(dom_r);
+        const aba_s = getScore(aba_r);
+        const nur_s = getScore(nur_r);
+        const chg_s = getScore(chg_r);
+        const end_s = getScore(end_r);
+        const het_s = getScore(het_r);
+        const agg_s = getScore(agg_r);
+
+        // Menghitung nilai WS (Wajib Standar)
+        const ws_ach = getWS(ach_s, 'ACH_s');
+        const ws_def = getWS(def_s, 'DEF_s');
+        const ws_ord = getWS(ord_s, 'ORD_s');
+        const ws_exh = getWS(exh_s, 'EXH_s');
+        const ws_aut = getWS(aut_s, 'AUT_s');
+        const ws_aff = getWS(aff_s, 'AFF_s');
+        const ws_int = getWS(int_s, 'INT_s');
+        const ws_suc = getWS(suc_s, 'SUC_s');
+        const ws_dom = getWS(dom_s, 'DOM_s');
+        const ws_aba = getWS(aba_s, 'ABA_s');
+        const ws_nur = getWS(nur_s, 'NUR_s');
+        const ws_chg = getWS(chg_s, 'CHG_s');
+        const ws_end = getWS(end_s, 'END_s');
+        const ws_het = getWS(het_s, 'HET_s');
+        const ws_agg = getWS(agg_s, 'AGG_s');
+        
+        // Menghitung total skor mentah
+        const total_s = ach_s + def_s + ord_s + exh_s + aut_s + aff_s + int_s + suc_s + dom_s + aba_s + nur_s + chg_s + end_s + het_s + agg_s;
+
+        // Fungsi untuk mencetak hasil ke konsol
+        function logResults() {
+            console.log("=====================================");
+            console.log("Hasil Perhitungan Skor EPPS");
+            console.log("=====================================");
+
+            console.log("----- SKOR MENTAH (RAW SCORE) -----");
+            console.log(`ach_s: ${ach_s}`);
+            console.log(`def_s: ${def_s}`);
+            console.log(`ord_s: ${ord_s}`);
+            console.log(`exh_s: ${exh_s}`);
+            console.log(`aut_s: ${aut_s}`);
+            console.log(`aff_s: ${aff_s}`);
+            console.log(`int_s: ${int_s}`);
+            console.log(`suc_s: ${suc_s}`);
+            console.log(`dom_s: ${dom_s}`);
+            console.log(`aba_s: ${aba_s}`);
+            console.log(`nur_s: ${nur_s}`);
+            console.log(`chg_s: ${chg_s}`);
+            console.log(`end_s: ${end_s}`);
+            console.log(`het_s: ${het_s}`);
+            console.log(`agg_s: ${agg_s}`);
+            console.log("-------------------------------------");
+
+            console.log("----- NILAI WS (WAJIB STANDAR) -----");
+            console.log(`ws_ach: ${ws_ach}`);
+            console.log(`ws_def: ${ws_def}`);
+            console.log(`ws_ord: ${ws_ord}`);
+            console.log(`ws_exh: ${ws_exh}`);
+            console.log(`ws_aut: ${ws_aut}`);
+            console.log(`ws_aff: ${ws_aff}`);
+            console.log(`ws_int: ${ws_int}`);
+            console.log(`ws_suc: ${ws_suc}`);
+            console.log(`ws_dom: ${ws_dom}`);
+            console.log(`ws_aba: ${ws_aba}`);
+            console.log(`ws_nur: ${ws_nur}`);
+            console.log(`ws_chg: ${ws_chg}`);
+            console.log(`ws_end: ${ws_end}`);
+            console.log(`ws_het: ${ws_het}`);
+            console.log(`ws_agg: ${ws_agg}`);
+            console.log("-------------------------------------");
+
+            console.log("----- SKOR TOTAL -----");
+            console.log(`total_s: ${total_s}`);
+            console.log("-------------------------------------");
+
+            console.log("Catatan: Tabel WS di dalam kode ini adalah contoh. Silakan lengkapi dengan data yang akurat.");
+        }
+
+        // Run the logging function when the page loads
+        document.addEventListener('DOMContentLoaded', logResults);
+    </script>
+</body>
+</html>

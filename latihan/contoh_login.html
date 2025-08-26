@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Sederhana</title>
+</head>
+<body>
+    <h1>Login Sederhana</h1>
+    <p>Masukkan nilai untuk x_01 dan periksa hasilnya di konsol.</p>
+    
+    <label for="input_x01">Nilai x_01:</label>
+    <input type="text" id="input_x01" placeholder="Masukkan nilai x_01">
+    
+    <button onclick="handleLogin()">Login</button>
+    
+    <script>
+        // URL API untuk operasi READ/FILTER
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis?table=nilai1';
+
+        // Fungsi asinkron untuk menangani proses login
+        async function handleLogin() {
+            // Dapatkan nilai dari input
+            const inputValue = document.getElementById('input_x01').value;
+
+            // Periksa jika input kosong
+            if (!inputValue) {
+                console.warn('Mohon masukkan nilai untuk x_01.');
+                return;
+            }
+
+            try {
+                // Gunakan x_01_eq untuk filter yang tepat
+                const fetchURL = `${API_URL}&x_01_eq=${inputValue}`;
+
+                // Melakukan fetch ke API
+                const response = await fetch(fetchURL);
+
+                // Memeriksa jika respons berhasil
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                // Mengurai respons sebagai JSON
+                const data = await response.json();
+
+                // Memeriksa apakah data ditemukan
+                if (data && data.data && data.data.length > 0) {
+                    // Ambil nilai x_01 dari respons API
+                    const userToken = data.data[0].x_01;
+                    
+                    // Jika data ditemukan, buat localStorage dengan nilai x_01
+                    localStorage.setItem('loginToken', userToken);
+                    console.log('Login berhasil! Token dibuat:', localStorage.getItem('loginToken'));
+                } else {
+                    // Jika data tidak ditemukan, tampilkan pesan
+                    console.log('Login gagal. Token tidak ada karena kredensial tidak cocok.');
+                }
+            } catch (error) {
+                console.error('Terjadi kesalahan saat memeriksa kredensial:', error);
+            }
+        }
+
+        // Opsional: periksa status login saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('loginToken');
+            if (token) {
+                console.log('Anda sudah login dengan token:', token);
+            } else {
+                console.log('Anda belum login.');
+            }
+        });
+    </script>
+</body>
+</html>

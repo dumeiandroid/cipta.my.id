@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Data dari URL</title>
+</head>
+<body>
+    <div class="konten"></div>
+    <script>
+        // Fungsi untuk mengambil data dan menampilkannya di konsol
+        async function fetchAndLogData() {
+            try {
+                // Mendapatkan URL saat ini
+                const currentURL = window.location.href;
+                const url = new URL(currentURL);
+                const params = new URLSearchParams(url.search);
+                const id_x = params.get('id_x');
+
+                if (!id_x) {
+                    console.error('Parameter id_x tidak ditemukan di URL.');
+                    return;
+                }
+
+                const API_URL = `https://lidan-co-id.pages.dev/api/contacts_filter_dinamis?table=nilai1&id_x=${id_x}`;
+                const response = await fetch(API_URL);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                // Mengurai respons utama sebagai JSON
+                const responseData = await response.json();
+
+                // Menampilkan respons utama di konsol
+                console.log(`Data dari id_x = ${id_x}:`, responseData);
+
+                // Pastikan responsData memiliki properti 'data' dan properti itu adalah objek
+                if (responseData && typeof responseData.data === 'object') {
+                    // Ambil objek yang berisi data yang Anda inginkan
+                    const contactData = responseData.data;
+
+                    // Sekarang, ambil nilai dari properti-properti objek tersebut
+                    const x_02 = contactData.x_02;
+                    const x_05 = contactData.x_05;
+                    const x_06 = contactData.x_06;
+                    const x_10 = contactData.x_10;
+
+                    // Tampilkan nilai yang telah disimpan
+                    console.log('Nilai x_02:', x_02);
+                    console.log('Nilai x_05:', x_05);
+                    console.log('Nilai x_06:', x_06);
+                    console.log('Nilai x_10:', x_10);
+                } else {
+                    console.error('Properti data tidak ditemukan atau bukan objek.');
+                }
+            } catch (error) {
+                console.error('Terjadi kesalahan saat mengambil data:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchAndLogData);
+    </script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Data dari API</title>
+</head>
+<body>
+    <h1>Menghapus Data</h1>
+    <p>Silakan tambahkan parameter `?id_x=nilai_id` ke URL di browser Anda.</p>
+    <p>Lihat di konsol browser untuk melihat respons dari server.</p>
+    <script>
+        // Fungsi asinkron untuk mengambil ID dari URL dan menghapus data
+        async function deleteAndLogData() {
+            try {
+                // Mendapatkan ID dari parameter URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const id_x = urlParams.get('id_x');
+
+                // Memeriksa apakah 'id_x' ditemukan
+                if (!id_x) {
+                    console.error('Parameter id_x tidak ditemukan di URL.');
+                    return; // Menghentikan eksekusi
+                }
+
+                // URL API untuk operasi DELETE dengan ID dinamis
+                const API_URL = `https://lidan-co-id.pages.dev/api/contacts_filter_dinamis?table=nilai1&id_x=${id_x}`;
+
+                // Konfigurasi untuk permintaan fetch
+                const options = {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+
+                // Melakukan fetch ke API
+                const response = await fetch(API_URL, options);
+
+                // Mengurai respons sebagai JSON
+                const data = await response.json();
+
+                // Memeriksa respons dan menampilkannya di konsol
+                if (response.ok) {
+                    console.log('Respons dari server:', data);
+                } else {
+                    console.error('Terjadi kesalahan saat menghapus data:', data);
+                }
+
+            } catch (error) {
+                console.error('Terjadi kesalahan pada fetch API:', error);
+            }
+        }
+
+        // Memanggil fungsi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', deleteAndLogData);
+    </script>
+</body>
+</html>

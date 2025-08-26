@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Data dari URL</title>
+</head>
+<body>
+    <div class="konten"></div>
+    <script>
+        // Fungsi untuk mengambil data dan menampilkannya di konsol
+        async function fetchAndLogData() {
+            try {
+                // Mendapatkan URL saat ini
+                const currentURL = window.location.href;
+
+                // Membuat objek URL dari URL saat ini
+                const url = new URL(currentURL);
+
+                // Menggunakan URLSearchParams untuk mendapatkan parameter dari URL
+                const params = new URLSearchParams(url.search);
+
+                // Mengambil nilai 'id_x' dari parameter URL
+                const id_x = params.get('id_x');
+
+                // Memeriksa apakah 'id_x' ditemukan di URL
+                if (!id_x) {
+                    console.error('Parameter id_x tidak ditemukan di URL.');
+                    return; // Menghentikan eksekusi jika tidak ada id_x
+                }
+
+                // URL API dengan filter dinamis
+                const API_URL = `https://lidan-co-id.pages.dev/api/contacts_filter_dinamis?table=nilai1&id_x=${id_x}`;
+
+                // Melakukan fetch ke API
+                const response = await fetch(API_URL);
+
+                // Memeriksa jika respons berhasil
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                // Mengurai respons sebagai JSON
+                const data = await response.json();
+
+                // Menampilkan data di konsol browser
+                console.log(`Data dari id_x = ${id_x}:`, data);
+            } catch (error) {
+                console.error('Terjadi kesalahan saat mengambil data:', error);
+            }
+        }
+
+        // Memanggil fungsi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', fetchAndLogData);
+    </script>
+</body>
+</html>

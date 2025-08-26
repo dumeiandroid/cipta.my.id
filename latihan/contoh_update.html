@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Data ke API</title>
+</head>
+<body>
+    <h1>Memperbarui Data PUT</h1>
+    <p>Silakan tambahkan parameter `?id_x=nilai_id` ke URL di browser Anda.</p>
+    <p>Lihat di konsol browser untuk melihat hasilnya.</p>
+    <script>
+        // Fungsi asinkron untuk mengambil ID dari URL, memperbarui data, dan mencatat respons
+        async function updateAndLogData() {
+            try {
+                // Mendapatkan URL saat ini
+                const currentURL = window.location.href;
+                const url = new URL(currentURL);
+                const params = new URLSearchParams(url.search);
+
+                // Mengambil nilai 'id_x' dari parameter URL
+                const id_x = params.get('id_x');
+
+                // Memeriksa apakah 'id_x' ditemukan di URL
+                if (!id_x) {
+                    console.error('Parameter id_x tidak ditemukan di URL.');
+                    return; // Menghentikan eksekusi jika tidak ada id_x
+                }
+
+                // URL API untuk operasi PUT dengan ID dinamis
+                const API_URL = `https://lidan-co-id.pages.dev/api/contacts_filter_dinamis?table=nilai1&id_x=${id_x}`;
+
+                // Data yang akan dikirim dalam format JSON
+                const updateData = {
+                    "x_01": "okoksaja",
+                    "x_25": "okoksaja",
+                    "x_02": "update-maba|||"
+                };
+
+                // Konfigurasi untuk permintaan fetch
+                const options = {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(updateData) // Mengubah objek JavaScript menjadi string JSON
+                };
+
+                // Melakukan fetch ke API
+                const response = await fetch(API_URL, options);
+
+                // Memeriksa jika respons berhasil
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                // Mengurai respons sebagai JSON
+                const data = await response.json();
+
+                // Menampilkan respons dari API di konsol browser
+                console.log('Respons dari server:', data);
+            } catch (error) {
+                console.error('Terjadi kesalahan saat memperbarui data:', error);
+            }
+        }
+
+        // Memanggil fungsi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', updateAndLogData);
+    </script>
+</body>
+</html>

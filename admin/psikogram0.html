@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Profil Pemeriksaan Psikologis</title>
+    <style>
+        body {
+            color: black;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #7000E0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+        }
+        .container1, .container_a {
+            color: black;
+            background: white;
+            width: 280mm;
+            padding: 20px;
+            background-color: white;
+            border: 1px solid black;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            position: relative;
+        }
+        .container1 {
+            height: 370mm;
+        }
+        .container_a {
+            height: 365mm;
+            overflow: hidden;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid black;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .info-table td {
+            padding: 5px;
+            border: 1px solid black;
+        }
+        .info-table td:first-child {
+            width: 25%;
+            font-weight: bold;
+        }
+        .content-section {
+            margin-bottom: 20px;
+        }
+        .content-section h2 {
+            background-color: #f2f2f2;
+            padding: 10px;
+            border-left: 5px solid #7000E0;
+        }
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: gray;
+        }
+        #downloadBtn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .no-download {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <button id="downloadBtn">Unduh PDF</button>
+
+    <div class="no-download">
+        <img id="headerImg" src="https://placehold.co/1920x30/7000E0/FFFFFF?text=Header" style="display:none;">
+        <img id="footerImg" src="https://placehold.co/1920x30/7000E0/FFFFFF?text=Footer" style="display:none;">
+    </div>
+    
+    <div id="downloadContent1" class="container1">
+        <!-- Konten Halaman 1 -->
+        <div class="header">
+            <h1>Profil Pemeriksaan Psikologis</h1>
+        </div>
+        <table class="info-table">
+            <tr>
+                <td>Nama</td>
+                <td id="nama">...</td>
+            </tr>
+            <tr>
+                <td>Usia</td>
+                <td id="usia">...</td>
+            </tr>
+            <tr>
+                <td>Jenis Kelamin</td>
+                <td id="jenis_kelamin">...</td>
+            </tr>
+            <tr>
+                <td>Pendidikan Terakhir</td>
+                <td id="pendidikan">...</td>
+            </tr>
+        </table>
+        <!-- Lanjutkan dengan konten halaman 1 lainnya -->
+    </div>
+    
+    <div id="downloadContent2" class="container_a">
+        <!-- Konten Halaman 2 -->
+        <div class="content-section">
+            <h2>Kekuatan dan Kelemahan</h2>
+            <ul id="strengths-list">
+                <!-- Data kekuatan akan diisi di sini -->
+            </ul>
+        </div>
+        <!-- Lanjutkan dengan konten halaman 2 lainnya -->
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        // Fungsi untuk mengambil data dari API dan memperbarui halaman
+        async function fetchAndPopulateData() {
+            try {
+                // Mengambil parameter id_x dari URL saat ini
+                const currentURL = window.location.href;
+                const url = new URL(currentURL);
+                const params = new URLSearchParams(url.search);
+                const id_x = params.get('id_x');
+
+                if (!id_x) {
+                    console.error('Parameter id_x tidak ditemukan di URL.');
+                    return;
+                }
+
+                // URL API Anda
+                const API_URL = `https://lidan-co-id.pages.dev/api/contacts_filter_dinamis?table=nilai1&id_x=${id_x}`;
+
+                // Melakukan request ke API
+                const response = await fetch(API_URL);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const responseData = await response.json();
+
+                if (responseData && typeof responseData.data === 'object') {
+                    const contactData = responseData.data;
+                    
+                    // VARIABEL UTAMA DARI API
+                    const x_02 = contactData.x_02;
+                    const x_05 = contactData.x_05;
+                    const x_06 = contactData.x_06;
+                    const x_10 = contactData.x_10;
+
+                    console.log('Nilai x_02 dari API:', x_02);
+                    console.log('Nilai x_05 dari API:', x_05);
+                    console.log('Nilai x_06 dari API:', x_06);
+                    console.log('Nilai x_10 dari API:', x_10);
+
+                    // Mengurai data x_02 untuk mengisi informasi pribadi
+                    const parts_x02 = x_02.split('|').map(part => part.trim().split(';'));
+                    const nama = parts_x02[0][0];
+                    const jenis_kelamin = parts_x02[0][8];
+                    const usia = parts_x02[0][4];
+                    const pendidikan = `${parts_x02[2][6]} ${parts_x02[2][1]}`;
+
+                    // Memperbarui elemen HTML dengan data dari API
+                    document.getElementById('nama').textContent = nama;
+                    document.getElementById('jenis_kelamin').textContent = jenis_kelamin;
+                    document.getElementById('usia').textContent = usia;
+                    document.getElementById('pendidikan').textContent = pendidikan;
+
+                    // Anda dapat menguraikan variabel lain seperti x_10
+                    // dan menggunakannya untuk mengisi elemen-elemen lain.
+                    const strengths_from_x10 = x_10.split(';').filter(Boolean);
+                    const strengths_list = document.getElementById('strengths-list');
+                    strengths_list.innerHTML = '';
+                    strengths_from_x10.forEach(strength => {
+                        const li = document.createElement('li');
+                        li.textContent = strength;
+                        strengths_list.appendChild(li);
+                    });
+
+                } else {
+                    console.error('Properti data tidak ditemukan atau bukan objek.');
+                }
+            } catch (error) {
+                console.error('Terjadi kesalahan saat mengambil data:', error);
+            }
+        }
+
+        // Panggil fungsi ini setelah seluruh halaman HTML dimuat
+        document.addEventListener('DOMContentLoaded', fetchAndPopulateData);
+
+        // Kode unduh PDF tetap sama
+        window.jsPDF = window.jspdf.jsPDF;
+        const downloadBtn = document.getElementById('downloadBtn');
+        downloadBtn.onclick = () => {
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const imgWidth = doc.internal.pageSize.getWidth();
+            const headerImgSrc = document.getElementById('headerImg').src;
+            const footerImgSrc = document.getElementById('footerImg').src;
+
+            const noDownloadElements = document.querySelectorAll('.no-download');
+            noDownloadElements.forEach(el => el.style.display = 'block');
+
+            const processPage = (contentId, isFirstPage) => {
+                return new Promise((resolve) => {
+                    if (!isFirstPage) {
+                        doc.addPage();
+                    }
+                    const headerImg = new Image();
+                    headerImg.crossOrigin = "anonymous";
+                    headerImg.src = headerImgSrc;
+                    headerImg.onload = () => {
+                        doc.addImage(headerImg, 'PNG', 0, 0, imgWidth, 30);
+                        
+                        const content = document.getElementById(contentId);
+                        html2canvas(content, { scale: 2, useCORS: true }).then(canvas => {
+                            const imgData = canvas.toDataURL('image/png');
+                            const contentHeight = (canvas.height * imgWidth) / canvas.width;
+                            doc.addImage(imgData, 'PNG', 0, 30, imgWidth, contentHeight);
+
+                            const footerImg = new Image();
+                            footerImg.crossOrigin = "anonymous";
+                            footerImg.src = footerImgSrc;
+                            footerImg.onload = () => {
+                                doc.addImage(footerImg, 'PNG', 0, pageHeight - 30, imgWidth, 30);
+                                resolve();
+                            };
+                        });
+                    };
+                });
+            };
+
+            processPage('downloadContent1', true)
+                .then(() => processPage('downloadContent2', false))
+                .then(() => {
+                    doc.save('profil_pemeriksaan_psikologis.pdf');
+                    noDownloadElements.forEach(el => el.style.display = '');
+                });
+        };
+    </script>
+</body>
+</html>
