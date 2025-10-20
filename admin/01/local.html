@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Local Storage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #controls {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #f39c12;
+            background-color: #fff9e6;
+            border-radius: 5px;
+        }
+        #localStorageData {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .item-content {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        .key {
+            font-weight: bold;
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .value {
+            white-space: pre-wrap;
+            color: #555;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 0.8em;
+            flex-shrink: 0;
+        }
+        .update-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 0.8em;
+            flex-shrink: 0;
+        }
+        .delete-all-btn {
+            background-color: #c0392b;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        /* --- Style untuk Modal (Dialog) --- */
+        dialog {
+            border: 1px solid #999;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 500px;
+        }
+        dialog::backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        dialog h3 {
+            margin-top: 0;
+            color: #3498db;
+        }
+        dialog label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        dialog input[type="text"], dialog textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9em;
+        }
+        dialog textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        dialog button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        #saveUpdateBtn {
+            background-color: #2ecc71;
+            color: white;
+        }
+        #cancelUpdateBtn {
+            background-color: #bdc3c7;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Kelola Data Local Storage</h1>
+
+    <div id="controls">
+        <button id="deleteAllBtn" class="delete-all-btn" onclick="clearAllLocalStorage()">🗑️ Hapus Semua Local Storage</button>
+        <p style="margin-top: 10px; font-size: 0.9em; color: #888;">*Tindakan ini akan menghapus semua data Local Storage di domain ini.</p>
+    </div>
+
+    <h2>Daftar Item:</h2>
+    <div id="localStorageData">
+        <p>Memuat data...</p>
+    </div>
+
+    <dialog id="updateModal">
+        <h3>Perbarui Item Local Storage</h3>
+        <form id="updateForm">
+            <label for="updateKey">Kunci:</label>
+            <input type="text" id="updateKey" name="key" readonly>
+
+            <label for="updateValue">Nilai Baru:</label>
+            <textarea id="updateValue" name="value"></textarea>
+            
+            <div>
+                <button type="submit" id="saveUpdateBtn">Simpan Perubahan</button>
+                <button type="button" id="cancelUpdateBtn" onclick="closeModal()">Batal</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script>
+        const updateModal = document.getElementById('updateModal');
+        const updateKeyInput = document.getElementById('updateKey');
+        const updateValueInput = document.getElementById('updateValue');
+        const updateForm = document.getElementById('updateForm');
+
+        /** Menampilkan semua data Local Storage */
+        function displayLocalStorage() {
+            const dataContainer = document.getElementById('localStorageData');
+            let outputHTML = '';
+            
+            if (typeof(Storage) === "undefined") {
+                dataContainer.innerHTML = '<p style="color: red;">Maaf, browser Anda tidak mendukung Web Storage (Local Storage).</p>';
+                return;
+            }
+
+            const localStorageSize = localStorage.length;
+            
+            if (localStorageSize === 0) {
+                outputHTML = '<p style="color: green; font-style: italic;">Local Storage kosong. Tidak ada data yang tersimpan.</p>';
+                document.getElementById('deleteAllBtn').disabled = true;
+            } else {
+                document.getElementById('deleteAllBtn').disabled = false;
+                
+                // Iterasi melalui semua kunci di Local Storage
+                for (let i = 0; i < localStorageSize; i++) {
+                    const key = localStorage.key(i);
+                    const value = localStorage.getItem(key);
+                    
+                    let displayValue = value;
+                    let isJson = false;
+
+                    // Coba format nilai jika terlihat seperti JSON (untuk keterbacaan)
+                    if (value && ((value.startsWith('{') && value.endsWith('}')) || (value.startsWith('[') && value.endsWith(']')))) {
+                        try {
+                            const parsed = JSON.parse(value);
+                            displayValue = JSON.stringify(parsed, null, 2); 
+                            isJson = true;
+                        } catch (e) {
+                            // Biarkan sebagai string
+                        }
+                    }
+
+                    // *** Menggunakan Base64 untuk menyimpan nilai di atribut data-* secara aman ***
+                    // Encode nilai untuk diletakkan di atribut HTML (agar aman dari karakter aneh)
+                    const safeValue = btoa(unescape(encodeURIComponent(value)));
+
+                    outputHTML += `
+                        <div class="item">
+                            <div class="item-content">
+                                <span class="key">Kunci:</span> ${key} <br>
+                                <span class="key">Nilai (${isJson ? 'JSON' : 'String'}):</span> 
+                                <pre class="value">${displayValue}</pre>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="update-btn" data-key="${key}" data-value-base64="${safeValue}">Perbarui</button>
+                                <button class="delete-btn" onclick="deleteItem('${key}')">Hapus</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            dataContainer.innerHTML = outputHTML;
+            // PENTING: Panggil fungsi untuk melampirkan event listeners setelah elemen dibuat
+            addUpdateEventListeners();
+        }
+
+        /** Menambahkan event listener ke semua tombol "Perbarui" yang baru dibuat */
+        function addUpdateEventListeners() {
+            const updateButtons = document.querySelectorAll('.update-btn');
+            updateButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const key = this.getAttribute('data-key');
+                    const base64Value = this.getAttribute('data-value-base64');
+                    
+                    // Decode nilai dari Base64 kembali ke string asli
+                    const value = decodeURIComponent(escape(atob(base64Value)));
+
+                    openModal(key, value);
+                });
+            });
+        }
+
+        /** Membuka modal dan mengisi form */
+        function openModal(key, currentValue) {
+            updateKeyInput.value = key;
+            updateValueInput.value = currentValue;
+            updateModal.showModal(); // Tampilkan dialog
+        }
+
+        /** Menutup modal */
+        function closeModal() {
+            updateModal.close();
+        }
+
+        /** Menangani pengiriman form update */
+        updateForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Mencegah pengiriman form default
+            
+            const key = updateKeyInput.value;
+            const newValue = updateValueInput.value;
+
+            if (key && newValue !== null) { 
+                // Simpan nilai baru ke Local Storage
+                localStorage.setItem(key, newValue);
+                console.log(`Item "${key}" telah diperbarui dengan nilai baru.`);
+                
+                closeModal(); // Tutup modal
+                displayLocalStorage(); // Muat ulang tampilan
+            } else {
+                alert("Kunci atau Nilai tidak valid.");
+            }
+        });
+
+        /** Menghapus item Local Storage tertentu berdasarkan kunci */
+        function deleteItem(key) {
+            if (confirm(`Apakah Anda yakin ingin menghapus item dengan kunci: "${key}"?`)) {
+                localStorage.removeItem(key);
+                console.log(`Item "${key}" telah dihapus.`);
+                displayLocalStorage();
+            }
+        }
+
+        /** Menghapus semua item Local Storage */
+        function clearAllLocalStorage() {
+            if (confirm("PERINGATAN! Anda akan menghapus SEMUA item Local Storage di domain ini. Lanjutkan?")) {
+                localStorage.clear();
+                console.log("Semua Local Storage telah dihapus.");
+                displayLocalStorage();
+            }
+        }
+
+        // Jalankan fungsi saat halaman dimuat
+        window.onload = displayLocalStorage;
+    </script>
+
+</body>
+</html>

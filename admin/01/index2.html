@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Data CRUD API Dinamis (v2)</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css"/>
+    <style>
+        .table-responsive{max-height:80vh;overflow-y:auto}
+        /* Style untuk read-only dan inline edit */
+        td.editable { cursor: text; transition: outline 0.1s; }
+        td.editable:focus { outline: 2px solid #0d6efd; background-color: #fff; }
+        td.readonly { background-color: #f8f9fa; cursor: default; }
+        .text-ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 25ch; display: inline-block; }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0"><i class="fas fa-database me-2"></i>Manajemen Data - Tabel: <span id="tableName"></span></h4>
+                        <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+                            <i class="fas fa-plus me-1"></i>Tambah Data
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover mb-0" id="dataManagementTable" style="width:100%">
+                                <thead class="table-dark sticky-top"><tr id="tableHeaderRow"></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted">
+                         Tips: Akses tabel lain melalui URL <code>?tabel=nama_tabel</code>. Kolom Tgl Insert/Update diisi otomatis oleh API.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addModal" tabindex="-1">
+        <div class="modal-dialog modal-lg"><div class="modal-content">
+            <div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-plus me-2"></i>Tambah Data Baru</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body"><form id="addForm"><div class="row g-2" id="addFormFields"></div></form></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-success btn-sm" onclick="saveData()"><i class="fas fa-save me-1"></i>Simpan Data</button>
+            </div>
+        </div></div>
+    </div>
+
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg"><div class="modal-content">
+            <div class="modal-header bg-warning text-dark"><h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Data</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body"><form id="editForm">
+                <input type="hidden" id="editId">
+                <div class="row g-2" id="editFormFields"></div>
+            </form></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-warning btn-sm" onclick="updateData()"><i class="fas fa-save me-1"></i>Update Data</button>
+            </div>
+        </div></div>
+    </div>
+    
+    <div class="modal fade" id="textModal" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Teks Lengkap</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body" id="textModalBody"></div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button></div>
+        </div></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        // API Configuration
+        const API_BASE_URL = 'https://lidan-co-id.pages.dev/api/contacts';
+        let currentTable = 'data_latihan';
+        const textLimit = 30; 
+        let dataTableInstance = null;
+
+        // Definisi Kolom: Hanya sampai x_20
+        const tableColumns = [
+            { key: 'x_01', header: 'Customer', editable: true },
+            { key: 'x_02', header: 'Nomor Telp', editable: true },
+            { key: 'x_03', header: 'Email', editable: true },
+            { key: 'x_04', header: 'Alamat', editable: true },
+            { key: 'x_05', header: 'Kota', editable: true },
+            { key: 'x_06', header: 'Kode Pos', editable: true },
+            { key: 'x_07', header: 'Negara', editable: true },
+            { key: 'x_08', header: 'Perusahaan', editable: true },
+            { key: 'x_09', header: 'Jabatan', editable: true },
+            { key: 'x_10', header: 'Tgl Pendaftaran', editable: true },
+            { key: 'x_11', header: 'Sumber', editable: true },
+            { key: 'x_12', header: 'Status', editable: true },
+            { key: 'x_13', header: 'Catatan', editable: true },
+            { key: 'x_14', header: 'Nilai', editable: true },
+            { key: 'x_15', header: 'Prioritas', editable: true },
+            { key: 'x_16', header: 'Penanggung Jawab', editable: true },
+            { key: 'x_17', header: 'Tanggal Kontak', editable: true },
+            { key: 'x_18', header: 'Metode Kontak', editable: true },
+            // Kolom Tgl Update/Insert
+            { key: 'x_19', header: 'Tgl Update', editable: false }, // Diisi oleh API (Update)
+            { key: 'x_20', header: 'Tgl Insert', editable: false }  // Diisi oleh API (Create)
+        ];
+
+        $(document).ready(function(){
+            const urlParams = new URLSearchParams(window.location.search);
+            currentTable = urlParams.get('tabel') || 'data_latihan';
+            $('#tableName').text(currentTable);
+            
+            // Buat header tabel
+            let headerHtml = '<th width="20">ID</th>';
+            tableColumns.forEach(col => {
+                headerHtml += `<th>${col.header}</th>`;
+            });
+            headerHtml += '<th width="120">Aksi</th>';
+            $('#tableHeaderRow').html(headerHtml);
+
+            // Buat form fields (Hanya sampai x_18 yang editable)
+            generateFormFields('addFormFields');
+            generateFormFields('editFormFields');
+            
+            loadData();
+
+            // Event Listeners (Teks Lengkap & Inline Update)
+            $('#dataManagementTable').on('click', '.show-full-text', function() {
+                const fullText = $(this).data('fullText');
+                $('#textModalBody').text(fullText);
+                new bootstrap.Modal(document.getElementById('textModal')).show();
+            });
+
+            $('#dataManagementTable').on('blur', 'td.editable[contenteditable="true"]', function() {
+                const cell = $(this);
+                const id = cell.closest('tr').find('td:first-child').text();
+                const column = cell.data('column');
+                const newValue = cell.text().trim();
+                const originalValue = cell.data('originalValue');
+
+                if (newValue === originalValue) return; 
+
+                const updateData = {};
+                updateData[column] = newValue;
+                // Tambahkan x_19 dengan tanggal/waktu saat ini
+                updateData['x_19'] = new Date().toISOString().replace('T', ' ').substring(0, 19); 
+
+                $.ajax({
+                    url: `${API_BASE_URL}/${id}?table=${currentTable}`, 
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Table-Name': currentTable },
+                    data: JSON.stringify(updateData),
+                    success: function() {
+                        cell.data('originalValue', newValue);
+                        loadData(false);
+                        showAlert(`Update kolom ${column} sukses!`, 'success');
+                    },
+                    error: function(xhr, status, error) { 
+                        cell.text(originalValue);
+                        showAlert('Error Update Inline data! ' + (xhr.responseJSON ? xhr.responseJSON.error : error), 'danger');
+                        loadData(false); 
+                    }
+                });
+            });
+        });
+
+        // Membuat form field dinamis (Hanya kolom editable)
+        function generateFormFields(containerId) {
+            let fieldsHtml = '';
+            // Hanya iterasi x_01 sampai x_18 yang editable
+            tableColumns.slice(0, 18).forEach(col => {
+                fieldsHtml += `
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label">${col.header}</label>
+                        <input type="text" name="${col.key}" class="form-control form-control-sm">
+                    </div>
+                `;
+            });
+            $(`#${containerId}`).html(fieldsHtml);
+        }
+
+        // --- FUNGSI CRUD ---
+
+        // Read All (R)
+        function loadData(resetPaging = true) {
+            if (dataTableInstance) dataTableInstance.destroy();
+
+            const dataTableColumns = [
+                { "data": "id_x", "title": "ID", "width": "50px" },
+                ...tableColumns.map((col, index) => ({
+                    "data": col.key,
+                    "title": col.header,
+                    "render": function(data) {
+                        data = data || '';
+                        if (String(data).length > textLimit) {
+                            const truncatedText = String(data).substring(0, textLimit) + '...';
+                            return `<span class="text-ellipsis show-full-text" data-full-text="${data}" title="Klik untuk lihat lengkap">${truncatedText}</span>`;
+                        }
+                        return data;
+                    },
+                    "createdCell": function (td, cellData, rowData, row, col) {
+                        const isEditable = tableColumns[col - 1].editable; 
+                        $(td).attr('data-column', tableColumns[col - 1].key);
+                        $(td).data('originalValue', cellData || ''); 
+
+                        if (isEditable) {
+                            $(td).attr('contenteditable', 'true').addClass('editable');
+                        } else {
+                            $(td).addClass('readonly');
+                        }
+                    }
+                })),
+                { 
+                    "data": null, "title": "Aksi", "width": "120px", "orderable": false, "searchable": false,
+                    "render": function(data, type, row) {
+                        return `
+                            <button class="btn btn-warning btn-sm me-1" onclick="editData(${row.id_x})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteData(${row.id_x})"><i class="fas fa-trash"></i></button>
+                        `;
+                    }
+                }
+            ];
+
+            dataTableInstance = $('#dataManagementTable').DataTable({
+                "columns": dataTableColumns,
+                "order": [[0, 'desc']], 
+                "destroy": true, "pageLength": 20, 
+                "displayStart": resetPaging ? 0 : (dataTableInstance ? dataTableInstance.page.info().start : 0),
+                "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json", "processing": "Memuat data..."},
+                "ajax": {
+                    "url": `${API_BASE_URL}?table=${currentTable}`,
+                    "dataSrc": "data",
+                    "error": function(jqXHR, textStatus, errorThrown) {
+                        showAlert(`Gagal memuat data: ${jqXHR.responseJSON ? jqXHR.responseJSON.error : errorThrown}`, 'danger');
+                    }
+                }
+            });
+        }
+
+        // Create (C)
+        function saveData() {
+            const formData = {};
+            // Ambil hanya x_01 s.d x_18 dari form
+            tableColumns.slice(0, 18).forEach(col => {
+                formData[col.key] = $(`#addForm input[name="${col.key}"]`).val() || '';
+            });
+            // Auto-create: Isi x_20 dengan tanggal/waktu saat ini
+            const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+            formData['x_20'] = now; 
+            // x_19 (Update Date) bisa diisi sama dengan x_20 saat dibuat
+            formData['x_19'] = now;
+
+            $.ajax({
+                url: `${API_BASE_URL}?table=${currentTable}`,
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Table-Name': currentTable },
+                data: JSON.stringify(formData),
+                success: function() {
+                    $('#addModal').modal('hide');
+                    $('#addForm')[0].reset();
+                    loadData(true); 
+                    showAlert('Data berhasil ditambahkan!', 'success');
+                },
+                error: function(xhr) { 
+                    showAlert('Error menambah data! ' + (xhr.responseJSON ? xhr.responseJSON.error : 'Terjadi kesalahan.'), 'danger'); 
+                }
+            });
+        }
+
+        // Read One (R) - Mengisi Modal Edit
+        function editData(id) {
+            $.ajax({
+                url: `${API_BASE_URL}/${id}?table=${currentTable}`, 
+                method: 'GET',
+                headers: {'X-Table-Name': currentTable},
+                success: function(response) {
+                    if(response.data) {
+                        $('#editId').val(response.data.id_x);
+                        // Hanya isi x_01 s.d x_18 ke form input
+                        tableColumns.slice(0, 18).forEach(col => {
+                            $(`#editForm input[name="${col.key}"]`).val(response.data[col.key] || '');
+                        });
+                        $('#editModal').modal('show');
+                    }
+                },
+                error: function(xhr) { 
+                    showAlert('Error loading data untuk edit! ' + (xhr.responseJSON ? xhr.responseJSON.error : 'Terjadi kesalahan.'), 'danger'); 
+                }
+            });
+        }
+
+        // Update (U)
+        function updateData() {
+            const id = $('#editId').val();
+            const formData = {};
+            // Ambil hanya x_01 s.d x_18 dari form
+            tableColumns.slice(0, 18).forEach(col => {
+                formData[col.key] = $(`#editForm input[name="${col.key}"]`).val() || '';
+            });
+            // Auto-update: Isi x_19 dengan tanggal/waktu saat ini
+            formData['x_19'] = new Date().toISOString().replace('T', ' ').substring(0, 19); 
+
+            $.ajax({
+                url: `${API_BASE_URL}/${id}?table=${currentTable}`, 
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Table-Name': currentTable },
+                data: JSON.stringify(formData),
+                success: function() {
+                    $('#editModal').modal('hide');
+                    loadData(false);
+                    showAlert('Data berhasil diupdate!', 'success');
+                },
+                error: function(xhr) { 
+                    showAlert('Error update data! ' + (xhr.responseJSON ? xhr.responseJSON.error : 'Terjadi kesalahan.'), 'danger'); 
+                }
+            });
+        }
+
+        // Delete (D)
+        function deleteData(id) {
+            if(confirm('Yakin ingin menghapus data dengan ID ' + id + '?')) {
+                $.ajax({
+                    url: `${API_BASE_URL}/${id}?table=${currentTable}`, 
+                    method: 'DELETE',
+                    headers: {'X-Table-Name': currentTable},
+                    success: function() {
+                        loadData(false); 
+                        showAlert('Data berhasil dihapus!', 'success');
+                    },
+                    error: function(xhr) { 
+                        showAlert('Error hapus data! ' + (xhr.responseJSON ? xhr.responseJSON.error : 'Terjadi kesalahan.'), 'danger'); 
+                    }
+                });
+            }
+        }
+
+        // Fungsi Pemberitahuan
+        function showAlert(message, type) {
+            const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show position-fixed" style="top:20px;right:20px;z-index:9999; min-width: 300px;">
+                ${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+            $('body').append(alertHtml);
+            setTimeout(() => $('.alert').alert('close'), 3000);
+        }
+    </script>
+</body>
+</html>

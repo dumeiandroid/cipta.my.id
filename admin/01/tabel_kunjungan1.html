@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tampilan Data Kunjungan API Lidan - Realtime Sederhana</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #555;
+        }
+        /* Style untuk hover/tooltip teks penuh */
+        td[title]:hover {
+            cursor: help;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📊 Data Kunjungan Harian Unik</h1>
+    <p>Data diperbarui otomatis setiap **5 detik** (polling API) dari tabel: `kunjungan`.</p>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>URL (x_01)</th>
+                <th>Status Unik (x_02)</th>
+                <th>Total Kunjungan (x_03)</th>
+                <th>Tgl Insert/Update</th>
+            </tr>
+        </thead>
+        <tbody id="dataTableBody">
+            <tr>
+                <td colspan="5" class="loading">Memuat data...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const API_BASE_URL = "https://lidan-co-id.pages.dev/api/contacts";
+    const TABLE_NAME = "kunjungan";
+    const POLLING_INTERVAL = 5000; // Interval pembaruan data dalam milidetik (5 detik)
+    const TEXT_LIMIT = 50; // Batas karakter untuk truncation
+
+    /**
+     * Fungsi untuk mengambil data dari API dan memperbarui tabel.
+     */
+    async function fetchDataAndRenderTable() {
+        const tableBody = document.getElementById('dataTableBody');
+        
+        // Tampilkan status memuat sementara
+        tableBody.innerHTML = '<tr><td colspan="5" class="loading">Memperbarui data...</td></tr>';
+
+        try {
+            // PERBAIKAN: Mengganti "?table=" menjadi "?tabel=" sesuai format yang bekerja
+            const response = await fetch(`${API_BASE_URL}?tabel=${TABLE_NAME}`, {
+                method: 'GET',
+                headers: {
+                    'X-Table-Name': TABLE_NAME
+                }
+            });
+
+            if (!response.ok) {
+                // Tangani kegagalan HTTP, meskipun respons berhasil (status 200) tetapi isinya mungkin kosong.
+                // Jika statusnya 404, 500, dll.
+                throw new Error(`Gagal mengambil data: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            
+            // Periksa apakah respons memiliki properti 'data' (seperti yang ditunjukkan oleh script CRUD Anda)
+            // Jika tidak, asumsikan respons adalah array data langsung.
+            const finalData = data.data || data;
+
+            // Bersihkan isi tabel sebelum mengisi data baru
+            tableBody.innerHTML = ''; 
+
+            if (!Array.isArray(finalData) || finalData.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="loading">Tidak ada data yang ditemukan. Pastikan tabel "kunjungan" berisi data.</td></tr>';
+                return;
+            }
+
+            // Iterasi melalui data dan buat baris tabel
+            finalData.forEach(item => {
+                const row = document.createElement('tr');
+                
+                // Prioritaskan x_19 (Update) jika ada, jika tidak, gunakan x_20 (Insert)
+                const timestamp = item.x_19 || item.x_20 || 'N/A';
+                
+                // Truncation (Pemotongan) pada x_01 (URL) dengan tooltip
+                const urlText = item.x_01 || '';
+                const displayUrl = urlText.length > TEXT_LIMIT ? urlText.substring(0, TEXT_LIMIT - 3) + '...' : urlText; // -3 untuk '...'
+
+                // Buat HTML untuk baris
+                row.innerHTML = `
+                    <td>${item.id_x || 'N/A'}</td>
+                    <td title="${urlText}">${displayUrl}</td> 
+                    <td>${item.x_02 || '0'}</td>
+                    <td>${item.x_03 || '0'}</td>
+                    <td>${timestamp}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            // console.log(`Tabel berhasil diperbarui dengan ${finalData.length} baris data.`);
+
+        } catch (error) {
+            console.error("Kesalahan saat memuat data:", error);
+            tableBody.innerHTML = `<tr><td colspan="5" class="loading" style="color: red;">❌ Error: Gagal memuat data dari API. (${error.message})</td></tr>`;
+        }
+    }
+
+    // ===============================================
+    // MEKANISME POLLING (REALTIME/AUTO-UPDATE)
+    // ===============================================
+
+    // Panggil fungsi pertama kali saat halaman dimuat
+    fetchDataAndRenderTable();
+
+    // Set interval untuk memanggil fungsi secara berkala
+    setInterval(fetchDataAndRenderTable, POLLING_INTERVAL);
+
+</script>
+
+</body>
+</html>
