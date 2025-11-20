@@ -225,8 +225,7 @@
 
         <div class="button-group">
             <button onclick="updateCanvas()">🔄 Update Preview</button>
-            <button onclick="downloadImage()">⬇️ Download PNG</button>
-        </div>
+            <button onclick="downloadImage()">⬇️ Download JPEG (Kompresi)</button> </div>
     </div>
 
     <script>
@@ -346,10 +345,34 @@
             });
         }
 
+        // FUNGSI UNDUHAN DENGAN KOMPRESI JPEG (DIPERBARUI)
         function downloadImage() {
+            const text = document.getElementById('textInput').value.trim();
+            
+            // Ambil dua kata pertama dan format
+            const words = text.split(/\s+/).filter(word => word.length > 0);
+            let baseName = 'lidan-psikologi'; // Default jika teks kosong
+
+            if (words.length > 0) {
+                // Ambil 2 kata pertama, gabungkan, dan ubah ke huruf kecil
+                const firstTwoWords = words.slice(0, 2).join('-').toLowerCase();
+                // Hapus karakter non-alfanumerik/non-hyphen (opsional, untuk nama file bersih)
+                baseName = firstTwoWords.replace(/[^a-z0-9-]/g, ''); 
+            }
+
+            // Tambahkan timestamp untuk memastikan keunikan nama file
+            const timestamp = new Date().getTime(); 
+            const fileName = `${baseName}-${timestamp}.jpeg`;
+
             const link = document.createElement('a');
-            link.download = 'lidan-psikologi-1200x630.png';
-            link.href = canvas.toDataURL('image/png');
+            
+            // 1. Set nama file yang dinamis
+            link.download = fileName; 
+            
+            // 2. Gunakan toDataURL('image/jpeg', kualitas)
+            const KUALITAS_KOMPRESI = 0.7; 
+            link.href = canvas.toDataURL('image/jpeg', KUALITAS_KOMPRESI);
+            
             link.click();
         }
 
