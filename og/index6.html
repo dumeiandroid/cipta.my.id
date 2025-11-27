@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Gambar Teks - Lidan Psikologi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 1300px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="url"],
+        select,
+        textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        input[type="url"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            grid-column: 1 / -1;
+        }
+
+        input[type="color"] {
+            width: 60px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .canvas-container {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            overflow: auto;
+        }
+
+        canvas {
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 100%;
+            height: auto;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .section-title {
+            color: #333;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            grid-column: 1 / -1;
+        }
+
+        .help-text {
+            color: #888;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Generator Gambar Teks - Lidan Psikologi</h1>
+        <p class="subtitle">Dimensi kanvas otomatis mengikuti ukuran gambar background yang diunggah.</p>
+
+        <div class="controls">
+            <div class="section-title">📝 Pengaturan Teks</div>
+            
+            <div class="input-group" style="grid-column: 1 / -1;">
+                <label>Teks Utama:</label>
+                <textarea id="textInput" placeholder="Masukkan teks Anda di sini...">Teks Modern & Profesional</textarea>
+            </div>
+
+            <div class="input-group">
+                <label>Ukuran Font:</label>
+                <input type="number" id="fontSize" value="60" min="20" max="200">
+            </div>
+
+            <div class="input-group">
+                <label>Warna Teks:</label>
+                <input type="color" id="textColor" value="#ffffff">
+            </div>
+
+            <div class="section-title">🖼️ Pengaturan Background</div>
+
+            <div class="input-group" style="grid-column: 1 / -1;">
+                <label>URL Gambar Background:</label>
+                <input type="file" id="bgImageFile" accept="image/*">
+                <span class="help-text">Pilih file gambar dari komputer Anda. Dimensi kanvas akan disesuaikan secara otomatis.</span>
+            </div>
+
+            <div class="input-group">
+                <label>Opacity Background (0-1):</label>
+                <input type="number" id="bgOpacity" value="0.4" min="0" max="1" step="0.1">
+                <span class="help-text">Untuk menggelapkan/mencerahkan gambar background</span>
+            </div>
+
+            <div class="section-title">🏷️ Pengaturan Logo & Branding</div>
+
+            <div class="input-group" style="grid-column: 1 / -1;">
+                <label>URL Logo:</label>
+                <input type="url" id="logoUrl" value="gambar/logo-psikologi.png" placeholder="https://example.com/logo.png">
+                <span class="help-text">Masukkan URL logo (akan muncul di kanan atas)</span>
+            </div>
+
+            <div class="input-group">
+                <label>Teks Brand:</label>
+                <input type="text" id="brandText" value="Lidan Psikologi" placeholder="Nama Brand">
+            </div>
+
+            <div class="input-group">
+                <label>Ukuran Logo:</label>
+                <input type="number" id="logoSize" value="60" min="30" max="150">
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <!-- Nilai width/height default hanya sebagai fallback CSS/HTML -->
+            <canvas id="canvas" width="1200" height="630"></canvas>
+        </div>
+
+        <div class="button-group">
+            <button onclick="updateCanvas()">🔄 Update Preview</button>
+            <button onclick="downloadImage()">⬇️ Download JPEG (Kompresi)</button> </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let backgroundImage = new Image();
+        let bgImageLoaded = false;
+        let logoImage = new Image();
+        let logoLoaded = false;
+        
+        let uploadedBgFileName = 'default-background.jpeg'; 
+        // Simpan dimensi default untuk fallback/saat belum ada gambar
+        const DEFAULT_WIDTH = 1200;
+        const DEFAULT_HEIGHT = 630;
+
+        // --- Setup Awal ---
+        // Load default logo
+        logoImage.src = document.getElementById('logoUrl').value;
+        logoImage.onload = function() {
+            logoLoaded = true;
+            updateCanvas();
+        };
+        logoImage.onerror = function() {
+            console.log('Logo gagal dimuat');
+            logoLoaded = false;
+            updateCanvas();
+        };
+
+        // --- Event Listener untuk Upload File ---
+        const bgImageFileInput = document.getElementById('bgImageFile');
+        bgImageFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                uploadedBgFileName = file.name;
+
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    bgImageLoaded = false;
+                    backgroundImage.src = event.target.result;
+                    // JANGAN panggil updateCanvas() di sini, panggil setelah gambar dimuat (onload)
+                };
+                
+                // PENTING: Gunakan onload pada objek Image untuk mengatur dimensi kanvas
+                backgroundImage.onload = function() {
+                    bgImageLoaded = true;
+                    
+                    // ** LOGIKA PENTING: SESUAIKAN KANVAS DENGAN DIMENSI GAMBAR **
+                    canvas.width = backgroundImage.width;
+                    canvas.height = backgroundImage.height;
+                    
+                    updateCanvas();
+                }
+                backgroundImage.onerror = function() {
+                    console.error('Background image gagal dimuat');
+                    bgImageLoaded = false;
+                    // Reset ke dimensi default jika gambar gagal
+                    canvas.width = DEFAULT_WIDTH;
+                    canvas.height = DEFAULT_HEIGHT;
+                    updateCanvas();
+                }
+                
+                reader.readAsDataURL(file);
+            } else {
+                // Jika input file dibersihkan/dibatalkan
+                bgImageLoaded = false;
+                uploadedBgFileName = 'default-background.jpeg';
+                canvas.width = DEFAULT_WIDTH;
+                canvas.height = DEFAULT_HEIGHT;
+                updateCanvas();
+            }
+        });
+
+
+        // --- Event listeners untuk URL Logo ---
+        document.getElementById('logoUrl').addEventListener('change', function() {
+            const url = this.value.trim();
+            if (url) {
+                logoLoaded = false;
+                logoImage.src = url;
+            } else {
+                logoLoaded = false;
+                updateCanvas();
+            }
+        });
+
+        // Auto update pada perubahan input lainnya
+        document.getElementById('textInput').addEventListener('input', updateCanvas);
+        document.getElementById('fontSize').addEventListener('input', updateCanvas);
+        document.getElementById('textColor').addEventListener('input', updateCanvas);
+        document.getElementById('bgOpacity').addEventListener('input', updateCanvas);
+        document.getElementById('brandText').addEventListener('input', updateCanvas);
+        document.getElementById('logoSize').addEventListener('input', updateCanvas);
+
+        function updateCanvas() {
+            const fontSize = parseInt(document.getElementById('fontSize').value) || 60;
+            const textColor = document.getElementById('textColor').value;
+            const bgOpacity = document.getElementById('bgOpacity').value;
+            const brandText = document.getElementById('brandText').value;
+            const logoSize = parseInt(document.getElementById('logoSize').value) || 60;
+            const text = document.getElementById('textInput').value;
+            
+            const canvasW = canvas.width;
+            const canvasH = canvas.height;
+
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvasW, canvasH);
+
+            // Draw background
+            if (bgImageLoaded) {
+                // Draw background image TEPAT sesuai ukuran kanvas (yang sudah disesuaikan)
+                ctx.drawImage(backgroundImage, 0, 0, canvasW, canvasH);
+                
+                // Add dark overlay for better text readability
+                ctx.fillStyle = `rgba(0, 0, 0, ${1 - bgOpacity})`;
+                ctx.fillRect(0, 0, canvasW, canvasH);
+            } else {
+                // Fallback to gradient if no image
+                const gradient = ctx.createLinearGradient(0, 0, canvasW, canvasH);
+                gradient.addColorStop(0, '#667eea');
+                gradient.addColorStop(1, '#764ba2');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvasW, canvasH);
+            }
+
+            // Draw logo and brand text in top right
+            // Gunakan padding dan skala relatif untuk memastikan elemen UI tetap terlihat baik
+            const padding = 40 * (canvasW / DEFAULT_WIDTH); 
+            const logoY = padding;
+
+            // Calculate text width first
+            ctx.fillStyle = '#ffffff';
+            const brandFontSize = Math.max(20, 28 * (canvasW / DEFAULT_WIDTH));
+            ctx.font = `bold ${brandFontSize}px Segoe UI, sans-serif`;
+            const textWidth = ctx.measureText(brandText).width;
+            
+            // Skala ukuran logo
+            const currentLogoSize = Math.max(30, logoSize * (canvasW / DEFAULT_WIDTH));
+
+            // Position logo at the start (left side of the brand)
+            const totalWidth = currentLogoSize + 15 + textWidth;
+            const logoX = canvasW - padding - totalWidth;
+            
+            // Draw logo if loaded (now on the LEFT)
+            if (logoLoaded) {
+                ctx.drawImage(logoImage, logoX, logoY, currentLogoSize, currentLogoSize);
+            }
+
+            // Draw brand text (to the right of logo)
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            const brandTextY = logoY + currentLogoSize / 2;
+            const brandTextX = logoX + currentLogoSize + 15;
+            ctx.fillText(brandText, brandTextX, brandTextY);
+
+            // Add main text in center
+            ctx.fillStyle = textColor;
+            // Skala ukuran font teks utama berdasarkan lebar kanvas
+            const mainFontSize = Math.max(30, fontSize * (canvasW / DEFAULT_WIDTH)); 
+            ctx.font = `bold ${mainFontSize}px Segoe UI, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Word wrap
+            const maxWidth = canvasW - (padding * 2);
+            const words = text.split(' ');
+            let lines = [];
+            let currentLine = words[0];
+
+            for (let i = 1; i < words.length; i++) {
+                const word = words[i];
+                const width = ctx.measureText(currentLine + " " + word).width;
+                if (width < maxWidth) {
+                    currentLine += " " + word;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            lines.push(currentLine);
+
+            // Draw text lines
+            const lineHeight = mainFontSize * 1.3;
+            const totalTextHeight = lines.length * lineHeight;
+            
+            // Pusatkan teks secara vertikal
+            const startY = (canvasH - totalTextHeight) / 2 + (lineHeight - mainFontSize) / 2 + (mainFontSize * 0.15); // Penyesuaian baseline visual
+            
+            lines.forEach((line, index) => {
+                ctx.fillText(line, canvasW / 2, startY + (index * lineHeight));
+            });
+        }
+
+        // FUNGSI UNDUHAN DENGAN KOMPRESI JPEG
+        function downloadImage() {
+            let baseName = uploadedBgFileName.replace(/\.[^/.]+$/, ""); 
+            
+            if (baseName === '') {
+                 baseName = 'default-image';
+            }
+
+            const timestamp = new Date().getTime(); 
+            // Format: <nama_file_tanpa_ext>-<timestamp>.jpeg
+            const fileName = `${baseName}-${timestamp}.jpeg`;
+
+            const link = document.createElement('a');
+            link.download = fileName;
+            
+            const KUALITAS_KOMPRESI = 0.7; 
+            link.href = canvas.toDataURL('image/jpeg', KUALITAS_KOMPRESI);
+            
+            link.click();
+        }
+
+        // Initial render (menggunakan dimensi default karena belum ada gambar)
+        canvas.width = DEFAULT_WIDTH;
+        canvas.height = DEFAULT_HEIGHT;
+        updateCanvas();
+    </script>
+</body>
+</html>
