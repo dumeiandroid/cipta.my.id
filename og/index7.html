@@ -467,11 +467,8 @@
                 return;
             }
 
-            // Objek untuk menghitung kemunculan nama file yang sama
-            const fileNameCounter = {};
-
             // Loop melalui setiap file yang diunggah
-            uploadedBgFiles.forEach((file, index) => {
+            uploadedBgFiles.forEach(file => {
                 const image = new Image();
                 const reader = new FileReader();
                 
@@ -490,22 +487,13 @@
                     // 2. Gambar overlay teks pada kanvas sementara
                     drawTextOverlay(tempCtx, tempCanvas, image, image.width, image.height);
                     
-                    // 3. Tentukan nama file dengan penomoran
+                    // 3. Tentukan nama file
                     let baseName = file.name.replace(/\.[^/.]+$/, ""); 
                     if (baseName === '') {
                          baseName = 'generated-image';
                     }
-                    
-                    // Hitung kemunculan nama file ini
-                    if (fileNameCounter[baseName]) {
-                        fileNameCounter[baseName]++;
-                    } else {
-                        fileNameCounter[baseName] = 1;
-                    }
-                    
-                    // Tambahkan nomor urut ke nama file
-                    const fileNumber = fileNameCounter[baseName];
-                    const fileName = `${baseName}-${fileNumber}.jpeg`;
+                    const timestamp = new Date().getTime(); 
+                    const fileName = `${baseName}-${timestamp}.jpeg`;
 
                     // 4. Unduh gambar
                     triggerDownload(tempCanvas, fileName);
