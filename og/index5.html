@@ -56,6 +56,29 @@
             display: flex;
             flex-direction: column;
         }
+        
+        /* Gaya khusus untuk checkbox */
+        .checkbox-group {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
 
         label {
             color: #555;
@@ -63,6 +86,12 @@
             margin-bottom: 8px;
             font-size: 14px;
         }
+        
+        .checkbox-item label {
+            margin-bottom: 0;
+            font-weight: 400;
+        }
+
 
         input[type="text"],
         input[type="number"],
@@ -191,6 +220,13 @@
             padding-bottom: 20px;
         }
         
+        /* Baris untuk kontrol mirror */
+        .mirror-controls {
+            grid-column: 1 / -1;
+            margin-top: -10px;
+            margin-bottom: 10px;
+        }
+        
         @media (min-width: 640px) {
             .bg-options {
                 grid-template-columns: 1fr 1fr 1fr;
@@ -266,6 +302,21 @@
 
 
             <div class="section-title">🖼️ Pengaturan Background</div>
+            
+            <!-- KONTROL MIRROR BARU -->
+            <div class="mirror-controls">
+                <label>Pencerminan Gambar Latar Belakang:</label>
+                 <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="mirrorHorizontal" onchange="updateCanvas()">
+                        <label for="mirrorHorizontal">Mirror Horizontal (Kiri/Kanan)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="mirrorVertical" onchange="updateCanvas()">
+                        <label for="mirrorVertical">Mirror Vertikal (Atas/Bawah)</label>
+                    </div>
+                 </div>
+            </div>
 
             <div class="bg-options">
                  <!-- Input Upload Gambar -->
@@ -354,9 +405,13 @@
         
         let bgSource = bgImageUrlInput.value; 
 
-        // Input Dimensi Kanvas BARU
+        // Input Dimensi Kanvas
         const canvasWidthInput = document.getElementById('canvasWidth');
         const canvasHeightInput = document.getElementById('canvasHeight');
+
+        // Input Mirror BARU
+        const mirrorHorizontalInput = document.getElementById('mirrorHorizontal');
+        const mirrorVerticalInput = document.getElementById('mirrorVertical');
 
         // Input Kontrol Lain
         const textOffsetXInput = document.getElementById('textOffsetX');
@@ -454,6 +509,7 @@
                 loadLogoImage(this.value.trim());
             });
 
+            // Tambahkan listener untuk input yang memicu update
             document.getElementById('textInput').addEventListener('input', updateCanvas);
             document.getElementById('fontSize').addEventListener('input', updateCanvas);
             document.getElementById('textColor').addEventListener('input', updateCanvas);
@@ -465,13 +521,11 @@
             bgZoomInput.addEventListener('input', updateCanvas);
             bgOffsetXInput.addEventListener('input', updateCanvas);
             bgOffsetYInput.addEventListener('input', updateCanvas);
-
-            // Listener BARU untuk Dimensi Kanvas
             canvasWidthInput.addEventListener('input', updateCanvasDimensions);
             canvasHeightInput.addEventListener('input', updateCanvasDimensions);
         }
         
-        // Fungsi BARU untuk mengubah dimensi kanvas
+        // Fungsi untuk mengubah dimensi kanvas
         function updateCanvasDimensions() {
             const newWidth = parseInt(canvasWidthInput.value) || 1200;
             const newHeight = parseInt(canvasHeightInput.value) || 630;
@@ -489,6 +543,39 @@
             const canvasW = canvas.width;
             const canvasH = canvas.height;
 
+            // Ambil status mirror
+            const isMirrorHorizontal = mirrorHorizontalInput.checked;
+            const isMirrorVertical = mirrorVerticalInput.checked;
+
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvasW, canvasH);
+            
+            // Simpan status canvas (sebelum transformasi mirror)
+            ctx.save();
+            
+            // ------------------------------------
+            // Lakukan Transformasi Mirror pada Kanvas
+            // ------------------------------------
+            let scaleX = 1;
+            let scaleY = 1;
+            let translateX = 0;
+            let translateY = 0;
+
+            if (isMirrorHorizontal) {
+                scaleX = -1;
+                translateX = -canvasW;
+            }
+            if (isMirrorVertical) {
+                scaleY = -1;
+                translateY = -canvasH;
+            }
+            
+            // Terapkan transformasi (Pencerminan dan translasi untuk menggeser kembali ke frame)
+            ctx.scale(scaleX, scaleY);
+            ctx.translate(translateX, translateY);
+
+            // --- Baca Kontrol Lainnya ---
             const text = document.getElementById('textInput').value;
             const fontSize = parseInt(document.getElementById('fontSize').value);
             const textColor = document.getElementById('textColor').value;
@@ -503,11 +590,10 @@
             const bgOffsetX = parseInt(bgOffsetXInput.value) || 0;
             const bgOffsetY = parseInt(bgOffsetYInput.value) || 0;
 
-            // Clear canvas
-            ctx.clearRect(0, 0, canvasW, canvasH);
 
             // ------------------------------------
             // 1. Draw Background (dengan Zoom dan Geser)
+            //    CATATAN: Draw background dilakukan di dalam blok transformasi
             // ------------------------------------
             if (bgImageLoaded) {
                 const imgWidth = backgroundImage.width;
@@ -547,8 +633,11 @@
                 ctx.fillRect(0, 0, canvasW, canvasH);
             }
 
+            // Pulihkan status kanvas sebelum transformasi (untuk memastikan teks/logo tidak ter-mirror)
+            ctx.restore();
+            
             // ------------------------------------
-            // 2. Draw Logo and Brand Text
+            // 2. Draw Logo and Brand Text (TIDAK ter-mirror)
             // ------------------------------------
             const padding = 40 * (canvasW / 1200); // Sesuaikan padding berdasarkan lebar kanvas
             const logoY = padding;
@@ -580,7 +669,7 @@
             ctx.fillText(brandText, brandTextX, brandTextY);
 
             // ------------------------------------
-            // 3. Draw Main Text (dengan Word Wrap dan Geser)
+            // 3. Draw Main Text (TIDAK ter-mirror)
             // ------------------------------------
             ctx.fillStyle = textColor;
             ctx.font = `bold ${fontSize}px Inter, sans-serif`;
