@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generator Gambar Teks - Multi-Download</title>
+    <title>Generator Gambar Teks - Lidan Psikologi</title>
     <style>
-        /* --- Bagian CSS (Diambil dari kode asli) --- */
+        /* ... (CSS ASLI TETAP SAMA) ... */
         * {
             margin: 0;
             padding: 0;
@@ -168,13 +168,12 @@
                 padding: 20px;
             }
         }
-        /* --- Akhir Bagian CSS --- */
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🎨 Generator Gambar Teks - Lidan Psikologi</h1>
-        <p class="subtitle">Dimensi kanvas preview otomatis mengikuti ukuran gambar background **pertama** yang diunggah. Semua gambar yang diunggah akan di-download dengan pengaturan yang sama.</p>
+        <p class="subtitle">Dimensi kanvas otomatis mengikuti ukuran gambar background yang diunggah.</p>
 
         <div class="controls">
             <div class="section-title">📝 Pengaturan Teks</div>
@@ -197,15 +196,15 @@
             <div class="section-title">🖼️ Pengaturan Background</div>
 
             <div class="input-group" style="grid-column: 1 / -1;">
-                <label>Unggah Gambar Background (Multi-Select):</label>
-                <input type="file" id="bgImageFile" accept="image/*" **multiple**>
-                <span class="help-text">Pilih **beberapa** file gambar dari komputer Anda.</span>
+                <label>URL Gambar Background:</label>
+                <input type="file" id="bgImageFile" accept="image/*" multiple>
+                <span class="help-text">Pilih file gambar dari komputer Anda. Dimensi kanvas akan disesuaikan secara otomatis dengan gambar PERTAMA untuk preview.</span>
             </div>
 
             <div class="input-group">
-                <label>Opacity Overlay Hitam (0-1):</label>
+                <label>Opacity Background (0-1):</label>
                 <input type="number" id="bgOpacity" value="0.4" min="0" max="1" step="0.1">
-                <span class="help-text">Nilai ini menentukan seberapa gelap overlay (1 - nilai opacity)</span>
+                <span class="help-text">Untuk menggelapkan/mencerahkan gambar background</span>
             </div>
 
             <div class="section-title">🏷️ Pengaturan Logo & Branding</div>
@@ -232,7 +231,7 @@
         </div>
 
         <div class="button-group">
-            <button onclick="updateCanvas()">🔄 Update Preview (Gambar Pertama)</button>
+            <button onclick="updateCanvas()">🔄 Update Preview</button>
             <button onclick="downloadAllImages()">⬇️ Download SEMUA Gambar (JPEG Kompresi)</button> 
         </div>
     </div>
@@ -240,18 +239,21 @@
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        
-        let uploadedBgFiles = []; // Menyimpan objek File dari input multi-upload
+        // Hapus variabel global backgroundImage, bgImageLoaded, dan uploadedBgFileName
+        // Ganti dengan array untuk menyimpan semua file yang diunggah
+        let uploadedBgFiles = []; // Menyimpan objek File dari input
         let previewImage = new Image(); // Objek Image untuk preview (gambar pertama)
         let previewImageLoaded = false;
         
         let logoImage = new Image();
         let logoLoaded = false;
         
+        // Simpan dimensi default untuk fallback/saat belum ada gambar
         const DEFAULT_WIDTH = 1200;
         const DEFAULT_HEIGHT = 630;
 
-        // --- Setup Awal Logo ---
+        // --- Setup Awal ---
+        // Load default logo
         logoImage.src = document.getElementById('logoUrl').value;
         logoImage.onload = function() {
             logoLoaded = true;
@@ -276,12 +278,13 @@
                 reader.onload = function(event) {
                     previewImageLoaded = false;
                     previewImage.src = event.target.result;
+                    // Lanjut ke .onload dari previewImage
                 };
                 
                 previewImage.onload = function() {
                     previewImageLoaded = true;
                     
-                    // SESUAIKAN KANVAS UTAMA DENGAN DIMENSI GAMBAR PERTAMA
+                    // ** LOGIKA PENTING: SESUAIKAN KANVAS DENGAN DIMENSI GAMBAR PERTAMA **
                     canvas.width = previewImage.width;
                     canvas.height = previewImage.height;
                     
@@ -306,7 +309,7 @@
         });
 
 
-        // --- Event listeners lainnya (Teks, Warna, dll.) ---
+        // --- Event listeners untuk URL Logo ---
         document.getElementById('logoUrl').addEventListener('change', function() {
             const url = this.value.trim();
             if (url) {
@@ -318,6 +321,7 @@
             }
         });
 
+        // Auto update pada perubahan input lainnya
         document.getElementById('textInput').addEventListener('input', updateCanvas);
         document.getElementById('fontSize').addEventListener('input', updateCanvas);
         document.getElementById('textColor').addEventListener('input', updateCanvas);
@@ -326,9 +330,15 @@
         document.getElementById('logoSize').addEventListener('input', updateCanvas);
 
         /**
-         * Fungsi yang berisi logika rendering overlay teks dan branding
+         * Fungsi untuk menggambar overlay teks pada objek canvas/konteks tertentu
+         * Memisahkan logika rendering dari updateCanvas untuk dipakai di fungsi downloadAllImages
+         * @param {CanvasRenderingContext2D} context - Konteks canvas (ctx)
+         * @param {HTMLCanvasElement} targetCanvas - Objek kanvas
+         * @param {HTMLImageElement | null} bgImg - Objek Image background yang akan digambar
+         * @param {number} bgW - Lebar background/kanvas
+         * @param {number} bgH - Tinggi background/kanvas
          */
-        function drawTextOverlay(context, bgImg, bgW, bgH) {
+        function drawTextOverlay(context, targetCanvas, bgImg, bgW, bgH) {
             const fontSize = parseInt(document.getElementById('fontSize').value) || 60;
             const textColor = document.getElementById('textColor').value;
             const bgOpacity = document.getElementById('bgOpacity').value;
@@ -339,17 +349,18 @@
             // Clear canvas
             context.clearRect(0, 0, bgW, bgH);
 
-            // 1. Draw background
+            // Draw background
             const isBgLoaded = bgImg && bgImg.complete && bgImg.naturalWidth !== 0;
 
             if (isBgLoaded) {
+                // Draw background image TEPAT sesuai ukuran kanvas 
                 context.drawImage(bgImg, 0, 0, bgW, bgH);
                 
-                // Add dark overlay
+                // Add dark overlay for better text readability
                 context.fillStyle = `rgba(0, 0, 0, ${1 - bgOpacity})`;
                 context.fillRect(0, 0, bgW, bgH);
             } else {
-                // Fallback to gradient
+                // Fallback to gradient if no image
                 const gradient = context.createLinearGradient(0, 0, bgW, bgH);
                 gradient.addColorStop(0, '#667eea');
                 gradient.addColorStop(1, '#764ba2');
@@ -357,32 +368,39 @@
                 context.fillRect(0, 0, bgW, bgH);
             }
 
-            // 2. Draw logo and brand text
+            // Draw logo and brand text in top right
+            // Gunakan padding dan skala relatif untuk memastikan elemen UI tetap terlihat baik
             const padding = 40 * (bgW / DEFAULT_WIDTH); 
             const logoY = padding;
 
+            // Calculate text width first
             context.fillStyle = '#ffffff';
             const brandFontSize = Math.max(20, 28 * (bgW / DEFAULT_WIDTH));
             context.font = `bold ${brandFontSize}px Segoe UI, sans-serif`;
             const textWidth = context.measureText(brandText).width;
             
+            // Skala ukuran logo
             const currentLogoSize = Math.max(30, logoSize * (bgW / DEFAULT_WIDTH));
 
+            // Position logo at the start (left side of the brand)
             const totalWidth = currentLogoSize + 15 + textWidth;
             const logoX = bgW - padding - totalWidth;
             
+            // Draw logo if loaded (now on the LEFT)
             if (logoLoaded) {
                 context.drawImage(logoImage, logoX, logoY, currentLogoSize, currentLogoSize);
             }
 
+            // Draw brand text (to the right of logo)
             context.textAlign = 'left';
             context.textBaseline = 'middle';
             const brandTextY = logoY + currentLogoSize / 2;
             const brandTextX = logoX + currentLogoSize + 15;
             context.fillText(brandText, brandTextX, brandTextY);
 
-            // 3. Add main text
+            // Add main text in center
             context.fillStyle = textColor;
+            // Skala ukuran font teks utama berdasarkan lebar kanvas
             const mainFontSize = Math.max(30, fontSize * (bgW / DEFAULT_WIDTH)); 
             context.font = `bold ${mainFontSize}px Segoe UI, sans-serif`;
             context.textAlign = 'center';
@@ -410,7 +428,8 @@
             const lineHeight = mainFontSize * 1.3;
             const totalTextHeight = lines.length * lineHeight;
             
-            const startY = (bgH - totalTextHeight) / 2 + (lineHeight - mainFontSize) / 2 + (mainFontSize * 0.15); 
+            // Pusatkan teks secara vertikal
+            const startY = (bgH - totalTextHeight) / 2 + (lineHeight - mainFontSize) / 2 + (mainFontSize * 0.15); // Penyesuaian baseline visual
             
             lines.forEach((line, index) => {
                 context.fillText(line, bgW / 2, startY + (index * lineHeight));
@@ -418,39 +437,41 @@
         }
 
 
-        // Fungsi untuk mengupdate preview (hanya gambar pertama)
+        // ** PERUBAHAN: updateCanvas sekarang hanya untuk preview (gambar pertama) **
         function updateCanvas() {
             // Gunakan previewImage untuk rendering ke kanvas utama
-            drawTextOverlay(ctx, previewImageLoaded ? previewImage : null, canvas.width, canvas.height);
+            drawTextOverlay(ctx, canvas, previewImageLoaded ? previewImage : null, canvas.width, canvas.height);
         }
 
         /**
-         * Memicu unduhan
+         * Fungsi untuk mengunduh gambar yang dibuat (diperlukan untuk downloadAllImages)
+         * @param {HTMLCanvasElement} canvasToDownload - Objek kanvas yang akan diunduh
+         * @param {string} fileName - Nama file yang akan digunakan
          */
         function triggerDownload(canvasToDownload, fileName) {
             const link = document.createElement('a');
             link.download = fileName;
             
             const KUALITAS_KOMPRESI = 0.7; 
+            // Menggunakan setTimeout 0 untuk memastikan unduhan terjadi setelah loop selesai
             setTimeout(() => {
                 link.href = canvasToDownload.toDataURL('image/jpeg', KUALITAS_KOMPRESI);
                 link.click();
             }, 0); 
         }
 
-        /**
-         * FUNGSI UTAMA UNTUK MULTI-DOWNLOAD
-         */
+        // ** FUNGSI BARU UNTUK MULTI-DOWNLOAD **
         function downloadAllImages() {
             if (uploadedBgFiles.length === 0) {
                 alert("Silakan unggah setidaknya satu gambar background terlebih dahulu!");
                 return;
             }
 
-            let downloadCounter = 0; // Inisialisasi counter untuk penamaan file
+            // Objek untuk menghitung kemunculan nama file yang sama
+            const fileNameCounter = {};
 
             // Loop melalui setiap file yang diunggah
-            uploadedBgFiles.forEach(file => {
+            uploadedBgFiles.forEach((file, index) => {
                 const image = new Image();
                 const reader = new FileReader();
                 
@@ -458,7 +479,7 @@
                     image.src = e.target.result;
                 };
 
-                // Lakukan rendering setelah setiap gambar dimuat
+                // PENTING: Lakukan rendering setelah setiap gambar dimuat
                 image.onload = function() {
                     // 1. Buat kanvas baru di memori
                     const tempCanvas = document.createElement('canvas');
@@ -467,21 +488,24 @@
                     const tempCtx = tempCanvas.getContext('2d');
 
                     // 2. Gambar overlay teks pada kanvas sementara
-                    drawTextOverlay(tempCtx, image, image.width, image.height);
+                    drawTextOverlay(tempCtx, tempCanvas, image, image.width, image.height);
                     
-                    // 3. Tentukan nama file yang dimodifikasi
-                    
-                    // Ambil nama file asli (tanpa ekstensi)
+                    // 3. Tentukan nama file dengan penomoran
                     let baseName = file.name.replace(/\.[^/.]+$/, ""); 
-                    
                     if (baseName === '') {
                          baseName = 'generated-image';
                     }
                     
-                    // Tambahkan counter
-                    downloadCounter++;
-                    // Nama file: namafile-1.jpeg
-                    const fileName = `${baseName}-${downloadCounter}.jpeg`; 
+                    // Hitung kemunculan nama file ini
+                    if (fileNameCounter[baseName]) {
+                        fileNameCounter[baseName]++;
+                    } else {
+                        fileNameCounter[baseName] = 1;
+                    }
+                    
+                    // Tambahkan nomor urut ke nama file
+                    const fileNumber = fileNameCounter[baseName];
+                    const fileName = `${baseName}-${fileNumber}.jpeg`;
 
                     // 4. Unduh gambar
                     triggerDownload(tempCanvas, fileName);
@@ -494,8 +518,6 @@
                 // Mulai membaca file
                 reader.readAsDataURL(file);
             });
-            
-            alert(`Berhasil memicu unduhan untuk ${uploadedBgFiles.length} file. Periksa folder unduhan Anda.`);
         }
 
         // Initial render (menggunakan dimensi default karena belum ada gambar)
