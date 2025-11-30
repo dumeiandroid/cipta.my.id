@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generator Gambar Teks - Lidan Psikologi</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -263,7 +267,7 @@
 
         <div class="button-group">
             <button onclick="updateCanvas()">🔄 Update Preview</button>
-            <button onclick="downloadAllImages()">⬇️ Download SEMUA Gambar (JPEG Kompresi)</button> 
+            <button onclick="downloadAllImages()">⬇️ Download Semua sebagai ZIP</button> 
         </div>
     </div>
 
@@ -350,8 +354,6 @@
         document.getElementById('bgOpacity').addEventListener('input', updateCanvas);
         document.getElementById('brandText').addEventListener('input', updateCanvas);
         document.getElementById('logoSize').addEventListener('input', updateCanvas);
-        
-        // Listener BARU untuk Kontras dan Hue
         document.getElementById('bgContrast').addEventListener('input', updateCanvas);
         document.getElementById('bgHue').addEventListener('input', updateCanvas);
 
@@ -466,21 +468,7 @@
         }
 
         /**
-         * Fungsi untuk mengunduh gambar yang dibuat
-         */
-        function triggerDownload(canvasToDownload, fileName) {
-            const link = document.createElement('a');
-            link.download = fileName;
-            
-            const KUALITAS_KOMPRESI = 0.7; 
-            setTimeout(() => {
-                link.href = canvasToDownload.toDataURL('image/jpeg', KUALITAS_KOMPRESI);
-                link.click();
-            }, 0); 
-        }
-
-        /**
-         * FUNGSI MULTI-DOWNLOAD DENGAN PERUBAHAN NAMA FILE
+         * FUNGSI MULTI-DOWNLOAD DENGAN JSZip (mengganti fungsi downloadAllImages lama)
          */
         function downloadAllImages() {
             if (uploadedBgFiles.length === 0) {
@@ -488,7 +476,16 @@
                 return;
             }
 
-            // Loop melalui setiap file yang diunggah
+            const zip = new JSZip();
+            let filesProcessed = 0;
+            const totalFiles = uploadedBgFiles.length;
+            const KUALITAS_KOMPRESI = 0.7; 
+
+            // Tampilkan pesan loading jika jumlah file banyak
+            if (totalFiles > 1) {
+                alert(`Memproses ${totalFiles} gambar... Harap tunggu hingga file ZIP diunduh.`);
+            }
+
             uploadedBgFiles.forEach(file => {
                 const image = new Image();
                 const reader = new FileReader();
@@ -497,7 +494,6 @@
                     image.src = e.target.result;
                 };
 
-                // Lakukan rendering setelah setiap gambar dimuat
                 image.onload = function() {
                     // 1. Buat kanvas baru di memori
                     const tempCanvas = document.createElement('canvas');
@@ -506,27 +502,40 @@
                     const tempCtx = tempCanvas.getContext('2d');
 
                     // 2. Gambar overlay teks pada kanvas sementara
-                    // Fungsi drawTextOverlay sudah menerapkan filter Kontras dan Hue di sini
                     drawTextOverlay(tempCtx, tempCanvas, image, image.width, image.height);
                     
                     // 3. Tentukan nama file
-                    let baseName = file.name.replace(/\.[^/.]+$/, ""); // Hapus ekstensi lama
+                    let baseName = file.name.replace(/\.[^/.]+$/, ""); 
                     if (baseName === '') {
                          baseName = 'generated-image';
                     }
-                    
-                    // MODIFIKASI: Hapus timestamp, pastikan ekstensi .jpeg
-                    const fileName = `${baseName}.jpeg`; 
+                    const fileName = `${baseName}.jpeg`; // Nama file tanpa kode unik, ekstensi JPEG
 
-                    // 4. Unduh gambar
-                    triggerDownload(tempCanvas, fileName);
+                    // 4. Konversi Canvas ke Data URL JPEG
+                    const dataUrl = tempCanvas.toDataURL('image/jpeg', KUALITAS_KOMPRESI);
+                    
+                    // 5. Tambahkan file ke objek ZIP
+                    const base64Data = dataUrl.split(',')[1];
+                    zip.file(fileName, base64Data, {base64: true});
+
+                    filesProcessed++;
+                    
+                    // Cek apakah semua file sudah diproses
+                    if (filesProcessed === totalFiles) {
+                        // 6. Generate dan Download ZIP
+                        zip.generateAsync({type:"blob"})
+                        .then(function(content) {
+                            // Gunakan FileSaver.js untuk menyimpan file ZIP
+                            saveAs(content, "generated_images.zip");
+                        });
+                    }
                 };
 
                 image.onerror = function() {
                     console.error(`Gagal memuat gambar untuk unduhan: ${file.name}`);
+                    filesProcessed++;
                 };
 
-                // Mulai membaca file
                 reader.readAsDataURL(file);
             });
         }
