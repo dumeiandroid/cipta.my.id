@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Gambar Teks Otomatis - Lidan Psikologi</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 1300px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="number"],
+        input[type="url"],
+        select,
+        textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input[type="number"]:focus,
+        input[type="url"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            grid-column: 1 / -1;
+        }
+
+        input[type="color"] {
+            width: 60px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+
+        .canvas-container {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            overflow: auto;
+        }
+
+        canvas {
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 100%;
+            height: auto;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .section-title {
+            color: #333;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            grid-column: 1 / -1;
+        }
+
+        .help-text {
+            color: #888;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Generator Otomatis Percakapan - Lidan Psikologi</h1>
+        <p class="subtitle">Membuat 100 gambar tanya jawab Inggris-Indonesia otomatis dengan background dari Picsum Photos (1200x630).</p>
+
+        <div class="controls">
+            <div class="section-title">🎨 Pengaturan Tampilan</div>
+            
+            <div class="input-group">
+                <label>Ukuran Font (English):</label>
+                <input type="number" id="fontSizeEn" value="48" min="20" max="150">
+            </div>
+
+            <div class="input-group">
+                <label>Ukuran Font (Indonesian):</label>
+                <input type="number" id="fontSizeId" value="36" min="20" max="150">
+            </div>
+
+            <div class="input-group">
+                <label>Warna Teks:</label>
+                <input type="color" id="textColor" value="#ffffff">
+            </div>
+            
+            <div class="input-group">
+                <label>Warna Shadow Teks:</label>
+                <input type="color" id="shadowColor" value="#000000">
+                <span class="help-text">Tambahkan shadow untuk visibilitas.</span>
+            </div>
+
+            <div class="input-group">
+                <label>Kontras Gambar Background (0.5 - 2.0):</label>
+                <input type="number" id="bgContrast" value="1.0" min="0.5" max="2.0" step="0.1">
+                <span class="help-text">1.0 = normal. Mengatur tingkat kontras.</span>
+            </div>
+            
+            <div class="input-group">
+                <label>Warna Gambar Background (Hue Rotate):</label>
+                <input type="range" id="bgHue" value="0" min="0" max="360" step="1">
+                <span class="help-text">0 = normal. Memutar rona warna (dalam derajat).</span>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="canvas" width="1200" height="630"></canvas>
+        </div>
+
+        <div class="button-group">
+            <button onclick="updatePreview(0)">🔄 Update Preview (Percakapan ke-1)</button>
+            <button onclick="downloadAllImages()">⬇️ Generate & Download 100 Gambar ZIP</button> 
+        </div>
+
+        <p id="statusMessage" style="text-align: center; margin-top: 20px; font-weight: bold; color: #333;"></p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const DEFAULT_WIDTH = 1200;
+        const DEFAULT_HEIGHT = 630;
+        
+        canvas.width = DEFAULT_WIDTH;
+        canvas.height = DEFAULT_HEIGHT;
+
+        // Data untuk 100 Percakapan Tanya Jawab Sehari-hari
+        const quotesData = [
+            {en: "A: What time is it?\nB: It's half past seven.", id: "A: Jam berapa sekarang?\nB: Sekarang jam setengah delapan."},
+            {en: "A: How are you today?\nB: I'm good, thanks! And you?", id: "A: Apa kabar hari ini?\nB: Saya baik, terima kasih! Dan Anda?"},
+            {en: "A: Where is the nearest bank?\nB: Turn left at the next traffic light.", id: "A: Di mana bank terdekat?\nB: Belok kiri di lampu lalu lintas berikutnya."},
+            {en: "A: Can I help you with that?\nB: No, thanks. I can handle it.", id: "A: Ada yang bisa saya bantu?\nB: Tidak, terima kasih. Saya bisa mengatasinya."},
+            {en: "A: What are you doing this weekend?\nB: I'm planning to visit my parents.", id: "A: Apa yang akan Anda lakukan akhir pekan ini?\nB: Saya berencana mengunjungi orang tua saya."},
+            {en: "A: Did you enjoy the movie?\nB: Yes, it was really exciting!", id: "A: Apakah Anda menikmati filmnya?\nB: Ya, itu sangat menarik!"},
+            {en: "A: Excuse me, do you know the way to the station?\nB: Sorry, I'm new here too.", id: "A: Permisi, apakah Anda tahu jalan ke stasiun?\nB: Maaf, saya juga baru di sini."},
+            {en: "A: Could you speak a little slower, please?\nB: Of course. I apologize.", id: "A: Bisakah Anda berbicara sedikit lebih pelan?\nB: Tentu saja. Saya minta maaf."},
+            {en: "A: What is your favorite food?\nB: I love Indonesian Satay.", id: "A: Apa makanan favorit Anda?\nB: Saya suka Sate Indonesia."},
+            {en: "A: How much does this cost?\nB: It's twenty-five thousand rupiah.", id: "A: Berapa harga ini?\nB: Harganya dua puluh lima ribu rupiah."},
+            {en: "A: What do you do for a living?\nB: I work as a graphic designer.", id: "A: Apa pekerjaan Anda?\nB: Saya bekerja sebagai desainer grafis."},
+            {en: "A: What's the weather like today?\nB: It's sunny and quite hot.", id: "A: Bagaimana cuaca hari ini?\nB: Cerah dan cukup panas."},
+            {en: "A: Do you have a pet?\nB: Yes, I have a cat named Luna.", id: "A: Apakah Anda punya hewan peliharaan?\nB: Ya, saya punya kucing bernama Luna."},
+            {en: "A: Where did you learn English?\nB: I learned mostly by watching movies.", id: "A: Di mana Anda belajar bahasa Inggris?\nB: Saya belajar sebagian besar dari menonton film."},
+            {en: "A: Would you like some coffee?\nB: No, thanks. I prefer tea.", id: "A: Apakah Anda mau kopi?\nB: Tidak, terima kasih. Saya lebih suka teh."},
+            {en: "A: Do you mind opening the window?\nB: Not at all. It's a bit stuffy in here.", id: "A: Apakah Anda keberatan membuka jendela?\nB: Sama sekali tidak. Agak pengap di sini."},
+            {en: "A: What time do you finish work?\nB: I usually finish at 5 PM.", id: "A: Jam berapa Anda selesai bekerja?\nB: Saya biasanya selesai jam 5 sore."},
+            {en: "A: Have you ever been to Bali?\nB: Yes, I went there last summer.", id: "A: Apakah Anda pernah ke Bali?\nB: Ya, saya pergi ke sana musim panas lalu."},
+            {en: "A: What kind of music do you listen to?\nB: I enjoy pop and classical music.", id: "A: Jenis musik apa yang Anda dengarkan?\nB: Saya menikmati musik pop dan klasik."},
+            {en: "A: Can you lend me a hand?\nB: Sure, what do you need help with?", id: "A: Bisakah Anda membantu saya?\nB: Tentu, Anda butuh bantuan apa?"},
+            {en: "A: What is your name again?\nB: It's Alex. Nice to meet you.", id: "A: Siapa nama Anda lagi?\nB: Nama saya Alex. Senang bertemu Anda."},
+            {en: "A: Do you have WiFi here?\nB: Yes, the password is 'guest123'.", id: "A: Apakah Anda punya WiFi di sini?\nB: Ya, kata sandinya adalah 'guest123'."},
+            {en: "A: How long does it take to get there?\nB: About thirty minutes by car.", id: "A: Berapa lama waktu yang dibutuhkan untuk sampai ke sana?\nB: Sekitar tiga puluh menit dengan mobil."},
+            {en: "A: Did you hear the news?\nB: No, what happened?", id: "A: Apakah Anda mendengar beritanya?\nB: Tidak, apa yang terjadi?"},
+            {en: "A: Are you free tomorrow morning?\nB: I'm busy. How about the afternoon?", id: "A: Apakah Anda bebas besok pagi?\nB: Saya sibuk. Bagaimana dengan sore hari?"},
+            {en: "A: This is delicious!\nB: Thank you. It's my grandmother's recipe.", id: "A: Ini enak sekali!\nB: Terima kasih. Ini resep nenek saya."},
+            {en: "A: What brings you here?\nB: I'm here for a business meeting.", id: "A: Apa yang membawa Anda ke sini?\nB: Saya di sini untuk pertemuan bisnis."},
+            {en: "A: Should we start now?\nB: Let's wait for five more minutes.", id: "A: Haruskah kita mulai sekarang?\nB: Mari kita tunggu lima menit lagi."},
+            {en: "A: I'm so tired.\nB: You should take a break.", id: "A: Saya sangat lelah.\nB: Anda harus istirahat."},
+            {en: "A: I apologize for the delay.\nB: It's okay. Don't worry about it.", id: "A: Saya minta maaf atas keterlambatannya.\nB: Tidak apa-apa. Jangan khawatir tentang itu."},
+            {en: "A: Would you like to join us for dinner?\nB: I'd love to! Where are we meeting?", id: "A: Maukah Anda bergabung dengan kami untuk makan malam?\nB: Saya mau! Di mana kita bertemu?"},
+            {en: "A: How was your flight?\nB: It was smooth and on time.", id: "A: Bagaimana penerbangan Anda?\nB: Lancar dan tepat waktu."},
+            {en: "A: What floor is the meeting room on?\nB: It's on the third floor.", id: "A: Ruang pertemuan ada di lantai berapa?\nB: Ada di lantai tiga."},
+            {en: "A: Is everything alright?\nB: Yes, just a little stress.", id: "A: Apakah semuanya baik-baik saja?\nB: Ya, hanya sedikit stres."},
+            {en: "A: Don't forget to send the email.\nB: I won't. I'll do it right away.", id: "A: Jangan lupa kirim emailnya.\nB: Tidak akan. Saya akan melakukannya segera."},
+            {en: "A: Could you turn the volume down?\nB: Oh, sorry. Is it too loud?", id: "A: Bisakah Anda mengecilkan volume?\nB: Oh, maaf. Apakah terlalu keras?"},
+            {en: "A: Are you going out later?\nB: I might. What about you?", id: "A: Apakah Anda akan keluar nanti?\nB: Mungkin. Bagaimana dengan Anda?"},
+            {en: "A: Do you live far from here?\nB: Not really. Just ten minutes away.", id: "A: Apakah Anda tinggal jauh dari sini?\nB: Tidak juga. Hanya sepuluh menit."},
+            {en: "A: What did you think of the presentation?\nB: It was very informative.", id: "A: Apa pendapat Anda tentang presentasi itu?\nB: Itu sangat informatif."},
+            {en: "A: Happy Birthday!\nB: Thank you for remembering!", id: "A: Selamat Ulang Tahun!\nB: Terima kasih sudah mengingat!"},
+            {en: "A: Where can I buy a ticket?\nB: You can buy it at the counter.", id: "A: Di mana saya bisa membeli tiket?\nB: Anda bisa membelinya di loket."},
+            {en: "A: What is the reason for your visit?\nB: I'm here for a vacation.", id: "A: Apa alasan kunjungan Anda?\nB: Saya di sini untuk berlibur."},
+            {en: "A: Is this seat taken?\nB: No, you can sit here.", id: "A: Apakah kursi ini sudah ditempati?\nB: Tidak, Anda boleh duduk di sini."},
+            {en: "A: Do you prefer indoors or outdoors activities?\nB: I prefer spending time outdoors.", id: "A: Apakah Anda lebih suka kegiatan di dalam atau di luar ruangan?\nB: Saya lebih suka menghabiskan waktu di luar ruangan."},
+            {en: "A: Did you finish the report?\nB: I'm still working on the final section.", id: "A: Apakah Anda menyelesaikan laporannya?\nB: Saya masih mengerjakan bagian akhir."},
+            {en: "A: How long have you been waiting?\nB: Only for five minutes.", id: "A: Sudah berapa lama Anda menunggu?\nB: Baru lima menit."},
+            {en: "A: Do you have any plans for dinner?\nB: I haven't decided yet.", id: "A: Apakah Anda punya rencana untuk makan malam?\nB: Saya belum memutuskan."},
+            {en: "A: What time is check-out?\nB: Check-out is at 11 AM.", id: "A: Jam berapa waktu check-out?\nB: Check-out adalah jam 11 pagi."},
+            {en: "A: How often do you exercise?\nB: I try to go to the gym three times a week.", id: "A: Seberapa sering Anda berolahraga?\nB: Saya mencoba pergi ke gym tiga kali seminggu."},
+            {en: "A: What seems to be the problem?\nB: My car won't start.", id: "A: Apa masalahnya?\nB: Mobil saya tidak mau menyala."},
+            {en: "A: Do you speak Indonesian?\nB: I can speak a little, not fluently.", id: "A: Apakah Anda berbicara bahasa Indonesia?\nB: Saya bisa bicara sedikit, tidak fasih."},
+            {en: "A: May I take a message?\nB: Yes, please ask him to call me back.", id: "A: Bolehkah saya menyampaikan pesan?\nB: Ya, tolong minta dia menelepon saya kembali."},
+            {en: "A: Where are you heading to?\nB: I'm going to the supermarket.", id: "A: Anda mau pergi ke mana?\nB: Saya akan pergi ke supermarket."},
+            {en: "A: Don't worry, it's not a big deal.\nB: Thanks for your understanding.", id: "A: Jangan khawatir, itu bukan masalah besar.\nB: Terima kasih atas pengertian Anda."},
+            {en: "A: Are you ready to order?\nB: Yes, I'll have the chicken soup.", id: "A: Apakah Anda siap memesan?\nB: Ya, saya akan memesan sup ayam."},
+            {en: "A: How was your vacation?\nB: It was absolutely relaxing.", id: "A: Bagaimana liburan Anda?\nB: Sangat santai."},
+            {en: "A: Can you recommend a good book?\nB: I recommend 'The Secret History'.", id: "A: Bisakah Anda merekomendasikan buku yang bagus?\nB: Saya merekomendasikan 'The Secret History'."},
+            {en: "A: What's wrong?\nB: I have a slight headache.", id: "A: Ada apa?\nB: Saya sedikit pusing."},
+            {en: "A: What time should we meet?\nB: Let's meet at 9 o'clock.", id: "A: Jam berapa kita harus bertemu?\nB: Mari kita bertemu jam 9."},
+            {en: "A: How was your day at school?\nB: It was tiring but fun.", id: "A: Bagaimana hari Anda di sekolah?\nB: Melelahkan tapi menyenangkan."},
+            {en: "A: Where is the restroom?\nB: It's down the hall, to your right.", id: "A: Di mana kamar kecilnya?\nB: Ada di ujung lorong, di sebelah kanan Anda."},
+            {en: "A: What are your hobbies?\nB: I enjoy reading and gardening.", id: "A: Apa hobi Anda?\nB: Saya suka membaca dan berkebun."},
+            {en: "A: I need to practice my English.\nB: I can practice with you!", id: "A: Saya perlu melatih bahasa Inggris saya.\nB: Saya bisa berlatih dengan Anda!"},
+            {en: "A: Could you please close the door?\nB: Certainly, one moment.", id: "A: Bisakah Anda menutup pintunya?\nB: Tentu, sebentar."},
+            {en: "A: Do you feel better now?\nB: Much better, thank you.", id: "A: Apakah Anda merasa lebih baik sekarang?\nB: Jauh lebih baik, terima kasih."},
+            {en: "A: Are you waiting for the bus?\nB: Yes, the number 12 bus.", id: "A: Apakah Anda sedang menunggu bus?\nB: Ya, bus nomor 12."},
+            {en: "A: Do you prefer sweet or savory food?\nB: I prefer savory food.", id: "A: Apakah Anda lebih suka makanan manis atau gurih?\nB: Saya lebih suka makanan gurih."},
+            {en: "A: Can I pay with credit card?\nB: Yes, we accept all major cards.", id: "A: Bisakah saya membayar dengan kartu kredit?\nB: Ya, kami menerima semua kartu utama."},
+            {en: "A: What's the biggest challenge you face?\nB: Time management.", id: "A: Apa tantangan terbesar yang Anda hadapi?\nB: Manajemen waktu."},
+            {en: "A: Let me know if you need anything.\nB: I will, thank you for the offer.", id: "A: Beri tahu saya jika Anda butuh sesuatu.\nB: Ya, terima kasih atas tawarannya."},
+            {en: "A: How was the party?\nB: It was a lot of fun, crowded though.", id: "A: Bagaimana pestanya?\nB: Sangat menyenangkan, meskipun ramai."},
+            {en: "A: Are we there yet?\nB: Almost. Just a few more minutes.", id: "A: Apakah kita sudah sampai?\nB: Hampir. Tinggal beberapa menit lagi."},
+            {en: "A: I forgot my wallet.\nB: Don't worry, I can lend you some money.", id: "A: Saya lupa dompet saya.\nB: Jangan khawatir, saya bisa meminjamkan Anda uang."},
+            {en: "A: What's the latest gossip?\nB: I haven't heard anything new.", id: "A: Apa gosip terbaru?\nB: Saya belum mendengar sesuatu yang baru."},
+            {en: "A: Do you have a favorite season?\nB: I love autumn the most.", id: "A: Apakah Anda punya musim favorit?\nB: Saya paling suka musim gugur."},
+            {en: "A: Shall we go for a walk?\nB: That sounds lovely.", id: "A: Haruskah kita berjalan-jalan?\nB: Kedengarannya menyenangkan."},
+            {en: "A: How long have you lived here?\nB: For about five years now.", id: "A: Sudah berapa lama Anda tinggal di sini?\nB: Sekitar lima tahun sekarang."},
+            {en: "A: What time does the store open?\nB: It opens at 9 o'clock every day.", id: "A: Jam berapa tokonya buka?\nB: Buka jam 9 setiap hari."},
+            {en: "A: Should I wear a jacket?\nB: Yes, it's getting cold outside.", id: "A: Haruskah saya memakai jaket?\nB: Ya, di luar mulai dingin."},
+            {en: "A: What did you have for lunch?\nB: I had a simple sandwich.", id: "A: Apa yang Anda makan untuk makan siang?\nB: Saya makan sandwich sederhana."},
+            {en: "A: Can I change my appointment?\nB: When would you like to reschedule?", id: "A: Bisakah saya mengubah janji temu saya?\nB: Kapan Anda ingin menjadwal ulang?"},
+            {en: "A: Do you like living in the city?\nB: Yes, I love the convenience.", id: "A: Apakah Anda suka tinggal di kota?\nB: Ya, saya suka kenyamanannya."},
+            {en: "A: What is the main point?\nB: The main point is to save energy.", id: "A: Apa poin utamanya?\nB: Poin utamanya adalah menghemat energi."},
+            {en: "A: I'm really sorry for my mistake.\nB: It happens. Let's fix it together.", id: "A: Saya benar-benar minta maaf atas kesalahan saya.\nB: Itu terjadi. Mari kita perbaiki bersama."},
+            {en: "A: Are you going to the concert?\nB: I wish I could, but I have work.", id: "A: Apakah Anda akan pergi ke konser?\nB: Saya berharap bisa, tapi saya ada pekerjaan."},
+            {en: "A: How was your presentation?\nB: It went well, thank goodness.", id: "A: Bagaimana presentasi Anda?\nB: Berjalan dengan baik, syukurlah."},
+            {en: "A: Can I get you a drink?\nB: A glass of water would be great.", id: "A: Bisakah saya mengambilkan Anda minuman?\nB: Segelas air akan bagus."},
+            {en: "A: Is it far to walk from here?\nB: Not too far, about fifteen minutes.", id: "A: Apakah jauh jika berjalan kaki dari sini?\nB: Tidak terlalu jauh, sekitar lima belas menit."},
+            {en: "A: What are your future plans?\nB: I plan to start my own business.", id: "A: Apa rencana masa depan Anda?\nB: Saya berencana memulai bisnis saya sendiri."},
+            {en: "A: Do you remember this song?\nB: Of course! It was popular back then.", id: "A: Apakah Anda ingat lagu ini?\nB: Tentu saja! Itu populer saat itu."},
+            {en: "A: What kind of sports do you like?\nB: I enjoy playing basketball.", id: "A: Olahraga jenis apa yang Anda suka?\nB: Saya suka bermain bola basket."},
+            {en: "A: When did you start learning to code?\nB: I started about two years ago.", id: "A: Kapan Anda mulai belajar coding?\nB: Saya mulai sekitar dua tahun lalu."},
+            {en: "A: Should we take an Uber or a taxi?\nB: Let's take an Uber, it's cheaper.", id: "A: Haruskah kita naik Uber atau taksi?\nB: Mari kita naik Uber, lebih murah."},
+            {en: "A: This is too difficult for me.\nB: Don't give up. I can help you.", id: "A: Ini terlalu sulit bagi saya.\nB: Jangan menyerah. Saya bisa membantu Anda."},
+            {en: "A: Can I bring a guest to the event?\nB: Yes, one guest is allowed.", id: "A: Bisakah saya membawa tamu ke acara tersebut?\nB: Ya, satu tamu diperbolehkan."},
+            {en: "A: What are you watching on TV?\nB: I'm watching a documentary about space.", id: "A: Apa yang Anda tonton di TV?\nB: Saya menonton film dokumenter tentang luar angkasa."},
+            {en: "A: Do you prefer working from home or office?\nB: I prefer working from the office.", id: "A: Apakah Anda lebih suka bekerja dari rumah atau kantor?\nB: Saya lebih suka bekerja dari kantor."},
+            {en: "A: I feel like having pizza tonight.\nB: That sounds like a great idea!", id: "A: Saya ingin makan pizza malam ini.\nB: Itu ide yang bagus!"},
+            {en: "A: Can you describe your neighborhood?\nB: It's quiet and has a lot of trees.", id: "A: Bisakah Anda mendeskripsikan lingkungan Anda?\nB: Tenang dan memiliki banyak pohon."},
+            {en: "A: What time is the last train?\nB: The last train leaves at midnight.", id: "A: Jam berapa kereta terakhir?\nB: Kereta terakhir berangkat tengah malam."},
+            {en: "A: Is there a fee for using this service?\nB: No, it's completely free.", id: "A: Apakah ada biaya untuk menggunakan layanan ini?\nB: Tidak, ini sepenuhnya gratis."},
+            {en: "A: Did you sleep well last night?\nB: Not really, I had a nightmare.", id: "A: Apakah Anda tidur nyenyak tadi malam?\nB: Tidak juga, saya mimpi buruk."},
+            {en: "A: What are you grateful for today?\nB: I'm grateful for my health and family.", id: "A: Apa yang Anda syukuri hari ini?\nB: Saya bersyukur atas kesehatan dan keluarga saya."},
+            {en: "A: How long will you be staying?\nB: I will be staying for two weeks.", id: "A: Berapa lama Anda akan tinggal?\nB: Saya akan tinggal selama dua minggu."},
+            {en: "A: Is there anything else I should know?\nB: No, that covers everything.", id: "A: Adakah hal lain yang harus saya ketahui?\nB: Tidak, itu mencakup semuanya."},
+            {en: "A: I'm running late.\nB: Take your time, no rush.", id: "A: Saya terlambat.\nB: Santai saja, tidak perlu terburu-buru."},
+            {en: "A: Do you have time for a quick chat?\nB: Yes, but only for a few minutes.", id: "A: Apakah Anda punya waktu untuk mengobrol sebentar?\nB: Ya, tapi hanya untuk beberapa menit."},
+            {en: "A: How can I improve my writing skills?\nB: Read more and write every day.", id: "A: Bagaimana saya bisa meningkatkan keterampilan menulis saya?\nB: Baca lebih banyak dan tulislah setiap hari."},
+            {en: "A: Did you make a reservation?\nB: Yes, I made it an hour ago.", id: "A: Apakah Anda membuat reservasi?\nB: Ya, saya membuatnya satu jam yang lalu."},
+            {en: "A: What's the best way to travel around the city?\nB: Taking the public transport is the best.", id: "A: Apa cara terbaik untuk berkeliling kota?\nB: Menggunakan transportasi umum adalah yang terbaik."}
+        ];
+
+        // URL Gambar Picsum (Gunakan ID 100-199 untuk 100 gambar berbeda)
+        const totalImages = 100;
+        const imageUrls = Array.from({length: totalImages}, (_, i) => 
+            `https://picsum.photos/id/${100 + i}/${DEFAULT_WIDTH}/${DEFAULT_HEIGHT}`
+        );
+
+
+        // --- Event listeners untuk kontrol lainnya ---
+        document.getElementById('fontSizeEn').addEventListener('input', () => updatePreview(0));
+        document.getElementById('fontSizeId').addEventListener('input', () => updatePreview(0));
+        document.getElementById('textColor').addEventListener('input', () => updatePreview(0));
+        document.getElementById('shadowColor').addEventListener('input', () => updatePreview(0));
+        document.getElementById('bgContrast').addEventListener('input', () => updatePreview(0));
+        document.getElementById('bgHue').addEventListener('input', () => updatePreview(0));
+
+
+        /**
+         * Fungsi untuk memecah teks menjadi baris
+         */
+        function wrapText(context, text, maxWidth) {
+            // Memecah berdasarkan baris baru (\n) terlebih dahulu, kemudian memecah setiap baris dengan wrapText biasa
+            const paragraphs = text.split('\n');
+            let lines = [];
+            
+            paragraphs.forEach(paragraph => {
+                const words = paragraph.split(' ');
+                let currentLine = words[0] || '';
+
+                for (let i = 1; i < words.length; i++) {
+                    const word = words[i];
+                    // Cek lebar dengan spasi
+                    const testLine = currentLine + " " + word;
+                    const width = context.measureText(testLine).width;
+                    
+                    if (width < maxWidth) {
+                        currentLine = testLine;
+                    } else {
+                        lines.push(currentLine);
+                        currentLine = word;
+                    }
+                }
+                lines.push(currentLine);
+                // Tambahkan spasi ekstra (garis kosong) antar paragraf jika ada lebih dari satu
+                // if (paragraphs.length > 1 && paragraphs.indexOf(paragraph) < paragraphs.length - 1) {
+                //     lines.push(""); // Tambahkan baris kosong untuk pemisah
+                // }
+            });
+            return lines.filter(line => line.trim() !== ''); // Filter baris yang kosong karena pemrosesan
+        }
+
+
+        /**
+         * Fungsi untuk menggambar overlay teks pada objek canvas/konteks tertentu
+         */
+        function drawTextOverlay(context, bgImg, quote) {
+            const bgW = DEFAULT_WIDTH;
+            const bgH = DEFAULT_HEIGHT;
+            
+            const fontSizeEn = parseInt(document.getElementById('fontSizeEn').value) || 48;
+            const fontSizeId = parseInt(document.getElementById('fontSizeId').value) || 36;
+            const textColor = document.getElementById('textColor').value;
+            const shadowColor = document.getElementById('shadowColor').value;
+            
+            // Ambil nilai filter
+            const contrastValue = parseFloat(document.getElementById('bgContrast').value) || 1.0;
+            const hueValue = parseInt(document.getElementById('bgHue').value) || 0;
+            
+            const padding = 60; // Padding kiri/kanan
+            const maxWidth = bgW - (padding * 2);
+            
+            // Clear canvas
+            context.clearRect(0, 0, bgW, bgH);
+
+            // Draw background
+            const isBgLoaded = bgImg && bgImg.complete && bgImg.naturalWidth !== 0;
+
+            if (isBgLoaded) {
+                // Terapkan filter Kontras dan Hue pada konteks
+                context.filter = `contrast(${contrastValue}) hue-rotate(${hueValue}deg)`;
+                
+                // Draw background image TEPAT sesuai ukuran kanvas 
+                context.drawImage(bgImg, 0, 0, bgW, bgH);
+                context.fillStyle = 'rgba(0, 0, 0, 0.5)'; // Mengatur warna hitam dengan opasitas 50%
+                context.fillRect(0, 0, bgW, bgH); // Menggambar kotak di atas gambar
+
+                // **PENTING:** Hapus filter sebelum menggambar elemen lain (teks)
+                context.filter = 'none'; 
+                
+            } else {
+                // Fallback to gradient if no image
+                const gradient = context.createLinearGradient(0, 0, bgW, bgH);
+                gradient.addColorStop(0, '#667eea');
+                gradient.addColorStop(1, '#764ba2');
+                context.fillStyle = gradient;
+                context.fillRect(0, 0, bgW, bgH);
+            }
+            
+            // --- Draw English Text (Lebih Besar) ---
+            context.font = `bold ${fontSizeEn}px 'Times New Roman', serif`;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            
+            const linesEn = wrapText(context, quote.en, maxWidth);
+            const lineHeightEn = fontSizeEn * 1.4;
+            const totalTextHeightEn = linesEn.length * lineHeightEn;
+
+            // --- Draw Indonesian Text (Lebih Kecil) ---
+            context.font = `${fontSizeId}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`; 
+
+            const linesId = wrapText(context, quote.id, maxWidth);
+            const lineHeightId = fontSizeId * 1.4;
+            const totalTextHeightId = linesId.length * lineHeightId;
+
+            // Hitung total tinggi teks untuk penempatan di tengah vertikal
+            const spacing = 30; // Jarak antara English dan Indonesian
+            const totalTextHeight = totalTextHeightEn + spacing + totalTextHeightId;
+
+            // Titik awal Y untuk teks English (diposisikan di tengah)
+            let startY = (bgH - totalTextHeight) / 2;
+            
+            // Terapkan shadow untuk visibilitas
+            context.shadowColor = shadowColor;
+            context.shadowBlur = 10;
+            context.shadowOffsetX = 3;
+            context.shadowOffsetY = 3;
+            
+            // Draw English Text
+            context.fillStyle = textColor;
+            context.font = `bold ${fontSizeEn}px 'Times New Roman', serif`;
+            linesEn.forEach((line, index) => {
+                const yPos = startY + (index * lineHeightEn) + (lineHeightEn / 2);
+                context.fillText(line, bgW / 2, yPos);
+            });
+            
+            // Update startY untuk Indonesian Text
+            startY += totalTextHeightEn + spacing;
+
+            // Draw Indonesian Text
+            context.font = `${fontSizeId}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+            linesId.forEach((line, index) => {
+                const yPos = startY + (index * lineHeightId) + (lineHeightId / 2);
+                context.fillText(line, bgW / 2, yPos);
+            });
+            
+            // Nonaktifkan shadow setelah menggambar teks
+            context.shadowColor = 'transparent';
+            context.shadowBlur = 0;
+            context.shadowOffsetX = 0;
+            context.shadowOffsetY = 0;
+        }
+
+
+        function updatePreview(index) {
+            const imageUrl = imageUrls[index];
+            const quote = quotesData[index];
+            const image = new Image();
+            
+            document.getElementById('statusMessage').innerText = `Loading Preview ${index + 1}/${totalImages}...`;
+
+            image.crossOrigin = 'Anonymous'; // Penting untuk gambar dari luar domain
+            image.src = imageUrl;
+
+            image.onload = function() {
+                drawTextOverlay(ctx, image, quote);
+                document.getElementById('statusMessage').innerText = `Preview ${index + 1}/${totalImages} ditampilkan.`;
+            };
+
+            image.onerror = function() {
+                console.error(`Gagal memuat gambar untuk preview: ${imageUrl}`);
+                document.getElementById('statusMessage').innerText = `Gagal memuat gambar ${index + 1}. Menampilkan background fallback.`;
+                // Gunakan fungsi drawTextOverlay dengan bgImg null untuk fallback gradient
+                drawTextOverlay(ctx, null, quote); 
+            };
+        }
+
+        /**
+         * FUNGSI MULTI-DOWNLOAD DENGAN JSZip
+         */
+        function downloadAllImages() {
+            const zip = new JSZip();
+            let filesProcessed = 0;
+            const totalFiles = imageUrls.length;
+            const KUALITAS_KOMPRESI = 0.8; // Kualitas JPEG (0.0 - 1.0)
+            
+            if (totalFiles === 0) {
+                 alert("Tidak ada data kutipan untuk diproses.");
+                 return;
+            }
+
+            document.getElementById('statusMessage').innerText = `Mulai memproses ${totalFiles} gambar... Harap tunggu.`;
+
+            // Proses setiap kutipan dan URL gambar
+            for (let i = 0; i < totalFiles; i++) {
+                const imageUrl = imageUrls[i];
+                const quote = quotesData[i];
+                
+                const image = new Image();
+                image.crossOrigin = 'Anonymous'; // Penting untuk gambar dari luar domain
+                image.src = imageUrl;
+                
+                image.onload = function() {
+                    // 1. Buat kanvas baru di memori
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = DEFAULT_WIDTH;
+                    tempCanvas.height = DEFAULT_HEIGHT;
+                    const tempCtx = tempCanvas.getContext('2d');
+
+                    // 2. Gambar overlay teks pada kanvas sementara
+                    drawTextOverlay(tempCtx, image, quote);
+                    
+                    // 3. Tentukan nama file
+                    const quoteText = quote.en.split('\n')[0].substring(0, 30).replace(/[^a-zA-Z0-9]/g, '_'); // Ambil 30 karakter pertama dari pertanyaan
+                    const fileName = `Percakapan_${i + 1}_${quoteText}.jpeg`; 
+
+                    // 4. Konversi Canvas ke Data URL JPEG
+                    const dataUrl = tempCanvas.toDataURL('image/jpeg', KUALITAS_KOMPRESI);
+                    
+                    // 5. Tambahkan file ke objek ZIP
+                    const base64Data = dataUrl.split(',')[1];
+                    zip.file(fileName, base64Data, {base64: true});
+
+                    filesProcessed++;
+                    document.getElementById('statusMessage').innerText = `Memproses... ${filesProcessed}/${totalFiles} selesai.`;
+
+                    // Cek apakah semua file sudah diproses
+                    if (filesProcessed === totalFiles) {
+                        // 6. Generate dan Download ZIP
+                        zip.generateAsync({type:"blob"})
+                        .then(function(content) {
+                            // Gunakan FileSaver.js untuk menyimpan file ZIP
+                            saveAs(content, "100_Percakapan_Lidan_Psikologi.zip");
+                            document.getElementById('statusMessage').innerText = `✅ Selesai! File ZIP berhasil diunduh. Total ${totalFiles} gambar.`;
+                        });
+                    }
+                };
+
+                image.onerror = function() {
+                    console.error(`Gagal memuat gambar untuk unduhan: ${imageUrl}`);
+                    // Jika gambar gagal dimuat, gunakan fallback gradient dan tetap tambahkan ke ZIP
+                    
+                    // 1. Buat kanvas baru di memori
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = DEFAULT_WIDTH;
+                    tempCanvas.height = DEFAULT_HEIGHT;
+                    const tempCtx = tempCanvas.getContext('2d');
+
+                    // 2. Gambar overlay teks pada kanvas sementara dengan bgImg null
+                    drawTextOverlay(tempCtx, null, quote);
+                    
+                    const quoteText = quote.en.split('\n')[0].substring(0, 30).replace(/[^a-zA-Z0-9]/g, '_'); 
+                    const fileName = `Percakapan_${i + 1}_${quoteText}_FALLBACK.jpeg`; 
+
+                    const dataUrl = tempCanvas.toDataURL('image/jpeg', KUALITAS_KOMPRESI);
+                    const base64Data = dataUrl.split(',')[1];
+                    zip.file(fileName, base64Data, {base64: true});
+
+                    filesProcessed++;
+                    document.getElementById('statusMessage').innerText = `Memproses... ${filesProcessed}/${totalFiles} selesai (dengan ${filesProcessed - i - 1} fallback).`;
+
+                    if (filesProcessed === totalFiles) {
+                        zip.generateAsync({type:"blob"})
+                        .then(function(content) {
+                            saveAs(content, "100_Percakapan_Lidan_Psikologi.zip");
+                            document.getElementById('statusMessage').innerText = `✅ Selesai! File ZIP berhasil diunduh. Total ${totalFiles} gambar.`;
+                        });
+                    }
+                };
+            }
+        }
+
+        // Initial render
+        updatePreview(0); // Tampilkan percakapan pertama sebagai preview
+    </script>
+</body>
+</html>

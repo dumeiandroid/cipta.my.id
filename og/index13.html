@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Otomatis Harian - Lidan Psikologi</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 1300px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="number"],
+        input[type="url"],
+        select,
+        textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input[type="number"]:focus,
+        input[type="url"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            grid-column: 1 / -1;
+        }
+
+        input[type="color"] {
+            width: 60px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+
+        .canvas-container {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            overflow: auto;
+        }
+
+        canvas {
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 100%;
+            height: auto;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .section-title {
+            color: #333;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            grid-column: 1 / -1;
+        }
+
+        .help-text {
+            color: #888;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Generator Otomatis Kutipan Harian - Lidan Psikologi (365 Hari)</h1>
+        <p class="subtitle">Membuat 365 gambar kutipan inspiratif harian, dimulai dari 1 Januari 2026. Dimensi 1200x630.</p>
+
+        <div class="controls">
+            <div class="section-title">🎨 Pengaturan Tampilan Teks</div>
+            
+            <div class="input-group">
+                <label>Ukuran Font Kutipan:</label>
+                <input type="number" id="fontSizeMain" value="48" min="20" max="150">
+            </div>
+
+            <div class="input-group">
+                <label>Warna Teks:</label>
+                <input type="color" id="textColor" value="#ffffff">
+            </div>
+            
+            <div class="input-group">
+                <label>Warna Shadow Teks:</label>
+                <input type="color" id="shadowColor" value="#000000">
+                <span class="help-text">Tambahkan shadow untuk visibilitas.</span>
+            </div>
+
+            <div class="input-group">
+                <label>Ukuran Font Tanggal:</label>
+                <input type="number" id="fontSizeDate" value="24" min="16" max="60">
+            </div>
+
+            <div class="section-title">🖼️ Pengaturan Background</div>
+            
+            <div class="input-group">
+                <label>Kontras Gambar Background (0.5 - 2.0):</label>
+                <input type="number" id="bgContrast" value="1.0" min="0.5" max="2.0" step="0.1">
+                <span class="help-text">1.0 = normal. Mengatur tingkat kontras.</span>
+            </div>
+            
+            <div class="input-group">
+                <label>Warna Gambar Background (Hue Rotate):</label>
+                <input type="range" id="bgHue" value="0" min="0" max="360" step="1">
+                <span class="help-text">0 = normal. Memutar rona warna (dalam derajat).</span>
+            </div>
+
+            <div class="section-title">🏷️ Pengaturan Logo & Branding</div>
+
+            <div class="input-group" style="grid-column: 1 / -1;">
+                <label>URL Logo:</label>
+                <input type="url" id="logoUrl" value="gambar/logo-psikologi.png" placeholder="https://example.com/logo.png">
+                <span class="help-text">Masukkan URL logo (akan muncul di Kanan Atas).</span>
+            </div>
+
+            <div class="input-group">
+                <label>Teks Brand:</label>
+                <input type="text" id="brandText" value="Lidan Psikologi" placeholder="Nama Brand">
+            </div>
+
+            <div class="input-group">
+                <label>Ukuran Logo (px):</label>
+                <input type="number" id="logoSize" value="60" min="30" max="150">
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="canvas" width="1200" height="630"></canvas>
+        </div>
+
+        <div class="button-group">
+            <button onclick="updatePreview(0)">🔄 Update Preview (Hari ke-1 / 1 Jan 2026)</button>
+            <button onclick="downloadAllImages()">⬇️ Generate & Download 365 Gambar ZIP</button> 
+        </div>
+
+        <p id="statusMessage" style="text-align: center; margin-top: 20px; font-weight: bold; color: #333;"></p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const DEFAULT_WIDTH = 1200;
+        const DEFAULT_HEIGHT = 630;
+        
+        canvas.width = DEFAULT_WIDTH;
+        canvas.height = DEFAULT_HEIGHT;
+
+        // --- Logo Setup ---
+        let logoImage = new Image();
+        let logoLoaded = false;
+        
+        // Setup Awal Logo
+        logoImage.src = document.getElementById('logoUrl').value;
+        logoImage.onload = function() {
+            logoLoaded = true;
+            updatePreview(0); // Update setelah logo dimuat
+        };
+        logoImage.onerror = function() {
+            logoLoaded = false;
+            console.error('Logo gagal dimuat');
+            updatePreview(0); 
+        };
+        
+        // Event listener untuk perubahan URL Logo
+        document.getElementById('logoUrl').addEventListener('change', function() {
+            const url = this.value.trim();
+            if (url) {
+                logoLoaded = false;
+                logoImage.crossOrigin = 'Anonymous'; // Penting jika logo dari domain lain
+                logoImage.src = url;
+            } else {
+                logoLoaded = false;
+                updatePreview(0);
+            }
+        });
+
+        // Data untuk 365 Kutipan (Kutipan Motivasi Bahasa Indonesia)
+        // Diulang jika jumlah kutipan unik kurang dari 365
+        const uniqueQuotes = [
+            {text: "Kesempatan terbaik hari ini adalah mengambil satu langkah maju, sekecil apapun itu."},
+            {text: "Percayalah pada potensi yang tersembunyi dalam dirimu. Kekuatan itu ada di sana, menunggu untuk ditemukan."},
+            {text: "Kesehatan mental adalah prioritas. Beristirahatlah, bukan menyerah, dan temukan dukungan di Lidan Psikologi."},
+            {text: "Bukan seberapa cepat, tapi seberapa konsisten. Konsistensi kecil membawa hasil besar dalam hidupmu."},
+            {text: "Setiap tantangan adalah peluang untuk membuktikan ketangguhan dirimu. Hadapi dengan senyum dan keyakinan."},
+            {text: "Kunci kebahagiaan sejati adalah menghargai proses, bukan hanya menunggu hasilnya tiba."},
+            {text: "Tentukan tujuanmu. Fokus. Abaikan keraguan. Engkau lebih kuat dari yang kau duga."},
+            {text: "Jangan biarkan masa lalu merampas energi untuk menciptakan masa depan yang indah dan baru."},
+            {text: "Masa depan yang cerah dimulai dengan kebiasaan positif hari ini. Mulai sekarang, jangan tunda lagi."},
+            {text: "Minat adalah kompas, bakat adalah peta. Gabungkan keduanya untuk menemukan jalan suksesmu yang unik."},
+            {text: "Temukan apa yang membuatmu bersemangat, dan jadikan itu bahan bakar untuk setiap langkahmu."},
+            {text: "Kegagalan hanyalah umpan balik. Pelajari, bangkit, dan coba lagi dengan cara yang lebih baik."},
+            {text: "Jadilah dirimu sendiri. Dunia membutuhkan keunikan dan cahaya yang hanya kamu miliki."},
+            {text: "Cintai pekerjaanmu. Saat kamu mencintai, bekerja terasa seperti bermain."},
+            {text: "Ubah pikiran negatif menjadi pertanyaan yang membangun: 'Apa yang bisa saya lakukan sekarang?'"},
+            {text: "Kebaikan kecil yang kamu tabur hari ini akan mekar menjadi kebahagiaan yang besar di masa depan."},
+            {text: "Fokus pada apa yang bisa kamu kendalikan. Lepaskan apa yang tidak. Itulah kedamaian pikiran."},
+            {text: "Jangan pernah berhenti belajar. Pikiran yang terbuka adalah pintu menuju kemungkinan tak terbatas."},
+            {text: "Tuliskan tujuanmu. Lihat setiap hari. Kekuatan visualisasi sangat besar."},
+            {text: "Kualitas hidupmu ditentukan oleh kualitas pertanyaan yang kamu ajukan pada dirimu sendiri."},
+            {text: "Keputusan terbaik adalah memulai. Sisanya akan mengikuti seiring kamu bergerak."},
+            {text: "Sukses adalah serangkaian kegagalan kecil yang diatasi dengan kegigihan besar."},
+            {text: "Ingat, kamu tidak sendirian dalam perjuangan ini. Konseling adalah tanda kekuatan, bukan kelemahan."},
+            {text: "Bakat terpendammu adalah harta karun. Tes Minat dan Bakat membantu membukanya."},
+            {text: "Langkah kecil setiap hari lebih baik daripada rencana besar yang tidak pernah dimulai."},
+            {text: "Dirimu di masa depan berterima kasih atas kerja kerasmu hari ini."},
+            {text: "Jangan bandingkan prosesmu dengan orang lain. Fokus pada kemajuan diri sendiri."},
+            {text: "Perubahan dimulai dari dalam. Kembangkan pola pikir yang positif dan tangguh."},
+            {text: "Rasa cemas hari ini akan menjadi kekuatan besok, jika kamu mau mengolahnya."},
+            {text: "Tujuan tanpa rencana hanyalah harapan. Buat rencana, dan raih apa yang kamu inginkan."},
+            {text: "Jangan takut akan lambat, takutlah jika kamu berhenti di tengah jalan."},
+            {text: "Hari ini adalah kesempatan baru untuk menulis kisah yang lebih baik dari kemarin."},
+            {text: "Berikan yang terbaik, dan hasilnya akan mengikuti kualitas usahamu."},
+            {text: "Jadikan kesulitan sebagai guru terbaikmu. Mereka membentuk dirimu yang tangguh."},
+            {text: "Kembangkan kebiasaan baik; mereka adalah arsitek dari keberhasilanmu."},
+        ];
+
+        // Buat array quotesData dengan 365 entri dari uniqueQuotes (diulang)
+        const totalImages = 365;
+        const quotesData = Array.from({length: totalImages}, (_, i) => uniqueQuotes[i % uniqueQuotes.length]);
+
+        // URL Gambar Picsum (Gunakan 365 ID berbeda)
+        const imageUrls = Array.from({length: totalImages}, (_, i) => 
+            `https://picsum.photos/id/${100 + i}/${DEFAULT_WIDTH}/${DEFAULT_HEIGHT}`
+        );
+
+
+        // --- Event listeners untuk kontrol lainnya ---
+        document.getElementById('fontSizeMain').addEventListener('input', () => updatePreview(0));
+        document.getElementById('fontSizeDate').addEventListener('input', () => updatePreview(0));
+        document.getElementById('textColor').addEventListener('input', () => updatePreview(0));
+        document.getElementById('shadowColor').addEventListener('input', () => updatePreview(0));
+        document.getElementById('bgContrast').addEventListener('input', () => updatePreview(0));
+        document.getElementById('bgHue').addEventListener('input', () => updatePreview(0));
+        document.getElementById('brandText').addEventListener('input', () => updatePreview(0));
+        document.getElementById('logoSize').addEventListener('input', () => updatePreview(0));
+
+
+        /**
+         * Fungsi untuk memecah teks menjadi baris
+         */
+        function wrapText(context, text, maxWidth) {
+            const words = text.split(' ');
+            let lines = [];
+            let currentLine = words[0] || '';
+
+            for (let i = 1; i < words.length; i++) {
+                const word = words[i];
+                const width = context.measureText(currentLine + " " + word).width;
+                if (width < maxWidth) {
+                    currentLine += " " + word;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
+
+        /**
+         * Menghitung tanggal, bulan, tahun, dan hari untuk indeks tertentu
+         * Dimulai dari 1 Januari 2026.
+         * @param {number} index - Indeks hari (0 sampai 364)
+         * @returns {object} {day: string, date: number, month: string, year: number}
+         */
+        function calculateDate(index) {
+            // Set start date to 2026-01-01 (using UTC to prevent local timezone offset issues)
+            const startDate = new Date('2026-01-01T00:00:00Z'); 
+            const targetDate = new Date(startDate);
+            targetDate.setUTCDate(startDate.getUTCDate() + index);
+
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+            return {
+                day: days[targetDate.getUTCDay()],
+                date: targetDate.getUTCDate(),
+                month: months[targetDate.getUTCMonth()],
+                year: targetDate.getUTCFullYear()
+            };
+        }
+
+        /**
+         * Fungsi untuk menggambar overlay teks pada objek canvas/konteks tertentu
+         */
+        function drawTextOverlay(context, bgImg, quote, index) {
+            const bgW = DEFAULT_WIDTH;
+            const bgH = DEFAULT_HEIGHT;
+            
+            const fontSizeMain = parseInt(document.getElementById('fontSizeMain').value) || 48;
+            const fontSizeDate = parseInt(document.getElementById('fontSizeDate').value) || 24;
+            const textColor = document.getElementById('textColor').value;
+            const shadowColor = document.getElementById('shadowColor').value;
+            const brandText = document.getElementById('brandText').value;
+            const logoSize = parseInt(document.getElementById('logoSize').value) || 60;
+            
+            // Ambil nilai filter
+            const contrastValue = parseFloat(document.getElementById('bgContrast').value) || 1.0;
+            const hueValue = parseInt(document.getElementById('bgHue').value) || 0;
+            
+            const padding = 60; // Padding kiri/kanan
+            const maxWidth = bgW - (padding * 2);
+            const text = quote.text;
+            
+            // Clear canvas
+            context.clearRect(0, 0, bgW, bgH);
+
+            // --- Draw Background & Filters ---
+            const isBgLoaded = bgImg && bgImg.complete && bgImg.naturalWidth !== 0;
+
+            if (isBgLoaded) {
+                context.filter = `contrast(${contrastValue}) hue-rotate(${hueValue}deg)`;
+                
+                context.drawImage(bgImg, 0, 0, bgW, bgH);
+                context.fillStyle = 'rgba(0, 0, 0, 0.5)'; // Overlay hitam 50%
+                context.fillRect(0, 0, bgW, bgH); 
+
+                // Hapus filter sebelum menggambar teks
+                context.filter = 'none'; 
+            } else {
+                // Fallback to gradient if no image
+                const gradient = context.createLinearGradient(0, 0, bgW, bgH);
+                gradient.addColorStop(0, '#667eea');
+                gradient.addColorStop(1, '#764ba2');
+                context.fillStyle = gradient;
+                context.fillRect(0, 0, bgW, bgH);
+            }
+
+
+            // --- 1. Draw Logo and Brand Text (Top Right) ---
+            const logoPadding = 40;
+            const logoY = logoPadding;
+
+            context.fillStyle = '#ffffff';
+            const brandFontSize = 28;
+            context.font = `bold ${brandFontSize}px Segoe UI, sans-serif`;
+            const textWidth = context.measureText(brandText).width;
+            
+            const currentLogoSize = logoSize; 
+            const logoX = bgW - logoPadding - currentLogoSize;
+            
+            // Hitung lebar total untuk teks dan logo agar rata kanan
+            const totalWidth = currentLogoSize + 15 + textWidth; 
+            const startX = bgW - logoPadding - totalWidth; 
+
+            // Draw Brand Text (to the left of logo)
+            context.textAlign = 'left';
+            context.textBaseline = 'middle';
+            const brandTextY = logoY + currentLogoSize / 2;
+            const brandTextX = startX + currentLogoSize + 15;
+            context.fillText(brandText, brandTextX, brandTextY);
+
+            // Draw logo if loaded (on the LEFT of brand text)
+            if (logoLoaded && document.getElementById('logoUrl').value) {
+                context.drawImage(logoImage, startX, logoY, currentLogoSize, currentLogoSize);
+            }
+
+            // --- 2. Draw Main Text (Center) ---
+            
+            // Terapkan shadow untuk visibilitas
+            context.shadowColor = shadowColor;
+            context.shadowBlur = 10;
+            context.shadowOffsetX = 3;
+            context.shadowOffsetY = 3;
+
+            context.fillStyle = textColor;
+            context.font = `bold ${fontSizeMain}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            
+            const lines = wrapText(context, text, maxWidth);
+            const lineHeight = fontSizeMain * 1.4;
+            const totalTextHeight = lines.length * lineHeight;
+            
+            // Posisi di tengah vertikal, sedikit ke atas untuk memberi ruang pada tanggal
+            let startY = (bgH / 2) - (totalTextHeight / 2) + 20; 
+            
+            lines.forEach((line, i) => {
+                const yPos = startY + (i * lineHeight) + (lineHeight / 2);
+                context.fillText(line, bgW / 2, yPos);
+            });
+
+            // Nonaktifkan shadow
+            context.shadowColor = 'transparent';
+            context.shadowBlur = 0;
+            context.shadowOffsetX = 0;
+            context.shadowOffsetY = 0;
+            
+            // --- 3. Draw Date/Day (Bottom Right) ---
+            const dateObj = calculateDate(index);
+            const dateText = `${dateObj.day}, ${dateObj.date} ${dateObj.month} ${dateObj.year}`;
+            
+            context.fillStyle = '#ffffff'; // Warna putih untuk tanggal
+            context.font = `${fontSizeDate}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+            context.textAlign = 'right';
+            context.textBaseline = 'bottom';
+            
+            const dateX = bgW - padding;
+            const dateY = bgH - padding;
+            
+            context.fillText(dateText, dateX, dateY);
+        }
+
+
+        function updatePreview(index) {
+            const imageUrl = imageUrls[index];
+            const quote = quotesData[index];
+            const image = new Image();
+            
+            const dateObj = calculateDate(index);
+            const previewText = `${dateObj.day}, ${dateObj.date} ${dateObj.month} ${dateObj.year}`;
+
+            document.getElementById('statusMessage').innerText = `Loading Preview Hari ke-${index + 1} (${previewText})...`;
+
+            image.crossOrigin = 'Anonymous'; 
+            image.src = imageUrl;
+
+            image.onload = function() {
+                drawTextOverlay(ctx, image, quote, index);
+                document.getElementById('statusMessage').innerText = `Preview Hari ke-${index + 1} (${previewText}) ditampilkan.`;
+            };
+
+            image.onerror = function() {
+                console.error(`Gagal memuat gambar untuk preview: ${imageUrl}`);
+                document.getElementById('statusMessage').innerText = `Gagal memuat gambar ${index + 1}. Menampilkan background fallback.`;
+                drawTextOverlay(ctx, null, quote, index); 
+            };
+        }
+
+        /**
+         * FUNGSI MULTI-DOWNLOAD DENGAN JSZip
+         */
+        function downloadAllImages() {
+            const zip = new JSZip();
+            let filesProcessed = 0;
+            const totalFiles = imageUrls.length;
+            const KUALITAS_KOMPRESI = 0.8; // Kualitas JPEG (0.0 - 1.0)
+            
+            if (totalFiles === 0) {
+                 alert("Tidak ada data kutipan untuk diproses.");
+                 return;
+            }
+
+            document.getElementById('statusMessage').innerText = `Mulai memproses ${totalFiles} gambar... Harap tunggu. Proses ini memerlukan waktu.`;
+
+            // Proses setiap kutipan dan URL gambar
+            for (let i = 0; i < totalFiles; i++) {
+                const imageUrl = imageUrls[i];
+                const quote = quotesData[i];
+                const index = i; // Simpan indeks saat ini
+                
+                const image = new Image();
+                image.crossOrigin = 'Anonymous'; 
+                image.src = imageUrl;
+                
+                const processFile = (loadedImage, isFallback = false) => {
+                    // 1. Buat kanvas baru di memori
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = DEFAULT_WIDTH;
+                    tempCanvas.height = DEFAULT_HEIGHT;
+                    const tempCtx = tempCanvas.getContext('2d');
+
+                    // 2. Gambar overlay teks pada kanvas sementara
+                    drawTextOverlay(tempCtx, isFallback ? null : loadedImage, quote, index);
+                    
+                    // 3. Tentukan nama file menggunakan tanggal
+                    const dateObj = calculateDate(index);
+                    const dateFileName = `${dateObj.year}-${(dateObj.month).slice(0, 3).toUpperCase()}-${dateObj.date.toString().padStart(2, '0')}`;
+                    const fileName = `Lidan_Psikologi_${dateFileName}${isFallback ? '_FALLBACK' : ''}.jpeg`; 
+
+                    // 4. Konversi Canvas ke Data URL JPEG
+                    const dataUrl = tempCanvas.toDataURL('image/jpeg', KUALITAS_KOMPRESI);
+                    
+                    // 5. Tambahkan file ke objek ZIP
+                    const base64Data = dataUrl.split(',')[1];
+                    zip.file(fileName, base64Data, {base64: true});
+
+                    filesProcessed++;
+                    document.getElementById('statusMessage').innerText = `Memproses... ${filesProcessed}/${totalFiles} selesai.`;
+
+                    // Cek apakah semua file sudah diproses
+                    if (filesProcessed === totalFiles) {
+                        // 6. Generate dan Download ZIP
+                        zip.generateAsync({type:"blob"})
+                        .then(function(content) {
+                            saveAs(content, "365_Kutipan_Lidan_Psikologi_2026.zip");
+                            document.getElementById('statusMessage').innerText = `✅ Selesai! File ZIP berhasil diunduh. Total ${totalFiles} gambar.`;
+                        });
+                    }
+                }
+
+                image.onload = function() {
+                    processFile(image, false);
+                };
+
+                image.onerror = function() {
+                    console.error(`Gagal memuat gambar untuk unduhan: ${imageUrl}`);
+                    // Jika gambar gagal dimuat, gunakan fallback gradient dan tetap tambahkan ke ZIP
+                    processFile(null, true); 
+                };
+            }
+        }
+
+        // Initial render
+        updatePreview(0); // Tampilkan kutipan pertama sebagai preview
+    </script>
+</body>
+</html>

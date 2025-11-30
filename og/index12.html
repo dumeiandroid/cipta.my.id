@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Gambar Teks Otomatis - Lidan Psikologi</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 1300px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="number"],
+        input[type="url"],
+        select,
+        textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input[type="number"]:focus,
+        input[type="url"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            grid-column: 1 / -1;
+        }
+
+        input[type="color"] {
+            width: 60px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+
+        .canvas-container {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            overflow: auto;
+        }
+
+        canvas {
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 100%;
+            height: auto;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .section-title {
+            color: #333;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            grid-column: 1 / -1;
+        }
+
+        .help-text {
+            color: #888;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Generator Otomatis Percakapan - Lidan Psikologi</h1>
+        <p class="subtitle">Membuat 100 gambar tanya jawab Inggris-Indonesia otomatis dengan background dari Picsum Photos (1200x630).</p>
+
+        <div class="controls">
+            <div class="section-title">🎨 Pengaturan Tampilan</div>
+            
+            <div class="input-group">
+                <label>Ukuran Font (English):</label>
+                <input type="number" id="fontSizeEn" value="48" min="20" max="150">
+            </div>
+
+            <div class="input-group">
+                <label>Ukuran Font (Indonesian):</label>
+                <input type="number" id="fontSizeId" value="36" min="20" max="150">
+            </div>
+
+            <div class="input-group">
+                <label>Warna Teks:</label>
+                <input type="color" id="textColor" value="#ffffff">
+            </div>
+            
+            <div class="input-group">
+                <label>Warna Shadow Teks:</label>
+                <input type="color" id="shadowColor" value="#000000">
+                <span class="help-text">Tambahkan shadow untuk visibilitas.</span>
+            </div>
+
+            <div class="input-group">
+                <label>Kontras Gambar Background (0.5 - 2.0):</label>
+                <input type="number" id="bgContrast" value="1.0" min="0.5" max="2.0" step="0.1">
+                <span class="help-text">1.0 = normal. Mengatur tingkat kontras.</span>
+            </div>
+            
+            <div class="input-group">
+                <label>Warna Gambar Background (Hue Rotate):</label>
+                <input type="range" id="bgHue" value="0" min="0" max="360" step="1">
+                <span class="help-text">0 = normal. Memutar rona warna (dalam derajat).</span>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="canvas" width="1200" height="630"></canvas>
+        </div>
+
+        <div class="button-group">
+            <button onclick="updatePreview(0)">🔄 Update Preview (Percakapan ke-1)</button>
+            <button onclick="downloadAllImages()">⬇️ Generate & Download 100 Gambar ZIP</button> 
+        </div>
+
+        <p id="statusMessage" style="text-align: center; margin-top: 20px; font-weight: bold; color: #333;"></p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const DEFAULT_WIDTH = 1200;
+        const DEFAULT_HEIGHT = 630;
+        
+        canvas.width = DEFAULT_WIDTH;
+        canvas.height = DEFAULT_HEIGHT;
+
+        // Data untuk 100 Percakapan Tanya Jawab Sehari-hari
+        const quotesData = [
+    {en: "A: How can I register for the Interest and Talent Test?\nB: You can register via our website or WhatsApp contact.", id: "A: Bagaimana cara mendaftar untuk Tes Minat dan Bakat?\nB: Anda bisa mendaftar melalui website atau kontak WhatsApp kami."},
+    {en: "A: What is the main purpose of taking the Talent Test?\nB: It helps discover suitable majors and careers for your future.", id: "A: Apa tujuan utama mengikuti Tes Bakat?\nB: Ini membantu menemukan jurusan dan karier yang cocok untuk masa depan Anda."},
+    {en: "A: How long is the duration of the counseling session?\nB: Each standard individual session lasts for 60 to 90 minutes.", id: "A: Berapa lama durasi sesi konseling?\nB: Setiap sesi individu standar berlangsung selama 60 hingga 90 menit."},
+    {en: "A: Do you offer corporate training or HR assessments?\nB: Yes, Lidan provides customized corporate psychology services.", id: "A: Apakah Anda menawarkan pelatihan perusahaan atau asesmen SDM?\nB: Ya, Lidan menyediakan layanan psikologi perusahaan yang disesuaikan."},
+    {en: "A: Where does Lidan Psikologi usually hold its seminars?\nB: We often hold them at our office or online via Zoom/Webinar.", id: "A: Di mana Lidan Psikologi biasanya mengadakan seminarnya?\nB: Kami sering mengadakan di kantor kami atau daring via Zoom/Webinar."},
+    {en: "A: What should I prepare before taking the Interest Test?\nB: Just ensure you are in a calm condition and well-rested.", id: "A: Apa yang harus saya siapkan sebelum mengikuti Tes Minat?\nB: Cukup pastikan Anda dalam kondisi tenang dan cukup istirahat."},
+    {en: "A: Is the test report discussed with a psychologist?\nB: Absolutely. The fee includes a direct consultation session.", id: "A: Apakah laporan tes didiskusikan dengan psikolog?\nB: Tentu saja. Biayanya sudah termasuk sesi konsultasi langsung."},
+    {en: "A: How can I choose the right psychologist for my issue?\nB: Our administrative team can recommend one based on your needs.", id: "A: Bagaimana cara memilih psikolog yang tepat untuk masalah saya?\nB: Tim administrasi kami dapat merekomendasikan satu berdasarkan kebutuhan Anda."},
+    {en: "A: What is the fee for the Comprehensive Interest and Talent package?\nB: Please check the 'Services' page on our website for the latest price list.", id: "A: Berapa biaya untuk paket Minat dan Bakat Komprehensif?\nB: Silakan cek halaman 'Layanan' di website kami untuk daftar harga terbaru."},
+    {en: "A: Is the consultation session confidential?\nB: Yes, confidentiality and professional ethics are our top priority.", id: "A: Apakah sesi konsultasi bersifat rahasia?\nB: Ya, kerahasiaan dan etika profesional adalah prioritas utama kami."},
+    {en: "A: Do you offer counseling for career change decisions?\nB: Yes, career counseling is one of our specialized services.", id: "A: Apakah Anda menawarkan konseling untuk keputusan perubahan karier?\nB: Ya, konseling karier adalah salah satu layanan spesialisasi kami."},
+    {en: "A: How long does it take to get the Interest Test results?\nB: The result report is ready within 5 working days after the test.", id: "A: Berapa lama waktu yang dibutuhkan untuk mendapatkan hasil Tes Minat?\nB: Laporan hasil siap dalam 5 hari kerja setelah tes."},
+    {en: "A: Can the Talent Test also be taken by adults?\nB: Of course. It's useful for adults seeking career direction or reskilling.", id: "A: Bisakah Tes Bakat juga diikuti oleh orang dewasa?\nB: Tentu saja. Ini berguna untuk orang dewasa yang mencari arah karier atau pelatihan ulang."},
+    {en: "A: I want to join a seminar on stress management. Is there one soon?\nB: We have a seminar on that topic next Tuesday. Will you join?", id: "A: Saya ingin ikut seminar tentang manajemen stres. Apakah ada yang sebentar lagi?\nB: Kami ada seminar tentang topik itu Selasa depan. Apakah Anda akan bergabung?"},
+    {en: "A: Do you have a trial session for first-time counseling clients?\nB: We offer a brief introductory consultation to understand your needs.", id: "A: Apakah Anda punya sesi percobaan untuk klien konseling pertama kali?\nB: Kami menawarkan konsultasi pengantar singkat untuk memahami kebutuhan Anda."},
+    {en: "A: What is the payment method for your services?\nB: We accept bank transfers and debit/credit card payments.", id: "A: Apa metode pembayaran untuk layanan Anda?\nB: Kami menerima transfer bank dan pembayaran kartu debit/kredit."},
+    {en: "A: Is there an age limit for the Interest and Talent Test?\nB: We recommend it for individuals aged 15 and above (junior high upwards).", id: "A: Apakah ada batasan usia untuk Tes Minat dan Bakat?\nB: Kami merekomendasikannya untuk individu usia 15 tahun ke atas (SMP ke atas)."},
+    {en: "A: I feel burnt out at work. Can counseling help me?\nB: Yes, a psychologist can help identify the cause and develop coping strategies.", id: "A: Saya merasa *burnt out* di tempat kerja. Bisakah konseling membantu saya?\nB: Ya, psikolog dapat membantu mengidentifikasi penyebabnya dan mengembangkan strategi penanggulangan."},
+    {en: "A: Can the test be done online (remotely)?\nB: Many of our psychological tests can be done online under supervision.", id: "A: Bisakah tes dilakukan secara *online* (jarak jauh)?\nB: Banyak tes psikologi kami dapat dilakukan secara *online* di bawah pengawasan."},
+    {en: "A: Is Lidan Psikologi open on weekends?\nB: We are open Saturday mornings for appointments, but closed on Sundays.", id: "A: Apakah Lidan Psikologi buka di akhir pekan?\nB: Kami buka Sabtu pagi untuk janji temu, tetapi tutup pada hari Minggu."},
+    {en: "A: What is the definition of 'talent' in a psychological context?\nB: It refers to a person's natural, specific aptitude for something.", id: "A: Apa definisi 'bakat' dalam konteks psikologi?\nB: Ini mengacu pada bakat alami dan spesifik seseorang untuk melakukan sesuatu."},
+    {en: "A: Do you provide psychological letters or recommendations for schools?\nB: Yes, if needed, we can issue official psychological assessment letters.", id: "A: Apakah Anda menyediakan surat atau rekomendasi psikologi untuk sekolah?\nB: Ya, jika diperlukan, kami dapat mengeluarkan surat asesmen psikologi resmi."},
+    {en: "A: How often should I attend counseling sessions?\nB: Typically, sessions are held once a week, but it depends on the client's needs.", id: "A: Seberapa sering saya harus menghadiri sesi konseling?\nB: Biasanya, sesi diadakan seminggu sekali, tapi tergantung pada kebutuhan klien."},
+    {en: "A: Are your seminar materials suitable for parents?\nB: We have specific seminars designed for parenting and child development.", id: "A: Apakah materi seminar Anda cocok untuk orang tua?\nB: Kami memiliki seminar khusus yang dirancang untuk pengasuhan dan perkembangan anak."},
+    {en: "A: Can the Interest Test help me choose a college major?\nB: Yes, that is its primary function: educational and career guidance.", id: "A: Bisakah Tes Minat membantu saya memilih jurusan kuliah?\nB: Ya, itu adalah fungsi utamanya: panduan pendidikan dan karier."},
+    {en: "A: What is included in the premium Interest and Talent package?\nB: It includes an in-depth test, consultation, and follow-up support.", id: "A: Apa saja yang termasuk dalam paket Minat dan Bakat premium?\nB: Ini mencakup tes mendalam, konsultasi, dan dukungan tindak lanjut."},
+    {en: "A: I feel anxious lately. Should I see a psychologist or a psychiatrist?\nB: Start with a psychologist for counseling; they will refer you if needed.", id: "A: Saya merasa cemas akhir-akhir ini. Haruskah saya menemui psikolog atau psikiater?\nB: Mulailah dengan psikolog untuk konseling; mereka akan merujuk Anda jika diperlukan."},
+    {en: "A: Can I reschedule my appointment if I have an emergency?\nB: Please inform us at least 24 hours in advance to reschedule without a fee.", id: "A: Bisakah saya menjadwal ulang janji temu jika ada keadaan darurat?\nB: Harap informasikan kami setidaknya 24 jam sebelumnya untuk penjadwalan ulang tanpa biaya."},
+    {en: "A: Do you use standardized and valid psychological tools?\nB: Absolutely. We only use scientifically proven and standardized tools.", id: "A: Apakah Anda menggunakan alat psikologi yang terstandardisasi dan valid?\nB: Tentu saja. Kami hanya menggunakan alat yang terbukti ilmiah dan terstandardisasi."},
+    {en: "A: How can I access your previous seminar recording?\nB: If you attended, you usually receive a link to the recording via email.", id: "A: Bagaimana cara mengakses rekaman seminar Anda sebelumnya?\nB: Jika Anda hadir, Anda biasanya menerima tautan rekaman via email."},
+    {en: "A: What is the ideal time to take the Interest and Talent Test?\nB: End of junior high school or during the first year of senior high is ideal.", id: "A: Kapan waktu yang ideal untuk mengikuti Tes Minat dan Bakat?\nB: Akhir SMP atau selama tahun pertama SMA adalah ideal."},
+    {en: "A: Can parents attend the consultation session for their child's test results?\nB: Yes, parental involvement is strongly encouraged for result discussion.", id: "A: Bisakah orang tua menghadiri sesi konsultasi hasil tes anak mereka?\nB: Ya, keterlibatan orang tua sangat dianjurkan untuk diskusi hasil."},
+    {en: "A: I want to improve my communication skills. Do you have a workshop for that?\nB: Yes, we regularly hold Communication Skills Workshops for professionals.", id: "A: Saya ingin meningkatkan keterampilan komunikasi saya. Apakah Anda punya *workshop* untuk itu?\nB: Ya, kami rutin mengadakan *Workshop* Keterampilan Komunikasi untuk para profesional."},
+    {en: "A: What is the benefit of counseling compared to just talking to friends?\nB: A psychologist provides objective, professional, and ethical guidance.", id: "A: Apa manfaat konseling dibandingkan hanya berbicara dengan teman?\nB: Seorang psikolog memberikan panduan yang objektif, profesional, dan etis."},
+    {en: "A: Do you accept BPJS or health insurance for counseling services?\nB: Currently, we accept private payments only. Please check back later for updates.", id: "A: Apakah Anda menerima BPJS atau asuransi kesehatan untuk layanan konseling?\nB: Saat ini, kami hanya menerima pembayaran pribadi. Silakan cek kembali untuk pembaruan."},
+    {en: "A: Can I request a specific psychologist for my session?\nB: You can request one, subject to their availability and specialization.", id: "A: Bisakah saya meminta psikolog tertentu untuk sesi saya?\nB: Anda dapat memintanya, tergantung pada ketersediaan dan spesialisasi mereka."},
+    {en: "A: What's the best way to contact your administrative team?\nB: WhatsApp is the fastest channel for quick responses and booking.", id: "A: Apa cara terbaik untuk menghubungi tim administrasi Anda?\nB: WhatsApp adalah saluran tercepat untuk respons cepat dan pemesanan."},
+    {en: "A: Does the Interest Test consider personality factors?\nB: Yes, a comprehensive test integrates interest, aptitude, and personality components.", id: "A: Apakah Tes Minat mempertimbangkan faktor kepribadian?\nB: Ya, tes komprehensif mengintegrasikan komponen minat, bakat, dan kepribadian."},
+    {en: "A: Can I attend the seminar without prior registration?\nB: No, pre-registration is mandatory to secure your seat and receive materials.", id: "A: Bisakah saya menghadiri seminar tanpa pendaftaran sebelumnya?\nB: Tidak, pendaftaran awal wajib untuk mengamankan tempat Anda dan menerima materi."},
+    {en: "A: How do I know if the career choice is right for my talent?\nB: The test report provides specific recommendations and alignment levels.", id: "A: Bagaimana saya tahu jika pilihan karier sudah tepat dengan bakat saya?\nB: Laporan tes memberikan rekomendasi spesifik dan tingkat keselarasan."},
+    {en: "A: I feel lost and unsure about my goals. Can I get help?\nB: Yes, we offer Life Coaching and Goal Setting sessions through our psychologists.", id: "A: Saya merasa tersesat dan tidak yakin dengan tujuan saya. Bisakah saya mendapatkan bantuan?\nB: Ya, kami menawarkan sesi *Life Coaching* dan Penetapan Tujuan melalui psikolog kami."},
+    {en: "A: Do you offer services specifically for children (under 10 years old)?\nB: Yes, we have specialized services like developmental assessments for children.", id: "A: Apakah Anda menawarkan layanan khusus untuk anak-anak (di bawah 10 tahun)?\nB: Ya, kami memiliki layanan khusus seperti asesmen perkembangan untuk anak-anak."},
+    {en: "A: What if I am not satisfied with the Interest and Talent Test results?\nB: The results are based on objective data. We offer re-consultation to ensure understanding.", id: "A: Bagaimana jika saya tidak puas dengan hasil Tes Minat dan Bakat?\nB: Hasil didasarkan pada data objektif. Kami menawarkan konsultasi ulang untuk memastikan pemahaman."},
+    {en: "A: Can I pay for counseling sessions per meeting?\nB: Yes, we offer both per-session payments and package deals.", id: "A: Bisakah saya membayar sesi konseling per pertemuan?\nB: Ya, kami menawarkan pembayaran per sesi dan paket harga."},
+    {en: "A: What is the main theme of the upcoming seminar this month?\nB: The main theme is 'Building Resilience in the Digital Age'.", id: "A: Apa tema utama seminar yang akan datang bulan ini?\nB: Tema utamanya adalah 'Membangun Ketahanan di Era Digital'."},
+    {en: "A: Is there a discount for student groups taking the Talent Test?\nB: Yes, we provide special prices for group testing for schools or campuses.", id: "A: Apakah ada diskon untuk kelompok siswa yang mengikuti Tes Bakat?\nB: Ya, kami memberikan harga khusus untuk tes kelompok bagi sekolah atau kampus."},
+    {en: "A: How do you ensure the test environment is comfortable for clients?\nB: Our testing room is private, quiet, and designed for maximum comfort.", id: "A: Bagaimana Anda memastikan lingkungan tes nyaman bagi klien?\nB: Ruang tes kami bersifat pribadi, tenang, dan dirancang untuk kenyamanan maksimal."},
+    {en: "A: I want to know my emotional intelligence (EQ). Is there a test for that?\nB: Yes, we have specialized assessments to measure Emotional Quotient.", id: "A: Saya ingin tahu kecerdasan emosional (EQ) saya. Apakah ada tes untuk itu?\nB: Ya, kami memiliki asesmen khusus untuk mengukur Kecerdasan Emosional."},
+    {en: "A: Do you provide a certificate after completing the seminar?\nB: Yes, all seminar participants receive an e-certificate of attendance.", id: "A: Apakah Anda memberikan sertifikat setelah menyelesaikan seminar?\nB: Ya, semua peserta seminar menerima *e-certificate* kehadiran."},
+    {en: "A: How should I address the psychologist during the session?\nB: You can call them 'Bapak/Ibu' or simply 'Psikolog [Name]'.", id: "A: Bagaimana seharusnya saya memanggil psikolog selama sesi?\nB: Anda bisa memanggil mereka 'Bapak/Ibu' atau cukup 'Psikolog [Nama]'."},
+    {en: "A: I'm considering switching majors. Can the Interest Test help validate this?\nB: Absolutely. The test can provide objective data to support or reconsider your decision.", id: "A: Saya sedang mempertimbangkan pindah jurusan. Bisakah Tes Minat membantu memvalidasi ini?\nB: Tentu saja. Tes dapat memberikan data objektif untuk mendukung atau mempertimbangkan kembali keputusan Anda."},
+    {en: "A: Do I need a referral letter from a doctor to see a psychologist?\nB: No, you can directly book an appointment without a referral.", id: "A: Apakah saya perlu surat rujukan dari dokter untuk menemui psikolog?\nB: Tidak, Anda dapat langsung membuat janji tanpa rujukan."},
+    {en: "A: What psychological approach do you use in counseling?\nB: Our psychologists use various approaches, mainly Cognitive Behavioral Therapy (CBT).", id: "A: Pendekatan psikologi apa yang Anda gunakan dalam konseling?\nB: Psikolog kami menggunakan berbagai pendekatan, terutama *Cognitive Behavioral Therapy* (CBT)."},
+    {en: "A: I'm not in Jakarta. Can I still use Lidan Psikologi's services?\nB: Yes, we serve clients across Indonesia through online counseling and testing.", id: "A: Saya tidak berada di Jakarta. Bisakah saya tetap menggunakan layanan Lidan Psikologi?\nB: Ya, kami melayani klien di seluruh Indonesia melalui konseling dan tes *online*."},
+    {en: "A: What is the most popular service at Lidan Psikologi?\nB: The Interest and Talent Test is our most requested service, especially for students.", id: "A: Apa layanan yang paling populer di Lidan Psikologi?\nB: Tes Minat dan Bakat adalah layanan kami yang paling banyak diminta, terutama untuk pelajar."},
+    {en: "A: What if I miss the seminar registration deadline?\nB: You can contact the admin; sometimes, we still accept late registrations if seats are available.", id: "A: Bagaimana jika saya ketinggalan batas waktu pendaftaran seminar?\nB: Anda dapat menghubungi admin; terkadang, kami masih menerima pendaftaran terlambat jika kursi tersedia."},
+    {en: "A: How long should I wait between counseling sessions?\nB: Usually, one week is ideal to practice the strategies discussed in the previous session.", id: "A: Berapa lama saya harus menunggu di antara sesi konseling?\nB: Biasanya, satu minggu ideal untuk mempraktikkan strategi yang dibahas di sesi sebelumnya."},
+    {en: "A: Can the test assess which foreign language I have a talent for?\nB: Yes, it can indicate general linguistic aptitude and learning style.", id: "A: Bisakah tes menilai bahasa asing apa yang saya punya bakat?\nB: Ya, itu dapat menunjukkan bakat linguistik umum dan gaya belajar."},
+    {en: "A: Do you offer counseling packages for couples or families?\nB: Yes, we provide couple counseling and family therapy sessions.", id: "A: Apakah Anda menawarkan paket konseling untuk pasangan atau keluarga?\nB: Ya, kami menyediakan sesi konseling pasangan dan terapi keluarga."},
+    {en: "A: Is the test data stored safely and privately?\nB: All client data is encrypted and stored securely following data privacy laws.", id: "A: Apakah data tes disimpan dengan aman dan secara pribadi?\nB: Semua data klien dienkripsi dan disimpan dengan aman mengikuti undang-undang privasi data."},
+    {en: "A: Can I bring a friend to accompany me during the test?\nB: Only test participants are allowed in the testing room to maintain focus.", id: "A: Bisakah saya membawa teman untuk menemani saat tes?\nB: Hanya peserta tes yang diizinkan berada di ruang tes untuk menjaga fokus."},
+    {en: "A: What is the benefit of joining Lidan's psychological seminars?\nB: You gain practical knowledge from experts and earn a professional certificate.", id: "A: Apa manfaat bergabung dengan seminar psikologi Lidan?\nB: Anda mendapatkan pengetahuan praktis dari para ahli dan mendapatkan sertifikat profesional."},
+    {en: "A: I want a follow-up consultation six months after the test. Is that possible?\nB: Yes, we offer follow-up consultation slots. You can book them separately.", id: "A: Saya ingin konsultasi tindak lanjut enam bulan setelah tes. Apakah itu mungkin?\nB: Ya, kami menawarkan slot konsultasi tindak lanjut. Anda dapat memesannya secara terpisah."},
+    {en: "A: Do you provide psychological assessments for school admission?\nB: Yes, we conduct psychological tests required for certain school enrollment processes.", id: "A: Apakah Anda menyediakan asesmen psikologi untuk penerimaan sekolah?\nB: Ya, kami melakukan tes psikologi yang disyaratkan untuk proses pendaftaran sekolah tertentu."},
+    {en: "A: I'm not sure if my problem is big enough for counseling.\nB: No problem is too small. If it affects your life, a session is beneficial.", id: "A: Saya tidak yakin apakah masalah saya cukup besar untuk konseling.\nB: Tidak ada masalah yang terlalu kecil. Jika itu memengaruhi hidup Anda, sesi akan bermanfaat."},
+    {en: "A: How do I prepare for the consultation session?\nB: Write down your questions and the main points you want to discuss.", id: "A: Bagaimana saya mempersiapkan diri untuk sesi konsultasi?\nB: Tuliskan pertanyaan Anda dan poin-poin utama yang ingin Anda diskusikan."},
+    {en: "A: Is the Talent Test result final and absolute?\nB: The result is a recommendation based on data, but your personal decision is paramount.", id: "A: Apakah hasil Tes Bakat bersifat final dan mutlak?\nB: Hasilnya adalah rekomendasi berdasarkan data, tetapi keputusan pribadi Anda adalah yang terpenting."},
+    {en: "A: What if I need an emergency consultation outside office hours?\nB: We do not offer emergency services, please contact an emergency mental health hotline.", id: "A: Bagaimana jika saya membutuhkan konsultasi darurat di luar jam kantor?\nB: Kami tidak menawarkan layanan darurat, silakan hubungi saluran siaga kesehatan mental darurat."},
+    {en: "A: Can the seminar be held exclusively for our company staff?\nB: Yes, we can arrange an in-house training with material customized for your staff.", id: "A: Bisakah seminar diadakan secara eksklusif untuk staf perusahaan kami?\nB: Ya, kami dapat mengatur pelatihan *in-house* dengan materi yang disesuaikan untuk staf Anda."},
+    {en: "A: What is the most effective way to follow up on my test recommendations?\nB: Focus on developing skills in the areas highlighted as your strengths.", id: "A: Apa cara paling efektif untuk menindaklanjuti rekomendasi tes saya?\nB: Fokus pada pengembangan keterampilan di area yang disorot sebagai kekuatan Anda."},
+    {en: "A: Do you use any projection techniques in your assessments?\nB: We use a balanced mix of objective and, when necessary, projective tests.", id: "A: Apakah Anda menggunakan teknik proyeksi dalam asesmen Anda?\nB: Kami menggunakan campuran seimbang antara tes objektif dan, bila perlu, tes proyektif."},
+    {en: "A: I feel discouraged about my current career. Should I change it?\nB: We can explore that in career counseling sessions to clarify your options.", id: "A: Saya merasa kecil hati tentang karier saya saat ini. Haruskah saya mengubahnya?\nB: Kami dapat menggali hal itu dalam sesi konseling karier untuk memperjelas pilihan Anda."},
+    {en: "A: What is Lidan Psikologi's commitment to quality service?\nB: Our commitment is to provide accurate, ethical, and solution-focused services.", id: "A: Apa komitmen Lidan Psikologi terhadap kualitas layanan?\nB: Komitmen kami adalah memberikan layanan yang akurat, etis, dan berfokus pada solusi."},
+    {en: "A: Do you provide a detailed profile of the psychologist before the session?\nB: Yes, we provide a brief profile of your assigned psychologist.", id: "A: Apakah Anda memberikan profil terperinci tentang psikolog sebelum sesi?\nB: Ya, kami memberikan profil singkat psikolog yang ditugaskan kepada Anda."},
+    {en: "A: Can I bring my siblings to the counseling session for support?\nB: For individual counseling, only the client is allowed, unless it's a family session.", id: "A: Bisakah saya membawa saudara saya ke sesi konseling untuk dukungan?\nB: Untuk konseling individu, hanya klien yang diizinkan, kecuali ini sesi keluarga."},
+    {en: "A: How can I subscribe to Lidan's newsletter for seminar updates?\nB: You can subscribe by entering your email at the bottom of our homepage.", id: "A: Bagaimana saya bisa berlangganan buletin Lidan untuk pembaruan seminar?\nB: Anda dapat berlangganan dengan memasukkan email Anda di bagian bawah halaman utama kami."},
+    {en: "A: What is the difference between an interest and an aptitude?\nB: Interest is motivation, while aptitude is the potential ability to learn a skill.", id: "A: Apa perbedaan antara minat dan bakat (*aptitude*)?\nB: Minat adalah motivasi, sedangkan bakat (*aptitude*) adalah potensi kemampuan untuk mempelajari suatu keterampilan."},
+    {en: "A: Is the Interest and Talent Test available in English?\nB: The test itself is standardized, and the report is provided in Indonesian, with English terms.", id: "A: Apakah Tes Minat dan Bakat tersedia dalam bahasa Inggris?\nB: Tesnya sendiri terstandarisasi, dan laporannya disediakan dalam Bahasa Indonesia, dengan istilah bahasa Inggris."},
+    {en: "A: How do I know if my child needs psychological counseling?\nB: Look for significant, persistent changes in behavior, mood, or academic performance.", id: "A: Bagaimana saya tahu jika anak saya membutuhkan konseling psikologi?\nB: Carilah perubahan signifikan dan terus-menerus pada perilaku, suasana hati, atau prestasi akademik."},
+    {en: "A: What topics are typically covered in Lidan's psychoeducation seminars?\nB: Topics include mental health awareness, productivity, and relationship management.", id: "A: Topik apa yang biasanya dibahas dalam seminar psikoedukasi Lidan?\nB: Topiknya mencakup kesadaran kesehatan mental, produktivitas, dan manajemen hubungan."},
+    {en: "A: Do you offer services for developing leadership skills?\nB: Yes, we provide specialized assessments and training for leadership development.", id: "A: Apakah Anda menawarkan layanan untuk mengembangkan keterampilan kepemimpinan?\nB: Ya, kami menyediakan asesmen dan pelatihan khusus untuk pengembangan kepemimpinan."},
+    {en: "A: I am a student and the fee is a bit high. Is there an installment option?\nB: We offer payment plans in collaboration with certain financial platforms.", id: "A: Saya seorang pelajar dan biayanya agak tinggi. Apakah ada opsi cicilan?\nB: Kami menawarkan rencana pembayaran bekerja sama dengan platform keuangan tertentu."},
+    {en: "A: What is the success rate of the students who followed your test recommendations?\nB: The majority of our clients report higher satisfaction and suitability with their choices.", id: "A: Berapa tingkat keberhasilan siswa yang mengikuti rekomendasi tes Anda?\nB: Mayoritas klien kami melaporkan kepuasan dan kesesuaian yang lebih tinggi dengan pilihan mereka."},
+    {en: "A: Can I cancel my booking if I give notice two days before?\nB: Yes, with a notice of 48 hours, you can cancel and get a full refund.", id: "A: Bisakah saya membatalkan pemesanan jika saya memberitahu dua hari sebelumnya?\nB: Ya, dengan pemberitahuan 48 jam, Anda dapat membatalkan dan mendapatkan pengembalian dana penuh."},
+    {en: "A: Do you use a specific methodology to calculate talent?\nB: We use a blend of well-established psychometric theories and statistical methods.", id: "A: Apakah Anda menggunakan metodologi khusus untuk menghitung bakat?\nB: Kami menggunakan perpaduan teori psikometri dan metode statistik yang sudah mapan."},
+    {en: "A: I need a psychologist who specializes in dealing with trauma. Can you help?\nB: Yes, we have psychologists with specific experience in trauma and PTSD treatment.", id: "A: Saya butuh psikolog yang berspesialisasi dalam menangani trauma. Bisakah Anda bantu?\nB: Ya, kami memiliki psikolog dengan pengalaman khusus dalam pengobatan trauma dan PTSD."},
+    {en: "A: What's the best time to book a counseling session to avoid long waits?\nB: Mid-week, late morning, or early afternoon appointments are usually easier to get.", id: "A: Kapan waktu terbaik untuk memesan sesi konseling agar tidak menunggu lama?\nB: Janji temu di pertengahan minggu, menjelang siang, atau sore hari biasanya lebih mudah didapatkan."},
+    {en: "A: Is the seminar available in both Indonesian and English?\nB: Most of our public seminars are conducted in Indonesian, but we offer corporate English ones.", id: "A: Apakah seminar tersedia dalam Bahasa Indonesia dan Bahasa Inggris?\nB: Sebagian besar seminar publik kami diadakan dalam Bahasa Indonesia, tetapi kami menawarkan yang berbahasa Inggris untuk perusahaan."},
+    {en: "A: Does the Interest and Talent Test cover entrepreneurial inclination?\nB: Yes, our comprehensive test includes indicators for entrepreneurial potential.", id: "A: Apakah Tes Minat dan Bakat mencakup kecenderungan berwirausaha?\nB: Ya, tes komprehensif kami mencakup indikator potensi kewirausahaan."},
+    {en: "A: I want to know more about the personality disorders you handle.\nB: We handle various conditions. Please book an initial assessment for clarification.", id: "A: Saya ingin tahu lebih banyak tentang gangguan kepribadian yang Anda tangani.\nB: Kami menangani berbagai kondisi. Silakan pesan asesmen awal untuk klarifikasi."},
+    {en: "A: Do you offer training on emotional regulation skills?\nB: Yes, our psychologists often run therapeutic groups focused on emotion regulation.", id: "A: Apakah Anda menawarkan pelatihan tentang keterampilan regulasi emosi?\nB: Ya, psikolog kami sering menjalankan kelompok terapeutik yang berfokus pada regulasi emosi."},
+    {en: "A: Can the test help me choose between two very different career paths?\nB: Yes, the data comparison will show which path aligns best with your profile.", id: "A: Bisakah tes membantu saya memilih antara dua jalur karier yang sangat berbeda?\nB: Ya, perbandingan data akan menunjukkan jalur mana yang paling sesuai dengan profil Anda."},
+    {en: "A: What is the policy regarding late arrival for an appointment?\nB: Late arrivals might lead to a reduced session duration to keep the schedule on time.", id: "A: Apa kebijakan mengenai keterlambatan janji temu?\nB: Keterlambatan dapat menyebabkan durasi sesi berkurang untuk menjaga jadwal tetap tepat waktu."},
+    {en: "A: Do you have a location in Central Jakarta?\nB: Our main office is currently located in South Jakarta, close to the MRT station.", id: "A: Apakah Anda memiliki lokasi di Jakarta Pusat?\nB: Kantor utama kami saat ini berlokasi di Jakarta Selatan, dekat dengan stasiun MRT."},
+    {en: "A: I am an educator. Do you have seminars relevant to pedagogy?\nB: Yes, we run educational psychology seminars focused on effective teaching methods.", id: "A: Saya seorang pendidik. Apakah Anda punya seminar yang relevan dengan pedagogi?\nB: Ya, kami menjalankan seminar psikologi pendidikan yang berfokus pada metode pengajaran yang efektif."},
+    {en: "A: Is the counseling service covered by the company's insurance program?\nB: Please check the details of your insurance policy regarding mental health coverage.", id: "A: Apakah layanan konseling ditanggung oleh program asuransi perusahaan?\nB: Silakan periksa detail polis asuransi Anda mengenai perlindungan kesehatan mental."},
+    {en: "A: How can I recommend Lidan Psikologi to my friends?\nB: You can share our website link or leave a positive review on Google Maps.", id: "A: Bagaimana cara merekomendasikan Lidan Psikologi kepada teman-teman saya?\nB: Anda dapat membagikan tautan situs web kami atau memberikan ulasan positif di Google Maps."},
+    {en: "A: What is the main characteristic of the psychological tests Lidan uses?\nB: They are standardized, reliable, and validated by Indonesian experts.", id: "A: Apa ciri utama tes psikologi yang digunakan Lidan?\nB: Mereka terstandarisasi, andal, dan divalidasi oleh para ahli Indonesia."},
+    {en: "A: Do you provide psychological check-ups for individuals?\nB: Yes, we offer a complete mental and emotional health check-up package.", id: "A: Apakah Anda menyediakan pemeriksaan psikologi (*check-up*) untuk individu?\nB: Ya, kami menawarkan paket pemeriksaan kesehatan mental dan emosional lengkap."},
+    {en: "A: What if the test result suggests a career I never considered before?\nB: That is common! The consultation will help you explore this new potential path.", id: "A: Bagaimana jika hasil tes menyarankan karier yang belum pernah saya pertimbangkan?\nB: Itu biasa! Konsultasi akan membantu Anda mengeksplorasi jalur potensi baru ini."},
+    {en: "A: Are the seminar materials provided in print or digital format?\nB: Materials are usually provided in digital (PDF) format to save paper.", id: "A: Apakah materi seminar disediakan dalam format cetak atau digital?\nB: Materi biasanya disediakan dalam format digital (PDF) untuk menghemat kertas."},
+    {en: "A: What should I do if I am unhappy with my assigned psychologist?\nB: Please contact our admin confidentially, and we can discuss a transfer to another psychologist.", id: "A: Apa yang harus saya lakukan jika saya tidak senang dengan psikolog yang ditugaskan kepada saya?\nB: Harap hubungi admin kami secara rahasia, dan kami dapat mendiskusikan transfer ke psikolog lain."},
+    {en: "A: Do you have any testimonials from previous clients about the Talent Test?\nB: Yes, you can see testimonials on our website and social media pages.", id: "A: Apakah Anda punya testimoni dari klien sebelumnya tentang Tes Bakat?\nB: Ya, Anda bisa melihat testimoni di website dan halaman media sosial kami."},
+    {en: "A: Can the test assess which vocational school program is best for me?\nB: Definitely. We align the results with vocational and practical paths as well.", id: "A: Bisakah tes menilai program sekolah kejuruan mana yang terbaik untuk saya?\nB: Tentu saja. Kami menyelaraskan hasilnya dengan jalur kejuruan dan praktis juga."},
+    {en: "A: What is the policy for refunds if I cancel the service?\nB: Refunds are processed according to our cancellation policy, typically within 7 working days.", id: "A: Apa kebijakan pengembalian dana jika saya membatalkan layanan?\nB: Pengembalian dana diproses sesuai kebijakan pembatalan kami, biasanya dalam 7 hari kerja."},
+    {en: "A: Do you offer supervision or consultation for junior psychologists?\nB: Yes, we have senior psychologists who provide professional supervision services.", id: "A: Apakah Anda menawarkan supervisi atau konsultasi untuk psikolog junior?\nB: Ya, kami memiliki psikolog senior yang menyediakan layanan supervisi profesional."},
+    {en: "A: Can I get psychological help if I am currently outside Indonesia?\nB: If you are an Indonesian citizen, our online service can still assist you.", id: "A: Bisakah saya mendapatkan bantuan psikologi jika saya sedang di luar Indonesia?\nB: Jika Anda adalah warga negara Indonesia, layanan *online* kami tetap dapat membantu Anda."},
+    {en: "A: What is the required payment deadline after booking?\nB: Payment must be made within 24 hours to secure your appointment slot.", id: "A: Apa batas waktu pembayaran yang diwajibkan setelah pemesanan?\nB: Pembayaran harus dilakukan dalam waktu 24 jam untuk mengamankan slot janji temu Anda."},
+    {en: "A: Is the seminar fee refundable if I cannot attend?\nB: Generally, no, but the ticket can usually be transferred to another person.", id: "A: Apakah biaya seminar dapat dikembalikan jika saya tidak bisa hadir?\nB: Umumnya tidak, tetapi tiket biasanya dapat dialihkan ke orang lain."},
+    {en: "A: Do you have a waiting list for popular time slots?\nB: Yes, you can ask the admin to put you on the waiting list.", id: "A: Apakah Anda memiliki daftar tunggu untuk slot waktu yang populer?\nB: Ya, Anda dapat meminta admin untuk memasukkan Anda ke dalam daftar tunggu."},
+    {en: "A: What is the ideal frequency for couple counseling?\nB: Usually, bi-weekly sessions are effective for couple therapy.", id: "A: Berapa frekuensi ideal untuk konseling pasangan?\nB: Biasanya, sesi dua mingguan efektif untuk terapi pasangan."},
+    {en: "A: Can the Interest Test highlight potential for creative careers, like art or design?\nB: Yes, it includes scales related to artistic and creative interests.", id: "A: Bisakah Tes Minat menyoroti potensi untuk karier kreatif, seperti seni atau desain?\nB: Ya, itu mencakup skala yang berkaitan dengan minat artistik dan kreatif."},
+    {en: "A: What is the main difference between Lidan Psikologi and other institutions?\nB: We focus on personalized, ethical services with comprehensive follow-up.", id: "A: Apa perbedaan utama antara Lidan Psikologi dan institusi lain?\nB: Kami berfokus pada layanan yang dipersonalisasi, etis, dengan tindak lanjut yang komprehensif."},
+    {en: "A: Do you offer group therapy sessions for social anxiety?\nB: Yes, we periodically open registration for group therapy focused on social issues.", id: "A: Apakah Anda menawarkan sesi terapi kelompok untuk kecemasan sosial?\nB: Ya, kami secara berkala membuka pendaftaran untuk terapi kelompok yang berfokus pada masalah sosial."},
+    {en: "A: How can I access the seminar material again after the event?\nB: The material link is sent to your registered email and is usually available for a week.", id: "A: Bagaimana saya bisa mengakses materi seminar lagi setelah acara?\nB: Tautan materi dikirim ke email terdaftar Anda dan biasanya tersedia selama seminggu."},
+    {en: "A: What should I do if I feel uncomfortable talking about a specific issue?\nB: You can communicate this to the psychologist; they will respect your boundaries.", id: "A: Apa yang harus saya lakukan jika saya merasa tidak nyaman membicarakan masalah tertentu?\nB: Anda dapat mengkomunikasikan ini kepada psikolog; mereka akan menghormati batasan Anda."},
+    {en: "A: Do you guarantee job placement after taking the Talent Test?\nB: We provide direction and recommendations, but job placement depends on individual effort.", id: "A: Apakah Anda menjamin penempatan kerja setelah mengikuti Tes Bakat?\nB: Kami memberikan arah dan rekomendasi, tetapi penempatan kerja tergantung pada usaha individu."},
+    {en: "A: Can the test predict my academic performance?\nB: It assesses your potential and motivation, which strongly correlates with academic success.", id: "A: Bisakah tes memprediksi kinerja akademik saya?\nB: Ini menilai potensi dan motivasi Anda, yang sangat berkorelasi dengan keberhasilan akademik."},
+    {en: "A: What is the difference between individual and group counseling?\nB: Individual is one-on-one; group counseling involves a small number of clients with similar issues.", id: "A: Apa perbedaan antara konseling individu dan kelompok?\nB: Individu adalah satu-satu; konseling kelompok melibatkan sejumlah kecil klien dengan masalah serupa."},
+    {en: "A: Can I bring my own questionnaire for you to analyze?\nB: We prefer to use our standardized tools for accurate professional results.", id: "A: Bisakah saya membawa kuesioner sendiri untuk Anda analisis?\nB: Kami lebih suka menggunakan alat standar kami untuk hasil profesional yang akurat."},
+    {en: "A: Do you offer follow-up sessions after the seminar to discuss implementation?\nB: Yes, some seminars include a short follow-up Q&A session.", id: "A: Apakah Anda menawarkan sesi tindak lanjut setelah seminar untuk membahas implementasi?\nB: Ya, beberapa seminar mencakup sesi tanya jawab tindak lanjut singkat."},
+    {en: "A: Is there a special package for students who also need counseling?\nB: We offer customized bundled packages for testing and therapy.", id: "A: Apakah ada paket khusus untuk pelajar yang juga membutuhkan konseling?\nB: Kami menawarkan paket gabungan yang disesuaikan untuk pengujian dan terapi."},
+    {en: "A: How often are the Interest and Talent Test tools updated?\nB: We regularly update and re-standardize our tools according to current psychological research.", id: "A: Seberapa sering alat Tes Minat dan Bakat diperbarui?\nB: Kami secara teratur memperbarui dan menstandardisasi ulang alat kami sesuai dengan penelitian psikologi saat ini."},
+    {en: "A: What if I need a consultation outside Lidan's regular operating hours?\nB: We can sometimes accommodate flexible hours, please check with the admin for availability.", id: "A: Bagaimana jika saya membutuhkan konsultasi di luar jam operasional reguler Lidan?\nB: Kami terkadang dapat mengakomodasi jam yang fleksibel, silakan cek ketersediaan dengan admin."},
+    {en: "A: Do you have specialized seminars on parenting teenagers?\nB: Yes, our parenting series often focuses on communication with and understanding adolescents.", id: "A: Apakah Anda memiliki seminar khusus tentang mengasuh remaja?\nB: Ya, seri pengasuhan kami sering berfokus pada komunikasi dan pemahaman remaja."},
+    {en: "A: Can the test assess talent in sports or physical activities?\nB: Yes, it measures psychomotor abilities and related interests.", id: "A: Bisakah tes menilai bakat dalam olahraga atau aktivitas fisik?\nB: Ya, ini mengukur kemampuan psikomotorik dan minat terkait."},
+    {en: "A: How long does the online registration process take?\nB: The online registration form usually takes less than five minutes to complete.", id: "A: Berapa lama proses pendaftaran *online*?\nB: Formulir pendaftaran *online* biasanya membutuhkan waktu kurang dari lima menit untuk diselesaikan."},
+    {en: "A: I am an adult trying to find a new passion. Can the test help me?\nB: Absolutely. It's excellent for identifying new areas of interest and motivation.", id: "A: Saya orang dewasa yang mencoba menemukan minat baru. Bisakah tes membantu saya?\nB: Tentu saja. Ini sangat baik untuk mengidentifikasi area minat dan motivasi baru."},
+    {en: "A: What is the minimum recommended number of counseling sessions?\nB: There is no minimum; however, consistent sessions (4-8) are usually needed to see changes.", id: "A: Berapa jumlah minimum sesi konseling yang direkomendasikan?\nB: Tidak ada minimal; namun, sesi yang konsisten (4-8) biasanya diperlukan untuk melihat perubahan."},
+    {en: "A: Do you provide a written summary of the consultation after the session?\nB: Yes, a brief summary or action plan is usually provided to the client.", id: "A: Apakah Anda memberikan ringkasan tertulis konsultasi setelah sesi?\nB: Ya, ringkasan singkat atau rencana tindakan biasanya diberikan kepada klien."},
+    {en: "A: How often do you publish new articles or blog posts on psychology?\nB: We publish new psychoeducation content on our blog every week.", id: "A: Seberapa sering Anda menerbitkan artikel atau *blog post* baru tentang psikologi?\nB: Kami menerbitkan konten psikoedukasi baru di blog kami setiap minggu."},
+    {en: "A: Can I get my test results translated into English for international application?\nB: We can provide an official translation service for an additional fee.", id: "A: Bisakah saya mendapatkan hasil tes saya diterjemahkan ke dalam Bahasa Inggris untuk aplikasi internasional?\nB: Kami dapat menyediakan layanan terjemahan resmi dengan biaya tambahan."},
+    {en: "A: What should I wear when attending a test or counseling session?\nB: Wear comfortable and polite attire. Formal clothing is not required.", id: "A: Apa yang harus saya kenakan saat menghadiri sesi tes atau konseling?\nB: Kenakan pakaian yang nyaman dan sopan. Pakaian formal tidak diperlukan."},
+    {en: "A: Do you accept payment in installments for expensive packages?\nB: Yes, payment can be done in two installments for packages over a certain price.", id: "A: Apakah Anda menerima pembayaran secara mencicil untuk paket mahal?\nB: Ya, pembayaran dapat dilakukan dalam dua kali cicilan untuk paket di atas harga tertentu."},
+    {en: "A: Can the Interest Test help me understand why I keep changing jobs?\nB: Yes, it can highlight motivational misalignment with your current professional environment.", id: "A: Bisakah Tes Minat membantu saya memahami mengapa saya terus berganti pekerjaan?\nB: Ya, itu dapat menyoroti ketidakselarasan motivasi dengan lingkungan profesional Anda saat ini."},
+    {en: "A: How long in advance should I book a counseling appointment?\nB: We recommend booking at least 3-5 days in advance, especially for evening slots.", id: "A: Berapa lama sebelumnya saya harus memesan janji temu konseling?\nB: Kami merekomendasikan pemesanan setidaknya 3-5 hari sebelumnya, terutama untuk slot malam."},
+    {en: "A: Do you have a seminar specifically on improving self-confidence?\nB: Yes, 'The Confident Me' is one of our most popular workshop titles.", id: "A: Apakah Anda punya seminar khusus tentang meningkatkan rasa percaya diri?\nB: Ya, 'The Confident Me' adalah salah satu judul *workshop* kami yang paling populer."},
+    {en: "A: Can the test results be used for internal company promotions?\nB: Yes, we provide specific talent management assessments for corporate use.", id: "A: Bisakah hasil tes digunakan untuk promosi internal perusahaan?\nB: Ya, kami menyediakan asesmen manajemen bakat khusus untuk penggunaan perusahaan."},
+    {en: "A: I am under 18. Do I need parental consent for counseling?\nB: Yes, parental or guardian consent is mandatory for clients under 18 years old.", id: "A: Saya di bawah 18 tahun. Apakah saya perlu izin orang tua untuk konseling?\nB: Ya, izin orang tua atau wali wajib untuk klien di bawah usia 18 tahun."},
+    {en: "A: Is the price for the online test different from the offline test?\nB: The price is usually the same, as the assessment and consultation time remain the same.", id: "A: Apakah harga tes *online* berbeda dengan tes *offline*?\nB: Harganya biasanya sama, karena waktu asesmen dan konsultasi tetap sama."},
+    {en: "A: What if I realize I made a mistake in filling out the Interest Test?\nB: Don't worry, the test has validity checks to ensure the accuracy of your answers.", id: "A: Bagaimana jika saya menyadari saya melakukan kesalahan dalam mengisi Tes Minat?\nB: Jangan khawatir, tes memiliki pemeriksaan validitas untuk memastikan keakuratan jawaban Anda."},
+    {en: "A: Does Lidan Psikologi also offer psychological therapy for depression?\nB: Yes, our clinical psychologists are experienced in handling depression and anxiety.", id: "A: Apakah Lidan Psikologi juga menawarkan terapi psikologi untuk depresi?\nB: Ya, psikolog klinis kami berpengalaman dalam menangani depresi dan kecemasan."},
+    {en: "A: How can I register a group of 50 students for a mass Talent Test?\nB: Please contact our corporate services team directly for a customized proposal.", id: "A: Bagaimana cara mendaftarkan kelompok 50 siswa untuk Tes Bakat massal?\nB: Silakan hubungi tim layanan korporat kami secara langsung untuk proposal yang disesuaikan."},
+    {en: "A: What is the first step in the counseling process at Lidan?\nB: The first step is an initial assessment and setting shared therapeutic goals.", id: "A: Apa langkah pertama dalam proses konseling di Lidan?\nB: Langkah pertama adalah asesmen awal dan penetapan tujuan terapeutik bersama."},
+    {en: "A: Do you provide a guarantee of satisfaction for the seminar material?\nB: We ensure the material is high quality and delivered by certified professionals.", id: "A: Apakah Anda memberikan jaminan kepuasan untuk materi seminar?\nB: Kami memastikan materi berkualitas tinggi dan disampaikan oleh profesional bersertifikat."},
+    {en: "A: I'm not good at math, but the test suggested an engineering field. Why?\nB: The test looks beyond basic math and focuses on logical and problem-solving aptitude.", id: "A: Saya tidak pandai matematika, tetapi tes menyarankan bidang teknik. Mengapa?\nB: Tes melihat lebih dari matematika dasar dan berfokus pada bakat logis dan pemecahan masalah."},
+    {en: "A: Can I change my appointment from online to in-person (offline)?\nB: Yes, you can change it, subject to the availability of the room and the psychologist.", id: "A: Bisakah saya mengubah janji temu saya dari *online* menjadi tatap muka (*offline*)?\nB: Ya, Anda bisa mengubahnya, tergantung pada ketersediaan ruangan dan psikolog."},
+    {en: "A: What kind of psychological profile is included in the test report?\nB: The report includes profiles of your interests, aptitudes, personality, and career recommendations.", id: "A: Profil psikologi apa yang termasuk dalam laporan tes?\nB: Laporan mencakup profil minat, bakat, kepribadian, dan rekomendasi karier Anda."},
+    {en: "A: Can the counseling session be used for self-improvement and personal development?\nB: Absolutely, many clients attend sessions for personal growth and goal realization.", id: "A: Bisakah sesi konseling digunakan untuk pengembangan diri dan perbaikan pribadi?\nB: Tentu saja, banyak klien menghadiri sesi untuk pertumbuhan pribadi dan realisasi tujuan."},
+    {en: "A: Are there any reading materials I can access before the test?\nB: We recommend you read our blog article on 'Preparing for the Interest and Talent Test'.", id: "A: Apakah ada bahan bacaan yang bisa saya akses sebelum tes?\nB: Kami merekomendasikan Anda membaca artikel blog kami tentang 'Mempersiapkan Tes Minat dan Bakat'."}
+];
+
+        // URL Gambar Picsum (Gunakan ID 100-199 untuk 100 gambar berbeda)
+        const totalImages = 100;
+        const imageUrls = Array.from({length: totalImages}, (_, i) => 
+            `https://picsum.photos/id/${100 + i}/${DEFAULT_WIDTH}/${DEFAULT_HEIGHT}`
+        );
+
+
+        // --- Event listeners untuk kontrol lainnya ---
+        document.getElementById('fontSizeEn').addEventListener('input', () => updatePreview(0));
+        document.getElementById('fontSizeId').addEventListener('input', () => updatePreview(0));
+        document.getElementById('textColor').addEventListener('input', () => updatePreview(0));
+        document.getElementById('shadowColor').addEventListener('input', () => updatePreview(0));
+        document.getElementById('bgContrast').addEventListener('input', () => updatePreview(0));
+        document.getElementById('bgHue').addEventListener('input', () => updatePreview(0));
+
+
+        /**
+         * Fungsi untuk memecah teks menjadi baris
+         */
+        function wrapText(context, text, maxWidth) {
+            // Memecah berdasarkan baris baru (\n) terlebih dahulu, kemudian memecah setiap baris dengan wrapText biasa
+            const paragraphs = text.split('\n');
+            let lines = [];
+            
+            paragraphs.forEach(paragraph => {
+                const words = paragraph.split(' ');
+                let currentLine = words[0] || '';
+
+                for (let i = 1; i < words.length; i++) {
+                    const word = words[i];
+                    // Cek lebar dengan spasi
+                    const testLine = currentLine + " " + word;
+                    const width = context.measureText(testLine).width;
+                    
+                    if (width < maxWidth) {
+                        currentLine = testLine;
+                    } else {
+                        lines.push(currentLine);
+                        currentLine = word;
+                    }
+                }
+                lines.push(currentLine);
+                // Tambahkan spasi ekstra (garis kosong) antar paragraf jika ada lebih dari satu
+                // if (paragraphs.length > 1 && paragraphs.indexOf(paragraph) < paragraphs.length - 1) {
+                //     lines.push(""); // Tambahkan baris kosong untuk pemisah
+                // }
+            });
+            return lines.filter(line => line.trim() !== ''); // Filter baris yang kosong karena pemrosesan
+        }
+
+
+        /**
+         * Fungsi untuk menggambar overlay teks pada objek canvas/konteks tertentu
+         */
+        function drawTextOverlay(context, bgImg, quote) {
+            const bgW = DEFAULT_WIDTH;
+            const bgH = DEFAULT_HEIGHT;
+            
+            const fontSizeEn = parseInt(document.getElementById('fontSizeEn').value) || 48;
+            const fontSizeId = parseInt(document.getElementById('fontSizeId').value) || 36;
+            const textColor = document.getElementById('textColor').value;
+            const shadowColor = document.getElementById('shadowColor').value;
+            
+            // Ambil nilai filter
+            const contrastValue = parseFloat(document.getElementById('bgContrast').value) || 1.0;
+            const hueValue = parseInt(document.getElementById('bgHue').value) || 0;
+            
+            const padding = 60; // Padding kiri/kanan
+            const maxWidth = bgW - (padding * 2);
+            
+            // Clear canvas
+            context.clearRect(0, 0, bgW, bgH);
+
+            // Draw background
+            const isBgLoaded = bgImg && bgImg.complete && bgImg.naturalWidth !== 0;
+
+            if (isBgLoaded) {
+                // Terapkan filter Kontras dan Hue pada konteks
+                context.filter = `contrast(${contrastValue}) hue-rotate(${hueValue}deg)`;
+                
+                // Draw background image TEPAT sesuai ukuran kanvas 
+                context.drawImage(bgImg, 0, 0, bgW, bgH);
+                context.fillStyle = 'rgba(0, 0, 0, 0.5)'; // Mengatur warna hitam dengan opasitas 50%
+                context.fillRect(0, 0, bgW, bgH); // Menggambar kotak di atas gambar
+
+                // **PENTING:** Hapus filter sebelum menggambar elemen lain (teks)
+                context.filter = 'none'; 
+                
+            } else {
+                // Fallback to gradient if no image
+                const gradient = context.createLinearGradient(0, 0, bgW, bgH);
+                gradient.addColorStop(0, '#667eea');
+                gradient.addColorStop(1, '#764ba2');
+                context.fillStyle = gradient;
+                context.fillRect(0, 0, bgW, bgH);
+            }
+            
+            // --- Draw English Text (Lebih Besar) ---
+            context.font = `bold ${fontSizeEn}px 'Times New Roman', serif`;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            
+            const linesEn = wrapText(context, quote.en, maxWidth);
+            const lineHeightEn = fontSizeEn * 1.4;
+            const totalTextHeightEn = linesEn.length * lineHeightEn;
+
+            // --- Draw Indonesian Text (Lebih Kecil) ---
+            context.font = `${fontSizeId}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`; 
+
+            const linesId = wrapText(context, quote.id, maxWidth);
+            const lineHeightId = fontSizeId * 1.4;
+            const totalTextHeightId = linesId.length * lineHeightId;
+
+            // Hitung total tinggi teks untuk penempatan di tengah vertikal
+            const spacing = 30; // Jarak antara English dan Indonesian
+            const totalTextHeight = totalTextHeightEn + spacing + totalTextHeightId;
+
+            // Titik awal Y untuk teks English (diposisikan di tengah)
+            let startY = (bgH - totalTextHeight) / 2;
+            
+            // Terapkan shadow untuk visibilitas
+            context.shadowColor = shadowColor;
+            context.shadowBlur = 10;
+            context.shadowOffsetX = 3;
+            context.shadowOffsetY = 3;
+            
+            // Draw English Text
+            context.fillStyle = textColor;
+            context.font = `bold ${fontSizeEn}px 'Times New Roman', serif`;
+            linesEn.forEach((line, index) => {
+                const yPos = startY + (index * lineHeightEn) + (lineHeightEn / 2);
+                context.fillText(line, bgW / 2, yPos);
+            });
+            
+            // Update startY untuk Indonesian Text
+            startY += totalTextHeightEn + spacing;
+
+            // Draw Indonesian Text
+            context.font = `${fontSizeId}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+            linesId.forEach((line, index) => {
+                const yPos = startY + (index * lineHeightId) + (lineHeightId / 2);
+                context.fillText(line, bgW / 2, yPos);
+            });
+            
+            // Nonaktifkan shadow setelah menggambar teks
+            context.shadowColor = 'transparent';
+            context.shadowBlur = 0;
+            context.shadowOffsetX = 0;
+            context.shadowOffsetY = 0;
+        }
+
+
+        function updatePreview(index) {
+            const imageUrl = imageUrls[index];
+            const quote = quotesData[index];
+            const image = new Image();
+            
+            document.getElementById('statusMessage').innerText = `Loading Preview ${index + 1}/${totalImages}...`;
+
+            image.crossOrigin = 'Anonymous'; // Penting untuk gambar dari luar domain
+            image.src = imageUrl;
+
+            image.onload = function() {
+                drawTextOverlay(ctx, image, quote);
+                document.getElementById('statusMessage').innerText = `Preview ${index + 1}/${totalImages} ditampilkan.`;
+            };
+
+            image.onerror = function() {
+                console.error(`Gagal memuat gambar untuk preview: ${imageUrl}`);
+                document.getElementById('statusMessage').innerText = `Gagal memuat gambar ${index + 1}. Menampilkan background fallback.`;
+                // Gunakan fungsi drawTextOverlay dengan bgImg null untuk fallback gradient
+                drawTextOverlay(ctx, null, quote); 
+            };
+        }
+
+        /**
+         * FUNGSI MULTI-DOWNLOAD DENGAN JSZip
+         */
+        function downloadAllImages() {
+            const zip = new JSZip();
+            let filesProcessed = 0;
+            const totalFiles = imageUrls.length;
+            const KUALITAS_KOMPRESI = 0.8; // Kualitas JPEG (0.0 - 1.0)
+            
+            if (totalFiles === 0) {
+                 alert("Tidak ada data kutipan untuk diproses.");
+                 return;
+            }
+
+            document.getElementById('statusMessage').innerText = `Mulai memproses ${totalFiles} gambar... Harap tunggu.`;
+
+            // Proses setiap kutipan dan URL gambar
+            for (let i = 0; i < totalFiles; i++) {
+                const imageUrl = imageUrls[i];
+                const quote = quotesData[i];
+                
+                const image = new Image();
+                image.crossOrigin = 'Anonymous'; // Penting untuk gambar dari luar domain
+                image.src = imageUrl;
+                
+                image.onload = function() {
+                    // 1. Buat kanvas baru di memori
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = DEFAULT_WIDTH;
+                    tempCanvas.height = DEFAULT_HEIGHT;
+                    const tempCtx = tempCanvas.getContext('2d');
+
+                    // 2. Gambar overlay teks pada kanvas sementara
+                    drawTextOverlay(tempCtx, image, quote);
+                    
+                    // 3. Tentukan nama file
+                    const quoteText = quote.en.split('\n')[0].substring(0, 30).replace(/[^a-zA-Z0-9]/g, '_'); // Ambil 30 karakter pertama dari pertanyaan
+                    const fileName = `Percakapan_${i + 1}_${quoteText}.jpeg`; 
+
+                    // 4. Konversi Canvas ke Data URL JPEG
+                    const dataUrl = tempCanvas.toDataURL('image/jpeg', KUALITAS_KOMPRESI);
+                    
+                    // 5. Tambahkan file ke objek ZIP
+                    const base64Data = dataUrl.split(',')[1];
+                    zip.file(fileName, base64Data, {base64: true});
+
+                    filesProcessed++;
+                    document.getElementById('statusMessage').innerText = `Memproses... ${filesProcessed}/${totalFiles} selesai.`;
+
+                    // Cek apakah semua file sudah diproses
+                    if (filesProcessed === totalFiles) {
+                        // 6. Generate dan Download ZIP
+                        zip.generateAsync({type:"blob"})
+                        .then(function(content) {
+                            // Gunakan FileSaver.js untuk menyimpan file ZIP
+                            saveAs(content, "100_Percakapan_Lidan_Psikologi.zip");
+                            document.getElementById('statusMessage').innerText = `✅ Selesai! File ZIP berhasil diunduh. Total ${totalFiles} gambar.`;
+                        });
+                    }
+                };
+
+                image.onerror = function() {
+                    console.error(`Gagal memuat gambar untuk unduhan: ${imageUrl}`);
+                    // Jika gambar gagal dimuat, gunakan fallback gradient dan tetap tambahkan ke ZIP
+                    
+                    // 1. Buat kanvas baru di memori
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = DEFAULT_WIDTH;
+                    tempCanvas.height = DEFAULT_HEIGHT;
+                    const tempCtx = tempCanvas.getContext('2d');
+
+                    // 2. Gambar overlay teks pada kanvas sementara dengan bgImg null
+                    drawTextOverlay(tempCtx, null, quote);
+                    
+                    const quoteText = quote.en.split('\n')[0].substring(0, 30).replace(/[^a-zA-Z0-9]/g, '_'); 
+                    const fileName = `Percakapan_${i + 1}_${quoteText}_FALLBACK.jpeg`; 
+
+                    const dataUrl = tempCanvas.toDataURL('image/jpeg', KUALITAS_KOMPRESI);
+                    const base64Data = dataUrl.split(',')[1];
+                    zip.file(fileName, base64Data, {base64: true});
+
+                    filesProcessed++;
+                    document.getElementById('statusMessage').innerText = `Memproses... ${filesProcessed}/${totalFiles} selesai (dengan ${filesProcessed - i - 1} fallback).`;
+
+                    if (filesProcessed === totalFiles) {
+                        zip.generateAsync({type:"blob"})
+                        .then(function(content) {
+                            saveAs(content, "100_Percakapan_Lidan_Psikologi.zip");
+                            document.getElementById('statusMessage').innerText = `✅ Selesai! File ZIP berhasil diunduh. Total ${totalFiles} gambar.`;
+                        });
+                    }
+                };
+            }
+        }
+
+        // Initial render
+        updatePreview(0); // Tampilkan percakapan pertama sebagai preview
+    </script>
+</body>
+</html>
