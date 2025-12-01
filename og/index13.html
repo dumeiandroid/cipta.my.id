@@ -9,6 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <style>
+        /* Gaya CSS tidak diubah dari versi sebelumnya */
         * {
             margin: 0;
             padding: 0;
@@ -258,7 +259,7 @@
 
         <div class="button-group">
             <button onclick="updatePreview(0)">🔄 Update Preview (Hari ke-1 / 1 Jan 2026)</button>
-            <button onclick="downloadAllImages()">⬇️ Generate & Download 365 Gambar ZIP</button> 
+            <button id="downloadButton" onclick="downloadAllImages()">⬇️ Mulai Download Batch 1 (Hari 1 - 100)</button> 
         </div>
 
         <p id="statusMessage" style="text-align: center; margin-top: 20px; font-weight: bold; color: #333;"></p>
@@ -267,17 +268,23 @@
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        const downloadButton = document.getElementById('downloadButton');
+        const statusMessage = document.getElementById('statusMessage');
         const DEFAULT_WIDTH = 1200;
         const DEFAULT_HEIGHT = 630;
         
         canvas.width = DEFAULT_WIDTH;
         canvas.height = DEFAULT_HEIGHT;
 
+        // --- Global State untuk Batch ---
+        let currentBatchIndex = 0;
+        const BATCH_SIZE = 100;
+        
         // --- Logo Setup ---
         let logoImage = new Image();
         let logoLoaded = false;
         
-        // Setup Awal Logo
+        // ... (Kode Logo Setup tetap sama)
         logoImage.src = document.getElementById('logoUrl').value;
         logoImage.onload = function() {
             logoLoaded = true;
@@ -289,7 +296,6 @@
             updatePreview(0); 
         };
         
-        // Event listener untuk perubahan URL Logo
         document.getElementById('logoUrl').addEventListener('change', function() {
             const url = this.value.trim();
             if (url) {
@@ -303,7 +309,6 @@
         });
 
         // Data untuk 365 Kutipan (Kutipan Motivasi Bahasa Indonesia)
-        // Diulang jika jumlah kutipan unik kurang dari 365
         const uniqueQuotes = [
             {text: "Kesempatan terbaik hari ini adalah mengambil satu langkah maju, sekecil apapun itu."},
             {text: "Percayalah pada potensi yang tersembunyi dalam dirimu. Kekuatan itu ada di sana, menunggu untuk ditemukan."},
@@ -388,8 +393,6 @@
         /**
          * Menghitung tanggal, bulan, tahun, dan hari untuk indeks tertentu
          * Dimulai dari 1 Januari 2026.
-         * @param {number} index - Indeks hari (0 sampai 364)
-         * @returns {object} {day: string, date: number, month: string, year: number}
          */
         function calculateDate(index) {
             // Set start date to 2026-01-01 (using UTC to prevent local timezone offset issues)
@@ -465,18 +468,17 @@
             const textWidth = context.measureText(brandText).width;
             
             const currentLogoSize = logoSize; 
-            const logoX = bgW - logoPadding - currentLogoSize;
             
             // Hitung lebar total untuk teks dan logo agar rata kanan
-            const totalWidth = currentLogoSize + 15 + textWidth; 
+            const totalWidth = logoLoaded && document.getElementById('logoUrl').value ? currentLogoSize + 15 + textWidth : textWidth; 
             const startX = bgW - logoPadding - totalWidth; 
+            const textStartX = logoLoaded && document.getElementById('logoUrl').value ? startX + currentLogoSize + 15 : startX;
 
-            // Draw Brand Text (to the left of logo)
+            // Draw Brand Text (to the right, starting after logo if present)
             context.textAlign = 'left';
             context.textBaseline = 'middle';
             const brandTextY = logoY + currentLogoSize / 2;
-            const brandTextX = startX + currentLogoSize + 15;
-            context.fillText(brandText, brandTextX, brandTextY);
+            context.fillText(brandText, textStartX, brandTextY);
 
             // Draw logo if loaded (on the LEFT of brand text)
             if (logoLoaded && document.getElementById('logoUrl').value) {
@@ -538,94 +540,184 @@
             const dateObj = calculateDate(index);
             const previewText = `${dateObj.day}, ${dateObj.date} ${dateObj.month} ${dateObj.year}`;
 
-            document.getElementById('statusMessage').innerText = `Loading Preview Hari ke-${index + 1} (${previewText})...`;
+            statusMessage.innerText = `Loading Preview Hari ke-${index + 1} (${previewText})...`;
 
             image.crossOrigin = 'Anonymous'; 
             image.src = imageUrl;
 
             image.onload = function() {
                 drawTextOverlay(ctx, image, quote, index);
-                document.getElementById('statusMessage').innerText = `Preview Hari ke-${index + 1} (${previewText}) ditampilkan.`;
+                statusMessage.innerText = `Preview Hari ke-${index + 1} (${previewText}) ditampilkan.`;
             };
 
             image.onerror = function() {
                 console.error(`Gagal memuat gambar untuk preview: ${imageUrl}`);
-                document.getElementById('statusMessage').innerText = `Gagal memuat gambar ${index + 1}. Menampilkan background fallback.`;
+                statusMessage.innerText = `Gagal memuat gambar ${index + 1}. Menampilkan background fallback.`;
                 drawTextOverlay(ctx, null, quote, index); 
             };
         }
 
         /**
-         * FUNGSI MULTI-DOWNLOAD DENGAN JSZip
+         * Helper function untuk memuat satu gambar dengan Promise dan TIMEOUT.
          */
-        function downloadAllImages() {
-            const zip = new JSZip();
-            let filesProcessed = 0;
-            const totalFiles = imageUrls.length;
-            const KUALITAS_KOMPRESI = 0.8; // Kualitas JPEG (0.0 - 1.0)
+        function loadSingleImage(url, index, batchNumber, totalBatches) {
+            const TIMEOUT_MS = 8000; // Batas waktu 8 detik
             
-            if (totalFiles === 0) {
-                 alert("Tidak ada data kutipan untuk diproses.");
-                 return;
+            const dateObj = calculateDate(index);
+            const progressDateText = `${dateObj.day}, ${dateObj.date} ${dateObj.month} ${dateObj.year}`;
+            statusMessage.innerText = 
+                `Memproses... (MEMUAT Gambar ke-${index + 1}/${totalImages} - Batch ${batchNumber}/${totalBatches}: ${progressDateText})... (Max ${TIMEOUT_MS / 1000}s)`;
+
+
+            return new Promise(resolve => {
+                let timeoutId = null;
+
+                const image = new Image();
+                image.crossOrigin = 'Anonymous';
+
+                // 1. Atur Timeout
+                timeoutId = setTimeout(() => {
+                    // Menonaktifkan event handler jika timeout terjadi
+                    image.onload = null; 
+                    image.onerror = null;
+                    console.warn(`Timeout! Gambar ${index + 1} (${progressDateText}) gagal dimuat dalam ${TIMEOUT_MS / 1000} detik. Menggunakan fallback.`);
+                    resolve({image: null, isFallback: true});
+                }, TIMEOUT_MS);
+                
+                // 2. Event Berhasil Dimuat
+                image.onload = function() {
+                    clearTimeout(timeoutId); // Hapus timeout jika berhasil
+                    resolve({image: image, isFallback: false}); 
+                };
+
+                // 3. Event Gagal Dimuat
+                image.onerror = function() {
+                    clearTimeout(timeoutId); // Hapus timeout jika terjadi error
+                    console.error(`Gagal memuat gambar ${index + 1} dari URL: ${url}. Menggunakan fallback.`);
+                    resolve({image: null, isFallback: true});
+                };
+                
+                // Mulai memuat gambar
+                image.src = url;
+            });
+        }
+
+
+        /**
+         * Memproses satu gambar, menggambarnya di kanvas, dan menambahkannya ke ZIP.
+         */
+        function processSingleImage(zip, index, batchNumber, totalBatches) {
+            return new Promise(async resolve => {
+                const imageUrl = imageUrls[index];
+                const quote = quotesData[index];
+                const KUALITAS_KOMPRESI = 0.8; 
+
+                // Tunggu hingga gambar selesai dimuat (atau gagal/timeout)
+                const {image, isFallback} = await loadSingleImage(imageUrl, index, batchNumber, totalBatches);
+
+                // Buat kanvas baru di memori
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = DEFAULT_WIDTH;
+                tempCanvas.height = DEFAULT_HEIGHT;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                // Gambar overlay teks
+                drawTextOverlay(tempCtx, image, quote, index);
+                
+                // Tentukan nama file menggunakan tanggal
+                const dateObj = calculateDate(index);
+                const dateFileName = `${dateObj.year}-${(dateObj.month).slice(0, 3).toUpperCase()}-${dateObj.date.toString().padStart(2, '0')}`;
+                const fallbackSuffix = isFallback ? '_FALLBACK' : '';
+                const fileName = `Lidan_Psikologi_${dateFileName}${fallbackSuffix}.jpeg`; 
+
+                // Konversi Canvas ke Data URL JPEG
+                const dataUrl = tempCanvas.toDataURL('image/jpeg', KUALITAS_KOMPRESI);
+                
+                // Tambahkan file ke objek ZIP
+                const base64Data = dataUrl.split(',')[1];
+                zip.file(fileName, base64Data, {base64: true});
+
+                // Update progress setelah selesai diproses
+                const progressDateText = `${dateObj.day}, ${dateObj.date} ${dateObj.month} ${dateObj.year}`;
+                const statusSuffix = isFallback ? ' (Menggunakan FALLBACK)' : '';
+                statusMessage.innerText = 
+                    `Memproses... (Gambar ke-${index + 1}/${totalImages} - Batch ${batchNumber}/${totalBatches}: ${progressDateText}) SELESAI.${statusSuffix} Lanjut ke gambar berikutnya.`;
+
+                resolve(); // Lanjutkan ke Promise/gambar berikutnya
+            });
+        }
+        
+        /**
+         * FUNGSI UTAMA DOWNLOAD YANG MENGONTROL ALIRAN BATCH
+         */
+        function getBatchInfo(batchIndex) {
+            const totalBatches = Math.ceil(totalImages / BATCH_SIZE);
+            const startIndex = batchIndex * BATCH_SIZE;
+            
+            let endIndex = startIndex + BATCH_SIZE;
+            if (endIndex > totalImages) {
+                endIndex = totalImages;
+            }
+            return { startIndex, endIndex, batchNumber: batchIndex + 1, totalBatches };
+        }
+
+        async function downloadAllImages() {
+            const totalBatches = Math.ceil(totalImages / BATCH_SIZE);
+
+            if (currentBatchIndex >= totalBatches) {
+                statusMessage.innerHTML = `✅ **Semua ${totalImages} gambar sudah selesai diunduh.**`;
+                downloadButton.disabled = true;
+                return;
             }
 
-            document.getElementById('statusMessage').innerText = `Mulai memproses ${totalFiles} gambar... Harap tunggu. Proses ini memerlukan waktu.`;
+            // --- Persiapan Batch ---
+            downloadButton.disabled = true;
+            downloadButton.innerText = 'Sedang Memproses Batch...';
 
-            // Proses setiap kutipan dan URL gambar
-            for (let i = 0; i < totalFiles; i++) {
-                const imageUrl = imageUrls[i];
-                const quote = quotesData[i];
-                const index = i; // Simpan indeks saat ini
-                
-                const image = new Image();
-                image.crossOrigin = 'Anonymous'; 
-                image.src = imageUrl;
-                
-                const processFile = (loadedImage, isFallback = false) => {
-                    // 1. Buat kanvas baru di memori
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = DEFAULT_WIDTH;
-                    tempCanvas.height = DEFAULT_HEIGHT;
-                    const tempCtx = tempCanvas.getContext('2d');
+            const { startIndex, endIndex, batchNumber } = getBatchInfo(currentBatchIndex);
+            const numFilesInBatch = endIndex - startIndex;
+            const zip = new JSZip();
+            
+            statusMessage.innerText = 
+                `Mulai memproses Batch ${batchNumber}/${totalBatches} (${startIndex + 1} - ${endIndex} dari ${totalImages})...`;
 
-                    // 2. Gambar overlay teks pada kanvas sementara
-                    drawTextOverlay(tempCtx, isFallback ? null : loadedImage, quote, index);
-                    
-                    // 3. Tentukan nama file menggunakan tanggal
-                    const dateObj = calculateDate(index);
-                    const dateFileName = `${dateObj.year}-${(dateObj.month).slice(0, 3).toUpperCase()}-${dateObj.date.toString().padStart(2, '0')}`;
-                    const fileName = `Lidan_Psikologi_${dateFileName}${isFallback ? '_FALLBACK' : ''}.jpeg`; 
-
-                    // 4. Konversi Canvas ke Data URL JPEG
-                    const dataUrl = tempCanvas.toDataURL('image/jpeg', KUALITAS_KOMPRESI);
-                    
-                    // 5. Tambahkan file ke objek ZIP
-                    const base64Data = dataUrl.split(',')[1];
-                    zip.file(fileName, base64Data, {base64: true});
-
-                    filesProcessed++;
-                    document.getElementById('statusMessage').innerText = `Memproses... ${filesProcessed}/${totalFiles} selesai.`;
-
-                    // Cek apakah semua file sudah diproses
-                    if (filesProcessed === totalFiles) {
-                        // 6. Generate dan Download ZIP
-                        zip.generateAsync({type:"blob"})
-                        .then(function(content) {
-                            saveAs(content, "365_Kutipan_Lidan_Psikologi_2026.zip");
-                            document.getElementById('statusMessage').innerText = `✅ Selesai! File ZIP berhasil diunduh. Total ${totalFiles} gambar.`;
-                        });
-                    }
+            try {
+                // --- Proses Gambar Berurutan dalam Batch ---
+                for (let i = startIndex; i < endIndex; i++) {
+                    await processSingleImage(zip, i, batchNumber, totalBatches); 
                 }
 
-                image.onload = function() {
-                    processFile(image, false);
-                };
+                // --- Kompresi dan Download ZIP Batch ---
+                statusMessage.innerText = 
+                    `Batch ${batchNumber} selesai diproses. Mengompres ${numFilesInBatch} file ZIP...`;
 
-                image.onerror = function() {
-                    console.error(`Gagal memuat gambar untuk unduhan: ${imageUrl}`);
-                    // Jika gambar gagal dimuat, gunakan fallback gradient dan tetap tambahkan ke ZIP
-                    processFile(null, true); 
-                };
+                const content = await zip.generateAsync({type:"blob"});
+                const zipFileName = `Lidan_Psikologi_Batch_${batchNumber}_(${startIndex + 1}sd${endIndex}).zip`;
+                saveAs(content, zipFileName);
+
+                currentBatchIndex++;
+                
+                // --- Update Status dan Tombol untuk Batch Selanjutnya ---
+                if (currentBatchIndex < totalBatches) {
+                    const nextBatchInfo = getBatchInfo(currentBatchIndex);
+                    downloadButton.disabled = false;
+                    downloadButton.innerHTML = `⬇️ Lanjut Download Batch ${currentBatchIndex + 1} (Hari ${nextBatchInfo.startIndex + 1} - ${nextBatchInfo.endIndex})`;
+                    statusMessage.innerHTML = 
+                        `✅ Batch **${batchNumber}** berhasil diunduh. Klik tombol di atas untuk melanjutkan ke **Batch ${currentBatchIndex + 1}** (Total ${totalBatches} Batch).`;
+                } else {
+                    // Semua Batch Selesai
+                    downloadButton.disabled = true;
+                    downloadButton.innerHTML = `✅ Selesai (Total ${totalImages} Gambar)`;
+                    statusMessage.innerHTML = 
+                        `🎉 **Selesai!** Semua ${totalImages} gambar telah berhasil diunduh dalam ${totalBatches} Batch.`;
+                }
+
+            } catch (error) {
+                // --- Penanganan Error ---
+                downloadButton.disabled = false;
+                downloadButton.innerText = 'Coba Lagi Download Batch Ini';
+                statusMessage.innerHTML = `❌ Terjadi kesalahan fatal selama proses Batch **${batchNumber}**: ${error.message}. Coba klik tombol di atas lagi.`;
+                console.error("Kesalahan proses ZIP:", error);
             }
         }
 
