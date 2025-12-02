@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Gambar Lirik Lagu Motivasi</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 1300px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="number"],
+        input[type="url"],
+        select,
+        textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input[type="number"]:focus,
+        input[type="url"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            grid-column: 1 / -1;
+        }
+
+        input[type="color"] {
+            width: 60px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+
+        .canvas-container {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            overflow: auto;
+        }
+
+        canvas {
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 100%;
+            height: auto;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .section-title {
+            color: #333;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            grid-column: 1 / -1;
+        }
+
+        .help-text {
+            color: #888;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Generator Gambar Lirik Lagu Dinamis</h1>
+        <p class="subtitle">Membuat **Halaman Sampul** dan baris lirik dari data di dalam `quotesData`.</p>
+
+        <div class="controls">
+            <div class="section-title">🎨 Pengaturan Tampilan</div>
+            
+            <div class="input-group">
+                <label>Ukuran Font (English Lirik/Judul):</label>
+                <input type="number" id="fontSizeEn" value="72" min="20" max="150">
+            </div>
+
+            <div class="input-group">
+                <label>Ukuran Font (Indonesian Terjemahan/Subjudul):</label>
+                <input type="number" id="fontSizeId" value="48" min="20" max="150">
+            </div>
+
+            <div class="input-group">
+                <label>Warna Teks:</label>
+                <input type="color" id="textColor" value="#ffffff">
+            </div>
+            
+            <div class="input-group">
+                <label>Warna Shadow Teks:</label>
+                <input type="color" id="shadowColor" value="#000000">
+                <span class="help-text">Tambahkan shadow untuk visibilitas.</span>
+            </div>
+
+            <div class="input-group">
+                <label>Kontras Gambar Background (0.5 - 2.0):</label>
+                <input type="number" id="bgContrast" value="1.0" min="0.5" max="2.0" step="0.1">
+                <span class="help-text">1.0 = normal. Mengatur tingkat kontras.</span>
+            </div>
+            
+            <div class="input-group">
+                <label>Warna Gambar Background (Hue Rotate):</label>
+                <input type="range" id="bgHue" value="0" min="0" max="360" step="1">
+                <span class="help-text">0 = normal. Memutar rona warna (dalam derajat).</span>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="canvas" width="1200" height="630"></canvas>
+        </div>
+
+        <div class="button-group">
+            <button onclick="updatePreview(Math.floor(Math.random() * quotesData.length))">🔄 Update Preview (Halaman Acak)</button> 
+            <button onclick="downloadAllImages()">⬇️ Generate & Download ZIP</button> 
+        </div>
+
+        <p id="statusMessage" style="text-align: center; margin-top: 20px; font-weight: bold; color: #333;"></p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const DEFAULT_WIDTH = 1200;
+        const DEFAULT_HEIGHT = 630;
+        // --- KONSTANTA BARU ---
+        const MAX_RETRIES = 3; 
+        const PICSUM_START_ID = 100; 
+        const PICSUM_END_ID = 900; 
+        
+        canvas.width = DEFAULT_WIDTH;
+        canvas.height = DEFAULT_HEIGHT;
+
+        // ====================================================================
+        // DATA UTAMA: CUKUP UBAH BAGIAN quotesData INI UNTUK GANTI LAGU!
+        // ... (DATA LIRIK ASLI TIDAK DIUBAH) ...
+        // ====================================================================
+        const quotesData = [
+    // Index 0: Metadata/Sampul
+    {
+        type: "metadata",
+        title_en: "HERE COMES THE SUN",
+        artist: "The Beatles",
+        title_id: "Matahari Telah Datang"
+    },
+    // Verse 1
+    {type: "lyric", en: "Here comes the sun, here comes the sun", id: "Matahari telah datang, matahari telah datang"},
+    {type: "lyric", en: "And I say, it's all right", id: "Dan aku berkata, semuanya baik-baik saja"},
+    {type: "lyric", en: "Little darling, it's been a long cold lonely winter", id: "Sayang kecil, sudah merupakan musim dingin yang panjang, dingin, dan sepi"},
+    {type: "lyric", en: "Little darling, it feels like years since it's been here", id: "Sayang kecil, rasanya sudah bertahun-tahun sejak ini ada di sini"},
+    // Verse 2
+    {type: "lyric", en: "Little darling, the smiles returning to the faces", id: "Sayang kecil, senyuman kembali ke wajah-wajah"},
+    {type: "lyric", en: "Little darling, it seems like years since it's been here", id: "Sayang kecil, rasanya sudah bertahun-tahun sejak ini ada di sini"},
+    // Chorus
+    {type: "lyric", en: "Here comes the sun, here comes the sun", id: "Matahari telah datang, matahari telah datang"},
+    {type: "lyric", en: "And I say, it's all right", id: "Dan aku berkata, semuanya baik-baik saja"},
+    // Bridge
+    {type: "lyric", en: "Sun, sun, sun, here it comes", id: "Matahari, matahari, matahari, ini dia datang"},
+    {type: "lyric", en: "It's all right", id: "Semuanya baik-baik saja"}
+];
+        // ====================================================================
+
+        
+        const totalFilesToGenerate = quotesData.length; 
+        
+        // --- FUNGSI BARU DARI index18: Load Gambar dengan Retry (Menggantikan rekursif) ---
+
+        /**
+         * Fungsi utilitas untuk membuat URL gambar acak
+         */
+        function generateRandomImageUrl(width, height) {
+            const randomId = Math.floor(Math.random() * (PICSUM_END_ID - PICSUM_START_ID + 1)) + PICSUM_START_ID;
+            return `https://picsum.photos/id/${randomId}/${width}/${height}`;
+        }
+
+        /**
+         * Memuat gambar dengan mekanisme coba ulang (retry) jika gagal.
+         * Menggunakan Promise dan Async/Await
+         */
+        function loadImageWithRetry(initialUrl) {
+            return new Promise((resolve) => {
+                let attempts = 0;
+                let currentUrl = initialUrl;
+
+                const attemptLoad = () => {
+                    attempts++;
+                    const image = new Image();
+                    image.crossOrigin = 'Anonymous';
+                    image.src = currentUrl;
+
+                    image.onload = () => resolve(image);
+
+                    image.onerror = () => {
+                        if (attempts < MAX_RETRIES) {
+                            // Coba lagi dengan URL acak yang berbeda
+                            currentUrl = generateRandomImageUrl(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+                            console.warn(`Gagal memuat gambar dari URL: ${image.src}. Mencoba lagi (Percobaan ${attempts}/${MAX_RETRIES}).`);
+                            attemptLoad(); 
+                        } else {
+                            console.error(`Gagal memuat gambar setelah ${MAX_RETRIES} percobaan. Menggunakan fallback warna.`);
+                            resolve(null); // Gagal total, kembalikan null untuk fallback
+                        }
+                    };
+                };
+
+                attemptLoad();
+            });
+        }
+
+        // --- FUNGSI BARU: Inisialisasi URL Acak Unik ---
+        /**
+         * Membuat array ID Picsum acak yang unik sejumlah count
+         */
+        function generateRandomPicsumIds(count) {
+            const ids = new Set();
+            while (ids.size < count) {
+                ids.add(Math.floor(Math.random() * (PICSUM_END_ID - PICSUM_START_ID + 1)) + PICSUM_START_ID);
+            }
+            return Array.from(ids);
+        }
+
+        const randomIds = generateRandomPicsumIds(totalFilesToGenerate);
+        const imageUrls = randomIds.map(id => 
+            `https://picsum.photos/id/${id}/${DEFAULT_WIDTH}/${DEFAULT_HEIGHT}`
+        );
+        // --- Akhir Inisialisasi URL Acak Unik ---
+        
+        // --- Event listeners untuk kontrol lainnya ---
+        document.getElementById('fontSizeEn').addEventListener('input', () => updatePreview(0));
+        document.getElementById('fontSizeId').addEventListener('input', () => updatePreview(0));
+        document.getElementById('textColor').addEventListener('input', () => updatePreview(0));
+        document.getElementById('shadowColor').addEventListener('input', () => updatePreview(0));
+        document.getElementById('bgContrast').addEventListener('input', () => updatePreview(0));
+        document.getElementById('bgHue').addEventListener('input', () => updatePreview(0));
+
+
+        /**
+         * Fungsi untuk memecah teks menjadi baris
+         */
+        function wrapText(context, text, maxWidth) {
+            const words = text.split(' ');
+            let lines = [];
+            let currentLine = words[0] || '';
+
+            for (let i = 1; i < words.length; i++) {
+                const word = words[i];
+                const width = context.measureText(currentLine + " " + word).width;
+                if (width < maxWidth) {
+                    currentLine += " " + word;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
+
+        /**
+         * Fungsi untuk menggambar background dan filter
+         */
+        function drawBackground(context, bgImg) {
+            const bgW = DEFAULT_WIDTH;
+            const bgH = DEFAULT_HEIGHT;
+            const contrastValue = parseFloat(document.getElementById('bgContrast').value) || 1.0;
+            const hueValue = parseInt(document.getElementById('bgHue').value) || 0;
+            
+            context.clearRect(0, 0, bgW, bgH);
+            const isBgLoaded = bgImg && bgImg.complete && bgImg.naturalWidth !== 0;
+
+            if (isBgLoaded) {
+                context.filter = `contrast(${contrastValue}) hue-rotate(${hueValue}deg)`;
+                context.drawImage(bgImg, 0, 0, bgW, bgH);
+                context.fillStyle = 'rgba(0, 0, 0, 0.5)'; // Overlay hitam 50%
+                context.fillRect(0, 0, bgW, bgH);
+                context.filter = 'none'; 
+            } else {
+                const gradient = context.createLinearGradient(0, 0, bgW, bgH);
+                gradient.addColorStop(0, '#667eea');
+                gradient.addColorStop(1, '#764ba2');
+                context.fillStyle = gradient;
+                context.fillRect(0, 0, bgW, bgH);
+            }
+        }
+        
+        /**
+         * FUNGSI Menggambar Halaman Sampul (Cover Page)
+         */
+        function drawCoverPage(context, bgImg) {
+            drawBackground(context, bgImg);
+
+            const metadata = quotesData[0]; 
+            
+            const bgW = DEFAULT_WIDTH;
+            const bgH = DEFAULT_HEIGHT;
+            const padding = 60;
+            const maxWidth = bgW - (padding * 2);
+
+            const titleFontSize = parseInt(document.getElementById('fontSizeEn').value) || 72;
+            const subTitleFontSize = parseInt(document.getElementById('fontSizeId').value) || 48; 
+            const textColor = document.getElementById('textColor').value;
+            const shadowColor = document.getElementById('shadowColor').value;
+            
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            
+            // Terapkan shadow
+            context.shadowColor = shadowColor;
+            context.shadowBlur = 10;
+            context.shadowOffsetX = 3;
+            context.shadowOffsetY = 3;
+
+            // --- Judul Utama (English) ---
+            context.fillStyle = textColor;
+            context.font = `bold ${titleFontSize}px 'Times New Roman', serif`;
+            
+            const linesTitle = wrapText(context, metadata.title_en, maxWidth);
+            const lineHeightTitle = titleFontSize * 1.4;
+            const totalTextHeightTitle = linesTitle.length * lineHeightTitle;
+            
+            let currentY = (bgH / 2) - (totalTextHeightTitle / 2) - 10; 
+            
+            linesTitle.forEach((line) => {
+                context.fillText(line, bgW / 2, currentY);
+                currentY += lineHeightTitle;
+            });
+            
+            // --- Subjudul (Artist + Terjemahan Judul) ---
+            context.font = `${subTitleFontSize}px 'Segoe UI', sans-serif`;
+            const subText = `${metadata.artist}\n(${metadata.title_id})`;
+            const linesSub = subText.split('\n');
+            const lineHeightSub = subTitleFontSize * 1.4;
+            
+            currentY += 40; 
+            
+            linesSub.forEach((line, index) => {
+                const yPos = currentY + (index * lineHeightSub) + (lineHeightSub / 2);
+                context.fillText(line, bgW / 2, yPos);
+            });
+
+            // Nonaktifkan shadow
+            context.shadowColor = 'transparent';
+            context.shadowBlur = 0;
+            context.shadowOffsetX = 0;
+            context.shadowOffsetY = 0;
+        }
+
+        /**
+         * Menggambar Lirik Baris (Index > 0)
+         */
+        function drawTextOverlay(context, bgImg, quote) {
+            drawBackground(context, bgImg);
+            
+            const bgW = DEFAULT_WIDTH;
+            const bgH = DEFAULT_HEIGHT;
+            
+            const fontSizeEn = parseInt(document.getElementById('fontSizeEn').value) || 48;
+            const fontSizeId = parseInt(document.getElementById('fontSizeId').value) || 36;
+            const textColor = document.getElementById('textColor').value;
+            const shadowColor = document.getElementById('shadowColor').value;
+            
+            const padding = 60; 
+            const maxWidth = bgW - (padding * 2);
+            
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+
+            // --- Hitung English Text (Lirik) ---
+            context.font = `bold ${fontSizeEn}px 'Times New Roman', serif`;
+            const linesEn = wrapText(context, quote.en, maxWidth);
+            const lineHeightEn = fontSizeEn * 1.4;
+            const totalTextHeightEn = linesEn.length * lineHeightEn;
+
+            // --- Hitung Indonesian Text (Terjemahan) ---
+            context.font = `${fontSizeId}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`; 
+            const linesId = wrapText(context, quote.id, maxWidth);
+            const lineHeightId = fontSizeId * 1.4;
+            const totalTextHeightId = linesId.length * lineHeightId;
+
+            // Hitung total tinggi LIRIK untuk penempatan di tengah vertikal
+            const spacing = 30; 
+            const totalLirikHeight = totalTextHeightEn + spacing + totalTextHeightId;
+
+            let startY = (bgH - totalLirikHeight) / 2;
+            
+            // Terapkan shadow
+            context.shadowColor = shadowColor;
+            context.shadowBlur = 10;
+            context.shadowOffsetX = 3;
+            context.shadowOffsetY = 3;
+            
+            // --- GAMBAR ENGLISH TEXT (LIRIK) ---
+            context.fillStyle = textColor;
+            context.font = `bold ${fontSizeEn}px 'Times New Roman', serif`;
+            linesEn.forEach((line, index) => {
+                const yPos = startY + (index * lineHeightEn) + (lineHeightEn / 2);
+                context.fillText(line, bgW / 2, yPos);
+            });
+            
+            // Update startY untuk Indonesian Text
+            startY += totalTextHeightEn + spacing;
+
+            // --- GAMBAR INDONESIAN TEXT (TERJEMAHAN) ---
+            context.font = `${fontSizeId}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+            linesId.forEach((line, index) => {
+                const yPos = startY + (index * lineHeightId) + (lineHeightId / 2);
+                context.fillText(line, bgW / 2, yPos);
+            });
+            
+            // Nonaktifkan shadow
+            context.shadowColor = 'transparent';
+            context.shadowBlur = 0;
+            context.shadowOffsetX = 0;
+            context.shadowOffsetY = 0;
+        }
+
+        /**
+         * FUNGSI MODIFIKASI: updatePreview (Menggunakan mekanisme retry dari index18)
+         */
+        async function updatePreview(index) {
+            const indexToUse = index % totalFilesToGenerate;
+            // Gunakan URL yang sudah ditentukan sebelumnya
+            const initialUrl = imageUrls[indexToUse]; 
+            const data = quotesData[indexToUse];
+
+            let fileType;
+            if (indexToUse === 0) {
+                fileType = 'Sampul';
+            } else {
+                const lyricSnippet = data.en.split(' ').slice(0, 3).join(' ');
+                fileType = `Lirik ke-${indexToUse} (${lyricSnippet}...)`;
+            }
+            
+            document.getElementById('statusMessage').innerText = `Loading Preview ${fileType} (${indexToUse}/${totalFilesToGenerate - 1})...`;
+
+            // Gunakan mekanisme retry berbasis Promise untuk memuat gambar
+            const image = await loadImageWithRetry(initialUrl);
+
+            if (image) {
+                // Berhasil dimuat (setelah 1 atau lebih percobaan)
+                if (indexToUse === 0) {
+                    drawCoverPage(ctx, image);
+                    document.getElementById('statusMessage').innerText = `Preview Sampul Lagu ditampilkan.`;
+                } else {
+                    drawTextOverlay(ctx, image, data);
+                    document.getElementById('statusMessage').innerText = `Preview Lirik ke-${indexToUse} (${data.en.split(' ').slice(0, 3).join(' ')}...) ditampilkan.`;
+                }
+            } else {
+                // Gagal total (menggunakan null untuk memicu fallback warna)
+                document.getElementById('statusMessage').innerText = `Gagal memuat gambar setelah ${MAX_RETRIES} kali. Menampilkan background fallback untuk ${fileType}.`;
+                if (indexToUse === 0) {
+                    drawCoverPage(ctx, null); 
+                } else {
+                    drawTextOverlay(ctx, null, data); 
+                }
+            }
+        }
+
+        /**
+         * FUNGSI MODIFIKASI: MULTI-DOWNLOAD DENGAN WORKER POOL DAN JSZip (Dari index18)
+         */
+        async function downloadAllImages() {
+            const zip = new JSZip();
+            let filesProcessed = 0;
+            let fallbacksUsed = 0;
+            const totalFiles = totalFilesToGenerate;
+            const KUALITAS_KOMPRESI = 0.8; 
+            const MAX_CONCURRENT = 10; // Batas koneksi serentak
+            const metadata = quotesData[0];
+            
+            if (totalFiles <= 1) { 
+                 alert("Data lirik kurang dari satu baris.");
+                 return;
+            }
+
+            document.getElementById('statusMessage').innerText = `Mulai memproses ${totalFiles} gambar (Sampul + Lirik)... Harap tunggu. Proses akan berjalan cepat karena menggunakan Worker Pool (${MAX_CONCURRENT} koneksi serentak).`;
+
+            // Array semua indeks yang perlu diproses (digunakan sebagai queue)
+            const allIndices = Array.from({length: totalFiles}, (_, i) => i).reverse();
+
+            /**
+             * Fungsi pembantu untuk memuat, memproses, dan menambahkan satu file ke ZIP
+             */
+            const processFile = (index) => {
+                return new Promise(async (resolve) => {
+                    // Ambil URL yang sudah ditentukan unik
+                    const initialUrl = imageUrls[index];
+                    const data = quotesData[index];
+
+                    // Gunakan mekanisme retry berbasis Promise
+                    const image = await loadImageWithRetry(initialUrl);
+                    const isFallback = (image === null);
+
+                    const handleImageProcessing = (img, isFallback) => {
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = DEFAULT_WIDTH;
+                        tempCanvas.height = DEFAULT_HEIGHT;
+                        const tempCtx = tempCanvas.getContext('2d');
+                        
+                        let fileName;
+
+                        if (index === 0) {
+                            drawCoverPage(tempCtx, img);
+                            fileName = `00_SAMPUL_${metadata.title_en.replace(/[^a-zA-Z0-9]/g, '')}.jpeg`;
+                        } else {
+                            drawTextOverlay(tempCtx, img, data);
+                            const quoteText = data.en.split(' ').slice(0, 5).join('_').replace(/[^a-zA-Z0-9_]/g, ''); 
+                            const fallbackSuffix = isFallback ? '_FALLBACK' : '';
+                            fileName = `${String(index).padStart(2, '0')}_Lirik_${quoteText}${fallbackSuffix}.jpeg`; 
+                        }
+
+                        const dataUrl = tempCanvas.toDataURL('image/jpeg', KUALITAS_KOMPRESI);
+                        const base64Data = dataUrl.split(',')[1];
+                        zip.file(fileName, base64Data, {base64: true});
+
+                        filesProcessed++;
+                        if (isFallback) fallbacksUsed++;
+                        
+                        document.getElementById('statusMessage').innerText = `Memproses... ${filesProcessed}/${totalFiles} selesai (Sukses: ${filesProcessed - fallbacksUsed}, Fallback: ${fallbacksUsed}).`;
+
+                        resolve(); // Selesaikan Promise setelah file diproses
+                    };
+
+                    handleImageProcessing(image, isFallback);
+                });
+            };
+            
+            // --- LOGIKA WORKER POOL CONTINUOUS ---
+
+            // Fungsi Worker: Mengambil tugas (indeks) dari queue hingga queue kosong
+            const worker = async () => {
+                let index;
+                // Selama masih ada indeks di array, ambil dan proses
+                while ((index = allIndices.pop()) !== undefined) {
+                    await processFile(index);
+                }
+            };
+            
+            // Jalankan sejumlah worker (MAX_CONCURRENT) serentak
+            const workers = Array(MAX_CONCURRENT).fill(null).map(() => worker());
+
+            // Tunggu hingga semua pekerja menyelesaikan semua tugas
+            await Promise.all(workers);
+            
+            // --- AKHIR LOGIKA WORKER POOL ---
+
+            // 6. Generate dan Download ZIP
+            zip.generateAsync({type:"blob"})
+            .then(function(content) {
+                const zipFileName = `Lirik_${metadata.title_en.replace(/[^a-zA-Z0-9]/g, '')}_Motivasi.zip`;
+                saveAs(content, zipFileName);
+                document.getElementById('statusMessage').innerText = `✅ Selesai! File ZIP berhasil diunduh. Total ${totalFiles} gambar. (Sukses: ${totalFiles - fallbacksUsed}, Fallback: ${fallbacksUsed}).`;
+            });
+        }
+
+        // Initial render: Tampilkan Sampul Lagu (index 0)
+        updatePreview(0); 
+    </script>
+</body>
+</html>
