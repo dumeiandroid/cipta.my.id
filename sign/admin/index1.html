@@ -143,7 +143,28 @@
         <h1>Selamat Datang, Admin</h1>
         <p>Silahkan pilih modul yang ingin dikelola:</p>
         
-        <div id="menu-container" class="grid-menu"></div>
+        <div class="grid-menu">
+            <a href="invoice_admin.html" class="menu-card">
+                <span class="icon">📄</span>
+                <span>Invoice</span>
+            </a>
+            <a href="kwitansi_admin.html" class="menu-card">
+                <span class="icon">🧾</span>
+                <span>Kwitansi</span>
+            </a>
+            <a href="sign_admin.html" class="menu-card">
+                <span class="icon">✍️</span>
+                <span>Digital Sign</span>
+            </a>
+            <a href="surat_admin.html" class="menu-card">
+                <span class="icon">✉️</span>
+                <span>Surat</span>
+            </a>
+            <a href="surat_penawaran_admin.html" class="menu-card">
+                <span class="icon">💼</span>
+                <span>Penawaran</span>
+            </a>
+        </div>
 
         <button class="logout-btn" onclick="logout()">Keluar</button>
     </div>
@@ -151,42 +172,6 @@
 
 <script>
     const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
-
-    // Library Icon - Disusun kesamping agar hemat baris
-    const iconLibrary = {
-        dokumen: "📄", tagihan: "🧾", tandaTangan: "✍️", email: "✉️", bisnis: "💼", folder: "📂", edit: "📝", arsip: "📦", print: "🖨️", copy: "📑",
-        hapus: "🗑️", ceklist: "✅", info: "ℹ️", peringatan: "⚠️", kunci: "🔒", bukaKunci: "🔓", cari: "🔍", tambah: "➕", kurangi: "➖", bintang: "⭐",
-        pengaturan: "⚙️", pengguna: "👤", grup: "👥", kalender: "📅", jam: "🕒", peta: "📍", rumah: "🏠", lonceng: "🔔", keluar: "🚪", link: "🔗",
-        grafik: "📊", chart: "📈", database: "🗄️", pesan: "💬", telepon: "📞", kamera: "📷", upload: "📤", download: "📥", awan: "☁️", wifi: "📶",
-        uang: "💰", bank: "🏦", dompet: "👛", keranjang: "🛒", kado: "🎁", piala: "🏆", ide: "💡", api: "🔥", jempol: "👍", hati: "❤️"
-    };
-
-    // Data Menu JSON
-    const menuData = [
-        { title: "Invoice", icon: iconLibrary.dokumen, link: "invoice_admin.html" },
-        { title: "Kwitansi", icon: iconLibrary.tagihan, link: "kwitansi_admin.html" },
-        { title: "Digital Sign", icon: iconLibrary.tandaTangan, link: "sign_admin.html" },
-        { title: "Surat", icon: iconLibrary.email, link: "surat_admin.html" },
-        { title: "Penawaran", icon: iconLibrary.bisnis, link: "surat_penawaran_admin.html" }
-    ];
-
-    function renderDashboardMenu() {
-        const container = document.getElementById('menu-container');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        menuData.forEach(item => {
-            const card = document.createElement('a');
-            card.href = item.link;
-            card.className = 'menu-card';
-            card.target = '_blank'; // Membuka di tab baru
-            card.innerHTML = `
-                <span class="icon">${item.icon}</span>
-                <span>${item.title}</span>
-            `;
-            container.appendChild(card);
-        });
-    }
 
     async function handleLogin() {
         const user = document.getElementById('username').value;
@@ -198,17 +183,21 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Custom-Auth': 'admin',
+                    'X-Custom-Auth': 'admin', // Sesuai dengan config di API Anda
                     'X-Role': 'admin'
                 },
-                body: JSON.stringify({ username: user, password: pass })
+                body: JSON.stringify({
+                    username: user,
+                    password: pass
+                })
             });
 
             const result = await response.json();
 
             if (result.success) {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('dashboard-section').style.display = 'block';
                 localStorage.setItem('isAdminLoggedIn', 'true');
-                showDashboard();
             } else {
                 errMsg.style.display = 'block';
                 errMsg.innerText = result.message || 'Login Gagal';
@@ -219,20 +208,16 @@
         }
     }
 
-    function showDashboard() {
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('dashboard-section').style.display = 'block';
-        renderDashboardMenu();
-    }
-
     function logout() {
         localStorage.removeItem('isAdminLoggedIn');
         location.reload();
     }
 
+    // Cek status login saat halaman dimuat
     window.onload = () => {
         if(localStorage.getItem('isAdminLoggedIn') === 'true') {
-            showDashboard();
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('dashboard-section').style.display = 'block';
         }
     }
 </script>
