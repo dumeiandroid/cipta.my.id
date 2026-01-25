@@ -163,64 +163,25 @@
         }
 
         function downloadPNG() {
-            const btn = event.target.closest('button');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<span>Memproses...</span>';
-            btn.disabled = true;
-            
             const node = document.getElementById('voucher-content');
             
+            // Mengatur filter untuk memastikan background halaman (abu-abu) tidak terbawa
+            // Menggunakan toPng agar mendukung transparansi di sudut rounded
             htmlToImage.toPng(node, { 
                 cacheBust: true,
-                backgroundColor: null,
-                pixelRatio: 2,
+                backgroundColor: null, // Penting: diset null agar transparan
                 style: {
-                    borderRadius: '40px'
+                    borderRadius: '40px' // Memastikan lengkungan ikut saat render
                 }
             })
             .then(function (dataUrl) {
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                
-                if (isMobile) {
-                    const newWindow = window.open();
-                    newWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                            <title>Voucher Lidan</title>
-                            <style>
-                                body { margin: 0; padding: 20px; background: #f3f4f6; text-align: center; font-family: system-ui; }
-                                img { max-width: 100%; height: auto; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-                                .info { margin-top: 20px; color: #666; font-size: 14px; }
-                            </style>
-                        </head>
-                        <body>
-                            <img src="${dataUrl}" alt="Voucher">
-                            <div class="info">
-                                <p><strong>Tekan dan tahan gambar</strong> untuk menyimpan ke galeri</p>
-                                <p style="font-size: 12px; margin-top: 10px;">Atau screenshot halaman ini</p>
-                            </div>
-                        </body>
-                        </html>
-                    `);
-                } else {
-                    const link = document.createElement('a');
-                    link.download = `Voucher_Lidan_${document.getElementById('vch-code').innerText}.png`;
-                    link.href = dataUrl;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                }
-                
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                const link = document.createElement('a');
+                link.download = `Voucher_Lidan_${document.getElementById('vch-code').innerText}.png`;
+                link.href = dataUrl;
+                link.click();
             })
             .catch(function (error) {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan saat membuat voucher. Silakan coba lagi.');
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                console.error('oops, something went wrong!', error);
             });
         }
 
