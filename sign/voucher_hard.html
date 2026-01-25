@@ -6,7 +6,7 @@
     <title>Voucher Resmi - Lidan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.1/html-to-image.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
         
@@ -22,7 +22,7 @@
         /* Area ini yang akan ditarik jadi PNG */
         #voucher-content {
             background: linear-gradient(135deg, #BF1A54 0%, #800e35 100%);
-            border-radius: 40px; /* Lengkungan sudut */
+            border-radius: 40px;
             color: white;
             display: flex;
             flex-wrap: wrap;
@@ -50,12 +50,71 @@
             .right-side { border-left: none; border-top: 3px dashed rgba(255,255,255,0.2); width: 100%; }
             #voucher-content { border-radius: 25px; }
         }
+
+        /* Modal styles */
+        #imageModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 9999;
+            overflow: auto;
+        }
+
+        #imageModal.active {
+            display: block;
+        }
+
+        #imageModal .modal-content {
+            padding: 20px;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #imageModal img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        #imageModal .instructions {
+            color: white;
+            margin-top: 20px;
+            font-size: 16px;
+            max-width: 500px;
+        }
+
+        #imageModal .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            background: rgba(255,255,255,0.2);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
     </style>
 </head>
 <body>
 
     <div class="no-print sticky top-0 bg-white/90 backdrop-blur-md p-4 flex justify-center gap-3 z-50 shadow-md">
-        <button onclick="downloadPNG()" class="bg-pink-600 text-white px-8 py-3 rounded-full font-black shadow-lg hover:bg-pink-700 transition active:scale-95 flex items-center gap-2">
+        <button id="downloadBtn" onclick="downloadPNG()" class="bg-pink-600 text-white px-8 py-3 rounded-full font-black shadow-lg hover:bg-pink-700 transition active:scale-95 flex items-center gap-2">
             <span>Download Voucher</span>
         </button>
     </div>
@@ -64,7 +123,7 @@
         <div id="voucher-content">
             <div class="left-side">
                 <div class="flex items-center gap-4 mb-10">
-                    <img src="https://lidan.co.id/gambar/logo-baru.png" alt="Logo" class="w-20 h-auto">
+                    <img src="https://lidan.co.id/gambar/logo-baru.png" alt="Logo" class="w-20 h-auto" crossorigin="anonymous">
                     <div>
                         <h3 class="font-black text-xl leading-tight tracking-tight">LIDAN</h3>
                         <p class="text-[8px] tracking-[0.4em] uppercase opacity-80">Psikologi Indonesia</p>
@@ -132,6 +191,20 @@
         </div>
     </div>
 
+    <!-- Modal untuk menampilkan gambar -->
+    <div id="imageModal">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="Voucher">
+            <div class="instructions">
+                <p style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">✨ Cara Menyimpan:</p>
+                <p><strong>Android:</strong> Tekan dan tahan gambar → Pilih "Download image" atau "Simpan gambar"</p>
+                <p style="margin-top: 10px;"><strong>iOS:</strong> Tekan dan tahan gambar → Pilih "Add to Photos" atau "Simpan ke Foto"</p>
+                <p style="margin-top: 15px; font-size: 14px; opacity: 0.7;">Atau screenshot halaman ini</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
         const urlParams = new URLSearchParams(window.location.search);
@@ -163,48 +236,32 @@
         }
 
         function downloadPNG() {
-            const btn = event.target.closest('button');
+            const btn = document.getElementById('downloadBtn');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<span>Memproses...</span>';
+            btn.innerHTML = '<span>⏳ Memproses...</span>';
             btn.disabled = true;
             
             const node = document.getElementById('voucher-content');
             
-            htmlToImage.toPng(node, { 
-                cacheBust: true,
+            // Gunakan html2canvas yang lebih kompatibel dengan mobile
+            html2canvas(node, {
+                scale: 2, // Kualitas tinggi
+                useCORS: true, // Untuk handle gambar eksternal
+                allowTaint: true,
                 backgroundColor: null,
-                pixelRatio: 2,
-                style: {
-                    borderRadius: '40px'
-                }
+                logging: false,
+                windowWidth: node.scrollWidth,
+                windowHeight: node.scrollHeight
             })
-            .then(function (dataUrl) {
+            .then(function(canvas) {
+                const dataUrl = canvas.toDataURL('image/png');
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                 
                 if (isMobile) {
-                    const newWindow = window.open();
-                    newWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                            <title>Voucher Lidan</title>
-                            <style>
-                                body { margin: 0; padding: 20px; background: #f3f4f6; text-align: center; font-family: system-ui; }
-                                img { max-width: 100%; height: auto; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-                                .info { margin-top: 20px; color: #666; font-size: 14px; }
-                            </style>
-                        </head>
-                        <body>
-                            <img src="${dataUrl}" alt="Voucher">
-                            <div class="info">
-                                <p><strong>Tekan dan tahan gambar</strong> untuk menyimpan ke galeri</p>
-                                <p style="font-size: 12px; margin-top: 10px;">Atau screenshot halaman ini</p>
-                            </div>
-                        </body>
-                        </html>
-                    `);
+                    // Tampilkan di modal
+                    showModal(dataUrl);
                 } else {
+                    // Download langsung untuk desktop
                     const link = document.createElement('a');
                     link.download = `Voucher_Lidan_${document.getElementById('vch-code').innerText}.png`;
                     link.href = dataUrl;
@@ -216,13 +273,32 @@
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             })
-            .catch(function (error) {
+            .catch(function(error) {
                 console.error('Error:', error);
-                alert('Terjadi kesalahan saat membuat voucher. Silakan coba lagi.');
+                alert('Terjadi kesalahan: ' + error.message + '. Silakan coba screenshot manual.');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             });
         }
+
+        function showModal(dataUrl) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = dataUrl;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('active');
+        }
+
+        // Close modal saat klik di luar gambar
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
 
         fetchVoucher();
     </script>
