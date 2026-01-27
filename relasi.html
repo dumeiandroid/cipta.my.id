@@ -6,8 +6,10 @@
     <title>CRM Strategi Relasi Pro - Multi-Target</title>
     
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
     <style>
         :root { 
@@ -18,23 +20,28 @@
             --wa: #25d366;
             --bg: #f8fafc;
         }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); padding: 20px; color: #1e293b; line-height: 1.6; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); padding: 20px; color: #1e293b; line-height: 1.6; }
         .container { max-width: 1200px; margin: auto; }
         .hidden { display: none; }
+        
+        /* Card UI */
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 25px; border: 1px solid #e2e8f0; }
         
-        /* Form & Grid */
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+        /* Form & Grid (x_01 sd x_20) */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
         .full-width { grid-column: 1 / -1; }
-        label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: #64748b; text-transform: uppercase; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        textarea { min-height: 100px; }
+        label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; transition: all 0.2s; }
+        input:focus, textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        textarea { min-height: 100px; resize: vertical; }
 
-        /* Login & Checkbox */
-        .remember-me { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 15px; cursor: pointer; }
-        
-        /* Buttons & States */
-        button { cursor: pointer; padding: 10px 18px; border-radius: 8px; font-weight: 600; border: none; transition: 0.2s; font-size: 13px; }
+        /* Login & Remember Me */
+        .login-box { max-width: 380px; margin: 80px auto; }
+        .remember-me { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 15px 0; cursor: pointer; color: #475569; }
+        .remember-me input { width: auto; height: auto; }
+
+        /* Buttons & Animations */
+        button { cursor: pointer; padding: 12px 20px; border-radius: 8px; font-weight: 600; border: none; transition: 0.3s; font-size: 14px; }
         .btn-primary { background: var(--accent); color: white; width: 100%; }
         .btn-success { background: var(--success); color: white; width: 100%; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .btn-success:disabled { background: #94a3b8; cursor: not-allowed; }
@@ -45,32 +52,41 @@
         .spinner { width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite; display: none; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Datatables Custom */
-        .dataTables_wrapper { margin-top: 20px; }
-        table.dataTable { border: none !important; margin-bottom: 20px !important; }
-        table.dataTable thead th { background: #f1f5f9; border-bottom: 1px solid #e2e8f0 !important; color: #475569; padding: 12px; }
-        .img-profile { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #f1f5f9; }
+        /* Datatables Custom Styling */
+        .dataTables_wrapper { margin-top: 10px; padding: 10px; }
+        table.dataTable { border: none !important; border-radius: 8px; overflow: hidden; }
+        table.dataTable thead th { background: #f1f5f9; color: #475569; border-bottom: 2px solid #e2e8f0 !important; text-align: left; padding: 15px; }
+        .img-profile { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #f1f5f9; border: 1px solid #e2e8f0; }
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #dcfce7; color: #166534; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="loginSection" class="card" style="max-width: 350px; margin: 80px auto;">
-        <h2 style="text-align: center;">🔐 CRM Relasi</h2>
-        <input type="text" id="username" placeholder="Username" style="margin-bottom: 12px;">
-        <input type="password" id="password" placeholder="Password" style="margin-bottom: 12px;">
-        <label class="remember-me"><input type="checkbox" id="rememberMe"> Ingat Saya</label>
-        <button onclick="handleLogin()" class="btn-primary">Masuk ke Sistem</button>
+    <div id="loginSection" class="card login-box">
+        <h2 style="text-align: center; margin-bottom: 20px;">🛡️ CRM Relasi Pro</h2>
+        <div id="loginError" style="color: red; font-size: 12px; margin-bottom: 10px; text-align: center; display: none;">Login gagal, periksa kredensial.</div>
+        <input type="text" id="username" placeholder="Username" style="margin-bottom: 15px;">
+        <input type="password" id="password" placeholder="Password" style="margin-bottom: 5px;">
+        
+        <label class="remember-me">
+            <input type="checkbox" id="rememberMe"> Ingat Saya (Auto-Login)
+        </label>
+        
+        <button onclick="handleLogin()" id="loginBtn" class="btn-primary">Masuk ke Database</button>
     </div>
 
     <div id="mainContent" class="hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <div><h2>Database Strategi Relasi</h2><small>Manajemen Panggung & Deep Discovery</small></div>
-            <button class="btn-danger" onclick="location.reload()">Keluar</button>
-        </div>
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <div>
+                <h2 style="margin:0;">Dashboard Strategi Relasi</h2>
+                <p style="color: #64748b; font-size: 13px; margin: 0;">Monitoring Panggung & Deep Discovery</p>
+            </div>
+            <button class="btn-danger" onclick="logout()">Keluar Aplikasi</button>
+        </header>
 
         <div class="card">
-            <h3 id="formTitle">📝 Entry Data & Analisis Latar Belakang</h3>
+            <h3 id="formTitle" style="margin-top:0; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">📝 Entry Data & Analisis</h3>
             <form id="relasiForm">
                 <input type="hidden" id="edit_id">
                 <input type="hidden" id="old_filename">
@@ -78,76 +94,82 @@
                 <div class="form-grid">
                     <div>
                         <label>Nama Target (x_01)</label>
-                        <input type="text" id="x_01" required>
+                        <input type="text" id="x_01" required placeholder="Contoh: Ibu Siti Aminah">
                     </div>
                     <div>
                         <label>Latar Belakang (x_02)</label>
-                        <input list="kategori_list" id="x_02" placeholder="Ketik/Pilih...">
+                        <input list="kategori_list" id="x_02" placeholder="Pilih atau Ketik Baru...">
                         <datalist id="kategori_list">
-                            <option value="Dosen/Ketua Tim"><option value="Single Parent"><option value="Pimpinan">
+                            <option value="Dosen / Akademisi">
+                            <option value="Single Parent">
+                            <option value="Pimpinan Organisasi">
+                            <option value="Ibu Rumah Tangga">
+                            <option value="Pemilik UMKM">
                         </datalist>
                     </div>
                     <div>
-                        <label>WhatsApp (x_04)</label>
-                        <input type="text" id="x_04" placeholder="62812...">
+                        <label>Nomor WhatsApp (x_04)</label>
+                        <input type="text" id="x_04" placeholder="62812345678">
                     </div>
                     <div>
-                        <label>Foto Relasi (R2)</label>
+                        <label>Unggah Foto (R2)</label>
                         <input type="file" id="fileInput" accept="image/*">
                     </div>
 
                     <div class="full-width">
-                        <label>Analisis Kepribadian & Karakter (x_05)</label>
-                        <textarea id="x_05"></textarea>
+                        <label>Analisis Kepribadian & Karakter Dominan (x_05)</label>
+                        <textarea id="x_05" placeholder="Misal: Tipe Koleris, sangat bangga dengan prestasi anak, sensitif terhadap kritik..."></textarea>
                     </div>
 
                     <div>
-                        <label>Tema Pancingan (x_06)</label>
-                        <input type="text" id="x_06">
+                        <label>Tema Penelitian / Pintu Masuk (x_06)</label>
+                        <input type="text" id="x_06" placeholder="Misal: Riset Manajemen Konflik Keluarga">
                     </div>
                     <div>
-                        <label>Status Panggung (x_07)</label>
+                        <label>Tahap Panggung Saat Ini (x_07)</label>
                         <select id="x_07">
-                            <option value="Panggung Digital">Panggung Digital</option>
-                            <option value="Panggung Depan">Panggung Depan</option>
-                            <option value="Panggung Samping">Panggung Samping</option>
-                            <option value="Panggung Belakang">Panggung Belakang</option>
-                            <option value="Panggung Luar">Panggung Luar</option>
+                            <option value="Panggung Digital">Panggung Digital (Media Sosial)</option>
+                            <option value="Panggung Depan">Panggung Depan (Formal/Waspada)</option>
+                            <option value="Panggung Samping">Panggung Samping (Lobi/Pendamping)</option>
+                            <option value="Panggung Belakang">Panggung Belakang (Terbuka/Curhat)</option>
+                            <option value="Panggung Luar">Panggung Luar (Akrab/Sobat)</option>
                         </select>
                     </div>
 
                     <div class="full-width">
-                        <label>Log Jawaban 5 Pertanyaan Masalah (x_08)</label>
-                        <textarea id="x_08"></textarea>
+                        <label>Log 5 Pertanyaan Masalah (x_08)</label>
+                        <textarea id="x_08" placeholder="Catat poin curhat dari Lapis 1 (Permukaan) sampai Lapis 5 (Akar Masalah)..."></textarea>
                     </div>
                     
                     <div class="full-width">
-                        <label>Update Progres / Catatan Tambahan (x_09)</label>
-                        <textarea id="x_09"></textarea>
+                        <label>Rencana Solusi / Follow Up (x_09)</label>
+                        <textarea id="x_09" placeholder="Apa tawaran solusi yang akan diberikan selanjutnya?"></textarea>
                     </div>
                 </div>
 
                 <button type="submit" id="submitBtn" class="btn-success">
                     <div id="btnSpinner" class="spinner"></div>
-                    <span id="btnText">Simpan Data Relasi</span>
+                    <span id="btnText">Simpan ke Database Relasi</span>
                 </button>
-                <button type="button" onclick="resetForm()" style="background:#cbd5e1; width:100%; margin-top:10px;">Reset</button>
+                <button type="button" onclick="resetForm()" style="background:#cbd5e1; color:#475569; width:100%; margin-top:10px;">Batal / Bersihkan Form</button>
             </form>
         </div>
 
         <div class="card">
-            <h3>📋 Monitoring Progres (Datatable Mode)</h3>
+            <h3 style="margin-top:0;">📋 Monitoring Progres (Big Data Mode)</h3>
             <div class="table-wrapper">
-                <table id="relasiTable" class="display" style="width:100%">
+                <table id="relasiTable" class="display responsive nowrap" style="width:100%">
                     <thead>
                         <tr>
-                            <th>Profil</th>
-                            <th>Latar Belakang</th>
-                            <th>Panggung</th>
+                            <th>Profil & Nama</th>
+                            <th>Kategori</th>
+                            <th>Status Panggung</th>
+                            <th>Terakhir Update</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
-                    <tbody id="tableBody"></tbody>
+                    <tbody id="tableBody">
+                        </tbody>
                 </table>
             </div>
         </div>
@@ -165,21 +187,30 @@
 
     let dataTableInstance = null;
 
-    // --- LOGIN & REMEMBER ME ---
+    // --- 1. LOGIKA LOGIN & AUTO-LOGIN (REMEMBER ME) ---
     window.onload = function() {
         const u = localStorage.getItem('crm_user');
         const p = localStorage.getItem('crm_pass');
+        
         if (u && p) {
             document.getElementById('username').value = u;
             document.getElementById('password').value = p;
             document.getElementById('rememberMe').checked = true;
+            // Langsung login jika data tersedia
+            handleLogin(true);
         }
     };
 
-    async function handleLogin() {
+    async function handleLogin(isAuto = false) {
         const u = document.getElementById('username').value;
         const p = document.getElementById('password').value;
         const remember = document.getElementById('rememberMe').checked;
+        const loginBtn = document.getElementById('loginBtn');
+
+        if (!u || !p) return;
+
+        loginBtn.disabled = true;
+        loginBtn.innerText = "Membuka Kunci...";
 
         try {
             const res = await fetch(`${CONFIG.D1_API}?action=login`, {
@@ -188,16 +219,38 @@
                 body: JSON.stringify({ username: u, password: p })
             });
             const result = await res.json();
+
             if (result.success) {
-                if(remember) { localStorage.setItem('crm_user', u); localStorage.setItem('crm_pass', p); }
+                if (remember) {
+                    localStorage.setItem('crm_user', u);
+                    localStorage.setItem('crm_pass', p);
+                } else {
+                    localStorage.removeItem('crm_user');
+                    localStorage.removeItem('crm_pass');
+                }
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('mainContent').classList.remove('hidden');
                 loadData();
-            } else { alert("Login Gagal"); }
-        } catch (e) { alert("Koneksi Error"); }
+            } else {
+                if (!isAuto) alert("Username atau Password Salah!");
+                loginBtn.disabled = false;
+                loginBtn.innerText = "Masuk ke Database";
+            }
+        } catch (e) {
+            if (!isAuto) alert("Gagal terhubung ke server.");
+            loginBtn.disabled = false;
+        }
     }
 
-    // --- LOAD DATA (DATATABLES) ---
+    function logout() {
+        if(confirm("Keluar dan hapus sesi login?")) {
+            localStorage.removeItem('crm_user');
+            localStorage.removeItem('crm_pass');
+        }
+        location.reload();
+    }
+
+    // --- 2. LOAD DATA KE DATATABLES ---
     async function loadData() {
         try {
             const res = await fetch(`${CONFIG.D1_API}?table=${CONFIG.TABLE}`, {
@@ -205,71 +258,93 @@
             });
             const result = await res.json();
 
-            // Hancurkan datatable lama jika ada
-            if (dataTableInstance) dataTableInstance.destroy();
+            // Hancurkan instance lama jika ada (untuk refresh)
+            if ($.fn.DataTable.isDataTable('#relasiTable')) {
+                $('#relasiTable').DataTable().destroy();
+            }
 
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
-            result.data.forEach(item => {
-                const waNum = item.x_04 ? item.x_04.replace(/\D/g, '') : '';
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <img src="${item.x_03 ? CONFIG.R2_PUBLIC+'/'+item.x_03 : 'https://via.placeholder.com/50'}" class="img-profile">
-                            <div><strong>${item.x_01}</strong><br>${waNum ? `<a href="https://wa.me/${waNum}" target="_blank" class="btn-wa">🟢 WA</a>` : ''}</div>
-                        </div>
-                    </td>
-                    <td>${item.x_02 || '-'}</td>
-                    <td><span class="panggung-tag">${item.x_07 || 'New'}</span></td>
-                    <td>
-                        <button onclick='prepareEdit(${JSON.stringify(item)})' style="background:#e2e8f0; font-size:11px;">Edit</button>
-                        <button onclick="deleteData('${item.id_x}')" style="background:#fee2e2; color:red; font-size:11px;">Hapus</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
+            if (result.data && result.data.length > 0) {
+                result.data.forEach(item => {
+                    const waNum = item.x_04 ? item.x_04.replace(/\D/g, '') : '';
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <img src="${item.x_03 ? CONFIG.R2_PUBLIC+'/'+item.x_03 : 'https://via.placeholder.com/80?text=Face'}" class="img-profile">
+                                <div>
+                                    <strong>${item.x_01}</strong><br>
+                                    ${waNum ? `<a href="https://wa.me/${waNum}" target="_blank" class="btn-wa">🟢 Chat WA</a>` : '<small>No Phone</small>'}
+                                </div>
+                            </div>
+                        </td>
+                        <td>${item.x_02 || '-'}</td>
+                        <td><span class="status-badge">${item.x_07 || 'Baru'}</span></td>
+                        <td><small>${item.created_at || '-'}</small></td>
+                        <td>
+                            <div style="display:flex; gap:8px;">
+                                <button onclick='prepareEdit(${JSON.stringify(item)})' style="background:#e2e8f0; font-size:11px; padding:5px 10px;">Edit</button>
+                                <button onclick="deleteData('${item.id_x}')" style="background:#fee2e2; color:#dc2626; font-size:11px; padding:5px 10px;">Hapus</button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
 
-            // Inisialisasi DataTable Profesional
-            dataTableInstance = $('#relasiTable').DataTable({
+            // Inisialisasi Ulang DataTables
+            $('#relasiTable').DataTable({
+                responsive: true,
+                order: [[3, 'desc']], // Urutkan berdasarkan update terbaru
                 pageLength: 10,
-                order: [[0, 'desc']],
-                language: { search: "Cari Relasi:", lengthMenu: "Tampilkan _MENU_ data" }
+                language: {
+                    search: "Cari Nama/Kategori:",
+                    lengthMenu: "Tampilkan _MENU_ baris",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ relasi",
+                    paginate: { next: "Lanjut", previous: "Kembali" }
+                }
             });
 
-        } catch (e) { console.error("Gagal load tabel", e); }
+        } catch (e) { console.error("Gagal load tabel:", e); }
     }
 
-    // --- SIMPAN DATA (DENGAN LOADING) ---
+    // --- 3. SIMPAN DATA (POST/PUT) DENGAN LOADING ---
     document.getElementById('relasiForm').onsubmit = async (e) => {
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
         const spinner = document.getElementById('btnSpinner');
         const btnText = document.getElementById('btnText');
 
-        // Start Loading
+        // AKTIFKAN LOADING STATE
         btn.disabled = true;
         spinner.style.display = "block";
-        btnText.innerText = "Memproses...";
+        btnText.innerText = "Sedang Mengirim Data...";
 
         const id = document.getElementById('edit_id').value;
         const fileInput = document.getElementById('fileInput');
         let finalFileName = document.getElementById('old_filename').value;
 
         try {
-            // Upload Foto jika ada
+            // Proses Upload Foto jika ada file baru
             if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
                 const formData = new FormData();
-                formData.append('file', fileInput.files[0]);
-                formData.append('customName', `relasi/${Date.now()}.jpg`);
-                const up = await fetch(`${CONFIG.R2_API}?action=upload`, {
-                    method: 'POST', headers: { 'X-Custom-Auth': CONFIG.AUTH_KEY }, body: formData
+                const path = `relasi/${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+                formData.append('file', file);
+                formData.append('customName', path);
+
+                const upRes = await fetch(`${CONFIG.R2_API}?action=upload`, {
+                    method: 'POST',
+                    headers: { 'X-Custom-Auth': CONFIG.AUTH_KEY },
+                    body: formData
                 });
-                const resUp = await up.json();
-                if (resUp.success) finalFileName = resUp.key;
+                const upResult = await upRes.json();
+                if (upResult.success) finalFileName = upResult.key;
             }
 
+            // Siapkan Payload x_01 - x_20
             const payload = {
                 x_01: document.getElementById('x_01').value,
                 x_02: document.getElementById('x_02').value,
@@ -283,52 +358,65 @@
             };
 
             const url = id ? `${CONFIG.D1_API}?table=${CONFIG.TABLE}&id_x=${id}` : `${CONFIG.D1_API}?table=${CONFIG.TABLE}`;
+            const method = id ? 'PUT' : 'POST';
+
             const res = await fetch(url, {
-                method: id ? 'PUT' : 'POST',
+                method: method,
                 headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': CONFIG.AUTH_KEY },
                 body: JSON.stringify(payload)
             });
 
             if (res.ok) {
-                alert("Berhasil!");
+                alert("Data Relasi Berhasil Disimpan!");
                 resetForm();
                 loadData();
+            } else {
+                alert("Gagal menyimpan ke D1.");
             }
-        } catch (err) { alert(err.message); } finally {
-            // Stop Loading
+        } catch (err) {
+            alert("Error: " + err.message);
+        } finally {
+            // MATIKAN LOADING STATE
             btn.disabled = false;
             spinner.style.display = "none";
-            btnText.innerText = "Simpan Data Relasi";
+            btnText.innerText = "Simpan ke Database Relasi";
         }
     };
 
-    window.prepareEdit = function(data) {
-        document.getElementById('edit_id').value = data.id_x;
-        document.getElementById('x_01').value = data.x_01;
-        document.getElementById('x_02').value = data.x_02;
-        document.getElementById('x_04').value = data.x_04;
-        document.getElementById('x_05').value = data.x_05;
-        document.getElementById('x_06').value = data.x_06;
-        document.getElementById('x_07').value = data.x_07;
-        document.getElementById('x_08').value = data.x_08;
-        document.getElementById('x_09').value = data.x_09;
-        document.getElementById('old_filename').value = data.x_03;
-        document.getElementById('formTitle').innerText = "Edit Relasi: " + data.x_01;
-        window.scrollTo({top: 0, behavior: 'smooth'});
+    // --- 4. FUNGSI PENDUKUNG (EDIT, DELETE, RESET) ---
+    window.prepareEdit = function(item) {
+        document.getElementById('edit_id').value = item.id_x;
+        document.getElementById('x_01').value = item.x_01 || '';
+        document.getElementById('x_02').value = item.x_02 || '';
+        document.getElementById('x_03').value = ''; // Reset input file
+        document.getElementById('x_04').value = item.x_04 || '';
+        document.getElementById('x_05').value = item.x_05 || '';
+        document.getElementById('x_06').value = item.x_06 || '';
+        document.getElementById('x_07').value = item.x_07 || 'Panggung Digital';
+        document.getElementById('x_08').value = item.x_08 || '';
+        document.getElementById('x_09').value = item.x_09 || '';
+        document.getElementById('old_filename').value = item.x_03 || '';
+        
+        document.getElementById('formTitle').innerText = "Update Analisis: " + item.x_01;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     async function deleteData(id) {
-        if(!confirm('Hapus?')) return;
-        await fetch(`${CONFIG.D1_API}?table=${CONFIG.TABLE}&id_x=${id}`, {
-            method: 'DELETE', headers: { 'X-Custom-Auth': CONFIG.AUTH_KEY }
-        });
-        loadData();
+        if (!confirm('Hapus permanen data relasi ini?')) return;
+        try {
+            await fetch(`${CONFIG.D1_API}?table=${CONFIG.TABLE}&id_x=${id}`, {
+                method: 'DELETE',
+                headers: { 'X-Custom-Auth': CONFIG.AUTH_KEY }
+            });
+            loadData();
+        } catch (err) { alert(err.message); }
     }
 
     function resetForm() {
         document.getElementById('relasiForm').reset();
         document.getElementById('edit_id').value = '';
-        document.getElementById('formTitle').innerText = "Entry Data & Analisis Latar Belakang";
+        document.getElementById('old_filename').value = '';
+        document.getElementById('formTitle').innerText = "📝 Entry Data & Analisis Latar Belakang";
     }
 </script>
 </body>
