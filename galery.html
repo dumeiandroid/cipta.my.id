@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lidan Cloud Explorer - Final Pro</title>
+    <style>
+        :root { --blue: #0078d7; --bg: #f5f5f5; --border: #ccc; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--bg); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        header { background: white; padding: 10px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; z-index: 10; }
+        .path-bar { flex: 1; border: 1px solid var(--border); padding: 6px 12px; display: flex; gap: 5px; background: #fff; font-size: 14px; border-radius: 4px; overflow: hidden; }
+        .path-bar span { cursor: pointer; color: var(--blue); font-weight: bold; }
+        
+        #dropZone { flex: 1; padding: 20px; overflow-y: auto; position: relative; }
+        #dropZone.dragover { background: #e1effb; border: 2px dashed var(--blue); }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 15px; }
+        .item { width: 100px; padding: 10px; text-align: center; cursor: pointer; border-radius: 4px; }
+        .item:hover { background: #e5f3ff; }
+        .item img { width: 70px; height: 50px; object-fit: cover; border-radius: 2px; background: #ddd; }
+        .icon { font-size: 40px; display: block; }
+        .name { font-size: 11px; margin-top: 5px; word-break: break-all; line-height: 1.2; height: 2.4em; overflow: hidden; }
+
+        #progress { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 12px 20px; border-radius: 8px; display: none; z-index: 1000; }
+        
+        .menu { position: absolute; background: white; border: 1px solid #ccc; display: none; z-index: 2000; list-style: none; padding: 5px 0; border-radius: 4px; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); }
+        .menu li { padding: 8px 20px; font-size: 13px; cursor: pointer; }
+        .menu li:hover { background: var(--blue); color: white; }
+        
+        #loginOverlay { position: fixed; inset: 0; background: #f0f2f5; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .login-card { background: white; padding: 30px; border-radius: 12px; text-align: center; width: 300px; }
+        
+        button { cursor: pointer; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; }
+    </style>
+</head>
+<body onclick="hideMenu()">
+
+<div id="loginOverlay" style="display:none">
+    <div class="login-card">
+        <h2>Lidan Cloud</h2>
+        <input type="text" id="userInp" placeholder="Username" style="width:100%; padding:10px; border:1px solid #ddd; margin-bottom:10px;">
+        <input type="password" id="passInp" placeholder="Password" style="width:100%; padding:10px; border:1px solid #ddd; margin-bottom:10px;">
+        <button onclick="doLogin()" style="background:var(--blue); color:white; width:100%;">Masuk</button>
+    </div>
+</div>
+
+<header>
+    <button onclick="muatData()">🔄</button>
+    <div class="path-bar" id="pathBar"></div>
+    <button onclick="buatFolderBaru()" style="background:#28a745; color:white;">+ Folder</button>
+    <button onclick="document.getElementById('fileUpload').click()" style="background:var(--blue); color:white;">Upload</button>
+    <input type="file" id="fileUpload" hidden multiple onchange="handleFiles(this.files)">
+</header>
+
+<div id="dropZone" ondragover="event.preventDefault(); this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event)">
+    <div class="grid" id="explorer"></div>
+</div>
+
+<div id="progress"><span id="progText">...</span></div>
+
+<ul id="contextMenu" class="menu">
+    <li onclick="prosesRename()">Ganti Nama</li>
+    <li onclick="prosesHapus()" style="color:red">Hapus Permanen</li>
+</ul>
+
+<script>
+    const API_URL = "https://lidan.co.id/api";
+    const API_LOGIN = "https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6";
+    let allData = [], currentPath = "", selectedItem = null, uploadQueue = [], totalQueue = 0, finishedCount = 0;
+
+    // --- 1. PERSISTENCE (Tahan Refresh) ---
+    function updateUrlPath() {
+        const url = new URL(window.location);
+        currentPath ? url.searchParams.set('path', currentPath) : url.searchParams.delete('path');
+        window.history.pushState({}, '', url);
+    }
+
+    function loadPathFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        currentPath = params.get('path') || "";
+    }
+
+    // --- 2. AUTH ---
+    async function doLogin() {
+        const u = document.getElementById('userInp').value;
+        const p = document.getElementById('passInp').value;
+        const res = await fetch(`${API_LOGIN}?action=login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': 'admin' },
+            body: JSON.stringify({ username: u, password: p })
+        });
+        const data = await res.json();
+        if (data.success) {
+            localStorage.setItem('lidan_token', btoa(`${u}:${p}`));
+            initApp();
+        } else alert("Login Gagal");
+    }
+
+    function initApp() {
+        if (localStorage.getItem('lidan_token')) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            loadPathFromUrl();
+            muatData();
+        } else {
+            document.getElementById('loginOverlay').style.display = 'flex';
+        }
+    }
+
+    // --- 3. DATA & RENDER ---
+    async function muatData() {
+        try {
+            const res = await fetch(`${API_URL}/list_r2`);
+            allData = await res.json();
+            render();
+        } catch (e) { console.error("Error muat data"); }
+    }
+
+    function render() {
+        const explorer = document.getElementById('explorer');
+        explorer.innerHTML = "";
+        const pathBar = document.getElementById('pathBar');
+        pathBar.innerHTML = `<span onclick="goPath('')">Root</span>`;
+        let bPath = "";
+        currentPath.split('/').filter(x => x).forEach(p => {
+            bPath += (bPath ? "/" : "") + p;
+            const target = bPath;
+            pathBar.innerHTML += ` / <span onclick="goPath('${target}')">${p}</span>`;
+        });
+
+        const folders = new Set();
+        const files = [];
+
+        allData.forEach(item => {
+            if (currentPath === "") {
+                if (item.key.includes("/")) folders.add(item.key.split("/")[0]);
+                else files.push(item);
+            } else if (item.key.startsWith(currentPath + "/")) {
+                const rel = item.key.substring(currentPath.length + 1);
+                const pts = rel.split("/");
+                if (pts.length > 1) folders.add(pts[0]);
+                else if (pts[0] !== "") files.push(item);
+            }
+        });
+
+        folders.forEach(f => {
+            const fKey = currentPath === "" ? f : currentPath + "/" + f;
+            explorer.appendChild(createItem("📁", f, () => goPath(fKey), {key: fKey, isFolder: true}));
+        });
+
+        files.forEach(f => {
+            if (f.key.endsWith('/.folder')) return;
+            const isImg = /\.(jpg|png|gif|webp|jpeg)$/i.test(f.key);
+            const icon = isImg ? `<img src="${f.url}" loading="lazy">` : "📄";
+            explorer.appendChild(createItem(icon, f.key.split('/').pop(), () => window.open(f.url), f));
+        });
+    }
+
+    function createItem(icon, name, act, data) {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `<span class="icon">${icon}</span><div class="name">${name}</div>`;
+        div.onclick = act;
+        div.oncontextmenu = (e) => {
+            e.preventDefault(); e.stopPropagation();
+            selectedItem = data;
+            const m = document.getElementById('contextMenu');
+            m.style.display = 'block'; m.style.left = e.pageX + 'px'; m.style.top = e.pageY + 'px';
+        };
+        return div;
+    }
+
+    // --- 4. OPERATIONS (Upload dengan 3 Opsi Konflik) ---
+    function handleDrop(e) { e.preventDefault(); document.getElementById('dropZone').classList.remove('dragover'); handleFiles(e.dataTransfer.files); }
+
+    async function handleFiles(files) {
+        uploadQueue = [];
+        finishedCount = 0;
+
+        for (const file of files) {
+            let fileName = file.name;
+            let targetPath = currentPath === "" ? fileName : `${currentPath}/${fileName}`;
+            
+            const exists = allData.find(item => item.key === targetPath);
+            if (exists) {
+                const choice = prompt(
+                    `KONFLIK: "${fileName}" sudah ada.\n\n` +
+                    `Pilih aksi (ketik angkanya):\n` +
+                    `1. Ganti (Overwrite)\n` +
+                    `2. Simpan Keduanya (Otomatis (1))\n` +
+                    `3. Ganti Manual (Beri nama baru)`, "2"
+                );
+
+                if (choice === "1") {
+                    // Overwrite (targetPath tetap)
+                } else if (choice === "2") {
+                    // Auto Rename (1)
+                    const extIndex = fileName.lastIndexOf('.');
+                    const baseName = extIndex !== -1 ? fileName.substring(0, extIndex) : fileName;
+                    const ext = extIndex !== -1 ? fileName.substring(extIndex) : "";
+                    let counter = 1;
+                    let tempPath;
+                    do {
+                        tempPath = currentPath === "" ? `${baseName}(${counter})${ext}` : `${currentPath}/${baseName}(${counter})${ext}`;
+                        counter++;
+                    } while (allData.find(item => item.key === tempPath));
+                    targetPath = tempPath;
+                } else if (choice === "3") {
+                    const manual = prompt("Beri nama baru (dengan ekstensi):", fileName);
+                    if (!manual) continue;
+                    targetPath = currentPath === "" ? manual : `${currentPath}/${manual}`;
+                } else continue;
+            }
+            uploadQueue.push({ file, fullPath: targetPath });
+        }
+
+        if (uploadQueue.length > 0) {
+            totalQueue = uploadQueue.length;
+            document.getElementById('progress').style.display = 'block';
+            processQueue();
+        }
+    }
+
+    async function processQueue() {
+        if (uploadQueue.length === 0) {
+            document.getElementById('progText').innerText = "Selesai!";
+            setTimeout(() => { document.getElementById('progress').style.display='none'; muatData(); }, 1000);
+            return;
+        }
+        const item = uploadQueue.shift();
+        document.getElementById('progText').innerText = `Unggah: ${finishedCount + 1}/${totalQueue}`;
+        
+        const fd = new FormData();
+        fd.append('file', item.file ? item.file : new Blob([''], {type:'application/octet-stream'}));
+        fd.append('customName', item.fullPath);
+        fd.append('token', localStorage.getItem('lidan_token'));
+
+        try {
+            await fetch(`${API_URL}/upload_r2`, { method: 'POST', headers: {'X-Custom-Auth':'admin'}, body: fd });
+            finishedCount++;
+        } catch(e) {}
+        processQueue();
+    }
+
+    // --- 5. RENAME & DELETE ---
+    async function prosesRename() {
+        const oldKey = selectedItem.isFolder ? selectedItem.key + "/.folder" : selectedItem.key;
+        const currentName = oldKey.split('/').filter(x => x !== '.folder').pop();
+        const newName = prompt("Ganti nama menjadi:", currentName);
+        if (!newName || newName === currentName) return;
+
+        const pts = oldKey.split('/');
+        selectedItem.isFolder ? (pts[pts.length - 2] = newName) : (pts[pts.length - 1] = newName);
+        const newKey = pts.join('/');
+
+        const res = await fetch(`${API_URL}/rename_r2`, {
+            method: 'POST',
+            body: JSON.stringify({ oldKey, newKey, auth: 'admin' })
+        });
+        if (res.ok) muatData();
+    }
+
+    async function prosesHapus() {
+        if (!confirm("Hapus permanen?")) return;
+        const key = selectedItem.isFolder ? selectedItem.key + "/.folder" : selectedItem.key;
+        await fetch(`${API_URL}/delete_r2`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key, token: localStorage.getItem('lidan_token'), auth: 'admin' })
+        });
+        muatData();
+    }
+
+    async function buatFolderBaru() {
+        const n = prompt("Nama Folder:");
+        if (!n) return;
+        const fullPath = currentPath === "" ? `${n}/.folder` : `${currentPath}/${n}/.folder`;
+        uploadQueue = [{ file: null, fullPath }];
+        totalQueue = 1; finishedCount = 0;
+        document.getElementById('progress').style.display = 'block';
+        processQueue();
+    }
+
+    function goPath(p) { currentPath = p; updateUrlPath(); render(); }
+    function hideMenu() { document.getElementById('contextMenu').style.display = 'none'; }
+    window.onpopstate = () => { loadPathFromUrl(); render(); };
+    initApp();
+</script>
+</body>
+</html>
