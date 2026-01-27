@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Strategi Relasi Pro - Multi-Target</title>
+    
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <style>
+        :root { 
+            --primary: #0f172a; 
+            --accent: #3b82f6; 
+            --danger: #ef4444; 
+            --success: #10b981; 
+            --wa: #25d366;
+            --bg: #f8fafc;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); padding: 20px; color: #1e293b; line-height: 1.6; }
+        .container { max-width: 1200px; margin: auto; }
+        .hidden { display: none; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 25px; border: 1px solid #e2e8f0; }
+        
+        /* Form & Grid */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+        .full-width { grid-column: 1 / -1; }
+        label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: #64748b; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        textarea { min-height: 100px; }
+
+        /* Login & Checkbox */
+        .remember-me { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 15px; cursor: pointer; }
+        
+        /* Buttons & States */
+        button { cursor: pointer; padding: 10px 18px; border-radius: 8px; font-weight: 600; border: none; transition: 0.2s; font-size: 13px; }
+        .btn-primary { background: var(--accent); color: white; width: 100%; }
+        .btn-success { background: var(--success); color: white; width: 100%; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-success:disabled { background: #94a3b8; cursor: not-allowed; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-wa { background: var(--wa); color: white; text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; }
+        
+        /* Loading Spinner */
+        .spinner { width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite; display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Datatables Custom */
+        .dataTables_wrapper { margin-top: 20px; }
+        table.dataTable { border: none !important; margin-bottom: 20px !important; }
+        table.dataTable thead th { background: #f1f5f9; border-bottom: 1px solid #e2e8f0 !important; color: #475569; padding: 12px; }
+        .img-profile { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #f1f5f9; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="loginSection" class="card" style="max-width: 350px; margin: 80px auto;">
+        <h2 style="text-align: center;">🔐 CRM Relasi</h2>
+        <input type="text" id="username" placeholder="Username" style="margin-bottom: 12px;">
+        <input type="password" id="password" placeholder="Password" style="margin-bottom: 12px;">
+        <label class="remember-me"><input type="checkbox" id="rememberMe"> Ingat Saya</label>
+        <button onclick="handleLogin()" class="btn-primary">Masuk ke Sistem</button>
+    </div>
+
+    <div id="mainContent" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div><h2>Database Strategi Relasi</h2><small>Manajemen Panggung & Deep Discovery</small></div>
+            <button class="btn-danger" onclick="location.reload()">Keluar</button>
+        </div>
+
+        <div class="card">
+            <h3 id="formTitle">📝 Entry Data & Analisis Latar Belakang</h3>
+            <form id="relasiForm">
+                <input type="hidden" id="edit_id">
+                <input type="hidden" id="old_filename">
+                
+                <div class="form-grid">
+                    <div>
+                        <label>Nama Target (x_01)</label>
+                        <input type="text" id="x_01" required>
+                    </div>
+                    <div>
+                        <label>Latar Belakang (x_02)</label>
+                        <input list="kategori_list" id="x_02" placeholder="Ketik/Pilih...">
+                        <datalist id="kategori_list">
+                            <option value="Dosen/Ketua Tim"><option value="Single Parent"><option value="Pimpinan">
+                        </datalist>
+                    </div>
+                    <div>
+                        <label>WhatsApp (x_04)</label>
+                        <input type="text" id="x_04" placeholder="62812...">
+                    </div>
+                    <div>
+                        <label>Foto Relasi (R2)</label>
+                        <input type="file" id="fileInput" accept="image/*">
+                    </div>
+
+                    <div class="full-width">
+                        <label>Analisis Kepribadian & Karakter (x_05)</label>
+                        <textarea id="x_05"></textarea>
+                    </div>
+
+                    <div>
+                        <label>Tema Pancingan (x_06)</label>
+                        <input type="text" id="x_06">
+                    </div>
+                    <div>
+                        <label>Status Panggung (x_07)</label>
+                        <select id="x_07">
+                            <option value="Panggung Digital">Panggung Digital</option>
+                            <option value="Panggung Depan">Panggung Depan</option>
+                            <option value="Panggung Samping">Panggung Samping</option>
+                            <option value="Panggung Belakang">Panggung Belakang</option>
+                            <option value="Panggung Luar">Panggung Luar</option>
+                        </select>
+                    </div>
+
+                    <div class="full-width">
+                        <label>Log Jawaban 5 Pertanyaan Masalah (x_08)</label>
+                        <textarea id="x_08"></textarea>
+                    </div>
+                    
+                    <div class="full-width">
+                        <label>Update Progres / Catatan Tambahan (x_09)</label>
+                        <textarea id="x_09"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn-success">
+                    <div id="btnSpinner" class="spinner"></div>
+                    <span id="btnText">Simpan Data Relasi</span>
+                </button>
+                <button type="button" onclick="resetForm()" style="background:#cbd5e1; width:100%; margin-top:10px;">Reset</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>📋 Monitoring Progres (Datatable Mode)</h3>
+            <div class="table-wrapper">
+                <table id="relasiTable" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Profil</th>
+                            <th>Latar Belakang</th>
+                            <th>Panggung</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const CONFIG = {
+        D1_API: "https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6",
+        R2_API: "https://lidan.co.id/api/r2_api",
+        R2_PUBLIC: "https://img.cipta.my.id",
+        AUTH_KEY: "admin",
+        TABLE: "relasi"
+    };
+
+    let dataTableInstance = null;
+
+    // --- LOGIN & REMEMBER ME ---
+    window.onload = function() {
+        const u = localStorage.getItem('crm_user');
+        const p = localStorage.getItem('crm_pass');
+        if (u && p) {
+            document.getElementById('username').value = u;
+            document.getElementById('password').value = p;
+            document.getElementById('rememberMe').checked = true;
+        }
+    };
+
+    async function handleLogin() {
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        const remember = document.getElementById('rememberMe').checked;
+
+        try {
+            const res = await fetch(`${CONFIG.D1_API}?action=login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': CONFIG.AUTH_KEY, 'X-Role': 'admin' },
+                body: JSON.stringify({ username: u, password: p })
+            });
+            const result = await res.json();
+            if (result.success) {
+                if(remember) { localStorage.setItem('crm_user', u); localStorage.setItem('crm_pass', p); }
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                loadData();
+            } else { alert("Login Gagal"); }
+        } catch (e) { alert("Koneksi Error"); }
+    }
+
+    // --- LOAD DATA (DATATABLES) ---
+    async function loadData() {
+        try {
+            const res = await fetch(`${CONFIG.D1_API}?table=${CONFIG.TABLE}`, {
+                headers: { 'X-Custom-Auth': CONFIG.AUTH_KEY }
+            });
+            const result = await res.json();
+
+            // Hancurkan datatable lama jika ada
+            if (dataTableInstance) dataTableInstance.destroy();
+
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            result.data.forEach(item => {
+                const waNum = item.x_04 ? item.x_04.replace(/\D/g, '') : '';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <img src="${item.x_03 ? CONFIG.R2_PUBLIC+'/'+item.x_03 : 'https://via.placeholder.com/50'}" class="img-profile">
+                            <div><strong>${item.x_01}</strong><br>${waNum ? `<a href="https://wa.me/${waNum}" target="_blank" class="btn-wa">🟢 WA</a>` : ''}</div>
+                        </div>
+                    </td>
+                    <td>${item.x_02 || '-'}</td>
+                    <td><span class="panggung-tag">${item.x_07 || 'New'}</span></td>
+                    <td>
+                        <button onclick='prepareEdit(${JSON.stringify(item)})' style="background:#e2e8f0; font-size:11px;">Edit</button>
+                        <button onclick="deleteData('${item.id_x}')" style="background:#fee2e2; color:red; font-size:11px;">Hapus</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Inisialisasi DataTable Profesional
+            dataTableInstance = $('#relasiTable').DataTable({
+                pageLength: 10,
+                order: [[0, 'desc']],
+                language: { search: "Cari Relasi:", lengthMenu: "Tampilkan _MENU_ data" }
+            });
+
+        } catch (e) { console.error("Gagal load tabel", e); }
+    }
+
+    // --- SIMPAN DATA (DENGAN LOADING) ---
+    document.getElementById('relasiForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        const spinner = document.getElementById('btnSpinner');
+        const btnText = document.getElementById('btnText');
+
+        // Start Loading
+        btn.disabled = true;
+        spinner.style.display = "block";
+        btnText.innerText = "Memproses...";
+
+        const id = document.getElementById('edit_id').value;
+        const fileInput = document.getElementById('fileInput');
+        let finalFileName = document.getElementById('old_filename').value;
+
+        try {
+            // Upload Foto jika ada
+            if (fileInput.files.length > 0) {
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('customName', `relasi/${Date.now()}.jpg`);
+                const up = await fetch(`${CONFIG.R2_API}?action=upload`, {
+                    method: 'POST', headers: { 'X-Custom-Auth': CONFIG.AUTH_KEY }, body: formData
+                });
+                const resUp = await up.json();
+                if (resUp.success) finalFileName = resUp.key;
+            }
+
+            const payload = {
+                x_01: document.getElementById('x_01').value,
+                x_02: document.getElementById('x_02').value,
+                x_03: finalFileName,
+                x_04: document.getElementById('x_04').value,
+                x_05: document.getElementById('x_05').value,
+                x_06: document.getElementById('x_06').value,
+                x_07: document.getElementById('x_07').value,
+                x_08: document.getElementById('x_08').value,
+                x_09: document.getElementById('x_09').value
+            };
+
+            const url = id ? `${CONFIG.D1_API}?table=${CONFIG.TABLE}&id_x=${id}` : `${CONFIG.D1_API}?table=${CONFIG.TABLE}`;
+            const res = await fetch(url, {
+                method: id ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': CONFIG.AUTH_KEY },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                alert("Berhasil!");
+                resetForm();
+                loadData();
+            }
+        } catch (err) { alert(err.message); } finally {
+            // Stop Loading
+            btn.disabled = false;
+            spinner.style.display = "none";
+            btnText.innerText = "Simpan Data Relasi";
+        }
+    };
+
+    window.prepareEdit = function(data) {
+        document.getElementById('edit_id').value = data.id_x;
+        document.getElementById('x_01').value = data.x_01;
+        document.getElementById('x_02').value = data.x_02;
+        document.getElementById('x_04').value = data.x_04;
+        document.getElementById('x_05').value = data.x_05;
+        document.getElementById('x_06').value = data.x_06;
+        document.getElementById('x_07').value = data.x_07;
+        document.getElementById('x_08').value = data.x_08;
+        document.getElementById('x_09').value = data.x_09;
+        document.getElementById('old_filename').value = data.x_03;
+        document.getElementById('formTitle').innerText = "Edit Relasi: " + data.x_01;
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    };
+
+    async function deleteData(id) {
+        if(!confirm('Hapus?')) return;
+        await fetch(`${CONFIG.D1_API}?table=${CONFIG.TABLE}&id_x=${id}`, {
+            method: 'DELETE', headers: { 'X-Custom-Auth': CONFIG.AUTH_KEY }
+        });
+        loadData();
+    }
+
+    function resetForm() {
+        document.getElementById('relasiForm').reset();
+        document.getElementById('edit_id').value = '';
+        document.getElementById('formTitle').innerText = "Entry Data & Analisis Latar Belakang";
+    }
+</script>
+</body>
+</html>
