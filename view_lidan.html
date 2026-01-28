@@ -39,7 +39,14 @@
         
         .close-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); color: white; border: none; font-size: 24px; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; z-index: 10001; backdrop-filter: blur(5px); }
 
-        .swiper { width: 100%; height: 100%; padding-top: 80px; }
+        /* Control buttons untuk autoplay dan auto-next */
+        .player-controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 10001; background: rgba(0,0,0,0.6); padding: 12px 20px; border-radius: 50px; backdrop-filter: blur(10px); }
+        .control-btn { background: rgba(255,255,255,0.2); color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .control-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
+        .control-btn.active { background: var(--blue); color: white; }
+        .control-btn .icon { font-size: 16px; }
+
+        .swiper { width: 100%; height: 100%; padding-top: 80px; padding-bottom: 80px; }
         .swiper-slide { display: flex; justify-content: center; align-items: center; background: #000; color: white; }
         video, .player-image { max-width: 100%; max-height: 100%; object-fit: contain; outline: none; }
         .audio-card { background: #1a1a1a; padding: 40px; border-radius: 24px; text-align: center; width: 85%; max-width: 400px; border: 1px solid #333; }
@@ -51,6 +58,12 @@
         .login-card { background: white; padding: 40px; border-radius: 16px; width: 340px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         .btn-login { width: 100%; background: var(--blue); color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        /* Responsive untuk mobile */
+        @media (max-width: 768px) {
+            .player-controls { bottom: 10px; padding: 8px 12px; }
+            .control-btn { padding: 8px 14px; font-size: 11px; }
+        }
     </style>
 </head>
 <body onkeydown="if(event.key==='Escape') closePlayer()">
@@ -80,6 +93,19 @@
         <div class="player-info" id="playerInfo"></div>
     </div>
     <button class="close-btn" onclick="closePlayer()">✕</button>
+    
+    <!-- Control buttons untuk autoplay dan auto-next -->
+    <div class="player-controls">
+        <button class="control-btn" id="autoplayBtn" onclick="toggleAutoplay()">
+            <span class="icon">▶️</span>
+            <span>Autoplay</span>
+        </button>
+        <button class="control-btn" id="autoNextBtn" onclick="toggleAutoNext()">
+            <span class="icon">⏭️</span>
+            <span>Auto Next</span>
+        </button>
+    </div>
+    
     <div class="swiper">
         <div class="swiper-wrapper" id="playerWrapper"></div>
     </div>
@@ -90,8 +116,13 @@
     const API_URL = "https://lidan.co.id/api/r2_api";
     const API_LOGIN = "https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6";
     let allData = [], currentPath = "", mediaFiles = [], swiperInstance = null;
+    
+    // Settings untuk autoplay dan auto-next
+    let autoplayEnabled = false;
+    let autoNextEnabled = false;
 
     function getToken() { return localStorage.getItem('lidan_token'); }
+    
     async function doLogin() {
         const u = document.getElementById('userInp').value;
         const p = document.getElementById('passInp').value;
@@ -104,11 +135,17 @@
         if (data.success) { localStorage.setItem('lidan_token', btoa(`${u}:${p}`)); initApp(); }
         else alert("Login Gagal");
     }
+    
     function doLogout() { localStorage.removeItem('lidan_token'); location.reload(); }
 
     function initApp() {
         if (!getToken()) { document.getElementById('loginOverlay').style.display = 'flex'; return; }
         document.getElementById('loginOverlay').style.display = 'none';
+        
+        // Load saved settings
+        autoplayEnabled = localStorage.getItem('autoplayEnabled') === 'true';
+        autoNextEnabled = localStorage.getItem('autoNextEnabled') === 'true';
+        
         muatData();
     }
 
@@ -155,7 +192,6 @@
             if (['jpg','jpeg','png','gif','webp'].includes(ext)) {
                 icon = `<img src="${file.url}" loading="lazy"><span class="file-badge">IMG</span>`;
             } else if (['mp4','webm'].includes(ext)) {
-                // Untuk video, tampilkan frame pertama sebagai thumbnail
                 icon = `<video src="${file.url}" preload="metadata" muted></video><span class="file-badge">VIDEO</span>`;
             } else if (['mp3','wav','ogg','m4a'].includes(ext)) {
                 icon = `<span class="file-icon">🎵</span><span class="file-badge">AUDIO</span>`;
@@ -184,6 +220,44 @@
         document.getElementById('playerInfo').textContent = `${index + 1} / ${mediaFiles.length} • ${ext.toUpperCase()}`;
     }
 
+    function toggleAutoplay() {
+        autoplayEnabled = !autoplayEnabled;
+        localStorage.setItem('autoplayEnabled', autoplayEnabled);
+        updateControlButtons();
+        
+        // Apply autoplay to current media if any
+        if (swiperInstance) {
+            const activeSlide = swiperInstance.slides[swiperInstance.activeIndex];
+            const media = activeSlide.querySelector('video, audio');
+            if (media && autoplayEnabled) {
+                media.play().catch(() => {});
+            }
+        }
+    }
+
+    function toggleAutoNext() {
+        autoNextEnabled = !autoNextEnabled;
+        localStorage.setItem('autoNextEnabled', autoNextEnabled);
+        updateControlButtons();
+    }
+
+    function updateControlButtons() {
+        const autoplayBtn = document.getElementById('autoplayBtn');
+        const autoNextBtn = document.getElementById('autoNextBtn');
+        
+        if (autoplayEnabled) {
+            autoplayBtn.classList.add('active');
+        } else {
+            autoplayBtn.classList.remove('active');
+        }
+        
+        if (autoNextEnabled) {
+            autoNextBtn.classList.add('active');
+        } else {
+            autoNextBtn.classList.remove('active');
+        }
+    }
+
     function openPlayer(startIndex) {
         const wrapper = document.getElementById('playerWrapper');
         wrapper.innerHTML = "";
@@ -199,6 +273,7 @@
 
         document.getElementById('playerOverlay').style.display = 'flex';
         updatePlayerInfo(startIndex);
+        updateControlButtons();
         
         if(swiperInstance) swiperInstance.destroy(true, true);
 
@@ -233,21 +308,58 @@
         if (media && media.getAttribute('data-src')) {
             media.src = media.getAttribute('data-src');
             media.removeAttribute('data-src');
-            if (media.tagName === 'VIDEO') {
+            
+            if (media.tagName === 'VIDEO' || media.tagName === 'AUDIO') {
                 const loader = activeSlide.querySelector('.loader');
                 if(loader) loader.style.display = 'block';
-                media.oncanplay = () => { if(loader) loader.style.display = 'none'; };
+                media.oncanplay = () => { 
+                    if(loader) loader.style.display = 'none';
+                };
+                
+                // Setup event listener untuk auto next
+                media.onended = () => {
+                    if (autoNextEnabled && swiper.activeIndex < mediaFiles.length - 1) {
+                        setTimeout(() => {
+                            swiper.slideNext();
+                        }, 500); // Delay 500ms sebelum next
+                    }
+                };
+                
+                // Autoplay jika diaktifkan
+                if (autoplayEnabled) {
+                    media.play().catch(() => {});
+                }
+            }
+        } else if (media && (media.tagName === 'VIDEO' || media.tagName === 'AUDIO')) {
+            // Setup event listener untuk media yang sudah loaded
+            media.onended = () => {
+                if (autoNextEnabled && swiper.activeIndex < mediaFiles.length - 1) {
+                    setTimeout(() => {
+                        swiper.slideNext();
+                    }, 500);
+                }
+            };
+            
+            if (autoplayEnabled) {
                 media.play().catch(() => {});
             }
-        } else if (media && media.tagName === 'VIDEO') media.play().catch(() => {});
+        }
     }
 
-    function stopAllMedia() { document.querySelectorAll('video, audio').forEach(m => m.pause()); }
+    function stopAllMedia() { 
+        document.querySelectorAll('video, audio').forEach(m => {
+            m.pause();
+            m.onended = null; // Remove event listener
+        });
+    }
 
     function closePlayer() {
         document.getElementById('playerOverlay').style.display = 'none';
         stopAllMedia();
-        document.querySelectorAll('#playerWrapper video, #playerWrapper audio').forEach(m => { m.src = ""; m.load(); });
+        document.querySelectorAll('#playerWrapper video, #playerWrapper audio').forEach(m => { 
+            m.src = ""; 
+            m.load(); 
+        });
     }
 
     function goPath(p) { currentPath = p; render(); }
