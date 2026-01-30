@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Asesmen Psikologi Pro - Natural Version</title>
+    
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+    
+    <style>
+        :root { --primary: #3498db; --success: #2ecc71; --warning: #f1c40f; --danger: #e74c3c; --dark: #2c3e50; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; }
+        .container { max-width: 1240px; margin: auto; }
+        .card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        h2 { margin-top: 0; color: var(--dark); border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .input-group { background: #fdfdfd; padding: 10px; border-radius: 8px; border: 1px solid #eee; display: flex; flex-direction: column; }
+        .input-group.row { flex-direction: row; justify-content: space-between; align-items: center; }
+        label { font-size: 11px; font-weight: bold; color: #777; }
+        input { padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+        input[type="number"] { width: 45px; text-align: center; font-weight: bold; color: var(--primary); }
+        .btn-main { padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; background: var(--primary); width: 100%; transition: 0.3s; }
+        .btn-cancel { background: #95a5a6; margin-top: 10px; display: none; }
+        .table-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .narasi-text { font-size: 11px; white-space: pre-line; background: #fffdf0; padding: 10px; border-radius: 5px; border: 1px solid #f1e6b2; max-width: 400px; line-height: 1.5; color: #444; }
+        .btn-table { padding: 5px 10px; font-size: 11px; border-radius: 4px; margin: 2px; border: none; color: white; cursor: pointer; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loader"><b>Sedang Memproses Data...</b></div>
+
+<div class="container">
+    <div class="card">
+        <h2 id="formTitle">Form Asesmen Psikologi</h2>
+        <form id="psikoForm">
+            <input type="hidden" id="edit_id">
+            <div class="form-grid">
+                <div class="input-group" style="grid-column: span 2;">
+                    <label>Nama Lengkap</label>
+                    <input type="text" id="x_01" required placeholder="Masukkan Nama">
+                </div>
+                <div class="input-group" style="grid-column: span 2;">
+                    <label>Nomor Ujian</label>
+                    <input type="text" id="x_02" required placeholder="Masukkan No Ujian">
+                </div>
+            </div>
+            <div class="form-grid" id="skorGrid"></div>
+            <button type="submit" id="submitBtn" class="btn-main">Simpan & Bangun Narasi</button>
+            <button type="button" id="cancelBtn" class="btn-main btn-cancel" onclick="resetForm()">Batal Edit</button>
+        </form>
+    </div>
+
+    <div class="table-container">
+        <table id="mainTable" class="display responsive nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nama</th>
+                    <th>No Ujian</th>
+                    <th>Hasil Analisa</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+
+<script>
+const CONFIG = { api: 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6', table: 'periksa', auth: 'admin' };
+const CATEGORIES = ["Kecerdasan Umum", "Logical Thinking", "Analytical Thinking", "Communication Skill", "Stabilitas Emosi", "Manajemen Stres", "Leadership", "Kontak Sosial", "Orientasi Pelayanan", "Motivasi Berprestasi"];
+const KOGNITIF_GROUP = ["Kecerdasan Umum", "Logical Thinking", "Analytical Thinking"];
+
+const dataPola = {
+    "Kecerdasan Umum": {
+        strength: [
+            "Memiliki kapasitas intelektual yang sangat baik dalam menangkap konsep kerja yang kompleks.",
+            "Menunjukkan daya tangkap yang cepat dan pemahaman yang mendalam terhadap informasi baru.",
+            "Kapasitas berpikirnya sangat menonjol, terutama dalam mengolah data yang membutuhkan konsentrasi tinggi.",
+            "Subjek memiliki fleksibilitas kognitif yang baik untuk memahami berbagai instruksi kerja dengan cepat.",
+            "Kecerdasan umum yang tinggi memungkinkannya bekerja dengan efisien dalam situasi yang menantang secara intelektual."
+        ],
+        weakness: [
+            "Perlu waktu lebih untuk memahami instruksi abstrak; disarankan menggunakan alat bantu visual atau mencatat poin penting saat pengarahan.",
+            "Daya tangkap informasi baru perlu dioptimalkan dengan cara melakukan review berkala dan memperbanyak simulasi tugas praktis.",
+            "Terkadang memerlukan penjelasan berulang; sebaiknya subjek lebih proaktif mengonfirmasi pemahamannya di awal penugasan.",
+            "Kapasitas belajar teknis perlu ditingkatkan melalui partisipasi aktif dalam pelatihan berkelanjutan dan workshop spesifik.",
+            "Kesulitan memproses banyak informasi sekaligus dapat diatasi dengan teknik kategorisasi data dan fokus pada satu tugas secara bertahap."
+        ]
+    },
+    "Logical Thinking": {
+        strength: [
+            "Memiliki alur berpikir yang sangat sistematis dan terstruktur dalam menghadapi masalah.",
+            "Sangat mahir dalam menyusun argumentasi yang masuk akal dan didukung fakta yang kuat.",
+            "Mampu menarik kesimpulan yang akurat berdasarkan pola-pola logika yang tersedia.",
+            "Menunjukkan penalaran logis yang tajam dalam membedah setiap tugas yang diberikan.",
+            "Proses berpikirnya sangat runtut, sehingga meminimalisir kesalahan dalam pengambilan keputusan harian."
+        ],
+        weakness: [
+            "Kesulitan menarik kesimpulan saat data tidak lengkap; disarankan untuk melatih teknik pengumpulan data sekunder yang lebih komprehensif.",
+            "Agar tidak terjebak asumsi, subjek perlu membiasakan diri melakukan validasi data sebelum menyusun hipotesa akhir.",
+            "Alur berpikir yang melompat-lompat dapat diperbaiki dengan membiasakan penggunaan kerangka berpikir (framework) saat memaparkan ide.",
+            "Kecepatan menemukan solusi logis perlu diasah dengan sering berlatih studi kasus atau permainan yang menguji penalaran.",
+            "Masih memerlukan bantuan melihat keterkaitan antar masalah; disarankan menggunakan mind-mapping untuk memetakan hubungan sebab-akibat."
+        ]
+    },
+    "Analytical Thinking": {
+        strength: [
+            "Sangat detail dalam mengurai masalah besar menjadi bagian-bagian kecil yang mudah dikelola.",
+            "Memiliki ketajaman dalam mengidentifikasi akar penyebab masalah secara mendalam.",
+            "Mampu melihat kaitan tersembunyi antar data yang berbeda untuk menghasilkan analisa yang akurat.",
+            "Kekuatan analisanya membantu subjek dalam memberikan solusi yang tepat sasaran.",
+            "Menunjukkan kecermatan yang luar biasa dalam membedah informasi teknis yang rumit."
+        ],
+        weakness: [
+            "Sering melewatkan detail krusial; disarankan menggunakan checklist evaluasi untuk memastikan seluruh variabel data telah diperiksa.",
+            "Perlu bimbingan dalam prioritas analisa; subjek sebaiknya belajar menggunakan matriks urgensi-kepentingan dalam mengolah data besar.",
+            "Kesulitan pada situasi multifaktor dapat diatasi dengan memecah variabel masalah secara tertulis sebelum melakukan penilaian.",
+            "Agar tidak terpaku di permukaan, subjek perlu melatih teknik '5 Whys' untuk menggali informasi secara lebih mendalam.",
+            "Disarankan untuk lebih teliti membedah variabel dengan cara melakukan verifikasi ulang (double check) sebelum mengambil tindakan."
+        ]
+    },
+    "Communication Skill": {
+        strength: [
+            "Mampu menyampaikan ide dan pendapat dengan sangat jelas serta mudah dipahami orang lain.",
+            "Memiliki gaya komunikasi yang persuasif dan efektif dalam berbagai situasi profesional.",
+            "Sangat mahir dalam menyesuaikan gaya bicaranya dengan berbagai level audiens yang berbeda.",
+            "Mampu mendengarkan secara aktif dan merespon pesan dengan cara yang sangat diplomatis.",
+            "Kemampuan verbalnya sangat mendukung dalam proses negosiasi dan presentasi strategi."
+        ],
+        weakness: [
+            "Perlu lebih asertif dalam berpendapat; disarankan berlatih teknik komunikasi 'I-Statement' untuk menyampaikan gagasan dengan percaya diri.",
+            "Kesulitan menjelaskan hal teknis dapat diatasi dengan membiasakan penggunaan analogi sederhana yang mudah dipahami orang awam.",
+            "Kurang percaya diri di depan publik; disarankan mengikuti kelas public speaking atau mencari kesempatan berbicara dalam forum kecil.",
+            "Kecenderungan pasif dalam grup perlu diperbaiki dengan menetapkan target minimal memberikan satu masukan di setiap sesi diskusi.",
+            "Penyampaian yang berbelit-belit dapat diperbaiki dengan teknik komunikasi 'Point-Reason-Example' agar informasi lebih terstruktur."
+        ]
+    },
+    "Stabilitas Emosi": {
+        strength: [
+            "Sangat matang secara emosional dan tidak mudah terdistraksi oleh tekanan di sekitarnya.",
+            "Mampu menjaga ketenangan dan kejernihan pikiran dalam situasi yang penuh konflik.",
+            "Memiliki kontrol diri yang sangat baik, sehingga tetap objektif dalam menilai keadaan.",
+            "Kematangan emosinya memberikan pengaruh positif dan ketenangan bagi anggota tim lainnya.",
+            "Tidak mudah terpengaruh oleh suasana hati (mood), sehingga performanya tetap konsisten."
+        ],
+        weakness: [
+            "Mudah cemas pada perubahan mendadak; disarankan melatih adaptabilitas dengan menyusun rencana cadangan (contingency plan) di setiap tugas.",
+            "Perlu memisahkan perasaan pribadi dan profesional dengan cara fokus pada fakta objektif saat terjadi perdebatan di tempat kerja.",
+            "Sikap reaktif terhadap kritik dapat diubah menjadi positif dengan memandang kritik sebagai data evaluasi untuk perbaikan diri.",
+            "Suasana hati yang fluktuatif dapat dikelola dengan teknik relaksasi singkat atau manajemen energi saat beban kerja meningkat.",
+            "Agar tetap tenang di bawah pengawasan ketat, subjek perlu membangun rasa percaya diri melalui penguasaan materi kerja yang matang."
+        ]
+    },
+    "Manajemen Stres": {
+        strength: [
+            "Menunjukkan ketahanan yang luar biasa saat bekerja dengan tenggat waktu yang sangat ketat.",
+            "Mampu mengelola prioritas tugas dengan sangat baik meskipun beban kerja meningkat tajam.",
+            "Tetap produktif dan mampu mengambil keputusan tepat dalam kondisi penuh tekanan.",
+            "Memiliki daya tahan mental yang kuat terhadap hambatan kerja yang bersifat berkelanjutan.",
+            "Sangat tangguh dalam menghadapi tantangan berat dan tidak mudah menyerah pada keadaan."
+        ],
+        weakness: [
+            "Kinerja menurun saat multitasking; disarankan untuk menerapkan teknik 'Time Boxing' agar setiap tugas selesai secara tuntas satu per satu.",
+            "Mudah kehilangan fokus di bawah tekanan; subjek perlu membiasakan jeda istirahat singkat (micro-breaks) untuk menjaga kejernihan mental.",
+            "Perlu mempelajari teknik manajemen stres seperti mindfulness atau teknik pernapasan untuk mencegah kelelahan fisik dan mental.",
+            "Merasa terbeban jika target tak tercapai; disarankan membagi target besar menjadi milestone kecil yang lebih realistis untuk diraih.",
+            "Agar tekanan tidak menumpuk, subjek perlu meningkatkan keterampilan delegasi dan pengaturan jadwal yang lebih terorganisir."
+        ]
+    },
+    "Leadership": {
+        strength: [
+            "Memiliki pengaruh yang kuat dan mampu menggerakkan anggota tim menuju tujuan bersama.",
+            "Sangat mahir dalam mendelegasikan tugas dan memotivasi bawahan untuk berkembang.",
+            "Menunjukkan wibawa dan keberanian dalam mengambil keputusan strategis bagi kelompok.",
+            "Mampu mengelola dinamika tim dengan bijaksana dan menjadi penengah yang adil.",
+            "Kepemimpinannya yang visioner sangat membantu organisasi dalam melakukan transformasi."
+        ],
+        weakness: [
+            "Ragu-ragu mengambil keputusan; disarankan untuk memperkuat landasan data agar lebih berani dalam mengeksekusi tindakan krusial.",
+            "Perlu keberanian memberikan instruksi tegas; subjek sebaiknya mengikuti pelatihan kepemimpinan situasional untuk mengasah ketegasan.",
+            "Kurang proaktif memimpin; disarankan untuk lebih berani mengambil inisiatif dalam mengoordinasi tugas-tugas kelompok.",
+            "Kemampuan supervisi perlu ditingkatkan dengan membiasakan monitoring berkala yang terjadwal terhadap perkembangan kerja tim.",
+            "Pengelolaan konflik internal dapat diperbaiki dengan mempelajari teknik negosiasi dan mediasi secara lebih mendalam."
+        ]
+    },
+    "Kontak Sosial": {
+        strength: [
+            "Sangat luwes dalam membangun jejaring sosial dan menjalin hubungan dengan orang baru.",
+            "Memiliki kemampuan interpersonal yang hangat dan mudah diterima di lingkungan mana pun.",
+            "Sangat aktif dalam berinteraksi dan mampu menciptakan suasana kerja yang kolaboratif.",
+            "Pandai menempatkan diri dan memiliki empati sosial yang sangat tinggi terhadap rekan kerja.",
+            "Kemampuan networking-nya yang luas menjadi aset berharga dalam membangun hubungan strategis."
+        ],
+        weakness: [
+            "Cenderung tertutup; disarankan untuk lebih banyak berpartisipasi dalam kegiatan informal kantor guna mencairkan suasana.",
+            "Kurang peka isyarat sosial; subjek perlu melatih empati dengan cara menjadi pendengar yang lebih aktif dalam setiap percakapan.",
+            "Agar kolaborasi lancar, subjek disarankan untuk lebih terbuka dalam berbagi informasi dan tidak bekerja secara terisolasi.",
+            "Kecenderungan menghindari interaksi perlu dikurangi dengan menyisihkan waktu khusus untuk berdiskusi ringan dengan rekan sejawat.",
+            "Percaya diri pada level jabatan tinggi dapat ditingkatkan dengan menyiapkan poin pembicaraan yang matang sebelum pertemuan dimulai."
+        ]
+    },
+    "Orientasi Pelayanan": {
+        strength: [
+            "Memiliki dedikasi yang tinggi dalam memberikan pelayanan terbaik kepada pelanggan.",
+            "Sangat proaktif dalam mengantisipasi kebutuhan klien dan memberikan solusi yang memuaskan.",
+            "Menunjukkan sikap yang ramah, sabar, dan sangat tulus dalam membantu orang lain.",
+            "Mampu menjaga standar kualitas pelayanan meskipun menghadapi komplain yang sulit.",
+            "Berorientasi pada kepuasan pihak lain dan selalu berusaha melampaui ekspektasi yang diberikan."
+        ],
+        weakness: [
+            "Kurang responsif terhadap keluhan; disarankan untuk menetapkan standar waktu respon (SLA) pribadi agar pelanggan merasa diprioritaskan.",
+            "Keramahan pada karakter sulit perlu diasah melalui pelatihan 'Service Excellence' dan teknik pengendalian diri.",
+            "Sifat pasif dalam membantu perlu diubah dengan cara menawarkan bantuan terlebih dahulu tanpa menunggu diminta oleh pihak lain.",
+            "Agar lebih peka, subjek perlu rutin melakukan survei kepuasan atau meminta feedback langsung untuk perbaikan layanan.",
+            "Penanganan komplain secara diplomatis dapat ditingkatkan dengan mempelajari teknik meredam emosi lawan bicara dan solusi win-win."
+        ]
+    },
+    "Motivasi Berprestasi": {
+        strength: [
+            "Memiliki semangat juang yang luar biasa untuk selalu menjadi yang terbaik di bidangnya.",
+            "Sangat berorientasi pada hasil dan selalu menetapkan standar kualitas kerja yang sangat tinggi.",
+            "Menunjukkan ambisi positif dan ketekunan yang konsisten dalam mengejar target yang sulit.",
+            "Tidak pernah puas dengan hasil rata-rata dan selalu mencari inovasi untuk lebih maju.",
+            "Memiliki determinasi diri yang kuat untuk terus berkembang meskipun menghadapi banyak rintangan."
+        ],
+        weakness: [
+            "Cepat puas dengan standar minimal; disarankan untuk selalu menetapkan 'stretch goal' agar potensi diri tetap terpacu maksimal.",
+            "Perlu menumbuhkan dorongan internal dengan cara menyelaraskan tujuan pribadi dengan visi perusahaan agar lebih bersemangat.",
+            "Disarankan menetapkan target harian yang menantang guna melatih konsistensi dalam mencapai prestasi kerja yang tinggi.",
+            "Kegigihan yang menurun saat ada hambatan perlu diatasi dengan menjaga fokus pada hasil akhir dan mencari mentor pendamping.",
+            "Motivasi kerja yang fluktuatif dapat distabilkan dengan rutin mengevaluasi pencapaian dan memberikan apresiasi diri atas keberhasilan kecil."
+        ]
+    }
+};
+
+// Inisialisasi DataTables
+let dTable = $('#mainTable').DataTable({
+    responsive: true,
+    pageLength: 10,
+    order: [[0, "desc"]],
+    language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' }
+});
+
+// Render Form Skor
+const grid = document.getElementById('skorGrid');
+CATEGORIES.forEach((cat, i) => {
+    const id = `x_${(i + 3).toString().padStart(2, '0')}`;
+    grid.innerHTML += `
+        <div class="input-group row">
+            <label>${cat}</label>
+            <input type="number" id="${id}" class="val-skor" data-cat="${cat}" min="1" max="10" value="5">
+        </div>`;
+});
+
+// Fungsi Pengambil Kalimat Acak (Natural)
+function getSentence(cat, type) {
+    const pool = type === 'S' ? dataPola[cat].strength : dataPola[cat].weakness;
+    const randomIndex = Math.floor(Math.random() * pool.length);
+    return pool[randomIndex];
+}
+
+// Fungsi Filter 3 Besar & Logika Eksklusif Kognitif
+function filterExclusive(scores, isStrength) {
+    let sorted = [...scores].sort((a, b) => isStrength ? b.score - a.score : a.score - b.score);
+    let finalSelection = [];
+    let kognitifTaken = false;
+
+    for (let item of sorted) {
+        if (finalSelection.length >= 3) break;
+        const isKog = KOGNITIF_GROUP.includes(item.name);
+        if (isKog) {
+            if (!kognitifTaken) {
+                finalSelection.push(item);
+                kognitifTaken = true;
+            }
+        } else {
+            finalSelection.push(item);
+        }
+    }
+    return finalSelection;
+}
+
+// Logic Simpan
+document.getElementById('psikoForm').onsubmit = async function(e) {
+    e.preventDefault();
+    $('#loader').show();
+    
+    const idEdit = document.getElementById('edit_id').value;
+    let payload = { x_01: document.getElementById('x_01').value, x_02: document.getElementById('x_02').value };
+
+    let scores = [];
+    document.querySelectorAll('.val-skor').forEach((el, i) => {
+        let key = `x_${(i+3).toString().padStart(2, '0')}`;
+        payload[key] = el.value;
+        scores.push({ name: el.dataset.cat, score: parseInt(el.value) });
+    });
+
+    const sList = filterExclusive(scores, true);
+    const wList = filterExclusive(scores, false);
+
+    let narasi = `HASIL ANALISA ASESMEN PSKIKOLOGI\n\nKEKUATAN UTAMA:\n`;
+    sList.forEach((s, i) => narasi += `${i+1}. ${s.name}: ${getSentence(s.name, 'S')}\n`);
+    narasi += `\nAREA PENGEMBANGAN:\n`;
+    wList.forEach((w, i) => narasi += `${i+1}. ${w.name}: ${getSentence(w.name, 'W')}\n`);
+    
+    payload.x_13 = narasi;
+
+    try {
+        const method = idEdit ? 'PUT' : 'POST';
+        const url = idEdit ? `${CONFIG.api}?table=${CONFIG.table}&id_x=${idEdit}` : `${CONFIG.api}?table=${CONFIG.table}`;
+        await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': CONFIG.auth },
+            body: JSON.stringify(payload)
+        });
+        alert("Data Berhasil Disimpan!");
+        resetForm();
+        loadData();
+    } catch (e) { alert("Koneksi gagal."); }
+    $('#loader').hide();
+};
+
+async function loadData() {
+    $('#loader').show();
+    try {
+        const res = await fetch(`${CONFIG.api}?table=${CONFIG.table}`, { headers: { 'X-Custom-Auth': CONFIG.auth } });
+        const json = await res.json();
+        dTable.clear();
+        json.data.forEach(row => {
+            dTable.row.add([
+                row.id_x, `<b>${row.x_01}</b>`, row.x_02,
+                `<div class="narasi-text" id="cp_${row.id_x}">${row.x_13}</div><button onclick="copyNarasi(${row.id_x})" class="btn-table" style="background:var(--success)">Salin</button>`,
+                `<button onclick='editRow(${JSON.stringify(row)})' class="btn-table" style="background:var(--warning)">Edit</button>
+                 <button onclick="deleteRow(${row.id_x})" class="btn-table" style="background:var(--danger)">Hapus</button>`
+            ]);
+        });
+        dTable.draw();
+    } catch (e) { }
+    $('#loader').hide();
+}
+
+function editRow(data) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('edit_id').value = data.id_x;
+    document.getElementById('x_01').value = data.x_01;
+    document.getElementById('x_02').value = data.x_02;
+    document.getElementById('formTitle').innerText = "Edit Data: " + data.x_01;
+    document.getElementById('cancelBtn').style.display = 'block';
+    for(let i=3; i<=12; i++) {
+        let k = `x_${i.toString().padStart(2, '0')}`;
+        document.getElementById(k).value = data[k] || 5;
+    }
+}
+
+async function deleteRow(id) {
+    if(!confirm("Yakin hapus?")) return;
+    await fetch(`${CONFIG.api}?table=${CONFIG.table}&id_x=${id}`, { method: 'DELETE', headers: { 'X-Custom-Auth': CONFIG.auth } });
+    loadData();
+}
+
+function resetForm() {
+    document.getElementById('psikoForm').reset();
+    document.getElementById('edit_id').value = '';
+    document.getElementById('formTitle').innerText = "Form Asesmen Psikologi";
+    document.getElementById('cancelBtn').style.display = 'none';
+}
+
+function copyNarasi(id) {
+    const text = document.getElementById(`cp_${id}`).innerText;
+    navigator.clipboard.writeText(text);
+    alert("Berhasil disalin!");
+}
+
+$(document).ready(() => loadData());
+</script>
+</body>
+</html>
