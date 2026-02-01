@@ -6,7 +6,7 @@
     <title>Dynamic Management System</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
     <style>
         body { background-color: #f4f7f6; padding: 20px; }
         .login-container { max-width: 400px; margin: 80px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -14,15 +14,7 @@
         .nav-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #eee; }
         td { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: cell; }
         td:focus { background-color: #fff9c4; outline: 2px solid #ffd600; white-space: normal; }
-        
-        /* DataTables Custom Style */
-        .dataTables_wrapper .dataTables_length,
-        .dataTables_wrapper .dataTables_filter,
-        .dataTables_wrapper .dataTables_info,
-        .dataTables_wrapper .dataTables_paginate {
-            margin-bottom: 15px;
-        }
-
+        .table-responsive { max-height: 70vh; overflow-y: auto; }
 
         /* ─── LOADING OVERLAY ─── */
         #loadingOverlay {
@@ -70,34 +62,6 @@
             border-radius: 8px 0 0 0; padding: 8px 10px;
             overflow-y: auto; z-index: 9999;
             border-top: 2px solid #007bff;
-            display: none; /* Sembunyikan secara default */
-        }
-        #debugPanel.active {
-            display: block; /* Tampilkan ketika ada class active */
-        }
-        
-        /* ─── TOMBOL TOGGLE DEBUG ─── */
-        #toggleDebugBtn {
-            position: fixed; bottom: 20px; right: 20px;
-            width: 50px; height: 50px;
-            background: #007bff; color: white;
-            border: none; border-radius: 50%;
-            font-size: 1.2rem; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,123,255,0.4);
-            z-index: 10000; /* Lebih tinggi dari debug panel (9999) */
-            transition: all 0.3s ease;
-        }
-        #toggleDebugBtn:hover {
-            background: #0056b3;
-            transform: scale(1.1);
-        }
-        #toggleDebugBtn.active {
-            background: #28a745;
-        }
-        
-        /* Pastikan tombol tetap di depan saat debug panel muncul */
-        #debugPanel.active ~ #toggleDebugBtn {
-            z-index: 10001;
         }
         #debugPanel .debug-title {
             color: #007bff; font-weight: bold; font-size: 0.78rem;
@@ -110,6 +74,22 @@
         .dbg-render { color: #ff6b6b; }
         .dbg-err    { color: #ff6b6b; font-weight: bold; }
         .dbg-time   { color: #666; margin-right: 6px; }
+
+        /* ─── DATATABLE CUSTOM ─── */
+        .dataTables_wrapper .dataTables_length select {
+            padding: 4px 8px;
+            margin: 0 5px;
+        }
+        .dataTables_wrapper .dataTables_filter input {
+            margin-left: 5px;
+            padding: 4px 8px;
+        }
+        .dataTables_wrapper .dataTables_info {
+            padding-top: 12px;
+        }
+        .dataTables_wrapper .dataTables_paginate {
+            padding-top: 12px;
+        }
     </style>
 </head>
 <body>
@@ -160,7 +140,7 @@
             <div class="loading-text">Sedang mengambil data, mohon tunggu...</div>
         </div>
         <div class="table-responsive">
-            <table id="dataTable" class="table table-bordered table-striped">
+            <table id="mainTable" class="table table-bordered table-striped">
                 <thead class="thead-dark"><tr id="tableHeader"></tr></thead>
                 <tbody id="tableBody"></tbody>
             </table>
@@ -214,15 +194,10 @@
     <div class="debug-title">🛠 DEBUG — Polling &amp; Snapshot</div>
 </div>
 
-<!-- ========== TOMBOL TOGGLE DEBUG ========== -->
-<button id="toggleDebugBtn" onclick="toggleDebugPanel()" title="Toggle Debug Panel">
-    <i class="fa fa-bug"></i>
-</button>
-
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
 <script>
 // ================================================================
 // KONFIGURASI
@@ -233,8 +208,6 @@ const UI_USERNAME    = 'admin';
 const UI_PASSWORD    = 'admin';
 const POLL_INTERVAL  = 5000;    // polling setiap 5 detik
 const FETCH_TIMEOUT  = 8000;    // timeout per request: 8 detik max
-
-let dataTableInstance = null;  // Instance DataTables
 
 // ================================================================
 // SAFE STORAGE (fallback kalau localStorage diblokir Edge)
@@ -300,10 +273,11 @@ async function fetchWithTimeout(url, options = {}) {
 let currentTable     = safeGet('lastTable') || 'cover';
 let lastDataSnapshot = '';
 let pollTimer        = null;
+let dataTableInstance = null;  // Instance DataTables
+let allTableNames    = [];
 let isFirstLoad      = true;
 let pollCount        = 0;
 let consecutiveFails = 0;   // hitung gagal berturut-turut untuk retry logic
-let allTableNames    = [];
 
 // ================================================================
 // INIT
@@ -323,17 +297,6 @@ $(document).ready(function () {
             safeSet('isLoggedIn', 'true');
             showMain();
         } else { alert('Username atau Password Salah!'); }
-    });
-
-    let sTimer;
-    $('#searchBox').on('input', function () {
-        clearTimeout(sTimer);
-        sTimer = setTimeout(function () {
-            isFirstLoad = true;
-            lastDataSnapshot = '';
-            debug('search', 'Reset snapshot & loadData()', 'poll');
-            loadData();
-        }, 500);
     });
 
     $('#btnShowTables').on('click', loadAvailableTables);
@@ -371,13 +334,11 @@ function stopPolling() {
 // 1. LOAD DATA (GET)  —  inti dari polling
 // ================================================================
 async function loadData(isPolling = false) {
-    const search = $('#searchBox').val();
     let url = `${API_BASE}?table=${currentTable}`;
-    if (search) url += `&x_01_like=${encodeURIComponent(search)}`;
 
     if (isFirstLoad && !isPolling) showLoading(true);
 
-    debug('fetch', `GET ...table=${currentTable}${search ? '&search='+search : ''}`, 'fetch');
+    debug('fetch', `GET ...table=${currentTable}`, 'fetch');
 
     try {
         const res = await fetchWithTimeout(url, { method: 'GET', headers: authHeaders() });
@@ -442,34 +403,38 @@ async function loadData(isPolling = false) {
 
         debug('render', `Done — ${result.data.length} baris`, 'render');
 
-        // Inisialisasi atau update DataTables
+        // Initialize atau Update DataTable
         if (dataTableInstance) {
-            dataTableInstance.destroy(); // Hancurkan instance lama
+            // Jika sudah ada, destroy dulu
+            dataTableInstance.destroy();
         }
         
-        dataTableInstance = $('#dataTable').DataTable({
-            pageLength: 10,
-            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
-            language: {
-                search: "Cari:",
-                lengthMenu: "Tampilkan _MENU_ data per halaman",
-                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
-                infoFiltered: "(disaring dari _MAX_ total data)",
-                paginate: {
-                    first: "Pertama",
-                    last: "Terakhir",
-                    next: "Selanjutnya",
-                    previous: "Sebelumnya"
-                },
-                zeroRecords: "Tidak ada data yang ditemukan",
-                emptyTable: "Tidak ada data tersedia"
+        // Initialize DataTable dengan konfigurasi
+        dataTableInstance = $('#mainTable').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, "Semua"]],
+            "language": {
+                "lengthMenu": "Tampilkan _MENU_ data per halaman",
+                "zeroRecords": "Data tidak ditemukan",
+                "info": "Menampilkan halaman _PAGE_ dari _PAGES_",
+                "infoEmpty": "Tidak ada data tersedia",
+                "infoFiltered": "(difilter dari _MAX_ total data)",
+                "search": "Cari:",
+                "paginate": {
+                    "first": "Pertama",
+                    "last": "Terakhir",
+                    "next": "Selanjutnya",
+                    "previous": "Sebelumnya"
+                }
             },
-            order: [[1, 'desc']], // Sort by ID descending
-            columnDefs: [
-                { orderable: false, targets: 0 } // Kolom Opsi tidak bisa di-sort
-            ]
+            "order": [[1, 'desc']], // Sort by ID column descending
+            "columnDefs": [
+                { "orderable": false, "targets": 0 } // Disable sorting on Action column
+            ],
+            "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>'
         });
+
+        debug('render', 'DataTable initialized', 'render');
 
 
     } catch (e) {
@@ -646,15 +611,23 @@ function generateFormFields() {
 }
 
 // ================================================================
-// 8. TOGGLE DEBUG PANEL
+// 8. HIDE DEBUG PANEL ON CLICK
 // ================================================================
-function toggleDebugPanel() {
-    const panel = $('#debugPanel');
-    const btn = $('#toggleDebugBtn');
+$(document).ready(function() {
+    // Klik di sembarang tempat untuk menyembunyikan debug panel
+    $(document).on('click', function(e) {
+        const debugPanel = $('#debugPanel');
+        // Cek apakah yang diklik bukan debug panel itu sendiri
+        if (!$(e.target).closest('#debugPanel').length) {
+            debugPanel.hide();
+        }
+    });
     
-    panel.toggleClass('active');
-    btn.toggleClass('active');
-}
+    // Klik pada debug panel tidak akan menyembunyikannya (stopPropagation)
+    $('#debugPanel').on('click', function(e) {
+        e.stopPropagation();
+    });
+});
 </script>
 </body>
 </html>
