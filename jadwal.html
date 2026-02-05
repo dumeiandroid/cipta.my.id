@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Jadwal Lidan v15.0</title>
+    <title>Dashboard Jadwal Lidan v16.0</title>
     <style>
-        :root { --m: #ff7675; --t: #74b9ff; --k: #55efc4; --s: #ffeaa7; --bg: #f4f7f6; }
+        :root { --m: #ff7675; --t: #74b9ff; --k: #55efc4; --s: #ffeaa7; --o: #b2bec3; --bg: #f4f7f6; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); margin: 0; overflow: hidden; }
         
@@ -21,38 +21,63 @@
         .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; }
         .login-box button { width: 100%; padding: 12px; background: #6c5ce7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
 
-        /* --- HEADER DASHBOARD (4 BARIS RAMPING) --- */
+        /* --- HEADER DASHBOARD --- */
         .header-nav { 
             background: #fff; padding: 10px; border-bottom: 2px solid #ddd; 
             display: flex; flex-direction: column; gap: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; z-index: 100;
         }
+        h1.title { margin: 0; font-size: 18px; color: #2d3436; text-align: center; }
 
-        h1.title { margin: 0; font-size: 18px; color: #2d3436; text-align: center; display: block; }
-
-        .status-tabs { display: flex; gap: 4px; background: #eee; padding: 3px; border-radius: 6px; }
-        .tab-btn { flex: 1; padding: 8px 2px; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 12px; }
+        .status-tabs { display: flex; gap: 5px; background: #eee; padding: 5px; border-radius: 6px; }
+.tab-btn { padding: 8px 15px; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; transition: 0.2s; }
         .tab-btn.active { background: #fff; color: #0984e3; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
         .controls { display: flex; justify-content: space-between; align-items: center; gap: 5px; }
-        .period-picker { display: flex; align-items: center; gap: 3px; background: #f8f9fa; padding: 4px; border-radius: 6px; border: 1px solid #ddd; }
-        .period-picker input { width: 35px; border: none; background: transparent; text-align: center; font-weight: bold; font-size: 14px; padding: 2px; }
-        .period-picker input#view_thn { width: 50px; }
-
+        /* Menambah lebar keseluruhan kotak picker dan ukuran font */
+.period-picker { 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; /* Jarak antar elemen lebih lega */
+    background: #f8f9fa; 
+    padding: 6px 12px; /* Padding lebih tebal */
+    border-radius: 8px; 
+    border: 1px solid #ccc;
+    flex-grow: 1; /* Biarkan dia mengambil ruang yang tersedia */
+    justify-content: center;
+}
+.period-picker input { 
+    width: 45px; /* Input bulan lebih lebar */
+    border: 1px solid #ddd; /* Tambah border tipis agar terlihat seperti kotak input */
+    background: #fff; 
+    text-align: center; 
+    font-weight: bold; 
+    font-size: 16px; /* Font lebih besar agar mudah dibaca */
+    padding: 4px;
+    border-radius: 4px;
+}
+.period-picker input#view_thn { 
+    width: 70px; /* Input tahun lebih lebar */
+}
+/* Memperbesar tombol OK agar mantap saat ditekan jempol */
+.period-picker button {
+    padding: 6px 15px !important;
+    font-size: 12px !important;
+    font-weight: bold;
+}
         .btn-add { background: #00b894; color: white; border: none; padding: 10px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; }
         .btn-logout { background: #e74c3c; color: white; border: none; padding: 8px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
 
-        .legenda { display: flex; gap: 10px; font-size: 10px; font-weight: bold; color: #636e72; justify-content: center; }
+        .legenda { display: flex; gap: 8px; font-size: 9px; font-weight: bold; color: #636e72; justify-content: center; flex-wrap: wrap; }
         .dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; vertical-align: middle; margin-right: 3px; }
 
-        /* --- TABLE AREA (RE-ENABLED COLORS) --- */
-        .wrapper { width: 100vw; height: calc(100vh - 170px); overflow-y: auto; background: #fff; scroll-behavior: smooth; }
+        /* --- TABLE AREA --- */
+        .wrapper { width: 100vw; height: calc(100vh - 175px); overflow-y: auto; background: #fff; scroll-behavior: smooth; }
         table { border-collapse: collapse; min-width: 100%; table-layout: fixed; }
         th { position: sticky; top: 0; background: #f8f9fa; border: 1px solid #ccc; padding: 8px; z-index: 10; font-size: 12px; }
         
-        /* Warna Khusus Baris */
-        tr.today { background-color: #fff9c4 !important; } /* Kuning untuk hari ini */
-        tr.sunday { background-color: #ffebee !important; } /* Merah muda untuk minggu */
+        tr.today { background-color: #fff9c4 !important; } 
+        tr.sunday { background-color: #ffebee !important; } 
         tr.sunday .tgl-col { color: #d63031; }
 
         .tgl-col { position: sticky; left: 0; width: 55px; text-align: center; font-weight: bold; background: inherit; border: 1px solid #ccc; z-index: 5; font-size: 12px; }
@@ -65,25 +90,23 @@
             cursor: pointer; border: 1px solid rgba(0,0,0,0.1); flex-shrink: 0;
         }
         .meeting { background: var(--m); } .tes { background: var(--t); } 
-        .konseling { background: var(--k); } .seminar { background: var(--s); }
+        .konseling { background: var(--k); } .seminar { background: var(--s); } .others { background: var(--o); }
 
-        /* Modal */
+        /* --- MODAL --- */
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 1000; align-items: center; justify-content: center; padding: 15px; backdrop-filter: blur(2px); }
-        .modal { background: white; padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; }
+        .modal { background: white; padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; position: relative; }
         input, textarea, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
 
         @media (min-width: 769px) {
             .header-nav { flex-direction: row; height: 85px; align-items: center; justify-content: space-between; padding: 0 20px; }
-            h1.title { text-align: left; }
-            .status-tabs { width: 350px; }
             .wrapper { height: calc(100vh - 85px); }
         }
     </style>
 </head>
 <body>
 
-<div id="loginPage">
-    <div class="login-box">
+<div id="loginPage" onclick="closeLoginError(event)">
+    <div class="login-box" onclick="event.stopPropagation()">
         <h2>Login Admin</h2>
         <input type="text" id="l_user" placeholder="Username">
         <input type="password" id="l_pass" placeholder="Password">
@@ -91,35 +114,31 @@
             <input type="checkbox" id="l_remember"> Remember Me
         </label>
         <button onclick="handleLogin()">Masuk</button>
-        <p id="loginMsg" style="color:red; font-size:12px; margin-top:10px; display:none;">User/Pass Salah!</p>
+        <p id="loginMsg" style="color:red; font-size:12px; margin-top:10px; display:none;">Akses Ditolak!</p>
     </div>
 </div>
 
 <div class="header-nav">
     <h1 class="title">Penjadwalan</h1>
-
     <div class="status-tabs">
         <button id="tab-aktif" class="tab-btn active" onclick="switchStatus('aktif')">Aktif</button>
         <button id="tab-pending" class="tab-btn" onclick="switchStatus('pending')">Pending</button>
         <button id="tab-done" class="tab-btn" onclick="switchStatus('done')">Done</button>
     </div>
-
     <div class="controls">
-        <button class="btn-add" onclick="openAddModal()">+ TAMBAH</button>
+        <button class="btn-add" onclick="openAddModal()">+</button>
         <div class="period-picker">
-            <input type="number" id="view_bln">
-            <span>/</span>
-            <input type="number" id="view_thn">
+            <input type="number" id="view_bln"><span>/</span><input type="number" id="view_thn">
             <button onclick="initCalendar()" style="border:none; background:#6c5ce7; color:white; border-radius:4px; padding:4px 6px; cursor:pointer; font-size:10px;">OK</button>
         </div>
         <button class="btn-logout" onclick="handleLogout()">Logout</button>
     </div>
-
     <div class="legenda">
         <span><div class="dot meeting" style="background:var(--m)"></div>Meet</span>
         <span><div class="dot tes" style="background:var(--t)"></div>Tes</span>
         <span><div class="dot konseling" style="background:var(--k)"></div>Kons</span>
         <span><div class="dot seminar" style="background:var(--s)"></div>Sem</span>
+        <span><div class="dot others" style="background:var(--o)"></div>Other</span>
     </div>
 </div>
 
@@ -130,16 +149,18 @@
     </table>
 </div>
 
-<div class="overlay" id="modalOverlay">
-    <div class="modal">
+<div class="overlay" id="modalOverlay" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
         <h3 id="modalTitle" style="margin:0 0 10px 0;">Detail Jadwal</h3>
         <input type="hidden" id="f_id">
         <div style="margin-bottom:10px;">
-            <label style="font-size:11px; font-weight:bold;">TGL & JAM (FORMAT 13:45)</label>
-            <div style="display:flex; gap:5px;">
-                <input type="number" id="f_tgl" placeholder="Tgl">
-                <input type="text" id="f_jam" placeholder="Jam">
-            </div>
+            <label style="font-size:11px; font-weight:bold;">PILIH TANGGAL (HARI OTOMATIS)</label>
+            <input type="date" id="f_date_picker" onchange="syncDatePickerToInteger()">
+            <input type="hidden" id="f_tgl">
+        </div>
+        <div style="margin-bottom:10px;">
+            <label style="font-size:11px; font-weight:bold;">JAM (MISAL 13:45)</label>
+            <input type="text" id="f_jam" placeholder="HH:mm">
         </div>
         <div style="margin-bottom:10px;">
             <label style="font-size:11px; font-weight:bold;">JENIS & KETERANGAN</label>
@@ -148,8 +169,9 @@
                 <option value="tes">Tes</option>
                 <option value="konseling">Konseling</option>
                 <option value="seminar">Seminar</option>
+                <option value="others">Other</option>
             </select>
-            <textarea id="f_ket" rows="3" placeholder="Catatan..."></textarea>
+            <textarea id="f_ket" rows="3" placeholder="Nama Peserta / Lokasi..."></textarea>
         </div>
         <div id="statusUpdateArea" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
             <button onclick="saveData('done')" style="background:#0984e3; color:white; border:none; padding:10px; border-radius:6px; font-weight:bold;">DONE</button>
@@ -167,6 +189,15 @@
     const TABLE_ADMIN = 'admins';
     let currentTab = 'aktif';
     const namaHari = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+
+    // --- LOGIKA DATE PICKER SYNC ---
+    function syncDatePickerToInteger() {
+        const dateVal = document.getElementById('f_date_picker').value;
+        if(dateVal) {
+            const dayInt = parseInt(dateVal.split('-')[2], 10);
+            document.getElementById('f_tgl').value = dayInt; // Pastikan jadi Integer (misal 2)
+        }
+    }
 
     async function handleLogin() {
         const u = document.getElementById('l_user').value;
@@ -198,6 +229,10 @@
         location.reload();
     }
 
+    function closeLoginError(e) {
+        document.getElementById('loginMsg').style.display = 'none';
+    }
+
     function initCalendar() {
         const bln = parseInt(document.getElementById('view_bln').value);
         const thn = parseInt(document.getElementById('view_thn').value);
@@ -213,10 +248,7 @@
             const isToday = (isCurrentMonth && i === todayTgl);
             let rowId = '';
             if (isCurrentMonth && i === Math.max(1, todayTgl - 1)) rowId = 'id="scrollTarget"';
-            
-            // LOGIKA WARNA BARIS
             let rowClass = isToday ? 'today' : (dateObj.getDay() === 0 ? 'sunday' : '');
-            
             tbody.innerHTML += `<tr ${rowId} class="${rowClass}"><td class="tgl-col">${i}<br><small>${namaHari[dateObj.getDay()]}</small></td><td><div class="task-list" id="task-container-${i}"></div></td></tr>`;
         }
         refreshData().then(() => {
@@ -235,7 +267,7 @@
             document.querySelectorAll('.task-list').forEach(el => el.innerHTML = '');
             if (res.success && res.data) {
                 res.data.sort((a,b) => String(a.x_02).localeCompare(String(b.x_02))).forEach(item => {
-                    const tglRaw = item.x_01.toString().split('.')[0];
+                    const tglRaw = parseInt(item.x_01);
                     const container = document.getElementById(`task-container-${tglRaw}`);
                     if (container) {
                         const box = document.createElement('div');
@@ -252,12 +284,12 @@
     async function saveData(forcedStatus) {
         const id = document.getElementById('f_id').value;
         const payload = {
-            x_01: Math.floor(document.getElementById('f_tgl').value).toString(),
+            x_01: document.getElementById('f_tgl').value.toString(),
             x_02: document.getElementById('f_jam').value.trim(),
             x_03: document.getElementById('f_jenis').value,
             x_04: document.getElementById('f_ket').value,
-            x_06: Math.floor(document.getElementById('view_bln').value).toString(),
-            x_07: Math.floor(document.getElementById('view_thn').value).toString()
+            x_06: document.getElementById('view_bln').value.toString(),
+            x_07: document.getElementById('view_thn').value.toString()
         };
         if (forcedStatus) payload.x_05 = forcedStatus;
         else if (!id) payload.x_05 = 'aktif';
@@ -274,7 +306,15 @@
 
     function openEditModal(item) {
         document.getElementById('f_id').value = item.id_x;
-        document.getElementById('f_tgl').value = item.x_01.toString().split('.')[0];
+        const tglInt = parseInt(item.x_01);
+        document.getElementById('f_tgl').value = tglInt;
+        
+        // Sync ke Date Picker
+        const bln = document.getElementById('view_bln').value.padStart(2, '0');
+        const thn = document.getElementById('view_thn').value;
+        const tglStr = tglInt.toString().padStart(2, '0');
+        document.getElementById('f_date_picker').value = `${thn}-${bln}-${tglStr}`;
+
         document.getElementById('f_jam').value = item.x_02;
         document.getElementById('f_jenis').value = item.x_03;
         document.getElementById('f_ket').value = item.x_04 || '';
@@ -284,7 +324,16 @@
 
     function openAddModal() {
         document.getElementById('f_id').value = '';
-        document.getElementById('f_tgl').value = new Date().getDate();
+        const today = new Date();
+        const tgl = today.getDate();
+        document.getElementById('f_tgl').value = tgl;
+        
+        // Sync ke Date Picker
+        const y = today.getFullYear();
+        const m = (today.getMonth()+1).toString().padStart(2, '0');
+        const d = tgl.toString().padStart(2, '0');
+        document.getElementById('f_date_picker').value = `${y}-${m}-${d}`;
+
         document.getElementById('f_jam').value = "08:00";
         document.getElementById('f_ket').value = '';
         document.getElementById('statusUpdateArea').style.display = 'none';
