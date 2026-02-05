@@ -2,40 +2,164 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Investigasi Ukuran File</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top 20 Storage Hunter - Lidan Cloud</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
-        .debug-box { background: #222; color: #0f0; padding: 15px; border-radius: 8px; overflow-x: auto; font-family: monospace; }
-        .btn { padding: 10px 20px; cursor: pointer; background: #0078d7; color: white; border: none; border-radius: 5px; }
+        :root { --danger: #dc3545; --success: #28a745; --primary: #0078d7; --dark: #343a40; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f8f9fa; margin: 0; padding: 20px; color: var(--dark); }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        
+        .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f1f1; padding-bottom: 20px; margin-bottom: 20px; }
+        h2 { margin: 0; font-size: 24px; color: var(--dark); }
+        
+        .stats-info { background: #e7f3ff; padding: 10px 15px; border-radius: 8px; font-size: 14px; color: var(--primary); font-weight: 500; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #fcfcfc; text-align: left; padding: 15px; border-bottom: 2px solid #dee2e6; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
+        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+        tr:hover { background: #f9f9f9; }
+
+        .file-info { display: flex; flex-direction: column; }
+        .file-name { font-weight: bold; color: #222; margin-bottom: 4px; word-break: break-all; }
+        .file-path { font-size: 11px; color: #888; font-family: monospace; }
+        
+        .size-tag { background: #fff3cd; color: #856404; padding: 5px 10px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block; }
+
+        .btn { cursor: pointer; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; transition: 0.3s; font-size: 13px; text-decoration: none; }
+        .btn-refresh { background: var(--primary); color: white; }
+        .btn-refresh:hover { background: #0056b3; box-shadow: 0 4px 12px rgba(0,120,215,0.3); }
+        .btn-run { background: var(--success); color: white; margin-right: 5px; }
+        .btn-run:hover { background: #218838; }
+        .btn-delete { background: var(--danger); color: white; }
+        .btn-delete:hover { background: #c82333; }
+
+        #loading { text-align: center; padding: 40px; display: none; }
+        .loader-spin { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <h2>Analisis Data API</h2>
-    <button class="btn" onclick="cekData()">1. Cek Struktur Data API</button>
-    <p>Lihat kotak di bawah untuk melihat apa yang dikirim oleh Cloudflare:</p>
-    <div id="debug" class="debug-box">Klik tombol di atas...</div>
 
-    <script>
-        async function cekData() {
-            const debugDiv = document.getElementById('debug');
-            try {
-                const res = await fetch("https://cipta.my.id/api/r2_api?action=list");
-                const data = await res.json();
-                
-                if (data.length > 0) {
-                    // Menampilkan 1 contoh objek file pertama secara utuh
-                    debugDiv.innerText = JSON.stringify(data[0], null, 4);
-                    
-                    if (!data[0].size && !data[0].Size) {
-                        debugDiv.innerHTML += "\n\n⚠️ PERINGATAN: Tidak ada properti 'size' atau 'Size' ditemukan!";
-                    }
-                } else {
-                    debugDiv.innerText = "Data kosong.";
-                }
-            } catch (e) {
-                debugDiv.innerText = "Error: " + e.message;
+<div class="container">
+    <div class="header-area">
+        <div>
+            <h2>📦 20 File Terbesar</h2>
+            <p style="margin: 5px 0 0; color: #666; font-size: 14px;">Memindai seluruh folder di Cloud Explorer Anda</p>
+        </div>
+        <button class="btn btn-refresh" onclick="fetchTopFiles()">🔄 Scan Ulang Storage</button>
+    </div>
+
+    <div id="loading">
+        <div class="loader-spin"></div>
+        <p style="margin-top: 15px; color: #666;">Menganalisis ukuran file...</p>
+    </div>
+
+    <table id="fileTable">
+        <thead>
+            <tr>
+                <th style="width: 50px;">Rank</th>
+                <th>Nama & Lokasi File</th>
+                <th style="width: 120px;">Ukuran</th>
+                <th style="text-align: center; width: 180px;">Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="resultBody">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    const API_URL = "https://cipta.my.id/api/r2_api";
+
+    // Fungsi konversi Bytes ke format manusiawi
+    function formatSize(bytes) {
+        if (!bytes || bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    async function fetchTopFiles() {
+        const table = document.getElementById('fileTable');
+        const body = document.getElementById('resultBody');
+        const loader = document.getElementById('loading');
+
+        body.innerHTML = "";
+        loader.style.display = "block";
+        table.style.opacity = "0.3";
+
+        try {
+            // Memanggil API List yang sudah diperbaiki
+            const response = await fetch(`${API_URL}?action=list`);
+            const data = await response.json();
+
+            // Logika Inti: Filter file sistem, Urutkan berdasarkan size, ambil 20 teratas
+            const sortedFiles = data
+                .filter(item => !item.key.endsWith('/.folder')) // Abaikan marker folder
+                .sort((a, b) => (b.size || 0) - (a.size || 0)) // Sort DESC
+                .slice(0, 20); // Limit 20
+
+            loader.style.display = "none";
+            table.style.opacity = "1";
+
+            if (sortedFiles.length === 0) {
+                body.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Tidak ada file ditemukan.</td></tr>";
+                return;
             }
+
+            sortedFiles.forEach((file, index) => {
+                const row = document.createElement('tr');
+                const fileName = file.key.split('/').pop();
+                
+                row.innerHTML = `
+                    <td style="font-weight: bold; color: #999;">#${index + 1}</td>
+                    <td>
+                        <div class="file-info">
+                            <span class="file-name">${fileName}</span>
+                            <span class="file-path">${file.key}</span>
+                        </div>
+                    </td>
+                    <td><span class="size-tag">${formatSize(file.size)}</span></td>
+                    <td style="text-align: center;">
+                        <a href="${file.url}" target="_blank" class="btn btn-run">Buka</a>
+                        <button class="btn btn-delete" onclick="deleteFile('${file.key}')">Hapus</button>
+                    </td>
+                `;
+                body.appendChild(row);
+            });
+
+        } catch (error) {
+            console.error("Error:", error);
+            loader.innerHTML = "<p style='color:red'>Gagal mengambil data. Pastikan API Worker sudah diupdate.</p>";
         }
-    </script>
+    }
+
+    async function deleteFile(key) {
+        if (!confirm(`Hapus permanen file ini?\n\n${key}`)) return;
+
+        try {
+            const res = await fetch(`${API_URL}?action=delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: key, auth: 'admin' })
+            });
+
+            const result = await res.json();
+            if (result.success) {
+                alert("File berhasil dihapus!");
+                fetchTopFiles(); // Segarkan daftar
+            } else {
+                alert("Gagal menghapus: " + (result.error || "Akses ditolak"));
+            }
+        } catch (e) {
+            alert("Terjadi kesalahan jaringan.");
+        }
+    }
+
+    // Jalankan saat load pertama kali
+    window.onload = fetchTopFiles;
+</script>
+
 </body>
 </html>
