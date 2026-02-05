@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Jadwal Lidan v13.0 - Responsive</title>
+    <title>Dashboard Jadwal Lidan v13.5</title>
     <style>
         :root { --m: #ff7675; --t: #74b9ff; --k: #55efc4; --s: #ffeaa7; --bg: #f4f7f6; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
@@ -25,68 +25,62 @@
 
         /* --- STYLE DASHBOARD --- */
         .header-nav { 
-            background: #fff; padding: 10px 20px; border-bottom: 2px solid #ddd; 
-            display: flex; justify-content: space-between; align-items: center; min-height: 85px;
+            background: #fff; padding: 10px 15px; border-bottom: 2px solid #ddd; 
+            display: flex; flex-direction: column; gap: 10px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; z-index: 100;
         }
-        .left-side { display: flex; flex-direction: column; gap: 8px; }
-        .legenda { display: flex; gap: 12px; font-size: 11px; font-weight: bold; color: #636e72; flex-wrap: wrap; }
-        .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; vertical-align: middle; margin-right: 4px; border: 1px solid rgba(0,0,0,0.1); }
         
-        .status-tabs { display: flex; gap: 5px; background: #eee; padding: 5px; border-radius: 6px; }
-        .tab-btn { padding: 8px 15px; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 13px; }
+        /* Baris 1: Tab Status */
+        .row-top { display: flex; justify-content: center; width: 100%; }
+        .status-tabs { display: flex; gap: 5px; background: #eee; padding: 4px; border-radius: 8px; width: 100%; max-width: 500px; }
+        .tab-btn { flex: 1; padding: 8px; border: none; cursor: pointer; border-radius: 6px; font-weight: bold; font-size: 13px; transition: 0.2s; }
         .tab-btn.active { background: #fff; color: #0984e3; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
-        .wrapper { width: 100vw; height: calc(100vh - 85px); overflow-y: auto; background: #fff; scroll-behavior: smooth; }
+        /* Baris 2: Tambah - Periode - Logout */
+        .row-middle { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; }
+        .period-picker { display: flex; align-items: center; gap: 5px; }
+        .period-picker input { width: 45px; padding: 6px 2px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; }
+        .period-picker input#view_thn { width: 65px; }
+
+        /* Baris 3: Legenda */
+        .legenda { display: flex; gap: 10px; font-size: 10px; font-weight: bold; color: #636e72; justify-content: center; flex-wrap: wrap; border-top: 1px solid #eee; padding-top: 5px; }
+        .dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; vertical-align: middle; margin-right: 3px; border: 1px solid rgba(0,0,0,0.1); }
+        
+        /* Tabel */
+        .wrapper { width: 100vw; height: calc(100vh - 145px); overflow-y: auto; background: #fff; scroll-behavior: smooth; }
         table { border-collapse: collapse; min-width: 100%; table-layout: fixed; }
-        th { position: sticky; top: 0; background: #f8f9fa; border: 1px solid #ccc; padding: 10px; z-index: 10; font-size: 14px; }
+        th { position: sticky; top: 0; background: #f8f9fa; border: 1px solid #ccc; padding: 10px; z-index: 10; font-size: 13px; }
         
         tr.today { background-color: #fff9c4 !important; } 
         tr.sunday { background-color: #ffebee; color: #d63031; }
         
-        .tgl-col { position: sticky; left: 0; width: 70px; text-align: center; font-weight: bold; background: inherit; border: 1px solid #ccc; z-index: 5; font-size: 13px; }
+        .tgl-col { position: sticky; left: 0; width: 60px; text-align: center; font-weight: bold; background: inherit; border: 1px solid #ccc; z-index: 5; font-size: 12px; }
         td { border: 1px solid #eee; padding: 5px; height: 75px; vertical-align: middle; }
 
-        .task-list { display: flex; gap: 6px; flex-wrap: nowrap; align-items: center; min-height: 55px; overflow-x: auto; padding-bottom: 2px; }
+        .task-list { display: flex; gap: 6px; flex-wrap: nowrap; align-items: center; min-height: 55px; overflow-x: auto; }
         .box { 
-            min-width: 55px; height: 50px; border-radius: 8px; display: flex; 
+            min-width: 55px; height: 48px; border-radius: 8px; display: flex; 
             align-items: center; justify-content: center; font-weight: bold; color: #2d3436;
             cursor: pointer; border: 1px solid rgba(0,0,0,0.1); font-size: 12px; flex-shrink: 0;
         }
         .meeting { background: var(--m); } .tes { background: var(--t); } 
         .konseling { background: var(--k); } .seminar { background: var(--s); }
 
-        /* --- MODAL --- */
+        /* Modal */
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(2px); padding: 15px; }
         .modal { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 380px; }
-        input, textarea, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; /* 16px mencegah auto-zoom di iOS */ }
+        input, textarea, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
         .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         button.action { padding: 12px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; }
 
-        /* ==========================================
-           CSS RESPONSIVE (MOBILE OPTIMIZATION)
-           ========================================== */
-        @media (max-width: 768px) {
-            .header-nav { 
-                flex-direction: column; 
-                height: auto; 
-                padding: 10px; 
-                gap: 12px;
-                align-items: flex-start;
-            }
-            .wrapper { height: calc(100vh - 180px); /* Menyesuaikan tinggi header mobile */ }
-            
-            .status-tabs { width: 100%; justify-content: space-around; }
-            .tab-btn { flex: 1; padding: 8px 5px; font-size: 12px; }
-            
-            .right-actions { width: 100%; display: flex; justify-content: space-between; align-items: center; }
-            
-            .tgl-col { width: 55px; font-size: 11px; }
-            td { height: 70px; }
-            .box { min-width: 50px; height: 45px; font-size: 11px; }
-            
-            .legenda { gap: 8px; }
-            .legenda span { font-size: 10px; }
+        /* Desktop Adjustment */
+        @media (min-width: 769px) {
+            .header-nav { flex-direction: row; height: 85px; justify-content: space-between; }
+            .row-top, .row-middle, .legenda { width: auto; border: none; padding: 0; }
+            .row-middle { order: 1; }
+            .row-top { order: 2; }
+            .right-btns { order: 3; display: flex; gap: 10px; align-items: center; }
+            .wrapper { height: calc(100vh - 85px); }
         }
     </style>
 </head>
@@ -100,54 +94,56 @@
         <label class="remember-me">
             <input type="checkbox" id="l_remember"> Remember Me
         </label>
-        <button onclick="handleLogin()">Masuk Ke Dashboard</button>
-        <p id="loginMsg" style="color:red; font-size:12px; margin-top:10px; display:none;">User atau Password Salah!</p>
+        <button onclick="handleLogin()">Masuk</button>
+        <p id="loginMsg" style="color:red; font-size:12px; margin-top:10px; display:none;">Login Gagal!</p>
     </div>
 </div>
 
-<div class="header-nav">
-    <div class="left-side">
-        <div style="display:flex; gap:8px;">
-            <input type="number" id="view_bln" style="width:45px; text-align:center;">
-            <input type="number" id="view_thn" style="width:70px; text-align:center;">
-            <button onclick="initCalendar()" style="padding:5px 12px; cursor:pointer; background:#6c5ce7; color:white; border:none; border-radius:6px; font-weight:bold; font-size:12px;">Lihat</button>
-        </div>
-        <div class="legenda">
-            <span><div class="dot meeting"></div>Meet</span>
-            <span><div class="dot tes"></div>Tes</span>
-            <span><div class="dot konseling"></div>Kons</span>
-            <span><div class="dot seminar"></div>Sem</span>
+<div class="header-nav" id="mainHeader">
+    <div class="row-top">
+        <div class="status-tabs">
+            <button id="tab-aktif" class="tab-btn active" onclick="switchStatus('aktif')">Aktif</button>
+            <button id="tab-pending" class="tab-btn" onclick="switchStatus('pending')">Pending</button>
+            <button id="tab-done" class="tab-btn" onclick="switchStatus('done')">Done</button>
         </div>
     </div>
 
-    <div class="status-tabs">
-        <button id="tab-aktif" class="tab-btn active" onclick="switchStatus('aktif')">Aktif</button>
-        <button id="tab-pending" class="tab-btn" onclick="switchStatus('pending')">Pending</button>
-        <button id="tab-done" class="tab-btn" onclick="switchStatus('done')">Done</button>
-    </div>
+    <div class="row-middle">
+        <button style="background:#00b894; color:white; border:none; padding:10px 12px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:12px;" onclick="openAddModal()">+ TAMBAH</button>
+        
+        <div class="period-picker">
+            <input type="number" id="view_bln">
+            <input type="number" id="view_thn">
+            <button onclick="initCalendar()" style="padding:6px 10px; cursor:pointer; background:#6c5ce7; color:white; border:none; border-radius:4px; font-size:11px;">OK</button>
+        </div>
 
-    <div class="right-actions">
-        <button style="background:#00b894; color:white; border:none; padding:10px 15px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:13px;" onclick="openAddModal()">+ TAMBAH</button>
         <button style="background:#e74c3c; color:white; border:none; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:11px;" onclick="handleLogout()">Logout</button>
+    </div>
+
+    <div class="legenda">
+        <span><div class="dot meeting"></div>Meet</span>
+        <span><div class="dot tes"></div>Tes</span>
+        <span><div class="dot konseling"></div>Kons</span>
+        <span><div class="dot seminar"></div>Sem</span>
     </div>
 </div>
 
 <div class="wrapper">
     <table>
-        <thead><tr><th style="width:70px;" class="tgl-th">Tgl</th><th>Jadwal Kerja</th></tr></thead>
+        <thead><tr><th style="width:60px;">Tgl</th><th>Jadwal Kerja</th></tr></thead>
         <tbody id="tableBody"></tbody>
     </table>
 </div>
 
 <div class="overlay" id="modalOverlay">
     <div class="modal">
-        <h3 id="modalTitle" style="margin:0 0 15px 0;">Detail Jadwal</h3>
+        <h3 id="modalTitle" style="margin:0 0 15px 0; font-size:18px;">Detail Jadwal</h3>
         <input type="hidden" id="f_id">
         <div style="margin-bottom:12px;">
             <label style="font-size:12px; font-weight:bold;">TANGGAL & JAM</label>
             <div style="display:flex; gap:8px;">
                 <input type="number" id="f_tgl" placeholder="Tgl">
-                <input type="text" id="f_jam" placeholder="Jam (13:45)">
+                <input type="text" id="f_jam" placeholder="Jam (e.g 13:45)">
             </div>
         </div>
         <div style="margin-bottom:12px;">
