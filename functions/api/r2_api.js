@@ -1,7 +1,7 @@
 export async function onRequest(context) {
   const { request, env } = context;
   const url = new URL(request.url);
-  const action = url.searchParams.get("action"); // Gunakan query parameter untuk membedakan fungsi
+  const action = url.searchParams.get("action"); 
 
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -9,7 +9,6 @@ export async function onRequest(context) {
     "Access-Control-Allow-Headers": "Content-Type, X-Custom-Auth",
   };
 
-  // 1. Tangani Preflight OPTIONS
   if (request.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -20,6 +19,7 @@ export async function onRequest(context) {
       const list = await env.MY_BUCKET.list();
       const files = list.objects.map(obj => ({
         key: obj.key,
+        size: obj.size, // <--- TAMBAHKAN BARIS INI (PENTING!)
         url: `https://fam.cipta.my.id/${obj.key}`,
         uploaded: obj.uploaded
       }));
@@ -28,10 +28,8 @@ export async function onRequest(context) {
 
     // --- AKSI POST: UPLOAD, RENAME, DELETE ---
     if (request.method === "POST") {
-      // Validasi Keamanan (Admin Check)
       const authHeader = request.headers.get("X-Custom-Auth");
       
-      // Logika khusus berdasarkan parameter "action"
       if (action === "upload") {
         if (authHeader !== "admin") throw new Error("Unauthorized");
         

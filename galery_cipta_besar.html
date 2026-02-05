@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Investigasi Ukuran File</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+        .debug-box { background: #222; color: #0f0; padding: 15px; border-radius: 8px; overflow-x: auto; font-family: monospace; }
+        .btn { padding: 10px 20px; cursor: pointer; background: #0078d7; color: white; border: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h2>Analisis Data API</h2>
+    <button class="btn" onclick="cekData()">1. Cek Struktur Data API</button>
+    <p>Lihat kotak di bawah untuk melihat apa yang dikirim oleh Cloudflare:</p>
+    <div id="debug" class="debug-box">Klik tombol di atas...</div>
+
+    <script>
+        async function cekData() {
+            const debugDiv = document.getElementById('debug');
+            try {
+                const res = await fetch("https://cipta.my.id/api/r2_api?action=list");
+                const data = await res.json();
+                
+                if (data.length > 0) {
+                    // Menampilkan 1 contoh objek file pertama secara utuh
+                    debugDiv.innerText = JSON.stringify(data[0], null, 4);
+                    
+                    if (!data[0].size && !data[0].Size) {
+                        debugDiv.innerHTML += "\n\n⚠️ PERINGATAN: Tidak ada properti 'size' atau 'Size' ditemukan!";
+                    }
+                } else {
+                    debugDiv.innerText = "Data kosong.";
+                }
+            } catch (e) {
+                debugDiv.innerText = "Error: " + e.message;
+            }
+        }
+    </script>
+</body>
+</html>
