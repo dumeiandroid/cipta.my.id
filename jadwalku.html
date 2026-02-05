@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Jadwal Lidan v16.0</title>
+    <title>Dashboard Jadwal Lidan v16.0 - Enhanced</title>
     <style>
-        :root { --m: #ff7675; --t: #74b9ff; --k: #55efc4; --s: #ffeaa7; --o: #b2bec3; --bg: #f4f7f6; }
+        :root { --bg: #f4f7f6; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); margin: 0; overflow: hidden; }
         
@@ -30,41 +30,18 @@
         h1.title { margin: 0; font-size: 18px; color: #2d3436; text-align: center; }
 
         .status-tabs { display: flex; gap: 5px; background: #eee; padding: 5px; border-radius: 6px; }
-.tab-btn { padding: 8px 15px; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; transition: 0.2s; }
+        .tab-btn { padding: 8px 15px; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; transition: 0.2s; flex: 1; }
         .tab-btn.active { background: #fff; color: #0984e3; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
         .controls { display: flex; justify-content: space-between; align-items: center; gap: 5px; }
-        /* Menambah lebar keseluruhan kotak picker dan ukuran font */
-.period-picker { 
-    display: flex; 
-    align-items: center; 
-    gap: 8px; /* Jarak antar elemen lebih lega */
-    background: #f8f9fa; 
-    padding: 6px 12px; /* Padding lebih tebal */
-    border-radius: 8px; 
-    border: 1px solid #ccc;
-    flex-grow: 1; /* Biarkan dia mengambil ruang yang tersedia */
-    justify-content: center;
-}
-.period-picker input { 
-    width: 45px; /* Input bulan lebih lebar */
-    border: 1px solid #ddd; /* Tambah border tipis agar terlihat seperti kotak input */
-    background: #fff; 
-    text-align: center; 
-    font-weight: bold; 
-    font-size: 16px; /* Font lebih besar agar mudah dibaca */
-    padding: 4px;
-    border-radius: 4px;
-}
-.period-picker input#view_thn { 
-    width: 70px; /* Input tahun lebih lebar */
-}
-/* Memperbesar tombol OK agar mantap saat ditekan jempol */
-.period-picker button {
-    padding: 6px 15px !important;
-    font-size: 12px !important;
-    font-weight: bold;
-}
+        .period-picker { 
+            display: flex; align-items: center; gap: 8px; background: #f8f9fa; 
+            padding: 6px 12px; border-radius: 8px; border: 1px solid #ccc; flex-grow: 1; justify-content: center;
+        }
+        .period-picker input { width: 45px; border: 1px solid #ddd; background: #fff; text-align: center; font-weight: bold; font-size: 16px; padding: 4px; border-radius: 4px; }
+        .period-picker input#view_thn { width: 70px; }
+        .period-picker button { padding: 6px 15px !important; font-size: 12px !important; font-weight: bold; }
+
         .btn-add { background: #00b894; color: white; border: none; padding: 10px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; }
         .btn-logout { background: #e74c3c; color: white; border: none; padding: 8px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
 
@@ -76,6 +53,8 @@
         table { border-collapse: collapse; min-width: 100%; table-layout: fixed; }
         th { position: sticky; top: 0; background: #f8f9fa; border: 1px solid #ccc; padding: 8px; z-index: 10; font-size: 12px; }
         
+        tr { cursor: pointer; transition: background 0.1s; }
+        tr:hover { background-color: #f1f2f6; }
         tr.today { background-color: #fff9c4 !important; } 
         tr.sunday { background-color: #ffebee !important; } 
         tr.sunday .tgl-col { color: #d63031; }
@@ -83,14 +62,13 @@
         .tgl-col { position: sticky; left: 0; width: 55px; text-align: center; font-weight: bold; background: inherit; border: 1px solid #ccc; z-index: 5; font-size: 12px; }
         td { border: 1px solid #eee; padding: 4px; height: 70px; vertical-align: middle; }
 
-        .task-list { display: flex; gap: 5px; flex-wrap: nowrap; overflow-x: auto; padding: 2px; }
+        .task-list { display: flex; gap: 5px; flex-wrap: nowrap; overflow-x: auto; padding: 2px; pointer-events: none; }
         .box { 
             min-width: 50px; height: 45px; border-radius: 6px; display: flex; 
             align-items: center; justify-content: center; font-weight: bold; font-size: 11px;
-            cursor: pointer; border: 1px solid rgba(0,0,0,0.1); flex-shrink: 0;
+            cursor: pointer; border: 1px solid rgba(0,0,0,0.1); flex-shrink: 0; pointer-events: auto;
+            color: #2d3436;
         }
-        .meeting { background: var(--m); } .tes { background: var(--t); } 
-        .konseling { background: var(--k); } .seminar { background: var(--s); } .others { background: var(--o); }
 
         /* --- MODAL --- */
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 1000; align-items: center; justify-content: center; padding: 15px; backdrop-filter: blur(2px); }
@@ -133,13 +111,8 @@
         </div>
         <button class="btn-logout" onclick="handleLogout()">Logout</button>
     </div>
-    <div class="legenda">
-        <span><div class="dot meeting" style="background:var(--m)"></div>Meet</span>
-        <span><div class="dot tes" style="background:var(--t)"></div>Tes</span>
-        <span><div class="dot konseling" style="background:var(--k)"></div>Kons</span>
-        <span><div class="dot seminar" style="background:var(--s)"></div>Sem</span>
-        <span><div class="dot others" style="background:var(--o)"></div>Other</span>
-    </div>
+    <div id="legendaContainer" class="legenda">
+        </div>
 </div>
 
 <div class="wrapper">
@@ -159,18 +132,13 @@
             <input type="hidden" id="f_tgl">
         </div>
         <div style="margin-bottom:10px;">
-            <label style="font-size:11px; font-weight:bold;">JAM (MISAL 13:45)</label>
-            <input type="text" id="f_jam" placeholder="HH:mm">
+            <label style="font-size:11px; font-weight:bold;">JAM (KLIK UNTUK MEMILIH)</label>
+            <input type="time" id="f_jam">
         </div>
         <div style="margin-bottom:10px;">
             <label style="font-size:11px; font-weight:bold;">JENIS & KETERANGAN</label>
             <select id="f_jenis">
-                <option value="meeting">Meeting</option>
-                <option value="tes">Tes</option>
-                <option value="konseling">Konseling</option>
-                <option value="seminar">Seminar</option>
-                <option value="others">Other</option>
-            </select>
+                </select>
             <textarea id="f_ket" rows="3" placeholder="Nama Peserta / Lokasi..."></textarea>
         </div>
         <div id="statusUpdateArea" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
@@ -183,6 +151,15 @@
 </div>
 
 <script>
+    // --- 3. KONFIGURASI JENIS & LEGENDA (JSON) ---
+    const CONFIG_JENIS = [
+        { id: "meeting", label: "Meet", color: "#ff7675", short: "Meet" },
+        { id: "cod", label: "Coding", color: "#74b9ff", short: "Coding" },
+        { id: "konseling", label: "Konseling", color: "#55efc4", short: "Kons" },
+        { id: "seminar", label: "Seminar", color: "#ffeaa7", short: "Sem" },
+        { id: "others", label: "Other", color: "#b2bec3", short: "Other" }
+    ];
+
     const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
     const AUTH_KEY = 'admin'; 
     const TABLE = 'jadwalku';
@@ -190,12 +167,34 @@
     let currentTab = 'aktif';
     const namaHari = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
 
-    // --- LOGIKA DATE PICKER SYNC ---
+    // Inisialisasi Legenda dan Select Options dari Config
+    function setupUIFromConfig() {
+        const legenda = document.getElementById('legendaContainer');
+        const select = document.getElementById('f_jenis');
+        const styleSheet = document.createElement("style");
+        let cssRules = "";
+
+        legenda.innerHTML = '';
+        select.innerHTML = '';
+
+        CONFIG_JENIS.forEach(item => {
+            // Legenda
+            legenda.innerHTML += `<span><div class="dot" style="background:${item.color}"></div>${item.short}</span>`;
+            // Select Modal
+            select.innerHTML += `<option value="${item.id}">${item.label}</option>`;
+            // Dynamic CSS untuk warna box
+            cssRules += `.box.${item.id} { background: ${item.color}; }\n`;
+        });
+        
+        styleSheet.innerText = cssRules;
+        document.head.appendChild(styleSheet);
+    }
+
     function syncDatePickerToInteger() {
         const dateVal = document.getElementById('f_date_picker').value;
         if(dateVal) {
             const dayInt = parseInt(dateVal.split('-')[2], 10);
-            document.getElementById('f_tgl').value = dayInt; // Pastikan jadi Integer (misal 2)
+            document.getElementById('f_tgl').value = dayInt;
         }
     }
 
@@ -249,7 +248,13 @@
             let rowId = '';
             if (isCurrentMonth && i === Math.max(1, todayTgl - 1)) rowId = 'id="scrollTarget"';
             let rowClass = isToday ? 'today' : (dateObj.getDay() === 0 ? 'sunday' : '');
-            tbody.innerHTML += `<tr ${rowId} class="${rowClass}"><td class="tgl-col">${i}<br><small>${namaHari[dateObj.getDay()]}</small></td><td><div class="task-list" id="task-container-${i}"></div></td></tr>`;
+            
+            // --- 1. MODIFIKASI: ONCLICK PADA BARIS ---
+            tbody.innerHTML += `
+                <tr ${rowId} class="${rowClass}" onclick="openAddModal(${i})">
+                    <td class="tgl-col">${i}<br><small>${namaHari[dateObj.getDay()]}</small></td>
+                    <td><div class="task-list" id="task-container-${i}"></div></td>
+                </tr>`;
         }
         refreshData().then(() => {
             const target = document.getElementById('scrollTarget');
@@ -273,7 +278,10 @@
                         const box = document.createElement('div');
                         box.className = `box ${item.x_03}`;
                         box.innerText = item.x_02; 
-                        box.onclick = () => openEditModal(item);
+                        box.onclick = (e) => {
+                            e.stopPropagation(); // Mencegah terpicunya klik baris
+                            openEditModal(item);
+                        };
                         container.appendChild(box);
                     }
                 });
@@ -285,7 +293,7 @@
         const id = document.getElementById('f_id').value;
         const payload = {
             x_01: document.getElementById('f_tgl').value.toString(),
-            x_02: document.getElementById('f_jam').value.trim(),
+            x_02: document.getElementById('f_jam').value, // Picker jam memberikan format HH:mm
             x_03: document.getElementById('f_jenis').value,
             x_04: document.getElementById('f_ket').value,
             x_06: document.getElementById('view_bln').value.toString(),
@@ -309,7 +317,6 @@
         const tglInt = parseInt(item.x_01);
         document.getElementById('f_tgl').value = tglInt;
         
-        // Sync ke Date Picker
         const bln = document.getElementById('view_bln').value.padStart(2, '0');
         const thn = document.getElementById('view_thn').value;
         const tglStr = tglInt.toString().padStart(2, '0');
@@ -322,17 +329,19 @@
         document.getElementById('modalOverlay').style.display = 'flex';
     }
 
-    function openAddModal() {
+    // --- 1. MODIFIKASI: Tambah parameter tgl agar dinamis saat klik baris ---
+    function openAddModal(tglSpecific = null) {
         document.getElementById('f_id').value = '';
         const today = new Date();
-        const tgl = today.getDate();
+        const blnView = document.getElementById('view_bln').value.padStart(2, '0');
+        const thnView = document.getElementById('view_thn').value;
+        
+        // Gunakan tanggal dari baris atau tanggal hari ini
+        const tgl = tglSpecific || today.getDate();
         document.getElementById('f_tgl').value = tgl;
         
-        // Sync ke Date Picker
-        const y = today.getFullYear();
-        const m = (today.getMonth()+1).toString().padStart(2, '0');
         const d = tgl.toString().padStart(2, '0');
-        document.getElementById('f_date_picker').value = `${y}-${m}-${d}`;
+        document.getElementById('f_date_picker').value = `${thnView}-${blnView}-${d}`;
 
         document.getElementById('f_jam').value = "08:00";
         document.getElementById('f_ket').value = '';
@@ -349,9 +358,11 @@
 
     function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
     
-    const d = new Date();
-    document.getElementById('view_bln').value = d.getMonth() + 1;
-    document.getElementById('view_thn').value = d.getFullYear();
+    // START UP
+    const dNow = new Date();
+    document.getElementById('view_bln').value = dNow.getMonth() + 1;
+    document.getElementById('view_thn').value = dNow.getFullYear();
+    setupUIFromConfig();
     checkAuth();
 </script>
 </body>
