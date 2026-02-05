@@ -2,84 +2,79 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Jadwal Lidan v13.5</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dashboard Jadwal Lidan v14.0</title>
     <style>
         :root { --m: #ff7675; --t: #74b9ff; --k: #55efc4; --s: #ffeaa7; --bg: #f4f7f6; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); margin: 0; overflow: hidden; }
         
-        /* --- STYLE LOGIN --- */
+        /* --- LOGIN PAGE --- */
         #loginPage {
             position: fixed; inset: 0; background: #2d3436; z-index: 9999;
             display: flex; align-items: center; justify-content: center; padding: 20px;
         }
         .login-box {
             background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 350px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center;
+            text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.3);
         }
-        .login-box h2 { margin-top: 0; color: #2d3436; }
         .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; }
         .login-box button { width: 100%; padding: 12px; background: #6c5ce7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .remember-me { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 15px; cursor: pointer; }
 
-        /* --- STYLE DASHBOARD --- */
+        /* --- HEADER DASHBOARD --- */
         .header-nav { 
-            background: #fff; padding: 10px 15px; border-bottom: 2px solid #ddd; 
-            display: flex; flex-direction: column; gap: 10px;
+            background: #fff; padding: 10px; border-bottom: 2px solid #ddd; 
+            display: flex; flex-direction: column; gap: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; z-index: 100;
         }
-        
-        /* Baris 1: Tab Status */
-        .row-top { display: flex; justify-content: center; width: 100%; }
-        .status-tabs { display: flex; gap: 5px; background: #eee; padding: 4px; border-radius: 8px; width: 100%; max-width: 500px; }
-        .tab-btn { flex: 1; padding: 8px; border: none; cursor: pointer; border-radius: 6px; font-weight: bold; font-size: 13px; transition: 0.2s; }
+
+        h1.title { margin: 0; font-size: 18px; color: #2d3436; text-align: center; display: block; }
+
+        /* Row Status Tabs */
+        .status-tabs { display: flex; gap: 4px; background: #eee; padding: 3px; border-radius: 6px; }
+        .tab-btn { flex: 1; padding: 8px 2px; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 12px; }
         .tab-btn.active { background: #fff; color: #0984e3; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
-        /* Baris 2: Tambah - Periode - Logout */
-        .row-middle { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; }
-        .period-picker { display: flex; align-items: center; gap: 5px; }
-        .period-picker input { width: 45px; padding: 6px 2px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; }
-        .period-picker input#view_thn { width: 65px; }
+        /* Row Controls (Tambah, Bulan, Thn, Logout) */
+        .controls { display: flex; justify-content: space-between; align-items: center; gap: 5px; }
+        .period-picker { display: flex; align-items: center; gap: 3px; background: #f8f9fa; padding: 4px; border-radius: 6px; border: 1px solid #ddd; }
+        .period-picker input { width: 40px; border: none; background: transparent; text-align: center; font-weight: bold; font-size: 14px; padding: 2px; }
+        .period-picker input#view_thn { width: 55px; }
 
-        /* Baris 3: Legenda */
-        .legenda { display: flex; gap: 10px; font-size: 10px; font-weight: bold; color: #636e72; justify-content: center; flex-wrap: wrap; border-top: 1px solid #eee; padding-top: 5px; }
-        .dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; vertical-align: middle; margin-right: 3px; border: 1px solid rgba(0,0,0,0.1); }
-        
-        /* Tabel */
-        .wrapper { width: 100vw; height: calc(100vh - 145px); overflow-y: auto; background: #fff; scroll-behavior: smooth; }
+        .btn-add { background: #00b894; color: white; border: none; padding: 10px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; }
+        .btn-logout { background: #e74c3c; color: white; border: none; padding: 10px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+
+        /* Row Legenda */
+        .legenda { display: flex; gap: 10px; font-size: 10px; font-weight: bold; color: #636e72; justify-content: center; }
+        .dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; vertical-align: middle; margin-right: 3px; }
+
+        /* --- TABLE AREA --- */
+        .wrapper { width: 100vw; height: calc(100vh - 165px); overflow-y: auto; background: #fff; scroll-behavior: smooth; }
         table { border-collapse: collapse; min-width: 100%; table-layout: fixed; }
-        th { position: sticky; top: 0; background: #f8f9fa; border: 1px solid #ccc; padding: 10px; z-index: 10; font-size: 13px; }
+        th { position: sticky; top: 0; background: #f8f9fa; border: 1px solid #ccc; padding: 8px; z-index: 10; font-size: 12px; }
         
-        tr.today { background-color: #fff9c4 !important; } 
-        tr.sunday { background-color: #ffebee; color: #d63031; }
-        
-        .tgl-col { position: sticky; left: 0; width: 60px; text-align: center; font-weight: bold; background: inherit; border: 1px solid #ccc; z-index: 5; font-size: 12px; }
-        td { border: 1px solid #eee; padding: 5px; height: 75px; vertical-align: middle; }
+        .tgl-col { position: sticky; left: 0; width: 55px; text-align: center; font-weight: bold; background: inherit; border: 1px solid #ccc; z-index: 5; font-size: 12px; }
+        td { border: 1px solid #eee; padding: 4px; height: 70px; vertical-align: middle; }
 
-        .task-list { display: flex; gap: 6px; flex-wrap: nowrap; align-items: center; min-height: 55px; overflow-x: auto; }
+        .task-list { display: flex; gap: 5px; flex-wrap: nowrap; overflow-x: auto; padding: 2px; }
         .box { 
-            min-width: 55px; height: 48px; border-radius: 8px; display: flex; 
-            align-items: center; justify-content: center; font-weight: bold; color: #2d3436;
-            cursor: pointer; border: 1px solid rgba(0,0,0,0.1); font-size: 12px; flex-shrink: 0;
+            min-width: 50px; height: 45px; border-radius: 6px; display: flex; 
+            align-items: center; justify-content: center; font-weight: bold; font-size: 11px;
+            cursor: pointer; border: 1px solid rgba(0,0,0,0.1); flex-shrink: 0;
         }
         .meeting { background: var(--m); } .tes { background: var(--t); } 
         .konseling { background: var(--k); } .seminar { background: var(--s); }
 
         /* Modal */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(2px); padding: 15px; }
-        .modal { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 380px; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 1000; align-items: center; justify-content: center; padding: 15px; backdrop-filter: blur(2px); }
+        .modal { background: white; padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; }
         input, textarea, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
-        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        button.action { padding: 12px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; }
 
         /* Desktop Adjustment */
         @media (min-width: 769px) {
-            .header-nav { flex-direction: row; height: 85px; justify-content: space-between; }
-            .row-top, .row-middle, .legenda { width: auto; border: none; padding: 0; }
-            .row-middle { order: 1; }
-            .row-top { order: 2; }
-            .right-btns { order: 3; display: flex; gap: 10px; align-items: center; }
+            .header-nav { flex-direction: row; height: 85px; align-items: center; justify-content: space-between; padding: 0 20px; }
+            h1.title { text-align: left; }
+            .status-tabs { width: 350px; }
             .wrapper { height: calc(100vh - 85px); }
         }
     </style>
@@ -91,77 +86,78 @@
         <h2>Login Admin</h2>
         <input type="text" id="l_user" placeholder="Username">
         <input type="password" id="l_pass" placeholder="Password">
-        <label class="remember-me">
+        <label style="display:flex; align-items:center; gap:5px; margin-bottom:10px; font-size:14px; cursor:pointer;">
             <input type="checkbox" id="l_remember"> Remember Me
         </label>
         <button onclick="handleLogin()">Masuk</button>
-        <p id="loginMsg" style="color:red; font-size:12px; margin-top:10px; display:none;">Login Gagal!</p>
+        <p id="loginMsg" style="color:red; font-size:12px; margin-top:10px; display:none;">Akses Ditolak!</p>
     </div>
 </div>
 
-<div class="header-nav" id="mainHeader">
-    <div class="row-top">
-        <div class="status-tabs">
-            <button id="tab-aktif" class="tab-btn active" onclick="switchStatus('aktif')">Aktif</button>
-            <button id="tab-pending" class="tab-btn" onclick="switchStatus('pending')">Pending</button>
-            <button id="tab-done" class="tab-btn" onclick="switchStatus('done')">Done</button>
-        </div>
+<div class="header-nav">
+    <h1 class="title">Penjadwalan</h1>
+
+    <div class="status-tabs">
+        <button id="tab-aktif" class="tab-btn active" onclick="switchStatus('aktif')">Aktif</button>
+        <button id="tab-pending" class="tab-btn" onclick="switchStatus('pending')">Pending</button>
+        <button id="tab-done" class="tab-btn" onclick="switchStatus('done')">Done</button>
     </div>
 
-    <div class="row-middle">
-        <button style="background:#00b894; color:white; border:none; padding:10px 12px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:12px;" onclick="openAddModal()">+ TAMBAH</button>
+    <div class="controls">
+        <button class="btn-add" onclick="openAddModal()">+ TAMBAH</button>
         
         <div class="period-picker">
             <input type="number" id="view_bln">
+            <span>/</span>
             <input type="number" id="view_thn">
-            <button onclick="initCalendar()" style="padding:6px 10px; cursor:pointer; background:#6c5ce7; color:white; border:none; border-radius:4px; font-size:11px;">OK</button>
+            <button onclick="initCalendar()" style="border:none; background:#6c5ce7; color:white; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:10px;">OK</button>
         </div>
 
-        <button style="background:#e74c3c; color:white; border:none; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:11px;" onclick="handleLogout()">Logout</button>
+        <button class="btn-logout" onclick="handleLogout()">Logout</button>
     </div>
 
     <div class="legenda">
-        <span><div class="dot meeting"></div>Meet</span>
-        <span><div class="dot tes"></div>Tes</span>
-        <span><div class="dot konseling"></div>Kons</span>
-        <span><div class="dot seminar"></div>Sem</span>
+        <span><div class="dot meeting" style="background:var(--m)"></div>Meet</span>
+        <span><div class="dot tes" style="background:var(--t)"></div>Tes</span>
+        <span><div class="dot konseling" style="background:var(--k)"></div>Kons</span>
+        <span><div class="dot seminar" style="background:var(--s)"></div>Sem</span>
     </div>
 </div>
 
 <div class="wrapper">
     <table>
-        <thead><tr><th style="width:60px;">Tgl</th><th>Jadwal Kerja</th></tr></thead>
+        <thead><tr><th style="width:55px;">Tgl</th><th>Daftar Jadwal Kerja</th></tr></thead>
         <tbody id="tableBody"></tbody>
     </table>
 </div>
 
 <div class="overlay" id="modalOverlay">
     <div class="modal">
-        <h3 id="modalTitle" style="margin:0 0 15px 0; font-size:18px;">Detail Jadwal</h3>
+        <h3 id="modalTitle" style="margin:0 0 10px 0;">Detail Jadwal</h3>
         <input type="hidden" id="f_id">
-        <div style="margin-bottom:12px;">
-            <label style="font-size:12px; font-weight:bold;">TANGGAL & JAM</label>
-            <div style="display:flex; gap:8px;">
+        <div style="margin-bottom:10px;">
+            <label style="font-size:11px; font-weight:bold;">TGL & JAM (FORMAT 13:45)</label>
+            <div style="display:flex; gap:5px;">
                 <input type="number" id="f_tgl" placeholder="Tgl">
-                <input type="text" id="f_jam" placeholder="Jam (e.g 13:45)">
+                <input type="text" id="f_jam" placeholder="Jam">
             </div>
         </div>
-        <div style="margin-bottom:12px;">
-            <label style="font-size:12px; font-weight:bold;">JENIS & KETERANGAN</label>
+        <div style="margin-bottom:10px;">
+            <label style="font-size:11px; font-weight:bold;">JENIS & KETERANGAN</label>
             <select id="f_jenis">
                 <option value="meeting">Meeting</option>
                 <option value="tes">Tes</option>
                 <option value="konseling">Konseling</option>
                 <option value="seminar">Seminar</option>
             </select>
-            <textarea id="f_ket" rows="3" placeholder="Keterangan..."></textarea>
+            <textarea id="f_ket" rows="3" placeholder="Nama/Catatan..."></textarea>
         </div>
-        <div id="statusUpdateArea" class="btn-row">
-            <button class="action" style="background:#0984e3; color:white;" onclick="saveData('done')">DONE</button>
-            <button class="action" style="background:#f39c12; color:white;" onclick="saveData('pending')">PENDING</button>
+        <div id="statusUpdateArea" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
+            <button onclick="saveData('done')" style="background:#0984e3; color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">DONE</button>
+            <button onclick="saveData('pending')" style="background:#f39c12; color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">PENDING</button>
         </div>
-        <button class="action" style="width:100%; margin-top:10px; background:#2d3436; color:white;" onclick="saveData(null)">SIMPAN DATA</button>
-        <button class="action" style="width:100%; margin-top:8px; background:#b2bec3; color:white;" onclick="closeModal()">BATAL</button>
+        <button onclick="saveData(null)" style="width:100%; margin-top:10px; background:#2d3436; color:white; border:none; padding:12px; border-radius:6px; font-weight:bold; cursor:pointer;">SIMPAN PERUBAHAN</button>
+        <button onclick="closeModal()" style="width:100%; margin-top:8px; background:#b2bec3; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer;">BATAL</button>
     </div>
 </div>
 
@@ -170,7 +166,6 @@
     const AUTH_KEY = 'admin'; 
     const TABLE = 'jadwal_kerja';
     const TABLE_ADMIN = 'admins';
-    
     let currentTab = 'aktif';
     const namaHari = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
 
@@ -188,7 +183,7 @@
                 document.getElementById('loginPage').style.display = 'none';
                 initCalendar();
             } else { document.getElementById('loginMsg').style.display = 'block'; }
-        } catch (e) { alert("Error Login"); }
+        } catch (e) { alert("Error Login Server"); }
     }
 
     function checkAuth() {
@@ -218,18 +213,13 @@
             const dateObj = new Date(thn, bln - 1, i);
             const isToday = (isCurrentMonth && i === todayTgl);
             let rowId = '';
-            if (isCurrentMonth) {
-                if (todayTgl === 1 && i === 1) rowId = 'id="scrollTarget"';
-                else if (i === todayTgl - 1) rowId = 'id="scrollTarget"';
-            }
+            if (isCurrentMonth && i === Math.max(1, todayTgl - 1)) rowId = 'id="scrollTarget"';
             let rowClass = isToday ? 'today' : (dateObj.getDay() === 0 ? 'sunday' : '');
             tbody.innerHTML += `<tr ${rowId} class="${rowClass}"><td class="tgl-col">${i}<br><small>${namaHari[dateObj.getDay()]}</small></td><td><div class="task-list" id="task-container-${i}"></div></td></tr>`;
         }
         refreshData().then(() => {
-            if (isCurrentMonth) {
-                const target = document.getElementById('scrollTarget');
-                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
+            const target = document.getElementById('scrollTarget');
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
     }
 
