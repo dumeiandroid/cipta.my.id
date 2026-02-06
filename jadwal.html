@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Jadwal Lidan v16.0 - Enhanced</title>
+    <title>Dashboard Jadwal Lidan v16.1</title>
     <style>
         :root { --bg: #f4f7f6; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
@@ -75,6 +75,13 @@
         .modal { background: white; padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; position: relative; }
         input, textarea, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
 
+        /* Status Buttons Grid */
+        #statusUpdateArea { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .btn-status { color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; display: none; }
+        .btn-done { background: #0984e3; }
+        .btn-pending { background: #f39c12; }
+        .btn-aktif { background: #00b894; }
+
         @media (min-width: 769px) {
             .header-nav { flex-direction: row; height: 85px; align-items: center; justify-content: space-between; padding: 0 20px; }
             .wrapper { height: calc(100vh - 85px); }
@@ -111,8 +118,7 @@
         </div>
         <button class="btn-logout" onclick="handleLogout()">Logout</button>
     </div>
-    <div id="legendaContainer" class="legenda">
-        </div>
+    <div id="legendaContainer" class="legenda"></div>
 </div>
 
 <div class="wrapper">
@@ -137,23 +143,25 @@
         </div>
         <div style="margin-bottom:10px;">
             <label style="font-size:11px; font-weight:bold;">JENIS & KETERANGAN</label>
-            <select id="f_jenis">
-                </select>
+            <select id="f_jenis"></select>
             <textarea id="f_ket" rows="3" placeholder="Nama Peserta / Lokasi..."></textarea>
         </div>
-        <div id="statusUpdateArea" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
-            <button onclick="saveData('done')" style="background:#0984e3; color:white; border:none; padding:10px; border-radius:6px; font-weight:bold;">DONE</button>
-            <button onclick="saveData('pending')" style="background:#f39c12; color:white; border:none; padding:10px; border-radius:6px; font-weight:bold;">PENDING</button>
+        
+        <div id="statusUpdateArea">
+            <button id="btnStateDone" class="btn-status btn-done" onclick="saveData('done')">DONE</button>
+            <button id="btnStatePending" class="btn-status btn-pending" onclick="saveData('pending')">PENDING</button>
+            <button id="btnStateAktif" class="btn-status btn-aktif" onclick="saveData('aktif')">AKTIFKAN</button>
         </div>
-        <button onclick="saveData(null)" style="width:100%; margin-top:10px; background:#2d3436; color:white; border:none; padding:12px; border-radius:6px; font-weight:bold;">SIMPAN</button>
+
+        <button onclick="saveData(null)" style="width:100%; margin-top:10px; background:#2d3436; color:white; border:none; padding:12px; border-radius:6px; font-weight:bold;">SIMPAN PERUBAHAN</button>
         <button onclick="closeModal()" style="width:100%; margin-top:8px; background:#b2bec3; color:white; border:none; padding:8px; border-radius:6px;">BATAL</button>
     </div>
 </div>
 
 <script>
-    // --- 3. KONFIGURASI JENIS & LEGENDA (JSON) ---
+    // 1. CONFIG JSON
     const CONFIG_JENIS = [
-        { id: "meeting", label: "Meet", color: "#ff7675", short: "Meet" },
+        { id: "meeting", label: "Meeting", color: "#ff7675", short: "Meet" },
         { id: "tes", label: "Tes", color: "#74b9ff", short: "Tes" },
         { id: "konseling", label: "Konseling", color: "#55efc4", short: "Kons" },
         { id: "seminar", label: "Seminar", color: "#ffeaa7", short: "Sem" },
@@ -167,25 +175,17 @@
     let currentTab = 'aktif';
     const namaHari = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
 
-    // Inisialisasi Legenda dan Select Options dari Config
     function setupUIFromConfig() {
         const legenda = document.getElementById('legendaContainer');
         const select = document.getElementById('f_jenis');
         const styleSheet = document.createElement("style");
         let cssRules = "";
-
-        legenda.innerHTML = '';
-        select.innerHTML = '';
-
+        legenda.innerHTML = ''; select.innerHTML = '';
         CONFIG_JENIS.forEach(item => {
-            // Legenda
             legenda.innerHTML += `<span><div class="dot" style="background:${item.color}"></div>${item.short}</span>`;
-            // Select Modal
             select.innerHTML += `<option value="${item.id}">${item.label}</option>`;
-            // Dynamic CSS untuk warna box
             cssRules += `.box.${item.id} { background: ${item.color}; }\n`;
         });
-        
         styleSheet.innerText = cssRules;
         document.head.appendChild(styleSheet);
     }
@@ -193,22 +193,18 @@
     function syncDatePickerToInteger() {
         const dateVal = document.getElementById('f_date_picker').value;
         if(dateVal) {
-            const dayInt = parseInt(dateVal.split('-')[2], 10);
-            document.getElementById('f_tgl').value = dayInt;
+            document.getElementById('f_tgl').value = parseInt(dateVal.split('-')[2], 10);
         }
     }
 
     async function handleLogin() {
-        const u = document.getElementById('l_user').value;
-        const p = document.getElementById('l_pass').value;
-        const rem = document.getElementById('l_remember').checked;
+        const u = document.getElementById('l_user').value, p = document.getElementById('l_pass').value, rem = document.getElementById('l_remember').checked;
         const query = `?table=${TABLE_ADMIN}&x_01_eq=${u}&x_02_eq=${p}`;
         try {
             const resp = await fetch(API_URL + query, { headers: { 'X-Custom-Auth': AUTH_KEY } });
             const res = await resp.json();
             if (res.success && res.data && res.data.length > 0) {
-                if (rem) localStorage.setItem('lidan_auth', 'true');
-                else sessionStorage.setItem('lidan_auth', 'true');
+                if (rem) localStorage.setItem('lidan_auth', 'true'); else sessionStorage.setItem('lidan_auth', 'true');
                 document.getElementById('loginPage').style.display = 'none';
                 initCalendar();
             } else { document.getElementById('loginMsg').style.display = 'block'; }
@@ -222,49 +218,26 @@
         }
     }
 
-    function handleLogout() {
-        localStorage.removeItem('lidan_auth');
-        sessionStorage.removeItem('lidan_auth');
-        location.reload();
-    }
-
-    function closeLoginError(e) {
-        document.getElementById('loginMsg').style.display = 'none';
-    }
+    function handleLogout() { localStorage.removeItem('lidan_auth'); sessionStorage.removeItem('lidan_auth'); location.reload(); }
+    function closeLoginError(e) { document.getElementById('loginMsg').style.display = 'none'; }
 
     function initCalendar() {
-        const bln = parseInt(document.getElementById('view_bln').value);
-        const thn = parseInt(document.getElementById('view_thn').value);
+        const bln = parseInt(document.getElementById('view_bln').value), thn = parseInt(document.getElementById('view_thn').value);
         const daysInMonth = new Date(thn, bln, 0).getDate();
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
-        const now = new Date();
-        const isCurrentMonth = (now.getMonth() + 1 === bln && now.getFullYear() === thn);
-        const todayTgl = now.getDate();
+        const tbody = document.getElementById('tableBody'); tbody.innerHTML = '';
+        const now = new Date(), isCurrentMonth = (now.getMonth() + 1 === bln && now.getFullYear() === thn), todayTgl = now.getDate();
 
         for (let i = 1; i <= daysInMonth; i++) {
             const dateObj = new Date(thn, bln - 1, i);
-            const isToday = (isCurrentMonth && i === todayTgl);
-            let rowId = '';
-            if (isCurrentMonth && i === Math.max(1, todayTgl - 1)) rowId = 'id="scrollTarget"';
-            let rowClass = isToday ? 'today' : (dateObj.getDay() === 0 ? 'sunday' : '');
-            
-            // --- 1. MODIFIKASI: ONCLICK PADA BARIS ---
-            tbody.innerHTML += `
-                <tr ${rowId} class="${rowClass}" onclick="openAddModal(${i})">
-                    <td class="tgl-col">${i}<br><small>${namaHari[dateObj.getDay()]}</small></td>
-                    <td><div class="task-list" id="task-container-${i}"></div></td>
-                </tr>`;
+            let rowId = (isCurrentMonth && i === Math.max(1, todayTgl - 1)) ? 'id="scrollTarget"' : '';
+            let rowClass = (isCurrentMonth && i === todayTgl) ? 'today' : (dateObj.getDay() === 0 ? 'sunday' : '');
+            tbody.innerHTML += `<tr ${rowId} class="${rowClass}" onclick="openAddModal(${i})"><td class="tgl-col">${i}<br><small>${namaHari[dateObj.getDay()]}</small></td><td><div class="task-list" id="task-container-${i}"></div></td></tr>`;
         }
-        refreshData().then(() => {
-            const target = document.getElementById('scrollTarget');
-            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
+        refreshData().then(() => { if (document.getElementById('scrollTarget')) document.getElementById('scrollTarget').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
     }
 
     async function refreshData() {
-        const bln = document.getElementById('view_bln').value;
-        const thn = document.getElementById('view_thn').value;
+        const bln = document.getElementById('view_bln').value, thn = document.getElementById('view_thn').value;
         const query = `?table=${TABLE}&x_06_eq=${bln}&x_07_eq=${thn}&x_05_eq=${currentTab}`;
         try {
             const resp = await fetch(API_URL + query, { headers: { 'X-Custom-Auth': AUTH_KEY } });
@@ -272,16 +245,11 @@
             document.querySelectorAll('.task-list').forEach(el => el.innerHTML = '');
             if (res.success && res.data) {
                 res.data.sort((a,b) => String(a.x_02).localeCompare(String(b.x_02))).forEach(item => {
-                    const tglRaw = parseInt(item.x_01);
-                    const container = document.getElementById(`task-container-${tglRaw}`);
+                    const container = document.getElementById(`task-container-${parseInt(item.x_01)}`);
                     if (container) {
                         const box = document.createElement('div');
-                        box.className = `box ${item.x_03}`;
-                        box.innerText = item.x_02; 
-                        box.onclick = (e) => {
-                            e.stopPropagation(); // Mencegah terpicunya klik baris
-                            openEditModal(item);
-                        };
+                        box.className = `box ${item.x_03}`; box.innerText = item.x_02;
+                        box.onclick = (e) => { e.stopPropagation(); openEditModal(item); };
                         container.appendChild(box);
                     }
                 });
@@ -293,59 +261,57 @@
         const id = document.getElementById('f_id').value;
         const payload = {
             x_01: document.getElementById('f_tgl').value.toString(),
-            x_02: document.getElementById('f_jam').value, // Picker jam memberikan format HH:mm
+            x_02: document.getElementById('f_jam').value,
             x_03: document.getElementById('f_jenis').value,
             x_04: document.getElementById('f_ket').value,
             x_06: document.getElementById('view_bln').value.toString(),
             x_07: document.getElementById('view_thn').value.toString()
         };
-        if (forcedStatus) payload.x_05 = forcedStatus;
-        else if (!id) payload.x_05 = 'aktif';
+        if (forcedStatus) payload.x_05 = forcedStatus; else if (!id) payload.x_05 = 'aktif';
 
         const url = id ? `${API_URL}?table=${TABLE}&id_x=${id}` : `${API_URL}?table=${TABLE}`;
-        await fetch(url, {
-            method: id ? 'PUT' : 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
-            body: JSON.stringify(payload)
-        });
-        closeModal();
-        refreshData();
+        await fetch(url, { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY }, body: JSON.stringify(payload) });
+        closeModal(); refreshData();
     }
 
+    // 2. MODIFIKASI: LOGIKA TOMBOL STATUS DINAMIS
     function openEditModal(item) {
         document.getElementById('f_id').value = item.id_x;
         const tglInt = parseInt(item.x_01);
         document.getElementById('f_tgl').value = tglInt;
-        
-        const bln = document.getElementById('view_bln').value.padStart(2, '0');
-        const thn = document.getElementById('view_thn').value;
-        const tglStr = tglInt.toString().padStart(2, '0');
-        document.getElementById('f_date_picker').value = `${thn}-${bln}-${tglStr}`;
-
+        document.getElementById('f_date_picker').value = `${document.getElementById('view_thn').value}-${document.getElementById('view_bln').value.padStart(2, '0')}-${tglInt.toString().padStart(2, '0')}`;
         document.getElementById('f_jam').value = item.x_02;
         document.getElementById('f_jenis').value = item.x_03;
         document.getElementById('f_ket').value = item.x_04 || '';
-        document.getElementById('statusUpdateArea').style.display = 'grid';
+
+        // Sembunyikan semua tombol status dulu
+        document.querySelectorAll('.btn-status').forEach(btn => btn.style.display = 'none');
+        
+        // Munculkan hanya tombol yang BERBEDA dari status saat ini
+        if (item.x_05 === 'aktif') {
+            document.getElementById('btnStateDone').style.display = 'block';
+            document.getElementById('btnStatePending').style.display = 'block';
+        } else if (item.x_05 === 'pending') {
+            document.getElementById('btnStateDone').style.display = 'block';
+            document.getElementById('btnStateAktif').style.display = 'block';
+        } else if (item.x_05 === 'done') {
+            document.getElementById('btnStateAktif').style.display = 'block';
+            document.getElementById('btnStatePending').style.display = 'block';
+        }
+
         document.getElementById('modalOverlay').style.display = 'flex';
     }
 
-    // --- 1. MODIFIKASI: Tambah parameter tgl agar dinamis saat klik baris ---
     function openAddModal(tglSpecific = null) {
         document.getElementById('f_id').value = '';
-        const today = new Date();
-        const blnView = document.getElementById('view_bln').value.padStart(2, '0');
-        const thnView = document.getElementById('view_thn').value;
-        
-        // Gunakan tanggal dari baris atau tanggal hari ini
-        const tgl = tglSpecific || today.getDate();
+        const tgl = tglSpecific || new Date().getDate();
         document.getElementById('f_tgl').value = tgl;
-        
-        const d = tgl.toString().padStart(2, '0');
-        document.getElementById('f_date_picker').value = `${thnView}-${blnView}-${d}`;
-
+        document.getElementById('f_date_picker').value = `${document.getElementById('view_thn').value}-${document.getElementById('view_bln').value.padStart(2, '0')}-${tgl.toString().padStart(2, '0')}`;
         document.getElementById('f_jam').value = "08:00";
         document.getElementById('f_ket').value = '';
-        document.getElementById('statusUpdateArea').style.display = 'none';
+        
+        // Saat TAMBAH BARU, sembunyikan semua tombol status (default otomatis 'aktif')
+        document.querySelectorAll('.btn-status').forEach(btn => btn.style.display = 'none');
         document.getElementById('modalOverlay').style.display = 'flex';
     }
 
@@ -358,10 +324,9 @@
 
     function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
     
-    // START UP
-    const dNow = new Date();
-    document.getElementById('view_bln').value = dNow.getMonth() + 1;
-    document.getElementById('view_thn').value = dNow.getFullYear();
+    // Inisialisasi
+    document.getElementById('view_bln').value = new Date().getMonth() + 1;
+    document.getElementById('view_thn').value = new Date().getFullYear();
     setupUIFromConfig();
     checkAuth();
 </script>
