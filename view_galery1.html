@@ -6,56 +6,45 @@
     <title>Lidan Cloud - Viewer Pro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <style>
-        :root { --blue: #0078d7; --bg: #f5f5f5; --border: #ddd; --card-bg: #ffffff; --text: #333; --danger: #d93025; }
+        :root { --blue: #0078d7; --bg: #f5f5f5; --border: #ddd; --card-bg: #ffffff; --text: #333; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
 
         header { background: white; padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .path-bar { flex: 1; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; background: #fff; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .path-bar span { cursor: pointer; color: var(--blue); font-weight: 600; }
-        .btn-action { background: transparent; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-        .btn-delete { color: var(--danger); border-color: var(--danger); }
-        .btn-delete:hover { background: #fff1f0; }
+        .btn-action { background: transparent; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
 
         #explorerContainer { padding: 20px; max-width: 1200px; margin: 0 auto; }
-        
-        /* Desktop Grid */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; }
-        
-        /* Tampilan HP: Grid 2 ke samping */
-        @media (max-width: 600px) {
-            .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-            #explorerContainer { padding: 10px; }
-            .icon-box { height: 120px !important; }
-        }
-
         .item { background: var(--card-bg); border: 1px solid var(--border); padding: 10px; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s ease; position: relative; }
         .item:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); border-color: var(--blue); }
-        .item.selected { border-color: var(--blue); background: #eef7ff; }
         
-        /* Checkbox Styling */
-        .item-checkbox { position: absolute; top: 8px; left: 8px; z-index: 10; width: 20px; height: 20px; cursor: pointer; }
-
         .icon-box { height: 100px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; overflow: hidden; border-radius: 8px; background: #ececec; position: relative; }
         .icon-box img { width: 100%; height: 100%; object-fit: cover; }
         .icon-box video { width: 100%; height: 100%; object-fit: cover; }
         .folder-icon { font-size: 60px; color: #ffca28; }
         .file-icon { font-size: 40px; color: #90a4ae; }
         
+        /* Badge untuk tipe file */
         .file-badge { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
         
         .name { font-size: 13px; font-weight: 500; word-break: break-all; height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.4; }
 
-        /* Player UI */
         #playerOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; }
+        
+        /* Header info untuk player */
         .player-header { position: absolute; top: 0; left: 0; right: 0; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%); padding: 20px 80px 40px 20px; z-index: 10000; }
         .player-filename { color: white; font-size: 18px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.5); margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .player-info { color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 5px; }
+        
         .close-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); color: white; border: none; font-size: 24px; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; z-index: 10001; backdrop-filter: blur(5px); }
 
+        /* Control buttons untuk autoplay dan auto-next */
         .player-controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 10001; background: rgba(0,0,0,0.6); padding: 12px 20px; border-radius: 50px; backdrop-filter: blur(10px); }
         .control-btn { background: rgba(255,255,255,0.2); color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
         .control-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
         .control-btn.active { background: var(--blue); color: white; }
+        .control-btn .icon { font-size: 16px; }
 
         .swiper { width: 100%; height: 100%; padding-top: 80px; padding-bottom: 80px; }
         .swiper-slide { display: flex; justify-content: center; align-items: center; background: #000; color: white; }
@@ -70,6 +59,7 @@
         input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         .btn-login { width: 100%; background: var(--blue); color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
+        /* Responsive untuk mobile */
         @media (max-width: 768px) {
             .player-controls { bottom: 10px; padding: 8px 12px; }
             .control-btn { padding: 8px 14px; font-size: 11px; }
@@ -90,7 +80,6 @@
 <header>
     <button onclick="muatData()" class="btn-action">🔄</button>
     <div class="path-bar" id="pathBar"></div>
-    <button id="deleteBtn" onclick="deleteSelected()" class="btn-action btn-delete" style="display:none">🗑️ Hapus</button>
     <button onclick="doLogout()" class="btn-action">Keluar</button>
 </header>
 
@@ -105,12 +94,15 @@
     </div>
     <button class="close-btn" onclick="closePlayer()">✕</button>
     
+    <!-- Control buttons untuk autoplay dan auto-next -->
     <div class="player-controls">
         <button class="control-btn" id="autoplayBtn" onclick="toggleAutoplay()">
-            <span class="icon">▶️</span><span>Autoplay</span>
+            <span class="icon">▶️</span>
+            <span>Autoplay</span>
         </button>
         <button class="control-btn" id="autoNextBtn" onclick="toggleAutoNext()">
-            <span class="icon">⏭️</span><span>Auto Next</span>
+            <span class="icon">⏭️</span>
+            <span>Auto Next</span>
         </button>
     </div>
     
@@ -124,8 +116,8 @@
     const API_URL = "https://cipta.my.id/api/r2_api";
     const API_LOGIN = "https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6";
     let allData = [], currentPath = "", mediaFiles = [], swiperInstance = null;
-    let selectedKeys = new Set();
     
+    // Settings untuk autoplay dan auto-next
     let autoplayEnabled = false;
     let autoNextEnabled = false;
 
@@ -149,8 +141,11 @@
     function initApp() {
         if (!getToken()) { document.getElementById('loginOverlay').style.display = 'flex'; return; }
         document.getElementById('loginOverlay').style.display = 'none';
+        
+        // Load saved settings
         autoplayEnabled = localStorage.getItem('autoplayEnabled') === 'true';
         autoNextEnabled = localStorage.getItem('autoNextEnabled') === 'true';
+        
         muatData();
     }
 
@@ -166,9 +161,6 @@
         const explorer = document.getElementById('explorer');
         const pathBar = document.getElementById('pathBar');
         explorer.innerHTML = "";
-        selectedKeys.clear();
-        updateDeleteButton();
-
         pathBar.innerHTML = `<span onclick="goPath('')">Root</span>`;
         let bPath = "";
         currentPath.split('/').filter(x=>x).forEach(part => {
@@ -190,12 +182,13 @@
 
         folders.forEach(f => {
             const fPath = currentPath === "" ? f : currentPath + "/" + f;
-            explorer.appendChild(createCard(`<span class="folder-icon">📁</span>`, f, () => goPath(fPath), true, {key: fPath}));
+            explorer.appendChild(createCard(`<span class="folder-icon">📁</span>`, f, () => goPath(fPath), true, null));
         });
 
         mediaFiles.forEach((file, index) => {
             const ext = file.key.split('.').pop().toLowerCase();
-            let icon;
+            let icon, badge = '';
+            
             if (['jpg','jpeg','png','gif','webp'].includes(ext)) {
                 icon = `<img src="${file.url}" loading="lazy"><span class="file-badge">IMG</span>`;
             } else if (['mp4','webm'].includes(ext)) {
@@ -205,87 +198,24 @@
             } else {
                 icon = `<span class="file-icon">📄</span><span class="file-badge">${ext.toUpperCase()}</span>`;
             }
-            explorer.appendChild(createCard(icon, file.key.split('/').pop(), () => openPlayer(index), false, file, index));
+            
+            explorer.appendChild(createCard(icon, file.key.split('/').pop(), () => openPlayer(index), false, file));
         });
     }
 
-    function createCard(icon, name, action, isFolder, fileData, index) {
+    function createCard(icon, name, action, isFolder, fileData) {
         const div = document.createElement('div');
         div.className = 'item';
-        div.id = isFolder ? "" : `file-item-${index}`;
-        
-        let checkboxHtml = "";
-        if(!isFolder) {
-            checkboxHtml = `<input type="checkbox" class="item-checkbox" data-key="${fileData.key}" onclick="toggleSelect(event, '${fileData.key}', this)">`;
-        }
-
-        div.innerHTML = `${checkboxHtml}<div class="icon-box">${icon}</div><div class="name">${name}</div>`;
+        div.innerHTML = `<div class="icon-box">${icon}</div><div class="name">${name}</div>`;
         div.onclick = action;
         return div;
     }
 
-    function toggleSelect(event, key, checkbox) {
-        event.stopPropagation(); // Mencegah klik checkbox membuka player
-        if(checkbox.checked) {
-            selectedKeys.add(key);
-            checkbox.closest('.item').classList.add('selected');
-        } else {
-            selectedKeys.delete(key);
-            checkbox.closest('.item').classList.remove('selected');
-        }
-        updateDeleteButton();
-    }
-
-    function updateDeleteButton() {
-        const btn = document.getElementById('deleteBtn');
-        btn.style.display = selectedKeys.size > 0 ? 'flex' : 'none';
-        btn.innerText = `🗑️ Hapus (${selectedKeys.size})`;
-    }
-
-    // FUNGSI DELETE SINKRON DENGAN r2_api.js
-    async function deleteSelected() {
-        if(!confirm(`Hapus ${selectedKeys.size} item terpilih selamanya?`)) return;
-        
-        const keysToDelete = Array.from(selectedKeys);
-        let successCount = 0;
-
-        for(let key of keysToDelete) {
-            try {
-                const response = await fetch(`${API_URL}?action=delete`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'X-Custom-Auth': 'admin' 
-                    },
-                    body: JSON.stringify({ 
-                        key: key, 
-                        auth: "admin" 
-                    })
-                });
-
-                if (response.ok) {
-                    successCount++;
-                } else {
-                    const err = await response.json();
-                    console.error(`Gagal hapus ${key}:`, err.error);
-                }
-            } catch (e) { 
-                console.error("Network Error:", e); 
-            }
-        }
-        
-        if (successCount > 0) {
-            alert(`Berhasil menghapus ${successCount} file.`);
-            selectedKeys.clear();
-            muatData(); 
-        }
-    }
-
     function updatePlayerInfo(index) {
         const file = mediaFiles[index];
-        if(!file) return;
         const filename = file.key.split('/').pop();
         const ext = file.key.split('.').pop().toLowerCase();
+        
         document.getElementById('playerFilename').textContent = filename;
         document.getElementById('playerInfo').textContent = `${index + 1} / ${mediaFiles.length} • ${ext.toUpperCase()}`;
     }
@@ -294,6 +224,15 @@
         autoplayEnabled = !autoplayEnabled;
         localStorage.setItem('autoplayEnabled', autoplayEnabled);
         updateControlButtons();
+        
+        // Apply autoplay to current media if any
+        if (swiperInstance) {
+            const activeSlide = swiperInstance.slides[swiperInstance.activeIndex];
+            const media = activeSlide.querySelector('video, audio');
+            if (media && autoplayEnabled) {
+                media.play().catch(() => {});
+            }
+        }
     }
 
     function toggleAutoNext() {
@@ -305,8 +244,18 @@
     function updateControlButtons() {
         const autoplayBtn = document.getElementById('autoplayBtn');
         const autoNextBtn = document.getElementById('autoNextBtn');
-        autoplayEnabled ? autoplayBtn.classList.add('active') : autoplayBtn.classList.remove('active');
-        autoNextEnabled ? autoNextBtn.classList.add('active') : autoNextBtn.classList.remove('active');
+        
+        if (autoplayEnabled) {
+            autoplayBtn.classList.add('active');
+        } else {
+            autoplayBtn.classList.remove('active');
+        }
+        
+        if (autoNextEnabled) {
+            autoNextBtn.classList.add('active');
+        } else {
+            autoNextBtn.classList.remove('active');
+        }
     }
 
     function openPlayer(startIndex) {
@@ -332,6 +281,14 @@
             initialSlide: startIndex,
             direction: window.innerWidth < 768 ? 'vertical' : 'horizontal',
             speed: 400,
+            threshold: 20,
+            longSwipes: false,
+            resistanceRatio: 0,
+            mousewheel: {
+                forceToAxis: true,
+                thresholdDelta: 50,
+                sensitivity: 1,
+            },
             keyboard: true,
             on: {
                 init: function() { loadMedia(this, this.activeIndex); },
@@ -345,45 +302,64 @@
     }
 
     function loadMedia(swiper, index) {
-        if (!swiper.slides || !swiper.slides[index]) return;
+        if (!swiper || !swiper.slides) return;
         const activeSlide = swiper.slides[index];
         const media = activeSlide.querySelector('video, img, audio');
         if (media && media.getAttribute('data-src')) {
             media.src = media.getAttribute('data-src');
             media.removeAttribute('data-src');
-            if (media.tagName !== 'IMG') {
+            
+            if (media.tagName === 'VIDEO' || media.tagName === 'AUDIO') {
                 const loader = activeSlide.querySelector('.loader');
                 if(loader) loader.style.display = 'block';
-                media.oncanplay = () => { if(loader) loader.style.display = 'none'; };
+                media.oncanplay = () => { 
+                    if(loader) loader.style.display = 'none';
+                };
+                
+                // Setup event listener untuk auto next
                 media.onended = () => {
                     if (autoNextEnabled && swiper.activeIndex < mediaFiles.length - 1) {
-                        setTimeout(() => { swiper.slideNext(); }, 500);
+                        setTimeout(() => {
+                            swiper.slideNext();
+                        }, 500); // Delay 500ms sebelum next
                     }
                 };
-                if (autoplayEnabled) media.play().catch(() => {});
+                
+                // Autoplay jika diaktifkan
+                if (autoplayEnabled) {
+                    media.play().catch(() => {});
+                }
+            }
+        } else if (media && (media.tagName === 'VIDEO' || media.tagName === 'AUDIO')) {
+            // Setup event listener untuk media yang sudah loaded
+            media.onended = () => {
+                if (autoNextEnabled && swiper.activeIndex < mediaFiles.length - 1) {
+                    setTimeout(() => {
+                        swiper.slideNext();
+                    }, 500);
+                }
+            };
+            
+            if (autoplayEnabled) {
+                media.play().catch(() => {});
             }
         }
     }
 
     function stopAllMedia() { 
-        document.querySelectorAll('video, audio').forEach(m => { m.pause(); m.onended = null; });
+        document.querySelectorAll('video, audio').forEach(m => {
+            m.pause();
+            m.onended = null; // Remove event listener
+        });
     }
 
     function closePlayer() {
-        const lastIndex = swiperInstance ? swiperInstance.activeIndex : -1;
         document.getElementById('playerOverlay').style.display = 'none';
         stopAllMedia();
-        document.querySelectorAll('#playerWrapper video, #playerWrapper audio').forEach(m => { m.src = ""; m.load(); });
-
-        // Auto-scroll ke file terakhir yang dilihat
-        if(lastIndex !== -1) {
-            const lastViewedElement = document.getElementById(`file-item-${lastIndex}`);
-            if(lastViewedElement) {
-                lastViewedElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                lastViewedElement.style.outline = "2px solid var(--blue)";
-                setTimeout(() => { lastViewedElement.style.outline = "none"; }, 2000);
-            }
-        }
+        document.querySelectorAll('#playerWrapper video, #playerWrapper audio').forEach(m => { 
+            m.src = ""; 
+            m.load(); 
+        });
     }
 
     function goPath(p) { currentPath = p; render(); }

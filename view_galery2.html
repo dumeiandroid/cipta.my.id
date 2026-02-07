@@ -17,23 +17,13 @@
         .btn-delete:hover { background: #fff1f0; }
 
         #explorerContainer { padding: 20px; max-width: 1200px; margin: 0 auto; }
-        
-        /* Desktop Grid */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; }
         
-        /* Tampilan HP: Grid 2 ke samping */
-        @media (max-width: 600px) {
-            .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-            #explorerContainer { padding: 10px; }
-            .icon-box { height: 120px !important; }
-        }
-
         .item { background: var(--card-bg); border: 1px solid var(--border); padding: 10px; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s ease; position: relative; }
         .item:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); border-color: var(--blue); }
         .item.selected { border-color: var(--blue); background: #eef7ff; }
         
-        /* Checkbox Styling */
-        .item-checkbox { position: absolute; top: 8px; left: 8px; z-index: 10; width: 20px; height: 20px; cursor: pointer; }
+        .item-checkbox { position: absolute; top: 8px; left: 8px; z-index: 10; width: 18px; height: 18px; cursor: pointer; }
 
         .icon-box { height: 100px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; overflow: hidden; border-radius: 8px; background: #ececec; position: relative; }
         .icon-box img { width: 100%; height: 100%; object-fit: cover; }
@@ -45,7 +35,6 @@
         
         .name { font-size: 13px; font-weight: 500; word-break: break-all; height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.4; }
 
-        /* Player UI */
         #playerOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; }
         .player-header { position: absolute; top: 0; left: 0; right: 0; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%); padding: 20px 80px 40px 20px; z-index: 10000; }
         .player-filename { color: white; font-size: 18px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.5); margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -156,6 +145,7 @@
 
     async function muatData() {
         try {
+            // Sesuai r2_api.js: Fetch awal tanpa folder/cursor mengembalikan Array
             const res = await fetch(`${API_URL}?action=list`);
             allData = await res.json();
             render();
@@ -225,7 +215,7 @@
     }
 
     function toggleSelect(event, key, checkbox) {
-        event.stopPropagation(); // Mencegah klik checkbox membuka player
+        event.stopPropagation();
         if(checkbox.checked) {
             selectedKeys.add(key);
             checkbox.closest('.item').classList.add('selected');
@@ -242,7 +232,7 @@
         btn.innerText = `🗑️ Hapus (${selectedKeys.size})`;
     }
 
-    // FUNGSI DELETE SINKRON DENGAN r2_api.js
+    // FUNGSI DELETE YANG DISINKRONKAN DENGAN r2_api.js
     async function deleteSelected() {
         if(!confirm(`Hapus ${selectedKeys.size} item terpilih selamanya?`)) return;
         
@@ -251,6 +241,7 @@
 
         for(let key of keysToDelete) {
             try {
+                // Mengirim request POST action=delete sesuai file r2_api.js
                 const response = await fetch(`${API_URL}?action=delete`, {
                     method: 'POST',
                     headers: { 
@@ -277,13 +268,12 @@
         if (successCount > 0) {
             alert(`Berhasil menghapus ${successCount} file.`);
             selectedKeys.clear();
-            muatData(); 
+            muatData(); // Memuat ulang data dari server
         }
     }
 
     function updatePlayerInfo(index) {
         const file = mediaFiles[index];
-        if(!file) return;
         const filename = file.key.split('/').pop();
         const ext = file.key.split('.').pop().toLowerCase();
         document.getElementById('playerFilename').textContent = filename;
@@ -345,7 +335,6 @@
     }
 
     function loadMedia(swiper, index) {
-        if (!swiper.slides || !swiper.slides[index]) return;
         const activeSlide = swiper.slides[index];
         const media = activeSlide.querySelector('video, img, audio');
         if (media && media.getAttribute('data-src')) {
@@ -375,7 +364,6 @@
         stopAllMedia();
         document.querySelectorAll('#playerWrapper video, #playerWrapper audio').forEach(m => { m.src = ""; m.load(); });
 
-        // Auto-scroll ke file terakhir yang dilihat
         if(lastIndex !== -1) {
             const lastViewedElement = document.getElementById(`file-item-${lastIndex}`);
             if(lastViewedElement) {
