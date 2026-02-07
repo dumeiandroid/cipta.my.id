@@ -32,8 +32,11 @@
         .item:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); border-color: var(--blue); }
         .item.selected { border-color: var(--blue); background: #eef7ff; }
         
-        /* Checkbox Styling */
-        .item-checkbox { position: absolute; top: 8px; left: 8px; z-index: 10; width: 20px; height: 20px; cursor: pointer; }
+        /* Checkbox & Copy Button Styling */
+        .card-controls { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .item-checkbox { width: 20px; height: 20px; cursor: pointer; margin: 0; }
+        .btn-copy-link { background: rgba(255,255,255,0.8); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+        .btn-copy-link:hover { background: var(--blue); color: white; border-color: var(--blue); }
 
         .icon-box { height: 100px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; overflow: hidden; border-radius: 8px; background: #ececec; position: relative; }
         .icon-box img { width: 100%; height: 100%; object-fit: cover; }
@@ -214,18 +217,33 @@
         div.className = 'item';
         div.id = isFolder ? "" : `file-item-${index}`;
         
-        let checkboxHtml = "";
+        let controlsHtml = "";
         if(!isFolder) {
-            checkboxHtml = `<input type="checkbox" class="item-checkbox" data-key="${fileData.key}" onclick="toggleSelect(event, '${fileData.key}', this)">`;
+            controlsHtml = `
+            <div class="card-controls">
+                <input type="checkbox" class="item-checkbox" data-key="${fileData.key}" onclick="toggleSelect(event, '${fileData.key}', this)">
+                <button class="btn-copy-link" onclick="copyDirectLink(event, '${fileData.url}')">🔗</button>
+            </div>`;
         }
 
-        div.innerHTML = `${checkboxHtml}<div class="icon-box">${icon}</div><div class="name">${name}</div>`;
+        div.innerHTML = `${controlsHtml}<div class="icon-box">${icon}</div><div class="name">${name}</div>`;
         div.onclick = action;
         return div;
     }
 
+    // FUNGSI COPY LINK LANGSUNG
+    function copyDirectLink(event, url) {
+        event.stopPropagation();
+        navigator.clipboard.writeText(url).then(() => {
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "✅";
+            setTimeout(() => { btn.innerText = originalText; }, 1000);
+        });
+    }
+
     function toggleSelect(event, key, checkbox) {
-        event.stopPropagation(); // Mencegah klik checkbox membuka player
+        event.stopPropagation(); 
         if(checkbox.checked) {
             selectedKeys.add(key);
             checkbox.closest('.item').classList.add('selected');
@@ -242,7 +260,6 @@
         btn.innerText = `🗑️ Hapus (${selectedKeys.size})`;
     }
 
-    // FUNGSI DELETE SINKRON DENGAN r2_api.js
     async function deleteSelected() {
         if(!confirm(`Hapus ${selectedKeys.size} item terpilih selamanya?`)) return;
         
@@ -265,13 +282,8 @@
 
                 if (response.ok) {
                     successCount++;
-                } else {
-                    const err = await response.json();
-                    console.error(`Gagal hapus ${key}:`, err.error);
                 }
-            } catch (e) { 
-                console.error("Network Error:", e); 
-            }
+            } catch (e) { console.error("Error:", e); }
         }
         
         if (successCount > 0) {
@@ -375,7 +387,6 @@
         stopAllMedia();
         document.querySelectorAll('#playerWrapper video, #playerWrapper audio').forEach(m => { m.src = ""; m.load(); });
 
-        // Auto-scroll ke file terakhir yang dilihat
         if(lastIndex !== -1) {
             const lastViewedElement = document.getElementById(`file-item-${lastIndex}`);
             if(lastViewedElement) {
