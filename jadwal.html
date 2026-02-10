@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Jadwal Lidan v16.1</title>
+    <title>Dashboard Jadwal Lidan v16.2</title>
     <style>
-        :root { --bg: #f4f7f6; }
+        :root { --bg: #f4f7f6; --primary: #6c5ce7; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); margin: 0; overflow: hidden; }
         
@@ -19,7 +19,7 @@
             text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.3);
         }
         .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; }
-        .login-box button { width: 100%; padding: 12px; background: #6c5ce7; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .login-box button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
 
         /* --- HEADER DASHBOARD --- */
         .header-nav { 
@@ -70,7 +70,25 @@
             color: #2d3436;
         }
 
-        /* --- LOADING INDICATOR --- */
+        /* --- MODAL --- */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 1000; align-items: center; justify-content: center; padding: 15px; backdrop-filter: blur(2px); }
+        .modal { background: white; padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; position: relative; max-height: 90vh; overflow-y: auto; }
+        input, textarea, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+
+        #statusUpdateArea { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .btn-status { color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; display: none; }
+        .btn-done { background: #0984e3; }
+        .btn-pending { background: #f39c12; }
+        .btn-aktif { background: #00b894; }
+        
+        /* Tombol Analisa Khusus */
+        .btn-analisa { 
+            width: 100%; margin-top: 15px; background: var(--primary); color: white; 
+            border: none; padding: 12px; border-radius: 6px; font-weight: bold; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 4px 6px rgba(108, 92, 231, 0.2);
+        }
+
         #loadingOverlay {
             position: absolute; inset: 0; background: rgba(255,255,255,0.8);
             display: none; flex-direction: column; align-items: center; justify-content: center;
@@ -78,22 +96,10 @@
         }
         .spinner {
             width: 40px; height: 40px; border: 4px solid #f3f3f3;
-            border-top: 4px solid #6c5ce7; border-radius: 50%;
+            border-top: 4px solid var(--primary); border-radius: 50%;
             animation: spin 1s linear infinite; margin-bottom: 10px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* --- MODAL --- */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 1000; align-items: center; justify-content: center; padding: 15px; backdrop-filter: blur(2px); }
-        .modal { background: white; padding: 20px; border-radius: 12px; width: 100%; max-width: 380px; position: relative; }
-        input, textarea, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
-
-        /* Status Buttons Grid */
-        #statusUpdateArea { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .btn-status { color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; display: none; }
-        .btn-done { background: #0984e3; }
-        .btn-pending { background: #f39c12; }
-        .btn-aktif { background: #00b894; }
 
         @media (min-width: 769px) {
             .header-nav { flex-direction: row; height: 85px; align-items: center; justify-content: space-between; padding: 0 20px; }
@@ -127,7 +133,7 @@
         <button class="btn-add" onclick="openAddModal()">+</button>
         <div class="period-picker">
             <input type="number" id="view_bln"><span>/</span><input type="number" id="view_thn">
-            <button onclick="initCalendar()" style="border:none; background:#6c5ce7; color:white; border-radius:4px; padding:4px 6px; cursor:pointer; font-size:10px;">OK</button>
+            <button onclick="initCalendar()" style="border:none; background:var(--primary); color:white; border-radius:4px; padding:4px 6px; cursor:pointer; font-size:10px;">OK</button>
         </div>
         <button class="btn-logout" onclick="handleLogout()">Logout</button>
     </div>
@@ -137,9 +143,8 @@
 <div class="wrapper">
     <div id="loadingOverlay">
         <div class="spinner"></div>
-        <div style="font-size: 14px; color: #6c5ce7; font-weight: bold;">Memuat Data...</div>
+        <div style="font-size: 14px; color: var(--primary); font-weight: bold;">Memuat Data...</div>
     </div>
-
     <table>
         <thead><tr><th style="width:55px;">Tgl</th><th>Daftar Jadwal Kerja</th></tr></thead>
         <tbody id="tableBody"></tbody>
@@ -150,15 +155,18 @@
     <div class="modal" onclick="event.stopPropagation()">
         <h3 id="modalTitle" style="margin:0 0 10px 0;">Detail Jadwal</h3>
         <input type="hidden" id="f_id">
+        
         <div style="margin-bottom:10px;">
-            <label style="font-size:11px; font-weight:bold;">PILIH TANGGAL (HARI OTOMATIS)</label>
+            <label style="font-size:11px; font-weight:bold;">PILIH TANGGAL</label>
             <input type="date" id="f_date_picker" onchange="syncDatePickerToInteger()">
             <input type="hidden" id="f_tgl">
         </div>
+        
         <div style="margin-bottom:10px;">
-            <label style="font-size:11px; font-weight:bold;">JAM (KLIK UNTUK MEMILIH)</label>
+            <label style="font-size:11px; font-weight:bold;">JAM</label>
             <input type="time" id="f_jam">
         </div>
+        
         <div style="margin-bottom:10px;">
             <label style="font-size:11px; font-weight:bold;">JENIS & KETERANGAN</label>
             <select id="f_jenis"></select>
@@ -172,12 +180,16 @@
         </div>
 
         <button onclick="saveData(null)" style="width:100%; margin-top:10px; background:#2d3436; color:white; border:none; padding:12px; border-radius:6px; font-weight:bold;">SIMPAN PERUBAHAN</button>
+        
+        <button id="btnGoToAnalisa" class="btn-analisa" style="display:none;" onclick="goToAnalisa()">
+            📊 LIHAT ANALISA STRATEGIS
+        </button>
+
         <button onclick="closeModal()" style="width:100%; margin-top:8px; background:#b2bec3; color:white; border:none; padding:8px; border-radius:6px;">BATAL</button>
     </div>
 </div>
 
 <script>
-    // 1. CONFIG JSON
     const CONFIG_JENIS = [
         { id: "meeting", label: "Meeting", color: "#ff7675", short: "Meet" },
         { id: "tes", label: "Tes", color: "#74b9ff", short: "Tes" },
@@ -210,9 +222,7 @@
 
     function syncDatePickerToInteger() {
         const dateVal = document.getElementById('f_date_picker').value;
-        if(dateVal) {
-            document.getElementById('f_tgl').value = parseInt(dateVal.split('-')[2], 10);
-        }
+        if(dateVal) document.getElementById('f_tgl').value = parseInt(dateVal.split('-')[2], 10);
     }
 
     async function handleLogin() {
@@ -255,9 +265,7 @@
     }
 
     async function refreshData() {
-        // Tampilkan loading saat mulai mengambil data
         document.getElementById('loadingOverlay').style.display = 'flex';
-        
         const bln = document.getElementById('view_bln').value, thn = document.getElementById('view_thn').value;
         const query = `?table=${TABLE}&x_06_eq=${bln}&x_07_eq=${thn}&x_05_eq=${currentTab}`;
         try {
@@ -276,8 +284,6 @@
                 });
             }
         } catch (e) { console.error(e); }
-        
-        // Sembunyikan loading setelah data selesai dimuat
         document.getElementById('loadingOverlay').style.display = 'none';
     }
 
@@ -308,6 +314,7 @@
         document.getElementById('f_ket').value = item.x_04 || '';
 
         document.querySelectorAll('.btn-status').forEach(btn => btn.style.display = 'none');
+        document.getElementById('btnGoToAnalisa').style.display = 'flex'; // Tampilkan tombol analisa
         
         if (item.x_05 === 'aktif') {
             document.getElementById('btnStateDone').style.display = 'block';
@@ -332,7 +339,13 @@
         document.getElementById('f_ket').value = '';
         
         document.querySelectorAll('.btn-status').forEach(btn => btn.style.display = 'none');
+        document.getElementById('btnGoToAnalisa').style.display = 'none'; // Sembunyikan untuk jadwal baru
         document.getElementById('modalOverlay').style.display = 'flex';
+    }
+
+    function goToAnalisa() {
+        const id = document.getElementById('f_id').value;
+        if(id) window.location.href = `analisa.html?id_x=${id}`;
     }
 
     function switchStatus(tab) {

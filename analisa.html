@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisa Strategis - Lidan v1.3</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --bg: #f4f7f6;
+            --dark: #2d3436;
+            --warning: #f39c12;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: var(--dark); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        
+        .container { width: 100%; max-width: 650px; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: var(--primary); margin-bottom: 25px; font-weight: 800; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        .mode-selector { display: flex; gap: 10px; margin-bottom: 25px; background: #eee; padding: 5px; border-radius: 8px; }
+        .mode-btn { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; background: transparent; color: #666; }
+        .mode-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-size: 11px; font-weight: bold; color: #636e72; margin-bottom: 6px; text-transform: uppercase; }
+        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; }
+        
+        .section-title { font-size: 14px; color: var(--primary); font-weight: bold; margin: 25px 0 15px 0; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
+        .section-title::after { content: ""; flex: 1; height: 1px; background: #eee; }
+
+        .btn-save { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-control { width: 100%; padding: 14px; background: var(--warning); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 10px; display: none; }
+        
+        #existingTaskArea { background: #f9f9f9; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary); margin-bottom: 20px; }
+        #loader { display: none; text-align: center; color: var(--primary); font-weight: bold; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <button onclick="window.location.href='jadwal.html'" style="background:none; border:none; color:var(--primary); cursor:pointer; font-weight:bold;">← Kembali</button>
+        <span style="font-size: 12px; color: #999;">Lidan Analisa v1.3</span>
+    </div>
+    
+    <h2>Analisa Strategis</h2>
+
+    <div class="mode-selector">
+        <button id="btnExisting" class="mode-btn active" onclick="setMode('existing')">Jadwal Eksis</button>
+        <button id="btnNew" class="mode-btn" onclick="setMode('new')">Analisa Baru</button>
+    </div>
+
+    <div id="formAnalisa">
+        <div id="existingTaskArea">
+            <div class="form-group">
+                <label>ID JADWAL (ID_X)</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="number" id="target_id" placeholder="ID_X...">
+                    <button onclick="loadExistingData()" style="padding:0 20px; background:var(--dark); color:white; border-radius:8px; border:none; cursor:pointer; font-weight:bold;">CEK</button>
+                </div>
+            </div>
+            <div id="taskPreview" style="font-size: 13px; color: #555; display:none; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;">
+                <p>📌 <b>Kegiatan:</b> <span id="prev_ket">-</span></p>
+                <p>📅 <b>Waktu:</b> <span id="prev_tgl">-</span></p>
+            </div>
+        </div>
+
+        <div id="newJadwalArea" style="display:none;">
+            <div class="section-title">Data Penjadwalan</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                <div class="form-group"><label>Tanggal</label><input type="date" id="f_date"></div>
+                <div class="form-group"><label>Jam</label><input type="time" id="f_time" value="08:00"></div>
+            </div>
+            <div class="form-group">
+                <label>Kategori</label>
+                <select id="f_jenis">
+                    <option value="meeting">Meeting</option>
+                    <option value="tes">Tes</option>
+                    <option value="konseling">Konseling</option>
+                    <option value="seminar">Seminar</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="section-title">Detail Analisa</div>
+        <div class="form-group">
+            <label>1. Masalah Utama</label>
+            <textarea id="a_masalah" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+            <label>2. Rencana Tindakan (Action Plan)</label>
+            <textarea id="a_rencana" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+            <label>3. Alasan Memilih Rencana</label>
+            <textarea id="a_alasan" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+            <label>4. Hasil yang Diharapkan (Target)</label>
+            <textarea id="a_target" rows="2"></textarea>
+        </div>
+
+        <button id="btnSubmit" class="btn-save" onclick="processSubmission(true)">SIMPAN ANALISA</button>
+        
+        <button id="btnGoToControl" class="btn-control" onclick="goToControl()">
+            ⚙️ AUTO-SAVE & LANJUT KE PENGENDALIAN
+        </button>
+
+        <div id="loader">Memproses data...</div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+    const AUTH_KEY = 'admin'; 
+    const TABLE = 'jadwal_kerja';
+
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const idParam = urlParams.get('id_x');
+        if (idParam) {
+            document.getElementById('target_id').value = idParam;
+            setMode('existing');
+            loadExistingData();
+        }
+    }
+
+    function setMode(mode) {
+        document.getElementById('btnExisting').classList.toggle('active', mode === 'existing');
+        document.getElementById('btnNew').classList.toggle('active', mode === 'new');
+        document.getElementById('existingTaskArea').style.display = mode === 'existing' ? 'block' : 'none';
+        document.getElementById('newJadwalArea').style.display = mode === 'new' ? 'block' : 'none';
+        document.getElementById('btnGoToControl').style.display = mode === 'existing' ? 'block' : 'none';
+    }
+
+    async function loadExistingData() {
+        const id = document.getElementById('target_id').value;
+        if(!id) return;
+        try {
+            const resp = await fetch(`${API_URL}?table=${TABLE}&id_x_eq=${id}`, { headers: { 'X-Custom-Auth': AUTH_KEY } });
+            const res = await resp.json();
+            if(res.success && res.data.length > 0) {
+                const item = res.data[0];
+                document.getElementById('taskPreview').style.display = 'block';
+                document.getElementById('prev_ket').innerText = item.x_04 || '-';
+                document.getElementById('prev_tgl').innerText = `${item.x_01}/${item.x_06}/${item.x_07}`;
+                document.getElementById('btnGoToControl').style.display = 'block';
+                if(item.x_10) {
+                    const ana = JSON.parse(item.x_10);
+                    document.getElementById('a_masalah').value = ana.masalah || '';
+                    document.getElementById('a_rencana').value = ana.rencana || item.x_04 || '';
+                    document.getElementById('a_alasan').value = ana.alasan || '';
+                    document.getElementById('a_target').value = ana.target || '';
+                } else {
+                    document.getElementById('a_rencana').value = item.x_04 || '';
+                }
+            }
+        } catch (e) { console.error("Load error"); }
+    }
+
+    // Fungsi Utama Simpan (bisa silent atau dengan alert)
+    async function processSubmission(showAlert = true) {
+        const loader = document.getElementById('loader');
+        loader.style.display = 'block';
+
+        const analisaObj = {
+            masalah: document.getElementById('a_masalah').value,
+            rencana: document.getElementById('a_rencana').value,
+            alasan: document.getElementById('a_alasan').value,
+            target: document.getElementById('a_target').value
+        };
+
+        let payload = {
+            x_10: JSON.stringify(analisaObj),
+            x_04: document.getElementById('a_rencana').value
+        };
+
+        let url = `${API_URL}?table=${TABLE}`;
+        let method = (document.getElementById('btnExisting').classList.contains('active')) ? 'PUT' : 'POST';
+
+        if (method === 'PUT') {
+            url += `&id_x=${document.getElementById('target_id').value}`;
+        } else {
+            const dInput = document.getElementById('f_date').value;
+            if(!dInput) { loader.style.display='none'; alert("Isi tanggal!"); return false; }
+            const d = new Date(dInput);
+            payload.x_01 = d.getDate().toString();
+            payload.x_02 = document.getElementById('f_time').value;
+            payload.x_03 = document.getElementById('f_jenis').value;
+            payload.x_05 = 'aktif';
+            payload.x_06 = (d.getMonth() + 1).toString();
+            payload.x_07 = d.getFullYear().toString();
+        }
+
+        try {
+            const resp = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+                body: JSON.stringify(payload)
+            });
+            const res = await resp.json();
+            loader.style.display = 'none';
+            if(res.success) {
+                if(showAlert) alert("Data Berhasil Disimpan!");
+                return true;
+            }
+        } catch (e) { 
+            loader.style.display = 'none';
+            return false; 
+        }
+    }
+
+    // Fungsi Gabungan: Simpan lalu Pindah Halaman
+    async function goToControl() {
+        const id = document.getElementById('target_id').value;
+        if(!id) return alert("Pilih ID Jadwal dulu!");
+
+        const isSaved = await processSubmission(false); // Simpan tanpa muncul alert "Berhasil"
+        if(isSaved) {
+            window.location.href = `pengendalian.html?id_x=${id}`;
+        } else {
+            alert("Gagal melakukan Auto-Save. Silahkan coba lagi.");
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengendalian & Evaluasi - Lidan v1.0</title>
+    <style>
+        :root {
+            --primary: #f39c12; /* Warna Oranye untuk Pengendalian */
+            --secondary: #e67e22;
+            --bg: #f4f7f6;
+            --dark: #2d3436;
+            --success: #00b894;
+            --danger: #d63031;
+            --info: #6c5ce7;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: var(--bg); color: var(--dark); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        
+        .container { width: 100%; max-width: 650px; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: var(--primary); margin-bottom: 25px; font-weight: 800; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        .card-ref { background: #fdf9f2; border: 1px solid #fbd38d; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .card-ref h4 { margin: 0 0 10px 0; color: #c05621; font-size: 14px; text-transform: uppercase; }
+        .ref-item { font-size: 13px; margin-bottom: 8px; line-height: 1.4; }
+        .ref-label { font-weight: bold; color: #7b341e; }
+
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-size: 11px; font-weight: bold; color: #636e72; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s; background: #fff; }
+        input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.1); }
+        
+        .section-title { font-size: 14px; color: var(--primary); font-weight: bold; margin: 25px 0 15px 0; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
+        .section-title::after { content: ""; flex: 1; height: 1px; background: #eee; }
+
+        .btn-save { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3); }
+        .btn-save:hover { background: var(--secondary); transform: translateY(-2px); }
+        
+        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: bold; color: white; margin-top: 5px; }
+        
+        #loader { display: none; text-align: center; color: var(--primary); font-weight: bold; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <button onclick="history.back()" style="background:none; border:none; color:var(--info); cursor:pointer; font-weight:bold;">← Kembali</button>
+        <span style="font-size: 12px; color: #999;">Lidan Control v1.0</span>
+    </div>
+    
+    <h2>Pengendalian & Evaluasi</h2>
+
+    <div id="referenceArea" class="card-ref" style="display:none;">
+        <h4>Referensi Rencana (Analisa)</h4>
+        <div class="ref-item"><span class="ref-label">Kegiatan:</span> <span id="ref_kegiatan">-</span></div>
+        <div class="ref-item"><span class="ref-label">Rencana:</span> <span id="ref_rencana">-</span></div>
+        <div class="ref-item"><span class="ref-label">Target/Hasil Diharapkan:</span> <br><i id="ref_target">-</i></div>
+    </div>
+
+    <div id="formPengendalian">
+        <div class="form-group">
+            <label>ID JADWAL (ID_X)</label>
+            <div style="display:flex; gap:8px;">
+                <input type="number" id="target_id" placeholder="Masukkan ID_X...">
+                <button onclick="loadDataForControl()" style="padding:0 20px; background:var(--dark); color:white; border-radius:8px; border:none; cursor:pointer; font-weight:bold;">MUAT</button>
+            </div>
+        </div>
+
+        <div class="section-title">Hasil Pelaksanaan</div>
+        
+        <div class="form-group">
+            <label>1. Hasil Aktual (Kenyataan di Lapangan)</label>
+            <textarea id="p_aktual" rows="3" placeholder="Apa hasil yang benar-benar tercapai?"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>2. Deviasi / Kendala</label>
+            <textarea id="p_deviasi" rows="2" placeholder="Adakah perbedaan dengan rencana? Apa hambatannya?"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>3. Kesimpulan & Rekomendasi</label>
+            <select id="p_kesimpulan" style="margin-bottom:10px;">
+                <option value="sesuai">Sesuai Target (Berhasil)</option>
+                <option value="sebagian">Tercapai Sebagian</option>
+                <option value="gagal">Tidak Sesuai (Perlu Analisa Ulang)</option>
+            </select>
+            <textarea id="p_saran" rows="2" placeholder="Langkah apa yang harus diambil selanjutnya?"></textarea>
+        </div>
+
+        <button id="btnSubmit" class="btn-save" onclick="saveControlData()">SIMPAN PENGENDALIAN</button>
+        
+        <div id="loader">Menyimpan hasil evaluasi...</div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+    const AUTH_KEY = 'admin'; 
+    const TABLE = 'jadwal_kerja';
+
+    // AUTO-LOAD DARI URL
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const idParam = urlParams.get('id_x');
+        if (idParam) {
+            document.getElementById('target_id').value = idParam;
+            loadDataForControl();
+        }
+    }
+
+    async function loadDataForControl() {
+        const id = document.getElementById('target_id').value;
+        if(!id) return;
+        
+        try {
+            const resp = await fetch(`${API_URL}?table=${TABLE}&id_x_eq=${id}`, { headers: { 'X-Custom-Auth': AUTH_KEY } });
+            const res = await resp.json();
+            
+            if(res.success && res.data.length > 0) {
+                const item = res.data[0];
+                document.getElementById('referenceArea').style.display = 'block';
+                document.getElementById('ref_kegiatan').innerText = `[${item.x_03}] ${item.x_01}/${item.x_06}/${item.x_07}`;
+                
+                // Ambil data dari JSON Analisa (x_10)
+                if(item.x_10) {
+                    const ana = JSON.parse(item.x_10);
+                    document.getElementById('ref_rencana').innerText = ana.rencana || item.x_04 || '-';
+                    document.getElementById('ref_target').innerText = ana.target || 'Tidak ada target spesifik';
+                } else {
+                    document.getElementById('ref_rencana').innerText = item.x_04 || '-';
+                    document.getElementById('ref_target').innerText = 'Data analisa belum diisi';
+                }
+
+                // Jika sudah ada data pengendalian sebelumnya (x_15)
+                if(item.x_15) {
+                    const pen = JSON.parse(item.x_15);
+                    document.getElementById('p_aktual').value = pen.aktual || '';
+                    document.getElementById('p_deviasi').value = pen.deviasi || '';
+                    document.getElementById('p_kesimpulan').value = pen.kesimpulan || 'sesuai';
+                    document.getElementById('p_saran').value = pen.saran || '';
+                }
+            } else {
+                alert("Data tidak ditemukan!");
+            }
+        } catch (e) { alert("Gagal memuat data referensi"); }
+    }
+
+    async function saveControlData() {
+        const id = document.getElementById('target_id').value;
+        if(!id) return alert("Pilih ID Jadwal!");
+
+        const loader = document.getElementById('loader');
+        loader.style.display = 'block';
+
+        const controlObj = {
+            aktual: document.getElementById('p_aktual').value,
+            deviasi: document.getElementById('p_deviasi').value,
+            kesimpulan: document.getElementById('p_kesimpulan').value,
+            saran: document.getElementById('p_saran').value,
+            executed_at: new Date().toISOString()
+        };
+
+        // Simpan ke kolom x_15
+        const payload = {
+            x_15: JSON.stringify(controlObj),
+            x_05: 'done' // Otomatis set status jadwal jadi DONE saat dikendalikan
+        };
+
+        try {
+            const resp = await fetch(`${API_URL}?table=${TABLE}&id_x=${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH_KEY },
+                body: JSON.stringify(payload)
+            });
+            const res = await resp.json();
+            if(res.success) {
+                alert("Data Pengendalian Berhasil Disimpan! Status jadwal kini: DONE.");
+                window.location.href = 'jadwal.html';
+            }
+        } catch (e) { alert("Gagal menyimpan data"); }
+        loader.style.display = 'none';
+    }
+</script>
+</body>
+</html>
