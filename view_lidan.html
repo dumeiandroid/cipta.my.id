@@ -6,13 +6,15 @@
     <title>Lidan Cloud - Viewer Pro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <style>
-        :root { --blue: #0078d7; --bg: #f5f5f5; --border: #ddd; --card-bg: #ffffff; --text: #333; }
+        :root { --blue: #0078d7; --bg: #f5f5f5; --border: #ddd; --card-bg: #ffffff; --text: #333; --danger: #d93025; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
 
         header { background: white; padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .path-bar { flex: 1; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; background: #fff; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .path-bar span { cursor: pointer; color: var(--blue); font-weight: 600; }
-        .btn-action { background: transparent; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        
+        .btn-action { background: white; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 5px; }
+        .btn-upload { background: var(--blue); color: white; border: none; }
 
         #explorerContainer { padding: 20px; max-width: 1200px; margin: 0 auto; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; }
@@ -20,67 +22,39 @@
         .item:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); border-color: var(--blue); }
         
         .icon-box { height: 100px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; overflow: hidden; border-radius: 8px; background: #ececec; position: relative; }
-        .icon-box img { width: 100%; height: 100%; object-fit: cover; }
-        .icon-box video { width: 100%; height: 100%; object-fit: cover; }
+        .icon-box img, .icon-box video { width: 100%; height: 100%; object-fit: cover; }
         .folder-icon { font-size: 60px; color: #ffca28; }
         .file-icon { font-size: 40px; color: #90a4ae; }
         
-        /* Badge untuk tipe file */
-        .file-badge { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
-        
         .name { font-size: 13px; font-weight: 500; word-break: break-all; height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.4; }
 
+        .item-actions { display: flex; justify-content: space-around; margin-top: 8px; gap: 4px; }
+        .btn-small { flex: 1; padding: 5px; font-size: 11px; border-radius: 4px; border: 1px solid var(--border); background: #f8f9fa; cursor: pointer; }
+        .btn-del { color: var(--danger); }
+
+        /* Player Overlay & Nav */
         #playerOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; }
+        .close-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.3); color: white; border: none; font-size: 24px; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; z-index: 10002; }
         
-        /* Header info untuk player */
-        .player-header { position: absolute; top: 0; left: 0; right: 0; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%); padding: 20px 80px 40px 20px; z-index: 10000; }
-        .player-filename { color: white; font-size: 18px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.5); margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .player-info { color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 5px; }
-        
-        .close-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); color: white; border: none; font-size: 24px; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; z-index: 10001; backdrop-filter: blur(5px); }
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.1); color: white; border: none; width: 60px; height: 80px; font-size: 30px; cursor: pointer; z-index: 10001; transition: 0.3s; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+        .nav-btn:hover { background: rgba(255,255,255,0.3); }
+        .prev-btn { left: 10px; }
+        .next-btn { right: 10px; }
 
-        /* Control buttons untuk autoplay dan auto-next */
-        .player-controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 10001; background: rgba(0,0,0,0.6); padding: 12px 20px; border-radius: 50px; backdrop-filter: blur(10px); }
-        .control-btn { background: rgba(255,255,255,0.2); color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
-        .control-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
-        .control-btn.active { background: var(--blue); color: white; }
-        .control-btn .icon { font-size: 16px; }
+        .swiper { width: 100%; height: 100%; }
+        .swiper-slide { display: flex; justify-content: center; align-items: center; }
+        video, .player-image { max-width: 90%; max-height: 90%; object-fit: contain; }
 
-        .swiper { width: 100%; height: 100%; padding-top: 80px; padding-bottom: 80px; }
-        .swiper-slide { display: flex; justify-content: center; align-items: center; background: #000; color: white; }
-        video, .player-image { max-width: 100%; max-height: 100%; object-fit: contain; outline: none; }
-        .audio-card { background: #1a1a1a; padding: 40px; border-radius: 24px; text-align: center; width: 85%; max-width: 400px; border: 1px solid #333; }
-        
-        .loader { position: absolute; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--blue); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        #loginOverlay { position: fixed; inset: 0; background: #f0f2f5; display: flex; justify-content: center; align-items: center; z-index: 10002; }
-        .login-card { background: white; padding: 40px; border-radius: 16px; width: 340px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btn-login { width: 100%; background: var(--blue); color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
-        /* Responsive untuk mobile */
-        @media (max-width: 768px) {
-            .player-controls { bottom: 10px; padding: 8px 12px; }
-            .control-btn { padding: 8px 14px; font-size: 11px; }
-        }
+        #uploadModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10003; justify-content:center; align-items:center; }
+        .modal-content { background:white; padding:25px; border-radius:12px; width:90%; max-width:400px; }
     </style>
 </head>
-<body onkeydown="if(event.key==='Escape') closePlayer()">
-
-<div id="loginOverlay" style="display:none">
-    <div class="login-card">
-        <h2>Lidan Cloud</h2>
-        <input type="text" id="userInp" placeholder="Username">
-        <input type="password" id="passInp" placeholder="Password">
-        <button onclick="doLogin()" class="btn-login">Masuk</button>
-    </div>
-</div>
+<body>
 
 <header>
     <button onclick="muatData()" class="btn-action">🔄</button>
     <div class="path-bar" id="pathBar"></div>
-    <button onclick="doLogout()" class="btn-action">Keluar</button>
+    <button onclick="openUploadModal()" class="btn-action btn-upload">📤 Upload</button>
 </header>
 
 <main id="explorerContainer">
@@ -88,66 +62,31 @@
 </main>
 
 <div id="playerOverlay">
-    <div class="player-header">
-        <h2 class="player-filename" id="playerFilename">Loading...</h2>
-        <div class="player-info" id="playerInfo"></div>
-    </div>
     <button class="close-btn" onclick="closePlayer()">✕</button>
-    
-    <!-- Control buttons untuk autoplay dan auto-next -->
-    <div class="player-controls">
-        <button class="control-btn" id="autoplayBtn" onclick="toggleAutoplay()">
-            <span class="icon">▶️</span>
-            <span>Autoplay</span>
-        </button>
-        <button class="control-btn" id="autoNextBtn" onclick="toggleAutoNext()">
-            <span class="icon">⏭️</span>
-            <span>Auto Next</span>
-        </button>
-    </div>
+    <button class="nav-btn prev-btn" onclick="swiperInstance.slidePrev()">❮</button>
+    <button class="nav-btn next-btn" onclick="swiperInstance.slideNext()">❯</button>
     
     <div class="swiper">
         <div class="swiper-wrapper" id="playerWrapper"></div>
     </div>
 </div>
 
+<div id="uploadModal">
+    <div class="modal-content">
+        <h3>Upload ke: <span id="targetPathDisplay"></span></h3>
+        <input type="file" id="fileInput" multiple style="margin-bottom:15px; width: 100%;">
+        <div style="display:flex; gap:10px">
+            <button onclick="prosesUpload()" class="btn-action btn-upload" style="flex:1">Mulai</button>
+            <button onclick="closeUploadModal()" class="btn-action" style="flex:1">Batal</button>
+        </div>
+        <div id="uploadProgress" style="margin-top:10px; font-size:12px; color:var(--blue)"></div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script>
-    const API_URL = "https://lidan.co.id/api/r2_api";
-    const API_LOGIN = "https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6";
+    const API_URL = "https://lidan.co.id/api/r2_api_lidan";
     let allData = [], currentPath = "", mediaFiles = [], swiperInstance = null;
-    
-    // Settings untuk autoplay dan auto-next
-    let autoplayEnabled = false;
-    let autoNextEnabled = false;
-
-    function getToken() { return localStorage.getItem('lidan_token'); }
-    
-    async function doLogin() {
-        const u = document.getElementById('userInp').value;
-        const p = document.getElementById('passInp').value;
-        const res = await fetch(`${API_LOGIN}?action=login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Role': 'admin', 'X-Custom-Auth': 'admin' },
-            body: JSON.stringify({ username: u, password: p })
-        });
-        const data = await res.json();
-        if (data.success) { localStorage.setItem('lidan_token', btoa(`${u}:${p}`)); initApp(); }
-        else alert("Login Gagal");
-    }
-    
-    function doLogout() { localStorage.removeItem('lidan_token'); location.reload(); }
-
-    function initApp() {
-        if (!getToken()) { document.getElementById('loginOverlay').style.display = 'flex'; return; }
-        document.getElementById('loginOverlay').style.display = 'none';
-        
-        // Load saved settings
-        autoplayEnabled = localStorage.getItem('autoplayEnabled') === 'true';
-        autoNextEnabled = localStorage.getItem('autoNextEnabled') === 'true';
-        
-        muatData();
-    }
 
     async function muatData() {
         try {
@@ -161,6 +100,7 @@
         const explorer = document.getElementById('explorer');
         const pathBar = document.getElementById('pathBar');
         explorer.innerHTML = "";
+        
         pathBar.innerHTML = `<span onclick="goPath('')">Root</span>`;
         let bPath = "";
         currentPath.split('/').filter(x=>x).forEach(part => {
@@ -171,34 +111,25 @@
 
         let folders = new Set();
         mediaFiles = [];
+
         allData.forEach(item => {
-            const rel = currentPath === "" ? item.key : item.key.substring(currentPath.length + 1);
             if (!item.key.startsWith(currentPath)) return;
-            if (currentPath !== "" && !item.key.startsWith(currentPath + "/")) return;
-            const parts = rel.split('/').filter(x => x);
+            const relativeKey = currentPath === "" ? item.key : item.key.substring(currentPath.length + 1);
+            if (!relativeKey) return;
+            const parts = relativeKey.split('/');
             if (parts.length > 1) folders.add(parts[0]);
-            else if (parts.length === 1 && parts[0] !== ".folder") mediaFiles.push(item);
+            else if (parts[0] !== ".folder") mediaFiles.push(item);
         });
 
-        folders.forEach(f => {
+        Array.from(folders).sort().forEach(f => {
             const fPath = currentPath === "" ? f : currentPath + "/" + f;
-            explorer.appendChild(createCard(`<span class="folder-icon">📁</span>`, f, () => goPath(fPath), true, null));
+            explorer.appendChild(createCard(`<span class="folder-icon">📁</span>`, f, () => goPath(fPath), true));
         });
 
         mediaFiles.forEach((file, index) => {
             const ext = file.key.split('.').pop().toLowerCase();
-            let icon, badge = '';
-            
-            if (['jpg','jpeg','png','gif','webp'].includes(ext)) {
-                icon = `<img src="${file.url}" loading="lazy"><span class="file-badge">IMG</span>`;
-            } else if (['mp4','webm'].includes(ext)) {
-                icon = `<video src="${file.url}" preload="metadata" muted></video><span class="file-badge">VIDEO</span>`;
-            } else if (['mp3','wav','ogg','m4a'].includes(ext)) {
-                icon = `<span class="file-icon">🎵</span><span class="file-badge">AUDIO</span>`;
-            } else {
-                icon = `<span class="file-icon">📄</span><span class="file-badge">${ext.toUpperCase()}</span>`;
-            }
-            
+            let icon = ['jpg','jpeg','png','gif','webp'].includes(ext) ? `<img src="${file.url}">` :
+                       ['mp4','webm'].includes(ext) ? `<video src="${file.url}" muted></video>` : `<span class="file-icon">📄</span>`;
             explorer.appendChild(createCard(icon, file.key.split('/').pop(), () => openPlayer(index), false, file));
         });
     }
@@ -207,55 +138,37 @@
         const div = document.createElement('div');
         div.className = 'item';
         div.innerHTML = `<div class="icon-box">${icon}</div><div class="name">${name}</div>`;
+        if (!isFolder) {
+            const act = document.createElement('div');
+            act.className = 'item-actions';
+            act.innerHTML = `
+                <button class="btn-small" onclick="event.stopPropagation(); copyLink('${fileData.url}')">🔗 Link</button>
+                <button class="btn-small" onclick="event.stopPropagation(); duplicateFile('${fileData.key}')">👯 Dup</button>
+                <button class="btn-small btn-del" onclick="event.stopPropagation(); deleteFile('${fileData.key}')">🗑️</button>
+            `;
+            div.appendChild(act);
+        }
         div.onclick = action;
         return div;
     }
 
-    function updatePlayerInfo(index) {
-        const file = mediaFiles[index];
-        const filename = file.key.split('/').pop();
-        const ext = file.key.split('.').pop().toLowerCase();
-        
-        document.getElementById('playerFilename').textContent = filename;
-        document.getElementById('playerInfo').textContent = `${index + 1} / ${mediaFiles.length} • ${ext.toUpperCase()}`;
-    }
+    async function duplicateFile(oldKey) {
+        const nameOnly = oldKey.split('/').pop();
+        const newName = prompt("Nama file duplikat:", "copy_" + nameOnly);
+        if (!newName) return;
 
-    function toggleAutoplay() {
-        autoplayEnabled = !autoplayEnabled;
-        localStorage.setItem('autoplayEnabled', autoplayEnabled);
-        updateControlButtons();
-        
-        // Apply autoplay to current media if any
-        if (swiperInstance) {
-            const activeSlide = swiperInstance.slides[swiperInstance.activeIndex];
-            const media = activeSlide.querySelector('video, audio');
-            if (media && autoplayEnabled) {
-                media.play().catch(() => {});
-            }
-        }
-    }
+        const path = oldKey.includes('/') ? oldKey.substring(0, oldKey.lastIndexOf("/") + 1) : "";
+        const newKey = path + newName;
 
-    function toggleAutoNext() {
-        autoNextEnabled = !autoNextEnabled;
-        localStorage.setItem('autoNextEnabled', autoNextEnabled);
-        updateControlButtons();
-    }
-
-    function updateControlButtons() {
-        const autoplayBtn = document.getElementById('autoplayBtn');
-        const autoNextBtn = document.getElementById('autoNextBtn');
-        
-        if (autoplayEnabled) {
-            autoplayBtn.classList.add('active');
-        } else {
-            autoplayBtn.classList.remove('active');
-        }
-        
-        if (autoNextEnabled) {
-            autoNextBtn.classList.add('active');
-        } else {
-            autoNextBtn.classList.remove('active');
-        }
+        try {
+            await fetch(`${API_URL}?action=rename`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': 'admin' },
+                body: JSON.stringify({ oldKey, newKey, keepOriginal: true }) // keepOriginal agar file lama tetap ada
+            });
+            alert("Berhasil diduplikasi!");
+            muatData();
+        } catch (e) { alert("Gagal!"); }
     }
 
     function openPlayer(startIndex) {
@@ -265,105 +178,72 @@
             const slide = document.createElement('div');
             slide.className = 'swiper-slide';
             const ext = file.key.split('.').pop().toLowerCase();
-            if (['mp4','webm'].includes(ext)) slide.innerHTML = `<video data-src="${file.url}" controls playsinline loop preload="none"></video><div class="loader"></div>`;
-            else if (['jpg','jpeg','png','gif','webp'].includes(ext)) slide.innerHTML = `<img data-src="${file.url}" class="player-image">`;
-            else slide.innerHTML = `<div class="audio-card">🎵<br><audio data-src="${file.url}" controls preload="none"></audio></div>`;
+            if (['mp4','webm'].includes(ext)) slide.innerHTML = `<video src="${file.url}" controls playsinline></video>`;
+            else if (['jpg','jpeg','png','gif','webp'].includes(ext)) slide.innerHTML = `<img src="${file.url}" class="player-image">`;
+            else slide.innerHTML = `<div style="color:white">📄 ${file.key}</div>`;
             wrapper.appendChild(slide);
         });
 
         document.getElementById('playerOverlay').style.display = 'flex';
-        updatePlayerInfo(startIndex);
-        updateControlButtons();
         
-        if(swiperInstance) swiperInstance.destroy(true, true);
-
+        if (swiperInstance) swiperInstance.destroy();
         swiperInstance = new Swiper('.swiper', {
             initialSlide: startIndex,
-            direction: window.innerWidth < 768 ? 'vertical' : 'horizontal',
-            speed: 400,
-            threshold: 20,
-            longSwipes: false,
-            resistanceRatio: 0,
-            mousewheel: {
-                forceToAxis: true,
-                thresholdDelta: 50,
-                sensitivity: 1,
-            },
-            keyboard: true,
-            on: {
-                init: function() { loadMedia(this, this.activeIndex); },
-                slideChange: function() {
-                    stopAllMedia();
-                    loadMedia(this, this.activeIndex);
-                    updatePlayerInfo(this.activeIndex);
-                }
-            }
-        });
-    }
-
-    function loadMedia(swiper, index) {
-        if (!swiper || !swiper.slides) return;
-        const activeSlide = swiper.slides[index];
-        const media = activeSlide.querySelector('video, img, audio');
-        if (media && media.getAttribute('data-src')) {
-            media.src = media.getAttribute('data-src');
-            media.removeAttribute('data-src');
-            
-            if (media.tagName === 'VIDEO' || media.tagName === 'AUDIO') {
-                const loader = activeSlide.querySelector('.loader');
-                if(loader) loader.style.display = 'block';
-                media.oncanplay = () => { 
-                    if(loader) loader.style.display = 'none';
-                };
-                
-                // Setup event listener untuk auto next
-                media.onended = () => {
-                    if (autoNextEnabled && swiper.activeIndex < mediaFiles.length - 1) {
-                        setTimeout(() => {
-                            swiper.slideNext();
-                        }, 500); // Delay 500ms sebelum next
-                    }
-                };
-                
-                // Autoplay jika diaktifkan
-                if (autoplayEnabled) {
-                    media.play().catch(() => {});
-                }
-            }
-        } else if (media && (media.tagName === 'VIDEO' || media.tagName === 'AUDIO')) {
-            // Setup event listener untuk media yang sudah loaded
-            media.onended = () => {
-                if (autoNextEnabled && swiper.activeIndex < mediaFiles.length - 1) {
-                    setTimeout(() => {
-                        swiper.slideNext();
-                    }, 500);
-                }
-            };
-            
-            if (autoplayEnabled) {
-                media.play().catch(() => {});
-            }
-        }
-    }
-
-    function stopAllMedia() { 
-        document.querySelectorAll('video, audio').forEach(m => {
-            m.pause();
-            m.onended = null; // Remove event listener
+            simulateTouch: true,
+            grabCursor: true,
+            keyboard: true
         });
     }
 
     function closePlayer() {
         document.getElementById('playerOverlay').style.display = 'none';
-        stopAllMedia();
-        document.querySelectorAll('#playerWrapper video, #playerWrapper audio').forEach(m => { 
-            m.src = ""; 
-            m.load(); 
+        document.querySelectorAll('video').forEach(v => v.pause());
+    }
+
+    function openUploadModal() {
+        document.getElementById('targetPathDisplay').textContent = currentPath || "Root";
+        document.getElementById('uploadModal').style.display = 'flex';
+    }
+    function closeUploadModal() { document.getElementById('uploadModal').style.display = 'none'; }
+
+    async function prosesUpload() {
+        const files = document.getElementById('fileInput').files;
+        if (!files.length) return;
+        const progress = document.getElementById('uploadProgress');
+        for (let file of files) {
+            progress.textContent = `Upload: ${file.name}`;
+            const formData = new FormData();
+            const fullPath = currentPath ? currentPath + "/" + file.name : file.name;
+            formData.append('file', file);
+            formData.append('customName', fullPath);
+            await fetch(`${API_URL}?action=upload`, {
+                method: 'POST',
+                headers: { 'X-Custom-Auth': 'admin' },
+                body: formData
+            });
+        }
+        alert("Upload Selesai!");
+        closeUploadModal();
+        muatData();
+    }
+
+    function copyLink(url) {
+        navigator.clipboard.writeText(url);
+        alert("Link disalin!");
+    }
+
+    async function deleteFile(key) {
+        if (!confirm("Hapus file?")) return;
+        await fetch(`${API_URL}?action=delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': 'admin' },
+            body: JSON.stringify({ key })
         });
+        muatData();
     }
 
     function goPath(p) { currentPath = p; render(); }
-    initApp();
+    muatData();
 </script>
 </body>
 </html>
