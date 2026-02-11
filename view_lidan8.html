@@ -6,29 +6,27 @@
     <title>Lidan Cloud - Viewer Pro (Dynamic Tree)</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <style>
-        :root { --blue: #0078d7; --bg: #f5f5f5; --border: #ddd; --card-bg: #ffffff; --text: #333; --danger: #d93025; --success: #28a745; }
+        :root { --blue: #0078d7; --bg: #f5f5f5; --border: #ddd; --card-bg: #ffffff; --text: #333; --danger: #d93025; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
-        header { background: white; padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.05); flex-wrap: wrap; }
-        .path-bar { flex: 1; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; background: #fff; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 150px; }
+        header { background: white; padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .path-bar { flex: 1; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; background: #fff; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .path-bar span { cursor: pointer; color: var(--blue); font-weight: 600; }
-        .btn-action { background: white; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 13px; }
+        .btn-action { background: white; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
         .btn-upload { background: var(--blue); color: white; border: none; }
         .btn-danger { background: var(--danger); color: white; border: none; display: none; }
-        .btn-copy-bulk { background: #6c757d; color: white; border: none; display: none; }
-        .btn-paste { background: var(--success); color: white; border: none; display: none; }
         
         #explorerContainer { padding: 15px; max-width: 1200px; margin: 0 auto; min-height: 80vh; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
         @media (max-width: 600px) { 
             .grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; } 
             .btn-action span { display: none; }
-            header { padding: 8px; }
         }
 
         .item { background: var(--card-bg); border: 1px solid var(--border); padding: 10px; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column; position: relative; height: 100%; }
         .item:hover { border-color: var(--blue); }
         .item.selected { border: 2px solid var(--blue); background: #eef7ff; }
         
+        /* Checkbox Box - Dibuat area khusus agar klik tidak memicu player */
         .checkbox-container { position: absolute; top: 0; left: 0; padding: 10px; z-index: 20; }
         .select-checkbox { width: 20px; height: 20px; cursor: pointer; }
 
@@ -59,11 +57,7 @@
 <header>
     <button onclick="muatData()" class="btn-action">🔄 <span>Refresh</span></button>
     <div class="path-bar" id="pathBar"></div>
-    
-    <button id="btnBulkCopy" onclick="salinTerpilih()" class="btn-action btn-copy-bulk">📋 <span>Copy (<span id="copyCountSelected">0</span>)</span></button>
-    <button id="btnPaste" onclick="tempelFile()" class="btn-action btn-paste">📥 <span>Paste (<span id="pasteCount">0</span>)</span></button>
-    <button id="btnBulkDelete" onclick="hapusTerpilih()" class="btn-action btn-danger">🗑️ <span>Hapus (<span id="delCountSelected">0</span>)</span></button>
-    
+    <button id="btnBulkDelete" onclick="hapusTerpilih()" class="btn-action btn-danger">🗑️ <span>Hapus (<span id="countSelected">0</span>)</span></button>
     <button onclick="openUploadModal()" class="btn-action btn-upload">📤 <span>Upload</span></button>
 </header>
 
@@ -112,12 +106,11 @@
     
     let allData = [], currentPath = "", mediaFiles = [], swiperInstance = null;
     let selectedFiles = new Set();
-    let clipboardFiles = []; // Untuk menyimpan daftar file yang di-copy
 
     async function muatData() {
         try {
             selectedFiles.clear();
-            updateBulkUI();
+            updateBulkDeleteUI();
             const res = await fetch(`${API_URL}?action=list&prefix=${encodeURIComponent(currentPath)}`);
             allData = await res.json();
             render();
@@ -185,6 +178,7 @@
         
         let htmlContent = ``;
         if (!isFolder) {
+            // Ditambahkan stopPropagation pada container agar klik tidak memicu pembukaan gambar
             htmlContent += `
                 <div class="checkbox-container" onclick="event.stopPropagation()">
                     <input type="checkbox" class="select-checkbox" onchange="toggleSelect(event, '${fileData.key}')">
@@ -197,6 +191,7 @@
         if (!isFolder) {
             const act = document.createElement('div');
             act.className = 'item-actions';
+            // Pastikan setiap tombol menghentikan event agar tidak memicu player induk
             act.innerHTML = `
                 <button class="btn-small" onclick="event.stopPropagation(); copyLink('${fileData.url}')">Link</button>
                 <button class="btn-small" onclick="event.stopPropagation(); duplicateFile('${fileData.key}')">Dup</button>
@@ -210,6 +205,7 @@
     }
 
     function toggleSelect(event, key) {
+        // StopPropagation sudah ditangani di parent container
         if (event.target.checked) {
             selectedFiles.add(key);
             event.target.closest('.item').classList.add('selected');
@@ -217,65 +213,17 @@
             selectedFiles.delete(key);
             event.target.closest('.item').classList.remove('selected');
         }
-        updateBulkUI();
+        updateBulkDeleteUI();
     }
 
-    function updateBulkUI() {
-        const btnDel = document.getElementById('btnBulkDelete');
-        const btnCopy = document.getElementById('btnBulkCopy');
-        const btnPaste = document.getElementById('btnPaste');
-        
-        const countDel = document.getElementById('delCountSelected');
-        const countCopy = document.getElementById('copyCountSelected');
-        const countPaste = document.getElementById('pasteCount');
-
+    function updateBulkDeleteUI() {
+        const btn = document.getElementById('btnBulkDelete');
+        const count = document.getElementById('countSelected');
         if (selectedFiles.size > 0) {
-            btnDel.style.display = 'flex';
-            btnCopy.style.display = 'flex';
-            countDel.innerText = selectedFiles.size;
-            countCopy.innerText = selectedFiles.size;
+            btn.style.display = 'flex';
+            count.innerText = selectedFiles.size;
         } else {
-            btnDel.style.display = 'none';
-            btnCopy.style.display = 'none';
-        }
-
-        if (clipboardFiles.length > 0) {
-            btnPaste.style.display = 'flex';
-            countPaste.innerText = clipboardFiles.length;
-        } else {
-            btnPaste.style.display = 'none';
-        }
-    }
-
-    function salinTerpilih() {
-        clipboardFiles = Array.from(selectedFiles);
-        alert(clipboardFiles.length + " file disalin ke clipboard internal. Silahkan buka folder tujuan dan klik Paste.");
-        updateBulkUI();
-    }
-
-    async function tempelFile() {
-        if (clipboardFiles.length === 0) return;
-        
-        const targetPath = currentPath;
-        const promises = clipboardFiles.map(oldKey => {
-            const fileName = oldKey.split('/').pop();
-            const newKey = targetPath === "" ? fileName : targetPath + "/" + fileName;
-            
-            // Menggunakan API Rename dengan keepOriginal: true (sama dengan fungsi Duplicate)
-            return fetch(`${API_URL}?action=rename`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': 'admin' },
-                body: JSON.stringify({ oldKey, newKey, keepOriginal: true }) 
-            });
-        });
-
-        try {
-            await Promise.all(promises);
-            alert("Berhasil menempel file ke folder ini.");
-            clipboardFiles = []; // Kosongkan clipboard setelah paste
-            muatData();
-        } catch (e) {
-            alert("Gagal menempel beberapa file.");
+            btn.style.display = 'none';
         }
     }
 
