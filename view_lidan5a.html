@@ -13,34 +13,17 @@
         .path-bar span { cursor: pointer; color: var(--blue); font-weight: 600; }
         .btn-action { background: white; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
         .btn-upload { background: var(--blue); color: white; border: none; }
-        
         #explorerContainer { padding: 15px; max-width: 1200px; margin: 0 auto; min-height: 80vh; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
-        @media (max-width: 600px) { 
-            .grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; } 
-            .btn-action span { display: none; }
-        }
-
+        @media (max-width: 600px) { .grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; } }
         .item { background: var(--card-bg); border: 1px solid var(--border); padding: 10px; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column; position: relative; height: 100%; }
-        .item:hover { border-color: var(--blue); }
         .icon-box { height: 100px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; overflow: hidden; border-radius: 8px; background: #ececec; }
         .icon-box img, .icon-box video { width: 100%; height: 100%; object-fit: cover; }
         .folder-icon { font-size: 50px; color: #ffca28; }
         .name { font-size: 12px; font-weight: 500; word-break: break-all; height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.4; margin-bottom: 8px; }
-        
         .item-actions { display: flex; justify-content: space-around; gap: 4px; margin-top: auto; }
         .btn-small { flex: 1; padding: 6px 2px; font-size: 10px; border-radius: 4px; border: 1px solid var(--border); background: #f8f9fa; cursor: pointer; }
-
-        /* Player Overlay Style from view6 */
         #playerOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; }
-        .close-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.3); color: white; border: none; font-size: 24px; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; z-index: 10002; }
-        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.15); color: white; border: none; width: 50px; height: 70px; font-size: 24px; cursor: pointer; z-index: 10001; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
-        .prev-btn { left: 10px; }
-        .next-btn { right: 10px; }
-        .swiper { width: 100%; height: 100%; }
-        .swiper-slide { display: flex; justify-content: center; align-items: center; }
-        video, .player-image { max-width: 95%; max-height: 90%; object-fit: contain; }
-
         #uploadModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10003; justify-content:center; align-items:center; padding: 20px; }
         .modal-content { background:white; padding:25px; border-radius:12px; width:100%; max-width:350px; }
     </style>
@@ -58,9 +41,7 @@
 </main>
 
 <div id="playerOverlay">
-    <button class="close-btn" onclick="closePlayer()">✕</button>
-    <button class="nav-btn prev-btn" onclick="swiperInstance.slidePrev()">❮</button>
-    <button class="nav-btn next-btn" onclick="swiperInstance.slideNext()">❯</button>
+    <button style="position:absolute; top:20px; right:20px; z-index:10002; color:white; background:none; border:none; font-size:30px; cursor:pointer;" onclick="closePlayer()">✕</button>
     <div class="swiper">
         <div class="swiper-wrapper" id="playerWrapper"></div>
     </div>
@@ -69,9 +50,9 @@
 <div id="uploadModal">
     <div class="modal-content">
         <h3>Upload ke: <span id="targetPathDisplay"></span></h3>
-        <input type="file" id="fileInput" multiple style="width:100%; margin-bottom:10px;">
-        <button onclick="prosesUpload()" class="btn-upload" style="width:100%; padding:10px; border-radius:8px; border:none; color:white; cursor:pointer;">Mulai Upload</button>
-        <button onclick="closeUploadModal()" style="width:100%; margin-top:5px; cursor:pointer; background:none; border:none; color:var(--text);">Batal</button>
+        <input type="file" id="fileInput" multiple>
+        <button onclick="prosesUpload()" class="btn-upload" style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:none; color:white; cursor:pointer;">Mulai Upload</button>
+        <button onclick="closeUploadModal()" style="width:100%; margin-top:5px; cursor:pointer;">Batal</button>
     </div>
 </div>
 
@@ -79,6 +60,7 @@
 <script>
     const API_URL = "https://lidan.co.id/api/r2_api_lidan";
     
+    // STRUKTUR FOLDER BERDASARKAN LAMPIRAN GAMBAR
     const FOLDER_STRUCTURE = {
         "book": {
             "finish": { "kerja": {}, "sma": {} },
@@ -99,19 +81,24 @@
 
     async function muatData() {
         try {
+            // Kita fetch data berdasarkan prefix folder saat ini
             const res = await fetch(`${API_URL}?action=list&prefix=${encodeURIComponent(currentPath)}`);
             allData = await res.json();
             render();
         } catch(e) { console.error("API Error:", e); }
     }
 
+    // Fungsi untuk mendapatkan sub-folder dari JSON Tree berdasarkan path
     function getFoldersFromTree(path) {
         if (!path) return Object.keys(FOLDER_STRUCTURE);
         const parts = path.split('/');
         let current = FOLDER_STRUCTURE;
         for (let part of parts) {
-            if (current[part]) current = current[part];
-            else return [];
+            if (current[part]) {
+                current = current[part];
+            } else {
+                return []; // Jika path tidak ada di struktur manual
+            }
         }
         return Object.keys(current);
     }
@@ -121,6 +108,7 @@
         const pathBar = document.getElementById('pathBar');
         explorer.innerHTML = "";
 
+        // Breadcrumbs
         pathBar.innerHTML = `<span onclick="goPath('')">Root</span>`;
         let bPath = "";
         currentPath.split('/').filter(x=>x).forEach(part => {
@@ -132,31 +120,41 @@
         let folderSet = new Set();
         mediaFiles = [];
 
+        // 1. Ambil folder dari JSON Tree (Struktur Manual)
         const manualSubFolders = getFoldersFromTree(currentPath);
         manualSubFolders.forEach(f => folderSet.add(f));
 
+        // 2. Ambil file dari API R2
         allData.forEach(item => {
+            // Pastikan item berada tepat di dalam currentPath (bukan di subfolder yang lebih dalam)
             const rel = currentPath === "" ? item.key : item.key.substring(currentPath.length + 1);
             if (!rel) return;
+
             const parts = rel.split('/').filter(x => x);
-            if (parts.length > 1) folderSet.add(parts[0]);
-            else if (parts.length === 1 && !item.key.endsWith('/')) mediaFiles.push(item);
+            
+            if (parts.length > 1) {
+                // Ini adalah subfolder yang ditemukan dari data R2
+                folderSet.add(parts[0]);
+            } else if (parts.length === 1 && !item.key.endsWith('/')) {
+                // Ini adalah file
+                mediaFiles.push(item);
+            }
         });
 
+        // Render Semua Folder (Gabungan Manual + R2)
         Array.from(folderSet).sort().forEach(f => {
             const fPath = currentPath === "" ? f : currentPath + "/" + f;
             explorer.appendChild(createCard(`<span class="folder-icon">📁</span>`, f, () => goPath(fPath), true));
         });
 
+        // Render File
         mediaFiles.forEach((file, index) => {
             const filename = file.key.split('/').pop();
             const ext = filename.split('.').pop().toLowerCase();
             let icon = ['jpg','jpeg','png','gif','webp'].includes(ext) ? `<img src="${file.url}" loading="lazy">` : 
                        ['mp4','webm'].includes(ext) ? `<video src="${file.url}" muted></video>` : `📄`;
             
-            const card = createCard(icon, filename, () => openPlayer(index), false, file);
-            card.id = `card-${index}`; // ID untuk scroll anchor
-            explorer.appendChild(card);
+            explorer.appendChild(createCard(icon, filename, () => openPlayer(index), false, file));
         });
     }
 
@@ -169,7 +167,6 @@
             act.className = 'item-actions';
             act.innerHTML = `
                 <button class="btn-small" onclick="event.stopPropagation(); copyLink('${fileData.url}')">Link</button>
-                <button class="btn-small" onclick="event.stopPropagation(); duplicateFile('${fileData.key}')">Dup</button>
                 <button class="btn-small btn-del" onclick="event.stopPropagation(); deleteFile('${fileData.key}')">🗑️</button>
             `;
             div.appendChild(act);
@@ -178,68 +175,13 @@
         return div;
     }
 
-    // FUNGSI DUPLIKAT (Tiruan view6)
-    async function duplicateFile(oldKey) {
-        const nameOnly = oldKey.split('/').pop();
-        const newName = prompt("Nama file duplikat:", "copy_" + nameOnly);
-        if (!newName) return;
-        const path = oldKey.includes('/') ? oldKey.substring(0, oldKey.lastIndexOf("/") + 1) : "";
-        const newKey = path + newName;
-        try {
-            await fetch(`${API_URL}?action=rename`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': 'admin' },
-                body: JSON.stringify({ oldKey, newKey, keepOriginal: true }) 
-            });
-            alert("Berhasil diduplikasi!");
-            muatData();
-        } catch (e) { alert("Gagal duplikasi!"); }
-    }
-
-    function openPlayer(startIndex) {
-        const wrapper = document.getElementById('playerWrapper');
-        wrapper.innerHTML = "";
-        mediaFiles.forEach(file => {
-            const slide = document.createElement('div');
-            slide.className = 'swiper-slide';
-            const ext = file.key.split('.').pop().toLowerCase();
-            if (['mp4','webm'].includes(ext)) slide.innerHTML = `<video src="${file.url}" controls playsinline></video>`;
-            else if (['jpg','jpeg','png','gif','webp'].includes(ext)) slide.innerHTML = `<img src="${file.url}" class="player-image">`;
-            else slide.innerHTML = `<div style="color:white">📄 ${file.key}</div>`;
-            wrapper.appendChild(slide);
-        });
-
-        document.getElementById('playerOverlay').style.display = 'flex';
-        if (swiperInstance) swiperInstance.destroy();
-        swiperInstance = new Swiper('.swiper', {
-            initialSlide: startIndex,
-            simulateTouch: true,
-            grabCursor: true,
-            keyboard: { enabled: true }
-        });
-    }
-
-    // FUNGSI CLOSE DENGAN AUTO-SCROLL (Tiruan view6)
-    function closePlayer() {
-        const currentIndex = swiperInstance.activeIndex; 
-        document.getElementById('playerOverlay').style.display = 'none';
-        document.querySelectorAll('video').forEach(v => v.pause());
-
-        setTimeout(() => {
-            const targetCard = document.getElementById(`card-${currentIndex}`);
-            if (targetCard) {
-                targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                targetCard.style.outline = "2px solid var(--blue)";
-                setTimeout(() => targetCard.style.outline = "none", 1500);
-            }
-        }, 100);
-    }
-
     function goPath(p) { currentPath = p; muatData(); }
+    
     function openUploadModal() { 
         document.getElementById('targetPathDisplay').innerText = currentPath || "Root";
         document.getElementById('uploadModal').style.display = 'flex'; 
     }
+    
     function closeUploadModal() { document.getElementById('uploadModal').style.display = 'none'; }
 
     async function prosesUpload() {
@@ -250,7 +192,11 @@
             const fullPath = currentPath ? currentPath + "/" + file.name : file.name;
             formData.append('file', file);
             formData.append('customName', fullPath);
-            await fetch(`${API_URL}?action=upload`, { method: 'POST', headers: { 'X-Custom-Auth': 'admin' }, body: formData });
+            await fetch(`${API_URL}?action=upload`, { 
+                method: 'POST', 
+                headers: { 'X-Custom-Auth': 'admin' }, 
+                body: formData 
+            });
         }
         alert("Upload Selesai");
         closeUploadModal();
@@ -269,6 +215,29 @@
         muatData();
     }
 
+    function openPlayer(index) {
+        const wrapper = document.getElementById('playerWrapper');
+        wrapper.innerHTML = "";
+        mediaFiles.forEach(file => {
+            const slide = document.createElement('div');
+            slide.className = 'swiper-slide';
+            const ext = file.key.split('.').pop().toLowerCase();
+            slide.innerHTML = ['mp4','webm'].includes(ext) 
+                ? `<video src="${file.url}" controls autoplay style="max-width:100%; max-height:80vh;"></video>` 
+                : `<img src="${file.url}" style="max-width:100%; max-height:80vh; object-fit:contain;">`;
+            wrapper.appendChild(slide);
+        });
+        document.getElementById('playerOverlay').style.display = 'flex';
+        if(swiperInstance) swiperInstance.destroy();
+        swiperInstance = new Swiper('.swiper', { initialSlide: index });
+    }
+    
+    function closePlayer() { 
+        document.getElementById('playerOverlay').style.display = 'none'; 
+        document.querySelectorAll('video').forEach(v => v.pause());
+    }
+
+    // Inisialisasi awal
     muatData();
 </script>
 </body>
