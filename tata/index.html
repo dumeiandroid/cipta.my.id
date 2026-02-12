@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Precise Finder - Static Version</title>
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --card: #ffffff; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 15px; }
+        .container { width: 100%; max-width: 750px; margin: 0 auto; }
+        .search-box { position: sticky; top: 10px; background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 10; }
+        input { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
+        .stats { margin-top: 10px; font-size: 0.85rem; color: #64748b; font-weight: 500; }
+        .result-item { background: var(--card); padding: 18px; border-radius: 10px; margin-bottom: 12px; border-left: 5px solid var(--primary); cursor: pointer; transition: 0.2s; }
+        .result-item:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.05); }
+        .highlight { background: #fde047; font-weight: bold; padding: 0 2px; border-radius: 3px; }
+        .active-highlight { background: #f97316 !important; color: white !important; padding: 2px 5px !important; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px; backdrop-filter: blur(4px); }
+        .modal-content { background: white; width: 100%; max-width: 850px; height: 85vh; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .modal-header { padding: 18px 25px; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .modal-body { padding: 30px; overflow-y: auto; line-height: 1.8; white-space: pre-wrap; font-size: 1.1rem; flex-grow: 1; color: #334155; }
+        .close-btn { cursor: pointer; font-size: 2rem; line-height: 1; }
+        
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="search-box">
+        <h2 style="margin:0 0 10px 0; color:var(--primary); letter-spacing: -0.5px;">🔍 Precise Finder (HTML)</h2>
+        <input type="text" id="searchInput" placeholder="Cari multi-kata (e.g: tugas pendeta)..." autocomplete="off">
+        <div id="stats" class="stats">Masukkan kata kunci untuk mencari di file .txt...</div>
+    </div>
+    <div id="results" style="margin-top:20px"></div>
+</div>
+
+<div id="modal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span id="modalTitle">File Viewer</span>
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+        </div>
+        <div id="modalBody" class="modal-body"></div>
+    </div>
+</div>
+
+<script>
+    // --- KONFIGURASI ---
+    // Karena JS tidak bisa scan folder otomatis, daftar file harus ditulis di sini
+    const fileList = ['01roadmap.txt', '02tata-gereja.txt', '03tata-dasar.txt', '04gbp.txt', '05tata-pelayanan.txt', '06other.txt']; 
+    
+    let timer;
+    const input = document.getElementById('searchInput');
+    const resultsDiv = document.getElementById('results');
+
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        const q = input.value.trim();
+        if (q.length < 2) { resultsDiv.innerHTML = ''; return; }
+        
+        timer = setTimeout(() => {
+            performSearch(q);
+        }, 500);
+    });
+
+    async function performSearch(query) {
+        const keywords = query.split(' ').filter(k => k.length > 0);
+        // Membuat regex Lookahead (sama seperti logika PHP sebelumnya)
+        const regexPattern = keywords.map(kw => `(?=.*${escapeRegExp(kw)})`).join('');
+        const regex = new RegExp(regexPattern, 'i');
+        
+        let foundCount = 0;
+        resultsDiv.innerHTML = 'Sedang mencari...';
+
+        const allResults = [];
+
+        for (const fileName of fileList) {
+            try {
+                const res = await fetch(fileName);
+                const content = await res.text();
+                
+                // Pisahkan menjadi kalimat
+                const sentenceRegex = /[^.?!|]+[.?!]/g;
+                let match;
+                
+                while ((match = sentenceRegex.exec(content)) !== null) {
+                    const sentenceText = match[0];
+                    const offset = match.index;
+
+                    if (regex.test(sentenceText)) {
+                        let highlighted = escapeHtml(sentenceText.trim());
+                        keywords.forEach(kw => {
+                            highlighted = highlighted.replace(new RegExp(`(${escapeRegExp(kw)})`, 'gi'), `<span class='highlight'>$1</span>`);
+                        });
+
+                        allResults.push({
+                            file: fileName,
+                            text: highlighted,
+                            keywords: keywords,
+                            offset: offset,
+                            fullContent: content // Simpan content agar tidak fetch ulang saat buka modal
+                        });
+                        foundCount++;
+                    }
+                }
+            } catch (err) {
+                console.error("Gagal membaca file: " + fileName);
+            }
+        }
+
+        renderResults(allResults, foundCount);
+    }
+
+    function renderResults(results, count) {
+        document.getElementById('stats').innerHTML = `Ditemukan <b>${count}</b> kalimat.`;
+        resultsDiv.innerHTML = '';
+        
+        results.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'result-item';
+            card.innerHTML = `
+                <small style="color:var(--primary); font-weight:bold; text-transform:uppercase; font-size:0.75rem">📄 ${item.file}</small>
+                <p style="margin:8px 0 0 0; color:#334155; line-height:1.5;">${item.text}</p>
+            `;
+            card.onclick = () => openModal(item);
+            resultsDiv.appendChild(card);
+        });
+    }
+
+    function openModal(item) {
+        const modal = document.getElementById('modal');
+        const modalBody = document.getElementById('modalBody');
+        document.getElementById('modalTitle').innerText = item.file;
+        modal.style.display = 'flex';
+
+        const text = item.fullContent;
+        const offset = item.offset;
+        const keywords = item.keywords;
+
+        const before = text.substring(0, offset);
+        const after = text.substring(offset);
+        const sentenceEnd = (after.search(/[.?!]/) + 1) || after.length;
+        const targetSentence = after.substring(0, sentenceEnd);
+        const remainder = after.substring(sentenceEnd);
+
+        const kwRegex = new RegExp(`(${keywords.map(k => escapeRegExp(k)).join('|')})`, 'gi');
+        const highlightKW = (t) => t.replace(kwRegex, `<span class="highlight">$1</span>`);
+
+        modalBody.innerHTML = 
+            highlightKW(escapeHtml(before)) + 
+            `<span id="scrollTarget" class="active-highlight">` + highlightKW(escapeHtml(targetSentence)) + `</span>` + 
+            highlightKW(escapeHtml(remainder));
+
+        setTimeout(() => {
+            const target = document.getElementById('scrollTarget');
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+    }
+
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+    
+    function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function escapeHtml(text) {
+        const map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    window.onclick = (e) => { if (e.target.classList.contains('modal-overlay')) closeModal(); }
+</script>
+
+</body>
+</html>
