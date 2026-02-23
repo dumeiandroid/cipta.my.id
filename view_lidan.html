@@ -369,11 +369,19 @@
             const img = wrapper.querySelector('img');
             if (!img) return;
 
-            let scale = 1, startDist = 0;
+            let scale = 1;
             let translateX = 0, translateY = 0;
+            let isPinching = false;
+
+            // Untuk pinch
+            let startDist = 0, startScale = 1;
             let startMidX = 0, startMidY = 0;
             let startTX = 0, startTY = 0;
-            let isPinching = false;
+
+            // Untuk pan (geser 1 jari)
+            let isPanning = false;
+            let panStartX = 0, panStartY = 0;
+            let panStartTX = 0, panStartTY = 0;
 
             function getDistance(t) {
                 const dx = t[0].clientX - t[1].clientX;
@@ -392,16 +400,33 @@
                 img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
             }
 
+            function updateSwiperState() {
+                // Swiper hanya aktif jika tidak sedang zoom
+                swiperInstance.allowTouchMove = (scale <= 1);
+            }
+
             wrapper.addEventListener('touchstart', e => {
                 if (e.touches.length === 2) {
+                    // Mulai pinch
                     isPinching = true;
+                    isPanning = false;
                     startDist = getDistance(e.touches);
+                    startScale = scale;
                     const mid = getMidpoint(e.touches);
                     startMidX = mid.x;
                     startMidY = mid.y;
                     startTX = translateX;
                     startTY = translateY;
-                    // Nonaktifkan swipe swiper saat pinch
+                    swiperInstance.allowTouchMove = false;
+                    e.preventDefault();
+                } else if (e.touches.length === 1 && scale > 1) {
+                    // Mulai pan (hanya kalau sedang zoom)
+                    isPanning = true;
+                    isPinching = false;
+                    panStartX = e.touches[0].clientX;
+                    panStartY = e.touches[0].clientY;
+                    panStartTX = translateX;
+                    panStartTY = translateY;
                     swiperInstance.allowTouchMove = false;
                     e.preventDefault();
                 }
@@ -409,33 +434,43 @@
 
             wrapper.addEventListener('touchmove', e => {
                 if (e.touches.length === 2 && isPinching) {
+                    // Hitung scale baru
                     const newDist = getDistance(e.touches);
-                    const newScale = Math.min(Math.max(scale * (newDist / startDist), 1), 5);
+                    const newScale = Math.min(Math.max(startScale * (newDist / startDist), 1), 5);
+                    
+                    // Hitung pergeseran dari midpoint
                     const mid = getMidpoint(e.touches);
-                    translateX = startTX + (mid.x - startMidX);
-                    translateY = startTY + (mid.y - startMidY);
+                    const newTX = startTX + (mid.x - startMidX);
+                    const newTY = startTY + (mid.y - startMidY);
+
                     scale = newScale;
-                    startDist = newDist;
-                    startMidX = mid.x;
-                    startMidY = mid.y;
-                    startTX = translateX;
-                    startTY = translateY;
+                    translateX = newTX;
+                    translateY = newTY;
+                    applyTransform();
+                    e.preventDefault();
+                } else if (e.touches.length === 1 && isPanning) {
+                    // Geser gambar dengan 1 jari
+                    const dx = e.touches[0].clientX - panStartX;
+                    const dy = e.touches[0].clientY - panStartY;
+                    translateX = panStartTX + dx;
+                    translateY = panStartTY + dy;
                     applyTransform();
                     e.preventDefault();
                 }
             }, { passive: false });
 
             wrapper.addEventListener('touchend', e => {
-                if (e.touches.length < 2) {
-                    isPinching = false;
-                    // Kembalikan swiper jika zoom sudah ke 1
+                if (e.touches.length < 2) isPinching = false;
+                if (e.touches.length === 0) {
+                    isPanning = false;
+                    // Jika zoom kembali ke 1, reset posisi dan aktifkan swiper
                     if (scale <= 1) {
                         scale = 1;
                         translateX = 0;
                         translateY = 0;
                         applyTransform();
-                        swiperInstance.allowTouchMove = true;
                     }
+                    updateSwiperState();
                 }
             });
 
@@ -448,7 +483,7 @@
                     translateX = 0;
                     translateY = 0;
                     applyTransform();
-                    swiperInstance.allowTouchMove = true;
+                    updateSwiperState();
                 }
                 lastTap = now;
             });
