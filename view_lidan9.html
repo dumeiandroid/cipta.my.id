@@ -48,9 +48,7 @@
         .next-btn { right: 10px; }
         .swiper { width: 100%; height: 100%; }
         .swiper-slide { display: flex; justify-content: center; align-items: center; }
-        video, .player-image { max-width: 95%; max-height: 90%; object-fit: contain; touch-action: none; }
-        .swiper-slide { overflow: hidden; }
-        .zoom-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; touch-action: none; }
+        video, .player-image { max-width: 95%; max-height: 90%; object-fit: contain; }
 
         #uploadModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10003; justify-content:center; align-items:center; padding: 20px; }
         .modal-content { background:white; padding:25px; border-radius:12px; width:100%; max-width:350px; }
@@ -341,13 +339,9 @@
             const slide = document.createElement('div');
             slide.className = 'swiper-slide';
             const ext = file.key.split('.').pop().toLowerCase();
-            if (['mp4','webm'].includes(ext)) {
-                slide.innerHTML = `<video src="${file.url}" controls playsinline></video>`;
-            } else if (['jpg','jpeg','png','gif','webp'].includes(ext)) {
-                slide.innerHTML = `<div class="zoom-wrapper"><img src="${file.url}" class="player-image"></div>`;
-            } else {
-                slide.innerHTML = `<div style="color:white">📄 ${file.key}</div>`;
-            }
+            if (['mp4','webm'].includes(ext)) slide.innerHTML = `<video src="${file.url}" controls playsinline></video>`;
+            else if (['jpg','jpeg','png','gif','webp'].includes(ext)) slide.innerHTML = `<img src="${file.url}" class="player-image">`;
+            else slide.innerHTML = `<div style="color:white">📄 ${file.key}</div>`;
             wrapper.appendChild(slide);
         });
 
@@ -358,100 +352,6 @@
             simulateTouch: true,
             grabCursor: true,
             keyboard: { enabled: true }
-        });
-
-        // Aktifkan pinch-to-zoom setelah swiper siap
-        setTimeout(initPinchZoom, 100);
-    }
-
-    function initPinchZoom() {
-        document.querySelectorAll('.zoom-wrapper').forEach(wrapper => {
-            const img = wrapper.querySelector('img');
-            if (!img) return;
-
-            let scale = 1, startDist = 0;
-            let translateX = 0, translateY = 0;
-            let startMidX = 0, startMidY = 0;
-            let startTX = 0, startTY = 0;
-            let isPinching = false;
-
-            function getDistance(t) {
-                const dx = t[0].clientX - t[1].clientX;
-                const dy = t[0].clientY - t[1].clientY;
-                return Math.sqrt(dx * dx + dy * dy);
-            }
-
-            function getMidpoint(t) {
-                return {
-                    x: (t[0].clientX + t[1].clientX) / 2,
-                    y: (t[0].clientY + t[1].clientY) / 2
-                };
-            }
-
-            function applyTransform() {
-                img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-            }
-
-            wrapper.addEventListener('touchstart', e => {
-                if (e.touches.length === 2) {
-                    isPinching = true;
-                    startDist = getDistance(e.touches);
-                    const mid = getMidpoint(e.touches);
-                    startMidX = mid.x;
-                    startMidY = mid.y;
-                    startTX = translateX;
-                    startTY = translateY;
-                    // Nonaktifkan swipe swiper saat pinch
-                    swiperInstance.allowTouchMove = false;
-                    e.preventDefault();
-                }
-            }, { passive: false });
-
-            wrapper.addEventListener('touchmove', e => {
-                if (e.touches.length === 2 && isPinching) {
-                    const newDist = getDistance(e.touches);
-                    const newScale = Math.min(Math.max(scale * (newDist / startDist), 1), 5);
-                    const mid = getMidpoint(e.touches);
-                    translateX = startTX + (mid.x - startMidX);
-                    translateY = startTY + (mid.y - startMidY);
-                    scale = newScale;
-                    startDist = newDist;
-                    startMidX = mid.x;
-                    startMidY = mid.y;
-                    startTX = translateX;
-                    startTY = translateY;
-                    applyTransform();
-                    e.preventDefault();
-                }
-            }, { passive: false });
-
-            wrapper.addEventListener('touchend', e => {
-                if (e.touches.length < 2) {
-                    isPinching = false;
-                    // Kembalikan swiper jika zoom sudah ke 1
-                    if (scale <= 1) {
-                        scale = 1;
-                        translateX = 0;
-                        translateY = 0;
-                        applyTransform();
-                        swiperInstance.allowTouchMove = true;
-                    }
-                }
-            });
-
-            // Double tap untuk reset zoom
-            let lastTap = 0;
-            wrapper.addEventListener('touchend', e => {
-                const now = Date.now();
-                if (now - lastTap < 300) {
-                    scale = 1;
-                    translateX = 0;
-                    translateY = 0;
-                    applyTransform();
-                    swiperInstance.allowTouchMove = true;
-                }
-                lastTap = now;
-            });
         });
     }
 
