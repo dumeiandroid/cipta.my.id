@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Management System</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
+    <style>
+        body { background-color: #f4f7f6; padding: 20px; }
+        .login-container { max-width: 400px; margin: 80px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .main-container { display: none; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .nav-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #eee; }
+        td { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: cell; }
+        td:focus { background-color: #fff9c4; outline: 2px solid #ffd600; white-space: normal; }
+        .table-responsive { max-height: 70vh; overflow-y: auto; }
+
+        /* ─── LOADING OVERLAY ─── */
+        #loadingOverlay {
+            display: none;
+            position: absolute; inset: 0;
+            background: rgba(255,255,255,0.92);
+            z-index: 10;
+            flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 8px; min-height: 200px;
+        }
+        #loadingOverlay.active { display: flex; }
+        #loadingOverlay .spinner {
+            width: 48px; height: 48px;
+            border: 5px solid #dee2e6; border-top-color: #007bff;
+            border-radius: 50%; animation: spin 0.7s linear infinite;
+            margin-bottom: 14px;
+        }
+        #loadingOverlay .loading-text { color: #6c757d; font-size: 0.95rem; font-weight: 500; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .table-wrapper { position: relative; }
+
+        /* ─── BUTTON LOADING ─── */
+        .btn-loading { opacity: 0.7; pointer-events: none; }
+        .btn-loading .btn-text { display: none; }
+        .btn-loading .btn-spinner {
+            display: inline-block !important;
+            width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
+            border-radius: 50%; animation: spin 0.6s linear infinite;
+            vertical-align: middle; margin-right: 4px;
+        }
+        .btn .btn-spinner { display: none; }
+
+        /* ─── STATUS INLINE ─── */
+        #inlineStatus { display: none; font-size: 0.8rem; padding: 4px 10px; border-radius: 4px; margin-left: 10px; }
+        #inlineStatus.success { display: inline-block; background: #d4edda; color: #155724; }
+        #inlineStatus.error   { display: inline-block; background: #f8d7da; color: #721c24; }
+
+        /* ─── DEBUG PANEL ─── */
+        #debugPanel {
+            position: fixed; bottom: 0; right: 0;
+            width: 440px; max-height: 260px;
+            background: #1e1e1e; color: #d4d4d4;
+            font-family: 'Consolas', monospace; font-size: 0.72rem;
+            border-radius: 8px 0 0 0; padding: 8px 10px;
+            overflow-y: auto; z-index: 9999;
+            border-top: 2px solid #007bff;
+        }
+        #debugPanel .debug-title {
+            color: #007bff; font-weight: bold; font-size: 0.78rem;
+            margin-bottom: 4px; border-bottom: 1px solid #333; padding-bottom: 3px;
+            position: sticky; top: 0; background: #1e1e1e;
+        }
+        .dbg-poll   { color: #6bcb77; }
+        .dbg-fetch  { color: #4d96ff; }
+        .dbg-cmp    { color: #ffbe0b; }
+        .dbg-render { color: #ff6b6b; }
+        .dbg-err    { color: #ff6b6b; font-weight: bold; }
+        .dbg-time   { color: #666; margin-right: 6px; }
+
+        /* ─── DATATABLE CUSTOM ─── */
+        .dataTables_wrapper .dataTables_length select {
+            padding: 4px 8px;
+            margin: 0 5px;
+        }
+        .dataTables_wrapper .dataTables_filter input {
+            margin-left: 5px;
+            padding: 4px 8px;
+        }
+        .dataTables_wrapper .dataTables_info {
+            padding-top: 12px;
+        }
+        .dataTables_wrapper .dataTables_paginate {
+            padding-top: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========== LOGIN ========== -->
+<div id="loginSection" class="login-container">
+    <h3 class="text-center mb-4">Admin Login</h3>
+    <form id="loginForm">
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="username" class="form-control" placeholder="admin" required autofocus>
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="password" class="form-control" placeholder="admin" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Masuk</button>
+    </form>
+</div>
+
+<!-- ========== MAIN ========== -->
+<div id="mainSection" class="container-fluid main-container">
+    <div class="nav-top pb-3">
+        <div>
+            <h4 class="mb-0">
+                Tabel: <span id="currentTableName" class="text-success font-weight-bold">...</span>
+                <span id="inlineStatus"></span>
+            </h4>
+            <small class="text-muted">Klik pada sel untuk mengedit data secara langsung</small>
+        </div>
+        <div>
+            <button class="btn btn-outline-info mr-2" id="btnShowTables"><i class="fa fa-database"></i> Pilih Tabel</button>
+            <button class="btn btn-danger" onclick="logout()"><i class="fa fa-sign-out-alt"></i> Keluar</button>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <button class="btn btn-success" onclick="$('#modalTambah').modal('show')">
+                <i class="fa fa-plus-circle"></i> Tambah Data Baru
+            </button>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <div id="loadingOverlay" class="active">
+            <div class="spinner"></div>
+            <div class="loading-text">Sedang mengambil data, mohon tunggu...</div>
+        </div>
+        <div class="table-responsive">
+            <table id="mainTable" class="table table-bordered table-striped">
+                <thead class="thead-dark"><tr id="tableHeader"></tr></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ========== MODAL: Pilih Tabel ========== -->
+<div class="modal fade" id="modalTabel" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header"><h5>Manajemen Database</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+            <div class="modal-body">
+                <label>Buka atau Buat Tabel Baru:</label>
+                <div class="input-group mb-3">
+                    <input type="text" id="newTableNameInput" class="form-control" placeholder="Nama tabel..." oninput="filterTableList()">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" onclick="changeTable($('#newTableNameInput').val())">Proses</button>
+                    </div>
+                </div>
+                <h6>Tabel yang Tersedia: <span id="tableCount" class="text-muted font-weight-normal small"></span></h6>
+                <div id="dbTableList" class="d-flex flex-wrap"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== MODAL: Tambah Data ========== -->
+<div class="modal fade" id="modalTambah" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header"><h5>Input Data Baru</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+            <div class="modal-body">
+                <form id="formTambahData">
+                    <div class="row" id="formFieldsContainer"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-success" id="btnSimpan" onclick="submitData()">
+                    <span class="btn-spinner"></span>
+                    <span class="btn-text"><i class="fa fa-save"></i> Simpan Data</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== DEBUG PANEL ========== -->
+<div id="debugPanel">
+    <div class="debug-title">🛠 DEBUG — Polling &amp; Snapshot</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
+<script>
+// ================================================================
+// KONFIGURASI
+// ================================================================
+const API_BASE       = 'https://lidan-co-id.pages.dev/api/db_gbkp1';
+const API_SECRET_KEY = 'admin';
+const UI_USERNAME    = 'admin';
+const UI_PASSWORD    = 'admin';
+const POLL_INTERVAL  = 5000;    // polling setiap 5 detik
+const FETCH_TIMEOUT  = 8000;    // timeout per request: 8 detik max
+
+// ================================================================
+// SAFE STORAGE (fallback kalau localStorage diblokir Edge)
+// ================================================================
+const _mem = {};
+function safeGet(key) {
+    try { return localStorage.getItem(key); }
+    catch (e) { return _mem[key] || null; }
+}
+function safeSet(key, val) {
+    try { localStorage.setItem(key, val); }
+    catch (e) { _mem[key] = val; }
+}
+function safeRemove(key) {
+    try { localStorage.removeItem(key); } catch (e) { delete _mem[key]; }
+}
+
+// ================================================================
+// DEBUG
+// ================================================================
+const DBG_MAX = 80;
+function debug(cat, msg, type) {
+    const cls = { poll:'dbg-poll', fetch:'dbg-fetch', cmp:'dbg-cmp', render:'dbg-render', err:'dbg-err' }[type] || '';
+    const t   = new Date().toLocaleTimeString();
+    console.log(`[${cat}] ${msg}`);
+    const panel = $('#debugPanel');
+    panel.append(`<div class="${cls}"><span class="dbg-time">${t}</span>[${cat}] ${msg}</div>`);
+    const lines = panel.find('div:not(.debug-title)');
+    if (lines.length > DBG_MAX) lines.first().remove();
+    panel[0].scrollTop = panel[0].scrollHeight;
+}
+
+// ================================================================
+// HELPERS
+// ================================================================
+function authHeaders(extra = {}) {
+    return { 'X-Custom-Auth': API_SECRET_KEY, ...extra };
+}
+function showLoading(v) { $('#loadingOverlay').toggleClass('active', v); }
+function showStatus(msg, type) {
+    $('#inlineStatus').text(msg).removeClass('success error').addClass(type);
+    setTimeout(() => $('#inlineStatus').removeClass('success error'), 2500);
+}
+function setBtnLoading(btn, v) { btn.toggleClass('btn-loading', v); }
+
+// ── Fetch dengan timeout menggunakan AbortController ──
+// Kalau server tidak jawab dalam FETCH_TIMEOUT ms, request dibatalkan.
+// Ini mencegah fetch "menggantung" dan memblokir polling berikutnya.
+async function fetchWithTimeout(url, options = {}) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+    try {
+        const res = await fetch(url, { ...options, signal: controller.signal });
+        return res;
+    } finally {
+        clearTimeout(timer);   // batal timer kalau request sudah selesai
+    }
+}
+
+// ================================================================
+// STATE
+// ================================================================
+let currentTable     = safeGet('lastTable_gbkp') || 'cover';
+let lastDataSnapshot = '';
+let pollTimer        = null;
+let dataTableInstance = null;  // Instance DataTables
+let allTableNames    = [];
+let isFirstLoad      = true;
+let pollCount        = 0;
+let consecutiveFails = 0;   // hitung gagal berturut-turut untuk retry logic
+
+// ================================================================
+// INIT
+// ================================================================
+$(document).ready(function () {
+    debug('init', 'Halaman loaded', 'poll');
+    if (safeGet('isLoggedIn_gbkp') === 'true') {
+        debug('init', 'Sudah login → showMain()', 'poll');
+        showMain();
+    } else {
+        debug('init', 'Belum login', 'poll');
+    }
+
+    $('#loginForm').submit(function (e) {
+        e.preventDefault();
+        if ($('#username').val() === UI_USERNAME && $('#password').val() === UI_PASSWORD) {
+            safeSet('isLoggedIn_gbkp', 'true');
+            showMain();
+        } else { alert('Username atau Password Salah!'); }
+    });
+
+    $('#btnShowTables').on('click', loadAvailableTables);
+});
+
+function showMain() {
+    $('#loginSection').hide();
+    $('#mainSection').show();
+    $('#currentTableName').text(currentTable);
+    generateFormFields();
+    isFirstLoad = true;
+    debug('main', `Tabel="${currentTable}"`, 'poll');
+    loadData();
+    startPolling();
+}
+function logout() { stopPolling(); safeRemove('isLoggedIn_gbkp'); location.reload(); }
+
+// ================================================================
+// POLLING
+// ================================================================
+function startPolling() {
+    stopPolling();
+    debug('polling', `START — interval ${POLL_INTERVAL}ms`, 'poll');
+    pollTimer = setInterval(function () {
+        pollCount++;
+        debug('polling', `─── tick #${pollCount} ───`, 'poll');
+        loadData(true);
+    }, POLL_INTERVAL);
+}
+function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; debug('polling','STOP','poll'); }
+}
+
+// ================================================================
+// 1. LOAD DATA (GET)  —  inti dari polling
+// ================================================================
+async function loadData(isPolling = false) {
+    let url = `${API_BASE}?table=${currentTable}`;
+
+    if (isFirstLoad && !isPolling) showLoading(true);
+
+    debug('fetch', `GET ...table=${currentTable}`, 'fetch');
+
+    try {
+        const res = await fetchWithTimeout(url, { method: 'GET', headers: authHeaders() });
+        debug('fetch', `status=${res.status} ok=${res.ok}`, 'fetch');
+
+        if (!res.ok) {
+            // Server jawab, tapi status bukan 2xx
+            debug('fetch', `Server error: ${res.status}`, 'err');
+            consecutiveFails++;
+            // Hanya tampilkan pesan gagal kalau bukan polling
+            // (polling gagal wajar sesekali, tidak perlu bikin user khawatir)
+            if (!isPolling) showStatus(`Error ${res.status} dari server`, 'error');
+            return;
+        }
+
+        const result = await res.json();
+
+        // Validasi
+        if (!result || !Array.isArray(result.data)) {
+            debug('fetch', `⚠ result.data bukan array → ${JSON.stringify(result).slice(0,100)}`, 'err');
+            consecutiveFails++;
+            if (!isPolling) showStatus('Response tidak valid', 'error');
+            return;
+        }
+
+        // ── Polling berhasil → reset counter fail ──
+        consecutiveFails = 0;
+
+        debug('fetch', `Dapat ${result.data.length} baris`, 'fetch');
+
+        // Snapshot comparison
+        const newSnap = JSON.stringify(result.data);
+        debug('cmp', `new=${newSnap.length}c | old=${lastDataSnapshot.length}c`, 'cmp');
+
+        if (!isFirstLoad && newSnap === lastDataSnapshot) {
+            debug('cmp', '✓ SAMA → skip', 'cmp');
+            return;
+        }
+
+        debug('cmp', '✗ BERBEDA → render', 'render');
+        lastDataSnapshot = newSnap;
+
+        // Render Header
+        let hdr = '<th>Opsi</th><th>ID</th>';
+        for (let i = 1; i <= 20; i++) hdr += `<th>x_${String(i).padStart(2,'0')}</th>`;
+        $('#tableHeader').html(hdr);
+
+        // Render Body
+        const tbody = $('#tableBody').empty();
+        result.data.forEach(row => {
+            let tr = `<tr>
+                <td><button class="btn btn-sm btn-outline-danger" data-id="${row.id_x}" onclick="deleteRow(this,${row.id_x})">
+                    <span class="btn-spinner"></span><span class="btn-text"><i class="fa fa-trash"></i></span>
+                </button></td>
+                <td class="bg-light font-weight-bold">${row.id_x}</td>`;
+            for (let i = 1; i <= 20; i++) {
+                let col = `x_${String(i).padStart(2,'0')}`;
+                tr += `<td contenteditable="true" data-id="${row.id_x}" data-col="${col}" onblur="updateField(this)">${row[col]||''}</td>`;
+            }
+            tbody.append(tr + '</tr>');
+        });
+
+        debug('render', `Done — ${result.data.length} baris`, 'render');
+
+        // Initialize atau Update DataTable
+        if (dataTableInstance) {
+            // Jika sudah ada, destroy dulu
+            dataTableInstance.destroy();
+        }
+        
+        // Initialize DataTable dengan konfigurasi
+        dataTableInstance = $('#mainTable').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [[5, 10, 25, 50, 100, -1], [5, 10, 25, 50, 100, "Semua"]],
+            "language": {
+                "lengthMenu": "Tampilkan _MENU_ data per halaman",
+                "zeroRecords": "Data tidak ditemukan",
+                "info": "Menampilkan halaman _PAGE_ dari _PAGES_",
+                "infoEmpty": "Tidak ada data tersedia",
+                "infoFiltered": "(difilter dari _MAX_ total data)",
+                "search": "Cari:",
+                "paginate": {
+                    "first": "Pertama",
+                    "last": "Terakhir",
+                    "next": "Selanjutnya",
+                    "previous": "Sebelumnya"
+                }
+            },
+            "order": [[1, 'desc']], // Sort by ID column descending
+            "columnDefs": [
+                { "orderable": false, "targets": 0 } // Disable sorting on Action column
+            ],
+            "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>'
+        });
+
+        debug('render', 'DataTable initialized', 'render');
+
+
+    } catch (e) {
+        consecutiveFails++;
+
+        // Bedakan: timeout (AbortError) vs error jaringan lainnya
+        if (e.name === 'AbortError') {
+            debug('fetch', `⏱ TIMEOUT setelah ${FETCH_TIMEOUT}ms`, 'err');
+        } else {
+            debug('fetch', `ERROR: ${e.message}`, 'err');
+        }
+
+        // Hanya tampilkan "Gagal mengambil data" kalau:
+        // 1. Bukan polling (user-triggered), ATAU
+        // 2. Polling sudah gagal 3x berturut-turut (baru tampilkan peringatan)
+        if (!isPolling) {
+            showStatus('Gagal mengambil data', 'error');
+        } else if (consecutiveFails >= 3) {
+            debug('fetch', `⚠ ${consecutiveFails}x gagal berturut-turut`, 'err');
+            showStatus('Koneksi tidak stabil', 'error');
+        }
+
+    } finally {
+        if (isFirstLoad) { showLoading(false); isFirstLoad = false; }
+    }
+}
+
+// ================================================================
+// 2. SUBMIT (POST)
+// ================================================================
+async function submitData() {
+    const btn = $('#btnSimpan');
+    let payload = {};
+    $('#formTambahData').serializeArray().forEach(i => { if(i.value) payload[i.name]=i.value; });
+
+    setBtnLoading(btn, true);
+    debug('submit','POST...','fetch');
+
+    try {
+        const res = await fetchWithTimeout(`${API_BASE}?table=${currentTable}`, {
+            method:'POST',
+            headers: authHeaders({'Content-Type':'application/json'}),
+            body: JSON.stringify(payload)
+        });
+        debug('submit',`status=${res.status}`,'fetch');
+        if (res.ok) {
+            $('#modalTambah').modal('hide');
+            $('#formTambahData')[0].reset();
+            lastDataSnapshot = '';
+            debug('submit','OK → reset snapshot','render');
+            loadData();
+            showStatus('Data berhasil ditambahkan','success');
+        } else { showStatus('Gagal menambahkan data','error'); }
+    } catch(e) {
+        debug('submit', e.name === 'AbortError' ? 'TIMEOUT' : e.message, 'err');
+        showStatus('Timeout atau error jaringan','error');
+    } finally { setBtnLoading(btn, false); }
+}
+
+// ================================================================
+// 3. UPDATE INLINE (PUT)
+// ================================================================
+async function updateField(tdEl) {
+    const $td = $(tdEl), id = $td.data('id'), col = $td.data('col'), val = $td.text();
+    $td.css('background-color','#fff9c4').prop('contenteditable',false);
+
+    debug('update',`PUT id=${id} col=${col}...`,'fetch');
+
+    try {
+        let p = {}; p[col] = val;
+        const res = await fetchWithTimeout(`${API_BASE}?table=${currentTable}&id_x=${id}`, {
+            method:'PUT',
+            headers: authHeaders({'Content-Type':'application/json'}),
+            body: JSON.stringify(p)
+        });
+        debug('update',`status=${res.status}`,'fetch');
+        if (res.ok) {
+            $td.css('background-color','#d4edda');
+            lastDataSnapshot = '';
+            showStatus('Update berhasil','success');
+        } else { $td.css('background-color','#f8d7da'); showStatus('Update gagal','error'); }
+    } catch(e) {
+        debug('update', e.name === 'AbortError' ? 'TIMEOUT' : e.message, 'err');
+        $td.css('background-color','#f8d7da');
+        showStatus('Timeout atau error jaringan','error');
+    } finally {
+        $td.prop('contenteditable',true);
+        setTimeout(()=>$td.css('background-color',''),1500);
+    }
+}
+
+// ================================================================
+// 4. DELETE
+// ================================================================
+async function deleteRow(btnEl, id) {
+    if (!confirm('Hapus data ini selamanya?')) return;
+    const btn = $(btnEl);
+    setBtnLoading(btn, true);
+    debug('delete',`DELETE id=${id}`,'fetch');
+
+    try {
+        const res = await fetchWithTimeout(`${API_BASE}?table=${currentTable}&id_x=${id}`, {
+            method:'DELETE', headers: authHeaders()
+        });
+        debug('delete',`status=${res.status}`,'fetch');
+        if (res.ok) {
+            lastDataSnapshot = '';
+            debug('delete','OK → reset snapshot','render');
+            showStatus('Dihapus','success');
+            loadData();
+        } else { showStatus('Gagal menghapus','error'); }
+    } catch(e) {
+        debug('delete', e.name === 'AbortError' ? 'TIMEOUT' : e.message, 'err');
+        showStatus('Timeout atau error jaringan','error');
+    } finally { setBtnLoading(btn, false); }
+}
+
+// ================================================================
+// 5. GANTI TABEL
+// ================================================================
+function changeTable(name) {
+    if (!name) return;
+    currentTable = name;
+    safeSet('lastTable_gbkp', name);
+    $('#currentTableName').text(name);
+    $('#modalTabel').modal('hide');
+    $('#newTableNameInput').val('');
+    lastDataSnapshot = '';
+    isFirstLoad = true;
+    consecutiveFails = 0;
+    debug('table',`→ "${name}"`,'poll');
+    loadData();
+}
+
+// ================================================================
+// 6. LIST TABEL + FILTER
+// ================================================================
+async function loadAvailableTables() {
+    try {
+        const res = await fetchWithTimeout(`${API_BASE}?action=list_tables`, { method:'GET', headers: authHeaders() });
+        const result = await res.json();
+        allTableNames = result.tables || [];
+        debug('tables', `Dapat ${allTableNames.length} tabel`, 'fetch');
+        filterTableList();
+        $('#modalTabel').modal('show');
+    } catch(e) {
+        debug('tables', e.name === 'AbortError' ? 'TIMEOUT' : e.message, 'err');
+        showStatus('Gagal list tabel','error');
+    }
+}
+
+function filterTableList() {
+    const keyword  = $('#newTableNameInput').val().trim().toLowerCase();
+    const filtered = keyword ? allTableNames.filter(t => t.toLowerCase().includes(keyword)) : allTableNames;
+
+    const c = $('#dbTableList').empty();
+    filtered.forEach(t => {
+        const cls = t === currentTable ? 'btn-success' : 'btn-outline-secondary';
+        c.append(`<button class="btn ${cls} m-1" onclick="changeTable('${t}')">${t}</button>`);
+    });
+    $('#tableCount').text(keyword ? `${filtered.length} dari ${allTableNames.length}` : `${allTableNames.length} tabel`);
+}
+
+// ================================================================
+// 7. GENERATE FORM
+// ================================================================
+function generateFormFields() {
+    let h = '';
+    for (let i=1; i<=20; i++) {
+        let col = `x_${String(i).padStart(2,'0')}`;
+        h += `<div class="col-md-6 mb-2"><label class="small mb-0">${col}</label><input type="text" name="${col}" class="form-control form-control-sm"></div>`;
+    }
+    $('#formFieldsContainer').html(h);
+}
+
+// ================================================================
+// 8. HIDE DEBUG PANEL ON CLICK
+// ================================================================
+$(document).ready(function() {
+    // Klik di sembarang tempat untuk menyembunyikan debug panel
+    $(document).on('click', function(e) {
+        const debugPanel = $('#debugPanel');
+        // Cek apakah yang diklik bukan debug panel itu sendiri
+        if (!$(e.target).closest('#debugPanel').length) {
+            debugPanel.hide();
+        }
+    });
+    
+    // Klik pada debug panel tidak akan menyembunyikannya (stopPropagation)
+    $('#debugPanel').on('click', function(e) {
+        e.stopPropagation();
+    });
+});
+</script>
+</body>
+</html>
