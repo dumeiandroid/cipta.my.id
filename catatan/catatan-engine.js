@@ -1,14 +1,13 @@
 // =========================================================
-// catatan-engine.js — Engine tampilan tombol & popup catatan
+// catatan-engine.js — Engine tombol & popup catatan
+// Versi: 1.0 | 2026-02-24
 // =========================================================
-// Letakkan SEBELUM catatan.js di halaman:
-//   <script src="catatan-engine.js"></script>
-//   <script src="catatan.js"></script>
+// File ini TIDAK perlu diubah saat update catatan.
+// Yang perlu diedit hanya catatan.js
 // =========================================================
 
 (function () {
 
-  // ── Style ──
   const style = document.createElement('style');
   style.textContent = `
     .cn-btn {
@@ -68,7 +67,6 @@
       from { opacity: 0; transform: translateY(10px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-
     .cn-popup-header {
       display: flex;
       align-items: flex-start;
@@ -93,7 +91,6 @@
       flex-shrink: 0;
     }
     .cn-popup-close:hover { color: #e8eaf0; }
-
     .cn-popup-isi {
       font-size: 13px;
       color: #9ca3af;
@@ -101,7 +98,6 @@
       white-space: pre-wrap;
     }
     .cn-popup-isi strong { color: #e8eaf0; }
-
     .cn-popup-footer {
       margin-top: 16px;
       font-size: 11px;
@@ -111,7 +107,7 @@
   `;
   document.head.appendChild(style);
 
-  // ── Popup elemen (satu, dipakai semua tombol) ──
+  // Buat satu overlay yang dipakai semua tombol
   const overlay = document.createElement('div');
   overlay.className = 'cn-overlay';
   overlay.innerHTML = `
@@ -125,6 +121,7 @@
     </div>`;
   document.body.appendChild(overlay);
 
+  // Tutup popup
   overlay.addEventListener('click', function (e) {
     if (e.target === overlay) tutupPopup();
   });
@@ -133,7 +130,9 @@
     if (e.key === 'Escape') tutupPopup();
   });
 
-  function tutupPopup() { overlay.classList.remove('open'); }
+  function tutupPopup() {
+    overlay.classList.remove('open');
+  }
 
   function bukaPopup(key) {
     if (typeof CATATAN === 'undefined') {
@@ -162,15 +161,15 @@
     overlay.classList.add('open');
   }
 
-  // ── Init: scan semua [data-catatan] setelah DOM siap ──
+  // Scan semua [data-catatan] setelah DOM siap
   function init() {
     document.querySelectorAll('[data-catatan]').forEach(function (el) {
-      const key = el.getAttribute('data-catatan');
-      const isFloat = el.getAttribute('data-float') === 'true';
+      const key      = el.getAttribute('data-catatan');
+      const isFloat  = el.getAttribute('data-float') === 'true';
 
       const btn = document.createElement('button');
-      btn.className = 'cn-btn' + (isFloat ? ' cn-btn-float' : '');
-      btn.title = 'Lihat catatan: ' + key;
+      btn.className  = 'cn-btn' + (isFloat ? ' cn-btn-float' : '');
+      btn.title      = 'Lihat catatan: ' + key;
       btn.textContent = 'ℹ';
       btn.addEventListener('click', function () { bukaPopup(key); });
 
@@ -181,6 +180,9 @@
       }
     });
   }
+
+  // Expose global untuk dipanggil dari onclick inline di nav & card
+  window._cnBuka = bukaPopup;
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
