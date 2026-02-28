@@ -83,59 +83,11 @@ header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;alig
 .view-btn.active{background:var(--border);color:var(--text)}
 
 /* CONTENT */
-.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:20px;padding-top:60px;width:100%}
-.breadcrumb-bar{
-  padding:10px 20px;
-  border-bottom:1px solid var(--border);
-  background:rgba(10,11,15,.97);
-  backdrop-filter:blur(16px);
-  display:none;
-  align-items:center;
-  gap:6px;
-  flex-wrap:wrap;
-  z-index:90;
-  position:fixed;
-  top:65px;
-  left:280px;
-  right:0;
-  min-height:40px;
-  box-shadow:0 4px 16px rgba(0,0,0,.25);
-}
-.breadcrumb-bar .breadcrumb-part{
-  font-family:var(--mono);
-  font-size:12px;
-  color:var(--muted);
-  cursor:pointer;
-  transition:color .15s;
-  display:flex;
-  align-items:center;
-  gap:5px;
-  padding:3px 6px;
-  border-radius:6px;
-  transition:all .15s;
-}
-.breadcrumb-bar .breadcrumb-part:hover{
-  color:var(--accent);
-  background:rgba(79,142,247,.1);
-}
-.breadcrumb-bar .breadcrumb-part.current{
-  color:var(--text);
-  font-weight:700;
-  cursor:default;
-}
-.breadcrumb-bar .breadcrumb-part.current:hover{
-  background:none;
-  color:var(--text);
-}
-.breadcrumb-bar .breadcrumb-sep{
-  color:var(--border);
-  font-family:var(--mono);
-  font-size:12px;
-  user-select:none;
-}
-@media(max-width:768px){
-  .breadcrumb-bar{padding:8px 12px;}
-}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:20px;width:100%}
+.breadcrumb{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.breadcrumb-part{cursor:pointer;transition:color .15s}
+.breadcrumb-part:hover{color:var(--accent)}
+.breadcrumb-sep{color:var(--border)}
 .stats-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;width:100%}
 .stat-pill{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-family:var(--mono);font-size:11px;display:flex;align-items:center;gap:6px;flex-shrink:0}
 .stat-val{font-weight:700;color:var(--accent)}
@@ -307,11 +259,10 @@ header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;alig
   .app{grid-template-columns:1fr}
   .folder-grid{grid-template-columns:repeat(2,1fr) !important}
   .file-grid:not(.list-view){grid-template-columns:repeat(2,1fr) !important}
-  .content{padding:12px;padding-top:56px}
+  .content{padding:12px}
   .toolbar{padding:10px 12px;gap:8px}
   .bucket-title{font-size:16px}
   .btn{padding:8px 12px;font-size:12px}
-  .breadcrumb-bar{left:0;top:57px;padding:8px 12px;}
 }
 </style>
 </head>
@@ -356,7 +307,6 @@ header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;alig
     <div class="toolbar" id="toolbar">
       <div class="bucket-title" id="mainTitle">Pilih Bucket</div>
     </div>
-    <div class="breadcrumb-bar" id="breadcrumbBar" style="display:none"></div>
     <div class="content" id="mainContent">
       <div class="empty-state">
         <div class="empty-icon">☁️</div>
@@ -445,7 +395,6 @@ function renderBucketList(){
 async function selectBucket(id){
   activeBucket=buckets.find(b=>b.id===id);
   currentPrefix='';selectedFiles.clear();folderCache={};
-  const bb=document.getElementById('breadcrumbBar');if(bb)bb.style.display='none';
   renderBucketList();updateToolbar();await loadFolder('');
   if(window.innerWidth<=768)closeSidebar();
 }
@@ -487,7 +436,6 @@ async function loadFolder(prefix,forceRefresh=false){
     renderFolderContent(result,prefix);
   }catch(e){
     showContent(`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Gagal terhubung</div><div style="font-size:13px;margin-top:8px;color:var(--danger)">${e.message}</div><div style="font-size:12px;margin-top:12px;color:var(--muted)">Pastikan API sudah di-deploy dan domain benar</div><button class="btn btn-ghost" style="margin:16px auto 0;display:flex" onclick="loadFolder('${prefix}',true)">↻ Coba lagi</button></div>`);
-    const bb=document.getElementById('breadcrumbBar');if(bb)bb.style.display='none';
     setStatus('Error');
   }
 }
@@ -527,17 +475,10 @@ function renderFolderContent(data,prefix){
   const fld=q?visibleFolders.filter(f=>f.key.toLowerCase().includes(q)):visibleFolders;
 
   const parts=prefix.split('/').filter(Boolean);
-  // Build breadcrumb for sticky bar
-  let breadHtml=`<span class="breadcrumb-part" onclick="loadFolder('')">🏠 root</span>`;
+  let bread=`<div class="breadcrumb"><span class="breadcrumb-part" onclick="loadFolder('')">🏠 root</span>`;
   let built='';
-  parts.forEach((p,idx)=>{
-    built+=p+'/';
-    const path=built;
-    const isLast=idx===parts.length-1;
-    breadHtml+=`<span class="breadcrumb-sep">/</span><span class="breadcrumb-part${isLast?' current':''}" ${isLast?'':` onclick="loadFolder('${path}')"`}>${p}</span>`;
-  });
-  const bbEl=document.getElementById('breadcrumbBar');
-  if(bbEl){bbEl.innerHTML=breadHtml;bbEl.style.display='flex';}
+  parts.forEach(p=>{built+=p+'/';const path=built;bread+=`<span class="breadcrumb-sep">/</span><span class="breadcrumb-part" onclick="loadFolder('${path}')">${p}</span>`;});
+  bread+='</div>';
 
   const totalSize=ff.reduce((s,f)=>s+(f.size||0),0);
   const stats=`<div class="stats-bar">
@@ -562,7 +503,7 @@ function renderFolderContent(data,prefix){
     filesHtml=`<div class="empty-state"><div class="empty-icon">🗂️</div><div class="empty-title">${q?'Tidak ada hasil':'Folder kosong'}</div>${!q?`<button class="btn btn-primary" style="margin:16px auto 0;display:flex" onclick="showUpload()">⬆ Upload File</button>`:''}</div>`;
   }
 
-  showContent(stats+foldersHtml+filesHtml);
+  showContent(bread+stats+foldersHtml+filesHtml);
   if(selectedFiles.size>0)renderBulkBar();
 }
 
