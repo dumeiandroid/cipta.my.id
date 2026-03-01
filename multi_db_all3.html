@@ -214,10 +214,10 @@ tbody td[contenteditable="true"]:focus{background:rgba(79,156,249,.08);outline:1
     <div class="login-logo">Multi<span>DB</span></div>
     <div class="login-sub">Masuk untuk mengelola semua database</div>
     <form id="loginForm">
-      <div class="fg"><label class="lbl">Username</label><input id="uname" type="text" class="inp" placeholder="Username" required autofocus autocomplete="username"></div>
-      <div class="fg"><label class="lbl">Password</label><input id="upass" type="password" class="inp" placeholder="••••••" required autocomplete="current-password"></div>
-      <button type="submit" class="btn-login" id="btnLogin">MASUK</button>
-      <div id="loginErr" class="login-err"></div>
+      <div class="fg"><label class="lbl">Username</label><input id="uname" type="text" class="inp" placeholder="admin" required autofocus></div>
+      <div class="fg"><label class="lbl">Password</label><input id="upass" type="password" class="inp" placeholder="••••••" required></div>
+      <button type="submit" class="btn-login">MASUK</button>
+      <div id="loginErr" class="login-err">Username atau password salah.</div>
     </form>
   </div>
 </div>
@@ -325,42 +325,13 @@ function hdrs(idx){
 }
 
 // ── AUTH ──
-document.getElementById('loginForm').addEventListener('submit', async e=>{
+document.getElementById('loginForm').addEventListener('submit',e=>{
   e.preventDefault();
-  const username = document.getElementById('uname').value.trim();
-  const password = document.getElementById('upass').value;
-  const errEl    = document.getElementById('loginErr');
-  const btnEl    = document.getElementById('btnLogin');
-
-  errEl.style.display='none';
-  btnEl.textContent='Memeriksa...';
-  btnEl.disabled=true;
-
-  try {
-    // Cek ke tabel 'users' di database General (DBS[0])
-    const api = DBS[0].api;
-    const h   = {'Content-Type':'application/json','X-Custom-Auth':DBS[0].auth};
-    const url = `${api}?table=admins&x_01_eq=${encodeURIComponent(username)}&x_02_eq=${encodeURIComponent(password)}`;
-    const res = await fetch(url, { headers: h });
-    const data = await res.json();
-
-    if(data.data && data.data.length > 0){
-      ss('loggedIn','true');
-      ss('loggedUser', username);
-      showApp();
-    } else {
-      errEl.textContent = 'Username atau password salah.';
-      errEl.style.display='block';
-    }
-  } catch(err) {
-    errEl.textContent = 'Gagal terhubung ke server.';
-    errEl.style.display='block';
-  } finally {
-    btnEl.textContent='MASUK';
-    btnEl.disabled=false;
-  }
+  if(document.getElementById('uname').value==='admin'&&document.getElementById('upass').value==='admin'){
+    ss('loggedIn','true'); showApp();
+  } else { document.getElementById('loginErr').style.display='block'; }
 });
-function logout(){ sr('loggedIn'); sr('loggedUser'); location.reload(); }
+function logout(){ sr('loggedIn'); location.reload(); }
 
 // ── INIT ──
 window.addEventListener('DOMContentLoaded',()=>{ if(sg('loggedIn')==='true') showApp(); });
