@@ -77,6 +77,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .tbl-act-btn.clear:hover{color:#fbbf24;border-color:#fbbf24;background:rgba(251,191,36,.1);}
 .tbl-act-btn.drop:hover{color:var(--danger);border-color:var(--danger);background:rgba(248,113,113,.1);}
 .tbl-act-btn.reset:hover{color:var(--a2);border-color:var(--a2);background:rgba(167,139,250,.1);}
+.tbl-search-wrap{padding:6px 8px;border-bottom:1px solid var(--border);}
+.tbl-search-inp{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px 5px 26px;font-size:11px;font-family:'DM Mono',monospace;}
+.tbl-search-inp:focus{outline:none;border-color:var(--a1);}
+.tbl-search-wrap{position:relative;}
+.tbl-search-wrap i{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:10px;pointer-events:none;}
 .tbl-msg{padding:7px 12px 7px 26px;font-size:11px;font-family:'DM Mono',monospace;font-style:italic;color:var(--muted);}
 .tbl-err{color:var(--danger);}
 /* confirm modal */
@@ -306,7 +311,11 @@ function buildSkeleton(){
         <i class="fa fa-chevron-down grp-chev"></i>
       </div>
       <div class="tbl-list" id="tblList${i}">
-        <div class="tbl-msg">memuat…</div>
+        <div class="tbl-search-wrap">
+          <i class="fa fa-search"></i>
+          <input class="tbl-search-inp" id="srch${i}" type="text" placeholder="Cari tabel..." oninput="filterTblList(${i},this.value)">
+        </div>
+        <div id="tblItems${i}"><div class="tbl-msg">memuat…</div></div>
       </div>
     </div>
   `).join('');
@@ -327,10 +336,13 @@ async function fetchTables(idx){
   }
 }
 
-function renderTblList(idx){
-  const list=allTables[idx]||[];
-  const el=document.getElementById('tblList'+idx);
-  if(!list.length){ el.innerHTML='<div class="tbl-msg">kosong</div>'; return; }
+function renderTblList(idx, filter=''){
+  const raw=allTables[idx]||[];
+  const list=[...raw].sort((a,b)=>a.localeCompare(b))
+    .filter(t=> !filter || t.toLowerCase().includes(filter.toLowerCase()));
+  const el=document.getElementById('tblItems'+idx);
+  if(!el) return;
+  if(!list.length){ el.innerHTML='<div class="tbl-msg">'+(filter?'tidak ditemukan':'kosong')+'</div>'; return; }
   el.innerHTML='';
   list.forEach(t=>{
     const div=document.createElement('div');
@@ -358,6 +370,11 @@ function renderTblList(idx){
     });
     el.appendChild(div);
   });
+}
+
+function filterTblList(idx, val){
+  renderTblList(idx, val);
+  highlightActive();
 }
 
 function selectTable(dbIdx, tblName){
