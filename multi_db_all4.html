@@ -383,20 +383,8 @@ async function showApp(){
   buildSkeleton();
   loadData();
 
-  // Hanya fetch General (idx=0) saat startup — DB lain lazy load saat diklik
-  fetchTables(0).then(() => {
-    // Auto-expand group General
-    const grp0 = document.getElementById('grp0');
-    if (grp0) grp0.classList.remove('collapsed');
-  });
-
-  // Kalau DB aktif bukan General, fetch dan expand juga
-  if (activeDB !== 0) {
-    fetchTables(activeDB).then(() => {
-      const grpA = document.getElementById('grp' + activeDB);
-      if (grpA) grpA.classList.remove('collapsed');
-    });
-  }
+  // fetch list tabel sidebar di background tanpa blokir
+  DBS.forEach((_,i) => fetchTables(i));
 }
 
 // ── SIDEBAR SKELETON ──
@@ -502,16 +490,7 @@ function updateBadge(){
 }
 
 function toggleGroup(idx){
-  const grp = document.getElementById('grp'+idx);
-  const isCollapsed = grp.classList.contains('collapsed');
-
-  if (isCollapsed && !allTables[idx]) {
-    // Belum pernah fetch — fetch dulu lalu expand
-    grp.classList.remove('collapsed');
-    fetchTables(idx);
-  } else {
-    grp.classList.toggle('collapsed');
-  }
+  document.getElementById('grp'+idx).classList.toggle('collapsed');
 }
 
 function openNewTable(){
