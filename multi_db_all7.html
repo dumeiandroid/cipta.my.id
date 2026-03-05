@@ -518,11 +518,10 @@ function selectTable(dbIdx, tblName){
   activeDB=dbIdx; activeTbl=tblName;
   ss('activeDB',dbIdx);
   ss('tbl_'+DBS[dbIdx].key,tblName);
-  if(lazyObserver){ lazyObserver.disconnect(); lazyObserver=null; }
   updateBadge(); highlightActive();
   document.getElementById('searchBox').value='';
   loadData();
-  closeSidebar();
+  closeSidebar(); // tutup drawer di mobile setelah pilih tabel
 }
 
 function highlightActive(){
@@ -562,141 +561,41 @@ function openNewTable(){
 }
 
 // ── LOAD DATA ──
-// ════════════════════════════════════════════════
-//  LAZY LOAD / INFINITE SCROLL
-// ════════════════════════════════════════════════
-const PAGE_SIZE   = 50;   // baris per page
-let   lazyOffset  = 0;
-let   lazyTotal   = null; // null = belum tahu
-let   lazyLoading = false;
-let   lazyDB      = null;
-let   lazyTbl     = null;
-
 async function loadData(){
-  // Reset state lazy load
-  lazyOffset  = 0;
-  lazyTotal   = null;
-  lazyLoading = false;
-  lazyDB      = activeDB;
-  lazyTbl     = activeTbl;
-
-  const wrap = document.getElementById('tableWrap');
-  wrap.innerHTML = '<div class="loading-txt">Memuat data</div>';
-
-  // Buat kontainer tabel dulu (kosong), lalu append baris
-  const firstBatch = await fetchPage(0);
-  if(firstBatch === null){
-    wrap.innerHTML = '<div class="empty-state"><i class="fa fa-plug"></i><p>Gagal memuat data</p></div>';
-    return;
-  }
-  if(firstBatch.data.length === 0){
-    wrap.innerHTML = '<div class="empty-state"><i class="fa fa-inbox"></i><p>Tidak ada data</p></div>';
-    return;
-  }
-
-  // Simpan total jika API support pagination
-  lazyTotal  = firstBatch.total ?? null;
-  lazyOffset = firstBatch.data.length;
-
-  // Render tabel awal
-  wrap.innerHTML = buildTableShell();
-  appendRows(firstBatch.data);
-  appendSentinel();
-
-  // Attach infinite scroll observer
-  attachObserver();
-}
-
-async function fetchPage(offset){
-  const q   = document.getElementById('searchBox').value;
-  let url   = `${DBS[activeDB].api}?table=${activeTbl}&limit=${PAGE_SIZE}&offset=${offset}`;
-  if(q) url += `&x_01_like=${encodeURIComponent(q)}`;
+  const wrap=document.getElementById('tableWrap');
+  wrap.innerHTML='<div class="loading-txt">Memuat data</div>';
+  let url=`${DBS[activeDB].api}?table=${activeTbl}`;
+  const q=document.getElementById('searchBox').value;
+  if(q) url+=`&x_01_like=${encodeURIComponent(q)}`;
   try{
-    const res    = await fetch(url, { headers: hdrs(activeDB) });
-    const result = await res.json();
-    return result;
-  } catch(e){ return null; }
+    const res=await fetch(url,{headers:hdrs(activeDB)});
+    const result=await res.json();
+    renderTable(result.data||[]);
+  }catch(e){
+    wrap.innerHTML='<div class="empty-state"><i class="fa fa-plug"></i><p>Gagal memuat data</p></div>';
+  }
 }
 
-function buildTableShell(){
-  let h = '<table id="dataTable"><thead><tr><th style="width:34px"></th><th>ID</th>';
-  for(let i=1;i<=20;i++) h += `<th>x_${String(i).padStart(2,'0')}</th>`;
-  h += '</tr></thead><tbody id="dataTbody"></tbody></table>';
-  // Sentinel div untuk IntersectionObserver
-  h += '<div id="lazySentinel" style="height:1px;"></div>';
-  h += '<div id="lazySpinner" style="display:none;text-align:center;padding:14px;color:var(--muted);font-family:monospace;font-size:12px;">Memuat lebih...</div>';
-  return h;
-}
-
-function appendRows(rows){
-  const tbody = document.getElementById('dataTbody');
-  if(!tbody) return;
+function renderTable(rows){
+  if(!rows.length){
+    document.getElementById('tableWrap').innerHTML='<div class="empty-state"><i class="fa fa-inbox"></i><p>Tidak ada data</p></div>';
+    return;
+  }
+  let h='<table><thead><tr><th style="width:34px"></th><th>ID</th>';
+  for(let i=1;i<=20;i++) h+=`<th>x_${String(i).padStart(2,'0')}</th>`;
+  h+='</tr></thead><tbody>';
   rows.forEach(row=>{
-    const tr = document.createElement('tr');
-    let cells = `<td><button class="btn-del" onclick="deleteRow(${row.id_x})"><i class="fa fa-trash"></i></button></td>`;
-    cells += `<td class="td-id">${row.id_x}</td>`;
+    h+=`<tr><td><button class="btn-del" onclick="deleteRow(${row.id_x})"><i class="fa fa-trash"></i></button></td>`;
+    h+=`<td class="td-id">${row.id_x}</td>`;
     for(let i=1;i<=20;i++){
-      const col = `x_${String(i).padStart(2,'0')}`;
-      cells += `<td contenteditable="true" onblur="updateField(${row.id_x},'${col}',this.innerText)">${row[col]||''}</td>`;
+      const col=`x_${String(i).padStart(2,'0')}`;
+      h+=`<td contenteditable="true" onblur="updateField(${row.id_x},'${col}',this.innerText)">${row[col]||''}</td>`;
     }
-    tr.innerHTML = cells;
-    tbody.appendChild(tr);
+    h+='</tr>';
   });
-  updateRowCount();
+  h+='</tbody></table>';
+  document.getElementById('tableWrap').innerHTML=h;
 }
-
-function appendSentinel(){
-  // Sentinel sudah ada di shell, tidak perlu append lagi
-}
-
-let lazyObserver = null;
-function attachObserver(){
-  if(lazyObserver) lazyObserver.disconnect();
-  const sentinel = document.getElementById('lazySentinel');
-  if(!sentinel) return;
-  lazyObserver = new IntersectionObserver(async entries => {
-    if(!entries[0].isIntersecting) return;
-    if(lazyLoading) return;
-    // Cek apakah masih ada data
-    if(lazyTotal !== null && lazyOffset >= lazyTotal) return;
-    // Guard: pastikan DB/tabel tidak berganti saat async
-    if(lazyDB !== activeDB || lazyTbl !== activeTbl) return;
-
-    lazyLoading = true;
-    const spinner = document.getElementById('lazySpinner');
-    if(spinner) spinner.style.display = 'block';
-
-    const batch = await fetchPage(lazyOffset);
-    lazyLoading = false;
-    if(spinner) spinner.style.display = 'none';
-
-    if(!batch || batch.data.length === 0) {
-      // Tidak ada lagi data
-      if(lazyObserver) lazyObserver.disconnect();
-      return;
-    }
-    lazyTotal  = batch.total ?? lazyTotal;
-    lazyOffset += batch.data.length;
-    appendRows(batch.data);
-
-    // Jika sudah semua, stop observer
-    if(lazyTotal !== null && lazyOffset >= lazyTotal){
-      if(lazyObserver) lazyObserver.disconnect();
-    }
-  }, { rootMargin: '200px' });
-  lazyObserver.observe(sentinel);
-}
-
-function updateRowCount(){
-  const tbody = document.getElementById('dataTbody');
-  if(!tbody) return;
-  const count = tbody.querySelectorAll('tr').length;
-  const total = lazyTotal !== null ? ` / ${lazyTotal}` : '';
-  document.getElementById('badgeTbl').textContent = `${activeTbl} (${count}${total})`;
-}
-
-// Fungsi ini masih dipanggil dari beberapa tempat — redirect ke loadData
-function renderTable(rows){ loadData(); }
 
 // ── CRUD ──
 async function submitData(){

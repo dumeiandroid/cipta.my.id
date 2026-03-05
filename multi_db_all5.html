@@ -77,8 +77,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .tbl-act-btn.clear:hover{color:#fbbf24;border-color:#fbbf24;background:rgba(251,191,36,.1);}
 .tbl-act-btn.drop:hover{color:var(--danger);border-color:var(--danger);background:rgba(248,113,113,.1);}
 .tbl-act-btn.reset:hover{color:var(--a2);border-color:var(--a2);background:rgba(167,139,250,.1);}
-.tbl-act-btn.backup:hover{color:#60a5fa;border-color:#60a5fa;background:rgba(96,165,250,.1);}
-.tbl-act-btn.move:hover{color:#fb923c;border-color:#fb923c;background:rgba(251,146,60,.1);}
 .tbl-search-wrap{padding:6px 8px;border-bottom:1px solid var(--border);}
 .tbl-search-inp{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px 5px 26px;font-size:11px;font-family:'DM Mono',monospace;}
 .tbl-search-inp:focus{outline:none;border-color:var(--a1);}
@@ -286,26 +284,6 @@ tbody td[contenteditable="true"]:focus{background:rgba(79,156,249,.08);outline:1
   </div>
 </div>
 
-<!-- MODAL BACKUP ke DB1 -->
-<div class="modal-ov" id="modalBackup">
-  <div class="confirm-box" style="width:420px;max-width:95vw;">
-    <div class="confirm-icon" id="bkpIcon"></div>
-    <div class="confirm-title" id="bkpTitle"></div>
-    <div class="confirm-sub" id="bkpSub"></div>
-    <div style="margin-bottom:8px;">
-      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;">Nama tabel tujuan di DB1</label>
-      <input type="text" class="confirm-inp" id="bkpDestInp" placeholder="Contoh: backup_a1..." autocomplete="off" style="margin-bottom:0;" oninput="resetBkpCheck()">
-    </div>
-    <div id="bkpCheckMsg" style="font-size:12px;min-height:20px;margin-bottom:10px;font-family:'DM Mono',monospace;padding:0 2px;"></div>
-    <div id="bkpProgress" style="display:none;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:10px;text-align:center;padding:8px;background:var(--s2);border-radius:7px;"></div>
-    <div class="confirm-ftr">
-      <button class="conf-cancel" id="bkpCancelBtn" onclick="closeModal('modalBackup')">Batal</button>
-      <button class="conf-exec ready" id="bkpCheckBtn" onclick="checkBackupDest()" style="background:var(--a1);color:#000;"><i class="fa fa-magnifying-glass"></i> Cek Nama</button>
-      <button class="conf-exec ready" id="bkpExecBtn" onclick="execBackup()" style="display:none;background:#60a5fa;color:#000;"><i class="fa fa-cloud-arrow-up"></i> <span id="bkpExecLbl">Backup</span></button>
-    </div>
-  </div>
-</div>
-
 <!-- MODAL TAMBAH -->
 <div class="modal-ov" id="modalAdd">
   <div class="modal-box">
@@ -336,10 +314,6 @@ const DBS = [
   { name:'DB5', api:'https://lidan-co-id.pages.dev/api/db5', key:'db5', auth:'admin', color:'#4ade80' },
 
 ];
-
-// Index DB1 & state backup — global agar tersedia sebelum fungsi apapun dipanggil
-const DB1_IDX       = DBS.findIndex(d => d.key === 'db1');
-let   bkpDestVerified = false;
 
 let activeDB  = 0;
 let activeTbl = 'cover';
@@ -489,11 +463,9 @@ function renderTblList(idx, filter=''){
       '<i class="fa fa-table tbl-icon"></i>'+
       '<span class="tbl-name">'+t+'</span>'+
       '<div class="tbl-actions">'+
-        '<button class="tbl-act-btn clear"  data-act="clear"  data-db="'+idx+'" data-tbl="'+t+'" title="Kosongkan data"><i class="fa fa-eraser"></i></button>'+
-        '<button class="tbl-act-btn drop"   data-act="drop"   data-db="'+idx+'" data-tbl="'+t+'" title="Hapus tabel"><i class="fa fa-trash"></i></button>'+
-        '<button class="tbl-act-btn reset"  data-act="reset"  data-db="'+idx+'" data-tbl="'+t+'" title="Hapus & buat ulang"><i class="fa fa-rotate"></i></button>'+
-        '<button class="tbl-act-btn backup" data-act="backup" data-db="'+idx+'" data-tbl="'+t+'" title="Backup ke DB1 (sumber tetap)"><i class="fa fa-cloud-arrow-up"></i></button>'+
-        '<button class="tbl-act-btn move"   data-act="move"   data-db="'+idx+'" data-tbl="'+t+'" title="Backup & Kosongkan ke DB1"><i class="fa fa-box-archive"></i></button>'+
+        '<button class="tbl-act-btn clear" data-act="clear" data-db="'+idx+'" data-tbl="'+t+'" title="Kosongkan data"><i class="fa fa-eraser"></i></button>'+
+        '<button class="tbl-act-btn drop"  data-act="drop"  data-db="'+idx+'" data-tbl="'+t+'" title="Hapus tabel"><i class="fa fa-trash"></i></button>'+
+        '<button class="tbl-act-btn reset" data-act="reset" data-db="'+idx+'" data-tbl="'+t+'" title="Hapus & buat ulang"><i class="fa fa-rotate"></i></button>'+
       '</div>';
     div.addEventListener('click', function(e){
       if(e.target.closest('.tbl-actions')) return;
@@ -518,11 +490,10 @@ function selectTable(dbIdx, tblName){
   activeDB=dbIdx; activeTbl=tblName;
   ss('activeDB',dbIdx);
   ss('tbl_'+DBS[dbIdx].key,tblName);
-  if(lazyObserver){ lazyObserver.disconnect(); lazyObserver=null; }
   updateBadge(); highlightActive();
   document.getElementById('searchBox').value='';
   loadData();
-  closeSidebar();
+  closeSidebar(); // tutup drawer di mobile setelah pilih tabel
 }
 
 function highlightActive(){
@@ -562,141 +533,41 @@ function openNewTable(){
 }
 
 // ── LOAD DATA ──
-// ════════════════════════════════════════════════
-//  LAZY LOAD / INFINITE SCROLL
-// ════════════════════════════════════════════════
-const PAGE_SIZE   = 50;   // baris per page
-let   lazyOffset  = 0;
-let   lazyTotal   = null; // null = belum tahu
-let   lazyLoading = false;
-let   lazyDB      = null;
-let   lazyTbl     = null;
-
 async function loadData(){
-  // Reset state lazy load
-  lazyOffset  = 0;
-  lazyTotal   = null;
-  lazyLoading = false;
-  lazyDB      = activeDB;
-  lazyTbl     = activeTbl;
-
-  const wrap = document.getElementById('tableWrap');
-  wrap.innerHTML = '<div class="loading-txt">Memuat data</div>';
-
-  // Buat kontainer tabel dulu (kosong), lalu append baris
-  const firstBatch = await fetchPage(0);
-  if(firstBatch === null){
-    wrap.innerHTML = '<div class="empty-state"><i class="fa fa-plug"></i><p>Gagal memuat data</p></div>';
-    return;
-  }
-  if(firstBatch.data.length === 0){
-    wrap.innerHTML = '<div class="empty-state"><i class="fa fa-inbox"></i><p>Tidak ada data</p></div>';
-    return;
-  }
-
-  // Simpan total jika API support pagination
-  lazyTotal  = firstBatch.total ?? null;
-  lazyOffset = firstBatch.data.length;
-
-  // Render tabel awal
-  wrap.innerHTML = buildTableShell();
-  appendRows(firstBatch.data);
-  appendSentinel();
-
-  // Attach infinite scroll observer
-  attachObserver();
-}
-
-async function fetchPage(offset){
-  const q   = document.getElementById('searchBox').value;
-  let url   = `${DBS[activeDB].api}?table=${activeTbl}&limit=${PAGE_SIZE}&offset=${offset}`;
-  if(q) url += `&x_01_like=${encodeURIComponent(q)}`;
+  const wrap=document.getElementById('tableWrap');
+  wrap.innerHTML='<div class="loading-txt">Memuat data</div>';
+  let url=`${DBS[activeDB].api}?table=${activeTbl}`;
+  const q=document.getElementById('searchBox').value;
+  if(q) url+=`&x_01_like=${encodeURIComponent(q)}`;
   try{
-    const res    = await fetch(url, { headers: hdrs(activeDB) });
-    const result = await res.json();
-    return result;
-  } catch(e){ return null; }
+    const res=await fetch(url,{headers:hdrs(activeDB)});
+    const result=await res.json();
+    renderTable(result.data||[]);
+  }catch(e){
+    wrap.innerHTML='<div class="empty-state"><i class="fa fa-plug"></i><p>Gagal memuat data</p></div>';
+  }
 }
 
-function buildTableShell(){
-  let h = '<table id="dataTable"><thead><tr><th style="width:34px"></th><th>ID</th>';
-  for(let i=1;i<=20;i++) h += `<th>x_${String(i).padStart(2,'0')}</th>`;
-  h += '</tr></thead><tbody id="dataTbody"></tbody></table>';
-  // Sentinel div untuk IntersectionObserver
-  h += '<div id="lazySentinel" style="height:1px;"></div>';
-  h += '<div id="lazySpinner" style="display:none;text-align:center;padding:14px;color:var(--muted);font-family:monospace;font-size:12px;">Memuat lebih...</div>';
-  return h;
-}
-
-function appendRows(rows){
-  const tbody = document.getElementById('dataTbody');
-  if(!tbody) return;
+function renderTable(rows){
+  if(!rows.length){
+    document.getElementById('tableWrap').innerHTML='<div class="empty-state"><i class="fa fa-inbox"></i><p>Tidak ada data</p></div>';
+    return;
+  }
+  let h='<table><thead><tr><th style="width:34px"></th><th>ID</th>';
+  for(let i=1;i<=20;i++) h+=`<th>x_${String(i).padStart(2,'0')}</th>`;
+  h+='</tr></thead><tbody>';
   rows.forEach(row=>{
-    const tr = document.createElement('tr');
-    let cells = `<td><button class="btn-del" onclick="deleteRow(${row.id_x})"><i class="fa fa-trash"></i></button></td>`;
-    cells += `<td class="td-id">${row.id_x}</td>`;
+    h+=`<tr><td><button class="btn-del" onclick="deleteRow(${row.id_x})"><i class="fa fa-trash"></i></button></td>`;
+    h+=`<td class="td-id">${row.id_x}</td>`;
     for(let i=1;i<=20;i++){
-      const col = `x_${String(i).padStart(2,'0')}`;
-      cells += `<td contenteditable="true" onblur="updateField(${row.id_x},'${col}',this.innerText)">${row[col]||''}</td>`;
+      const col=`x_${String(i).padStart(2,'0')}`;
+      h+=`<td contenteditable="true" onblur="updateField(${row.id_x},'${col}',this.innerText)">${row[col]||''}</td>`;
     }
-    tr.innerHTML = cells;
-    tbody.appendChild(tr);
+    h+='</tr>';
   });
-  updateRowCount();
+  h+='</tbody></table>';
+  document.getElementById('tableWrap').innerHTML=h;
 }
-
-function appendSentinel(){
-  // Sentinel sudah ada di shell, tidak perlu append lagi
-}
-
-let lazyObserver = null;
-function attachObserver(){
-  if(lazyObserver) lazyObserver.disconnect();
-  const sentinel = document.getElementById('lazySentinel');
-  if(!sentinel) return;
-  lazyObserver = new IntersectionObserver(async entries => {
-    if(!entries[0].isIntersecting) return;
-    if(lazyLoading) return;
-    // Cek apakah masih ada data
-    if(lazyTotal !== null && lazyOffset >= lazyTotal) return;
-    // Guard: pastikan DB/tabel tidak berganti saat async
-    if(lazyDB !== activeDB || lazyTbl !== activeTbl) return;
-
-    lazyLoading = true;
-    const spinner = document.getElementById('lazySpinner');
-    if(spinner) spinner.style.display = 'block';
-
-    const batch = await fetchPage(lazyOffset);
-    lazyLoading = false;
-    if(spinner) spinner.style.display = 'none';
-
-    if(!batch || batch.data.length === 0) {
-      // Tidak ada lagi data
-      if(lazyObserver) lazyObserver.disconnect();
-      return;
-    }
-    lazyTotal  = batch.total ?? lazyTotal;
-    lazyOffset += batch.data.length;
-    appendRows(batch.data);
-
-    // Jika sudah semua, stop observer
-    if(lazyTotal !== null && lazyOffset >= lazyTotal){
-      if(lazyObserver) lazyObserver.disconnect();
-    }
-  }, { rootMargin: '200px' });
-  lazyObserver.observe(sentinel);
-}
-
-function updateRowCount(){
-  const tbody = document.getElementById('dataTbody');
-  if(!tbody) return;
-  const count = tbody.querySelectorAll('tr').length;
-  const total = lazyTotal !== null ? ` / ${lazyTotal}` : '';
-  document.getElementById('badgeTbl').textContent = `${activeTbl} (${count}${total})`;
-}
-
-// Fungsi ini masih dipanggil dari beberapa tempat — redirect ke loadData
-function renderTable(rows){ loadData(); }
 
 // ── CRUD ──
 async function submitData(){
@@ -736,36 +607,7 @@ const ACTION_CFG = {
   },
 };
 
-function openBackupModal(type, dbIdx, tblName){
-  const isMove = (type === 'move');
-  pendingAction = { type, dbIdx, tblName };
-  bkpDestVerified = false;
-
-  document.getElementById('bkpIcon').textContent    = isMove ? '📦' : '☁️';
-  document.getElementById('bkpTitle').innerHTML     = isMove
-    ? `Backup & Kosongkan <span style="color:var(--a1)">${tblName}</span>`
-    : `Backup <span style="color:var(--a1)">${tblName}</span> ke DB1`;
-  document.getElementById('bkpSub').innerHTML       = isMove
-    ? `Semua data dari <code>${tblName}</code> (<strong>${DBS[dbIdx].name}</strong>) akan dipindahkan ke DB1, lalu tabel sumber dikosongkan.`
-    : `Semua data dari <code>${tblName}</code> (<strong>${DBS[dbIdx].name}</strong>) akan disalin ke DB1. Tabel sumber <strong>tidak</strong> dikosongkan.`;
-  document.getElementById('bkpExecLbl').textContent = isMove ? 'Pindahkan & Kosongkan' : 'Backup';
-  document.getElementById('bkpExecBtn').style.background = isMove ? '#fb923c' : '#60a5fa';
-  document.getElementById('bkpDestInp').value        = tblName;
-  document.getElementById('bkpCheckMsg').textContent = '';
-  document.getElementById('bkpCheckMsg').style.color = '';
-  document.getElementById('bkpProgress').style.display = 'none';
-  document.getElementById('bkpProgress').innerHTML     = '';
-  document.getElementById('bkpCheckBtn').style.display = '';
-  document.getElementById('bkpCheckBtn').disabled      = false;
-  document.getElementById('bkpCheckBtn').innerHTML     = '<i class="fa fa-magnifying-glass"></i> Cek Nama';
-  document.getElementById('bkpExecBtn').style.display  = 'none';
-
-  openModal('modalBackup');
-  setTimeout(()=>document.getElementById('bkpDestInp').focus(), 150);
-}
-
 function askTableAction(type, dbIdx, tblName){
-  if(type === 'backup' || type === 'move'){ openBackupModal(type, dbIdx, tblName); return; }
   pendingAction = { type, dbIdx, tblName };
   const cfg = ACTION_CFG[type];
   document.getElementById('confIcon').textContent  = cfg.icon;
@@ -834,158 +676,6 @@ async function execTableAction(){
   // Refresh tampilan tabel yang aktif
   if(activeDB===dbIdx && activeTbl===tblName) loadData();
   else selectTable(dbIdx, tblName);
-}
-
-// ════════════════════════════════════════════════
-//  BACKUP ke DB1
-// ════════════════════════════════════════════════
-
-function resetBkpCheck(){
-  bkpDestVerified = false;
-  document.getElementById('bkpCheckMsg').textContent = '';
-  document.getElementById('bkpCheckMsg').style.color = '';
-  document.getElementById('bkpExecBtn').style.display = 'none';
-  document.getElementById('bkpCheckBtn').style.display = '';
-  document.getElementById('bkpCheckBtn').disabled = false;
-  document.getElementById('bkpCheckBtn').innerHTML = '<i class="fa fa-magnifying-glass"></i> Cek Nama';
-}
-
-async function checkBackupDest(){
-  const destName = document.getElementById('bkpDestInp').value.trim();
-  const msgEl    = document.getElementById('bkpCheckMsg');
-  const checkBtn = document.getElementById('bkpCheckBtn');
-
-  if(!destName){
-    msgEl.style.color = 'var(--danger)'; msgEl.textContent = '⚠ Nama tabel tujuan tidak boleh kosong.'; return;
-  }
-  if(DB1_IDX < 0){
-    msgEl.style.color = 'var(--danger)'; msgEl.textContent = '⚠ DB1 tidak ditemukan dalam konfigurasi DBS.'; return;
-  }
-  checkBtn.disabled = true;
-  checkBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Mengecek...';
-  msgEl.textContent = '';
-
-  try {
-    const res  = await fetch(`${DBS[DB1_IDX].api}?action=list_tables`, { headers: hdrs(DB1_IDX) });
-    const data = await res.json();
-    const existing = (data.tables||[]).map(t => t.toLowerCase());
-    if(existing.includes(destName.toLowerCase())){
-      msgEl.style.color = 'var(--danger)';
-      msgEl.innerHTML   = `❌ Tabel <code style="background:var(--s2);padding:1px 5px;border-radius:3px;">${destName}</code> sudah ada di DB1. Gunakan nama lain.`;
-      bkpDestVerified = false;
-      checkBtn.disabled = false;
-      checkBtn.innerHTML = '<i class="fa fa-magnifying-glass"></i> Cek Nama';
-    } else {
-      msgEl.style.color = 'var(--a3)';
-      msgEl.innerHTML   = `✅ Nama <code style="background:var(--s2);padding:1px 5px;border-radius:3px;">${destName}</code> tersedia di DB1.`;
-      bkpDestVerified = true;
-      checkBtn.style.display = 'none';
-      document.getElementById('bkpExecBtn').style.display = '';
-    }
-  } catch(e) {
-    msgEl.style.color = 'var(--danger)'; msgEl.textContent = '⚠ Gagal mengecek DB1. Periksa koneksi.';
-    checkBtn.disabled = false;
-    checkBtn.innerHTML = '<i class="fa fa-magnifying-glass"></i> Cek Nama';
-  }
-}
-
-async function execBackup(){
-  if(!pendingAction || !bkpDestVerified) return;
-  const { type, dbIdx, tblName } = pendingAction;
-  const isMove    = (type === 'move');
-  const destName  = document.getElementById('bkpDestInp').value.trim();
-  const progEl    = document.getElementById('bkpProgress');
-  const execBtn   = document.getElementById('bkpExecBtn');
-  const cancelBtn = document.getElementById('bkpCancelBtn');
-
-  execBtn.disabled = cancelBtn.disabled = true;
-  progEl.style.display = 'block';
-  const log = msg => { progEl.innerHTML = msg; };
-
-  try {
-    // ── Langkah 1: Ambil SEMUA data sumber (max 500 per page) ──
-    log('⏳ Mengambil data dari sumber...');
-    let allRows = [], offset = 0;
-    const LIMIT = 500;
-    while(true){
-      const url = `${DBS[dbIdx].api}?table=${tblName}&limit=${LIMIT}&offset=${offset}`;
-      const res = await fetch(url, { headers: hdrs(dbIdx) });
-      if(!res.ok) throw new Error(`Gagal fetch sumber (${res.status})`);
-      const json = await res.json();
-      const rows = json.data || [];
-      allRows = allRows.concat(rows);
-      // Jika API support pagination (ada field total), lanjut loop; jika tidak, cukup sekali
-      if(json.total !== undefined){
-        if(allRows.length >= json.total) break;
-        offset += LIMIT;
-      } else {
-        break; // API lama tanpa pagination — ambil sekali
-      }
-    }
-
-    if(allRows.length === 0){
-      log('ℹ️ Tabel sumber kosong — tidak ada data untuk diproses.');
-      await new Promise(r=>setTimeout(r,1800)); closeModal('modalBackup'); return;
-    }
-
-    log(`⏳ ${allRows.length} baris ditemukan. Mengirim bulk insert ke DB1 → <b>${destName}</b>...`);
-
-    // ── Langkah 2: Kirim bulk insert (semua sekaligus, API pakai batch D1) ──
-    // Bersihkan payload: hapus id_x agar auto-increment berjalan
-    const payload = allRows.map(row => {
-      const r = {};
-      for(let c=1;c<=20;c++){
-        const col = 'x_'+String(c).padStart(2,'0');
-        if(row[col] !== undefined && row[col] !== null && row[col] !== '') r[col] = row[col];
-      }
-      return r;
-    });
-
-    // Kirim dalam chunk 500 agar tidak timeout di edge network
-    const CHUNK = 500;
-    let totalInserted = 0;
-    for(let i = 0; i < payload.length; i += CHUNK){
-      const chunk = payload.slice(i, i + CHUNK);
-      log(`⏳ Bulk insert chunk ${Math.floor(i/CHUNK)+1}/${Math.ceil(payload.length/CHUNK)} (${i+1}–${Math.min(i+CHUNK, payload.length)} dari ${payload.length})...`);
-      const r = await fetch(`${DBS[DB1_IDX].api}?table=${destName}&action=bulk_insert`, {
-        method: 'POST',
-        headers: hdrs(DB1_IDX),
-        body: JSON.stringify(chunk)
-      });
-      if(!r.ok){
-        const txt = await r.text();
-        throw new Error(`Bulk insert gagal (${r.status}): ${txt}`);
-      }
-      const rj = await r.json();
-      totalInserted += rj.inserted || chunk.length;
-    }
-
-    log(`✅ ${totalInserted} baris berhasil dikirim ke DB1 → <b>${destName}</b>.`);
-
-    // ── Langkah 3: Kosongkan sumber (hanya mode 'move') ──
-    if(isMove){
-      log(`⏳ Mengosongkan tabel sumber...`);
-      const cr = await fetch(`${DBS[dbIdx].api}?table=${tblName}&action=clear_table`,
-        { method:'DELETE', headers:hdrs(dbIdx) });
-      if(!cr.ok){ log(`⚠️ Data disalin ke DB1 tapi gagal kosongkan sumber (${cr.status}).`); await new Promise(r=>setTimeout(r,3000)); closeModal('modalBackup'); return; }
-      log(`✅ Selesai! ${totalInserted} baris dipindahkan ke DB1 → <b>${destName}</b> &amp; sumber dikosongkan.`);
-    } else {
-      log(`✅ Selesai! ${totalInserted} baris dicopy ke DB1 → <b>${destName}</b>. Sumber tidak diubah.`);
-    }
-
-    allTables[DB1_IDX] = null;
-    if(activeDB===dbIdx && activeTbl===tblName) loadData();
-    const grp1 = document.getElementById('grp'+DB1_IDX);
-    if(grp1 && !grp1.classList.contains('collapsed')) fetchTables(DB1_IDX);
-
-    await new Promise(r=>setTimeout(r,2000));
-    closeModal('modalBackup');
-  } catch(e){
-    log(`❌ Error: ${e.message}`);
-    await new Promise(r=>setTimeout(r,3000)); closeModal('modalBackup');
-  } finally {
-    execBtn.disabled = cancelBtn.disabled = false;
-  }
 }
 
 
