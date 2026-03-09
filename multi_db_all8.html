@@ -594,8 +594,8 @@ async function loadData(){
     return;
   }
 
-  // Simpan total — API pakai field 'count', bukan 'total'
-  lazyTotal  = firstBatch.total ?? firstBatch.count ?? null;
+  // Simpan total jika API support pagination
+  lazyTotal  = firstBatch.total ?? null;
   lazyOffset = firstBatch.data.length;
 
   // Render tabel awal
@@ -671,21 +671,16 @@ function attachObserver(){
     if(spinner) spinner.style.display = 'none';
 
     if(!batch || batch.data.length === 0) {
+      // Tidak ada lagi data
       if(lazyObserver) lazyObserver.disconnect();
       return;
     }
-    // API pakai field 'count', bukan 'total'
-    lazyTotal  = batch.total ?? batch.count ?? lazyTotal;
+    lazyTotal  = batch.total ?? lazyTotal;
     lazyOffset += batch.data.length;
     appendRows(batch.data);
 
-    // Stop jika sudah semua data
+    // Jika sudah semua, stop observer
     if(lazyTotal !== null && lazyOffset >= lazyTotal){
-      if(lazyObserver) lazyObserver.disconnect();
-      return;
-    }
-    // Fallback: jika API abaikan offset (selalu return data sama), stop setelah batch < PAGE_SIZE
-    if(lazyTotal === null && batch.data.length < PAGE_SIZE){
       if(lazyObserver) lazyObserver.disconnect();
     }
   }, { rootMargin: '200px' });
