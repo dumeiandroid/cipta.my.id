@@ -334,14 +334,28 @@ $(document).ready(function() {
         return fallbackTab ? fallbackTab.id : TAB_CONFIG[0].id;
     }
 
-    // Bangun tombol tab dari TAB_CONFIG ke dalam card
-    function buildTabs(mode) {
+    // Hitung total kunjungan per tab dari aggregation
+    function calcTabTotals(aggregation) {
+        const totals = {};
+        TAB_CONFIG.forEach(tab => { totals[tab.id] = 0; });
+        Object.keys(aggregation).forEach(url => {
+            const cat = classifyUrl(url);
+            if (totals[cat] !== undefined) totals[cat] += aggregation[url].x_02_total;
+        });
+        return totals;
+    }
+
+    // Bangun tombol tab dari TAB_CONFIG ke dalam card, dengan badge jumlah
+    function buildTabs(mode, aggregation) {
         const container = $(`#url-filter-tabs-${mode}`);
         container.html('');
         const defaultTab = activeTabState[mode] || TAB_CONFIG[0].id;
+        const totals = aggregation ? calcTabTotals(aggregation) : {};
         TAB_CONFIG.forEach(tab => {
             const isActive = tab.id === defaultTab;
-            const btn = $(`<button class="tab-btn${isActive ? ' ' + tab.activeClass : ''}" data-mode="${mode}" data-tab="${tab.id}">${tab.label}</button>`);
+            const count = totals[tab.id] !== undefined ? totals[tab.id] : '';
+            const badge = count !== '' ? ` (${formatNumber(count)})` : '';
+            const btn = $(`<button class="tab-btn${isActive ? ' ' + tab.activeClass : ''}" data-mode="${mode}" data-tab="${tab.id}">${tab.label}${badge}</button>`);
             container.append(btn);
         });
     }
@@ -353,15 +367,19 @@ $(document).ready(function() {
         const allUrls = Object.keys(aggregation);
         const filteredUrls = allUrls.filter(url => classifyUrl(url) === activeTab);
 
-        // Total hanya URL di tab ini → ditampilkan di angka besar
-        const tabTotal = filteredUrls.reduce((sum, url) => sum + aggregation[url].x_02_total, 0);
-        $(`#${mode}-total`).text(formatNumber(tabTotal));
-
-        // Persentase dihitung dari total semua URL
+        // Grand total semua URL (untuk persentase & sub-info)
         const grandTotal = allUrls.reduce((sum, url) => sum + aggregation[url].x_02_total, 0);
+        // Tab total = hanya URL di tab aktif
+        const tabTotal = filteredUrls.reduce((sum, url) => sum + aggregation[url].x_02_total, 0);
+
+        // Tampilkan tabTotal di angka besar; jika berbeda dari grandTotal, tampilkan grand total kecil di samping
+        const subInfo = (tabTotal !== grandTotal)
+            ? ` <small class="text-muted fw-normal" style="font-size:0.55em">/ ${formatNumber(grandTotal)} total</small>`
+            : '';
+        $(`#${mode}-total`).html(formatNumber(tabTotal) + subInfo);
 
         const tabCfg = TAB_CONFIG.find(t => t.id === activeTab);
-        const tabLabel = tabCfg ? tabCfg.label.replace(/[^a-zA-Z\s\/]/g, '').trim() : activeTab;
+        const tabLabel = tabCfg ? tabCfg.label.replace(/[^\w\s\/]/g, '').trim() : activeTab;
 
         if (filteredUrls.length === 0) {
             detailsContainer.html(`<div class="col-12 text-muted">Tidak ada URL ${tabLabel} pada periode ini.</div>`);
@@ -411,10 +429,8 @@ $(document).ready(function() {
         // Simpan data untuk dipakai ulang saat ganti tab
         cardData[mode] = { aggregation, dateFilter };
 
-        // Bangun tab dari config (hanya sekali, atau rebuild jika config berubah)
-        if ($(`#url-filter-tabs-${mode}`).children().length === 0) {
-            buildTabs(mode);
-        }
+        // Selalu rebuild tab agar badge angka ikut terupdate saat auto-refresh
+        buildTabs(mode, aggregation);
 
         // Gunakan tab aktif yang tersimpan, default tab pertama
         const activeTab = activeTabState[mode] || TAB_CONFIG[0].id;
