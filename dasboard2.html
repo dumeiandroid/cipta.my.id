@@ -17,31 +17,9 @@
 
         /* MODIFIKASI: Gaya untuk Scrollbar di Detail Card */
         .card-footer.scrollable-details {
-            max-height: 250px;
-            overflow-y: auto;
+            max-height: 250px; /* Tinggi maksimum yang diizinkan */
+            overflow-y: auto; /* Aktifkan scrollbar vertikal jika melebihi batas */
         }
-        /* Tab filter URL */
-        .url-filter-tabs {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 6px;
-            flex-wrap: wrap;
-        }
-        .url-filter-tabs .tab-btn {
-            font-size: 0.7rem;
-            padding: 2px 8px;
-            border-radius: 20px;
-            border: 1px solid #dee2e6;
-            background: #f8f9fa;
-            color: #6c757d;
-            cursor: pointer;
-            transition: all .15s;
-            white-space: nowrap;
-        }
-        .url-filter-tabs .tab-btn:hover { background: #e9ecef; }
-        .url-filter-tabs .tab-btn.active-public { background: #4e73df; color: #fff; border-color: #4e73df; }
-        .url-filter-tabs .tab-btn.active-admin  { background: #dc3545; color: #fff; border-color: #dc3545; }
-        .url-filter-tabs .tab-btn.active-lokal  { background: #6c757d; color: #fff; border-color: #6c757d; }
     </style>
 </head>
 <body>
@@ -70,13 +48,12 @@
                                 <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                     Total Kunjungan Hari Ini (<span id="hari_ini-date-label">Memuat...</span>)
                                 </div>
-                                <div id="url-filter-tabs-hari_ini" class="url-filter-tabs mt-1"></div>
                                 <div id="hari_ini-total" class="h5 mb-0 font-weight-bold text-gray-800">0</div>
                             </div>
                             <div class="col-auto"><i class="fas fa-calendar-day fa-2x text-gray-300"></i></div>
                         </div>
                     </div>
-                    <div class="card-footer py-2 bg-white scrollable-details">
+                    <div class="card-footer py-2 bg-white scrollable-details"> 
                         <div class="row small" id="hari_ini-details">
                             <div class="col-12 text-muted">Memuat detail URL...</div>
                         </div>
@@ -92,7 +69,6 @@
                                 <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                     Total Kunjungan Tanggal Pilihan (<span id="tanggal_pilihan-date-label">Memuat...</span>)
                                 </div>
-                                <div id="url-filter-tabs-tanggal_pilihan" class="url-filter-tabs mt-1"></div>
                                 <div id="tanggal_pilihan-total" class="h5 mb-0 font-weight-bold text-gray-800">0</div>
                             </div>
                             <div class="col-auto"><i class="fas fa-calendar-check fa-2x text-gray-300"></i></div>
@@ -114,7 +90,6 @@
                                 <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                     Total Kunjungan Keseluruhan
                                 </div>
-                                <div id="url-filter-tabs-keseluruhan" class="url-filter-tabs mt-1"></div>
                                 <div id="keseluruhan-total" class="h5 mb-0 font-weight-bold text-gray-800">0</div>
                             </div>
                             <div class="col-auto"><i class="fas fa-database fa-2x text-gray-300"></i></div>
@@ -169,36 +144,7 @@
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
 <script>
 $(document).ready(function() {
-
-    // ══════════════════════════════════════════════════════════════
-    // KONFIGURASI TAB — ubah di sini untuk menambah/mengedit tab
-    // ══════════════════════════════════════════════════════════════
-    const TAB_CONFIG = [
-        {
-            id: "public",
-            label: "🌐 Publik",
-            activeClass: "active-public",
-            // URL masuk tab ini jika TIDAK cocok dengan tab lain
-            // (tab ini adalah fallback / default)
-            fallback: true
-        },
-        {
-            id: "admin",
-            label: "🔒 Admin",
-            activeClass: "active-admin",
-            // URL masuk tab ini jika mengandung salah satu kata di bawah
-            contains: ["admin"]
-        },
-        {
-            id: "lokal",
-            label: "💻 Lokal/Dev",
-            activeClass: "active-lokal",
-            // URL masuk tab ini jika mengandung salah satu kata di bawah
-            contains: ["localhost", "file:///", "127.0.0.1"]
-        }
-    ];
-    // ══════════════════════════════════════════════════════════════
-
+    
     // --- KONSTANTA & VARIABEL ---
     const API_BASE_URL = "https://lidan-co-id.pages.dev/api/contacts_filter_dinamis";
     const TABLE_NAME = "kunjungan";
@@ -314,111 +260,61 @@ $(document).ready(function() {
         updateTimestamp();
     }
 
-    // Simpan data agregasi per mode
-    const cardData = {};
-    // Simpan tab aktif per mode
-    const activeTabState = {};
-
-    // Klasifikasi URL berdasarkan TAB_CONFIG
-    function classifyUrl(url) {
-        const u = url.toLowerCase();
-        // Cek tab non-fallback terlebih dahulu (urutan array = prioritas)
-        for (const tab of TAB_CONFIG) {
-            if (tab.fallback) continue;
-            if (tab.contains && tab.contains.some(kw => u.includes(kw.toLowerCase()))) {
-                return tab.id;
-            }
-        }
-        // Fallback ke tab dengan fallback: true
-        const fallbackTab = TAB_CONFIG.find(t => t.fallback);
-        return fallbackTab ? fallbackTab.id : TAB_CONFIG[0].id;
-    }
-
-    // Bangun tombol tab dari TAB_CONFIG ke dalam card
-    function buildTabs(mode) {
-        const container = $(`#url-filter-tabs-${mode}`);
-        container.html('');
-        const defaultTab = activeTabState[mode] || TAB_CONFIG[0].id;
-        TAB_CONFIG.forEach(tab => {
-            const isActive = tab.id === defaultTab;
-            const btn = $(`<button class="tab-btn${isActive ? ' ' + tab.activeClass : ''}" data-mode="${mode}" data-tab="${tab.id}">${tab.label}</button>`);
-            container.append(btn);
-        });
-    }
-
-    function renderCardHtml(mode, aggregation, dateFilter, activeTab) {
+    function renderCard(mode, total, aggregation, dateFilter) {
+        $(`#${mode}-total`).text(formatNumber(total));
+        
         const detailsContainer = $(`#${mode}-details`);
         detailsContainer.html('');
 
-        const allUrls = Object.keys(aggregation);
-        const filteredUrls = allUrls.filter(url => classifyUrl(url) === activeTab);
-
-        // Total hanya URL di tab ini → ditampilkan di angka besar
-        const tabTotal = filteredUrls.reduce((sum, url) => sum + aggregation[url].x_02_total, 0);
-        $(`#${mode}-total`).text(formatNumber(tabTotal));
-
-        // Persentase dihitung dari total semua URL
-        const grandTotal = allUrls.reduce((sum, url) => sum + aggregation[url].x_02_total, 0);
-
-        const tabCfg = TAB_CONFIG.find(t => t.id === activeTab);
-        const tabLabel = tabCfg ? tabCfg.label.replace(/[^a-zA-Z\s\/]/g, '').trim() : activeTab;
-
-        if (filteredUrls.length === 0) {
-            detailsContainer.html(`<div class="col-12 text-muted">Tidak ada URL ${tabLabel} pada periode ini.</div>`);
+        if (total === 0) {
+            detailsContainer.html(`<div class="col-12 text-muted">Tidak ada data ${mode === 'hari_ini' ? 'hari ini' : mode === 'tanggal_pilihan' ? 'pada tanggal ini' : 'keseluruhan'}.</div>`);
             return;
-        }
-
-        let sortedUrls;
-        if (mode === 'hari_ini') {
-            sortedUrls = filteredUrls.sort((a, b) => aggregation[b].id_x_max - aggregation[a].id_x_max);
-        } else {
-            sortedUrls = filteredUrls.sort((a, b) => aggregation[b].x_02_total - aggregation[a].x_02_total);
         }
 
         let html = '';
         let colorIndex = 0;
-        const filterToday = mode === 'hari_ini' ? 'true' : 'false';
-        const filterDateParam = dateFilter || '';
+        
+        // LOGIKA PENGURUTAN YANG DIMODIFIKASI
+        let sortedUrls;
+        
+        if (mode === 'hari_ini') {
+            // Urutkan berdasarkan id_x_max (sesuai permintaan sebelumnya)
+            sortedUrls = Object.keys(aggregation).sort((a, b) => aggregation[b].id_x_max - aggregation[a].id_x_max);
+        } else {
+            // Urutkan berdasarkan x_02_total (Total Kunjungan) (sesuai permintaan baru)
+            sortedUrls = Object.keys(aggregation).sort((a, b) => aggregation[b].x_02_total - aggregation[a].x_02_total);
+        }
+        // END LOGIKA PENGURUTAN
 
         sortedUrls.forEach(url => {
             const count = aggregation[url].x_02_total;
-            const percentage = grandTotal > 0 ? (count / grandTotal * 100).toFixed(1) : 0;
+            const percentage = total > 0 ? (count / total * 100).toFixed(1) : 0;
             const color = colors[colorIndex % colors.length];
+            
+            const filterToday = mode === 'hari_ini' ? 'true' : 'false';
+            const filterDateParam = dateFilter || ''; 
+
             const displayUrl = url.length > 35 ? url.substring(0, 32) + '...' : url;
 
             html += `
                 <div class="col-12 mt-1">
-                    <a href="#"
-                        class="load-data-btn text-xs text-secondary d-block"
-                        data-bs-toggle="modal"
-                        data-bs-target="#detailModal"
+                    <a href="#" 
+                        class="load-data-btn text-xs text-secondary d-block" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#detailModal" 
                         data-url="${url}"
-                        data-filter-today="${filterToday}"
+                        data-filter-today="${filterToday}" 
                         data-filter-date="${filterDateParam}"
                         title="Lihat detail untuk: ${url}">
-                        <span class="text-${color} me-1">•</span> ${displayUrl}:
+                        <span class="text-${color} me-1">•</span> ${displayUrl}: 
                         <strong>${formatNumber(count)}</strong> (${percentage}%)
                     </a>
                 </div>
             `;
             colorIndex++;
         });
-
+        
         detailsContainer.html(html);
-    }
-
-    function renderCard(mode, total, aggregation, dateFilter) {
-        // Simpan data untuk dipakai ulang saat ganti tab
-        cardData[mode] = { aggregation, dateFilter };
-
-        // Bangun tab dari config (hanya sekali, atau rebuild jika config berubah)
-        if ($(`#url-filter-tabs-${mode}`).children().length === 0) {
-            buildTabs(mode);
-        }
-
-        // Gunakan tab aktif yang tersimpan, default tab pertama
-        const activeTab = activeTabState[mode] || TAB_CONFIG[0].id;
-        renderCardHtml(mode, aggregation, dateFilter, activeTab);
     }
     
     
@@ -500,27 +396,6 @@ $(document).ready(function() {
             loadDashboardData(); 
         } else {
             alert('Silakan pilih tanggal terlebih dahulu.');
-        }
-    });
-
-    // Event: klik tab filter URL
-    $('#data-dashboard-container').on('click', '.tab-btn', function() {
-        const btn = $(this);
-        const mode = btn.data('mode');
-        const tab  = btn.data('tab');
-
-        // Simpan state tab aktif
-        activeTabState[mode] = tab;
-
-        // Update style: hapus semua active class, pasang yang baru
-        const allActiveClasses = TAB_CONFIG.map(t => t.activeClass).join(' ');
-        $(`#url-filter-tabs-${mode} .tab-btn`).removeClass(allActiveClasses);
-        const tabCfg = TAB_CONFIG.find(t => t.id === tab);
-        if (tabCfg) btn.addClass(tabCfg.activeClass);
-
-        // Re-render dengan tab baru
-        if (cardData[mode]) {
-            renderCardHtml(mode, cardData[mode].aggregation, cardData[mode].dateFilter, tab);
         }
     });
 
