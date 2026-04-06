@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Ruang Tulis</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F7F5F0;
+  --surface: #FFFFFF;
+  --surface2: #F0EDE6;
+  --border: #E2DDD5;
+  --border2: #CCC8BE;
+  --text: #1A1816;
+  --text2: #6B6560;
+  --text3: #9E9890;
+  --purple: #5B4FCF;
+  --purple-light: #EAE7FB;
+  --purple-dark: #3D338F;
+  --green: #1D7A5A;
+  --green-light: #DFF2EA;
+  --orange: #C4511A;
+  --orange-light: #FAEADE;
+  --red: #C0392B;
+  --red-light: #FDECEB;
+  --yellow-light: #FDF5DC;
+  --yellow: #B08800;
+  --radius: 10px;
+  --radius-lg: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* TOAST */
+#toast {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-80px);
+  background: var(--text); color: #fff; font-size: 13px; padding: 10px 18px;
+  border-radius: 99px; z-index: 9999; transition: transform .3s ease; pointer-events: none;
+  white-space: nowrap;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* LOADING OVERLAY */
+#loading {
+  position: fixed; inset: 0; background: rgba(247,245,240,.85);
+  display: flex; align-items: center; justify-content: center; z-index: 8888;
+  display: none;
+}
+.spinner {
+  width: 28px; height: 28px; border: 2px solid var(--border);
+  border-top-color: var(--purple); border-radius: 50%; animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* TOPBAR */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo {
+  font-family: 'Lora', serif;
+  font-size: 18px; font-weight: 500;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+.logo span { color: var(--purple); }
+.stats-row { display: flex; gap: 6px; }
+.stat-chip {
+  font-size: 11px; padding: 3px 9px;
+  border-radius: 99px; border: 1px solid var(--border);
+  color: var(--text2); background: var(--surface2);
+  cursor: default;
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 53px; z-index: 99;
+}
+.tab {
+  flex: 1; padding: 12px 4px;
+  text-align: center; font-size: 13px; font-weight: 400;
+  cursor: pointer; color: var(--text2);
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.tab-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.tab.active { color: var(--purple); border-bottom-color: var(--purple); font-weight: 500; }
+
+/* PANELS */
+.panel { display: none; padding: 16px; }
+.panel.active { display: block; }
+
+/* FORM ELEMENTS */
+label, .lbl { font-size: 11px; color: var(--text2); margin-bottom: 4px; display: block; letter-spacing: .3px; text-transform: uppercase; }
+input[type=text], input[type=date], select, textarea {
+  width: 100%; font-size: 14px; font-family: 'DM Sans', sans-serif;
+  padding: 9px 11px; border-radius: var(--radius);
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); outline: none; transition: border-color .15s;
+  -webkit-appearance: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--purple); }
+textarea { resize: vertical; line-height: 1.6; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.mb12 { margin-bottom: 12px; }
+
+/* EDITOR BOX */
+.ebox {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 12px;
+  background: var(--surface);
+}
+.etb {
+  display: flex; gap: 4px; padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2); flex-wrap: wrap;
+}
+.tb {
+  font-size: 12px; padding: 4px 10px;
+  border-radius: var(--radius); border: 1px solid var(--border);
+  cursor: pointer; background: var(--surface); color: var(--text);
+  font-family: 'DM Sans', sans-serif; transition: background .1s;
+}
+.tb:hover { background: var(--purple-light); border-color: var(--purple); color: var(--purple); }
+.ea {
+  padding: 14px; font-size: 14px; min-height: 200px;
+  color: var(--text); line-height: 1.8; outline: none;
+  font-family: 'DM Sans', sans-serif;
+}
+.ea[contenteditable=true]:empty:before {
+  content: attr(data-placeholder); color: var(--text3);
+}
+.ea-code {
+  font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.7;
+  background: var(--surface2); padding: 12px; min-height: 200px;
+  border: none; width: 100%; color: var(--text); resize: vertical;
+}
+.ea-prev {
+  padding: 14px; font-size: 15px; min-height: 200px;
+  color: var(--text); line-height: 1.85;
+  font-family: 'Lora', serif; background: var(--surface);
+}
+.ea-prev h2 { font-size: 19px; font-weight: 500; margin-bottom: 10px; }
+.ea-prev p { margin-bottom: 10px; }
+.ea-prev strong { font-weight: 500; }
+.ea-prev em { font-style: italic; color: var(--text2); }
+.ea-prev blockquote {
+  border-left: 3px solid var(--purple); padding-left: 12px;
+  margin: 10px 0; color: var(--text2); font-style: italic;
+}
+.mode-hint {
+  font-size: 11px; color: var(--text3); padding: 7px 12px;
+  border-bottom: 1px solid var(--border); background: var(--surface2);
+}
+
+/* MODE BAR */
+.mode-bar { display: flex; gap: 5px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 2px; }
+.mode-bar::-webkit-scrollbar { display: none; }
+.mb-btn {
+  font-size: 11px; padding: 5px 12px; border-radius: 99px;
+  border: 1px solid var(--border); background: transparent;
+  cursor: pointer; color: var(--text2); white-space: nowrap;
+  font-family: 'DM Sans', sans-serif; transition: all .15s;
+}
+.mb-btn.active { background: var(--purple-light); border-color: var(--purple); color: var(--purple); font-weight: 500; }
+
+/* BUTTONS */
+.btn-row { display: flex; gap: 8px; margin-top: 14px; }
+.btn-d {
+  flex: 1; padding: 11px; font-size: 13px; font-weight: 500;
+  border-radius: var(--radius); border: 1px solid var(--border2);
+  background: transparent; color: var(--text2); cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: background .15s;
+}
+.btn-d:hover { background: var(--surface2); }
+.btn-p {
+  flex: 1; padding: 11px; font-size: 13px; font-weight: 500;
+  border-radius: var(--radius); border: none;
+  background: var(--purple); color: #fff; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: background .15s;
+}
+.btn-p:hover { background: var(--purple-dark); }
+.btn-p:active { transform: scale(0.98); }
+
+/* BADGE PILLS */
+.jenis-bar, .prio-bar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.jb, .pb {
+  font-size: 12px; padding: 5px 13px; border-radius: 99px;
+  cursor: pointer; border: 1px solid transparent;
+  font-family: 'DM Sans', sans-serif; transition: outline .1s;
+}
+.jb-analogi { background: var(--purple-light); color: var(--purple-dark); border-color: #AFA9EC; }
+.jb-cerita { background: var(--green-light); color: var(--green); border-color: #5DCAA5; }
+.jb-perump { background: var(--yellow-light); color: var(--yellow); border-color: #D4A800; }
+.jb-metafora { background: var(--orange-light); color: var(--orange); border-color: #E8905A; }
+.pb-k { background: var(--red-light); color: var(--red); border-color: #F09595; }
+.pb-s { background: var(--yellow-light); color: var(--yellow); border-color: #D4A800; }
+.pb-r { background: var(--green-light); color: var(--green); border-color: #5DCAA5; }
+.jb.aktif, .pb.aktif { outline: 2px solid var(--purple); outline-offset: 1px; }
+
+/* DIVIDER */
+.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+/* LIST */
+.list-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.list-title { font-size: 12px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: .4px; }
+.list-more { font-size: 12px; color: var(--purple); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; padding: 0; }
+.li {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer;
+  transition: background .1s;
+}
+.li:last-child { border-bottom: none; }
+.li:hover { background: var(--surface2); margin: 0 -4px; padding-left: 4px; padding-right: 4px; border-radius: var(--radius); }
+.li-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+.li-body { flex: 1; min-width: 0; }
+.li-t { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+.li-m { font-size: 11px; color: var(--text3); }
+.li-badge {
+  font-size: 10px; padding: 1px 7px; border-radius: 99px;
+  margin-left: 5px; vertical-align: middle;
+}
+.li-act { display: flex; gap: 6px; margin-top: 4px; }
+.li-edit, .li-del {
+  font-size: 11px; padding: 2px 9px; border-radius: 99px; cursor: pointer;
+  border: 1px solid var(--border); background: transparent;
+  font-family: 'DM Sans', sans-serif; color: var(--text2);
+}
+.li-del { color: var(--red); border-color: #F09595; }
+.li-del:hover { background: var(--red-light); }
+.li-edit:hover { background: var(--purple-light); color: var(--purple); border-color: var(--purple); }
+.li-read { font-size: 11px; padding: 2px 9px; border-radius: 99px; cursor: pointer; border: 1px solid #5DCAA5; background: var(--green-light); color: var(--green); font-family: 'DM Sans', sans-serif; }
+.li-read:hover { background: #c0e8d6; }
+
+/* SCHEMA BOX */
+.schema-box {
+  background: var(--surface2); border-radius: var(--radius);
+  padding: 10px 12px; margin-top: 16px;
+  border: 1px solid var(--border);
+}
+.schema-title { font-size: 11px; font-weight: 500; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .3px; }
+.schema-row { display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+.schema-row:last-child { border-bottom: none; }
+.schema-col { color: var(--purple); font-family: monospace; font-weight: 500; }
+.schema-val { color: var(--text2); }
+
+/* FULLSCREEN READ */
+#fullscreen {
+  display: none; position: fixed; inset: 0;
+  background: var(--bg); z-index: 9000; overflow-y: auto;
+  padding: 32px 20px;
+}
+#fullscreen.show { display: block; }
+.fs-content {
+  max-width: 620px; margin: 0 auto;
+  font-family: 'Lora', serif; font-size: 18px; line-height: 2;
+  color: var(--text);
+}
+.fs-content h2 { font-size: 26px; margin-bottom: 16px; font-weight: 500; }
+.fs-content p { margin-bottom: 14px; }
+.fs-content blockquote {
+  border-left: 3px solid var(--purple); padding-left: 16px;
+  color: var(--text2); font-style: italic; margin: 14px 0;
+}
+.fs-close {
+  position: fixed; top: 16px; right: 16px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 99px; font-size: 13px; padding: 6px 14px;
+  cursor: pointer; color: var(--text2); font-family: 'DM Sans', sans-serif;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+
+/* EMPTY STATE */
+.empty {
+  text-align: center; padding: 28px 16px;
+  color: var(--text3); font-size: 13px;
+}
+.empty-icon { font-size: 28px; margin-bottom: 8px; }
+
+/* SECTION HEAD */
+.sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.sec-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.btn-new {
+  font-size: 11px; padding: 5px 12px; border-radius: 99px;
+  background: var(--purple); color: #fff; border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-weight: 500;
+}
+
+/* EDIT MODE HEADER */
+.edit-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; background: var(--yellow-light); color: var(--yellow);
+  border: 1px solid #D4A800; border-radius: 99px; padding: 3px 10px;
+  margin-bottom: 10px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 360px) {
+  .row2 { grid-template-columns: 1fr; }
+  .logo { font-size: 16px; }
+}
+
+/* TAG PANEL (Ilustrasi & Isu picker) */
+.tag-bar {
+  display: flex; gap: 6px; margin-bottom: 10px;
+}
+.tag-toggle {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; padding: 5px 12px; border-radius: 99px;
+  border: 1px solid var(--border); background: var(--surface2);
+  cursor: pointer; color: var(--text2);
+  font-family: 'DM Sans', sans-serif; transition: all .15s;
+}
+.tag-toggle.active {
+  background: var(--purple-light); border-color: var(--purple);
+  color: var(--purple); font-weight: 500;
+}
+.tag-toggle .tag-count {
+  font-size: 10px; background: var(--purple); color: #fff;
+  border-radius: 99px; padding: 1px 6px; display: none;
+}
+.tag-toggle.active .tag-count { display: inline; }
+
+/* Tag Panel Drawer */
+.tag-panel {
+  display: none;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); margin-bottom: 12px;
+  overflow: hidden;
+}
+.tag-panel.open { display: block; }
+.tag-panel-head {
+  padding: 10px 14px 0; border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.tag-panel-tabs { display: flex; gap: 0; }
+.tpt {
+  font-size: 12px; padding: 8px 14px; cursor: pointer;
+  color: var(--text2); border-bottom: 2px solid transparent;
+  font-family: 'DM Sans', sans-serif;
+}
+.tpt.active { color: var(--purple); border-bottom-color: var(--purple); font-weight: 500; }
+.tag-panel-search {
+  padding: 8px 14px; border-bottom: 1px solid var(--border);
+}
+.tag-panel-search input {
+  font-size: 12px; padding: 6px 10px; border-radius: 99px;
+  border: 1px solid var(--border); background: var(--surface2);
+  width: 100%; font-family: 'DM Sans', sans-serif;
+  color: var(--text); outline: none;
+}
+.tag-panel-search input:focus { border-color: var(--purple); background: var(--surface); }
+
+.tag-panel-list { max-height: 240px; overflow-y: auto; padding: 6px 0; }
+.tag-panel-list::-webkit-scrollbar { width: 4px; }
+.tag-panel-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+.tp-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 9px 14px; cursor: pointer; transition: background .1s;
+  border-bottom: 1px solid var(--border);
+}
+.tp-item:last-child { border-bottom: none; }
+.tp-item:hover { background: var(--surface2); }
+.tp-item.selected { background: var(--purple-light); }
+.tp-item-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.tp-item-body { flex: 1; min-width: 0; }
+.tp-item-judul { font-size: 13px; color: var(--text); line-height: 1.35; margin-bottom: 2px; }
+.tp-item-meta { font-size: 11px; color: var(--text3); }
+.tp-item-badge {
+  font-size: 10px; padding: 1px 7px; border-radius: 99px; margin-left: 5px; vertical-align: middle;
+}
+.tp-item-check {
+  font-size: 14px; color: var(--purple); flex-shrink: 0; margin-top: 2px; display: none;
+}
+.tp-item.selected .tp-item-check { display: block; }
+
+/* Tagged items display (below editor) */
+.tagged-section { margin-bottom: 10px; }
+.tagged-section-title {
+  font-size: 11px; color: var(--text2); margin-bottom: 6px;
+  text-transform: uppercase; letter-spacing: .3px;
+}
+.tagged-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.tagged-chip {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; padding: 4px 10px; border-radius: 99px;
+  background: var(--purple-light); color: var(--purple);
+  border: 1px solid #AFA9EC; cursor: pointer;
+}
+.tagged-chip:hover { background: #d5d0f6; }
+.tagged-chip .chip-x { font-size: 11px; color: var(--purple-dark); }
+.tagged-isu-chip {
+  background: var(--orange-light); color: var(--orange);
+  border-color: #E8905A;
+}
+.tagged-isu-chip .chip-x { color: var(--orange); }
+.tagged-empty { font-size: 12px; color: var(--text3); font-style: italic; }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+<div id="loading"><div class="spinner"></div></div>
+
+<!-- FULLSCREEN READ -->
+<div id="fullscreen">
+  <button class="fs-close" onclick="closeFS()">✕ Tutup</button>
+  <div class="fs-content" id="fsContent"></div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">Ruang<span>.</span>Tulis</div>
+  <div class="stats-row">
+    <span class="stat-chip" id="statArtikel">— artikel</span>
+    <span class="stat-chip" id="statIlustrasi">— ide</span>
+    <span class="stat-chip" id="statIsu">— isu</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('artikel',this)" id="tab-artikel">
+    <span class="tab-dot" style="background:#5B4FCF"></span> Tulis
+  </div>
+  <div class="tab" onclick="switchTab('ilustrasi',this)" id="tab-ilustrasi">
+    <span class="tab-dot" style="background:#1D7A5A"></span> Ilustrasi
+  </div>
+  <div class="tab" onclick="switchTab('isu',this)" id="tab-isu">
+    <span class="tab-dot" style="background:#C4511A"></span> Isu
+  </div>
+</div>
+
+<!-- ===================== TAB ARTIKEL ===================== -->
+<div class="panel active" id="p-artikel">
+
+  <div class="sec-head">
+    <span class="sec-title" id="artikel-title">Artikel baru</span>
+    <button class="btn-new" onclick="resetArtikel()">+ Baru</button>
+  </div>
+
+  <div id="artikel-edit-badge" style="display:none">
+    <div class="edit-badge">✏ Mode edit — id <span id="artikel-edit-id"></span></div>
+  </div>
+
+  <div class="row2">
+    <div><label>Judul (x_02)</label><input type="text" id="a-judul" placeholder="Tulis judul..."></div>
+    <div><label>Kategori (x_11)</label><input type="text" id="a-kategori" placeholder="psikologi, tips..."></div>
+  </div>
+
+  <div class="mb12">
+    <label>Mode penulisan</label>
+    <div class="mode-bar">
+      <button class="mb-btn active" onclick="swMode('wysiwyg',this)">WYSIWYG</button>
+      <button class="mb-btn" onclick="swMode('html',this)">Kode HTML</button>
+      <button class="mb-btn" onclick="swMode('md',this)">Paste AI (MD)</button>
+      <button class="mb-btn" onclick="swMode('baca',this)">Baca</button>
+    </div>
+  </div>
+
+  <div class="ebox" id="ebox">
+    <div class="etb" id="etb">
+      <button class="tb" onclick="fmt('bold')"><b>B</b></button>
+      <button class="tb" onclick="fmt('italic')"><i>I</i></button>
+      <button class="tb" onclick="fmt('h2')">H2</button>
+      <button class="tb" onclick="fmt('blockquote')">Kutip</button>
+      <button class="tb" onclick="fmt('ul')">• List</button>
+      <button class="tb" onclick="openFS()">&#x26F6; Layar penuh</button>
+    </div>
+    <div class="mode-hint" id="mode-hint">Ketik langsung — format dengan tombol toolbar di atas</div>
+    <div class="ea" id="ea" contenteditable="true" data-placeholder="Mulai menulis artikel..."></div>
+  </div>
+
+  <!-- TAG: Ilustrasi & Isu -->
+  <div style="margin-bottom:10px">
+    <div class="lbl">Tautkan ke artikel ini</div>
+    <div class="tag-bar">
+      <button class="tag-toggle" id="btn-tag-il" onclick="toggleTagPanel('ilustrasi')">
+        💡 Ilustrasi <span class="tag-count" id="tc-il">0</span>
+      </button>
+      <button class="tag-toggle" id="btn-tag-isu" onclick="toggleTagPanel('isu')">
+        📋 Isu <span class="tag-count" id="tc-isu">0</span>
+      </button>
+    </div>
+
+    <!-- Drawer Panel -->
+    <div class="tag-panel" id="tag-panel">
+      <div class="tag-panel-head">
+        <div class="tag-panel-tabs">
+          <div class="tpt active" id="tpt-ilustrasi" onclick="switchTagTab('ilustrasi')">💡 Ilustrasi</div>
+          <div class="tpt" id="tpt-isu" onclick="switchTagTab('isu')">📋 Isu</div>
+        </div>
+      </div>
+      <div class="tag-panel-search">
+        <input type="text" id="tag-search" placeholder="Cari..." oninput="filterTagList()">
+      </div>
+      <div class="tag-panel-list" id="tag-panel-list">
+        <div class="empty">Memuat...</div>
+      </div>
+    </div>
+
+    <!-- Tagged chips display -->
+    <div class="tagged-section" id="tagged-il-section" style="display:none">
+      <div class="tagged-section-title">Ilustrasi tertaut:</div>
+      <div class="tagged-chips" id="tagged-il-chips"></div>
+    </div>
+    <div class="tagged-section" id="tagged-isu-section" style="display:none">
+      <div class="tagged-section-title">Isu tertaut:</div>
+      <div class="tagged-chips" id="tagged-isu-chips"></div>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div>
+      <label>Penulis (x_12)</label>
+      <input type="text" id="a-penulis" placeholder="Nama penulis...">
+    </div>
+    <div>
+      <label>Status (x_03)</label>
+      <select id="a-status">
+        <option value="draft">Draft</option>
+        <option value="publish">Publish</option>
+        <option value="arsip">Arsip</option>
+      </select>
+    </div>
+  </div>
+  <input type="hidden" id="a-id" value="">
+  <input type="hidden" id="a-tagged-il" value="">
+  <input type="hidden" id="a-tagged-isu" value="">
+
+  <div class="btn-row">
+    <button class="btn-d" onclick="saveArtikel('draft')">Simpan draft</button>
+    <button class="btn-p" onclick="saveArtikel('publish')">Publikasikan</button>
+  </div>
+
+  <hr class="divider">
+
+  <div class="list-head">
+    <span class="list-title">Tersimpan</span>
+    <button class="list-more" onclick="loadList('artikel')">Muat ulang ↺</button>
+  </div>
+  <div id="list-artikel"><div class="empty"><div class="empty-icon">📄</div>Belum ada artikel</div></div>
+
+</div>
+
+<!-- ===================== TAB ILUSTRASI ===================== -->
+<div class="panel" id="p-ilustrasi">
+
+  <div class="sec-head">
+    <span class="sec-title" id="ilustrasi-title">Ide ilustrasi baru</span>
+    <button class="btn-new" onclick="resetIlustrasi()">+ Baru</button>
+  </div>
+
+  <div id="ilustrasi-edit-badge" style="display:none">
+    <div class="edit-badge">✏ Mode edit — id <span id="ilustrasi-edit-id"></span></div>
+  </div>
+
+  <div class="mb12">
+    <label>Judul / ide (x_02)</label>
+    <input type="text" id="il-judul" placeholder="Contoh: Analogi pohon dan pertumbuhan diri...">
+  </div>
+
+  <div class="mb12">
+    <label>Jenis tulisan (x_07)</label>
+    <div class="jenis-bar" id="jenis-bar">
+      <span class="jb jb-analogi aktif" data-val="analogi" onclick="setJenis(this)">Analogi</span>
+      <span class="jb jb-cerita" data-val="cerita" onclick="setJenis(this)">Cerita</span>
+      <span class="jb jb-perump" data-val="perumpamaan" onclick="setJenis(this)">Perumpamaan</span>
+      <span class="jb jb-metafora" data-val="metafora" onclick="setJenis(this)">Metafora</span>
+    </div>
+  </div>
+
+  <div class="mb12">
+    <label>Isi tulisan (x_08)</label>
+    <div class="ebox">
+      <div class="mode-hint">Tulis bebas — cerita, analogi, perumpamaan yang jadi bahan artikel</div>
+      <div class="ea" id="il-isi" contenteditable="true" data-placeholder="Bayangkan pikiran seperti taman..."></div>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div>
+      <label>Nada / suasana (x_09)</label>
+      <select id="il-nada">
+        <option value="inspiratif">Inspiratif</option>
+        <option value="reflektif">Reflektif</option>
+        <option value="ringan">Ringan / Humoris</option>
+        <option value="serius">Serius</option>
+        <option value="motivatif">Motivatif</option>
+      </select>
+    </div>
+    <div>
+      <label>Cocok untuk topik (x_10)</label>
+      <input type="text" id="il-topik" placeholder="stres, motivasi...">
+    </div>
+  </div>
+  <input type="hidden" id="il-id" value="">
+
+  <div class="btn-row">
+    <button class="btn-d" onclick="saveIlustrasi('ide')">Simpan ide</button>
+    <button class="btn-p" onclick="saveIlustrasi('siap')">Tandai siap pakai</button>
+  </div>
+
+  <hr class="divider">
+
+  <div class="list-head">
+    <span class="list-title">Bank ide ilustrasi</span>
+    <button class="list-more" onclick="loadList('ilustrasi')">Muat ulang ↺</button>
+  </div>
+  <div id="list-ilustrasi"><div class="empty"><div class="empty-icon">💡</div>Belum ada ide tersimpan</div></div>
+
+</div>
+
+<!-- ===================== TAB ISU ===================== -->
+<div class="panel" id="p-isu">
+
+  <div class="sec-head">
+    <span class="sec-title" id="isu-title">Catatan isu baru</span>
+    <button class="btn-new" onclick="resetIsu()">+ Baru</button>
+  </div>
+
+  <div id="isu-edit-badge" style="display:none">
+    <div class="edit-badge">✏ Mode edit — id <span id="isu-edit-id"></span></div>
+  </div>
+
+  <div class="row2">
+    <div><label>Judul isu (x_02)</label><input type="text" id="is-judul" placeholder="Ringkasan singkat..."></div>
+    <div><label>Lokasi (x_09)</label><input type="text" id="is-lokasi" placeholder="Kota / sekolah..."></div>
+  </div>
+
+  <div class="mb12">
+    <label>Prioritas (x_10)</label>
+    <div class="prio-bar" id="prio-bar">
+      <span class="pb pb-k aktif" data-val="penting" onclick="setPrio(this)">Penting</span>
+      <span class="pb pb-s" data-val="sedang" onclick="setPrio(this)">Sedang</span>
+      <span class="pb pb-r" data-val="catatan" onclick="setPrio(this)">Catatan</span>
+    </div>
+  </div>
+
+  <div class="mb12">
+    <label>Kejadian di lapangan (x_05)</label>
+    <div class="ebox">
+      <div class="mode-hint">Tulis kejadian, observasi, atau cerita dari lapangan</div>
+      <textarea class="ea-code" id="is-deskripsi" style="font-family:'DM Sans',sans-serif;font-size:14px;min-height:160px" placeholder="Contoh: Siswa kelas 10 di sekolah X menunjukkan tanda-tanda stres akademik..."></textarea>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div><label>Sumber / narasumber (x_06)</label><input type="text" id="is-sumber" placeholder="Guru, orang tua, siswa..."></div>
+    <div><label>Tanggal (x_04)</label><input type="date" id="is-tanggal"></div>
+  </div>
+
+  <div class="mb12">
+    <label>Tindak lanjut (x_11)</label>
+    <select id="is-tindak">
+      <option value="belum">Belum ada tindakan</option>
+      <option value="perlu-artikel">Perlu diangkat jadi artikel</option>
+      <option value="proses">Sedang diproses</option>
+      <option value="sudah">Sudah diangkat</option>
+      <option value="arsip">Arsip</option>
+    </select>
+  </div>
+  <input type="hidden" id="is-id" value="">
+
+  <div class="btn-row">
+    <button class="btn-d" onclick="saveIsu('belum')">Simpan catatan</button>
+    <button class="btn-p" onclick="saveIsu('perlu-artikel')">Tandai untuk artikel</button>
+  </div>
+
+  <hr class="divider">
+
+  <div class="list-head">
+    <span class="list-title">Catatan lapangan</span>
+    <button class="list-more" onclick="loadList('isu')">Muat ulang ↺</button>
+  </div>
+  <div id="list-isu"><div class="empty"><div class="empty-icon">📋</div>Belum ada catatan isu</div></div>
+
+</div>
+
+<script>
+const API = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+const TABLE = 'artikel_ruangtulis';
+const HEADERS = { 'Content-Type': 'application/json', 'X-Custom-Auth': 'admin' };
+
+/* ---- UTIL ---- */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+function showLoad(v) { document.getElementById('loading').style.display = v ? 'flex' : 'none'; }
+function today() { return new Date().toISOString().split('T')[0]; }
+function timeAgo(str) {
+  if (!str) return '';
+  const d = new Date(str), now = new Date();
+  const diff = Math.floor((now - d) / 1000);
+  if (diff < 60) return 'baru saja';
+  if (diff < 3600) return Math.floor(diff/60) + ' mnt lalu';
+  if (diff < 86400) return Math.floor(diff/3600) + ' jam lalu';
+  return Math.floor(diff/86400) + ' hari lalu';
+}
+
+/* ---- TABS ---- */
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('p-' + name).classList.add('active');
+  loadList(name);
+}
+
+/* ---- EDITOR MODE ---- */
+let currentMode = 'wysiwyg';
+function swMode(mode, btn) {
+  currentMode = mode;
+  document.querySelectorAll('.mb-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const box = document.getElementById('ebox');
+  const tb = document.getElementById('etb');
+  const hint = document.getElementById('mode-hint');
+  const eaEl = document.getElementById('ea');
+  const curContent = eaEl ? (eaEl.innerHTML || eaEl.value || '') : '';
+
+  const hints = {
+    wysiwyg: 'Ketik langsung — format dengan tombol toolbar di atas',
+    html: 'Mode kode — tag HTML seperti &lt;b&gt;, &lt;h2&gt; terlihat langsung',
+    md: 'Tempel hasil AI (Markdown) — **tebal**, ## judul, *miring*',
+    baca: 'Pratinjau bersih — tampilan akhir artikel'
+  };
+  if (hint) hint.textContent = hints[mode].replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+  // rebuild editor area
+  const old = box.querySelector('.ea, .ea-code, .ea-prev');
+  let newEl;
+  if (mode === 'html' || mode === 'md') {
+    newEl = document.createElement('textarea');
+    newEl.className = 'ea-code';
+    newEl.id = 'ea';
+    newEl.placeholder = mode === 'html' ? '<h2>Judul</h2>\n<p>Isi paragraf...</p>' : '## Judul\n\n**Teks tebal** dan *miring*\n\n> Kutipan';
+    if (mode === 'html') newEl.value = curContent;
+    else newEl.value = htmlToMd(curContent);
+    tb.style.display = 'none';
+  } else if (mode === 'baca') {
+    newEl = document.createElement('div');
+    newEl.className = 'ea-prev';
+    newEl.id = 'ea';
+    newEl.innerHTML = curContent || '<p style="color:var(--text3)">Belum ada konten untuk ditampilkan.</p>';
+    tb.style.display = 'none';
+  } else {
+    newEl = document.createElement('div');
+    newEl.className = 'ea';
+    newEl.id = 'ea';
+    newEl.contentEditable = 'true';
+    newEl.setAttribute('data-placeholder', 'Mulai menulis artikel...');
+    if (old && old.tagName === 'TEXTAREA') newEl.innerHTML = old.value;
+    else newEl.innerHTML = curContent;
+    tb.style.display = 'flex';
+  }
+  if (old) old.replaceWith(newEl);
+}
+
+function fmt(cmd) {
+  const ea = document.getElementById('ea');
+  if (!ea || ea.contentEditable !== 'true') return;
+  ea.focus();
+  if (cmd === 'bold') document.execCommand('bold');
+  else if (cmd === 'italic') document.execCommand('italic');
+  else if (cmd === 'h2') document.execCommand('formatBlock', false, '<h2>');
+  else if (cmd === 'blockquote') document.execCommand('formatBlock', false, '<blockquote>');
+  else if (cmd === 'ul') document.execCommand('insertUnorderedList');
+}
+
+function htmlToMd(html) {
+  return html
+    .replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n\n')
+    .replace(/<strong[^>]*>(.*?)<\/strong>/gi, '**$1**')
+    .replace(/<b[^>]*>(.*?)<\/b>/gi, '**$1**')
+    .replace(/<em[^>]*>(.*?)<\/em>/gi, '*$1*')
+    .replace(/<i[^>]*>(.*?)<\/i>/gi, '*$1*')
+    .replace(/<blockquote[^>]*>(.*?)<\/blockquote>/gi, '> $1\n')
+    .replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\n\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .trim();
+}
+
+function mdToHtml(md) {
+  return md
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^/, '<p>')
+    .replace(/$/, '</p>');
+}
+
+function getEditorContent() {
+  const ea = document.getElementById('ea');
+  if (!ea) return { html: '', md: '' };
+  if (ea.tagName === 'TEXTAREA') {
+    if (currentMode === 'md') return { html: mdToHtml(ea.value), md: ea.value };
+    return { html: ea.value, md: htmlToMd(ea.value) };
+  }
+  return { html: ea.innerHTML, md: htmlToMd(ea.innerHTML) };
+}
+
+function setEditorContent(html) {
+  const ea = document.getElementById('ea');
+  if (!ea) return;
+  if (ea.tagName === 'TEXTAREA') ea.value = currentMode === 'md' ? htmlToMd(html) : html;
+  else ea.innerHTML = html;
+}
+
+/* ---- FULLSCREEN ---- */
+function openFS() {
+  const { html } = getEditorContent();
+  const judul = document.getElementById('a-judul').value;
+  document.getElementById('fsContent').innerHTML =
+    (judul ? '<h2>' + judul + '</h2>' : '') + html;
+  document.getElementById('fullscreen').classList.add('show');
+}
+function closeFS() { document.getElementById('fullscreen').classList.remove('show'); }
+
+/* ---- READ ARTIKEL ---- */
+function cleanAndRender(html) {
+  // Strip semua HTML tags → teks mentah berisi Markdown
+  let text = html
+    .replace(/<strong[^>]*>(.*?)<\/strong>/gi, '**$1**')
+    .replace(/<b[^>]*>(.*?)<\/b>/gi, '**$1**')
+    .replace(/<em[^>]*>(.*?)<\/em>/gi, '*$1*')
+    .replace(/<i[^>]*>(.*?)<\/i>/gi, '*$1*')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' ')
+    .trim();
+
+  // Konversi Markdown ke HTML bersih
+  return text
+    .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid var(--border);margin:18px 0">')
+    .replace(/^###### (.+)$/gm, '<h6>$1</h6>')
+    .replace(/^##### (.+)$/gm, '<h5>$1</h5>')
+    .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
+    .replace(/^### (.+)$/gm, '<h3 style="font-size:17px;font-weight:500;margin:14px 0 6px">$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2 style="font-size:20px;font-weight:500;margin:16px 0 8px">$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1 style="font-size:22px;font-weight:600;margin:16px 0 8px">$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^[*-] (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>[\s\S]*?<\/li>(\n|$))+/g, m => '<ul style="padding-left:20px;margin:6px 0 10px">' + m + '</ul>')
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    .split(/\n\n+/)
+    .map(block => {
+      block = block.trim();
+      if (!block) return '';
+      if (/^<(h[1-6]|ul|ol|li|blockquote|hr)/.test(block)) return block;
+      return '<p>' + block.replace(/\n/g, '<br>') + '</p>';
+    })
+    .join('');
+}
+
+async function readArtikel(id) {
+  showLoad(true);
+  try {
+    const res = await apiGet({ id_x: id });
+    const r = res.data;
+    if (!r) { showToast('Artikel tidak ditemukan'); showLoad(false); return; }
+    const judul = r.x_02 || '';
+    const raw = r.x_05 || r.x_06 || '';
+    if (!raw) { showToast('Konten artikel kosong'); showLoad(false); return; }
+    const konten = cleanAndRender(raw);
+    const meta = [r.x_12, r.x_11, r.x_04].filter(Boolean).join(' · ');
+    document.getElementById('fsContent').innerHTML =
+      (judul ? `<h2>${judul}</h2>` : '') +
+      (meta ? `<p style="font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text3);margin-bottom:20px">${meta}</p>` : '') +
+      konten;
+    document.getElementById('fullscreen').classList.add('show');
+  } catch (e) { showToast('Gagal memuat artikel'); }
+  showLoad(false);
+}
+
+/* ---- JENIS & PRIO PILLS ---- */
+function setJenis(el) {
+  document.querySelectorAll('.jb').forEach(j => j.classList.remove('aktif'));
+  el.classList.add('aktif');
+}
+function setPrio(el) {
+  document.querySelectorAll('.pb').forEach(p => p.classList.remove('aktif'));
+  el.classList.add('aktif');
+}
+function getJenis() { return document.querySelector('.jb.aktif')?.dataset.val || 'analogi'; }
+function getPrio() { return document.querySelector('.pb.aktif')?.dataset.val || 'sedang'; }
+
+/* ---- API CALLS ---- */
+async function apiGet(params) {
+  const url = new URL(API);
+  url.searchParams.set('table', TABLE);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+  const r = await fetch(url, { headers: HEADERS });
+  return r.json();
+}
+
+async function apiPost(body) {
+  const url = new URL(API);
+  url.searchParams.set('table', TABLE);
+  const r = await fetch(url, { method: 'POST', headers: HEADERS, body: JSON.stringify(body) });
+  return r.json();
+}
+
+async function apiPut(id, body) {
+  const url = new URL(API);
+  url.searchParams.set('table', TABLE);
+  url.searchParams.set('id_x', id);
+  const r = await fetch(url, { method: 'PUT', headers: HEADERS, body: JSON.stringify(body) });
+  return r.json();
+}
+
+async function apiDelete(id) {
+  const url = new URL(API);
+  url.searchParams.set('table', TABLE);
+  url.searchParams.set('id_x', id);
+  const r = await fetch(url, { method: 'DELETE', headers: HEADERS });
+  return r.json();
+}
+
+function insParseIds(val) {
+  if (!val) return [];
+  try { const p = JSON.parse(val); return Array.isArray(p) ? p : []; }
+  catch(e) { return []; }
+}
+
+/* ---- SAVE ARTIKEL ---- */
+async function saveArtikel(statusOverride) {
+  const judul = document.getElementById('a-judul').value.trim();
+  if (!judul) { showToast('Judul tidak boleh kosong'); return; }
+  const { html, md } = getEditorContent();
+  const status = statusOverride || document.getElementById('a-status').value;
+  const id = document.getElementById('a-id').value;
+  const ilIds = taggedIlustrasi.map(t => t.id);
+  const isuIds = taggedIsu.map(t => t.id);
+  const body = {
+    x_01: 'artikel', x_02: judul,
+    x_03: status, x_04: today(),
+    x_05: html, x_06: md,
+    x_11: document.getElementById('a-kategori').value,
+    x_12: document.getElementById('a-penulis').value,
+    x_13: JSON.stringify(ilIds),
+    x_14: JSON.stringify(isuIds)
+  };
+  showLoad(true);
+  try {
+    const res = id ? await apiPut(id, body) : await apiPost(body);
+    if (res.success) {
+      showToast(id ? 'Artikel diperbarui ✓' : (status === 'publish' ? 'Artikel dipublikasikan ✓' : 'Draft tersimpan ✓'));
+      resetArtikel(); loadList('artikel'); loadStats();
+    } else showToast('Gagal menyimpan: ' + (res.message || ''));
+  } catch (e) { showToast('Error: ' + e.message); }
+  showLoad(false);
+}
+
+function resetArtikel() {
+  document.getElementById('a-judul').value = '';
+  document.getElementById('a-kategori').value = '';
+  document.getElementById('a-penulis').value = '';
+  document.getElementById('a-status').value = 'draft';
+  document.getElementById('a-id').value = '';
+  document.getElementById('artikel-edit-badge').style.display = 'none';
+  document.getElementById('artikel-title').textContent = 'Artikel baru';
+  setEditorContent('');
+  // reset tagged
+  taggedIlustrasi = []; taggedIsu = [];
+  document.getElementById('a-tagged-il').value = '';
+  document.getElementById('a-tagged-isu').value = '';
+  updateTagCount('il', 0); updateTagCount('isu', 0);
+  renderTagChips('il'); renderTagChips('isu');
+  document.getElementById('tag-panel').classList.remove('open');
+  tagPanelOpen = false;
+}
+
+/* ---- SAVE ILUSTRASI ---- */
+async function saveIlustrasi(statusOverride) {
+  const judul = document.getElementById('il-judul').value.trim();
+  const isi = document.getElementById('il-isi').innerHTML;
+  if (!judul) { showToast('Judul tidak boleh kosong'); return; }
+  const id = document.getElementById('il-id').value;
+  const body = {
+    x_01: 'ilustrasi', x_02: judul,
+    x_03: statusOverride, x_04: today(),
+    x_07: getJenis(), x_08: isi,
+    x_09: document.getElementById('il-nada').value,
+    x_10: document.getElementById('il-topik').value
+  };
+  showLoad(true);
+  try {
+    const res = id ? await apiPut(id, body) : await apiPost(body);
+    if (res.success) {
+      showToast(statusOverride === 'siap' ? 'Ditandai siap pakai ✓' : 'Ide tersimpan ✓');
+      resetIlustrasi(); loadList('ilustrasi'); loadStats();
+    } else showToast('Gagal: ' + (res.message || ''));
+  } catch (e) { showToast('Error: ' + e.message); }
+  showLoad(false);
+}
+
+function resetIlustrasi() {
+  document.getElementById('il-judul').value = '';
+  document.getElementById('il-isi').innerHTML = '';
+  document.getElementById('il-topik').value = '';
+  document.getElementById('il-id').value = '';
+  document.getElementById('ilustrasi-edit-badge').style.display = 'none';
+  document.getElementById('ilustrasi-title').textContent = 'Ide ilustrasi baru';
+  document.querySelectorAll('.jb').forEach(j => j.classList.remove('aktif'));
+  document.querySelector('.jb-analogi').classList.add('aktif');
+}
+
+/* ---- SAVE ISU ---- */
+async function saveIsu(statusOverride) {
+  const judul = document.getElementById('is-judul').value.trim();
+  if (!judul) { showToast('Judul tidak boleh kosong'); return; }
+  const id = document.getElementById('is-id').value;
+  const tindak = statusOverride || document.getElementById('is-tindak').value;
+  const body = {
+    x_01: 'isu', x_02: judul,
+    x_03: tindak,
+    x_04: document.getElementById('is-tanggal').value || today(),
+    x_05: document.getElementById('is-deskripsi').value,
+    x_06: document.getElementById('is-sumber').value,
+    x_09: document.getElementById('is-lokasi').value,
+    x_10: getPrio(), x_11: tindak
+  };
+  showLoad(true);
+  try {
+    const res = id ? await apiPut(id, body) : await apiPost(body);
+    if (res.success) {
+      showToast(tindak === 'perlu-artikel' ? 'Ditandai untuk artikel ✓' : 'Catatan tersimpan ✓');
+      resetIsu(); loadList('isu'); loadStats();
+    } else showToast('Gagal: ' + (res.message || ''));
+  } catch (e) { showToast('Error: ' + e.message); }
+  showLoad(false);
+}
+
+function resetIsu() {
+  document.getElementById('is-judul').value = '';
+  document.getElementById('is-lokasi').value = '';
+  document.getElementById('is-deskripsi').value = '';
+  document.getElementById('is-sumber').value = '';
+  document.getElementById('is-tanggal').value = '';
+  document.getElementById('is-tindak').value = 'belum';
+  document.getElementById('is-id').value = '';
+  document.getElementById('isu-edit-badge').style.display = 'none';
+  document.getElementById('isu-title').textContent = 'Catatan isu baru';
+  document.querySelectorAll('.pb').forEach(p => p.classList.remove('aktif'));
+  document.querySelector('.pb-k').classList.add('aktif');
+}
+
+/* ---- LOAD LIST ---- */
+async function loadList(type) {
+  const el = document.getElementById('list-' + type);
+  el.innerHTML = '<div class="empty"><div class="spinner" style="margin:0 auto"></div></div>';
+  try {
+    const res = await apiGet({ 'x_01_eq': type });
+    if (!res.success || !res.data || res.data.length === 0) {
+      const icons = { artikel: '📄', ilustrasi: '💡', isu: '📋' };
+      const msgs = { artikel: 'Belum ada artikel', ilustrasi: 'Belum ada ide tersimpan', isu: 'Belum ada catatan isu' };
+      el.innerHTML = `<div class="empty"><div class="empty-icon">${icons[type]}</div>${msgs[type]}</div>`;
+      return;
+    }
+    el.innerHTML = res.data.map(r => renderItem(r, type)).join('');
+  } catch (e) {
+    el.innerHTML = '<div class="empty">Gagal memuat — periksa koneksi</div>';
+  }
+}
+
+function renderItem(r, type) {
+  const dotColor = {
+    artikel: r.x_03 === 'publish' ? '#1D7A5A' : r.x_03 === 'arsip' ? '#9E9890' : '#888780',
+    ilustrasi: r.x_03 === 'siap' ? '#1D7A5A' : '#888780',
+    isu: r.x_10 === 'penting' ? '#C0392B' : r.x_10 === 'sedang' ? '#B08800' : '#1D7A5A'
+  }[type];
+
+  const badge = {
+    artikel: r.x_03 === 'publish'
+      ? `<span class="li-badge" style="background:#DFF2EA;color:#1D7A5A">publish</span>`
+      : r.x_03 === 'arsip'
+      ? `<span class="li-badge" style="background:#F0EDE6;color:#9E9890">arsip</span>`
+      : `<span class="li-badge" style="background:#F0EDE6;color:#6B6560">draft</span>`,
+    ilustrasi: r.x_03 === 'siap'
+      ? `<span class="li-badge" style="background:#DFF2EA;color:#1D7A5A">siap</span>`
+      : `<span class="li-badge" style="background:#FDF5DC;color:#B08800">ide</span>`,
+    isu: r.x_10 === 'penting'
+      ? `<span class="li-badge" style="background:#FDECEB;color:#C0392B">penting</span>`
+      : r.x_10 === 'sedang'
+      ? `<span class="li-badge" style="background:#FDF5DC;color:#B08800">sedang</span>`
+      : `<span class="li-badge" style="background:#DFF2EA;color:#1D7A5A">catatan</span>`
+  }[type];
+
+  const meta = {
+    artikel: `${timeAgo(r.x_04)}${r.x_11 ? ' · ' + r.x_11 : ''}`,
+    ilustrasi: `${r.x_07 || ''} · ${r.x_09 || ''} · ${timeAgo(r.x_04)}`,
+    isu: `${r.x_09 || ''} · ${r.x_11 || 'belum ditindak'} · ${timeAgo(r.x_04)}`
+  }[type];
+
+  return `<div class="li">
+    <div class="li-dot" style="background:${dotColor}"></div>
+    <div class="li-body">
+      <div class="li-t">${r.x_02 || '(tanpa judul)'}${badge}</div>
+      <div class="li-m">${meta}</div>
+      <div class="li-act">
+        ${type === 'artikel' && r.x_03 === 'publish' ? `<button class="li-read" onclick="readArtikel(${r.id_x})">Baca</button>` : ''}
+        <button class="li-edit" onclick="editItem(${r.id_x},'${type}')">Edit</button>
+        <button class="li-del" onclick="deleteItem(${r.id_x},'${type}')">Hapus</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---- EDIT ---- */
+async function editItem(id, type) {
+  showLoad(true);
+  try {
+    const res = await apiGet({ id_x: id });
+    const r = res.data;
+    if (type === 'artikel') {
+      document.getElementById('a-judul').value = r.x_02 || '';
+      document.getElementById('a-kategori').value = r.x_11 || '';
+      document.getElementById('a-penulis').value = r.x_12 || '';
+      document.getElementById('a-status').value = r.x_03 || 'draft';
+      document.getElementById('a-id').value = id;
+      document.getElementById('artikel-edit-badge').style.display = 'block';
+      document.getElementById('artikel-edit-id').textContent = id;
+      document.getElementById('artikel-title').textContent = 'Edit artikel';
+      setEditorContent(r.x_05 || '');
+
+      // Restore tagged ilustrasi & isu dari x_13 & x_14
+      taggedIlustrasi = []; taggedIsu = [];
+      const savedIl  = insParseIds(r.x_13);
+      const savedIsu = insParseIds(r.x_14);
+      // Muat data ilustrasi & isu dulu kalau belum ada
+      if (allTagIlustrasi.length === 0 || allTagIsu.length === 0) {
+        await loadTagData();
+      }
+      savedIl.forEach(sid => {
+        const found = allTagIlustrasi.find(x => x.id_x == sid);
+        if (found) taggedIlustrasi.push({ id: found.id_x, judul: found.x_02||'(tanpa judul)', jenis: found.x_07||'analogi' });
+      });
+      savedIsu.forEach(sid => {
+        const found = allTagIsu.find(x => x.id_x == sid);
+        if (found) taggedIsu.push({ id: found.id_x, judul: found.x_02||'(tanpa judul)', prio: found.x_10||'catatan' });
+      });
+      document.getElementById('a-tagged-il').value = taggedIlustrasi.map(t=>t.id).join(',');
+      document.getElementById('a-tagged-isu').value = taggedIsu.map(t=>t.id).join(',');
+      updateTagCount('il', taggedIlustrasi.length);
+      updateTagCount('isu', taggedIsu.length);
+      renderTagChips('il');
+      renderTagChips('isu');
+
+      switchTab('artikel', document.getElementById('tab-artikel'));
+    } else if (type === 'ilustrasi') {
+      document.getElementById('il-judul').value = r.x_02 || '';
+      document.getElementById('il-isi').innerHTML = r.x_08 || '';
+      document.getElementById('il-nada').value = r.x_09 || 'inspiratif';
+      document.getElementById('il-topik').value = r.x_10 || '';
+      document.getElementById('il-id').value = id;
+      document.getElementById('ilustrasi-edit-badge').style.display = 'block';
+      document.getElementById('ilustrasi-edit-id').textContent = id;
+      document.getElementById('ilustrasi-title').textContent = 'Edit ilustrasi';
+      document.querySelectorAll('.jb').forEach(j => {
+        j.classList.toggle('aktif', j.dataset.val === r.x_07);
+      });
+      switchTab('ilustrasi', document.getElementById('tab-ilustrasi'));
+    } else {
+      document.getElementById('is-judul').value = r.x_02 || '';
+      document.getElementById('is-lokasi').value = r.x_09 || '';
+      document.getElementById('is-deskripsi').value = r.x_05 || '';
+      document.getElementById('is-sumber').value = r.x_06 || '';
+      document.getElementById('is-tanggal').value = r.x_04 || '';
+      document.getElementById('is-tindak').value = r.x_11 || 'belum';
+      document.getElementById('is-id').value = id;
+      document.getElementById('isu-edit-badge').style.display = 'block';
+      document.getElementById('isu-edit-id').textContent = id;
+      document.getElementById('isu-title').textContent = 'Edit isu';
+      document.querySelectorAll('.pb').forEach(p => {
+        p.classList.toggle('aktif', p.dataset.val === r.x_10);
+      });
+      switchTab('isu', document.getElementById('tab-isu'));
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (e) { showToast('Gagal memuat data'); }
+  showLoad(false);
+}
+
+/* ---- DELETE ---- */
+async function deleteItem(id, type) {
+  if (!confirm('Hapus item ini?')) return;
+  showLoad(true);
+  try {
+    const res = await apiDelete(id);
+    if (res.success) { showToast('Dihapus ✓'); loadList(type); loadStats(); }
+    else showToast('Gagal hapus');
+  } catch (e) { showToast('Error hapus'); }
+  showLoad(false);
+}
+
+/* ---- STATS ---- */
+async function loadStats() {
+  try {
+    const [a, il, is] = await Promise.all([
+      apiGet({ x_01_eq: 'artikel' }),
+      apiGet({ x_01_eq: 'ilustrasi' }),
+      apiGet({ x_01_eq: 'isu' })
+    ]);
+    document.getElementById('statArtikel').textContent = (a.count || 0) + ' artikel';
+    document.getElementById('statIlustrasi').textContent = (il.count || 0) + ' ide';
+    document.getElementById('statIsu').textContent = (is.count || 0) + ' isu';
+  } catch (e) {}
+}
+
+/* ---- TAG PANEL (Ilustrasi & Isu) ---- */
+let tagPanelOpen = false;
+let activeTagTab = 'ilustrasi';
+let allTagIlustrasi = [];
+let allTagIsu = [];
+let taggedIlustrasi = []; // [{id, judul, jenis}]
+let taggedIsu = [];       // [{id, judul, prio}]
+
+async function loadTagData() {
+  try {
+    const [ri, rs] = await Promise.all([
+      apiGet({ x_01_eq: 'ilustrasi' }),
+      apiGet({ x_01_eq: 'isu' })
+    ]);
+    allTagIlustrasi = ri.data || [];
+    allTagIsu = rs.data || [];
+  } catch(e) {}
+}
+
+function toggleTagPanel(tab) {
+  const panel = document.getElementById('tag-panel');
+  const btnIl = document.getElementById('btn-tag-il');
+  const btnIsu = document.getElementById('btn-tag-isu');
+
+  if (tagPanelOpen && activeTagTab === tab) {
+    // close
+    panel.classList.remove('open');
+    btnIl.classList.remove('active');
+    btnIsu.classList.remove('active');
+    tagPanelOpen = false;
+  } else {
+    panel.classList.add('open');
+    tagPanelOpen = true;
+    switchTagTab(tab);
+    if (tab === 'ilustrasi') { btnIl.classList.add('active'); btnIsu.classList.remove('active'); }
+    else { btnIsu.classList.add('active'); btnIl.classList.remove('active'); }
+    if (allTagIlustrasi.length === 0) loadTagData().then(() => renderTagList());
+    else renderTagList();
+  }
+}
+
+function switchTagTab(tab) {
+  activeTagTab = tab;
+  document.querySelectorAll('.tpt').forEach(t => t.classList.remove('active'));
+  document.getElementById('tpt-' + tab).classList.add('active');
+  document.getElementById('tag-search').value = '';
+  renderTagList();
+}
+
+function filterTagList() { renderTagList(); }
+
+function renderTagList() {
+  const q = (document.getElementById('tag-search').value || '').toLowerCase();
+  const el = document.getElementById('tag-panel-list');
+  const badge = {analogi:{bg:'#EAE7FB',c:'#3D338F'},cerita:{bg:'#DFF2EA',c:'#1D7A5A'},perumpamaan:{bg:'#FDF5DC',c:'#B08800'},metafora:{bg:'#FAEADE',c:'#C4511A'}};
+  const pbadge = {penting:{bg:'#FDECEB',c:'#C0392B'},sedang:{bg:'#FDF5DC',c:'#B08800'},catatan:{bg:'#DFF2EA',c:'#1D7A5A'}};
+
+  if (activeTagTab === 'ilustrasi') {
+    let list = allTagIlustrasi;
+    if (q) list = list.filter(r => (r.x_02||'').toLowerCase().includes(q) || (r.x_07||'').toLowerCase().includes(q));
+    if (!list.length) { el.innerHTML = `<div class="empty" style="padding:20px 16px">Belum ada ilustrasi</div>`; return; }
+    el.innerHTML = list.map(r => {
+      const j = r.x_07 || 'analogi';
+      const b = badge[j] || badge.analogi;
+      const dotColor = r.x_03 === 'siap' ? '#1D7A5A' : '#B08800';
+      const sel = taggedIlustrasi.find(t => t.id == r.id_x) ? 'selected' : '';
+      return `<div class="tp-item ${sel}" onclick="toggleTagItem(${r.id_x},'ilustrasi','${(r.x_02||'').replace(/'/g,"\\'")}','${j}')">
+        <div class="tp-item-dot" style="background:${dotColor}"></div>
+        <div class="tp-item-body">
+          <div class="tp-item-judul">${r.x_02||'(tanpa judul)'}
+            <span class="tp-item-badge" style="background:${b.bg};color:${b.c}">${j}</span>
+          </div>
+          <div class="tp-item-meta">${r.x_09?'Nada: '+r.x_09:''}${r.x_10?' · Topik: '+r.x_10:''}</div>
+        </div>
+        <div class="tp-item-check">✓</div>
+      </div>`;
+    }).join('');
+  } else {
+    let list = allTagIsu;
+    if (q) list = list.filter(r => (r.x_02||'').toLowerCase().includes(q) || (r.x_09||'').toLowerCase().includes(q));
+    if (!list.length) { el.innerHTML = `<div class="empty" style="padding:20px 16px">Belum ada isu</div>`; return; }
+    el.innerHTML = list.map(r => {
+      const p = r.x_10 || 'catatan';
+      const b = pbadge[p] || pbadge.catatan;
+      const sel = taggedIsu.find(t => t.id == r.id_x) ? 'selected' : '';
+      return `<div class="tp-item ${sel}" onclick="toggleTagItem(${r.id_x},'isu','${(r.x_02||'').replace(/'/g,"\\'")}','${p}')">
+        <div class="tp-item-dot" style="background:${b.c}"></div>
+        <div class="tp-item-body">
+          <div class="tp-item-judul">${r.x_02||'(tanpa judul)'}
+            <span class="tp-item-badge" style="background:${b.bg};color:${b.c}">${p}</span>
+          </div>
+          <div class="tp-item-meta">${r.x_09?'📍 '+r.x_09+' · ':''}${r.x_11||'belum ditindak'}</div>
+        </div>
+        <div class="tp-item-check">✓</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function toggleTagItem(id, type, judul, meta) {
+  if (type === 'ilustrasi') {
+    const idx = taggedIlustrasi.findIndex(t => t.id == id);
+    if (idx >= 0) taggedIlustrasi.splice(idx, 1);
+    else taggedIlustrasi.push({ id, judul, jenis: meta });
+    updateTagCount('il', taggedIlustrasi.length);
+    renderTagChips('il');
+  } else {
+    const idx = taggedIsu.findIndex(t => t.id == id);
+    if (idx >= 0) taggedIsu.splice(idx, 1);
+    else taggedIsu.push({ id, judul, prio: meta });
+    updateTagCount('isu', taggedIsu.length);
+    renderTagChips('isu');
+  }
+  renderTagList();
+  // store in hidden fields
+  document.getElementById('a-tagged-il').value = taggedIlustrasi.map(t=>t.id).join(',');
+  document.getElementById('a-tagged-isu').value = taggedIsu.map(t=>t.id).join(',');
+}
+
+function updateTagCount(key, count) {
+  const tc = document.getElementById('tc-' + key);
+  tc.textContent = count;
+  const btn = document.getElementById('btn-tag-' + key);
+  if (count > 0) { tc.style.display = 'inline'; btn.classList.add('active'); }
+  else { tc.style.display = 'none'; btn.classList.remove('active'); }
+}
+
+function renderTagChips(key) {
+  const list = key === 'il' ? taggedIlustrasi : taggedIsu;
+  const section = document.getElementById('tagged-' + key + '-section');
+  const chips = document.getElementById('tagged-' + key + '-chips');
+  if (!list.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  chips.innerHTML = list.map(t => {
+    const cls = key === 'isu' ? 'tagged-chip tagged-isu-chip' : 'tagged-chip';
+    const icon = key === 'il' ? '💡' : '📋';
+    return `<span class="${cls}" onclick="removeTaggedItem(${t.id},'${key}')">
+      ${icon} ${t.judul} <span class="chip-x">✕</span>
+    </span>`;
+  }).join('');
+}
+
+function removeTaggedItem(id, key) {
+  if (key === 'il') {
+    taggedIlustrasi = taggedIlustrasi.filter(t => t.id != id);
+    updateTagCount('il', taggedIlustrasi.length);
+    renderTagChips('il');
+    document.getElementById('a-tagged-il').value = taggedIlustrasi.map(t=>t.id).join(',');
+  } else {
+    taggedIsu = taggedIsu.filter(t => t.id != id);
+    updateTagCount('isu', taggedIsu.length);
+    renderTagChips('isu');
+    document.getElementById('a-tagged-isu').value = taggedIsu.map(t=>t.id).join(',');
+  }
+  if (tagPanelOpen) renderTagList();
+}
+
+// Close panel when clicking outside
+document.addEventListener('click', function(e) {
+  if (!tagPanelOpen) return;
+  const panel = document.getElementById('tag-panel');
+  const btnIl = document.getElementById('btn-tag-il');
+  const btnIsu = document.getElementById('btn-tag-isu');
+  if (!panel.contains(e.target) && !btnIl.contains(e.target) && !btnIsu.contains(e.target)) {
+    panel.classList.remove('open');
+    tagPanelOpen = false;
+  }
+});
+
+/* ---- INIT ---- */
+loadList('artikel');
+loadStats();
+loadTagData();
+</script>
+</body>
+</html>

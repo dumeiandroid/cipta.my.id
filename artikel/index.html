@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Ruang Baca</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F7F5F0; --surface: #FFFFFF; --surface2: #F0EDE6;
+  --border: #E2DDD5; --border2: #CCC8BE;
+  --text: #1A1816; --text2: #6B6560; --text3: #9E9890;
+  --purple: #5B4FCF; --purple-light: #EAE7FB; --purple-dark: #3D338F;
+  --green: #1D7A5A; --green-light: #DFF2EA;
+  --orange: #C4511A; --orange-light: #FAEADE;
+  --yellow: #B08800; --yellow-light: #FDF5DC;
+  --red: #C0392B; --red-light: #FDECEB;
+  --radius: 10px; --radius-lg: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+#toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-80px); background: var(--text); color: #fff; font-size: 13px; padding: 10px 18px; border-radius: 99px; z-index: 9999; transition: transform .3s ease; pointer-events: none; white-space: nowrap; }
+#toast.show { transform: translateX(-50%) translateY(0); }
+#loading { position: fixed; inset: 0; background: rgba(247,245,240,.85); display: none; align-items: center; justify-content: center; z-index: 8888; }
+.spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* TOPBAR */
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.logo { font-family: 'Lora', serif; font-size: 18px; font-weight: 500; letter-spacing: -0.3px; }
+.logo span { color: var(--purple); }
+.logo-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+/* MAIN TABS */
+.main-tabs { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; position: sticky; top: 53px; z-index: 99; }
+.main-tab { flex: 1; padding: 11px 4px; text-align: center; font-size: 13px; cursor: pointer; color: var(--text2); border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; }
+.main-tab.active { color: var(--purple); border-bottom-color: var(--purple); font-weight: 500; }
+
+/* SEARCH */
+.search-wrap { padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 98px; z-index: 98; }
+.search-inner { display: flex; align-items: center; background: var(--surface2); border: 1px solid var(--border); border-radius: 99px; padding: 0 14px; gap: 8px; transition: border-color .15s; }
+.search-inner:focus-within { border-color: var(--purple); background: var(--surface); }
+.search-input { flex: 1; font-size: 14px; font-family: 'DM Sans', sans-serif; padding: 8px 0; border: none; background: transparent; color: var(--text); outline: none; }
+.search-input::placeholder { color: var(--text3); }
+.search-clear { font-size: 14px; color: var(--text3); cursor: pointer; background: none; border: none; display: none; }
+
+/* KATEGORI TABS */
+.ktabs-wrap { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 151px; z-index: 97; overflow-x: auto; white-space: nowrap; padding: 0 16px; }
+.ktabs-wrap::-webkit-scrollbar { display: none; }
+.ktabs { display: inline-flex; }
+.ktab { font-size: 12px; padding: 9px 13px; cursor: pointer; color: var(--text2); border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; white-space: nowrap; }
+.ktab.active { color: var(--purple); border-bottom-color: var(--purple); font-weight: 500; }
+
+/* PANELS */
+.panel { display: none; }
+.panel.active { display: block; }
+.main { padding: 14px 16px; max-width: 680px; margin: 0 auto; }
+
+/* ARTIKEL CARD */
+.art-card { background: var(--surface); border-radius: var(--radius-lg); padding: 15px; cursor: pointer; transition: box-shadow .15s, transform .1s; border: 1px solid var(--border); margin-bottom: 10px; }
+.art-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.07); transform: translateY(-1px); }
+.art-cat { font-size: 11px; color: var(--purple); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
+.art-judul { font-family: 'Lora', serif; font-size: 16px; font-weight: 500; line-height: 1.45; margin-bottom: 6px; }
+.art-preview { font-size: 13px; color: var(--text2); line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 9px; }
+.art-meta { display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--text3); }
+.art-meta-left { display: flex; align-items: center; gap: 8px; }
+.art-author { display: flex; align-items: center; gap: 4px; }
+.art-avatar { width: 20px; height: 20px; border-radius: 50%; background: var(--purple-light); color: var(--purple); font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.art-read-btn { font-size: 11px; color: var(--purple); font-weight: 500; }
+.art-judul-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 0; }
+.art-judul-row .art-judul { margin-bottom: 0; flex: 1; }
+.art-draft-btn {
+  flex-shrink: 0;
+  font-size: 10px; padding: 3px 9px; border-radius: 99px;
+  border: 1px solid var(--border2); background: var(--surface2);
+  color: var(--text3); cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: all .15s; white-space: nowrap; margin-top: 2px;
+}
+.art-draft-btn:hover { background: var(--orange-light); border-color: var(--orange); color: var(--orange); }
+.art-draft-btn:disabled { opacity: .5; cursor: default; }
+
+/* ILUSTRASI CARD */
+.il-card { background: var(--surface); border-radius: var(--radius-lg); padding: 14px; border: 1px solid var(--border); margin-bottom: 10px; }
+.il-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+.il-judul { font-size: 14px; font-weight: 500; line-height: 1.4; flex: 1; }
+.il-badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; flex-shrink: 0; white-space: nowrap; }
+.il-isi { font-size: 13px; color: var(--text2); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.il-meta { font-size: 11px; color: var(--text3); margin-top: 7px; }
+
+/* ISU CARD */
+.isu-card { background: var(--surface); border-radius: var(--radius-lg); padding: 14px; border: 1px solid var(--border); border-left: 3px solid var(--orange); margin-bottom: 10px; }
+.isu-judul { font-size: 14px; font-weight: 500; margin-bottom: 5px; }
+.isu-isi { font-size: 13px; color: var(--text2); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.isu-meta { font-size: 11px; color: var(--text3); margin-top: 7px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.isu-chip { padding: 2px 8px; border-radius: 99px; font-size: 10px; }
+
+/* RESULT INFO */
+.result-info { font-size: 12px; color: var(--text3); margin-bottom: 12px; }
+.empty { text-align: center; padding: 48px 16px; color: var(--text3); font-size: 14px; }
+.empty-icon { font-size: 36px; margin-bottom: 12px; }
+.empty-sub { font-size: 12px; margin-top: 6px; }
+
+/* FULLSCREEN READ */
+#fullscreen { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 9000; overflow-y: auto; }
+#fullscreen.show { display: block; }
+.fs-topbar { position: sticky; top: 0; z-index: 10; background: rgba(247,245,240,.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.fs-left-group { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; overflow: hidden; }
+.fs-back { font-size: 13px; color: var(--text2); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; padding: 0; white-space: nowrap; flex-shrink: 0; }
+.fs-back:hover { color: var(--text); }
+.fs-logo { font-family: 'Lora', serif; font-size: 14px; color: var(--text3); }
+.fs-logo span { color: var(--purple); }
+.fs-body { max-width: 640px; margin: 0 auto; padding: 28px 20px 80px; }
+.fs-cat { font-size: 11px; color: var(--purple); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.fs-judul { font-family: 'Lora', serif; font-size: 26px; font-weight: 500; line-height: 1.35; margin-bottom: 12px; }
+.fs-meta { font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 8px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.fs-meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border2); }
+.fs-content { font-family: 'Lora', serif; color: var(--text); }
+.fs-content h1 { font-family: 'DM Sans', sans-serif; font-size: 20px; font-weight: 600; }
+.fs-content h2 { font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 500; }
+.fs-content h3 { font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; color: var(--text2); }
+.fs-content h4, .fs-content h5, .fs-content h6 { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--text2); }
+.fs-content strong { font-weight: 600; }
+.fs-content em { font-style: italic; color: var(--text2); }
+.fs-content blockquote { border-left: 3px solid var(--purple); padding-left: 14px; color: var(--text2); font-style: italic; }
+.fs-content hr { border: none; border-top: 1px solid var(--border); }
+@media (max-width: 400px) { .fs-judul { font-size: 21px; } }
+
+/* ILUSTRASI FULLSCREEN */
+#fs-ilustrasi { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 9000; overflow-y: auto; }
+#fs-ilustrasi.show { display: block; }
+.fsi-body { max-width: 640px; margin: 0 auto; padding: 28px 20px 80px; }
+.fsi-badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 99px; margin-bottom: 10px; }
+.fsi-judul { font-family: 'Lora', serif; font-size: 24px; font-weight: 500; line-height: 1.35; margin-bottom: 8px; }
+.fsi-meta { font-size: 12px; color: var(--text3); margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.fsi-content { font-family: 'Lora', serif; font-size: 16px; line-height: 1.9; color: var(--text); }
+.fsi-content p { margin-bottom: 12px; }
+
+/* ISU FULLSCREEN */
+#fs-isu { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 9000; overflow-y: auto; }
+#fs-isu.show { display: block; }
+.fsisu-body { max-width: 640px; margin: 0 auto; padding: 28px 20px 80px; }
+.fsisu-judul { font-family: 'Lora', serif; font-size: 22px; font-weight: 500; line-height: 1.35; margin-bottom: 10px; }
+.fsisu-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.fsisu-chip { font-size: 11px; padding: 3px 10px; border-radius: 99px; }
+.fsisu-divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.fsisu-field-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .3px; margin-bottom: 5px; }
+.fsisu-field-val { font-size: 15px; color: var(--text); line-height: 1.7; margin-bottom: 16px; }
+
+/* Card clickable */
+.il-card { cursor: pointer; transition: box-shadow .15s, transform .1s; }
+.il-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.07); transform: translateY(-1px); }
+.isu-card { cursor: pointer; transition: box-shadow .15s, transform .1s; }
+.isu-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.07); transform: translateY(-1px); }
+.il-card-footer, .isu-card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 8px;
+}
+.card-read-btn { font-size: 11px; color: var(--purple); font-weight: 500; }
+
+/* ===== ARTIKEL READER: Tombol Ilustrasi & Isu ===== */
+/* Tombol di fs-topbar */
+.fs-insert-btns { display: flex; gap: 6px; }
+.fs-ins-btn {
+  font-size: 11px; padding: 5px 11px; border-radius: 99px;
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--text2); cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: all .15s;
+  display: flex; align-items: center; gap: 4px;
+}
+.fs-ins-btn:hover { background: var(--purple-light); border-color: var(--purple); color: var(--purple); }
+.fs-ins-btn.active { background: var(--purple-light); border-color: var(--purple); color: var(--purple); font-weight: 500; }
+.fs-ins-btn .ins-count {
+  font-size: 10px; background: var(--purple); color: #fff;
+  border-radius: 99px; padding: 0px 5px; display: none;
+}
+.fs-ins-btn.has-items .ins-count { display: inline; }
+
+/* Picker panel (muncul di bawah topbar artikel) */
+#ins-picker {
+  display: none;
+  position: sticky; top: 53px; z-index: 9;
+  background: var(--surface); border-bottom: 2px solid var(--purple);
+  box-shadow: 0 4px 16px rgba(0,0,0,.08);
+}
+#ins-picker.open { display: block; }
+.ins-picker-tabs { display: flex; border-bottom: 1px solid var(--border); }
+.ins-ptab {
+  flex: 1; padding: 10px 4px; text-align: center;
+  font-size: 12px; cursor: pointer; color: var(--text2);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  font-family: 'DM Sans', sans-serif; transition: all .15s;
+}
+.ins-ptab.active { color: var(--purple); border-bottom-color: var(--purple); font-weight: 500; }
+.ins-picker-search { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.ins-picker-search input {
+  width: 100%; font-size: 13px; padding: 6px 12px; border-radius: 99px;
+  border: 1px solid var(--border); background: var(--surface2);
+  font-family: 'DM Sans', sans-serif; color: var(--text); outline: none;
+}
+.ins-picker-search input:focus { border-color: var(--purple); background: var(--surface); }
+.ins-picker-list { max-height: 220px; overflow-y: auto; }
+.ins-picker-list::-webkit-scrollbar { width: 3px; }
+.ins-picker-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+.ins-pitem {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border);
+  transition: background .1s;
+}
+.ins-pitem:last-child { border-bottom: none; }
+.ins-pitem:hover { background: var(--surface2); }
+.ins-pitem.selected { background: var(--purple-light); }
+.ins-pitem-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.ins-pitem-body { flex: 1; min-width: 0; }
+.ins-pitem-judul { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ins-pitem-meta { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.ins-pitem-badge { font-size: 10px; padding: 1px 6px; border-radius: 99px; margin-left: 5px; vertical-align: middle; }
+.ins-pitem-check { font-size: 13px; color: var(--purple); flex-shrink: 0; display: none; }
+.ins-pitem.selected .ins-pitem-check { display: block; }
+
+/* Bar chip referensi — sebaris dengan tombol kembali */
+#ins-selected-bar {
+  display: none;
+  min-width: 0;
+  overflow: hidden;
+}
+#ins-selected-bar.has-items { display: flex; align-items: center; }
+.ins-bar-btns { display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; }
+.ins-bar-btns::-webkit-scrollbar { display: none; }
+.ins-bar-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; padding: 6px 13px; border-radius: 99px;
+  border: 1px solid var(--border); background: var(--surface);
+  cursor: pointer; color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  transition: all .15s; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+.ins-bar-btn:hover { background: var(--purple-light); border-color: var(--purple); color: var(--purple); }
+.ins-bar-btn .ibtn-icon { font-size: 13px; }
+.ins-bar-btn .ibtn-x {
+  font-size: 10px; color: var(--text3); margin-left: 2px;
+  width: 14px; height: 14px; display: flex; align-items: center;
+  justify-content: center; border-radius: 50%;
+}
+.ins-bar-btn:hover .ibtn-x { background: #c7c3f0; color: var(--purple-dark); }
+
+/* Inline detail card — muncul saat tombol diklik */
+/* Detail card — floating sticky di bawah topbar */
+#ins-detail-area {
+  position: sticky;
+  top: 53px;
+  z-index: 8;
+  background: rgba(247,245,240,.96);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+#ins-detail-area:empty { display: none; }
+.ins-detail-card {
+  border-radius: 0; padding: 14px 20px;
+  margin: 0 auto; border: none; border-left: 3px solid transparent;
+  background: transparent;
+  max-width: 640px;
+}
+.ins-detail-card.type-ilustrasi { border-left: 3px solid var(--purple); }
+.ins-detail-card.type-isu { border-left: 3px solid var(--orange); }
+.ins-detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.ins-detail-title { font-size: 14px; font-weight: 500; font-family: 'DM Sans', sans-serif; flex: 1; }
+.ins-detail-badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; flex-shrink: 0; }
+.ins-detail-close { font-size: 11px; color: var(--text3); cursor: pointer; padding: 2px 6px; border-radius: 99px; background: var(--surface2); border: 1px solid var(--border); flex-shrink: 0; }
+.ins-detail-close:hover { background: var(--border); }
+.ins-detail-body { font-size: 14px; color: var(--text2); line-height: 1.7; font-family: 'DM Sans', sans-serif; }
+.ins-detail-body p { margin-bottom: 8px; }
+.ins-detail-body strong { color: var(--text); font-weight: 500; }
+.ins-detail-meta { font-size: 11px; color: var(--text3); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+<div id="loading"><div class="spinner"></div></div>
+
+<!-- FULLSCREEN READ -->
+<div id="fullscreen">
+  <div class="fs-topbar">
+    <div class="fs-left-group">
+      <button class="fs-back" onclick="closeRead()">← Kembali</button>
+      <div id="ins-selected-bar">
+        <div class="ins-bar-btns" id="ins-bar-btns"></div>
+      </div>
+    </div>
+    <div class="fs-insert-btns">
+      <button class="fs-ins-btn" id="ins-btn-il" onclick="toggleInsPicker('ilustrasi')">
+        💡 <span>Ilustrasi</span><span class="ins-count" id="ins-count-il">0</span>
+      </button>
+      <button class="fs-ins-btn" id="ins-btn-isu" onclick="toggleInsPicker('isu')">
+        📋 <span>Isu</span><span class="ins-count" id="ins-count-isu">0</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Picker panel (sticky di bawah topbar) -->
+  <div id="ins-picker">
+    <div class="ins-picker-tabs">
+      <div class="ins-ptab active" id="ins-ptab-ilustrasi" onclick="switchInsPTab('ilustrasi')">💡 Ilustrasi</div>
+      <div class="ins-ptab" id="ins-ptab-isu" onclick="switchInsPTab('isu')">📋 Isu</div>
+    </div>
+    <div class="ins-picker-search">
+      <input type="text" id="ins-search" placeholder="Cari..." oninput="renderInsList()">
+    </div>
+    <div class="ins-picker-list" id="ins-picker-list"></div>
+  </div>
+
+  <!-- Detail card floating — sticky di bawah topbar/picker -->
+  <div id="ins-detail-area"></div>
+
+  <div class="fs-body">
+    <div class="fs-cat" id="fs-cat"></div>
+    <div class="fs-judul" id="fs-judul"></div>
+    <div class="fs-meta" id="fs-meta"></div>
+    <div class="fs-content" id="fs-content"></div>
+  </div>
+</div>
+
+<!-- FULLSCREEN ILUSTRASI -->
+<div id="fs-ilustrasi">
+  <div class="fs-topbar">
+    <button class="fs-back" onclick="closeIlustrasiRead()">← Kembali</button>
+    <div class="fs-logo">Ruang<span>.</span>Baca</div>
+  </div>
+  <div class="fsi-body">
+    <div class="fsi-badge" id="fsi-badge"></div>
+    <div class="fsi-judul" id="fsi-judul"></div>
+    <div class="fsi-meta" id="fsi-meta"></div>
+    <div class="fsi-content" id="fsi-content"></div>
+  </div>
+</div>
+
+<!-- FULLSCREEN ISU -->
+<div id="fs-isu">
+  <div class="fs-topbar">
+    <button class="fs-back" onclick="closeIsuRead()">← Kembali</button>
+    <div class="fs-logo">Ruang<span>.</span>Baca</div>
+  </div>
+  <div class="fsisu-body">
+    <div class="fsisu-judul" id="fsisu-judul"></div>
+    <div class="fsisu-chips" id="fsisu-chips"></div>
+    <hr class="fsisu-divider">
+    <div id="fsisu-fields"></div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div>
+    <div class="logo">Ruang<span>.</span>Baca</div>
+    <div class="logo-sub">Konten pilihan</div>
+  </div>
+  <span id="stat-count" style="font-size:11px;color:var(--text3)"></span>
+</div>
+
+<!-- MAIN TABS -->
+<div class="main-tabs">
+  <div class="main-tab active" onclick="switchMainTab('artikel',this)">📄 Artikel</div>
+  <div class="main-tab" onclick="switchMainTab('ilustrasi',this)">💡 Ilustrasi</div>
+  <div class="main-tab" onclick="switchMainTab('isu',this)">📋 Isu</div>
+</div>
+
+<!-- SEARCH -->
+<div class="search-wrap">
+  <div class="search-inner">
+    <span style="color:var(--text3);font-size:14px">🔍</span>
+    <input class="search-input" id="searchInput" type="text" placeholder="Cari artikel..." oninput="onSearch(this)">
+    <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+  </div>
+</div>
+
+<!-- KATEGORI TABS -->
+<div class="ktabs-wrap" id="ktabs-wrap">
+  <div class="ktabs" id="ktabs">
+    <div class="ktab active" data-kat="semua" onclick="setKat(this)">Semua</div>
+  </div>
+</div>
+
+<!-- PANELS -->
+<div class="panel active" id="panel-artikel">
+  <div class="main">
+    <div class="result-info" id="resultInfo"></div>
+    <div id="artList"><div class="empty"><div class="spinner" style="margin:0 auto 12px"></div>Memuat...</div></div>
+  </div>
+</div>
+<div class="panel" id="panel-ilustrasi">
+  <div class="main">
+    <div id="ilList"><div class="empty"><div class="spinner" style="margin:0 auto 12px"></div>Memuat...</div></div>
+  </div>
+</div>
+<div class="panel" id="panel-isu">
+  <div class="main">
+    <div id="isuList"><div class="empty"><div class="spinner" style="margin:0 auto 12px"></div>Memuat...</div></div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   CONFIG — sesuaikan di sini tanpa perlu buka CSS
+================================================================ */
+const CONFIG = {
+  reading: {
+    fontSize:          "17px",   // ukuran font konten artikel
+    lineHeight:        "1.85",   // tinggi baris
+    pMarginBottom:     "10px",   // jarak bawah antar paragraf
+    liMarginBottom:    "2px",    // jarak antar item bullet list  ← geser ini
+    ulMarginTop:       "4px",    // jarak atas blok list
+    ulMarginBottom:    "8px",    // jarak bawah blok list
+    ulPaddingLeft:     "20px",   // indentasi bullet list
+    h2MarginTop:       "16px",   // jarak atas heading H2
+    h3MarginTop:       "12px",   // jarak atas heading H3
+    blockquoteMargin:  "10px 0", // jarak blockquote
+    hrMargin:          "16px 0", // jarak garis pemisah ---
+  }
+};
+
+/* ================================================================
+   API
+================================================================ */
+const API     = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+const TABLE   = 'artikel_ruangtulis';
+const HEADERS = { 'Content-Type': 'application/json', 'X-Custom-Auth': 'admin' };
+
+let allArtikel   = [];
+let allIlustrasi = [];
+let allIsu       = [];
+let activeKat    = 'semua';
+let searchQuery  = '';
+let activeTab    = 'artikel';
+
+/* ---- TERAPKAN CONFIG KE CSS ---- */
+function applyConfig() {
+  const c = CONFIG.reading;
+  const s = document.createElement('style');
+  s.textContent = `
+    .fs-content { font-size: ${c.fontSize}; line-height: ${c.lineHeight}; }
+    .fs-content p { margin-bottom: ${c.pMarginBottom}; }
+    .fs-content ul, .fs-content ol { padding-left: ${c.ulPaddingLeft}; margin: ${c.ulMarginTop} 0 ${c.ulMarginBottom}; }
+    .fs-content li { margin-bottom: ${c.liMarginBottom}; line-height: 1.65; }
+    .fs-content h2 { margin: ${c.h2MarginTop} 0 6px; }
+    .fs-content h3 { margin: ${c.h3MarginTop} 0 4px; }
+    .fs-content blockquote { margin: ${c.blockquoteMargin}; }
+    .fs-content hr { margin: ${c.hrMargin}; }
+  `;
+  document.head.appendChild(s);
+}
+
+/* ---- UTIL ---- */
+function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+function showLoad(v) { document.getElementById('loading').style.display = v?'flex':'none'; }
+function timeAgo(str) {
+  if (!str) return '';
+  const diff = Math.floor((new Date()-new Date(str))/1000);
+  if (diff<60) return 'baru saja';
+  if (diff<3600) return Math.floor(diff/60)+' mnt lalu';
+  if (diff<86400) return Math.floor(diff/3600)+' jam lalu';
+  const d=Math.floor(diff/86400);
+  if (d<30) return d+' hari lalu';
+  const m=Math.floor(d/30);
+  return m<12 ? m+' bln lalu' : Math.floor(m/12)+' thn lalu';
+}
+function initials(n) { return n ? n.trim().split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase() : '?'; }
+function stripHtml(h) { return h ? h.replace(/<[^>]+>/g,'').replace(/#+\s*/g,'').replace(/\*+/g,'').replace(/\s+/g,' ').trim() : ''; }
+
+/* ---- MARKDOWN/HTML RENDER ---- */
+function cleanAndRender(html) {
+  let t = html
+    .replace(/<strong[^>]*>(.*?)<\/strong>/gi,'**$1**')
+    .replace(/<b[^>]*>(.*?)<\/b>/gi,'**$1**')
+    .replace(/<em[^>]*>(.*?)<\/em>/gi,'*$1*')
+    .replace(/<i[^>]*>(.*?)<\/i>/gi,'*$1*')
+    .replace(/<br\s*\/?>/gi,'\n')
+    .replace(/<\/p>/gi,'\n\n')
+    .replace(/<[^>]+>/g,'')
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' ')
+    .trim();
+
+  return t
+    .replace(/^---+$/gm,'<hr>')
+    .replace(/^#{6} (.+)$/gm,'<h6>$1</h6>')
+    .replace(/^#{5} (.+)$/gm,'<h5>$1</h5>')
+    .replace(/^#{4} (.+)$/gm,'<h4>$1</h4>')
+    .replace(/^#{3} (.+)$/gm,'<h3>$1</h3>')
+    .replace(/^#{2} (.+)$/gm,'<h2>$1</h2>')
+    .replace(/^#{1} (.+)$/gm,'<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/^[*-] (.+)$/gm,'<li>$1</li>')
+    .replace(/((?:<li>[^\n]*<\/li>\n?)+)/g,'<ul>$1</ul>')
+    .replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>')
+    .split(/\n\n+/)
+    .map(b => {
+      b = b.trim();
+      if (!b) return '';
+      if (/^<(h[1-6]|ul|ol|blockquote|hr)/.test(b)) return b;
+      return '<p>'+b.replace(/\n/g,'<br>')+'</p>';
+    })
+    .join('');
+}
+
+/* ---- MAIN TAB SWITCH ---- */
+function switchMainTab(name, el) {
+  document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  activeTab = name;
+  document.getElementById('ktabs-wrap').style.display = name==='artikel' ? '' : 'none';
+  document.getElementById('searchInput').placeholder =
+    name==='artikel' ? 'Cari artikel...' : name==='ilustrasi' ? 'Cari ilustrasi...' : 'Cari isu...';
+  clearSearch();
+}
+
+/* ---- LOAD DATA ---- */
+async function apiGet(params) {
+  const url = new URL(API);
+  url.searchParams.set('table', TABLE);
+  for (const [k,v] of Object.entries(params)) url.searchParams.set(k,v);
+  return (await fetch(url,{headers:HEADERS})).json();
+}
+
+async function loadAll() {
+  try {
+    const [rA, rI, rS] = await Promise.all([
+      apiGet({x_01_eq:'artikel'}),
+      apiGet({x_01_eq:'ilustrasi'}),
+      apiGet({x_01_eq:'isu'})
+    ]);
+    allArtikel   = (rA.data||[]).filter(r=>r.x_03==='publish');
+    allIlustrasi = (rI.data||[]).filter(r=>r.x_03==='siap');
+    allIsu       = (rS.data||[]).filter(r=>r.x_11==='perlu-artikel');
+
+    document.getElementById('stat-count').textContent =
+      allArtikel.length+' artikel · '+allIlustrasi.length+' ilustrasi · '+allIsu.length+' isu';
+
+    buildKatTabs();
+    renderArtikel();
+    renderIlustrasi();
+    renderIsu();
+  } catch(e) {
+    document.getElementById('artList').innerHTML='<div class="empty">Gagal memuat — periksa koneksi</div>';
+  }
+}
+
+/* ---- KATEGORI ---- */
+function buildKatTabs() {
+  const kats = [...new Set(allArtikel.map(r=>r.x_11).filter(Boolean))].sort();
+  const wrap = document.getElementById('ktabs');
+  wrap.innerHTML = '<div class="ktab active" data-kat="semua" onclick="setKat(this)">Semua</div>';
+  kats.forEach(k => {
+    const d = document.createElement('div');
+    d.className='ktab'; d.dataset.kat=k;
+    d.onclick=function(){setKat(this);};
+    d.textContent=k.charAt(0).toUpperCase()+k.slice(1);
+    wrap.appendChild(d);
+  });
+}
+function setKat(el) {
+  document.querySelectorAll('.ktab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active'); activeKat=el.dataset.kat; renderArtikel();
+}
+
+/* ---- SEARCH ---- */
+function onSearch(el) {
+  searchQuery=el.value.trim().toLowerCase();
+  document.getElementById('searchClear').style.display=searchQuery?'block':'none';
+  if(activeTab==='artikel') renderArtikel();
+  else if(activeTab==='ilustrasi') renderIlustrasi();
+  else renderIsu();
+}
+function clearSearch() {
+  document.getElementById('searchInput').value='';
+  searchQuery='';
+  document.getElementById('searchClear').style.display='none';
+  if(activeTab==='artikel') renderArtikel();
+  else if(activeTab==='ilustrasi') renderIlustrasi();
+  else renderIsu();
+}
+
+/* ---- RENDER ARTIKEL ---- */
+function renderArtikel() {
+  let list = allArtikel;
+  if (activeKat!=='semua') list=list.filter(r=>(r.x_11||'').toLowerCase()===activeKat.toLowerCase());
+  if (searchQuery) list=list.filter(r=>
+    (r.x_02||'').toLowerCase().includes(searchQuery)||
+    (r.x_11||'').toLowerCase().includes(searchQuery)||
+    (r.x_12||'').toLowerCase().includes(searchQuery)||
+    stripHtml(r.x_05||'').toLowerCase().includes(searchQuery)
+  );
+  document.getElementById('resultInfo').textContent =
+    (searchQuery||activeKat!=='semua') ? list.length+' artikel ditemukan' : '';
+  const el=document.getElementById('artList');
+  if (!list.length) { el.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div>Tidak ada artikel<div class="empty-sub">${searchQuery?'Coba kata kunci lain':'Belum ada di kategori ini'}</div></div>`; return; }
+  el.innerHTML=list.map(r=>{
+    const preview=stripHtml(r.x_05||r.x_06||'').substring(0,110);
+    const kat=r.x_11?r.x_11.charAt(0).toUpperCase()+r.x_11.slice(1):'';
+    const author=r.x_12||'Anonim';
+    return `<div class="art-card" id="art-card-${r.id_x}" onclick="openArtikel(${r.id_x})">
+      ${kat?`<div class="art-cat">${kat}</div>`:''}
+      <div class="art-judul-row">
+        <div class="art-judul">${r.x_02||'(tanpa judul)'}</div>
+        <button class="art-draft-btn" onclick="moveToDraft(event,${r.id_x})" title="Pindahkan ke draft">Draft</button>
+      </div>
+      ${preview?`<div class="art-preview">${preview}…</div>`:''}
+      <div class="art-meta">
+        <div class="art-meta-left">
+          <div class="art-author"><div class="art-avatar">${initials(author)}</div><span>${author}</span></div>
+          ${r.x_04?`<span>· ${timeAgo(r.x_04)}</span>`:''}
+        </div>
+        <div class="art-read-btn">Baca →</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ---- RENDER ILUSTRASI ---- */
+function renderIlustrasi() {
+  let list = allIlustrasi;
+  if (searchQuery) list=list.filter(r=>
+    (r.x_02||'').toLowerCase().includes(searchQuery)||
+    stripHtml(r.x_08||'').toLowerCase().includes(searchQuery)
+  );
+  const el=document.getElementById('ilList');
+  if (!list.length) { el.innerHTML=`<div class="empty"><div class="empty-icon">💡</div>${searchQuery?'Tidak ditemukan':'Belum ada ilustrasi siap pakai'}</div>`; return; }
+  const badge={analogi:{bg:'#EAE7FB',c:'#3D338F'},cerita:{bg:'#DFF2EA',c:'#1D7A5A'},perumpamaan:{bg:'#FDF5DC',c:'#B08800'},metafora:{bg:'#FAEADE',c:'#C4511A'}};
+  el.innerHTML=list.map(r=>{
+    const j=r.x_07||'analogi'; const b=badge[j]||badge.analogi;
+    const isi=stripHtml(r.x_08||'').substring(0,140);
+    return `<div class="il-card" onclick="openIlustrasi(${r.id_x})">
+      <div class="il-header">
+        <div class="il-judul">${r.x_02||'(tanpa judul)'}</div>
+        <span class="il-badge" style="background:${b.bg};color:${b.c}">${j}</span>
+      </div>
+      ${isi?`<div class="il-isi">${isi}…</div>`:''}
+      <div class="il-card-footer">
+        <div class="il-meta">${[r.x_09?'Nada: '+r.x_09:'',r.x_10?'Topik: '+r.x_10:'',timeAgo(r.x_04)].filter(Boolean).join(' · ')}</div>
+        <div class="card-read-btn">Baca →</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ---- RENDER ISU ---- */
+function renderIsu() {
+  let list = allIsu;
+  if (searchQuery) list=list.filter(r=>
+    (r.x_02||'').toLowerCase().includes(searchQuery)||
+    (r.x_09||'').toLowerCase().includes(searchQuery)||
+    (r.x_05||'').toLowerCase().includes(searchQuery)
+  );
+  const el=document.getElementById('isuList');
+  if (!list.length) { el.innerHTML=`<div class="empty"><div class="empty-icon">📋</div>${searchQuery?'Tidak ditemukan':'Tidak ada isu yang ditandai untuk artikel'}</div>`; return; }
+  const pbadge={penting:{bg:'#FDECEB',c:'#C0392B'},sedang:{bg:'#FDF5DC',c:'#B08800'},catatan:{bg:'#DFF2EA',c:'#1D7A5A'}};
+  el.innerHTML=list.map(r=>{
+    const p=r.x_10||'catatan'; const b=pbadge[p]||pbadge.catatan;
+    const borderColor = p==='penting'?'#C0392B':p==='sedang'?'#B08800':'#1D7A5A';
+    const isi=(r.x_05||'').substring(0,130);
+    return `<div class="isu-card" style="border-left-color:${borderColor}" onclick="openIsu(${r.id_x})">
+      <div class="isu-judul">${r.x_02||'(tanpa judul)'}</div>
+      ${isi?`<div class="isu-isi">${isi}…</div>`:''}
+      <div class="isu-card-footer">
+        <div class="isu-meta">
+          <span class="isu-chip" style="background:${b.bg};color:${b.c}">${p}</span>
+          ${r.x_09?`<span>📍 ${r.x_09}</span>`:''}
+          ${r.x_04?`<span>${timeAgo(r.x_04)}</span>`:''}
+        </div>
+        <div class="card-read-btn">Baca →</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ---- OPEN ILUSTRASI FULLSCREEN ---- */
+function openIlustrasi(id) {
+  const r = allIlustrasi.find(x => x.id_x == id);
+  if (!r) { showToast('Ilustrasi tidak ditemukan'); return; }
+  const badge = {analogi:{bg:'#EAE7FB',c:'#3D338F'},cerita:{bg:'#DFF2EA',c:'#1D7A5A'},perumpamaan:{bg:'#FDF5DC',c:'#B08800'},metafora:{bg:'#FAEADE',c:'#C4511A'}};
+  const j = r.x_07 || 'analogi';
+  const b = badge[j] || badge.analogi;
+
+  const badgeEl = document.getElementById('fsi-badge');
+  badgeEl.textContent = j;
+  badgeEl.style.background = b.bg;
+  badgeEl.style.color = b.c;
+  badgeEl.style.border = `1px solid ${b.c}44`;
+
+  document.getElementById('fsi-judul').textContent = r.x_02 || '(tanpa judul)';
+  document.getElementById('fsi-meta').textContent = [
+    r.x_09 ? 'Nada: ' + r.x_09 : '',
+    r.x_10 ? 'Topik: ' + r.x_10 : '',
+    r.x_04 ? timeAgo(r.x_04) : ''
+  ].filter(Boolean).join(' · ');
+
+  const isi = r.x_08 || '';
+  const cleaned = isi ? cleanAndRender(isi) : '<p style="color:var(--text3)">Belum ada isi</p>';
+  document.getElementById('fsi-content').innerHTML = cleaned;
+  document.getElementById('fs-ilustrasi').classList.add('show');
+  document.getElementById('fs-ilustrasi').scrollTop = 0;
+}
+function closeIlustrasiRead() { document.getElementById('fs-ilustrasi').classList.remove('show'); }
+
+/* ---- OPEN ISU FULLSCREEN ---- */
+function openIsu(id) {
+  const r = allIsu.find(x => x.id_x == id);
+  if (!r) { showToast('Isu tidak ditemukan'); return; }
+  const pbadge = {penting:{bg:'#FDECEB',c:'#C0392B'},sedang:{bg:'#FDF5DC',c:'#B08800'},catatan:{bg:'#DFF2EA',c:'#1D7A5A'}};
+  const p = r.x_10 || 'catatan';
+  const b = pbadge[p] || pbadge.catatan;
+
+  document.getElementById('fsisu-judul').textContent = r.x_02 || '(tanpa judul)';
+
+  const chips = [];
+  chips.push(`<span class="fsisu-chip" style="background:${b.bg};color:${b.c};border:1px solid ${b.c}44">${p}</span>`);
+  if (r.x_09) chips.push(`<span class="fsisu-chip" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border)">📍 ${r.x_09}</span>`);
+  if (r.x_11) chips.push(`<span class="fsisu-chip" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border)">${r.x_11}</span>`);
+  document.getElementById('fsisu-chips').innerHTML = chips.join('');
+
+  const fields = [];
+  if (r.x_05) fields.push(`<div class="fsisu-field-label">Kejadian di Lapangan</div><div class="fsisu-field-val">${r.x_05.replace(/\n/g,'<br>')}</div>`);
+  if (r.x_06) fields.push(`<div class="fsisu-field-label">Sumber / Narasumber</div><div class="fsisu-field-val">${r.x_06}</div>`);
+  if (r.x_04) fields.push(`<div class="fsisu-field-label">Tanggal</div><div class="fsisu-field-val">${r.x_04}</div>`);
+  document.getElementById('fsisu-fields').innerHTML = fields.join('<hr class="fsisu-divider">');
+
+  document.getElementById('fs-isu').classList.add('show');
+  document.getElementById('fs-isu').scrollTop = 0;
+}
+function closeIsuRead() { document.getElementById('fs-isu').classList.remove('show'); }
+
+/* ---- INSERT PICKER (di dalam artikel fullscreen) ---- */
+let insPickerOpen = false;
+let insActiveTab = 'ilustrasi';
+let insSelected = []; // [{id, judul, type, data}]
+let insOpenDetail = null; // id yang detail-nya sedang terbuka
+
+function toggleInsPicker(tab) {
+  const picker = document.getElementById('ins-picker');
+  if (insPickerOpen && insActiveTab === tab) {
+    picker.classList.remove('open');
+    insPickerOpen = false;
+    document.getElementById('ins-btn-il').classList.remove('active');
+    document.getElementById('ins-btn-isu').classList.remove('active');
+  } else {
+    picker.classList.add('open');
+    insPickerOpen = true;
+    switchInsPTab(tab);
+    document.getElementById('ins-search').value = '';
+  }
+}
+
+function switchInsPTab(tab) {
+  insActiveTab = tab;
+  document.querySelectorAll('.ins-ptab').forEach(t => t.classList.remove('active'));
+  document.getElementById('ins-ptab-' + tab).classList.add('active');
+  document.getElementById('ins-btn-il').classList.toggle('active', tab === 'ilustrasi' && insPickerOpen);
+  document.getElementById('ins-btn-isu').classList.toggle('active', tab === 'isu' && insPickerOpen);
+  document.getElementById('ins-search').value = '';
+  renderInsList();
+}
+
+function renderInsList() {
+  const q = (document.getElementById('ins-search').value || '').toLowerCase();
+  const el = document.getElementById('ins-picker-list');
+  const badgeIl = {analogi:{bg:'#EAE7FB',c:'#3D338F'},cerita:{bg:'#DFF2EA',c:'#1D7A5A'},perumpamaan:{bg:'#FDF5DC',c:'#B08800'},metafora:{bg:'#FAEADE',c:'#C4511A'}};
+  const badgeIsu = {penting:{bg:'#FDECEB',c:'#C0392B'},sedang:{bg:'#FDF5DC',c:'#B08800'},catatan:{bg:'#DFF2EA',c:'#1D7A5A'}};
+
+  if (insActiveTab === 'ilustrasi') {
+    let list = allIlustrasi;
+    if (q) list = list.filter(r => (r.x_02||'').toLowerCase().includes(q) || (r.x_07||'').toLowerCase().includes(q));
+    if (!list.length) { el.innerHTML = '<div class="empty" style="padding:18px">Belum ada ilustrasi</div>'; return; }
+    el.innerHTML = list.map(r => {
+      const j = r.x_07 || 'analogi'; const b = badgeIl[j] || badgeIl.analogi;
+      const sel = insSelected.find(s => s.id == r.id_x && s.type === 'ilustrasi') ? 'selected' : '';
+      return `<div class="ins-pitem ${sel}" onclick="toggleInsItem(${r.id_x},'ilustrasi')">
+        <div class="ins-pitem-dot" style="background:${b.c}"></div>
+        <div class="ins-pitem-body">
+          <div class="ins-pitem-judul">${r.x_02||'(tanpa judul)'}
+            <span class="ins-pitem-badge" style="background:${b.bg};color:${b.c}">${j}</span>
+          </div>
+          <div class="ins-pitem-meta">${[r.x_09?'Nada: '+r.x_09:'', r.x_10?'Topik: '+r.x_10:''].filter(Boolean).join(' · ')}</div>
+        </div>
+        <div class="ins-pitem-check">✓</div>
+      </div>`;
+    }).join('');
+  } else {
+    let list = allIsu;
+    if (q) list = list.filter(r => (r.x_02||'').toLowerCase().includes(q) || (r.x_09||'').toLowerCase().includes(q));
+    if (!list.length) { el.innerHTML = '<div class="empty" style="padding:18px">Belum ada isu</div>'; return; }
+    el.innerHTML = list.map(r => {
+      const p = r.x_10 || 'catatan'; const b = badgeIsu[p] || badgeIsu.catatan;
+      const sel = insSelected.find(s => s.id == r.id_x && s.type === 'isu') ? 'selected' : '';
+      return `<div class="ins-pitem ${sel}" onclick="toggleInsItem(${r.id_x},'isu')">
+        <div class="ins-pitem-dot" style="background:${b.c}"></div>
+        <div class="ins-pitem-body">
+          <div class="ins-pitem-judul">${r.x_02||'(tanpa judul)'}
+            <span class="ins-pitem-badge" style="background:${b.bg};color:${b.c}">${p}</span>
+          </div>
+          <div class="ins-pitem-meta">${r.x_09?'📍 '+r.x_09:''}${r.x_11?' · '+r.x_11:''}</div>
+        </div>
+        <div class="ins-pitem-check">✓</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function toggleInsItem(id, type) {
+  const allData = type === 'ilustrasi' ? allIlustrasi : allIsu;
+  const r = allData.find(x => x.id_x == id);
+  if (!r) return;
+  const idx = insSelected.findIndex(s => s.id == id && s.type === type);
+  if (idx >= 0) {
+    insSelected.splice(idx, 1);
+    if (insOpenDetail === id + '-' + type) { insOpenDetail = null; renderInsDetailArea(); }
+  } else {
+    insSelected.push({ id, type, judul: r.x_02 || '(tanpa judul)', data: r });
+  }
+  updateInsBar();
+  renderInsList();
+  insSaveToDb(); // simpan ke database
+  showToast(idx >= 0 ? 'Referensi dilepas ✓' : 'Referensi disimpan ✓');
+}
+
+function updateInsBar() {
+  const bar = document.getElementById('ins-selected-bar');
+  const btns = document.getElementById('ins-bar-btns');
+  const countIl = insSelected.filter(s => s.type === 'ilustrasi').length;
+  const countIsu = insSelected.filter(s => s.type === 'isu').length;
+
+  // update count badges on header buttons
+  const cIlEl = document.getElementById('ins-count-il');
+  const cIsuEl = document.getElementById('ins-count-isu');
+  cIlEl.textContent = countIl;
+  cIsuEl.textContent = countIsu;
+  document.getElementById('ins-btn-il').classList.toggle('has-items', countIl > 0);
+  document.getElementById('ins-btn-isu').classList.toggle('has-items', countIsu > 0);
+
+  if (!insSelected.length) { bar.classList.remove('has-items'); btns.innerHTML = ''; return; }
+  bar.classList.add('has-items');
+
+  btns.innerHTML = insSelected.map(s => {
+    const icon = s.type === 'ilustrasi' ? '💡' : '📋';
+    const isOpen = insOpenDetail === s.id + '-' + s.type;
+    const activeStyle = isOpen ? 'background:var(--purple-light);border-color:var(--purple);color:var(--purple);' : '';
+    return `<button class="ins-bar-btn" style="${activeStyle}" onclick="toggleInsDetail(${s.id},'${s.type}')">
+      <span class="ibtn-icon">${icon}</span>
+      <span>${s.judul}</span>
+      <span class="ibtn-x" onclick="event.stopPropagation();removeInsItem(${s.id},'${s.type}')">✕</span>
+    </button>`;
+  }).join('');
+}
+
+function removeInsItem(id, type) {
+  insSelected = insSelected.filter(s => !(s.id == id && s.type === type));
+  if (insOpenDetail === id + '-' + type) { insOpenDetail = null; }
+  updateInsBar();
+  renderInsDetailArea();
+  if (insPickerOpen) renderInsList();
+  insSaveToDb();
+  showToast('Referensi dilepas ✓');
+}
+
+function toggleInsDetail(id, type) {
+  const key = id + '-' + type;
+  insOpenDetail = insOpenDetail === key ? null : key;
+  updateInsBar(); // re-render bar to update active style
+  renderInsDetailArea();
+}
+
+function renderInsDetailArea() {
+  const area = document.getElementById('ins-detail-area');
+  if (!insOpenDetail) { area.innerHTML = ''; return; }
+  const [id, type] = insOpenDetail.split('-');
+  const s = insSelected.find(x => x.id == id && x.type === type);
+  if (!s) { area.innerHTML = ''; return; }
+
+  const badgeIl = {analogi:{bg:'#EAE7FB',c:'#3D338F'},cerita:{bg:'#DFF2EA',c:'#1D7A5A'},perumpamaan:{bg:'#FDF5DC',c:'#B08800'},metafora:{bg:'#FAEADE',c:'#C4511A'}};
+  const badgeIsu = {penting:{bg:'#FDECEB',c:'#C0392B'},sedang:{bg:'#FDF5DC',c:'#B08800'},catatan:{bg:'#DFF2EA',c:'#1D7A5A'}};
+  const r = s.data;
+  let inner = '';
+
+  if (type === 'ilustrasi') {
+    const j = r.x_07 || 'analogi'; const b = badgeIl[j] || badgeIl.analogi;
+    const isi = r.x_08 ? cleanAndRender(r.x_08) : '<p style="color:var(--text3)">Belum ada isi</p>';
+    const meta = [r.x_09?'Nada: '+r.x_09:'', r.x_10?'Topik: '+r.x_10:''].filter(Boolean).join(' · ');
+    inner = `
+      <div class="ins-detail-head">
+        <div class="ins-detail-title">💡 ${s.judul}</div>
+        <span class="ins-detail-badge" style="background:${b.bg};color:${b.c}">${j}</span>
+        <span class="ins-detail-close" onclick="toggleInsDetail(${s.id},'${type}')">Tutup</span>
+      </div>
+      <div class="ins-detail-body">${isi}</div>
+      ${meta?`<div class="ins-detail-meta">${meta}</div>`:''}`;
+  } else {
+    const p = r.x_10 || 'catatan'; const b = badgeIsu[p] || badgeIsu.catatan;
+    const fields = [];
+    if (r.x_05) fields.push(`<strong>Kejadian:</strong> ${r.x_05.replace(/\n/g,' ')}`);
+    if (r.x_06) fields.push(`<strong>Sumber:</strong> ${r.x_06}`);
+    if (r.x_09) fields.push(`<strong>Lokasi:</strong> 📍 ${r.x_09}`);
+    inner = `
+      <div class="ins-detail-head">
+        <div class="ins-detail-title">📋 ${s.judul}</div>
+        <span class="ins-detail-badge" style="background:${b.bg};color:${b.c}">${p}</span>
+        <span class="ins-detail-close" onclick="toggleInsDetail(${s.id},'${type}')">Tutup</span>
+      </div>
+      <div class="ins-detail-body">${fields.map(f=>`<p>${f}</p>`).join('')}</div>
+      ${r.x_04?`<div class="ins-detail-meta">${r.x_04}</div>`:''}`;
+  }
+
+  area.innerHTML = `<div class="ins-detail-card type-${type}">${inner}</div>`;
+}
+
+// Tutup picker saat klik di luar
+document.addEventListener('click', function(e) {
+  if (!insPickerOpen) return;
+  const picker = document.getElementById('ins-picker');
+  const btnIl = document.getElementById('ins-btn-il');
+  const btnIsu = document.getElementById('ins-btn-isu');
+  if (!picker.contains(e.target) && !btnIl.contains(e.target) && !btnIsu.contains(e.target)) {
+    picker.classList.remove('open');
+    insPickerOpen = false;
+    btnIl.classList.remove('active');
+    btnIsu.classList.remove('active');
+  }
+});
+
+/* ---- SIMPAN PILIHAN KE DATABASE ---- */
+let insCurrentArtikelId = null;
+
+async function insSaveToDb() {
+  if (!insCurrentArtikelId) return;
+  try {
+    const idIl = JSON.stringify(insSelected.filter(s=>s.type==='ilustrasi').map(s=>s.id));
+    const idIsu = JSON.stringify(insSelected.filter(s=>s.type==='isu').map(s=>s.id));
+    const url = new URL(API);
+    url.searchParams.set('table', TABLE);
+    url.searchParams.set('id_x', insCurrentArtikelId);
+    await fetch(url, {
+      method: 'PUT',
+      headers: HEADERS,
+      body: JSON.stringify({ x_13: idIl, x_14: idIsu })
+    });
+  } catch(e) { console.warn('Gagal simpan referensi:', e); }
+}
+
+/* ---- OPEN ARTIKEL FULLSCREEN ---- */
+async function openArtikel(id) {
+  showLoad(true);
+  try {
+    const url=new URL(API); url.searchParams.set('table',TABLE); url.searchParams.set('id_x',id);
+    const data=await (await fetch(url,{headers:HEADERS})).json();
+    const r=data.data;
+    if (!r) { showToast('Artikel tidak ditemukan'); showLoad(false); return; }
+
+    insCurrentArtikelId = id;
+
+    const kat=r.x_11?r.x_11.charAt(0).toUpperCase()+r.x_11.slice(1):'';
+    document.getElementById('fs-cat').textContent=kat;
+    document.getElementById('fs-judul').textContent=r.x_02||'';
+    document.getElementById('fs-meta').innerHTML=[
+      `<span>${r.x_12||'Anonim'}</span>`,
+      r.x_04?'<div class="fs-meta-dot"></div>':'',
+      r.x_04?`<span>${r.x_04}</span>`:''
+    ].join('');
+    document.getElementById('fs-content').innerHTML=cleanAndRender(r.x_05||r.x_06||'');
+
+    // Reset insert state
+    insSelected = []; insOpenDetail = null; insPickerOpen = false;
+    document.getElementById('ins-picker').classList.remove('open');
+    document.getElementById('ins-btn-il').classList.remove('active','has-items');
+    document.getElementById('ins-btn-isu').classList.remove('active','has-items');
+    document.getElementById('ins-count-il').textContent = '0';
+    document.getElementById('ins-count-isu').textContent = '0';
+    document.getElementById('ins-selected-bar').classList.remove('has-items');
+    document.getElementById('ins-bar-btns').innerHTML = '';
+    document.getElementById('ins-detail-area').innerHTML = '';
+
+    // Restore pilihan tersimpan dari x_13 (ilustrasi) & x_14 (isu)
+    const savedIl  = insParseIds(r.x_13);
+    const savedIsu = insParseIds(r.x_14);
+
+    savedIl.forEach(sid => {
+      const found = allIlustrasi.find(x => x.id_x == sid);
+      if (found) insSelected.push({ id: found.id_x, type: 'ilustrasi', judul: found.x_02||'(tanpa judul)', data: found });
+    });
+    savedIsu.forEach(sid => {
+      const found = allIsu.find(x => x.id_x == sid);
+      if (found) insSelected.push({ id: found.id_x, type: 'isu', judul: found.x_02||'(tanpa judul)', data: found });
+    });
+
+    // Tampilkan bar jika ada pilihan tersimpan
+    updateInsBar();
+    switchInsPTab('ilustrasi');
+
+    document.getElementById('fullscreen').classList.add('show');
+    document.getElementById('fullscreen').scrollTop=0;
+  } catch(e) { showToast('Gagal memuat artikel'); }
+  showLoad(false);
+}
+
+function insParseIds(val) {
+  if (!val) return [];
+  try { const p = JSON.parse(val); return Array.isArray(p) ? p : []; }
+  catch(e) { return []; }
+}
+function closeRead() {
+  document.getElementById('fullscreen').classList.remove('show');
+  document.getElementById('ins-picker').classList.remove('open');
+  insPickerOpen = false;
+}
+window.addEventListener('popstate', closeRead);
+
+/* ---- DRAFT ---- */
+async function moveToDraft(e, id) {
+  e.stopPropagation();
+  const btn = e.currentTarget;
+  btn.textContent = '...';
+  btn.disabled = true;
+  try {
+    const url = new URL(API);
+    url.searchParams.set('table', TABLE);
+    url.searchParams.set('id_x', id);
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: HEADERS,
+      body: JSON.stringify({ x_03: 'draft' })
+    });
+    if (!res.ok) throw new Error();
+    // Hapus dari array dan UI
+    allArtikel = allArtikel.filter(r => r.id_x != id);
+    const card = document.getElementById('art-card-' + id);
+    if (card) {
+      card.style.transition = 'opacity .3s, transform .3s';
+      card.style.opacity = '0';
+      card.style.transform = 'translateX(8px)';
+      setTimeout(() => { card.remove(); renderArtikel(); }, 300);
+    }
+    showToast('Dipindahkan ke draft');
+  } catch(e) {
+    btn.textContent = 'Draft';
+    btn.disabled = false;
+    showToast('Gagal memindahkan');
+  }
+}
+
+/* ---- INIT ---- */
+applyConfig();
+loadAll();
+</script>
+</body>
+</html>
