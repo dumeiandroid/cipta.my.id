@@ -76,6 +76,13 @@ body {
 }
 .logo span { color: var(--purple); }
 .stats-row { display: flex; gap: 6px; }
+.logout-btn {
+  font-size: 11px; padding: 4px 11px; border-radius: 99px;
+  border: 1px solid var(--border2); background: transparent;
+  color: var(--text3); cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: all .15s; white-space: nowrap;
+}
+.logout-btn:hover { background: var(--red-light); border-color: #F09595; color: var(--red); }
 .stat-chip {
   font-size: 11px; padding: 3px 9px;
   border-radius: 99px; border: 1px solid var(--border);
@@ -413,9 +420,105 @@ textarea { resize: vertical; line-height: 1.6; }
 }
 .tagged-isu-chip .chip-x { color: var(--orange); }
 .tagged-empty { font-size: 12px; color: var(--text3); font-style: italic; }
+
+/* ===== LOGIN SCREEN ===== */
+#login-screen {
+  display: none; position: fixed; inset: 0;
+  background: var(--bg); z-index: 99999;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+#login-screen.hidden { display: none !important; }
+.login-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 32px 28px;
+  width: 100%; max-width: 360px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.06);
+}
+.login-logo {
+  font-family: 'Lora', serif; font-size: 22px; font-weight: 500;
+  text-align: center; margin-bottom: 6px;
+}
+.login-logo span { color: var(--purple); }
+.login-sub {
+  font-size: 12px; color: var(--text3); text-align: center;
+  margin-bottom: 28px;
+}
+.login-field { margin-bottom: 14px; }
+.login-field label {
+  font-size: 11px; color: var(--text2); display: block;
+  margin-bottom: 5px; text-transform: uppercase; letter-spacing: .3px;
+}
+.login-field input {
+  width: 100%; font-size: 14px; font-family: 'DM Sans', sans-serif;
+  padding: 10px 12px; border-radius: var(--radius);
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--text); outline: none; transition: border-color .15s, background .15s;
+}
+.login-field input:focus { border-color: var(--purple); background: var(--surface); }
+.login-remember {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--text2); margin-bottom: 20px;
+  cursor: pointer; user-select: none;
+}
+.login-remember input[type=checkbox] { display: none; }
+.login-check-box {
+  width: 17px; height: 17px; border-radius: 5px;
+  border: 1.5px solid var(--border2); background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all .15s;
+}
+.login-remember input:checked + .login-check-box {
+  background: var(--purple); border-color: var(--purple);
+}
+.login-remember input:checked + .login-check-box::after {
+  content: '✓'; font-size: 11px; color: #fff; font-weight: 600;
+}
+.login-btn {
+  width: 100%; padding: 12px; font-size: 14px; font-weight: 500;
+  border-radius: var(--radius); border: none;
+  background: var(--purple); color: #fff; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: background .15s;
+}
+.login-btn:hover { background: var(--purple-dark); }
+.login-btn:disabled { opacity: .6; cursor: default; }
+.login-error {
+  font-size: 12px; color: var(--red); text-align: center;
+  margin-bottom: 14px; display: none; padding: 8px 12px;
+  background: var(--red-light); border-radius: var(--radius);
+  border: 1px solid #F09595;
+}
+.login-error.show { display: block; }
+/* Sembunyikan semua konten saat belum login */
+body.needs-login > *:not(#login-screen):not(#toast) { display: none !important; }
+
 </style>
 </head>
 <body>
+
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Ruang<span>.</span>Tulis</div>
+    <div class="login-sub">Masuk untuk melanjutkan</div>
+    <div class="login-error" id="login-error">Username atau password salah</div>
+    <div class="login-field">
+      <label for="login-user">Username</label>
+      <input type="text" id="login-user" placeholder="Masukkan username" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label for="login-pass">Password</label>
+      <input type="password" id="login-pass" placeholder="Masukkan password" autocomplete="current-password">
+    </div>
+    <label class="login-remember">
+      <input type="checkbox" id="login-remember">
+      <div class="login-check-box"></div>
+      Ingat saya
+    </label>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Masuk</button>
+  </div>
+</div>
 
 <div id="toast"></div>
 <div id="loading"><div class="spinner"></div></div>
@@ -429,10 +532,13 @@ textarea { resize: vertical; line-height: 1.6; }
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">Ruang<span>.</span>Tulis</div>
-  <div class="stats-row">
-    <span class="stat-chip" id="statArtikel">— artikel</span>
-    <span class="stat-chip" id="statIlustrasi">— ide</span>
-    <span class="stat-chip" id="statIsu">— isu</span>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="stats-row">
+      <span class="stat-chip" id="statArtikel">— artikel</span>
+      <span class="stat-chip" id="statIlustrasi">— ide</span>
+      <span class="stat-chip" id="statIsu">— isu</span>
+    </div>
+    <button class="logout-btn" onclick="doLogout()" title="Keluar">↩ Keluar</button>
   </div>
 </div>
 
@@ -1401,10 +1507,110 @@ document.addEventListener('click', function(e) {
   }
 });
 
+/* ===== LOGIN ===== */
+const ADMIN_TABLE = 'admins';
+
+function loginGetSaved() {
+  try {
+    const s = localStorage.getItem('rtulis_session');
+    if (!s) return null;
+    return JSON.parse(s);
+  } catch(e) { return null; }
+}
+
+function loginSaveSession(user) {
+  localStorage.setItem('rtulis_session', JSON.stringify({ user, ts: Date.now() }));
+}
+
+function loginClearSession() {
+  localStorage.removeItem('rtulis_session');
+}
+
+function doLogout() {
+  loginClearSession();
+  // Reset form login
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-remember').checked = false;
+  document.getElementById('login-error').classList.remove('show');
+  showLoginScreen();
+}
+
+function loginCheck() {
+  const saved = loginGetSaved();
+  if (saved && saved.user) {
+    // Sudah ada session tersimpan
+    showApp();
+  } else {
+    showLoginScreen();
+  }
+}
+
+function showLoginScreen() {
+  document.body.classList.add('needs-login');
+  document.getElementById('login-screen').classList.remove('hidden');
+}
+
+function showApp() {
+  document.body.classList.remove('needs-login');
+  document.getElementById('login-screen').classList.add('hidden');
+  loadList('artikel');
+  loadStats();
+  loadTagData();
+}
+
+async function doLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value.trim();
+  const remember = document.getElementById('login-remember').checked;
+  const errEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+
+  if (!user || !pass) {
+    errEl.textContent = 'Username dan password wajib diisi';
+    errEl.classList.add('show'); return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Memeriksa...';
+  errEl.classList.remove('show');
+
+  try {
+    const url = new URL(API);
+    url.searchParams.set('table', ADMIN_TABLE);
+    url.searchParams.set('x_01_eq', user);
+    const res = await fetch(url, { headers: HEADERS });
+    const data = await res.json();
+    const admins = data.data || [];
+    const match = admins.find(a => a.x_01 === user && a.x_02 === pass);
+
+    if (match) {
+      if (remember) loginSaveSession(user);
+      showApp();
+      loadList('artikel');
+      loadStats();
+      loadTagData();
+    } else {
+      errEl.textContent = 'Username atau password salah';
+      errEl.classList.add('show');
+    }
+  } catch(e) {
+    errEl.textContent = 'Gagal terhubung ke server';
+    errEl.classList.add('show');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Masuk';
+}
+
+// Enter key submit
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.body.classList.contains('needs-login')) doLogin();
+});
+
 /* ---- INIT ---- */
-loadList('artikel');
-loadStats();
-loadTagData();
+loginCheck();
+// loadList, loadStats, loadTagData dipanggil oleh showApp() setelah login berhasil
 </script>
 </body>
 </html>
