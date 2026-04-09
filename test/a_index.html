@@ -438,28 +438,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 </div>
 
 
-<!-- ═══ SCREEN: KREPLIN ═══ -->
-<div id="screenKreplin" class="screen">
-  <div class="card card-wide">
-    <div id="topBar">
-      <span class="top-title" id="krepTitle">Tes Kraepelin</span>
-      <span id="krepProgress" style="display:none"></span>
-      <span id="krepTimer" style="display:none">30</span>
-    </div>
-    <div class="progress-wrap"><div id="krepProgressBar" style="height:100%;background:var(--primary);border-radius:99px;transition:width .4s;width:0%"></div></div>
-    <div id="krepContent" style="text-align:center;padding:24px 0">
-      <div style="font-size:.8em;color:var(--muted);margin-bottom:8px" id="krepSoalLabel">Soal 1</div>
-      <div style="font-size:2.8em;font-weight:800;color:var(--text);margin-bottom:24px;letter-spacing:.05em" id="krepSoalQ">? + ?</div>
-      <p style="font-size:.82em;color:var(--muted);margin-bottom:16px">Pilih <strong>angka satuan</strong> dari hasil penjumlahan</p>
-      <div id="krepOpts" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:380px;margin:0 auto"></div>
-    </div>
-    <div style="display:none">
-      <span>Kolom <strong id="krepKolom">1</strong> / 45</span>
-      <span>✓ <strong id="krepBenar">0</strong> &nbsp; ✗ <strong id="krepSalah">0</strong></span>
-    </div>
-  </div>
-</div>
-
 <script src="renderers.js"></script>
 
 <script>
@@ -609,7 +587,6 @@ async function loadAC(){
     AC=[];WTL=[];UT=[];
     for(const item of items){
       if(item.startsWith('who:')){const k=item.slice(4).trim(),w={fileKey:k,dataUrl:WHO_B+k+'.txt',data:null,_taskId:'who_'+k};WTL.push(w);UT.push({type:'who',ref:w})}
-      else if(item==='kreplin'){UT.push({type:'kreplin',ref:{_taskId:'kreplin'}})}
       else{const k=item.replace(/\.txt$/i,''),c=ALL_CONFIG.find(c=>(c.dataUrl||'').split('/').pop().replace(/\.txt$/i,'')==k);
         if(c){AC.push(c);if(c.type==='ranking'&&c.totalKolom){for(let ki=1;ki<=c.totalKolom;ki++)UT.push({type:'config',ref:{...c,id:c.id+'_k'+ki,_baseId:c.id,kolom:ki,_taskId:c.id+'_k'+ki}})}else UT.push({type:'config',ref:c})}}
     }
@@ -620,10 +597,6 @@ async function loadAC(){
 async function goNext2(){
   for(const ut of UT){
     if(ut.type==='who'){wBL=WTL;const i=wFindNext();if(i!==-1){wBI=i;wOpen(i);return}}
-    else if(ut.type==='kreplin'){
-      let done=false;try{const o=JSON.parse(cu.x_06||'{}');done=!!o.kreplin&&o.kreplin.dikerjakan!==''}catch{}
-      if(!done){hl();kreplinStart();return}
-    }
     else{
       const t=ut.ref;
       if(t.type==='ranking'&&t.totalKolom&&!t.id.includes('_k')){

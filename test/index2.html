@@ -443,8 +443,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   <div class="card card-wide">
     <div id="topBar">
       <span class="top-title" id="krepTitle">Tes Kraepelin</span>
-      <span id="krepProgress" style="display:none"></span>
-      <span id="krepTimer" style="display:none">30</span>
+      <span id="krepProgress"></span>
+      <span id="krepTimer" style="padding:6px 14px;background:var(--bg);border:2px solid var(--border);border-radius:8px;font-weight:700;font-size:1em;min-width:48px;text-align:center">30</span>
     </div>
     <div class="progress-wrap"><div id="krepProgressBar" style="height:100%;background:var(--primary);border-radius:99px;transition:width .4s;width:0%"></div></div>
     <div id="krepContent" style="text-align:center;padding:24px 0">
@@ -453,7 +453,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       <p style="font-size:.82em;color:var(--muted);margin-bottom:16px">Pilih <strong>angka satuan</strong> dari hasil penjumlahan</p>
       <div id="krepOpts" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:380px;margin:0 auto"></div>
     </div>
-    <div style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-size:.82em;color:var(--muted)">
       <span>Kolom <strong id="krepKolom">1</strong> / 45</span>
       <span>✓ <strong id="krepBenar">0</strong> &nbsp; ✗ <strong id="krepSalah">0</strong></span>
     </div>
@@ -621,7 +621,7 @@ async function goNext2(){
   for(const ut of UT){
     if(ut.type==='who'){wBL=WTL;const i=wFindNext();if(i!==-1){wBI=i;wOpen(i);return}}
     else if(ut.type==='kreplin'){
-      let done=false;try{const o=JSON.parse(cu.x_06||'{}');done=!!o.kreplin&&o.kreplin.dikerjakan!==''}catch{}
+      let done=false;try{const o=JSON.parse(cu.x_06||'{}');if(o.kreplin&&o.kreplin.dikerjakan){const cols=o.kreplin.dikerjakan.split('|');done=cols.length>=45&&cols.every(v=>v!=='')}}catch{}
       if(!done){hl();kreplinStart();return}
     }
     else{
@@ -899,6 +899,7 @@ function startPolling(){
         stopPolling();
         const st=$('tungguStatus'),tx=$('tungguStatusTxt'),btn=$('btnMulaiTes');
         if(st)st.classList.add('aktif');if(tx)tx.textContent='Tes siap dimulai!';if(btn)btn.style.display='block';
+        await loadAC();
         await goNext2();
       }
     }catch{}
@@ -933,7 +934,7 @@ function startTutupPolling(){
 }
 function stopTutupPolling(){if(_tutupPollInterval){clearInterval(_tutupPollInterval);_tutupPollInterval=null;}}
 function stopPolling(){if(pollInterval){clearInterval(pollInterval);pollInterval=null}}
-async function mulaiTes(){stopPolling();await goNext2()}
+async function mulaiTes(){stopPolling();await loadAC();await goNext2()}
 
 let _cdInterval=null;
 let _kontrolInfo={aktif:false,waktu_mulai:'',link:''};

@@ -255,8 +255,6 @@ $(document).ready(function() {
     }
 
     // Fungsi ini tetap melacak id_x_max
-    // URL dengan tanda '?' digabung berdasarkan base URL (sebelum '?')
-    // URL tanpa tanda '?' tetap dihitung masing-masing secara terpisah
     function aggregateByX01(data) {
         const aggregation = {};
         let totalCount = 0; 
@@ -264,28 +262,17 @@ $(document).ready(function() {
         if (!Array.isArray(data)) return { aggregation, totalCount };
         
         data.forEach(item => {
-            const rawUrl = item.x_01 || 'URL Kosong';
+            const url = item.x_01 || 'URL Kosong';
             const visits = parseInt(item.x_02, 10) || 0; 
             const currentIdX = parseInt(item.id_x, 10) || 0; 
-
-            // Tentukan key agregasi:
-            // - Jika URL mengandung '?', gunakan base URL (sebelum '?') + '?' sebagai key
-            // - Jika tidak ada '?', gunakan URL asli
-            let aggKey;
-            const qIndex = rawUrl.indexOf('?');
-            if (qIndex !== -1) {
-                aggKey = rawUrl.substring(0, qIndex) + '?'; // misal: /edukasi/tes-iq-premium?
-            } else {
-                aggKey = rawUrl;
-            }
             
-            if (aggregation[aggKey]) {
-                aggregation[aggKey].x_02_total += visits; 
-                if (currentIdX > aggregation[aggKey].id_x_max) {
-                     aggregation[aggKey].id_x_max = currentIdX;
+            if (aggregation[url]) {
+                aggregation[url].x_02_total += visits; 
+                if (currentIdX > aggregation[url].id_x_max) {
+                     aggregation[url].id_x_max = currentIdX;
                 }
             } else {
-                aggregation[aggKey] = { 
+                aggregation[url] = { 
                     x_02_total: visits,
                     id_x_max: currentIdX 
                 }; 
@@ -465,16 +452,7 @@ $(document).ready(function() {
         const emptyColspan = 6;
         $('#dataTableDetail tbody').html(`<tr><td colspan="${emptyColspan}" class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Memuat data...</p></td></tr>`);
         
-        // Jika URL diakhiri '?' berarti ini adalah grup URL dengan query string
-        // Gunakan x_01_like agar semua varian query string ikut diambil
-        const hasQueryGroup = url.endsWith('?');
-        let apiUrl;
-        if (hasQueryGroup) {
-            // Base URL tanpa '?' untuk LIKE query (misal: /edukasi/tes-iq-premium?)
-            apiUrl = `${API_BASE_URL}?table=${TABLE_NAME}&x_01_like=${encodeURIComponent(url)}%`;
-        } else {
-            apiUrl = `${API_BASE_URL}?table=${TABLE_NAME}&x_01_eq=${encodeURIComponent(url)}`;
-        }
+        let apiUrl = `${API_BASE_URL}?table=${TABLE_NAME}&x_01_eq=${encodeURIComponent(url)}`;
         
         if (filterToday === 'true') {
             const today = getTodayDate();

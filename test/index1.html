@@ -438,30 +438,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 </div>
 
 
-<!-- ═══ SCREEN: KREPLIN ═══ -->
-<div id="screenKreplin" class="screen">
-  <div class="card card-wide">
-    <div id="topBar">
-      <span class="top-title" id="krepTitle">Tes Kraepelin</span>
-      <span id="krepProgress" style="display:none"></span>
-      <span id="krepTimer" style="display:none">30</span>
-    </div>
-    <div class="progress-wrap"><div id="krepProgressBar" style="height:100%;background:var(--primary);border-radius:99px;transition:width .4s;width:0%"></div></div>
-    <div id="krepContent" style="text-align:center;padding:24px 0">
-      <div style="font-size:.8em;color:var(--muted);margin-bottom:8px" id="krepSoalLabel">Soal 1</div>
-      <div style="font-size:2.8em;font-weight:800;color:var(--text);margin-bottom:24px;letter-spacing:.05em" id="krepSoalQ">? + ?</div>
-      <p style="font-size:.82em;color:var(--muted);margin-bottom:16px">Pilih <strong>angka satuan</strong> dari hasil penjumlahan</p>
-      <div id="krepOpts" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:380px;margin:0 auto"></div>
-    </div>
-    <div style="display:none">
-      <span>Kolom <strong id="krepKolom">1</strong> / 45</span>
-      <span>✓ <strong id="krepBenar">0</strong> &nbsp; ✗ <strong id="krepSalah">0</strong></span>
-    </div>
-  </div>
-</div>
-
-<script src="renderers.js"></script>
-
 <script>
 // ============================================================
 // KONFIGURASI PAKET — diambil dari query parameter ?p=
@@ -470,37 +446,35 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 const AUTO_PAKET = new URLSearchParams(window.location.search).get('p') || '';
 
 const BASE='https://cipta.my.id/psikotest/simpel/';
-// Helper: buat entry config ringkas. file = nama file tanpa .txt (kecuali ada suffix _a dll)
-const _c=(id,file,type,sf='x_05',extra={})=>({id,dataUrl:BASE+(file||id)+'.txt',type,saveField:sf,...extra});
 const ALL_CONFIG=[
-  _c('apm0',  null,      'image_single'),
-  _c('apm1',  null,      'image_single'),
-  _c('apm1a', null,      'image_single'),
-  _c('apm1b', null,      'image_single'),
-  _c('apm2',  null,      'image_single'),
-  _c('apm2a', null,      'image_single'),
-  _c('apm2b', null,      'image_single'),
-  _c('apm14', null,      'image_single'),
-  _c('cfit0', null,      'image_single'),
-  _c('cfit1', null,      'image_single'),
-  _c('cfit2', 'cfit2_a', 'image_multi'),
-  _c('cfit3', null,      'image_single'),
-  _c('cfit4', null,      'image_single'),
-  _c('epps',  null,      'ab_choice',        'x_06'),
-  _c('ist0',  null,      'text_choice'),
-  _c('ist1',  null,      'text_choice'),
-  _c('ist2',  null,      'text_choice'),
-  _c('ist3',  null,      'text_choice'),
-  _c('ist4_a',null,      'text_input_scored'),
-  _c('ist5_a',null,      'digit_check'),
-  _c('ist6_a',null,      'digit_check'),
-  _c('ist7',  null,      'image_single'),
-  _c('ist8',  null,      'image_single'),
-  _c('ist9',  null,      'text_choice'),
-  _c('papi',  null,      'ab_choice',        'x_06'),
-  _c('rmib',  null,      'ranking',          'x_06', {kolom:1,totalKolom:8,showInstructionsOnce:true}),
-  _c('tkd3',  null,      'text_choice'),
-  _c('tkd6',  'tkd6_a',  'text_input'),
+  {id:'apm0',  dataUrl:BASE+'apm0.txt',   type:'image_single',      saveField:'x_05'},
+  {id:'apm1',  dataUrl:BASE+'apm1.txt',   type:'image_single',      saveField:'x_05'},
+  {id:'apm1a', dataUrl:BASE+'apm1a.txt',  type:'image_single',      saveField:'x_05'},
+  {id:'apm1b', dataUrl:BASE+'apm1b.txt',  type:'image_single',      saveField:'x_05'},
+  {id:'apm2',  dataUrl:BASE+'apm2.txt',   type:'image_single',      saveField:'x_05'},
+  {id:'apm2a', dataUrl:BASE+'apm2a.txt',  type:'image_single',      saveField:'x_05'},
+  {id:'apm2b', dataUrl:BASE+'apm2b.txt',  type:'image_single',      saveField:'x_05'},
+  {id:'apm14', dataUrl:BASE+'apm14.txt',  type:'image_single',      saveField:'x_05'},
+  {id:'cfit0', dataUrl:BASE+'cfit0.txt',  type:'image_single',      saveField:'x_05'},
+  {id:'cfit1', dataUrl:BASE+'cfit1.txt',  type:'image_single',      saveField:'x_05'},
+  {id:'cfit2', dataUrl:BASE+'cfit2_a.txt',type:'image_multi',       saveField:'x_05'},
+  {id:'cfit3', dataUrl:BASE+'cfit3.txt',  type:'image_single',      saveField:'x_05'},
+  {id:'cfit4', dataUrl:BASE+'cfit4.txt',  type:'image_single',      saveField:'x_05'},
+  {id:'epps',  dataUrl:BASE+'epps.txt',   type:'ab_choice',         saveField:'x_06'},
+  {id:'ist0',  dataUrl:BASE+'ist0.txt',   type:'text_choice',       saveField:'x_05'},
+  {id:'ist1',  dataUrl:BASE+'ist1.txt',   type:'text_choice',       saveField:'x_05'},
+  {id:'ist2',  dataUrl:BASE+'ist2.txt',   type:'text_choice',       saveField:'x_05'},
+  {id:'ist3',  dataUrl:BASE+'ist3.txt',   type:'text_choice',       saveField:'x_05'},
+  {id:'ist4_a',dataUrl:BASE+'ist4_a.txt', type:'text_input_scored', saveField:'x_05'},
+  {id:'ist5_a',dataUrl:BASE+'ist5_a.txt', type:'digit_check',       saveField:'x_05'},
+  {id:'ist6_a',dataUrl:BASE+'ist6_a.txt', type:'digit_check',       saveField:'x_05'},
+  {id:'ist7',  dataUrl:BASE+'ist7.txt',   type:'image_single',      saveField:'x_05'},
+  {id:'ist8',  dataUrl:BASE+'ist8.txt',   type:'image_single',      saveField:'x_05'},
+  {id:'ist9',  dataUrl:BASE+'ist9.txt',   type:'text_choice',       saveField:'x_05'},
+  {id:'papi',  dataUrl:BASE+'papi.txt',   type:'ab_choice',         saveField:'x_06'},
+  {id:'rmib',  dataUrl:BASE+'rmib.txt',   type:'ranking',           saveField:'x_06',kolom:1,totalKolom:8,showInstructionsOnce:true},
+  {id:'tkd3',  dataUrl:BASE+'tkd3.txt',   type:'text_choice',       saveField:'x_05'},
+  {id:'tkd6',  dataUrl:BASE+'tkd6_a.txt', type:'text_input',        saveField:'x_05'}
 ];
 const API_W='https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
 const API_R='https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
@@ -525,8 +499,6 @@ const aF=async(u,o={})=>(await fetch(u,o)).json();
 const aG=id=>aF(`${API_R}?table=${TBL}&id_x=${id}`,{headers:{'X-Custom-Auth':AUTH}});
 const aP=(id,b)=>fetch(`${API_W}?table=${TBL}&id_x=${id}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Custom-Auth':AUTH},body:JSON.stringify(b)});
 const gBio=f=>{try{const o=JSON.parse(cu.x_02||'{}');return o[f.replace(/^bio/,'').toLowerCase()]||''}catch{return''}};
-// Helper: parse vMap dari x_09 — dipakai di beberapa tempat
-function parseVMap(x09){vMap={};try{const v=JSON.parse(x09||'{}');Object.entries(v).forEach(([k,vl])=>{if(k&&/^[a-zA-Z0-9_]+$/.test(k))vMap[k]=parseInt(vl)||0})}catch{}}
 
 async function chkTok(t){try{const d=await aF(`${API_W}?table=${TBL}&x_01_eq=${encodeURIComponent(t)}`,{headers:{'X-Custom-Auth':AUTH}});return d.success&&d.count>0}catch{return false}}
 async function genTok(pid){for(let i=0;i<10;i++){const t=pid+'-'+rs(i<8?12:14);if(!(await chkTok(t)))return t}return pid+'-'+rs(16)}
@@ -546,6 +518,8 @@ async function loadPaket(){
     }catch(ex){console.warn('[loadPaket] x_03 gagal di-parse, pakai default',ex);}
   }catch(e){console.error('[loadPaket]',e)}
 }
+function renderPaket(){}
+
 // ─── Fungsi biodata (dipakai oleh biodata-2, tersedia global) ───
 function syncRadioStyle(){
   const y=$('bioKesediaanY'),n=$('bioKesediaanN');
@@ -609,7 +583,6 @@ async function loadAC(){
     AC=[];WTL=[];UT=[];
     for(const item of items){
       if(item.startsWith('who:')){const k=item.slice(4).trim(),w={fileKey:k,dataUrl:WHO_B+k+'.txt',data:null,_taskId:'who_'+k};WTL.push(w);UT.push({type:'who',ref:w})}
-      else if(item==='kreplin'){UT.push({type:'kreplin',ref:{_taskId:'kreplin'}})}
       else{const k=item.replace(/\.txt$/i,''),c=ALL_CONFIG.find(c=>(c.dataUrl||'').split('/').pop().replace(/\.txt$/i,'')==k);
         if(c){AC.push(c);if(c.type==='ranking'&&c.totalKolom){for(let ki=1;ki<=c.totalKolom;ki++)UT.push({type:'config',ref:{...c,id:c.id+'_k'+ki,_baseId:c.id,kolom:ki,_taskId:c.id+'_k'+ki}})}else UT.push({type:'config',ref:c})}}
     }
@@ -620,10 +593,6 @@ async function loadAC(){
 async function goNext2(){
   for(const ut of UT){
     if(ut.type==='who'){wBL=WTL;const i=wFindNext();if(i!==-1){wBI=i;wOpen(i);return}}
-    else if(ut.type==='kreplin'){
-      let done=false;try{const o=JSON.parse(cu.x_06||'{}');done=!!o.kreplin&&o.kreplin.dikerjakan!==''}catch{}
-      if(!done){hl();kreplinStart();return}
-    }
     else{
       const t=ut.ref;
       if(t.type==='ranking'&&t.totalKolom&&!t.id.includes('_k')){
@@ -656,6 +625,7 @@ function upShowDetail(id,nama,harga,desc,el){
   box.classList.add('show');
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
+function upConfirmDetail(){}
 async function upSelectPaket(nama,harga,el){
   trackBtn('lap_pilih_'+nama.toLowerCase());
   upPaketSel=nama;upHargaSel=harga;
@@ -760,7 +730,7 @@ function renderQ(){
   updProg();if(cfg.type==='ranking'){renderRank();return}dbg('renderQ');
   if(qi<0||qi>=qs.length){if(skip.length>0){qi=skip.shift();saveSt()}else{endTest(false);return}}
   const q=qs[qi];
-  (RENDERERS[cfg.type]||(_=>{}))(q);
+  ({image_single:rImgS,image_multi:rImgM,text_choice:rTxtC,text_input:rTxtI,text_input_scored:rTIS,digit_check:rDC,ab_choice:rAB}[cfg.type]||(_=>{}))(q);
 }
 function updProg(){
   const tot=cfg.type==='ranking'?8:qs.length,cur=cfg.type==='ranking'?(cfg.kolom||1):qi+1;
@@ -768,6 +738,109 @@ function updProg(){
   let info=cfg.type==='ranking'?`Kolom ${cfg.kolom} / ${cfg.totalKolom||8}`:`Soal ${qi+1} / ${qs.length}`;
   if(skip.length>0&&cfg.type!=='ranking')info+=` · ⟳ ${skip.length} dilewati`;
   $('progressInfo').innerText=info;const bt=$('bbTitle'),bp=$('bbProgress');if(bt)bt.innerText=cfg.title||'';if(bp)bp.innerText=info;
+}
+
+function rImgS(q){
+  const p=q.question.split(' ');
+  $('questionContent').innerHTML=`<div class="q-label">Soal ${p[0]}${skB()}</div><img class="q-image" src="${p[1]}" alt="soal" oncontextmenu="return false" ondragstart="return false"><div class="options-img" id="optArea"></div>`;
+  $('actionBar').innerHTML=`<button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
+  for(const k in q.options){if(!q.options[k])continue;const img=Object.assign(document.createElement('img'),{src:q.options[k],title:k});img.setAttribute('oncontextmenu','return false');img.setAttribute('ondragstart','return false');img.onclick=()=>{mAns(qi);ua.push(`${qi+1}${k}${k===q.answer?'v':'x'}`);if(k===q.answer)sc++;saveSt();goNx()};$('optArea').appendChild(img)}
+}
+function rImgM(q){
+  $('questionContent').innerHTML=`<div class="q-label">Pilih 2 gambar yang BERBEDA dari lainnya</div><div class="options-img" id="optArea" style="gap:14px"></div>`;
+  $('actionBar').innerHTML=`<button class="btn btn-success btn-sm" id="btnJ" onclick="subIM()" disabled>Jawab</button><button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
+  q.options.forEach((src,i)=>{const w=document.createElement('div');w.className='opt-check-wrap';w.innerHTML=`<input type="checkbox" id="mc${i}" value="${src}"><label for="mc${i}"><img src="${src}" oncontextmenu="return false" ondragstart="return false"></label>`;w.querySelector('input').addEventListener('change',()=>{$('btnJ').disabled=document.querySelectorAll('#optArea input:checked').length!==2});$('optArea').appendChild(w)});
+}
+function subIM(){const q=qs[qi],sel=[...document.querySelectorAll('#optArea input:checked')].map(c=>c.value),ok=sel.length===2&&sel.every(v=>q.correctAnswers.includes(v));mAns(qi);const opsiHuruf=['a','b','c','d','e','f'];const huruf=sel.map(v=>{const idx=q.options.indexOf(v);return idx>=0?opsiHuruf[idx]:'?';}).sort().join('').toUpperCase();ua.push(`${qi+1}${huruf}${ok?'v':'x'}`);if(ok)sc++;saveSt();goNx()}
+function rTxtC(q){
+  let opts='';for(const k in q.options){if(!q.options[k])continue;opts+=`<button class="opt-text" onclick="subTC('${k}','${q.answer}')"><strong>${k}.</strong> ${q.options[k]}</button>`}
+  $('questionContent').innerHTML=`<div class="q-label">Soal No. ${qi+1}${skB()}</div><div class="q-text">${q.question}</div><div class="options-text">${opts}</div>`;
+  $('actionBar').innerHTML=`<button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
+}
+function subTC(k,ans){mAns(qi);ua.push(`${qi+1}${k}${k===ans?'v':'x'}`);if(k===ans)sc++;saveSt();goNx()}
+function rTxtI(q){
+  const iT=cfg.id==='tkd6';
+  const isMobile=(('ontouchstart' in window)||navigator.maxTouchPoints>0)&&window.innerWidth<=768;
+  const npHtml=iT&&isMobile?`<div class="numpad-wrap"><div class="numpad-row">${'12345'.split('').map(d=>`<button class="numpad-btn" onclick="np('${d}')">${d}</button>`).join('')}</div><div class="numpad-row">${'67890'.split('').map(d=>`<button class="numpad-btn" onclick="np('${d}')">${d}</button>`).join('')}</div><div class="numpad-row"><button class="numpad-btn btn-space" onclick="np(' ')">SPASI</button><button class="numpad-btn" onclick="np('/')">/</button><button class="numpad-btn" onclick="npc()">,</button><button class="numpad-btn btn-del" onclick="np('DEL')">⌫</button></div></div>`:'';
+  const warnHtml=`<div id="tiWarn" style="display:none;color:var(--danger);font-size:.82em;font-weight:600;margin-top:6px;text-align:center">⚠ Masukkan 2 jawaban dipisah spasi. Contoh: <strong>48 50</strong></div>`;
+  $('questionContent').innerHTML=`<div class="q-label">Soal No. ${qi+1}${skB()}</div><div class="q-text">${q.question}</div><div class="input-wrap"><input type="text" id="userAnswer" placeholder="${iT?'Contoh: 48 50':'Jawaban...'}" autocomplete="off" ${iT&&isMobile?'readonly':''} oninput="tiOninput(this)"/>${warnHtml}${npHtml}</div>`;
+  $('actionBar').innerHTML=`<button class="btn btn-primary btn-sm" id="btnNx" onclick="tiTrySubmit()" disabled>Jawab</button><button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
+  const inp=$('userAnswer');
+  if(!iT){inp.focus();inp.addEventListener('keyup',e=>{if(e.key==='Enter'&&inp.value.trim())subTI()})}
+  else if(!isMobile){
+    inp.focus();
+    inp.addEventListener('keyup',e=>{if(e.key==='Enter')tiTrySubmit()});
+  }
+}
+function tiOninput(inp){
+  const iT=cfg.id==='tkd6';
+  if(iT){
+    const parts=inp.value.trim().split(/\s+/);
+    const valid=parts.length>=2&&parts[0]!==''&&parts[1]!=='';
+    $('btnNx').disabled=!valid;
+    const w=$('tiWarn');if(w)w.style.display='none';
+  }else{
+    $('btnNx').disabled=inp.value.trim()==='';
+  }
+}
+function tiTrySubmit(){
+  const inp=$('userAnswer');if(!inp)return;
+  const val=inp.value.trim();
+  const parts=val.split(/\s+/);
+  const w=$('tiWarn');
+  if(cfg.id==='tkd6'&&(parts.length<2||parts[1]==='')){
+    if(w){w.style.display='block';inp.focus();inp.style.borderColor='var(--danger)';setTimeout(()=>{inp.style.borderColor='';},1800)}
+    return;
+  }
+  if(w)w.style.display='none';
+  if(val)subTI();
+}
+function subTI(){const q=qs[qi],a=$('userAnswer').value.trim().replace(/,/g,' ');let ok=false;for(const ca of(q.correctAnswers||[])){if(a.toLowerCase()===ca.answer.replace(/,/g,' ').trim().toLowerCase()){ok=true;break}}mAns(qi);ua.push(`${qi+1}${a}${ok?'v':'x'}`);if(ok)sc++;saveSt();goNx()}
+function np(v){const inp=$('userAnswer');if(!inp)return;if(v==='DEL'){inp.value=inp.value.slice(0,-1)}else if(v===' '){if(inp.value.trim()!==''&&!inp.value.includes(' '))inp.value+=v}else{const p=inp.value.split(' ');if(p.length===2&&p[1].length>=6)return;if(p.length===1&&p[0].length>=6)return;inp.value+=v}const btn=$('btnNx');if(btn){const p=inp.value.split(' ');btn.disabled=!(p.length>=2&&p[0].trim()!==''&&p.slice(1).join(' ').trim()!=='')}}
+function npc(){np(',')}
+function rTIS(q){
+  const pair=q.question.split('|'),w1=pair[0]||'',w2=pair[1]||'';
+  $('questionContent').innerHTML=`<div class="tis-pair"><span class="tis-word">${w1}</span><span class="tis-dash">–</span><span class="tis-word">${w2}</span></div><p class="tis-hint">Temukan kata penghubung yang tepat antara dua kata di atas.</p><div class="tis-input-wrap"><input id="tisAnswer" type="text" placeholder="Ketik kata penghubung..." autocomplete="off"></div>`;
+  $('actionBar').innerHTML=`<button class="btn btn-primary btn-sm" onclick="subTIS('${q.answer||''}')">Jawab</button><button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
+  const inp=$('tisAnswer');if(inp)setTimeout(()=>inp.focus(),80);
+  if(inp)inp.addEventListener('keydown',e=>{if(e.key==='Enter')subTIS(q.answer||'')});
+}
+function subTIS(ans){const inp=$('tisAnswer');if(!inp||!inp.value.trim())return;const v=inp.value.trim().toLowerCase(),ok=v===String(ans).toLowerCase();mAns(qi);ua.push(`${qi+1}|${v}|${ok?'v':'x'}`);if(ok)sc++;saveSt();goNx()}
+let dcCk=[];
+function rDC(q){
+  const btns=['1','2','3','4','5','6','7','8','9','0'].map(d=>`<button class="dc-digit-btn" id="dcb-${d}" onclick="dcT('${d}')">${d}</button>`).join('');
+  dcCk=[];
+  $('questionContent').innerHTML=`<div class="q-label">Soal No. ${qi+1}${skB()}</div><div class="dc-question">${q.question}</div><p class="dc-hint">Klik angka sesuai urutan (1–9 dulu, lalu 0)</p><div class="dc-preview" id="dcP"><span class="dc-preview-label">Jawaban:</span><span id="dcPD" style="color:var(--muted);font-style:italic">—</span></div><div class="dc-digits">${btns}</div>`;
+  $('actionBar').innerHTML=`<button class="btn btn-primary btn-sm" id="btnDC" onclick="subDC()" disabled>Jawab</button><button class="btn btn-outline btn-sm" onclick="dcR()">↺ Reset</button><button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
+}
+function dcT(d){const i=dcCk.indexOf(d);i!==-1?dcCk.splice(i):dcCk.push(d);dcUI()}
+function dcR(){dcCk=[];dcUI()}
+function dcUI(){
+  ['1','2','3','4','5','6','7','8','9','0'].forEach(d=>{const b=$('dcb-'+d);if(!b)return;const p=dcCk.indexOf(d);b.classList.toggle('dc-checked',p!==-1);let o=b.querySelector('.dc-order');if(p!==-1){if(!o){o=document.createElement('span');o.className='dc-order';b.appendChild(o)}o.textContent=p+1}else if(o)o.remove()});
+  const p=$('dcPD');if(p)p.innerHTML=dcCk.length?dcCk.map(d=>`<span class="dc-preview-digit">${d}</span>`).join(''):'<span style="color:var(--muted);font-style:italic">—</span>';
+  $('btnDC').disabled=!dcCk.length;
+}
+function subDC(){const q=qs[qi],a=dcCk.join(''),ok=a===(q.correctAnswers||[]).join('');mAns(qi);ua.push(`${qi+1}|${a}|${ok?'v':'x'}`);if(ok)sc++;saveSt();goNx()}
+function rAB(q){
+  $('questionContent').innerHTML=`<div class="q-label">Pasangan Soal No. ${qi+1}</div><div class="options-ab"><button class="opt-ab" onclick="subAB('A')"><strong>A.</strong> ${q.A||(q.options&&q.options.A)||'-'}</button><button class="opt-ab" onclick="subAB('B')"><strong>B.</strong> ${q.B||(q.options&&q.options.B)||'-'}</button></div>`;
+  $('actionBar').innerHTML='';
+}
+function subAB(c){ua.push(c);saveSt();goNx()}
+function renderRank(){
+  const rows=qs.map((q,r)=>`<tr><td class="col-no" style="width:36px">${r+1}</td><td>${q.text}</td><td><div class="btn-container">${[1,2,3,4,5,6,7,8,9,10,11,12].map(n=>`<button class="btn-rank" id="br-${r}-${n}" onclick="rSl(${r},${n})">${n}</button>`).join('')}</div></td></tr>`).join('');
+  $('questionContent').innerHTML=`<div id="deskripsiBox">${cfg._pem||''}</div><div style="overflow-x:auto"><table class="ranking-table"><thead><tr><th class="col-no" style="width:36px">No</th><th>Pernyataan</th><th style="width:480px">Pilihan Ranking</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  $('actionBar').innerHTML='';updRankUI();
+}
+function rSl(r,v){
+  if(rSel[r]===v){rSel[r]=null;uNum=uNum.filter(n=>n!==v)}
+  else{if(uNum.includes(v))return;if(rSel[r]!==null)uNum=uNum.filter(n=>n!==rSel[r]);rSel[r]=v;uNum.push(v)}
+  updRankUI();saveSt();if(rSel.filter(n=>n!==null).length===12)saveRank(rSel.join(';'));
+}
+function updRankUI(){for(let r=0;r<12;r++){const s=rSel[r];for(let v=1;v<=12;v++){const b=$('br-'+r+'-'+v);if(!b)continue;b.classList.remove('sel','gone');if(s!==null){v===s?b.classList.add('sel'):b.classList.add('gone')}else if(uNum.includes(v))b.classList.add('gone')}}}
+async function saveRank(ds){
+  sl('Menyimpan...');const id=localStorage.getItem('db_id');
+  try{let o={};try{o=JSON.parse(cu[cfg.saveField]||'{}')}catch{}o[cfg._taskId]=ds;const v=JSON.stringify(o);await aP(id,{[cfg.saveField]:v});cu[cfg.saveField]=v;localStorage.removeItem('_st_'+cfg._taskId);rSel=Array(12).fill(null);uNum=[];await goNext2()}
+  catch(e){alert('Gagal: '+e.message)}finally{hl()}
 }
 
 function goNx(){
@@ -803,7 +876,7 @@ async function endTest(to){
 }
 function afterT(){
   try{
-    parseVMap(cu.x_09);
+    vMap={};if(cu.x_09){try{const v=JSON.parse(cu.x_09);Object.entries(v).forEach(([k,vl])=>{if(k&&/^[a-zA-Z0-9_]+$/.test(k))vMap[k]=parseInt(vl)||0})}catch{}}
     goNext2();
   }catch(e){console.error('[afterT]',e);farC(localStorage.getItem('token'))}
 }
@@ -813,7 +886,7 @@ async function farC(token){
     const res=await aF(`${API_R}?table=${TBL}&x_01_eq=${token}`,{headers:{'X-Custom-Auth':AUTH}});
     if(!res.success||!res.count){localStorage.clear();hl();ss('screenDaftar');loadPaket();return}
     cu=res.data[0];localStorage.setItem('db_id',cu.id_x);
-    parseVMap(cu.x_09);
+    vMap={};if(cu.x_09){try{const v=JSON.parse(cu.x_09);Object.entries(v).forEach(([k,vl])=>{if(k&&/^[a-zA-Z0-9_]+$/.test(k))vMap[k]=parseInt(vl)||0})}catch{}}
     await loadAC();await goNext2();
   }catch(e){console.error(e);hl();ss('screenDaftar');loadPaket()}
   finally{hl()}
@@ -1021,7 +1094,12 @@ window.onload = async () => {
   if (tok) {
     const _pLama = localStorage.getItem('_p');
     if (_pLama && _pLama !== AUTO_PAKET) {
-      Object.keys(localStorage).filter(k=>k.startsWith('_st_')).forEach(k=>localStorage.removeItem(k));
+      const _keysHapus = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('_st_')) _keysHapus.push(k);
+      }
+      _keysHapus.forEach(k => localStorage.removeItem(k));
       localStorage.setItem('_p', AUTO_PAKET);
     }
     sl('Memeriksa sesi...');
@@ -1029,7 +1107,7 @@ window.onload = async () => {
       const res = await aF(`${API_R}?table=${TBL}&x_01_eq=${tok}`, { headers: { 'X-Custom-Auth': AUTH } });
       if (!res.success || !res.count) { localStorage.clear(); hl(); ss('screenDaftar'); loadPaket(); return; }
       cu = res.data[0]; localStorage.setItem('db_id', cu.id_x);
-      parseVMap(cu.x_09);
+      vMap = {}; if (cu.x_09) { try { const v = JSON.parse(cu.x_09); Object.entries(v).forEach(([k, vl]) => { if (k && /^[a-zA-Z0-9_]+$/.test(k)) vMap[k] = parseInt(vl) || 0; }); } catch {} }
       await loadAC();
       let status = 'nonaktif'; try { status = JSON.parse(cu.x_02 || '{}').status || 'nonaktif'; } catch {}
       if (status === 'aktif') { hl(); await goNext2(); }
@@ -1047,9 +1125,8 @@ window.onload = async () => {
   const API_BASE_URL='https://lidan-co-id.pages.dev/api/contacts';
   const TABLE_NAME='kunjungan',BASE_LS_KEY='visit_tracker_',QUERY_PARAM=`tabel=${TABLE_NAME}`;
   function simpleHash(str){let h=0;for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0;}return Math.abs(h).toString(16)}
-  const _pad=n=>String(n).padStart(2,'0');
-  function getTodayDate(){const n=new Date();return n.getFullYear()+'-'+_pad(n.getMonth()+1)+'-'+_pad(n.getDate())}
-  function getCurrentTimestamp(){const n=new Date();return getTodayDate()+' '+_pad(n.getHours())+':'+_pad(n.getMinutes())+':'+_pad(n.getSeconds())}
+  function getTodayDate(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')}
+  function getCurrentTimestamp(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')+' '+String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0')}
   async function trackVisit(){
     const url=window.location.href,lsKey=BASE_LS_KEY+simpleHash(url),today=getTodayDate();
     let stored=null;try{stored=JSON.parse(localStorage.getItem(lsKey)||'null')}catch{}
