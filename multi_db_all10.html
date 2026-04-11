@@ -565,7 +565,7 @@ function openNewTable(){
 // ════════════════════════════════════════════════
 //  LAZY LOAD / INFINITE SCROLL
 // ════════════════════════════════════════════════
-const PAGE_SIZE   = 100;  // baris per page — harus sama dengan DEFAULT_LIMIT di API
+const PAGE_SIZE   = 50;   // baris per page
 let   lazyOffset  = 0;
 let   lazyTotal   = null; // null = belum tahu
 let   lazyLoading = false;
@@ -594,8 +594,8 @@ async function loadData(){
     return;
   }
 
-  // 'total' = jumlah semua baris di DB (dari API baru), fallback ke count jika API lama
-  lazyTotal  = firstBatch.total ?? null;
+  // Simpan total — API pakai field 'count', bukan 'total'
+  lazyTotal  = firstBatch.total ?? firstBatch.count ?? null;
   lazyOffset = firstBatch.data.length;
 
   // Render tabel awal
@@ -674,7 +674,8 @@ function attachObserver(){
       if(lazyObserver) lazyObserver.disconnect();
       return;
     }
-    lazyTotal  = batch.total ?? lazyTotal;
+    // API pakai field 'count', bukan 'total'
+    lazyTotal  = batch.total ?? batch.count ?? lazyTotal;
     lazyOffset += batch.data.length;
     appendRows(batch.data);
 
