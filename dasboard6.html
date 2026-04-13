@@ -512,68 +512,22 @@ $(document).ready(function() {
                 console.log("[DEBUG DETAIL] Contoh Item Data Pertama:", rawData[0]);
             }
 
-            // Helper: parse x_04 JSON
-            function parseX04(raw) {
-                try { return raw ? JSON.parse(raw) : null; } catch(e) { return null; }
-            }
-            // Helper: badge warna load_ms
-            function loadBadge(ms) {
-                if (ms == null) return '';
-                const color = ms < 300 ? '#1cc88a' : ms < 800 ? '#f6c23e' : '#e74a3b';
-                return '<span style="color:'+color+';font-weight:600;">⚡'+ms+'ms</span>';
-            }
-            // Helper: label klik singkat
-            function shortLabel(lbl) {
-                const map = {'cta_wa_utama':'wa-utama','cta_wa_hero':'wa-hero','wa_float':'wa-float',
-                    'paket_dasar':'p-dasar','paket_lengkap':'p-lengkap','paket_komprehensif':'p-kompr','btn_bandingkan_paket':'bandingkan'};
-                return map[lbl] || lbl.substring(0,14);
-            }
-
             detailDataTableInstance = $('#dataTableDetail').DataTable({
                 data: rawData,
                 columns: [
                     { data: 'id_x' },
-                    { data: 'x_01' },
+                    { data: 'x_01' }, 
                     { data: 'x_02' },
-                    {
-                        // Kunjungan (x_03) + load_ms + sections_reached
-                        data: null,
-                        render: function(row) {
-                            const eng = parseX04(row.x_04);
-                            let sub = '';
-                            if (eng) {
-                                const lb = loadBadge(eng.load_ms);
-                                const sec = eng.sections_reached != null ? '<span style="color:#4e73df;">s:'+eng.sections_reached+'</span>' : '';
-                                if (lb || sec) sub = '<div style="font-size:0.72em;margin-top:2px;">'+(lb||'')+(lb&&sec?' · ':'')+(sec||'')+'</div>';
-                            }
-                            return '<div>'+(row.x_03 ?? '-')+'</div>'+sub;
-                        }
-                    },
-                    {
-                        // Waktu Update (x_19) + daftar klik dari buttons_clicked
-                        data: null,
-                        render: function(row) {
-                            const eng = parseX04(row.x_04);
-                            let sub = '';
-                            if (eng && Array.isArray(eng.buttons_clicked) && eng.buttons_clicked.length > 0) {
-                                const labels = eng.buttons_clicked.map(function(l){
-                                    return '<span style="background:#eaf4ee;color:#1a6b3c;border-radius:3px;padding:0 3px;margin-right:2px;font-size:0.68em;">'+shortLabel(l)+'</span>';
-                                }).join('');
-                                sub = '<div style="margin-top:3px;">🖱️ '+labels+'</div>';
-                            } else if (eng) {
-                                sub = '<div style="font-size:0.68em;color:#bbb;margin-top:2px;">no klik</div>';
-                            }
-                            return '<div>'+(row.x_19 ?? '-')+'</div>'+sub;
-                        }
-                    },
+                    { data: 'x_03' },
+                    { data: 'x_19' },
                     { data: 'x_20' }
                 ],
-                "destroy": true,
+                "destroy": true, 
                 "paging": true,
                 "ordering": true,
                 "info": true,
                 "searching": true,
-                "order": [[5, 'desc']]
+                "order": [[5, 'desc']] // Tetap urutkan modal detail berdasarkan Waktu Create (x_20)
             });
 
         } catch (error) {
