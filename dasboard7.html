@@ -525,43 +525,50 @@ $(document).ready(function() {
                 const color = ms < 300 ? '#1cc88a' : ms < 800 ? '#f6c23e' : '#e74a3b';
                 return '<span style="color:'+color+';font-weight:600;">⚡'+ms+'ms</span>';
             }
-            // Helper: label klik full (tanpa pemotongan)
+            // Helper: label klik singkat
             function shortLabel(lbl) {
-                return lbl;
+                const map = {'cta_wa_utama':'wa-utama','cta_wa_hero':'wa-hero','wa_float':'wa-float',
+                    'paket_dasar':'p-dasar','paket_lengkap':'p-lengkap','paket_komprehensif':'p-kompr','btn_bandingkan_paket':'bandingkan'};
+                return map[lbl] || lbl.substring(0,14);
             }
 
             detailDataTableInstance = $('#dataTableDetail').DataTable({
                 data: rawData,
                 columns: [
                     { data: 'id_x' },
+                    { data: 'x_01' },
+                    { data: 'x_02' },
                     {
-                        // URL (x_01) + semua info engagement dari x_04
+                        // Kunjungan (x_03) + load_ms + sections_reached
                         data: null,
                         render: function(row) {
                             const eng = parseX04(row.x_04);
                             let sub = '';
                             if (eng) {
-                                // load_ms + sections_reached
                                 const lb = loadBadge(eng.load_ms);
                                 const sec = eng.sections_reached != null ? '<span style="color:#4e73df;">s:'+eng.sections_reached+'</span>' : '';
-                                if (lb || sec) sub += '<div style="font-size:0.72em;margin-top:3px;">'+(lb||'')+(lb&&sec?' · ':'')+(sec||'')+'</div>';
-                                // buttons_clicked
-                                if (Array.isArray(eng.buttons_clicked) && eng.buttons_clicked.length > 0) {
-                                    const labels = eng.buttons_clicked.map(function(l){
-                                        const full = shortLabel(l);
-                                        return '<span title="'+full+'" style="display:inline-block;background:#eaf4ee;color:#1a6b3c;border-radius:3px;padding:1px 5px;margin:1px 2px 1px 0;font-size:0.68em;white-space:nowrap;">&#128432; '+full+'</span>';
-                                    }).join('');
-                                    sub += '<div style="margin-top:3px;">'+labels+'</div>';
-                                } else {
-                                    sub += '<div style="font-size:0.68em;color:#bbb;margin-top:2px;">no klik</div>';
-                                }
+                                if (lb || sec) sub = '<div style="font-size:0.72em;margin-top:2px;">'+(lb||'')+(lb&&sec?' · ':'')+(sec||'')+'</div>';
                             }
-                            return '<div style="word-break:break-all;">'+( row.x_01 ?? '-')+'</div>'+sub;
+                            return '<div>'+(row.x_03 ?? '-')+'</div>'+sub;
                         }
                     },
-                    { data: 'x_02' },
-                    { data: 'x_03' },
-                    { data: 'x_19' },
+                    {
+                        // Waktu Update (x_19) + daftar klik dari buttons_clicked
+                        data: null,
+                        render: function(row) {
+                            const eng = parseX04(row.x_04);
+                            let sub = '';
+                            if (eng && Array.isArray(eng.buttons_clicked) && eng.buttons_clicked.length > 0) {
+                                const labels = eng.buttons_clicked.map(function(l){
+                                    return '<span style="background:#eaf4ee;color:#1a6b3c;border-radius:3px;padding:0 3px;margin-right:2px;font-size:0.68em;">'+shortLabel(l)+'</span>';
+                                }).join('');
+                                sub = '<div style="margin-top:3px;">🖱️ '+labels+'</div>';
+                            } else if (eng) {
+                                sub = '<div style="font-size:0.68em;color:#bbb;margin-top:2px;">no klik</div>';
+                            }
+                            return '<div>'+(row.x_19 ?? '-')+'</div>'+sub;
+                        }
+                    },
                     { data: 'x_20' }
                 ],
                 "destroy": true,
