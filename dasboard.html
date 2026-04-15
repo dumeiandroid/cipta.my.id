@@ -341,18 +341,21 @@ $(document).ready(function() {
 
     // Klasifikasi URL berdasarkan TAB_CONFIG
     function classifyUrl(url) {
-        const u = url.toLowerCase();
-        // Cek tab non-fallback terlebih dahulu (urutan array = prioritas)
-        for (const tab of TAB_CONFIG) {
-            if (tab.fallback) continue;
-            if (tab.contains && tab.contains.some(kw => u.includes(kw.toLowerCase()))) {
-                return tab.id;
-            }
+    const u = url.toLowerCase();
+    
+    // Cek admin DULU sebelum apapun
+    if (u.includes("admin")) return "admin";
+    
+    // Baru cek tab lain seperti biasa
+    for (const tab of TAB_CONFIG) {
+        if (tab.fallback) continue;
+        if (tab.contains && tab.contains.some(kw => u.includes(kw.toLowerCase()))) {
+            return tab.id;
         }
-        // Fallback ke tab dengan fallback: true
-        const fallbackTab = TAB_CONFIG.find(t => t.fallback);
-        return fallbackTab ? fallbackTab.id : TAB_CONFIG[0].id;
     }
+    const fallbackTab = TAB_CONFIG.find(t => t.fallback);
+    return fallbackTab ? fallbackTab.id : TAB_CONFIG[0].id;
+}
 
     // Hitung total kunjungan per tab dari aggregation
     function calcTabTotals(aggregation) {
