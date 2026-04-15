@@ -100,16 +100,16 @@
   /* ── Deteksi label tombol otomatis ── */
   function getBtnLabel(el) {
     // Coba teks tombol
-    const txt = (el.textContent || '').trim().replace(/\s+/g, ' ').substring(0, 50);
+    const txt = (el.textContent || '').trim().replace(/\s+/g, ' ');
     if (txt) return txt;
 
     // Coba aria-label
     const aria = el.getAttribute('aria-label');
-    if (aria) return aria.trim().substring(0, 50);
+    if (aria) return aria.trim();
 
     // Fallback: href singkat atau tag
     const href = el.getAttribute('href');
-    if (href) return 'link_' + href.substring(0, 30).replace(/\s/g, '_');
+    if (href) return 'link_' + href.replace(/\s/g, '_');
 
     return 'btn_unknown';
   }
