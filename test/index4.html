@@ -272,8 +272,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
      ═══════════════════════════════════════════ -->
 <script>
   const FRAGMENT_BASE  = 'https://lidan.co.id/test/';
-  const BIODATA_FILE   = 'biodata-2.html';   // ← ganti angka sesuai kebutuhan
-  const PENUTUP_FILE   = 'penutup-2.html';   // ← ganti angka sesuai kebutuhan
+  let BIODATA_FILE     = 'biodata-2.html';   // ← default, akan diganti dari x_03 paket
+  let PENUTUP_FILE     = 'penutup-2.html';   // ← default, akan diganti dari x_03 paket
+
+  function resolveFragmentUrl(file) {
+    return file.startsWith('http') ? file : FRAGMENT_BASE + file;
+  }
 </script>
 
 <div id="globalLoader"><div class="spinner"></div><p id="loaderText">Memuat...</p></div>
@@ -405,23 +409,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   </div>
 </div>
 
-<!-- ═══ SCREEN: KREPLIN ═══ -->
-<div id="screenKreplin" class="screen">
-  <div class="card card-wide">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap">
-      <span class="top-title" id="krepTitle">Tes Kraepelin</span>
-      <span id="krepProgress" style="color:var(--muted);font-size:.85em"></span>
-      <span id="krepTimerDisplay" style="display:none"></span>
-    </div>
-    <div class="progress-wrap"><div id="krepProgressBar" style="height:100%;background:var(--primary);border-radius:99px;transition:width .4s;width:0%"></div></div>
-    <div id="krepContent" style="text-align:center;padding:24px 0">
-      <div style="font-size:2.8em;font-weight:800;color:var(--text);margin-bottom:24px;letter-spacing:.05em" id="krepSoalQ">? + ?</div>
-      <p style="font-size:.82em;color:var(--muted);margin-bottom:16px">Pilih <strong>angka satuan</strong> dari hasil penjumlahan</p>
-      <div id="krepOpts" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:380px;margin:0 auto"></div>
-    </div>
-  </div>
-</div>
-
 <!-- ═══ SCREEN: SOAL ═══ -->
 <div id="screenTest" class="screen">
   <div class="card card-wide card-xl" id="testCard">
@@ -453,12 +440,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
 <script>
 // ============================================================
-// KONFIGURASI PAKET — diambil dari query string ?p=nama-paket
+// KONFIGURASI PAKET — diambil dari query parameter ?p=
+// Contoh URL: https://lidan.co.id/test/tes-iq.html?p=tes-iq-free
 // ============================================================
-const _urlParams = new URLSearchParams(window.location.search);
-const AUTO_PAKET = (_urlParams.get('p') || '').trim();
-
-
+const AUTO_PAKET = new URLSearchParams(window.location.search).get('p') || '';
 
 const BASE='https://cipta.my.id/psikotest/simpel/';
 const ALL_CONFIG=[
@@ -489,8 +474,7 @@ const ALL_CONFIG=[
   {id:'papi',  dataUrl:BASE+'papi.txt',   type:'ab_choice',         saveField:'x_06'},
   {id:'rmib',  dataUrl:BASE+'rmib.txt',   type:'ranking',           saveField:'x_06',kolom:1,totalKolom:8,showInstructionsOnce:true},
   {id:'tkd3',  dataUrl:BASE+'tkd3.txt',   type:'text_choice',       saveField:'x_05'},
-  {id:'tkd6',  dataUrl:BASE+'tkd6_a.txt', type:'text_input',        saveField:'x_05'},
-  {id:'kreplin',dataUrl:BASE+'kreplin.txt',type:'kreplin',           saveField:'x_06'}
+  {id:'tkd6',  dataUrl:BASE+'tkd6_a.txt', type:'text_input',        saveField:'x_05'}
 ];
 const API_W='https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
 const API_R='https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
@@ -524,31 +508,15 @@ async function loadPaket(){
     const d=await aF(`${API_R}?table=${TBL_P}`,{headers:{'X-Custom-Auth':AUTH}});
     pList=(d.success&&d.data)||[];
     sPaket=pList.find(p=>(p.x_01||'').trim()===AUTO_PAKET)||null;
-    if(!sPaket)console.warn('[loadPaket] Paket tidak ditemukan:',AUTO_PAKET);
+    if(!sPaket){console.warn('[loadPaket] Paket tidak ditemukan:',AUTO_PAKET);return;}
+    // Baca x_03 untuk BIODATA_FILE & PENUTUP_FILE
+    try{
+      const x03=JSON.parse(sPaket.x_03||'{}');
+      if(x03.biodata) BIODATA_FILE=x03.biodata;
+      if(x03.penutup) PENUTUP_FILE=x03.penutup;
+      console.log('[loadPaket] Fragment dari x_03:',BIODATA_FILE,PENUTUP_FILE);
+    }catch(ex){console.warn('[loadPaket] x_03 gagal di-parse, pakai default',ex);}
   }catch(e){console.error('[loadPaket]',e)}
-}
-
-function showPaketNotFoundScreen(){
-  hl();
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  let errScreen=$('screenPaketTidakAda');
-  if(!errScreen){
-    errScreen=document.createElement('div');
-    errScreen.id='screenPaketTidakAda';
-    errScreen.className='screen active';
-    errScreen.innerHTML=`
-      <div class="card" style="text-align:center;margin-top:40px">
-        <div style="font-size:3em;margin-bottom:12px">🔍</div>
-        <div style="font-size:1.25em;font-weight:700;color:var(--danger);margin-bottom:10px">Paket Tidak Ada</div>
-        <p style="color:var(--muted);font-size:.9em;line-height:1.7">
-          Paket <strong style="color:var(--text)">${AUTO_PAKET}</strong> tidak ditemukan.<br>
-          Pastikan nama paket sudah benar atau hubungi administrator.
-        </p>
-      </div>`;
-    document.body.appendChild(errScreen);
-  }else{
-    errScreen.classList.add('active');
-  }
 }
 function renderPaket(){}
 
@@ -600,7 +568,7 @@ async function handleDaftar(){
     const res=await aF(`${API_W}?table=${TBL}`,{method:'POST',headers:{'Content-Type':'application/json','X-Custom-Auth':AUTH},body:JSON.stringify({x_01:tok,x_02:bio})});
     if(!res.success)throw new Error(res.message||'Gagal.');
     localStorage.setItem('token',tok);localStorage.setItem('db_id',String(res.id_x));localStorage.setItem('_p',pnm);
-    cu={id_x:res.id_x,x_01:tok,x_02:bio};sl('Memuat tes...');await loadAC();hl();ss('screenTunggu');showZoomTunggu();startGlobalPolling();
+    cu={id_x:res.id_x,x_01:tok,x_02:bio};sl('Memuat tes...');await loadAC();hl();ss('screenTunggu');showZoomTunggu();startPolling();
   }catch(e){hl();eb.textContent='⚠ '+e.message;eb.classList.add('show');sLoad(btn,false)}
 }
 
@@ -615,7 +583,6 @@ async function loadAC(){
     AC=[];WTL=[];UT=[];
     for(const item of items){
       if(item.startsWith('who:')){const k=item.slice(4).trim(),w={fileKey:k,dataUrl:WHO_B+k+'.txt',data:null,_taskId:'who_'+k};WTL.push(w);UT.push({type:'who',ref:w})}
-      else if(item==='kreplin'){const c=ALL_CONFIG.find(c=>c.id==='kreplin');if(c){AC.push(c);UT.push({type:'kreplin',ref:{...c,_taskId:'kreplin'}})}}
       else{const k=item.replace(/\.txt$/i,''),c=ALL_CONFIG.find(c=>(c.dataUrl||'').split('/').pop().replace(/\.txt$/i,'')==k);
         if(c){AC.push(c);if(c.type==='ranking'&&c.totalKolom){for(let ki=1;ki<=c.totalKolom;ki++)UT.push({type:'config',ref:{...c,id:c.id+'_k'+ki,_baseId:c.id,kolom:ki,_taskId:c.id+'_k'+ki}})}else UT.push({type:'config',ref:c})}}
     }
@@ -624,16 +591,8 @@ async function loadAC(){
 }
 
 async function goNext2(){
-  // ── Periksa dulu sebelum lanjut ke instruksi berikutnya ──
-  const boleh=await cekSebelumInstruksi();
-  if(!boleh)return;
-
   for(const ut of UT){
     if(ut.type==='who'){wBL=WTL;const i=wFindNext();if(i!==-1){wBI=i;wOpen(i);return}}
-    else if(ut.type==='kreplin'){
-      let done=false;try{const o=JSON.parse(cu.x_06||'{}');done=!!o.kreplin&&o.kreplin.dikerjakan!==''}catch{}
-      if(!done){hl();await kreplinStart(ut.ref);return}
-    }
     else{
       const t=ut.ref;
       if(t.type==='ranking'&&t.totalKolom&&!t.id.includes('_k')){
@@ -648,7 +607,7 @@ async function goNext2(){
   doneAll();
 }
 
-function doneAll(){stopGlobalPolling();stopPolling();hl();ss('screenUpgrade')}
+function doneAll(){hl();ss('screenUpgrade')}
 
 // ── UPGRADE LAPORAN ──
 let upPaketSel=null,upHargaSel=0;
@@ -698,40 +657,7 @@ async function upSelectPaket(nama,harga,el){
 }
 function upSkip(){trackBtn('lap_lewati');$('doneIcon').innerText='🎉';$('doneTitle').innerText='Semua Tes Selesai!';$('doneDesc').innerText='Terima kasih sudah mengikuti tes. Hasil Anda telah tersimpan.';ss('screenDone')}
 
-// ─── Pemeriksaan Ganda: Tes Global & Status Kolom ───────────────────────────
-// Dipanggil sebelum setiap instruksi / soal ditampilkan.
-// Mengembalikan true jika aman dilanjutkan, false jika dialihkan.
-async function cekSebelumInstruksi(){
-  // 1) Periksa apakah tes global masih aktif
-  sl('Memeriksa status tes...');
-  const kontrol=await cekKontrol();
-  if(!kontrol.aktif){
-    hl();showScreenTutup(kontrol);
-    return false;
-  }
-  // 2) Periksa apakah status peserta masih aktif (kolom aktifkan)
-  try{
-    const id=localStorage.getItem('db_id');
-    if(id){
-      const res=await aF(`${API_R}?table=${TBL}&id_x=${id}`,{headers:{'X-Custom-Auth':AUTH}});
-      if(res.success&&res.data){
-        cu=res.data;
-        let status='nonaktif';try{status=JSON.parse(cu.x_02||'{}').status||'nonaktif'}catch{}
-        if(status!=='aktif'){
-          hl();ss('screenTunggu');showZoomTunggu();startGlobalPolling();
-          return false;
-        }
-      }
-    }
-  }catch(e){console.warn('[cekSebelumInstruksi] Gagal cek status peserta:',e)}
-  return true;
-}
-
 async function openById(tid){
-  // ── Periksa dulu sebelum lanjut ──
-  const boleh=await cekSebelumInstruksi();
-  if(!boleh)return;
-
   const isSub=tid.includes('_k');let base,kol;
   if(isSub){const b=tid.replace(/_k\d+$/,'');kol=parseInt(tid.split('_k')[1]);base=AC.find(c=>c.id===b);cfg={...base,kolom:kol,_taskId:tid}}
   else{base=AC.find(c=>c.id===tid);cfg={...base,_taskId:tid}}
@@ -969,10 +895,6 @@ async function farC(token){
 // WHO Engine
 const wFindNext=()=>{for(let i=0;i<wBL.length;i++){const b=wBL[i],d=b.data,sf=d?(d.saveField||'x_07'):'x_07';let done=false;try{const o=JSON.parse(cu[sf]||'{}');done=o[b._taskId]!=null&&o[b._taskId]!==''}catch{}if(!done)return i}return -1};
 async function wOpen(idx){
-  // ── Periksa dulu sebelum lanjut ──
-  const boleh=await cekSebelumInstruksi();
-  if(!boleh)return;
-
   sl('Memuat tes...');
   try{
     const b=wBL[idx];if(!b.data)b.data=await(await fetch(b.dataUrl+'?v='+Date.now())).json();
@@ -1036,126 +958,55 @@ document.addEventListener('contextmenu',e=>{if(e.target.tagName==='IMG'){e.preve
 document.addEventListener('dragstart',e=>{if(e.target.tagName==='IMG'){e.preventDefault();return false}});
 document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='s'){e.preventDefault();return false}});
 
-// ═══════════════════════════════════════════
-// POLLING TERPUSAT — memantau status global & peserta
-// Interval adaptif: 5 detik di instruksi/soal, 3 detik di layar tunggu
-// ═══════════════════════════════════════════
-// POLLING TERPUSAT — satu loop menangani semua skenario
-// Interval adaptif berdasarkan layar aktif:
-//   screenTutup  → 4 detik (tunggu tes dibuka)
-//   screenTunggu → 3 detik (tunggu peserta diaktifkan)
-//   screenStart / screenTest → 5 detik (pantau nonaktif)
-//   layar lain → berhenti
-// ═══════════════════════════════════════════
-let _globalPollInterval=null;
-let _globalPollBusy=false;
-
-function getActiveScreen(){
-  const screens=['screenTutup','screenDaftar','screenTunggu','screenStart','screenTest','screenDash','screenDone','screenUpgrade'];
-  for(const id of screens){const el=$(id);if(el&&el.classList.contains('active'))return id;}
-  return null;
-}
-
-function startGlobalPolling(){
-  stopGlobalPolling();
-
-  async function pollTick(){
-    if(_globalPollBusy)return;
-    _globalPollBusy=true;
+// Polling status aktif
+let pollInterval=null;
+function startPolling(){
+  stopPolling();
+  pollInterval=setInterval(async()=>{
     try{
-      const screen=getActiveScreen();
-
-      // ── Layar TUTUP: tunggu tes global dibuka kembali ──
-      if(screen==='screenTutup'){
-        const kontrol=await cekKontrol();
-        if(kontrol.aktif){
-          stopGlobalPolling();
-          if(_cdInterval){clearInterval(_cdInterval);_cdInterval=null;}
-          const tok=localStorage.getItem('token'),dbId=localStorage.getItem('db_id');
-          if(tok&&dbId){
-            sl('Memeriksa sesi...');
-            try{
-              const res=await aF(`${API_R}?table=${TBL}&id_x=${dbId}`,{headers:{'X-Custom-Auth':AUTH}});
-              if(res.success&&res.data){
-                cu=res.data;await loadAC();
-                let status='nonaktif';try{status=JSON.parse(cu.x_02||'{}').status||'nonaktif'}catch{}
-                if(status==='aktif'){hl();startGlobalPolling();await goNext2();}
-                else{hl();ss('screenTunggu');showZoomTunggu();startGlobalPolling();}
-              }else{localStorage.clear();hl();ss('screenDaftar');loadPaket();}
-            }catch{hl();ss('screenDaftar');loadPaket();}
-          }else{hl();ss('screenDaftar');loadPaket();}
-        }
-        _globalPollBusy=false;return;
+      const res=await aF(`${API_R}?table=${TBL}&id_x=${localStorage.getItem('db_id')}`,{headers:{'X-Custom-Auth':AUTH}});
+      if(!res.success||!res.data)return;
+      cu=res.data;
+      let status='nonaktif';try{status=JSON.parse(cu.x_02||'{}').status||'nonaktif'}catch{}
+      if(status==='aktif'){
+        stopPolling();
+        const st=$('tungguStatus'),tx=$('tungguStatusTxt'),btn=$('btnMulaiTes');
+        if(st)st.classList.add('aktif');if(tx)tx.textContent='Tes siap dimulai!';if(btn)btn.style.display='block';
+        await goNext2();
       }
-
-      // ── Layar TUNGGU: tunggu peserta diaktifkan ──
-      if(screen==='screenTunggu'){
-        const dbId=localStorage.getItem('db_id');
-        if(!dbId){_globalPollBusy=false;return;}
-        // Cek kontrol global terlebih dahulu
-        const kontrol=await cekKontrol();
-        if(!kontrol.aktif){
-          stopGlobalPolling();
-          hl();showScreenTutup(kontrol);startGlobalPolling();
-          _globalPollBusy=false;return;
-        }
-        const res=await aF(`${API_R}?table=${TBL}&id_x=${dbId}`,{headers:{'X-Custom-Auth':AUTH}});
-        if(!res.success||!res.data){_globalPollBusy=false;return;}
-        cu=res.data;
-        let status='nonaktif';try{status=JSON.parse(cu.x_02||'{}').status||'nonaktif'}catch{}
-        if(status==='aktif'){
-          stopGlobalPolling();
-          const st=$('tungguStatus'),tx=$('tungguStatusTxt'),btn=$('btnMulaiTes');
-          if(st)st.classList.add('aktif');if(tx)tx.textContent='Tes siap dimulai!';if(btn)btn.style.display='block';
-          startGlobalPolling();await goNext2();
-        }
-        _globalPollBusy=false;return;
-      }
-
-      // ── Layar INSTRUKSI / SOAL: pantau jika dinonaktifkan ──
-      if(['screenStart','screenTest','screenDash'].includes(screen)){
-        // 1) Cek kontrol global
-        const kontrol=await cekKontrol();
-        if(!kontrol.aktif){
-          stopGlobalPolling();hl();showScreenTutup(kontrol);startGlobalPolling();
-          _globalPollBusy=false;return;
-        }
-        // 2) Cek status peserta
-        const dbId=localStorage.getItem('db_id');
-        if(!dbId){_globalPollBusy=false;return;}
-        const res=await aF(`${API_R}?table=${TBL}&id_x=${dbId}`,{headers:{'X-Custom-Auth':AUTH}});
-        if(!res.success||!res.data){_globalPollBusy=false;return;}
-        cu=res.data;
-        let status='nonaktif';try{status=JSON.parse(cu.x_02||'{}').status||'nonaktif'}catch{}
-        if(status!=='aktif'){
-          stopGlobalPolling();hl();ss('screenTunggu');showZoomTunggu();startGlobalPolling();
-          _globalPollBusy=false;return;
-        }
-        _globalPollBusy=false;return;
-      }
-
-      // Layar lain (daftar, done, upgrade) → tidak perlu poll
-      _globalPollBusy=false;
-    }catch(e){console.warn('[globalPoll]',e);_globalPollBusy=false;}
-  }
-
-  function scheduleNext(){
-    const screen=getActiveScreen();
-    const delay=screen==='screenTunggu'?3000:screen==='screenTutup'?4000:5000;
-    _globalPollInterval=setTimeout(async()=>{await pollTick();scheduleNext();},delay);
-  }
-  scheduleNext();
+    }catch{}
+  },3000);
 }
 
-function stopGlobalPolling(){
-  if(_globalPollInterval){clearTimeout(_globalPollInterval);_globalPollInterval=null;}
-  _globalPollBusy=false;
+let _tutupPollInterval=null;
+function startTutupPolling(){
+  stopTutupPolling();
+  _tutupPollInterval=setInterval(async()=>{
+    try{
+      const kontrol=await cekKontrol();
+      if(kontrol.aktif){
+        stopTutupPolling();
+        if(_cdInterval){clearInterval(_cdInterval);_cdInterval=null;}
+        const tok=localStorage.getItem('token'),dbId=localStorage.getItem('db_id');
+        if(tok&&dbId){
+          sl('Memeriksa sesi...');
+          try{
+            const res=await aF(`${API_R}?table=${TBL}&id_x=${dbId}`,{headers:{'X-Custom-Auth':AUTH}});
+            if(res.success&&res.data){
+              cu=res.data;await loadAC();
+              let status='nonaktif';try{status=JSON.parse(cu.x_02||'{}').status||'nonaktif'}catch{}
+              if(status==='aktif'){hl();await goNext2();}
+              else{hl();ss('screenTunggu');showZoomTunggu();startPolling();}
+            }else{localStorage.clear();hl();ss('screenDaftar');loadPaket();}
+          }catch{hl();ss('screenDaftar');loadPaket();}
+        }else{hl();ss('screenDaftar');loadPaket();}
+      }
+    }catch{}
+  },4000);
 }
-
-// startPolling & startTutupPolling dihapus — digantikan startGlobalPolling()
-function stopPolling(){}        // stub agar referensi lama tidak error
-function stopTutupPolling(){}   // stub agar referensi lama tidak error
-async function mulaiTes(){startGlobalPolling();await goNext2()}
+function stopTutupPolling(){if(_tutupPollInterval){clearInterval(_tutupPollInterval);_tutupPollInterval=null;}}
+function stopPolling(){if(pollInterval){clearInterval(pollInterval);pollInterval=null}}
+async function mulaiTes(){stopPolling();await goNext2()}
 
 let _cdInterval=null;
 let _kontrolInfo={aktif:false,waktu_mulai:'',link:''};
@@ -1201,7 +1052,7 @@ function showScreenTutup(info){
       tick();_cdInterval=setInterval(tick,1000);
     }
   }
-  hl();ss('screenTutup');startGlobalPolling();
+  hl();ss('screenTutup');startTutupPolling();
 }
 
 // ═══════════════════════════════════════════
@@ -1224,44 +1075,15 @@ async function loadFragment(url, containerId) {
 // INIT
 // ═══════════════════════════════════════════
 window.onload = async () => {
-  // ── Cek ?p= lebih awal, sebelum apapun dijalankan ──
-  if (!AUTO_PAKET) {
-    hl();
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    let errScreen = $('screenNoPacket');
-    if (!errScreen) {
-      errScreen = document.createElement('div');
-      errScreen.id = 'screenNoPacket';
-      errScreen.className = 'screen active';
-      errScreen.innerHTML = `
-        <div class="card" style="text-align:center;margin-top:40px">
-          <div style="font-size:3em;margin-bottom:12px">📦</div>
-          <div style="font-size:1.25em;font-weight:700;color:var(--danger);margin-bottom:10px">Paket Belum Dimasukkan</div>
-          <p style="color:var(--muted);font-size:.9em;line-height:1.7">
-            Halaman ini memerlukan parameter paket pada URL.<br>
-            Tambahkan <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:.9em">?p=nama-paket</code> di akhir URL Anda.<br><br>
-            Contoh: <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:.9em">tes-template.html?p=tes-iq</code>
-          </p>
-        </div>`;
-      document.body.appendChild(errScreen);
-    } else {
-      errScreen.classList.add('active');
-    }
-    return; // hentikan init
-  }
-
-  sl('Memeriksa paket...');
-
-  // Cek paket di server SEBELUM apapun (termasuk sebelum cek token)
-  await loadPaket();
-  if (!sPaket) { showPaketNotFoundScreen(); return; }
-
   sl('Memuat halaman...');
 
-  // Muat kedua fragment secara paralel
+  // 1. Load paket dulu agar BIODATA_FILE & PENUTUP_FILE bisa diset dari x_03
+  await loadPaket();
+
+  // 2. Muat kedua fragment secara paralel
   await Promise.all([
-    loadFragment(FRAGMENT_BASE + BIODATA_FILE, 'biodataContainer'),
-    loadFragment(FRAGMENT_BASE + PENUTUP_FILE,  'penutupContainer'),
+    loadFragment(resolveFragmentUrl(BIODATA_FILE), 'biodataContainer'),
+    loadFragment(resolveFragmentUrl(PENUTUP_FILE),  'penutupContainer'),
   ]);
 
   sl('Memeriksa status tes...');
@@ -1283,250 +1105,18 @@ window.onload = async () => {
     sl('Memeriksa sesi...');
     try {
       const res = await aF(`${API_R}?table=${TBL}&x_01_eq=${tok}`, { headers: { 'X-Custom-Auth': AUTH } });
-      if (!res.success || !res.count) { localStorage.clear(); hl(); ss('screenDaftar'); return; }
+      if (!res.success || !res.count) { localStorage.clear(); hl(); ss('screenDaftar'); loadPaket(); return; }
       cu = res.data[0]; localStorage.setItem('db_id', cu.id_x);
       vMap = {}; if (cu.x_09) { try { const v = JSON.parse(cu.x_09); Object.entries(v).forEach(([k, vl]) => { if (k && /^[a-zA-Z0-9_]+$/.test(k)) vMap[k] = parseInt(vl) || 0; }); } catch {} }
       await loadAC();
       let status = 'nonaktif'; try { status = JSON.parse(cu.x_02 || '{}').status || 'nonaktif'; } catch {}
-      if (status === 'aktif') { hl(); startGlobalPolling(); await goNext2(); }
-      else { hl(); ss('screenTunggu'); showZoomTunggu(); startGlobalPolling(); }
-    } catch (e) { localStorage.clear(); hl(); ss('screenDaftar'); }
+      if (status === 'aktif') { hl(); await goNext2(); }
+      else { hl(); ss('screenTunggu'); showZoomTunggu(); startPolling(); }
+    } catch (e) { localStorage.clear(); hl(); ss('screenDaftar'); loadPaket(); }
     return;
   }
-  hl(); ss('screenDaftar');
+  hl(); ss('screenDaftar'); loadPaket();
 };
-</script>
-
-<script>
-// ═══ KREPLIN ENGINE ═══
-let _kCfg={},_kKolom=0,_kSoalIdx=0,_kBenar=0,_kSalah=0,_kTimer=null,_kTL=0,_kLog=[],_kA=0,_kB=0,_kDone=false;
-const _kSK='_krep_state';
-
-function kreplinSaveState(){
-  localStorage.setItem(_kSK,JSON.stringify({
-    kolom:_kKolom,soalIdx:_kSoalIdx,benar:_kBenar,salah:_kSalah,
-    benarPrev:_kBenarPrev,salahPrev:_kSalahPrev,
-    timeLeft:_kTL,log:_kLog,introShown:true
-  }));
-}
-
-function kreplinLoadState(){
-  try{return JSON.parse(localStorage.getItem(_kSK)||'null')}catch{return null}
-}
-
-function kreplinClearState(){localStorage.removeItem(_kSK)}
-
-async function kreplinStart(ref){
-  // Load config dari txt
-  let meta={totalKolom:45,soalPerKolom:50,detikPerKolom:30,angkaMin:1,angkaMax:9};
-  let title='Tes Kraepelin',instructions='',desc='',exNote='';
-  if(ref&&ref.dataUrl){
-    try{
-      const raw=await(await fetch(ref.dataUrl+'?v='+Date.now())).json();
-      if(raw&&raw.meta){
-        const m=raw.meta;
-        if(m.title)title=m.title;
-        if(m.instructions)instructions=m.instructions;
-        if(m.desc)desc=m.desc;
-        if(m.exNote)exNote=m.exNote;
-        if(m.kreplin)Object.assign(meta,m.kreplin);
-      }
-    }catch(e){console.warn('[kreplin] gagal load config:',e)}
-  }
-  _kCfg=meta;_kDone=false;
-
-  // Cek apakah ada state tersimpan (resume setelah refresh)
-  const saved=kreplinLoadState();
-  if(saved&&saved.introShown&&saved.kolom&&saved.kolom<=meta.totalKolom){
-    // Resume langsung tanpa intro
-    _kKolom=saved.kolom;
-    _kSoalIdx=saved.soalIdx||0;
-    _kBenar=saved.benar||0;
-    _kSalah=saved.salah||0;
-    _kBenarPrev=saved.benarPrev||0;
-    _kSalahPrev=saved.salahPrev||0;
-    _kTL=saved.timeLeft||meta.detikPerKolom;
-    _kLog=saved.log||[];
-    ss('screenKreplin');hl();
-    kreplinRenderKolom();
-    kreplinSoalBaru();
-    // Timer resume dari sisa waktu
-    kreplinStartTimerResume(_kTL);
-    return;
-  }
-
-  // Intro hanya ditampilkan pertama kali
-  cfg={title,instructions,desc,exNote,exImgTop:'',exImgBottom:'',timer:0,_taskId:'kreplin'};
-  $('startTitle').innerText=title;
-  $('startInstructions').innerText=instructions||desc||'';
-  $('exNote').innerText=exNote||'';
-  $('exampleBlock').style.display=exNote?'':'none';
-  const iw=document.querySelector('#exampleBlock .example-images');if(iw)iw.style.display='none';
-  $('timerNote').style.display='none';
-  $('btnStart').onclick=()=>kreplinRun();
-  ss('screenStart');hl();
-}
-
-function kreplinRun(){
-  _kKolom=1;_kBenar=0;_kSalah=0;_kBenarPrev=0;_kSalahPrev=0;_kLog=[];_kDone=false;_kSoalIdx=0;
-  _kTL=_kCfg.detikPerKolom||30;
-  kreplinSaveState();
-  ss('screenKreplin');
-  kreplinRenderKolom();
-  kreplinSoalBaru();
-  kreplinStartTimer();
-}
-
-function kreplinRenderKolom(){
-  $('krepTitle').innerText='Tes Kraepelin';
-  $('krepProgress').innerText='Kolom '+_kKolom+' / '+(_kCfg.totalKolom||45);
-  $('krepProgressBar').style.width=Math.round(((_kKolom-1)/(_kCfg.totalKolom||45))*100)+'%';
-}
-
-function kreplinNextKolom(){
-  if(_kKolom>_kCfg.totalKolom){kreplinSelesai();return}
-  _kSoalIdx=0;
-  _kTL=_kCfg.detikPerKolom||30;
-  kreplinRenderKolom();
-  kreplinSoalBaru();
-  kreplinSaveState();
-  kreplinStartTimer();
-}
-
-function kreplinSoalBaru(){
-  const min=_kCfg.angkaMin||1,max=_kCfg.angkaMax||9;
-  _kA=Math.floor(Math.random()*(max-min+1))+min;
-  _kB=Math.floor(Math.random()*(max-min+1))+min;
-  $('krepSoalQ').innerText=_kA+' + '+_kB;
-  const jawaban=(_kA+_kB)%10;
-  const wrap=$('krepOpts');wrap.innerHTML='';
-  [0,1,2,3,4,5,6,7,8,9].forEach(n=>{
-    const btn=document.createElement('button');
-    btn.className='btn btn-outline btn-sm';
-    btn.style.cssText='width:56px;height:56px;font-size:1.4em;font-weight:800;border-radius:12px;padding:0';
-    btn.innerText=n;
-    btn.onclick=()=>kreplinJawab(n,jawaban);
-    wrap.appendChild(btn);
-  });
-}
-
-function kreplinBuatOpsi(jawaban){
-  return [0,1,2,3,4,5,6,7,8,9];
-}
-
-function kreplinJawab(pilihan,jawaban){
-  const benar=pilihan===jawaban;
-  if(benar)_kBenar++;else _kSalah++;
-  _kSoalIdx++;
-  kreplinSaveState();
-  if(_kSoalIdx>=(_kCfg.soalPerKolom||50)){
-    kreplinCatatKolom();
-    clearInterval(_kTimer);_kTimer=null;
-    _kKolom++;kreplinNextKolom();
-  } else {
-    kreplinSoalBaru();
-  }
-}
-
-function kreplinBuildPayload(){
-  const total=_kCfg.totalKolom||45;
-  const dikerjakan=Array(total).fill('');
-  const benar=Array(total).fill('');
-  const salah=Array(total).fill('');
-  _kLog.forEach(k=>{
-    const i=(k.kolom||1)-1;
-    if(i>=0&&i<total){
-      dikerjakan[i]=String(k.soal||0);
-      benar[i]=String(k.benar||0);
-      salah[i]=String(k.salah||0);
-    }
-  });
-  return {
-    dikerjakan:dikerjakan.join('|'),
-    benar:benar.join('|'),
-    salah:salah.join('|')
-  };
-}
-
-let _kBenarPrev=0,_kSalahPrev=0;
-
-function kreplinCatatKolom(){
-  const benarKolom=_kBenar-_kBenarPrev;
-  const salahKolom=_kSalah-_kSalahPrev;
-  _kLog.push({kolom:_kKolom,soal:_kSoalIdx,benar:benarKolom,salah:salahKolom});
-  _kBenarPrev=_kBenar;
-  _kSalahPrev=_kSalah;
-  // Simpan progress ke server setiap akhir kolom
-  const dbId=localStorage.getItem('db_id');
-  if(dbId){
-    aG(dbId).then(cur=>{
-      const sf='x_06';
-      let o={};try{o=JSON.parse(cur.data[sf]||'{}')}catch{}
-      o.kreplin=kreplinBuildPayload();
-      const upd={};upd[sf]=JSON.stringify(o);
-      return aP(dbId,upd).then(()=>{cu=cur.data;cu[sf]=upd[sf];});
-    }).catch(e=>console.warn('[kreplin] gagal simpan kolom:',e));
-  }
-}
-
-function kreplinStartTimer(){
-  if(_kTimer)clearInterval(_kTimer);
-  kreplinUpdTimer();
-  _kTimer=setInterval(()=>{
-    _kTL--;kreplinUpdTimer();kreplinSaveState();
-    if(_kTL<=0){
-      clearInterval(_kTimer);_kTimer=null;
-      kreplinCatatKolom();
-      _kKolom++;kreplinNextKolom();
-    }
-  },1000);
-}
-
-function kreplinStartTimerResume(sisaWaktu){
-  if(_kTimer)clearInterval(_kTimer);
-  _kTL=sisaWaktu;
-  kreplinUpdTimer();
-  _kTimer=setInterval(()=>{
-    _kTL--;kreplinUpdTimer();kreplinSaveState();
-    if(_kTL<=0){
-      clearInterval(_kTimer);_kTimer=null;
-      kreplinCatatKolom();
-      _kKolom++;kreplinNextKolom();
-    }
-  },1000);
-}
-
-function kreplinUpdTimer(){
-  const m=String(Math.floor(_kTL/60)).padStart(2,'0'),s=String(_kTL%60).padStart(2,'0');
-  const el=$('krepTimerDisplay');if(!el)return;
-  el.innerText=m+':'+s;
-  el.style.color=_kTL<=10?'var(--danger)':'var(--text)';
-}
-
-async function kreplinSelesai(){
-  if(_kDone)return;_kDone=true;
-  if(_kTimer){clearInterval(_kTimer);_kTimer=null;}
-  kreplinClearState();
-  const dbId=localStorage.getItem('db_id');
-  if(dbId){
-    sl('Menyimpan hasil...');
-    try{
-      const cur=await aG(dbId);
-      const sf='x_06';
-      let o={};try{o=JSON.parse(cur.data[sf]||'{}')}catch{}
-      o.kreplin=kreplinBuildPayload();
-      const upd={};upd[sf]=JSON.stringify(o);
-      await aP(dbId,upd);
-      cu=cur.data;cu[sf]=upd[sf];
-    }catch(e){console.warn('[kreplin] gagal simpan:',e)}
-  }
-  hl();
-  $('doneIcon').innerText='✅';
-  $('doneTitle').innerText='Tes Kraepelin Selesai!';
-  $('doneDesc').innerText='Hasil telah tersimpan.';
-  ss('screenDone');
-  setTimeout(()=>{sl('Memuat tes berikutnya...');goNext2()},2000);
-}
 </script>
 
 <script>
