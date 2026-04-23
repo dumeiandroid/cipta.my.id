@@ -272,8 +272,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
      ═══════════════════════════════════════════ -->
 <script>
   const FRAGMENT_BASE  = 'https://lidan.co.id/test/';
-  const BIODATA_FILE   = 'biodata-2.html';   // ← ganti angka sesuai kebutuhan
-  const PENUTUP_FILE   = 'penutup-2.html';   // ← ganti angka sesuai kebutuhan
+  let BIODATA_FILE     = 'biodata-2.html';   // ← default, akan diganti dari x_03 paket
+  let PENUTUP_FILE     = 'penutup-2.html';   // ← default, akan diganti dari x_03 paket
+
+  function resolveFragmentUrl(file) {
+    return file.startsWith('http') ? file : FRAGMENT_BASE + file;
+  }
 </script>
 
 <div id="globalLoader"><div class="spinner"></div><p id="loaderText">Memuat...</p></div>
@@ -405,23 +409,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   </div>
 </div>
 
-<!-- ═══ SCREEN: KREPLIN ═══ -->
-<div id="screenKreplin" class="screen">
-  <div class="card card-wide">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap">
-      <span class="top-title" id="krepTitle">Tes Kraepelin</span>
-      <span id="krepProgress" style="color:var(--muted);font-size:.85em"></span>
-      <span id="krepTimerDisplay" style="display:none"></span>
-    </div>
-    <div class="progress-wrap"><div id="krepProgressBar" style="height:100%;background:var(--primary);border-radius:99px;transition:width .4s;width:0%"></div></div>
-    <div id="krepContent" style="text-align:center;padding:24px 0">
-      <div style="font-size:2.8em;font-weight:800;color:var(--text);margin-bottom:24px;letter-spacing:.05em" id="krepSoalQ">? + ?</div>
-      <p style="font-size:.82em;color:var(--muted);margin-bottom:16px">Pilih <strong>angka satuan</strong> dari hasil penjumlahan</p>
-      <div id="krepOpts" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:380px;margin:0 auto"></div>
-    </div>
-  </div>
-</div>
-
 <!-- ═══ SCREEN: SOAL ═══ -->
 <div id="screenTest" class="screen">
   <div class="card card-wide card-xl" id="testCard">
@@ -451,46 +438,69 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 </div>
 
 
+<!-- ═══ SCREEN: KREPLIN ═══ -->
+<div id="screenKreplin" class="screen">
+  <div class="card card-wide">
+    <div id="topBar">
+      <span class="top-title" id="krepTitle">Tes Kraepelin</span>
+      <span id="krepProgress" style="display:none"></span>
+      <span id="krepTimer" style="display:none">30</span>
+    </div>
+    <div class="progress-wrap"><div id="krepProgressBar" style="height:100%;background:var(--primary);border-radius:99px;transition:width .4s;width:0%"></div></div>
+    <div id="krepContent" style="text-align:center;padding:24px 0">
+      <div style="font-size:.8em;color:var(--muted);margin-bottom:8px" id="krepSoalLabel">Soal 1</div>
+      <div style="font-size:2.8em;font-weight:800;color:var(--text);margin-bottom:24px;letter-spacing:.05em" id="krepSoalQ">? + ?</div>
+      <p style="font-size:.82em;color:var(--muted);margin-bottom:16px">Pilih <strong>angka satuan</strong> dari hasil penjumlahan</p>
+      <div id="krepOpts" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:380px;margin:0 auto"></div>
+    </div>
+    <div style="display:none">
+      <span>Kolom <strong id="krepKolom">1</strong> / 45</span>
+      <span>✓ <strong id="krepBenar">0</strong> &nbsp; ✗ <strong id="krepSalah">0</strong></span>
+    </div>
+  </div>
+</div>
+
+<script src="renderers.js"></script>
+
 <script>
 // ============================================================
-// KONFIGURASI PAKET — diambil dari query string ?p=nama-paket
+// KONFIGURASI PAKET — diambil dari query parameter ?p=
+// Contoh URL: https://lidan.co.id/test/tes-iq.html?p=tes-iq-free
 // ============================================================
-const _urlParams = new URLSearchParams(window.location.search);
-const AUTO_PAKET = (_urlParams.get('p') || '').trim();
-
-
+const AUTO_PAKET = new URLSearchParams(window.location.search).get('p') || '';
 
 const BASE='https://cipta.my.id/psikotest/simpel/';
+// Helper: buat entry config ringkas. file = nama file tanpa .txt (kecuali ada suffix _a dll)
+const _c=(id,file,type,sf='x_05',extra={})=>({id,dataUrl:BASE+(file||id)+'.txt',type,saveField:sf,...extra});
 const ALL_CONFIG=[
-  {id:'apm0',  dataUrl:BASE+'apm0.txt',   type:'image_single',      saveField:'x_05'},
-  {id:'apm1',  dataUrl:BASE+'apm1.txt',   type:'image_single',      saveField:'x_05'},
-  {id:'apm1a', dataUrl:BASE+'apm1a.txt',  type:'image_single',      saveField:'x_05'},
-  {id:'apm1b', dataUrl:BASE+'apm1b.txt',  type:'image_single',      saveField:'x_05'},
-  {id:'apm2',  dataUrl:BASE+'apm2.txt',   type:'image_single',      saveField:'x_05'},
-  {id:'apm2a', dataUrl:BASE+'apm2a.txt',  type:'image_single',      saveField:'x_05'},
-  {id:'apm2b', dataUrl:BASE+'apm2b.txt',  type:'image_single',      saveField:'x_05'},
-  {id:'apm14', dataUrl:BASE+'apm14.txt',  type:'image_single',      saveField:'x_05'},
-  {id:'cfit0', dataUrl:BASE+'cfit0.txt',  type:'image_single',      saveField:'x_05'},
-  {id:'cfit1', dataUrl:BASE+'cfit1.txt',  type:'image_single',      saveField:'x_05'},
-  {id:'cfit2', dataUrl:BASE+'cfit2_a.txt',type:'image_multi',       saveField:'x_05'},
-  {id:'cfit3', dataUrl:BASE+'cfit3.txt',  type:'image_single',      saveField:'x_05'},
-  {id:'cfit4', dataUrl:BASE+'cfit4.txt',  type:'image_single',      saveField:'x_05'},
-  {id:'epps',  dataUrl:BASE+'epps.txt',   type:'ab_choice',         saveField:'x_06'},
-  {id:'ist0',  dataUrl:BASE+'ist0.txt',   type:'text_choice',       saveField:'x_05'},
-  {id:'ist1',  dataUrl:BASE+'ist1.txt',   type:'text_choice',       saveField:'x_05'},
-  {id:'ist2',  dataUrl:BASE+'ist2.txt',   type:'text_choice',       saveField:'x_05'},
-  {id:'ist3',  dataUrl:BASE+'ist3.txt',   type:'text_choice',       saveField:'x_05'},
-  {id:'ist4_a',dataUrl:BASE+'ist4_a.txt', type:'text_input_scored', saveField:'x_05'},
-  {id:'ist5_a',dataUrl:BASE+'ist5_a.txt', type:'digit_check',       saveField:'x_05'},
-  {id:'ist6_a',dataUrl:BASE+'ist6_a.txt', type:'digit_check',       saveField:'x_05'},
-  {id:'ist7',  dataUrl:BASE+'ist7.txt',   type:'image_single',      saveField:'x_05'},
-  {id:'ist8',  dataUrl:BASE+'ist8.txt',   type:'image_single',      saveField:'x_05'},
-  {id:'ist9',  dataUrl:BASE+'ist9.txt',   type:'text_choice',       saveField:'x_05'},
-  {id:'papi',  dataUrl:BASE+'papi.txt',   type:'ab_choice',         saveField:'x_06'},
-  {id:'rmib',  dataUrl:BASE+'rmib.txt',   type:'ranking',           saveField:'x_06',kolom:1,totalKolom:8,showInstructionsOnce:true},
-  {id:'tkd3',  dataUrl:BASE+'tkd3.txt',   type:'text_choice',       saveField:'x_05'},
-  {id:'tkd6',  dataUrl:BASE+'tkd6_a.txt', type:'text_input',        saveField:'x_05'},
-  {id:'kreplin',dataUrl:BASE+'kreplin.txt',type:'kreplin',           saveField:'x_06'}
+  _c('apm0',  null,      'image_single'),
+  _c('apm1',  null,      'image_single'),
+  _c('apm1a', null,      'image_single'),
+  _c('apm1b', null,      'image_single'),
+  _c('apm2',  null,      'image_single'),
+  _c('apm2a', null,      'image_single'),
+  _c('apm2b', null,      'image_single'),
+  _c('apm14', null,      'image_single'),
+  _c('cfit0', null,      'image_single'),
+  _c('cfit1', null,      'image_single'),
+  _c('cfit2', 'cfit2_a', 'image_multi'),
+  _c('cfit3', null,      'image_single'),
+  _c('cfit4', null,      'image_single'),
+  _c('epps',  null,      'ab_choice',        'x_06'),
+  _c('ist0',  null,      'text_choice'),
+  _c('ist1',  null,      'text_choice'),
+  _c('ist2',  null,      'text_choice'),
+  _c('ist3',  null,      'text_choice'),
+  _c('ist4_a',null,      'text_input_scored'),
+  _c('ist5_a',null,      'digit_check'),
+  _c('ist6_a',null,      'digit_check'),
+  _c('ist7',  null,      'image_single'),
+  _c('ist8',  null,      'image_single'),
+  _c('ist9',  null,      'text_choice'),
+  _c('papi',  null,      'ab_choice',        'x_06'),
+  _c('rmib',  null,      'ranking',          'x_06', {kolom:1,totalKolom:8,showInstructionsOnce:true}),
+  _c('tkd3',  null,      'text_choice'),
+  _c('tkd6',  'tkd6_a',  'text_input'),
 ];
 const API_W='https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
 const API_R='https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
@@ -515,6 +525,8 @@ const aF=async(u,o={})=>(await fetch(u,o)).json();
 const aG=id=>aF(`${API_R}?table=${TBL}&id_x=${id}`,{headers:{'X-Custom-Auth':AUTH}});
 const aP=(id,b)=>fetch(`${API_W}?table=${TBL}&id_x=${id}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Custom-Auth':AUTH},body:JSON.stringify(b)});
 const gBio=f=>{try{const o=JSON.parse(cu.x_02||'{}');return o[f.replace(/^bio/,'').toLowerCase()]||''}catch{return''}};
+// Helper: parse vMap dari x_09 — dipakai di beberapa tempat
+function parseVMap(x09){vMap={};try{const v=JSON.parse(x09||'{}');Object.entries(v).forEach(([k,vl])=>{if(k&&/^[a-zA-Z0-9_]+$/.test(k))vMap[k]=parseInt(vl)||0})}catch{}}
 
 async function chkTok(t){try{const d=await aF(`${API_W}?table=${TBL}&x_01_eq=${encodeURIComponent(t)}`,{headers:{'X-Custom-Auth':AUTH}});return d.success&&d.count>0}catch{return false}}
 async function genTok(pid){for(let i=0;i<10;i++){const t=pid+'-'+rs(i<8?12:14);if(!(await chkTok(t)))return t}return pid+'-'+rs(16)}
@@ -524,11 +536,16 @@ async function loadPaket(){
     const d=await aF(`${API_R}?table=${TBL_P}`,{headers:{'X-Custom-Auth':AUTH}});
     pList=(d.success&&d.data)||[];
     sPaket=pList.find(p=>(p.x_01||'').trim()===AUTO_PAKET)||null;
-    if(!sPaket)console.warn('[loadPaket] Paket tidak ditemukan:',AUTO_PAKET);
+    if(!sPaket){console.warn('[loadPaket] Paket tidak ditemukan:',AUTO_PAKET);return;}
+    // Baca x_03 untuk BIODATA_FILE & PENUTUP_FILE
+    try{
+      const x03=JSON.parse(sPaket.x_03||'{}');
+      if(x03.biodata) BIODATA_FILE=x03.biodata;
+      if(x03.penutup) PENUTUP_FILE=x03.penutup;
+      console.log('[loadPaket] Fragment dari x_03:',BIODATA_FILE,PENUTUP_FILE);
+    }catch(ex){console.warn('[loadPaket] x_03 gagal di-parse, pakai default',ex);}
   }catch(e){console.error('[loadPaket]',e)}
 }
-function renderPaket(){}
-
 // ─── Fungsi biodata (dipakai oleh biodata-2, tersedia global) ───
 function syncRadioStyle(){
   const y=$('bioKesediaanY'),n=$('bioKesediaanN');
@@ -577,7 +594,7 @@ async function handleDaftar(){
     const res=await aF(`${API_W}?table=${TBL}`,{method:'POST',headers:{'Content-Type':'application/json','X-Custom-Auth':AUTH},body:JSON.stringify({x_01:tok,x_02:bio})});
     if(!res.success)throw new Error(res.message||'Gagal.');
     localStorage.setItem('token',tok);localStorage.setItem('db_id',String(res.id_x));localStorage.setItem('_p',pnm);
-    cu={id_x:res.id_x,x_01:tok,x_02:bio};sl('Memuat tes...');await loadAC();hl();ss('screenTunggu');showZoomTunggu();startGlobalPolling();
+    cu={id_x:res.id_x,x_01:tok,x_02:bio};sl('Memuat tes...');await loadAC();hl();ss('screenTunggu');showZoomTunggu();startPolling();
   }catch(e){hl();eb.textContent='⚠ '+e.message;eb.classList.add('show');sLoad(btn,false)}
 }
 
@@ -592,7 +609,7 @@ async function loadAC(){
     AC=[];WTL=[];UT=[];
     for(const item of items){
       if(item.startsWith('who:')){const k=item.slice(4).trim(),w={fileKey:k,dataUrl:WHO_B+k+'.txt',data:null,_taskId:'who_'+k};WTL.push(w);UT.push({type:'who',ref:w})}
-      else if(item==='kreplin'){const c=ALL_CONFIG.find(c=>c.id==='kreplin');if(c){AC.push(c);UT.push({type:'kreplin',ref:{...c,_taskId:'kreplin'}})}}
+      else if(item==='kreplin'){UT.push({type:'kreplin',ref:{_taskId:'kreplin'}})}
       else{const k=item.replace(/\.txt$/i,''),c=ALL_CONFIG.find(c=>(c.dataUrl||'').split('/').pop().replace(/\.txt$/i,'')==k);
         if(c){AC.push(c);if(c.type==='ranking'&&c.totalKolom){for(let ki=1;ki<=c.totalKolom;ki++)UT.push({type:'config',ref:{...c,id:c.id+'_k'+ki,_baseId:c.id,kolom:ki,_taskId:c.id+'_k'+ki}})}else UT.push({type:'config',ref:c})}}
     }
@@ -601,15 +618,11 @@ async function loadAC(){
 }
 
 async function goNext2(){
-  // ── Periksa dulu sebelum lanjut ke instruksi berikutnya ──
-  const boleh=await cekSebelumInstruksi();
-  if(!boleh)return;
-
   for(const ut of UT){
     if(ut.type==='who'){wBL=WTL;const i=wFindNext();if(i!==-1){wBI=i;wOpen(i);return}}
     else if(ut.type==='kreplin'){
       let done=false;try{const o=JSON.parse(cu.x_06||'{}');done=!!o.kreplin&&o.kreplin.dikerjakan!==''}catch{}
-      if(!done){hl();await kreplinStart(ut.ref);return}
+      if(!done){hl();kreplinStart();return}
     }
     else{
       const t=ut.ref;
@@ -625,7 +638,7 @@ async function goNext2(){
   doneAll();
 }
 
-function doneAll(){stopGlobalPolling();stopPolling();hl();ss('screenUpgrade')}
+function doneAll(){hl();ss('screenUpgrade')}
 
 // ── UPGRADE LAPORAN ──
 let upPaketSel=null,upHargaSel=0;
@@ -643,7 +656,6 @@ function upShowDetail(id,nama,harga,desc,el){
   box.classList.add('show');
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
-function upConfirmDetail(){}
 async function upSelectPaket(nama,harga,el){
   trackBtn('lap_pilih_'+nama.toLowerCase());
   upPaketSel=nama;upHargaSel=harga;
@@ -675,40 +687,7 @@ async function upSelectPaket(nama,harga,el){
 }
 function upSkip(){trackBtn('lap_lewati');$('doneIcon').innerText='🎉';$('doneTitle').innerText='Semua Tes Selesai!';$('doneDesc').innerText='Terima kasih sudah mengikuti tes. Hasil Anda telah tersimpan.';ss('screenDone')}
 
-// ─── Pemeriksaan Ganda: Tes Global & Status Kolom ───────────────────────────
-// Dipanggil sebelum setiap instruksi / soal ditampilkan.
-// Mengembalikan true jika aman dilanjutkan, false jika dialihkan.
-async function cekSebelumInstruksi(){
-  // 1) Periksa apakah tes global masih aktif
-  sl('Memeriksa status tes...');
-  const kontrol=await cekKontrol();
-  if(!kontrol.aktif){
-    hl();showScreenTutup(kontrol);
-    return false;
-  }
-  // 2) Periksa apakah status peserta masih aktif (kolom aktifkan)
-  try{
-    const id=localStorage.getItem('db_id');
-    if(id){
-      const res=await aF(`${API_R}?table=${TBL}&id_x=${id}`,{headers:{'X-Custom-Auth':AUTH}});
-      if(res.success&&res.data){
-        cu=res.data;
-        let status='nonaktif';try{status=JSON.parse(cu.x_02||'{}').status||'nonaktif'}catch{}
-        if(status!=='aktif'){
-          hl();ss('screenTunggu');showZoomTunggu();startGlobalPolling();
-          return false;
-        }
-      }
-    }
-  }catch(e){console.warn('[cekSebelumInstruksi] Gagal cek status peserta:',e)}
-  return true;
-}
-
 async function openById(tid){
-  // ── Periksa dulu sebelum lanjut ──
-  const boleh=await cekSebelumInstruksi();
-  if(!boleh)return;
-
   const isSub=tid.includes('_k');let base,kol;
   if(isSub){const b=tid.replace(/_k\d+$/,'');kol=parseInt(tid.split('_k')[1]);base=AC.find(c=>c.id===b);cfg={...base,kolom:kol,_taskId:tid}}
   else{base=AC.find(c=>c.id===tid);cfg={...base,_taskId:tid}}
@@ -781,7 +760,7 @@ function renderQ(){
   updProg();if(cfg.type==='ranking'){renderRank();return}dbg('renderQ');
   if(qi<0||qi>=qs.length){if(skip.length>0){qi=skip.shift();saveSt()}else{endTest(false);return}}
   const q=qs[qi];
-  ({image_single:rImgS,image_multi:rImgM,text_choice:rTxtC,text_input:rTxtI,text_input_scored:rTIS,digit_check:rDC,ab_choice:rAB}[cfg.type]||(_=>{}))(q);
+  (RENDERERS[cfg.type]||(_=>{}))(q);
 }
 function updProg(){
   const tot=cfg.type==='ranking'?8:qs.length,cur=cfg.type==='ranking'?(cfg.kolom||1):qi+1;
@@ -789,109 +768,6 @@ function updProg(){
   let info=cfg.type==='ranking'?`Kolom ${cfg.kolom} / ${cfg.totalKolom||8}`:`Soal ${qi+1} / ${qs.length}`;
   if(skip.length>0&&cfg.type!=='ranking')info+=` · ⟳ ${skip.length} dilewati`;
   $('progressInfo').innerText=info;const bt=$('bbTitle'),bp=$('bbProgress');if(bt)bt.innerText=cfg.title||'';if(bp)bp.innerText=info;
-}
-
-function rImgS(q){
-  const p=q.question.split(' ');
-  $('questionContent').innerHTML=`<div class="q-label">Soal ${p[0]}${skB()}</div><img class="q-image" src="${p[1]}" alt="soal" oncontextmenu="return false" ondragstart="return false"><div class="options-img" id="optArea"></div>`;
-  $('actionBar').innerHTML=`<button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
-  for(const k in q.options){if(!q.options[k])continue;const img=Object.assign(document.createElement('img'),{src:q.options[k],title:k});img.setAttribute('oncontextmenu','return false');img.setAttribute('ondragstart','return false');img.onclick=()=>{mAns(qi);ua.push(`${qi+1}${k}${k===q.answer?'v':'x'}`);if(k===q.answer)sc++;saveSt();goNx()};$('optArea').appendChild(img)}
-}
-function rImgM(q){
-  $('questionContent').innerHTML=`<div class="q-label">Pilih 2 gambar yang BERBEDA dari lainnya</div><div class="options-img" id="optArea" style="gap:14px"></div>`;
-  $('actionBar').innerHTML=`<button class="btn btn-success btn-sm" id="btnJ" onclick="subIM()" disabled>Jawab</button><button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
-  q.options.forEach((src,i)=>{const w=document.createElement('div');w.className='opt-check-wrap';w.innerHTML=`<input type="checkbox" id="mc${i}" value="${src}"><label for="mc${i}"><img src="${src}" oncontextmenu="return false" ondragstart="return false"></label>`;w.querySelector('input').addEventListener('change',()=>{$('btnJ').disabled=document.querySelectorAll('#optArea input:checked').length!==2});$('optArea').appendChild(w)});
-}
-function subIM(){const q=qs[qi],sel=[...document.querySelectorAll('#optArea input:checked')].map(c=>c.value),ok=sel.length===2&&sel.every(v=>q.correctAnswers.includes(v));mAns(qi);const opsiHuruf=['a','b','c','d','e','f'];const huruf=sel.map(v=>{const idx=q.options.indexOf(v);return idx>=0?opsiHuruf[idx]:'?';}).sort().join('').toUpperCase();ua.push(`${qi+1}${huruf}${ok?'v':'x'}`);if(ok)sc++;saveSt();goNx()}
-function rTxtC(q){
-  let opts='';for(const k in q.options){if(!q.options[k])continue;opts+=`<button class="opt-text" onclick="subTC('${k}','${q.answer}')"><strong>${k}.</strong> ${q.options[k]}</button>`}
-  $('questionContent').innerHTML=`<div class="q-label">Soal No. ${qi+1}${skB()}</div><div class="q-text">${q.question}</div><div class="options-text">${opts}</div>`;
-  $('actionBar').innerHTML=`<button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
-}
-function subTC(k,ans){mAns(qi);ua.push(`${qi+1}${k}${k===ans?'v':'x'}`);if(k===ans)sc++;saveSt();goNx()}
-function rTxtI(q){
-  const iT=cfg.id==='tkd6';
-  const isMobile=(('ontouchstart' in window)||navigator.maxTouchPoints>0)&&window.innerWidth<=768;
-  const npHtml=iT&&isMobile?`<div class="numpad-wrap"><div class="numpad-row">${'12345'.split('').map(d=>`<button class="numpad-btn" onclick="np('${d}')">${d}</button>`).join('')}</div><div class="numpad-row">${'67890'.split('').map(d=>`<button class="numpad-btn" onclick="np('${d}')">${d}</button>`).join('')}</div><div class="numpad-row"><button class="numpad-btn btn-space" onclick="np(' ')">SPASI</button><button class="numpad-btn" onclick="np('/')">/</button><button class="numpad-btn" onclick="npc()">,</button><button class="numpad-btn btn-del" onclick="np('DEL')">⌫</button></div></div>`:'';
-  const warnHtml=`<div id="tiWarn" style="display:none;color:var(--danger);font-size:.82em;font-weight:600;margin-top:6px;text-align:center">⚠ Masukkan 2 jawaban dipisah spasi. Contoh: <strong>48 50</strong></div>`;
-  $('questionContent').innerHTML=`<div class="q-label">Soal No. ${qi+1}${skB()}</div><div class="q-text">${q.question}</div><div class="input-wrap"><input type="text" id="userAnswer" placeholder="${iT?'Contoh: 48 50':'Jawaban...'}" autocomplete="off" ${iT&&isMobile?'readonly':''} oninput="tiOninput(this)"/>${warnHtml}${npHtml}</div>`;
-  $('actionBar').innerHTML=`<button class="btn btn-primary btn-sm" id="btnNx" onclick="tiTrySubmit()" disabled>Jawab</button><button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
-  const inp=$('userAnswer');
-  if(!iT){inp.focus();inp.addEventListener('keyup',e=>{if(e.key==='Enter'&&inp.value.trim())subTI()})}
-  else if(!isMobile){
-    inp.focus();
-    inp.addEventListener('keyup',e=>{if(e.key==='Enter')tiTrySubmit()});
-  }
-}
-function tiOninput(inp){
-  const iT=cfg.id==='tkd6';
-  if(iT){
-    const parts=inp.value.trim().split(/\s+/);
-    const valid=parts.length>=2&&parts[0]!==''&&parts[1]!=='';
-    $('btnNx').disabled=!valid;
-    const w=$('tiWarn');if(w)w.style.display='none';
-  }else{
-    $('btnNx').disabled=inp.value.trim()==='';
-  }
-}
-function tiTrySubmit(){
-  const inp=$('userAnswer');if(!inp)return;
-  const val=inp.value.trim();
-  const parts=val.split(/\s+/);
-  const w=$('tiWarn');
-  if(cfg.id==='tkd6'&&(parts.length<2||parts[1]==='')){
-    if(w){w.style.display='block';inp.focus();inp.style.borderColor='var(--danger)';setTimeout(()=>{inp.style.borderColor='';},1800)}
-    return;
-  }
-  if(w)w.style.display='none';
-  if(val)subTI();
-}
-function subTI(){const q=qs[qi],a=$('userAnswer').value.trim().replace(/,/g,' ');let ok=false;for(const ca of(q.correctAnswers||[])){if(a.toLowerCase()===ca.answer.replace(/,/g,' ').trim().toLowerCase()){ok=true;break}}mAns(qi);ua.push(`${qi+1}${a}${ok?'v':'x'}`);if(ok)sc++;saveSt();goNx()}
-function np(v){const inp=$('userAnswer');if(!inp)return;if(v==='DEL'){inp.value=inp.value.slice(0,-1)}else if(v===' '){if(inp.value.trim()!==''&&!inp.value.includes(' '))inp.value+=v}else{const p=inp.value.split(' ');if(p.length===2&&p[1].length>=6)return;if(p.length===1&&p[0].length>=6)return;inp.value+=v}const btn=$('btnNx');if(btn){const p=inp.value.split(' ');btn.disabled=!(p.length>=2&&p[0].trim()!==''&&p.slice(1).join(' ').trim()!=='')}}
-function npc(){np(',')}
-function rTIS(q){
-  const pair=q.question.split('|'),w1=pair[0]||'',w2=pair[1]||'';
-  $('questionContent').innerHTML=`<div class="tis-pair"><span class="tis-word">${w1}</span><span class="tis-dash">–</span><span class="tis-word">${w2}</span></div><p class="tis-hint">Temukan kata penghubung yang tepat antara dua kata di atas.</p><div class="tis-input-wrap"><input id="tisAnswer" type="text" placeholder="Ketik kata penghubung..." autocomplete="off"></div>`;
-  $('actionBar').innerHTML=`<button class="btn btn-primary btn-sm" onclick="subTIS('${q.answer||''}')">Jawab</button><button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
-  const inp=$('tisAnswer');if(inp)setTimeout(()=>inp.focus(),80);
-  if(inp)inp.addEventListener('keydown',e=>{if(e.key==='Enter')subTIS(q.answer||'')});
-}
-function subTIS(ans){const inp=$('tisAnswer');if(!inp||!inp.value.trim())return;const v=inp.value.trim().toLowerCase(),ok=v===String(ans).toLowerCase();mAns(qi);ua.push(`${qi+1}|${v}|${ok?'v':'x'}`);if(ok)sc++;saveSt();goNx()}
-let dcCk=[];
-function rDC(q){
-  const btns=['1','2','3','4','5','6','7','8','9','0'].map(d=>`<button class="dc-digit-btn" id="dcb-${d}" onclick="dcT('${d}')">${d}</button>`).join('');
-  dcCk=[];
-  $('questionContent').innerHTML=`<div class="q-label">Soal No. ${qi+1}${skB()}</div><div class="dc-question">${q.question}</div><p class="dc-hint">Klik angka sesuai urutan (1–9 dulu, lalu 0)</p><div class="dc-preview" id="dcP"><span class="dc-preview-label">Jawaban:</span><span id="dcPD" style="color:var(--muted);font-style:italic">—</span></div><div class="dc-digits">${btns}</div>`;
-  $('actionBar').innerHTML=`<button class="btn btn-primary btn-sm" id="btnDC" onclick="subDC()" disabled>Jawab</button><button class="btn btn-outline btn-sm" onclick="dcR()">↺ Reset</button><button class="btn btn-outline btn-sm" onclick="skipQ()">Lewati</button>`;
-}
-function dcT(d){const i=dcCk.indexOf(d);i!==-1?dcCk.splice(i):dcCk.push(d);dcUI()}
-function dcR(){dcCk=[];dcUI()}
-function dcUI(){
-  ['1','2','3','4','5','6','7','8','9','0'].forEach(d=>{const b=$('dcb-'+d);if(!b)return;const p=dcCk.indexOf(d);b.classList.toggle('dc-checked',p!==-1);let o=b.querySelector('.dc-order');if(p!==-1){if(!o){o=document.createElement('span');o.className='dc-order';b.appendChild(o)}o.textContent=p+1}else if(o)o.remove()});
-  const p=$('dcPD');if(p)p.innerHTML=dcCk.length?dcCk.map(d=>`<span class="dc-preview-digit">${d}</span>`).join(''):'<span style="color:var(--muted);font-style:italic">—</span>';
-  $('btnDC').disabled=!dcCk.length;
-}
-function subDC(){const q=qs[qi],a=dcCk.join(''),ok=a===(q.correctAnswers||[]).join('');mAns(qi);ua.push(`${qi+1}|${a}|${ok?'v':'x'}`);if(ok)sc++;saveSt();goNx()}
-function rAB(q){
-  $('questionContent').innerHTML=`<div class="q-label">Pasangan Soal No. ${qi+1}</div><div class="options-ab"><button class="opt-ab" onclick="subAB('A')"><strong>A.</strong> ${q.A||(q.options&&q.options.A)||'-'}</button><button class="opt-ab" onclick="subAB('B')"><strong>B.</strong> ${q.B||(q.options&&q.options.B)||'-'}</button></div>`;
-  $('actionBar').innerHTML='';
-}
-function subAB(c){ua.push(c);saveSt();goNx()}
-function renderRank(){
-  const rows=qs.map((q,r)=>`<tr><td class="col-no" style="width:36px">${r+1}</td><td>${q.text}</td><td><div class="btn-container">${[1,2,3,4,5,6,7,8,9,10,11,12].map(n=>`<button class="btn-rank" id="br-${r}-${n}" onclick="rSl(${r},${n})">${n}</button>`).join('')}</div></td></tr>`).join('');
-  $('questionContent').innerHTML=`<div id="deskripsiBox">${cfg._pem||''}</div><div style="overflow-x:auto"><table class="ranking-table"><thead><tr><th class="col-no" style="width:36px">No</th><th>Pernyataan</th><th style="width:480px">Pilihan Ranking</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-  $('actionBar').innerHTML='';updRankUI();
-}
-function rSl(r,v){
-  if(rSel[r]===v){rSel[r]=null;uNum=uNum.filter(n=>n!==v)}
-  else{if(uNum.includes(v))return;if(rSel[r]!==null)uNum=uNum.filter(n=>n!==rSel[r]);rSel[r]=v;uNum.push(v)}
-  updRankUI();saveSt();if(rSel.filter(n=>n!==null).length===12)saveRank(rSel.join(';'));
-}
-function updRankUI(){for(let r=0;r<12;r++){const s=rSel[r];for(let v=1;v<=12;v++){const b=$('br-'+r+'-'+v);if(!b)continue;b.classList.remove('sel','gone');if(s!==null){v===s?b.classList.add('sel'):b.classList.add('gone')}else if(uNum.includes(v))b.classList.add('gone')}}}
-async function saveRank(ds){
-  sl('Menyimpan...');const id=localStorage.getItem('db_id');
-  try{let o={};try{o=JSON.parse(cu[cfg.saveField]||'{}')}catch{}o[cfg._taskId]=ds;const v=JSON.stringify(o);await aP(id,{[cfg.saveField]:v});cu[cfg.saveField]=v;localStorage.removeItem('_st_'+cfg._taskId);rSel=Array(12).fill(null);uNum=[];await goNext2()}
-  catch(e){alert('Gagal: '+e.message)}finally{hl()}
 }
 
 function goNx(){
@@ -927,7 +803,7 @@ async function endTest(to){
 }
 function afterT(){
   try{
-    vMap={};if(cu.x_09){try{const v=JSON.parse(cu.x_09);Object.entries(v).forEach(([k,vl])=>{if(k&&/^[a-zA-Z0-9_]+$/.test(k))vMap[k]=parseInt(vl)||0})}catch{}}
+    parseVMap(cu.x_09);
     goNext2();
   }catch(e){console.error('[afterT]',e);farC(localStorage.getItem('token'))}
 }
@@ -937,7 +813,7 @@ async function farC(token){
     const res=await aF(`${API_R}?table=${TBL}&x_01_eq=${token}`,{headers:{'X-Custom-Auth':AUTH}});
     if(!res.success||!res.count){localStorage.clear();hl();ss('screenDaftar');loadPaket();return}
     cu=res.data[0];localStorage.setItem('db_id',cu.id_x);
-    vMap={};if(cu.x_09){try{const v=JSON.parse(cu.x_09);Object.entries(v).forEach(([k,vl])=>{if(k&&/^[a-zA-Z0-9_]+$/.test(k))vMap[k]=parseInt(vl)||0})}catch{}}
+    parseVMap(cu.x_09);
     await loadAC();await goNext2();
   }catch(e){console.error(e);hl();ss('screenDaftar');loadPaket()}
   finally{hl()}
@@ -946,10 +822,6 @@ async function farC(token){
 // WHO Engine
 const wFindNext=()=>{for(let i=0;i<wBL.length;i++){const b=wBL[i],d=b.data,sf=d?(d.saveField||'x_07'):'x_07';let done=false;try{const o=JSON.parse(cu[sf]||'{}');done=o[b._taskId]!=null&&o[b._taskId]!==''}catch{}if(!done)return i}return -1};
 async function wOpen(idx){
-  // ── Periksa dulu sebelum lanjut ──
-  const boleh=await cekSebelumInstruksi();
-  if(!boleh)return;
-
   sl('Memuat tes...');
   try{
     const b=wBL[idx];if(!b.data)b.data=await(await fetch(b.dataUrl+'?v='+Date.now())).json();
@@ -1013,126 +885,55 @@ document.addEventListener('contextmenu',e=>{if(e.target.tagName==='IMG'){e.preve
 document.addEventListener('dragstart',e=>{if(e.target.tagName==='IMG'){e.preventDefault();return false}});
 document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='s'){e.preventDefault();return false}});
 
-// ═══════════════════════════════════════════
-// POLLING TERPUSAT — memantau status global & peserta
-// Interval adaptif: 5 detik di instruksi/soal, 3 detik di layar tunggu
-// ═══════════════════════════════════════════
-// POLLING TERPUSAT — satu loop menangani semua skenario
-// Interval adaptif berdasarkan layar aktif:
-//   screenTutup  → 4 detik (tunggu tes dibuka)
-//   screenTunggu → 3 detik (tunggu peserta diaktifkan)
-//   screenStart / screenTest → 5 detik (pantau nonaktif)
-//   layar lain → berhenti
-// ═══════════════════════════════════════════
-let _globalPollInterval=null;
-let _globalPollBusy=false;
-
-function getActiveScreen(){
-  const screens=['screenTutup','screenDaftar','screenTunggu','screenStart','screenTest','screenDash','screenDone','screenUpgrade'];
-  for(const id of screens){const el=$(id);if(el&&el.classList.contains('active'))return id;}
-  return null;
-}
-
-function startGlobalPolling(){
-  stopGlobalPolling();
-
-  async function pollTick(){
-    if(_globalPollBusy)return;
-    _globalPollBusy=true;
+// Polling status aktif
+let pollInterval=null;
+function startPolling(){
+  stopPolling();
+  pollInterval=setInterval(async()=>{
     try{
-      const screen=getActiveScreen();
-
-      // ── Layar TUTUP: tunggu tes global dibuka kembali ──
-      if(screen==='screenTutup'){
-        const kontrol=await cekKontrol();
-        if(kontrol.aktif){
-          stopGlobalPolling();
-          if(_cdInterval){clearInterval(_cdInterval);_cdInterval=null;}
-          const tok=localStorage.getItem('token'),dbId=localStorage.getItem('db_id');
-          if(tok&&dbId){
-            sl('Memeriksa sesi...');
-            try{
-              const res=await aF(`${API_R}?table=${TBL}&id_x=${dbId}`,{headers:{'X-Custom-Auth':AUTH}});
-              if(res.success&&res.data){
-                cu=res.data;await loadAC();
-                let status='nonaktif';try{status=JSON.parse(cu.x_02||'{}').status||'nonaktif'}catch{}
-                if(status==='aktif'){hl();startGlobalPolling();await goNext2();}
-                else{hl();ss('screenTunggu');showZoomTunggu();startGlobalPolling();}
-              }else{localStorage.clear();hl();ss('screenDaftar');loadPaket();}
-            }catch{hl();ss('screenDaftar');loadPaket();}
-          }else{hl();ss('screenDaftar');loadPaket();}
-        }
-        _globalPollBusy=false;return;
+      const res=await aF(`${API_R}?table=${TBL}&id_x=${localStorage.getItem('db_id')}`,{headers:{'X-Custom-Auth':AUTH}});
+      if(!res.success||!res.data)return;
+      cu=res.data;
+      let status='nonaktif';try{status=JSON.parse(cu.x_02||'{}').status||'nonaktif'}catch{}
+      if(status==='aktif'){
+        stopPolling();
+        const st=$('tungguStatus'),tx=$('tungguStatusTxt'),btn=$('btnMulaiTes');
+        if(st)st.classList.add('aktif');if(tx)tx.textContent='Tes siap dimulai!';if(btn)btn.style.display='block';
+        await goNext2();
       }
-
-      // ── Layar TUNGGU: tunggu peserta diaktifkan ──
-      if(screen==='screenTunggu'){
-        const dbId=localStorage.getItem('db_id');
-        if(!dbId){_globalPollBusy=false;return;}
-        // Cek kontrol global terlebih dahulu
-        const kontrol=await cekKontrol();
-        if(!kontrol.aktif){
-          stopGlobalPolling();
-          hl();showScreenTutup(kontrol);startGlobalPolling();
-          _globalPollBusy=false;return;
-        }
-        const res=await aF(`${API_R}?table=${TBL}&id_x=${dbId}`,{headers:{'X-Custom-Auth':AUTH}});
-        if(!res.success||!res.data){_globalPollBusy=false;return;}
-        cu=res.data;
-        let status='nonaktif';try{status=JSON.parse(cu.x_02||'{}').status||'nonaktif'}catch{}
-        if(status==='aktif'){
-          stopGlobalPolling();
-          const st=$('tungguStatus'),tx=$('tungguStatusTxt'),btn=$('btnMulaiTes');
-          if(st)st.classList.add('aktif');if(tx)tx.textContent='Tes siap dimulai!';if(btn)btn.style.display='block';
-          startGlobalPolling();await goNext2();
-        }
-        _globalPollBusy=false;return;
-      }
-
-      // ── Layar INSTRUKSI / SOAL: pantau jika dinonaktifkan ──
-      if(['screenStart','screenTest','screenDash'].includes(screen)){
-        // 1) Cek kontrol global
-        const kontrol=await cekKontrol();
-        if(!kontrol.aktif){
-          stopGlobalPolling();hl();showScreenTutup(kontrol);startGlobalPolling();
-          _globalPollBusy=false;return;
-        }
-        // 2) Cek status peserta
-        const dbId=localStorage.getItem('db_id');
-        if(!dbId){_globalPollBusy=false;return;}
-        const res=await aF(`${API_R}?table=${TBL}&id_x=${dbId}`,{headers:{'X-Custom-Auth':AUTH}});
-        if(!res.success||!res.data){_globalPollBusy=false;return;}
-        cu=res.data;
-        let status='nonaktif';try{status=JSON.parse(cu.x_02||'{}').status||'nonaktif'}catch{}
-        if(status!=='aktif'){
-          stopGlobalPolling();hl();ss('screenTunggu');showZoomTunggu();startGlobalPolling();
-          _globalPollBusy=false;return;
-        }
-        _globalPollBusy=false;return;
-      }
-
-      // Layar lain (daftar, done, upgrade) → tidak perlu poll
-      _globalPollBusy=false;
-    }catch(e){console.warn('[globalPoll]',e);_globalPollBusy=false;}
-  }
-
-  function scheduleNext(){
-    const screen=getActiveScreen();
-    const delay=screen==='screenTunggu'?3000:screen==='screenTutup'?4000:5000;
-    _globalPollInterval=setTimeout(async()=>{await pollTick();scheduleNext();},delay);
-  }
-  scheduleNext();
+    }catch{}
+  },3000);
 }
 
-function stopGlobalPolling(){
-  if(_globalPollInterval){clearTimeout(_globalPollInterval);_globalPollInterval=null;}
-  _globalPollBusy=false;
+let _tutupPollInterval=null;
+function startTutupPolling(){
+  stopTutupPolling();
+  _tutupPollInterval=setInterval(async()=>{
+    try{
+      const kontrol=await cekKontrol();
+      if(kontrol.aktif){
+        stopTutupPolling();
+        if(_cdInterval){clearInterval(_cdInterval);_cdInterval=null;}
+        const tok=localStorage.getItem('token'),dbId=localStorage.getItem('db_id');
+        if(tok&&dbId){
+          sl('Memeriksa sesi...');
+          try{
+            const res=await aF(`${API_R}?table=${TBL}&id_x=${dbId}`,{headers:{'X-Custom-Auth':AUTH}});
+            if(res.success&&res.data){
+              cu=res.data;await loadAC();
+              let status='nonaktif';try{status=JSON.parse(cu.x_02||'{}').status||'nonaktif'}catch{}
+              if(status==='aktif'){hl();await goNext2();}
+              else{hl();ss('screenTunggu');showZoomTunggu();startPolling();}
+            }else{localStorage.clear();hl();ss('screenDaftar');loadPaket();}
+          }catch{hl();ss('screenDaftar');loadPaket();}
+        }else{hl();ss('screenDaftar');loadPaket();}
+      }
+    }catch{}
+  },4000);
 }
-
-// startPolling & startTutupPolling dihapus — digantikan startGlobalPolling()
-function stopPolling(){}        // stub agar referensi lama tidak error
-function stopTutupPolling(){}   // stub agar referensi lama tidak error
-async function mulaiTes(){startGlobalPolling();await goNext2()}
+function stopTutupPolling(){if(_tutupPollInterval){clearInterval(_tutupPollInterval);_tutupPollInterval=null;}}
+function stopPolling(){if(pollInterval){clearInterval(pollInterval);pollInterval=null}}
+async function mulaiTes(){stopPolling();await goNext2()}
 
 let _cdInterval=null;
 let _kontrolInfo={aktif:false,waktu_mulai:'',link:''};
@@ -1178,7 +979,7 @@ function showScreenTutup(info){
       tick();_cdInterval=setInterval(tick,1000);
     }
   }
-  hl();ss('screenTutup');startGlobalPolling();
+  hl();ss('screenTutup');startTutupPolling();
 }
 
 // ═══════════════════════════════════════════
@@ -1201,38 +1002,15 @@ async function loadFragment(url, containerId) {
 // INIT
 // ═══════════════════════════════════════════
 window.onload = async () => {
-  // ── Cek ?p= lebih awal, sebelum apapun dijalankan ──
-  if (!AUTO_PAKET) {
-    hl();
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    let errScreen = $('screenNoPacket');
-    if (!errScreen) {
-      errScreen = document.createElement('div');
-      errScreen.id = 'screenNoPacket';
-      errScreen.className = 'screen active';
-      errScreen.innerHTML = `
-        <div class="card" style="text-align:center;margin-top:40px">
-          <div style="font-size:3em;margin-bottom:12px">📦</div>
-          <div style="font-size:1.25em;font-weight:700;color:var(--danger);margin-bottom:10px">Paket Belum Dimasukkan</div>
-          <p style="color:var(--muted);font-size:.9em;line-height:1.7">
-            Halaman ini memerlukan parameter paket pada URL.<br>
-            Tambahkan <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:.9em">?p=nama-paket</code> di akhir URL Anda.<br><br>
-            Contoh: <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:.9em">tes-template.html?p=tes-iq</code>
-          </p>
-        </div>`;
-      document.body.appendChild(errScreen);
-    } else {
-      errScreen.classList.add('active');
-    }
-    return; // hentikan init
-  }
-
   sl('Memuat halaman...');
 
-  // Muat kedua fragment secara paralel
+  // 1. Load paket dulu agar BIODATA_FILE & PENUTUP_FILE bisa diset dari x_03
+  await loadPaket();
+
+  // 2. Muat kedua fragment secara paralel
   await Promise.all([
-    loadFragment(FRAGMENT_BASE + BIODATA_FILE, 'biodataContainer'),
-    loadFragment(FRAGMENT_BASE + PENUTUP_FILE,  'penutupContainer'),
+    loadFragment(resolveFragmentUrl(BIODATA_FILE), 'biodataContainer'),
+    loadFragment(resolveFragmentUrl(PENUTUP_FILE),  'penutupContainer'),
   ]);
 
   sl('Memeriksa status tes...');
@@ -1243,12 +1021,7 @@ window.onload = async () => {
   if (tok) {
     const _pLama = localStorage.getItem('_p');
     if (_pLama && _pLama !== AUTO_PAKET) {
-      const _keysHapus = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith('_st_')) _keysHapus.push(k);
-      }
-      _keysHapus.forEach(k => localStorage.removeItem(k));
+      Object.keys(localStorage).filter(k=>k.startsWith('_st_')).forEach(k=>localStorage.removeItem(k));
       localStorage.setItem('_p', AUTO_PAKET);
     }
     sl('Memeriksa sesi...');
@@ -1256,11 +1029,11 @@ window.onload = async () => {
       const res = await aF(`${API_R}?table=${TBL}&x_01_eq=${tok}`, { headers: { 'X-Custom-Auth': AUTH } });
       if (!res.success || !res.count) { localStorage.clear(); hl(); ss('screenDaftar'); loadPaket(); return; }
       cu = res.data[0]; localStorage.setItem('db_id', cu.id_x);
-      vMap = {}; if (cu.x_09) { try { const v = JSON.parse(cu.x_09); Object.entries(v).forEach(([k, vl]) => { if (k && /^[a-zA-Z0-9_]+$/.test(k)) vMap[k] = parseInt(vl) || 0; }); } catch {} }
+      parseVMap(cu.x_09);
       await loadAC();
       let status = 'nonaktif'; try { status = JSON.parse(cu.x_02 || '{}').status || 'nonaktif'; } catch {}
-      if (status === 'aktif') { hl(); startGlobalPolling(); await goNext2(); }
-      else { hl(); ss('screenTunggu'); showZoomTunggu(); startGlobalPolling(); }
+      if (status === 'aktif') { hl(); await goNext2(); }
+      else { hl(); ss('screenTunggu'); showZoomTunggu(); startPolling(); }
     } catch (e) { localStorage.clear(); hl(); ss('screenDaftar'); loadPaket(); }
     return;
   }
@@ -1269,245 +1042,14 @@ window.onload = async () => {
 </script>
 
 <script>
-// ═══ KREPLIN ENGINE ═══
-let _kCfg={},_kKolom=0,_kSoalIdx=0,_kBenar=0,_kSalah=0,_kTimer=null,_kTL=0,_kLog=[],_kA=0,_kB=0,_kDone=false;
-const _kSK='_krep_state';
-
-function kreplinSaveState(){
-  localStorage.setItem(_kSK,JSON.stringify({
-    kolom:_kKolom,soalIdx:_kSoalIdx,benar:_kBenar,salah:_kSalah,
-    benarPrev:_kBenarPrev,salahPrev:_kSalahPrev,
-    timeLeft:_kTL,log:_kLog,introShown:true
-  }));
-}
-
-function kreplinLoadState(){
-  try{return JSON.parse(localStorage.getItem(_kSK)||'null')}catch{return null}
-}
-
-function kreplinClearState(){localStorage.removeItem(_kSK)}
-
-async function kreplinStart(ref){
-  // Load config dari txt
-  let meta={totalKolom:45,soalPerKolom:50,detikPerKolom:30,angkaMin:1,angkaMax:9};
-  let title='Tes Kraepelin',instructions='',desc='',exNote='';
-  if(ref&&ref.dataUrl){
-    try{
-      const raw=await(await fetch(ref.dataUrl+'?v='+Date.now())).json();
-      if(raw&&raw.meta){
-        const m=raw.meta;
-        if(m.title)title=m.title;
-        if(m.instructions)instructions=m.instructions;
-        if(m.desc)desc=m.desc;
-        if(m.exNote)exNote=m.exNote;
-        if(m.kreplin)Object.assign(meta,m.kreplin);
-      }
-    }catch(e){console.warn('[kreplin] gagal load config:',e)}
-  }
-  _kCfg=meta;_kDone=false;
-
-  // Cek apakah ada state tersimpan (resume setelah refresh)
-  const saved=kreplinLoadState();
-  if(saved&&saved.introShown&&saved.kolom&&saved.kolom<=meta.totalKolom){
-    // Resume langsung tanpa intro
-    _kKolom=saved.kolom;
-    _kSoalIdx=saved.soalIdx||0;
-    _kBenar=saved.benar||0;
-    _kSalah=saved.salah||0;
-    _kBenarPrev=saved.benarPrev||0;
-    _kSalahPrev=saved.salahPrev||0;
-    _kTL=saved.timeLeft||meta.detikPerKolom;
-    _kLog=saved.log||[];
-    ss('screenKreplin');hl();
-    kreplinRenderKolom();
-    kreplinSoalBaru();
-    // Timer resume dari sisa waktu
-    kreplinStartTimerResume(_kTL);
-    return;
-  }
-
-  // Intro hanya ditampilkan pertama kali
-  cfg={title,instructions,desc,exNote,exImgTop:'',exImgBottom:'',timer:0,_taskId:'kreplin'};
-  $('startTitle').innerText=title;
-  $('startInstructions').innerText=instructions||desc||'';
-  $('exNote').innerText=exNote||'';
-  $('exampleBlock').style.display=exNote?'':'none';
-  const iw=document.querySelector('#exampleBlock .example-images');if(iw)iw.style.display='none';
-  $('timerNote').style.display='none';
-  $('btnStart').onclick=()=>kreplinRun();
-  ss('screenStart');hl();
-}
-
-function kreplinRun(){
-  _kKolom=1;_kBenar=0;_kSalah=0;_kBenarPrev=0;_kSalahPrev=0;_kLog=[];_kDone=false;_kSoalIdx=0;
-  _kTL=_kCfg.detikPerKolom||30;
-  kreplinSaveState();
-  ss('screenKreplin');
-  kreplinRenderKolom();
-  kreplinSoalBaru();
-  kreplinStartTimer();
-}
-
-function kreplinRenderKolom(){
-  $('krepTitle').innerText='Tes Kraepelin';
-  $('krepProgress').innerText='Kolom '+_kKolom+' / '+(_kCfg.totalKolom||45);
-  $('krepProgressBar').style.width=Math.round(((_kKolom-1)/(_kCfg.totalKolom||45))*100)+'%';
-}
-
-function kreplinNextKolom(){
-  if(_kKolom>_kCfg.totalKolom){kreplinSelesai();return}
-  _kSoalIdx=0;
-  _kTL=_kCfg.detikPerKolom||30;
-  kreplinRenderKolom();
-  kreplinSoalBaru();
-  kreplinSaveState();
-  kreplinStartTimer();
-}
-
-function kreplinSoalBaru(){
-  const min=_kCfg.angkaMin||1,max=_kCfg.angkaMax||9;
-  _kA=Math.floor(Math.random()*(max-min+1))+min;
-  _kB=Math.floor(Math.random()*(max-min+1))+min;
-  $('krepSoalQ').innerText=_kA+' + '+_kB;
-  const jawaban=(_kA+_kB)%10;
-  const wrap=$('krepOpts');wrap.innerHTML='';
-  [0,1,2,3,4,5,6,7,8,9].forEach(n=>{
-    const btn=document.createElement('button');
-    btn.className='btn btn-outline btn-sm';
-    btn.style.cssText='width:56px;height:56px;font-size:1.4em;font-weight:800;border-radius:12px;padding:0';
-    btn.innerText=n;
-    btn.onclick=()=>kreplinJawab(n,jawaban);
-    wrap.appendChild(btn);
-  });
-}
-
-function kreplinBuatOpsi(jawaban){
-  return [0,1,2,3,4,5,6,7,8,9];
-}
-
-function kreplinJawab(pilihan,jawaban){
-  const benar=pilihan===jawaban;
-  if(benar)_kBenar++;else _kSalah++;
-  _kSoalIdx++;
-  kreplinSaveState();
-  if(_kSoalIdx>=(_kCfg.soalPerKolom||50)){
-    kreplinCatatKolom();
-    clearInterval(_kTimer);_kTimer=null;
-    _kKolom++;kreplinNextKolom();
-  } else {
-    kreplinSoalBaru();
-  }
-}
-
-function kreplinBuildPayload(){
-  const total=_kCfg.totalKolom||45;
-  const dikerjakan=Array(total).fill('');
-  const benar=Array(total).fill('');
-  const salah=Array(total).fill('');
-  _kLog.forEach(k=>{
-    const i=(k.kolom||1)-1;
-    if(i>=0&&i<total){
-      dikerjakan[i]=String(k.soal||0);
-      benar[i]=String(k.benar||0);
-      salah[i]=String(k.salah||0);
-    }
-  });
-  return {
-    dikerjakan:dikerjakan.join('|'),
-    benar:benar.join('|'),
-    salah:salah.join('|')
-  };
-}
-
-let _kBenarPrev=0,_kSalahPrev=0;
-
-function kreplinCatatKolom(){
-  const benarKolom=_kBenar-_kBenarPrev;
-  const salahKolom=_kSalah-_kSalahPrev;
-  _kLog.push({kolom:_kKolom,soal:_kSoalIdx,benar:benarKolom,salah:salahKolom});
-  _kBenarPrev=_kBenar;
-  _kSalahPrev=_kSalah;
-  // Simpan progress ke server setiap akhir kolom
-  const dbId=localStorage.getItem('db_id');
-  if(dbId){
-    aG(dbId).then(cur=>{
-      const sf='x_06';
-      let o={};try{o=JSON.parse(cur.data[sf]||'{}')}catch{}
-      o.kreplin=kreplinBuildPayload();
-      const upd={};upd[sf]=JSON.stringify(o);
-      return aP(dbId,upd).then(()=>{cu=cur.data;cu[sf]=upd[sf];});
-    }).catch(e=>console.warn('[kreplin] gagal simpan kolom:',e));
-  }
-}
-
-function kreplinStartTimer(){
-  if(_kTimer)clearInterval(_kTimer);
-  kreplinUpdTimer();
-  _kTimer=setInterval(()=>{
-    _kTL--;kreplinUpdTimer();kreplinSaveState();
-    if(_kTL<=0){
-      clearInterval(_kTimer);_kTimer=null;
-      kreplinCatatKolom();
-      _kKolom++;kreplinNextKolom();
-    }
-  },1000);
-}
-
-function kreplinStartTimerResume(sisaWaktu){
-  if(_kTimer)clearInterval(_kTimer);
-  _kTL=sisaWaktu;
-  kreplinUpdTimer();
-  _kTimer=setInterval(()=>{
-    _kTL--;kreplinUpdTimer();kreplinSaveState();
-    if(_kTL<=0){
-      clearInterval(_kTimer);_kTimer=null;
-      kreplinCatatKolom();
-      _kKolom++;kreplinNextKolom();
-    }
-  },1000);
-}
-
-function kreplinUpdTimer(){
-  const m=String(Math.floor(_kTL/60)).padStart(2,'0'),s=String(_kTL%60).padStart(2,'0');
-  const el=$('krepTimerDisplay');if(!el)return;
-  el.innerText=m+':'+s;
-  el.style.color=_kTL<=10?'var(--danger)':'var(--text)';
-}
-
-async function kreplinSelesai(){
-  if(_kDone)return;_kDone=true;
-  if(_kTimer){clearInterval(_kTimer);_kTimer=null;}
-  kreplinClearState();
-  const dbId=localStorage.getItem('db_id');
-  if(dbId){
-    sl('Menyimpan hasil...');
-    try{
-      const cur=await aG(dbId);
-      const sf='x_06';
-      let o={};try{o=JSON.parse(cur.data[sf]||'{}')}catch{}
-      o.kreplin=kreplinBuildPayload();
-      const upd={};upd[sf]=JSON.stringify(o);
-      await aP(dbId,upd);
-      cu=cur.data;cu[sf]=upd[sf];
-    }catch(e){console.warn('[kreplin] gagal simpan:',e)}
-  }
-  hl();
-  $('doneIcon').innerText='✅';
-  $('doneTitle').innerText='Tes Kraepelin Selesai!';
-  $('doneDesc').innerText='Hasil telah tersimpan.';
-  ss('screenDone');
-  setTimeout(()=>{sl('Memuat tes berikutnya...');goNext2()},2000);
-}
-</script>
-
-<script>
 // ═══ Pelacak Kunjungan Harian Unik ═══
 (function(){
   const API_BASE_URL='https://lidan-co-id.pages.dev/api/contacts';
   const TABLE_NAME='kunjungan',BASE_LS_KEY='visit_tracker_',QUERY_PARAM=`tabel=${TABLE_NAME}`;
   function simpleHash(str){let h=0;for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0;}return Math.abs(h).toString(16)}
-  function getTodayDate(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')}
-  function getCurrentTimestamp(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')+' '+String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0')}
+  const _pad=n=>String(n).padStart(2,'0');
+  function getTodayDate(){const n=new Date();return n.getFullYear()+'-'+_pad(n.getMonth()+1)+'-'+_pad(n.getDate())}
+  function getCurrentTimestamp(){const n=new Date();return getTodayDate()+' '+_pad(n.getHours())+':'+_pad(n.getMinutes())+':'+_pad(n.getSeconds())}
   async function trackVisit(){
     const url=window.location.href,lsKey=BASE_LS_KEY+simpleHash(url),today=getTodayDate();
     let stored=null;try{stored=JSON.parse(localStorage.getItem(lsKey)||'null')}catch{}
