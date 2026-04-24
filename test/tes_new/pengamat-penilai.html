@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Tes Pengamat vs Penilai</title>
+    <style>
+        :root { 
+            --primary: #2c3e50; 
+            --accent: #27ae60; 
+            --bg: #f0f2f5; 
+            --highlight: #2ecc71;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; display: flex; justify-content: center; }
+        .container { background: white; width: 100%; max-width: 500px; padding: 25px; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: var(--primary); }
+        
+        .section-title { font-weight: bold; margin-top: 25px; border-bottom: 2px solid #eee; padding-bottom: 5px; color: #7f8c8d; }
+        .input-group { margin: 15px 0; }
+        .input-group label { display: block; margin-bottom: 5px; font-size: 0.9em; }
+        .input-group input, .input-group select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        
+        /* Baris Soal & Tombol A/B */
+        .answer-row { display: flex; align-items: center; padding: 12px 5px; border-bottom: 1px solid #eee; gap: 10px; }
+        .num { width: 30px; font-weight: bold; color: #777; }
+        
+        .options-group { display: flex; flex-grow: 1; gap: 10px; }
+        .option-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid var(--accent);
+            background: white;
+            color: var(--accent);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .option-btn:hover { background: #f0fff4; }
+        .option-btn.selected {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Submit & Loading */
+        #btn-submit { 
+            width: 100%; padding: 15px; background: var(--primary); color: white; border: none; 
+            border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 30px; font-size: 16px; 
+        }
+        #btn-submit:hover { background: #1a252f; }
+        
+        .loading-box {
+            display: none;
+            text-align: center;
+            margin-top: 25px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Tes 8: Mengenal Orientasi Hidup</h2>
+    <form id="pjForm">
+        <div class="section-title">Data Diri</div>
+        <div class="input-group">
+            <label>Nama Lengkap</label>
+            <input type="text" id="nama" required placeholder="Nama Anda...">
+        </div>
+        <div class="input-group">
+            <label>Usia</label>
+            <input type="number" id="usia" required placeholder="Usia...">
+        </div>
+        <div class="input-group">
+            <label>Pendidikan</label>
+            <select id="pendidikan" required>
+                <option value="">Pilih...</option>
+                <option value="SD">SD</option>
+                <option value="SMP">SMP</option>
+                <option value="SMA/SMK">SMA/SMK</option>
+                <option value="Diploma/S1">Diploma/S1</option>
+            </select>
+        </div>
+
+        <div class="section-title">Lembar Jawaban</div>
+        <div id="quizArea"></div>
+        
+        <button type="button" id="btn-submit" onclick="submitData()">Simpan & Lihat Hasil</button>
+        <div id="loading-status" class="loading-box">🔄 Menganalisis orientasi diri Anda...</div>
+    </form>
+</div>
+
+<script>
+    const totalQuestions = 10;
+    let jawabanData = {};
+
+    // Generate 10 soal berurutan dengan tombol A dan B
+    const quizArea = document.getElementById('quizArea');
+    for (let i = 1; i <= totalQuestions; i++) {
+        quizArea.innerHTML += `
+            <div class="answer-row">
+                <div class="num">${i}.</div>
+                <div class="options-group" id="group-q${i}">
+                    <div class="option-btn" onclick="selectOption(${i}, 'A')">A</div>
+                    <div class="option-btn" onclick="selectOption(${i}, 'B')">B</div>
+                </div>
+            </div>`;
+    }
+
+    function selectOption(qNum, val) {
+        // Simpan jawaban
+        jawabanData[`q${qNum}`] = val;
+
+        // Feedback visual tombol
+        const buttons = document.querySelectorAll(`#group-q${qNum} .option-btn`);
+        buttons.forEach(btn => btn.classList.remove('selected'));
+        
+        const selectedBtn = Array.from(buttons).find(btn => btn.innerText === val);
+        if (selectedBtn) selectedBtn.classList.add('selected');
+    }
+
+    async function submitData() {
+        const nama = document.getElementById('nama').value;
+        const usia = document.getElementById('usia').value;
+        const pendidikan = document.getElementById('pendidikan').value;
+
+        // Validasi
+        if(!nama || !usia || !pendidikan) return alert("Mohon lengkapi data diri!");
+        if(Object.keys(jawabanData).length < totalQuestions) return alert("Mohon jawab semua soal 1-10!");
+
+        // Aktifkan Loading
+        const btnSubmit = document.getElementById('btn-submit');
+        const loadingBox = document.getElementById('loading-status');
+        btnSubmit.classList.add('hidden');
+        loadingBox.style.display = 'block';
+
+        // Hitung skor A dan B
+        let skor = { A: 0, B: 0 };
+        Object.values(jawabanData).forEach(val => {
+            skor[val]++;
+        });
+
+        const tgl = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        const dataDiriObj = { nama, usia, pendidikan, tgl_tes: tgl };
+        const token = "PJ-" + Math.random().toString(36).substring(2, 10);
+        const namaKey = document.title.trim().toLowerCase().replace(/\s+/g, '-');
+        const jawabanStr = Array.from({length: 10}, (_,i) => jawabanData[`q${i+1}`]).join(';') + ';';
+        const x07 = {}; x07[namaKey] = jawabanStr;
+        const payload = {
+            x_01: token,
+            x_02: JSON.stringify(dataDiriObj),
+            x_07: JSON.stringify(x07)
+        };
+
+        try {
+            const res = await fetch("https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6?table=nilai1_json", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': 'admin' },
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await res.json();
+            if(result.success) {
+                window.location.href = `08view.html?token=${token}`;
+            } else {
+                alert("Gagal menyimpan data.");
+                resetUI();
+            }
+        } catch (e) { 
+            alert("Terjadi kesalahan koneksi."); 
+            resetUI();
+        }
+    }
+
+    function resetUI() {
+        document.getElementById('btn-submit').classList.remove('hidden');
+        document.getElementById('loading-status').style.display = 'none';
+    }
+</script>
+</body>
+</html>

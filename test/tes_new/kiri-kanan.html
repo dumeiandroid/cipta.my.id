@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Tes Otak Kiri & Kanan</title>
+    <style>
+        :root { 
+            --primary: #2c3e50; 
+            --bg: #f4f7f6; 
+            --accent: #2980b9;
+            --success: #27ae60;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; display: flex; justify-content: center; }
+        .container { background: white; width: 100%; max-width: 500px; padding: 25px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        h2 { text-align: center; color: var(--primary); margin-bottom: 20px; }
+        
+        .section-title { font-weight: bold; margin-top: 25px; border-bottom: 2px solid #eee; padding-bottom: 5px; color: var(--accent); }
+        .input-group { margin: 15px 0; }
+        .input-group label { display: block; margin-bottom: 5px; font-size: 0.9em; color: #555; }
+        .input-group input, .input-group select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+
+        .answer-row { display: flex; align-items: center; padding: 12px 5px; border-bottom: 1px solid #eee; gap: 15px; }
+        .num { width: 30px; font-weight: bold; color: #777; }
+        
+        .options { display: flex; flex-grow: 1; gap: 10px; }
+        .option-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid var(--accent);
+            background: white;
+            color: var(--accent);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .option-btn:hover { background: #f0f7ff; }
+        .option-btn.selected {
+            background: var(--accent);
+            color: white;
+        }
+
+        #btn-submit { 
+            width: 100%; padding: 15px; background: var(--primary); color: white; border: none; 
+            border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 30px; font-size: 16px; 
+        }
+        #btn-submit:hover { background: #1a252f; }
+        
+        .loading-box {
+            display: none;
+            text-align: center;
+            margin-top: 25px;
+            padding: 15px;
+            background: #e1f5fe;
+            border-radius: 8px;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Tes Dominasi Otak</h2>
+    
+    <form id="brainForm">
+        <div class="section-title">Data Diri</div>
+        <div class="input-group">
+            <label>Nama Lengkap</label>
+            <input type="text" id="nama" name="nama" required placeholder="Masukkan nama...">
+        </div>
+        <div class="input-group">
+            <label>Usia</label>
+            <input type="number" id="usia" name="usia" required placeholder="Contoh: 20">
+        </div>
+        <div class="input-group">
+            <label>Pendidikan</label>
+            <select id="pendidikan" name="pendidikan" required>
+                <option value="">Pilih...</option>
+                <option value="SD">SD</option>
+                <option value="SMP">SMP</option>
+                <option value="SMA/SMK">SMA/SMK</option>
+                <option value="Diploma/S1">Diploma/S1</option>
+            </select>
+        </div>
+
+        <div class="section-title">Lembar Jawaban</div>
+        <div id="quizContainer"></div>
+        
+        <button type="button" id="btn-submit" onclick="submitData()">Simpan & Analisis</button>
+        <div id="loading-status" class="loading-box">🔄 Menganalisis Dominasi Otak...</div>
+    </form>
+</div>
+
+<script>
+    const API_URL = "https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6?table=nilai1_json";
+    let jawabanData = {};
+
+    // Menghasilkan 22 soal berurutan (1-11 dikirim sebagai A, 12-22 dikirim sebagai B)
+    function initQuiz() {
+        const container = document.getElementById('quizContainer');
+        for(let i=1; i<=22; i++) {
+            // Tentukan prefix pengiriman data (1-11 = A, 12-22 = B)
+            const prefix = i <= 11 ? 'A' : 'B';
+            const idKey = i <= 11 ? i : i - 11;
+            const finalKey = `${prefix}${idKey}`;
+
+            container.innerHTML += `
+                <div class="answer-row">
+                    <div class="num">${i}</div>
+                    <div class="options" id="group-${finalKey}">
+                        <div class="option-btn" onclick="selectOption('${finalKey}', 'Sesuai')">A</div>
+                        <div class="option-btn" onclick="selectOption('${finalKey}', 'Tidak')">B</div>
+                    </div>
+                </div>`;
+        }
+    }
+    
+    initQuiz();
+
+    function selectOption(key, type) {
+        // Jika pilih A (Sesuai), simpan data. Jika pilih B (Tidak), hapus dari payload
+        if (type === 'Sesuai') {
+            jawabanData[key] = "1";
+        } else {
+            delete jawabanData[key];
+        }
+
+        // Visual feedback tombol
+        const buttons = document.querySelectorAll(`#group-${key} .option-btn`);
+        buttons.forEach(btn => btn.classList.remove('selected'));
+        
+        const selectedIndex = type === 'Sesuai' ? 0 : 1;
+        buttons[selectedIndex].classList.add('selected');
+    }
+
+    async function submitData() {
+        const nama = document.getElementById('nama').value;
+        const usia = document.getElementById('usia').value;
+        const pendidikan = document.getElementById('pendidikan').value;
+
+        if(!nama || !usia || !pendidikan) return alert("Lengkapi data diri!");
+
+        // Tampilan Loading
+        const btnSubmit = document.getElementById('btn-submit');
+        const loadingBox = document.getElementById('loading-status');
+        btnSubmit.classList.add('hidden');
+        loadingBox.style.display = 'block';
+
+        const dataDiri = { nama, usia, pendidikan };
+        const tgl = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        const dataDiriObj = { nama, usia, pendidikan, tgl_tes: tgl };
+        const token = "BRAIN-" + Math.random().toString(36).substring(2, 10);
+        const namaKey = document.title.trim().toLowerCase().replace(/\s+/g, '-');
+        let jawabanArr = [];
+        for(let i=1; i<=11; i++) jawabanArr.push(jawabanData[`A${i}`] === "1" ? "A" : "B");
+        for(let i=1; i<=11; i++) jawabanArr.push(jawabanData[`B${i}`] === "1" ? "A" : "B");
+        const jawabanStr = jawabanArr.join(';') + ';';
+        const x07 = {}; x07[namaKey] = jawabanStr;
+        const payload = {
+            x_01: token,
+            x_02: JSON.stringify(dataDiriObj),
+            x_07: JSON.stringify(x07)
+        };
+
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': 'admin' },
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await res.json();
+            if(result.success) {
+                window.location.href = `02view.html?token=${token}`;
+            } else {
+                alert("Gagal menyimpan.");
+                resetUI();
+            }
+        } catch (e) { 
+            alert("Gagal koneksi ke server."); 
+            resetUI();
+        }
+    }
+
+    function resetUI() {
+        document.getElementById('btn-submit').classList.remove('hidden');
+        document.getElementById('loading-status').style.display = 'none';
+    }
+</script>
+</body>
+</html>
