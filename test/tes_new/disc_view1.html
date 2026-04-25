@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Tes DISC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --D: #c0392b; --I: #e67e22; --S: #27ae60; --C: #2980b9;
+            --D-light: #fdeaea; --I-light: #fef5ec; --S-light: #eafaf1; --C-light: #eaf4fb;
+            --dark: #1a1a2e; --mid: #2c2c54; --light: #f4f4f8; --white: #ffffff;
+            --radius: 16px; --shadow: 0 8px 32px rgba(0,0,0,0.10);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--light);
+            min-height: 100vh;
+        }
+
+        /* ── LOADING ── */
+        #loadingScreen {
+            position:fixed; inset:0; background:var(--dark);
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            z-index:999; transition:opacity .5s;
+        }
+        .spinner {
+            width:56px; height:56px;
+            border:4px solid rgba(255,255,255,.15);
+            border-top-color:#fff; border-radius:50%;
+            animation:spin 1s linear infinite; margin-bottom:20px;
+        }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        #loadingScreen p { color:rgba(255,255,255,.7); font-size:.95em; letter-spacing:.05em; }
+
+        /* ── LAYOUT ── */
+        .page { max-width:860px; margin:0 auto; padding:32px 16px 60px; }
+
+        /* ── HERO HEADER ── */
+        .hero {
+            background: var(--dark);
+            border-radius: var(--radius);
+            padding: 48px 40px 40px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            color: white;
+        }
+        .hero::before {
+            content:'DISC';
+            position:absolute; right:-20px; top:-20px;
+            font-family:'Playfair Display', serif;
+            font-size:160px; font-weight:900;
+            color:rgba(255,255,255,.04);
+            line-height:1; pointer-events:none;
+        }
+        .hero-label {
+            font-size:.75em; font-weight:600; letter-spacing:.15em;
+            text-transform:uppercase; color:rgba(255,255,255,.5);
+            margin-bottom:10px;
+        }
+        .hero h1 {
+            font-family:'Playfair Display', serif;
+            font-size:2.2em; line-height:1.1; margin-bottom:6px;
+        }
+        .hero-sub { color:rgba(255,255,255,.6); font-size:.95em; }
+
+        /* ── PROFILE CARD ── */
+        .profile-card {
+            background:var(--white); border-radius:var(--radius);
+            padding:28px 32px; margin-bottom:24px;
+            box-shadow:var(--shadow);
+            display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:20px;
+        }
+        .profile-item .lbl {
+            font-size:.72em; font-weight:600; letter-spacing:.1em;
+            text-transform:uppercase; color:#aaa; margin-bottom:4px;
+        }
+        .profile-item .val { font-size:1.05em; font-weight:500; color:var(--dark); }
+
+        /* ── SELF TABS ── */
+        .tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+        .tab-btn {
+            padding:9px 22px; border:2px solid #e0e0e0; background:white;
+            border-radius:99px; font-family:'DM Sans',sans-serif;
+            font-size:.88em; font-weight:600; cursor:pointer; transition:.2s;
+            color:#888;
+        }
+        .tab-btn.active { background:var(--dark); border-color:var(--dark); color:white; }
+
+        /* ── DISC PANEL ── */
+        .disc-panel {
+            background:var(--white); border-radius:var(--radius);
+            padding:32px; margin-bottom:24px; box-shadow:var(--shadow);
+            display:none;
+        }
+        .disc-panel.active { display:block; }
+        .panel-title {
+            font-family:'Playfair Display', serif; font-size:1.4em;
+            color:var(--dark); margin-bottom:24px;
+            display:flex; align-items:center; gap:10px;
+        }
+        .panel-title .badge {
+            font-size:.55em; background:var(--light); border-radius:99px;
+            padding:4px 14px; color:#888; font-family:'DM Sans',sans-serif;
+            font-weight:600; letter-spacing:.05em; text-transform:uppercase;
+        }
+
+        /* ── DISC BARS ── */
+        .disc-bars { display:flex; flex-direction:column; gap:18px; }
+        .disc-row { display:flex; flex-direction:column; gap:6px; }
+        .disc-row-head {
+            display:flex; justify-content:space-between; align-items:center;
+        }
+        .disc-name {
+            display:flex; align-items:center; gap:10px;
+            font-weight:600; font-size:.95em; color:var(--dark);
+        }
+        .disc-dot {
+            width:10px; height:10px; border-radius:50%;
+        }
+        .disc-score-badge {
+            font-size:.78em; font-weight:700; padding:3px 12px;
+            border-radius:99px; letter-spacing:.03em;
+        }
+        .score-pos { background:#e8f8f0; color:#1e8449; }
+        .score-neg { background:#fdeaea; color:#c0392b; }
+        .score-neu { background:#f0f0f0; color:#888; }
+
+        .bar-track {
+            height:12px; background:#f0f0f0; border-radius:99px; overflow:hidden;
+        }
+        .bar-fill {
+            height:100%; border-radius:99px;
+            transition:width 1.2s cubic-bezier(.4,0,.2,1);
+        }
+        .disc-desc {
+            font-size:.82em; color:#777; line-height:1.5; margin-top:4px;
+        }
+
+        /* ── RADAR CHART ── */
+        .chart-wrap {
+            background:var(--white); border-radius:var(--radius);
+            padding:32px; margin-bottom:24px; box-shadow:var(--shadow);
+        }
+        .chart-wrap h2 {
+            font-family:'Playfair Display',serif; font-size:1.3em;
+            color:var(--dark); margin-bottom:20px;
+        }
+        .chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        .chart-box { position:relative; height:220px; }
+        .chart-label {
+            text-align:center; font-size:.8em; color:#888;
+            font-weight:600; margin-top:6px; text-transform:uppercase; letter-spacing:.05em;
+        }
+
+        /* ── PROFILE TYPE ── */
+        .type-card {
+            border-radius:var(--radius); padding:32px; margin-bottom:24px;
+            box-shadow:var(--shadow); border-left:6px solid;
+        }
+        .type-card h2 {
+            font-family:'Playfair Display',serif; font-size:1.8em; margin-bottom:10px;
+        }
+        .type-card p { color:#555; line-height:1.7; font-size:.95em; }
+
+        /* ── TRAIT GRID ── */
+        .trait-grid {
+            display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+            gap:16px; margin-bottom:24px;
+        }
+        .trait-card {
+            background:var(--white); border-radius:var(--radius);
+            padding:22px; box-shadow:var(--shadow);
+        }
+        .trait-card h4 {
+            font-size:.78em; font-weight:700; letter-spacing:.1em;
+            text-transform:uppercase; margin-bottom:12px;
+        }
+        .trait-card ul { list-style:none; }
+        .trait-card li {
+            font-size:.85em; color:#555; padding:5px 0 5px 20px;
+            position:relative; border-bottom:1px solid #f4f4f4;
+        }
+        .trait-card li:last-child { border-bottom:none; }
+        .trait-card li::before {
+            content:'→'; position:absolute; left:0; font-size:.9em;
+        }
+
+        /* ── BUTTONS ── */
+        .btn-row {
+            display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:8px;
+        }
+        .btn {
+            padding:14px 24px; border:none; border-radius:10px;
+            font-family:'DM Sans',sans-serif; font-size:.95em; font-weight:600;
+            cursor:pointer; transition:.2s;
+        }
+        .btn-dark { background:var(--dark); color:white; }
+        .btn-dark:hover { background:var(--mid); transform:translateY(-2px); }
+        .btn-outline { background:white; color:var(--dark); border:2px solid var(--dark); }
+        .btn-outline:hover { background:var(--dark); color:white; transform:translateY(-2px); }
+
+        /* ── ERROR ── */
+        .error-box {
+            text-align:center; padding:80px 40px; background:white;
+            border-radius:var(--radius); box-shadow:var(--shadow);
+        }
+        .error-box h2 { font-family:'Playfair Display',serif; font-size:1.8em; color:#c0392b; margin-bottom:10px; }
+        .error-box p { color:#888; }
+
+        @media print {
+            body { background:white; }
+            .btn-row { display:none; }
+            #loadingScreen { display:none; }
+        }
+        @media(max-width:600px) {
+            .hero { padding:32px 24px; }
+            .hero h1 { font-size:1.6em; }
+            .chart-grid { grid-template-columns:1fr; }
+            .btn-row { grid-template-columns:1fr; }
+            .profile-card { padding:20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loadingScreen">
+    <div class="spinner"></div>
+    <p>Memuat hasil analisis DISC...</p>
+</div>
+
+<div class="page" id="app"></div>
+
+<script>
+// ═══════════════════════════════════════
+// TABEL WARNA (dari 19.php)
+// ═══════════════════════════════════════
+const TABEL = [
+    [1,'A','KUNING','KUNING'],[1,'B','HIJAU','HIJAU'],[1,'C','PUTIH','MERAH'],[1,'D','BIRU','BIRU'],
+    [2,'A','MERAH','MERAH'],[2,'B','BIRU','BIRU'],[2,'C','PUTIH','HIJAU'],[2,'D','PUTIH','KUNING'],
+    [3,'A','PUTIH','BIRU'],[3,'B','MERAH','MERAH'],[3,'C','KUNING','KUNING'],[3,'D','HIJAU','PUTIH'],
+    [4,'A','BIRU','PUTIH'],[4,'B','MERAH','MERAH'],[4,'C','PUTIH','HIJAU'],[4,'D','KUNING','KUNING'],
+    [5,'A','PUTIH','BIRU'],[5,'B','MERAH','MERAH'],[5,'C','KUNING','KUNING'],[5,'D','HIJAU','PUTIH'],
+    [6,'A','MERAH','MERAH'],[6,'B','PUTIH','HIJAU'],[6,'C','PUTIH','KUNING'],[6,'D','BIRU','PUTIH'],
+    [7,'A','HIJAU','HIJAU'],[7,'B','PUTIH','BIRU'],[7,'C','PUTIH','KUNING'],[7,'D','MERAH','PUTIH'],
+    [8,'A','KUNING','PUTIH'],[8,'B','PUTIH','HIJAU'],[8,'C','MERAH','MERAH'],[8,'D','BIRU','BIRU'],
+    [9,'A','MERAH','MERAH'],[9,'B','KUNING','PUTIH'],[9,'C','HIJAU','HIJAU'],[9,'D','PUTIH','BIRU'],
+    [10,'A','BIRU','BIRU'],[10,'B','KUNING','KUNING'],[10,'C','PUTIH','HIJAU'],[10,'D','MERAH','MERAH'],
+    [11,'A','PUTIH','KUNING'],[11,'B','BIRU','PUTIH'],[11,'C','HIJAU','HIJAU'],[11,'D','MERAH','MERAH'],
+    [12,'A','MERAH','PUTIH'],[12,'B','KUNING','KUNING'],[12,'C','HIJAU','HIJAU'],[12,'D','BIRU','PUTIH'],
+    [13,'A','HIJAU','PUTIH'],[13,'B','MERAH','MERAH'],[13,'C','KUNING','KUNING'],[13,'D','PUTIH','BIRU'],
+    [14,'A','MERAH','MERAH'],[14,'B','KUNING','PUTIH'],[14,'C','HIJAU','PUTIH'],[14,'D','PUTIH','BIRU'],
+    [15,'A','KUNING','KUNING'],[15,'B','MERAH','MERAH'],[15,'C','HIJAU','HIJAU'],[15,'D','PUTIH','PUTIH'],
+    [16,'A','BIRU','PUTIH'],[16,'B','MERAH','MERAH'],[16,'C','HIJAU','HIJAU'],[16,'D','KUNING','KUNING'],
+    [17,'A','BIRU','BIRU'],[17,'B','HIJAU','HIJAU'],[17,'C','KUNING','PUTIH'],[17,'D','MERAH','MERAH'],
+    [18,'A','KUNING','KUNING'],[18,'B','PUTIH','HIJAU'],[18,'C','MERAH','MERAH'],[18,'D','BIRU','BIRU'],
+    [19,'A','KUNING','PUTIH'],[19,'B','HIJAU','HIJAU'],[19,'C','PUTIH','BIRU'],[19,'D','PUTIH','MERAH'],
+    [20,'A','KUNING','KUNING'],[20,'B','BIRU','PUTIH'],[20,'C','HIJAU','HIJAU'],[20,'D','MERAH','MERAH'],
+    [21,'A','PUTIH','MERAH'],[21,'B','HIJAU','PUTIH'],[21,'C','KUNING','KUNING'],[21,'D','PUTIH','BIRU'],
+    [22,'A','HIJAU','HIJAU'],[22,'B','KUNING','KUNING'],[22,'C','BIRU','BIRU'],[22,'D','MERAH','MERAH'],
+    [23,'A','PUTIH','MERAH'],[23,'B','BIRU','PUTIH'],[23,'C','HIJAU','HIJAU'],[23,'D','KUNING','KUNING'],
+    [24,'A','PUTIH','KUNING'],[24,'B','HIJAU','HIJAU'],[24,'C','MERAH','PUTIH'],[24,'D','BIRU','PUTIH'],
+];
+
+// ═══════════════════════════════════════
+// FUNGSI KALKULASI (porting dari 19.php)
+// ═══════════════════════════════════════
+function hitungWarna(arr) {
+    const c = {MERAH:0,HIJAU:0,KUNING:0,BIRU:0,PUTIH:0};
+    arr.forEach(w => { if(c[w]!==undefined) c[w]++; });
+    return c;
+}
+
+function skorD1(v) {
+    if(v>=15&&v<=21)return 8; if(v>=13&&v<=14)return 6; if(v>=9&&v<=12)return 4;
+    if(v>=7&&v<=8)return 2; if(v==3)return -4; if(v>=1&&v<=2)return -6; return -8;
+}
+function skorI1(v) {
+    if(v>=9&&v<=19)return 8; if(v>=7&&v<=8)return 6; if(v>=5&&v<=6)return 4;
+    if(v==4)return 2; if(v==3)return -2; if(v==2)return -4; if(v==1)return -6; return -8;
+}
+function skorS1(v) {
+    if(v>=14&&v<=20)return 8; if(v>=10&&v<=12)return 6; if(v>=7&&v<=9)return 4;
+    if(v>=5&&v<=6)return 2; if(v>=3&&v<=4)return -2; if(v==2)return -4;
+    if(v>=0&&v<=1)return -6; return -8;
+}
+function skorC1(v) {
+    if(v>=11&&v<=17)return 8; if(v>=7&&v<=9)return 6; if(v>=5&&v<=6)return 4;
+    if(v==4)return 2; if(v==3)return -2; if(v==2)return -4; if(v==1)return -6; return -8;
+}
+function skorD2(v) {
+    if(v>=0&&v<=1)return 8; if(v==2)return 6; if(v==3)return 4; if(v>=4&&v<=5)return 2;
+    if(v>=6&&v<=8)return -2; if(v>=9&&v<=11)return -4; if(v>=12&&v<=14)return -6; return -8;
+}
+function skorI2(v) {
+    if(v==0)return 8; if(v==1)return 6; if(v>=2&&v<=3)return 4; if(v==4)return 2;
+    if(v==5)return -2; if(v>=6&&v<=7)return -4; if(v>=8&&v<=9)return -6; return -8;
+}
+function skorS2(v) {
+    if(v>=0&&v<=1)return 8; if(v==2)return 6; if(v>=3&&v<=4)return 4; if(v>=5&&v<=6)return 2;
+    if(v==7)return -2; if(v>=8&&v<=9)return -4; if(v>=10&&v<=11)return -6; return -8;
+}
+function skorC2(v) {
+    if(v>=0&&v<=1)return 8; if(v==2)return 6; if(v>=3&&v<=4)return 4; if(v>=5&&v<=6)return 2;
+    if(v>=7&&v<=8)return -2; if(v>=9&&v<=10)return -4; if(v>=11&&v<=12)return -6; return -8;
+}
+function skorD3(v) {
+    if(v>=15&&v<=21)return 8; if(v>=10&&v<=14)return 6; if(v>=7&&v<=9)return 4;
+    if(v>=1&&v<=5)return 2; if(v>=-4&&v<=0)return -2; if(v>=-9&&v<=-6)return -4;
+    if(v>=-12&&v<=-10)return -6; return -8;
+}
+function skorI3(v) {
+    if(v>=8&&v<=18)return 8; if(v>=5&&v<=7)return 6; if(v>=3&&v<=4)return 4;
+    if(v>=0&&v<=2)return 2; if(v>=-2&&v<=-1)return -2; if(v>=-5&&v<=-3)return -4;
+    if(v>=-8&&v<=-6)return -6; return -8;
+}
+function skorS3(v) {
+    if(v>=11&&v<=20)return 8; if(v>=7&&v<=10)return 6; if(v>=3&&v<=6)return 4;
+    if(v>=0&&v<=2)return 2; if(v>=-4&&v<=-1)return -2; if(v>=-7&&v<=-5)return -4;
+    if(v==-8)return -6; return -8;
+}
+function skorC3(v) {
+    if(v>=6&&v<=17)return 8; if(v>=3&&v<=5)return 6; if(v>=1&&v<=2)return 4;
+    if(v>=-2&&v<=0)return 2; if(v>=-4&&v<=-3)return -2; if(v>=-7&&v<=-5)return -4;
+    if(v>=-10&&v<=-8)return -6; return -8;
+}
+
+function hitungDISC(jawabanStr) {
+    // jawabanStr: "A_C;B_D;D_A;..." (format who_dual)
+    const discStr = '_;' + jawabanStr;
+    const parts = discStr.split(';').map(s => s.trim());
+    const jawaban = parts.map(p => p.split('_').map(s => s.trim()));
+
+    const hasilA = [], hasilB = [];
+    for (let i = 1; i < jawaban.length; i++) {
+        const soal = i, jwA = jawaban[i][0], jwB = jawaban[i][1];
+        if (!jwA || !jwB) continue;
+        const rowA = TABEL.find(r => r[0]===soal && r[1]===jwA);
+        const rowB = TABEL.find(r => r[0]===soal && r[1]===jwB);
+        if (rowA) hasilA.push(rowA[2]);
+        if (rowB) hasilB.push(rowB[3]);
+    }
+
+    const cA = hitungWarna(hasilA), cB = hitungWarna(hasilB);
+    const selisih = {
+        MERAH: cA.MERAH - cB.MERAH, HIJAU: cA.HIJAU - cB.HIJAU,
+        KUNING: cA.KUNING - cB.KUNING, BIRU: cA.BIRU - cB.BIRU,
+    };
+
+    return {
+        public:  { D:skorD1(cA.MERAH), I:skorI1(cA.HIJAU), S:skorS1(cA.KUNING), C:skorC1(cA.BIRU) },
+        private: { D:skorD2(cB.MERAH), I:skorI2(cB.HIJAU), S:skorS2(cB.KUNING), C:skorC2(cB.BIRU) },
+        perceived:{ D:skorD3(selisih.MERAH), I:skorI3(selisih.HIJAU), S:skorS3(selisih.KUNING), C:skorC3(selisih.BIRU) },
+        raw: { cA, cB, selisih }
+    };
+}
+
+// ═══════════════════════════════════════
+// DESKRIPSI
+// ═══════════════════════════════════════
+const DESC = {
+    D: {
+        8:  "Sangat percaya diri, agresif, dan berfokus pada hasil. Cenderung mengambil inisiatif dan siap menghadapi tantangan.",
+        6:  "Mampu memimpin dan memotivasi orang lain. Berorientasi pada hasil, tetapi lebih mempertimbangkan pendapat tim.",
+        4:  "Memiliki sifat dominan, tetapi juga terbuka untuk kolaborasi. Menyeimbangkan kepemimpinan dan kerja sama.",
+        2:  "Lebih suka bekerja di belakang layar. Menghindari konflik dan tidak terlalu mengejar posisi kepemimpinan.",
+        "-2": "Cenderung menghindari konflik dan kurang percaya diri. Tidak menunjukkan keinginan untuk memimpin.",
+        "-4": "Hampir tidak menunjukkan sifat dominan. Lebih suka bekerja sama tanpa ambisi untuk memimpin.",
+        "-6": "Sangat menghindari pengambilan keputusan. Tidak nyaman dalam situasi kompetitif.",
+        "-8": "Sangat pasif dan cenderung menyerah pada orang lain. Tidak berinisiatif dalam situasi apa pun.",
+    },
+    I: {
+        8:  "Sangat karismatik dan mampu memotivasi orang lain. Menyukai interaksi sosial dan berbicara di depan umum.",
+        6:  "Mampu membangun hubungan yang kuat. Masih sangat sosial, tetapi lebih fokus pada hasil dan tujuan.",
+        4:  "Menyukai interaksi sosial, tetapi tidak selalu berusaha menjadi pusat perhatian.",
+        2:  "Lebih introvert dan tidak nyaman dalam situasi sosial. Mungkin lebih fokus pada pekerjaan daripada hubungan.",
+        "-2": "Hampir tidak berinteraksi secara sosial. Cenderung menghindari situasi komunikasi aktif.",
+        "-4": "Sangat tidak tertarik pada hubungan sosial. Lebih nyaman bekerja sendiri.",
+        "-6": "Sangat enggan berinteraksi dengan orang lain. Menghindari situasi sosial.",
+        "-8": "Sangat tertutup dan tidak berkomunikasi. Tidak mampu membangun hubungan sosial.",
+    },
+    S: {
+        8:  "Sangat sabar dan dapat diandalkan. Mampu menjaga hubungan yang harmonis dan bekerja sama dengan baik.",
+        6:  "Mampu beradaptasi dengan perubahan, tetapi lebih suka rutinitas. Menyukai lingkungan yang tenang.",
+        4:  "Cukup fleksibel, tetapi terkadang tidak nyaman dengan perubahan. Menyeimbangkan stabilitas dan adaptasi.",
+        2:  "Tidak terlalu nyaman dengan rutinitas. Lebih cepat beradaptasi dengan perubahan.",
+        "-2": "Sangat tidak stabil dan mudah terganggu. Tidak mampu menjaga fokus jangka panjang.",
+        "-4": "Sangat cepat beradaptasi, tetapi bisa kehilangan arah. Tidak nyaman dengan hubungan yang panjang.",
+        "-6": "Sangat tidak sabar dan sering merasa gelisah. Menghindari rutinitas.",
+        "-8": "Sangat tidak dapat diandalkan dan tidak mampu menjaga hubungan yang stabil.",
+    },
+    C: {
+        8:  "Sangat detail-oriented dan selalu mengikuti aturan. Mampu menganalisis situasi dengan sangat baik.",
+        6:  "Masih menghargai aturan dan detail, tetapi bisa lebih fleksibel dalam pendekatan.",
+        4:  "Memiliki keseimbangan antara mengikuti aturan dan memberikan ruang untuk kreativitas.",
+        2:  "Tidak terlalu terikat pada aturan. Lebih suka mengambil pendekatan yang lebih bebas.",
+        "-2": "Sangat mengabaikan aturan, cenderung mengambil risiko tanpa mempertimbangkan konsekuensi.",
+        "-4": "Hampir tidak mengikuti prosedur. Lebih suka cara yang tidak konvensional.",
+        "-6": "Sangat tidak teratur dan tidak menghargai detail. Cenderung mengabaikan semua aturan.",
+        "-8": "Sangat tidak teratur dan cenderung bertindak impulsif tanpa memperhatikan norma.",
+    }
+};
+
+const DISC_META = {
+    D: { name:'Dominance', label:'D — Dominance', color:'#c0392b', light:'#fdeaea', icon:'⚡', desc:'Berorientasi pada hasil, pengambil keputusan cepat, dan penuh percaya diri.' },
+    I: { name:'Influence',  label:'I — Influence',  color:'#e67e22', light:'#fef5ec', icon:'🌟', desc:'Komunikatif, antusias, dan mampu mempengaruhi orang lain secara positif.' },
+    S: { name:'Steadiness', label:'S — Steadiness', color:'#27ae60', light:'#eafaf1', icon:'🌿', desc:'Sabar, konsisten, dan menjadi penyeimbang dalam tim.' },
+    C: { name:'Compliance', label:'C — Compliance', color:'#2980b9', light:'#eaf4fb', icon:'🔍', desc:'Analitis, teliti, dan selalu mengutamakan kualitas serta prosedur.' },
+};
+
+function getDesc(tipe, nilai) {
+    return DESC[tipe][String(nilai)] || '';
+}
+
+function dominanLabel(scores) {
+    const pos = Object.entries(scores).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+    if (!pos.length) return 'Seimbang';
+    return pos.slice(0,2).map(([k])=> DISC_META[k].name).join(' / ');
+}
+
+// ═══════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════
+let charts = [];
+
+function renderBarPanel(scores, panelId) {
+    const keys = ['D','I','S','C'];
+    const maxAbs = 8;
+    return keys.map(k => {
+        const v = scores[k], m = DISC_META[k];
+        const isPos = v > 0, isNeg = v < 0;
+        const pct = Math.abs(v) / maxAbs * 100;
+        const badgeCls = isPos ? 'score-pos' : isNeg ? 'score-neg' : 'score-neu';
+        const label = isPos ? `Skala +${v}` : isNeg ? `Skala ${v}` : 'Netral';
+        return `
+        <div class="disc-row">
+            <div class="disc-row-head">
+                <span class="disc-name">
+                    <span class="disc-dot" style="background:${m.color}"></span>
+                    ${m.label}
+                </span>
+                <span class="disc-score-badge ${badgeCls}">${label}</span>
+            </div>
+            <div class="bar-track">
+                <div class="bar-fill" style="width:${pct}%;background:${m.color}"></div>
+            </div>
+            <div class="disc-desc">${getDesc(k, v)}</div>
+        </div>`;
+    }).join('');
+}
+
+function renderCharts(result) {
+    charts.forEach(c => c.destroy());
+    charts = [];
+    const selfTypes = [
+        {id:'chartPublic',   scores:result.public,    label:'Public Self'},
+        {id:'chartPrivate',  scores:result.private,   label:'Private Self'},
+    ];
+    selfTypes.forEach(({id, scores, label}) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const ctx = el.getContext('2d');
+        charts.push(new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['D','I','S','C'],
+                datasets: [{
+                    data: ['D','I','S','C'].map(k => Math.max(scores[k], 0)),
+                    backgroundColor: 'rgba(26,26,46,0.1)',
+                    borderColor: '#1a1a2e',
+                    borderWidth: 2,
+                    pointBackgroundColor: ['#c0392b','#e67e22','#27ae60','#2980b9'],
+                    pointRadius: 5,
+                }]
+            },
+            options: {
+                responsive:true, maintainAspectRatio:false,
+                scales: {
+                    r: {
+                        min:0, max:8, ticks:{stepSize:2,display:false},
+                        grid:{color:'rgba(0,0,0,.08)'},
+                        pointLabels:{font:{size:14,weight:'bold'},color:'#333'}
+                    }
+                },
+                plugins:{legend:{display:false}}
+            }
+        }));
+    });
+}
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
+    document.querySelectorAll('.disc-panel').forEach(p => p.classList.toggle('active', p.id==='panel-'+tab));
+}
+
+function renderResult(data) {
+    const bio = JSON.parse(data.x_02 || '{}');
+    const x07 = JSON.parse(data.x_07 || '{}');
+
+    // Cari key DISC
+    const discKey = x07['who_disc'] !== undefined ? 'who_disc'
+        : (Object.keys(x07).find(k => k.includes('disc')) || '');
+    const jawabanStr = discKey ? x07[discKey] : '';
+
+    if (!jawabanStr || !jawabanStr.trim().includes('_')) {
+        document.getElementById('app').innerHTML = `
+        <div class="error-box">
+            <h2>⚠️ Data Belum Tersedia</h2>
+            <p>Peserta ini belum menyelesaikan Tes Kepribadian DISC.</p>
+        </div>`;
+        return;
+    }
+
+    const result = hitungDISC(jawabanStr);
+    const domPub = dominanLabel(result.public);
+    const domPri = dominanLabel(result.private);
+    const domPer = dominanLabel(result.perceived);
+
+    document.getElementById('app').innerHTML = `
+    <div class="hero">
+        <div class="hero-label">Laporan Psikologi</div>
+        <h1>Tes Kepribadian DISC</h1>
+        <p class="hero-sub">Analisis gaya perilaku berdasarkan metode DISC</p>
+    </div>
+
+    <div class="profile-card">
+        <div class="profile-item"><div class="lbl">Nama</div><div class="val">${bio.nama || '—'}</div></div>
+        <div class="profile-item"><div class="lbl">Usia</div><div class="val">${bio.usia ? bio.usia+' Tahun' : '—'}</div></div>
+        <div class="profile-item"><div class="lbl">Pendidikan</div><div class="val">${bio.pendidikan || '—'}</div></div>
+        <div class="profile-item"><div class="lbl">Tanggal Tes</div><div class="val">${bio.tgl_tes || '—'}</div></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="public"    onclick="switchTab('public')">🌐 Public Self</button>
+        <button class="tab-btn"        data-tab="private"   onclick="switchTab('private')">🔒 Private Self</button>
+        <button class="tab-btn"        data-tab="perceived" onclick="switchTab('perceived')">🔮 Perceived Self</button>
+    </div>
+
+    <!-- PANELS -->
+    <div class="disc-panel active" id="panel-public">
+        <div class="panel-title">Public Self <span class="badge">Tampak ke Orang Lain</span></div>
+        <div style="margin-bottom:10px;color:#888;font-size:.88em">Tipe dominan: <b style="color:var(--dark)">${domPub}</b></div>
+        <div class="disc-bars">${renderBarPanel(result.public,'public')}</div>
+    </div>
+    <div class="disc-panel" id="panel-private">
+        <div class="panel-title">Private Self <span class="badge">Diri Sebenarnya</span></div>
+        <div style="margin-bottom:10px;color:#888;font-size:.88em">Tipe dominan: <b style="color:var(--dark)">${domPri}</b></div>
+        <div class="disc-bars">${renderBarPanel(result.private,'private')}</div>
+    </div>
+    <div class="disc-panel" id="panel-perceived">
+        <div class="panel-title">Perceived Self <span class="badge">Persepsi Diri Total</span></div>
+        <div style="margin-bottom:10px;color:#888;font-size:.88em">Tipe dominan: <b style="color:var(--dark)">${domPer}</b></div>
+        <div class="disc-bars">${renderBarPanel(result.perceived,'perceived')}</div>
+    </div>
+
+    <!-- RADAR CHART -->
+    <div class="chart-wrap">
+        <h2>📊 Perbandingan Public vs Private Self</h2>
+        <div class="chart-grid">
+            <div>
+                <div class="chart-box"><canvas id="chartPublic"></canvas></div>
+                <div class="chart-label">Public Self</div>
+            </div>
+            <div>
+                <div class="chart-box"><canvas id="chartPrivate"></canvas></div>
+                <div class="chart-label">Private Self</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRAIT CARDS -->
+    <div class="trait-grid">
+        ${['D','I','S','C'].map(k => {
+            const m = DISC_META[k];
+            return `<div class="trait-card">
+                <h4 style="color:${m.color}">${m.icon} ${m.label}</h4>
+                <p style="font-size:.82em;color:#888;margin-bottom:10px">${m.desc}</p>
+            </div>`;
+        }).join('')}
+    </div>
+
+    <!-- BUTTONS -->
+    <div class="btn-row">
+        <button class="btn btn-dark" onclick="downloadImg()">📥 Download JPG</button>
+        <button class="btn btn-outline" onclick="window.print()">🖨️ Cetak PDF</button>
+    </div>
+    `;
+
+    renderCharts(result);
+}
+
+// ═══════════════════════════════════════
+// LOAD DATA
+// ═══════════════════════════════════════
+async function loadData() {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token') || params.get('x_01');
+    const app = document.getElementById('app');
+
+    if (!token) {
+        hide(); app.innerHTML = `<div class="error-box"><h2>❌ Token Tidak Ditemukan</h2><p>Tambahkan ?token=xxx pada URL.</p></div>`; return;
+    }
+
+    try {
+        const res = await fetch(
+            `https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6?table=nilai1_json&x_01_eq=${token}`,
+            { headers: { 'X-Custom-Auth': 'admin' } }
+        );
+        const json = await res.json();
+        hide();
+        if (json.success && json.count > 0) {
+            renderResult(json.data[0]);
+        } else {
+            app.innerHTML = `<div class="error-box"><h2>❌ Data Tidak Ditemukan</h2><p>Token tidak valid atau belum ada data.</p></div>`;
+        }
+    } catch(e) {
+        hide(); app.innerHTML = `<div class="error-box"><h2>❌ Koneksi Gagal</h2><p>Tidak dapat terhubung ke server.</p></div>`;
+    }
+}
+
+function hide() {
+    const s = document.getElementById('loadingScreen');
+    s.style.opacity = '0';
+    setTimeout(() => s.style.display='none', 500);
+}
+
+async function downloadImg() {
+    const btn = event.target;
+    btn.disabled = true; btn.textContent = '⏳ Memproses...';
+    try {
+        const canvas = await html2canvas(document.getElementById('app'), {scale:2, backgroundColor:'#f4f4f8'});
+        const a = document.createElement('a');
+        a.download = `Hasil-DISC-${Date.now()}.jpg`;
+        a.href = canvas.toDataURL('image/jpeg', 0.95);
+        a.click();
+        btn.textContent = '✅ Berhasil!';
+    } catch { btn.textContent = '❌ Gagal'; }
+    setTimeout(() => { btn.disabled=false; btn.textContent='📥 Download JPG'; }, 2000);
+}
+
+loadData();
+</script>
+</body>
+</html>

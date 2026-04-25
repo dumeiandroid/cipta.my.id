@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Tes DISC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --D: #c0392b; --I: #e67e22; --S: #27ae60; --C: #2980b9;
+            --D-light: #fdeaea; --I-light: #fef5ec; --S-light: #eafaf1; --C-light: #eaf4fb;
+            --dark: #1a1a2e; --mid: #2c2c54; --light: #f4f4f8; --white: #ffffff;
+            --radius: 16px; --shadow: 0 8px 32px rgba(0,0,0,0.10);
+            --pos: #1e8449; --pos-light: #e8f8f0;
+            --neg: #c0392b; --neg-light: #fdeaea;
+            --tip: #5b2d8e; --tip-light: #f0eaff;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'DM Sans',sans-serif; background:var(--light); min-height:100vh; }
+
+        /* LOADING */
+        #loadingScreen {
+            position:fixed; inset:0; background:var(--dark);
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            z-index:999; transition:opacity .5s;
+        }
+        .spinner {
+            width:56px; height:56px; border:4px solid rgba(255,255,255,.15);
+            border-top-color:#fff; border-radius:50%;
+            animation:spin 1s linear infinite; margin-bottom:20px;
+        }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        #loadingScreen p { color:rgba(255,255,255,.7); font-size:.95em; letter-spacing:.05em; }
+
+        /* LAYOUT */
+        .page { max-width:900px; margin:0 auto; padding:32px 16px 60px; }
+
+        /* HERO */
+        .hero {
+            background:var(--dark); border-radius:var(--radius);
+            padding:48px 40px 40px; margin-bottom:24px;
+            position:relative; overflow:hidden; color:white;
+        }
+        .hero::before {
+            content:'DISC'; position:absolute; right:-20px; top:-20px;
+            font-family:'Playfair Display',serif; font-size:160px; font-weight:900;
+            color:rgba(255,255,255,.04); line-height:1; pointer-events:none;
+        }
+        .hero-label {
+            font-size:.75em; font-weight:600; letter-spacing:.15em;
+            text-transform:uppercase; color:rgba(255,255,255,.5); margin-bottom:10px;
+        }
+        .hero h1 { font-family:'Playfair Display',serif; font-size:2.2em; line-height:1.1; margin-bottom:6px; }
+        .hero-sub { color:rgba(255,255,255,.6); font-size:.95em; }
+
+        /* PROFILE CARD */
+        .profile-card {
+            background:var(--white); border-radius:var(--radius);
+            padding:28px 32px; margin-bottom:24px; box-shadow:var(--shadow);
+            display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:20px;
+        }
+        .profile-item .lbl { font-size:.72em; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#aaa; margin-bottom:4px; }
+        .profile-item .val { font-size:1.05em; font-weight:500; color:var(--dark); }
+
+        /* SELF TABS (outer: Public/Private/Perceived) */
+        .tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+        .tab-btn {
+            padding:9px 22px; border:2px solid #e0e0e0; background:white;
+            border-radius:99px; font-family:'DM Sans',sans-serif;
+            font-size:.88em; font-weight:600; cursor:pointer; transition:.2s; color:#888;
+        }
+        .tab-btn.active { background:var(--dark); border-color:var(--dark); color:white; }
+
+        /* DISC PANEL */
+        .disc-panel { background:var(--white); border-radius:var(--radius); padding:32px; margin-bottom:24px; box-shadow:var(--shadow); display:none; }
+        .disc-panel.active { display:block; }
+        .panel-title { font-family:'Playfair Display',serif; font-size:1.4em; color:var(--dark); margin-bottom:8px; display:flex; align-items:center; gap:10px; }
+        .panel-title .badge { font-size:.55em; background:var(--light); border-radius:99px; padding:4px 14px; color:#888; font-family:'DM Sans',sans-serif; font-weight:600; letter-spacing:.05em; text-transform:uppercase; }
+        .panel-sub { color:#888; font-size:.88em; margin-bottom:20px; }
+
+        /* INNER TABS: Positif / Negatif */
+        .inner-tabs { display:flex; gap:8px; margin-bottom:20px; }
+        .inner-tab-btn {
+            padding:7px 18px; border:2px solid #e0e0e0; background:white;
+            border-radius:99px; font-family:'DM Sans',sans-serif;
+            font-size:.83em; font-weight:600; cursor:pointer; transition:.2s; color:#888;
+        }
+        .inner-tab-btn.pos-active { background:var(--pos-light); border-color:var(--pos); color:var(--pos); }
+        .inner-tab-btn.neg-active { background:var(--neg-light); border-color:var(--neg); color:var(--neg); }
+
+        .inner-panel { display:none; }
+        .inner-panel.active { display:block; }
+
+        /* DISC BARS */
+        .disc-bars { display:flex; flex-direction:column; gap:18px; }
+        .disc-row { display:flex; flex-direction:column; gap:6px; }
+        .disc-row-head { display:flex; justify-content:space-between; align-items:center; }
+        .disc-name { display:flex; align-items:center; gap:10px; font-weight:600; font-size:.95em; color:var(--dark); }
+        .disc-dot { width:10px; height:10px; border-radius:50%; }
+        .disc-score-badge { font-size:.78em; font-weight:700; padding:3px 12px; border-radius:99px; letter-spacing:.03em; }
+        .score-pos { background:#e8f8f0; color:#1e8449; }
+        .score-neg { background:#fdeaea; color:#c0392b; }
+        .score-neu { background:#f0f0f0; color:#888; }
+        .bar-track { height:12px; background:#f0f0f0; border-radius:99px; overflow:hidden; }
+        .bar-fill { height:100%; border-radius:99px; transition:width 1.2s cubic-bezier(.4,0,.2,1); }
+        .disc-desc { font-size:.82em; color:#777; line-height:1.5; margin-top:4px; }
+
+        /* DETAIL CARD (per DISC trait) */
+        .detail-card {
+            border-radius:12px; padding:20px 24px; margin-top:8px;
+            border-left:4px solid; animation:fadeIn .3s ease;
+        }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+        .detail-card h4 { font-size:.8em; font-weight:700; letter-spacing:.1em; text-transform:uppercase; margin-bottom:12px; }
+        .detail-sections { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        @media(max-width:600px) { .detail-sections { grid-template-columns:1fr; } }
+        .detail-box { background:rgba(255,255,255,0.7); border-radius:10px; padding:14px 16px; }
+        .detail-box h5 { font-size:.75em; font-weight:700; letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+        .detail-box ul { list-style:none; }
+        .detail-box li { font-size:.82em; color:#444; padding:4px 0 4px 18px; position:relative; border-bottom:1px solid rgba(0,0,0,.05); line-height:1.5; }
+        .detail-box li:last-child { border-bottom:none; }
+        .detail-box li::before { content:'•'; position:absolute; left:4px; font-weight:900; }
+
+        /* TIP BOX */
+        .tip-box { background:var(--tip-light); border-radius:10px; padding:14px 16px; margin-top:12px; }
+        .tip-box h5 { font-size:.75em; font-weight:700; letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px; color:var(--tip); display:flex; align-items:center; gap:6px; }
+        .tip-box ul { list-style:none; }
+        .tip-box li { font-size:.82em; color:#4a3060; padding:4px 0 4px 18px; position:relative; border-bottom:1px solid rgba(91,45,142,.08); line-height:1.5; }
+        .tip-box li:last-child { border-bottom:none; }
+        .tip-box li::before { content:'✦'; position:absolute; left:2px; font-size:.7em; color:var(--tip); top:5px; }
+
+        /* NEUTRAL NOTICE */
+        .neutral-notice {
+            background:#f8f8f8; border-radius:12px; padding:18px 20px;
+            border-left:4px solid #ccc; margin-top:8px;
+            font-size:.85em; color:#888; line-height:1.6;
+        }
+
+        /* EMPTY STATE (no positive / no negative traits) */
+        .empty-state {
+            text-align:center; padding:32px 20px;
+            background:#f9f9f9; border-radius:12px; color:#aaa; font-size:.88em;
+        }
+        .empty-state .emoji { font-size:2em; margin-bottom:8px; }
+
+        /* RADAR CHART */
+        .chart-wrap { background:var(--white); border-radius:var(--radius); padding:32px; margin-bottom:24px; box-shadow:var(--shadow); }
+        .chart-wrap h2 { font-family:'Playfair Display',serif; font-size:1.3em; color:var(--dark); margin-bottom:20px; }
+        .chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        .chart-box { position:relative; height:220px; }
+        .chart-label { text-align:center; font-size:.8em; color:#888; font-weight:600; margin-top:6px; text-transform:uppercase; letter-spacing:.05em; }
+
+        /* SUMMARY SECTION */
+        .summary-wrap { background:var(--dark); border-radius:var(--radius); padding:32px; margin-bottom:24px; box-shadow:var(--shadow); color:white; }
+        .summary-wrap h2 { font-family:'Playfair Display',serif; font-size:1.3em; margin-bottom:20px; opacity:.9; }
+        .summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
+        .summary-col { background:rgba(255,255,255,.07); border-radius:12px; padding:18px; }
+        .summary-col h3 { font-size:.75em; font-weight:700; letter-spacing:.1em; text-transform:uppercase; margin-bottom:12px; opacity:.6; }
+        .summary-col ul { list-style:none; }
+        .summary-col li { font-size:.83em; padding:5px 0 5px 18px; position:relative; border-bottom:1px solid rgba(255,255,255,.06); line-height:1.5; opacity:.85; }
+        .summary-col li:last-child { border-bottom:none; }
+        .summary-col li::before { content:'→'; position:absolute; left:0; opacity:.5; }
+
+        /* BUTTONS */
+        .btn-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:8px; }
+        .btn { padding:14px 24px; border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:.95em; font-weight:600; cursor:pointer; transition:.2s; }
+        .btn-dark { background:var(--dark); color:white; }
+        .btn-dark:hover { background:var(--mid); transform:translateY(-2px); }
+        .btn-outline { background:white; color:var(--dark); border:2px solid var(--dark); }
+        .btn-outline:hover { background:var(--dark); color:white; transform:translateY(-2px); }
+
+        /* ERROR */
+        .error-box { text-align:center; padding:80px 40px; background:white; border-radius:var(--radius); box-shadow:var(--shadow); }
+        .error-box h2 { font-family:'Playfair Display',serif; font-size:1.8em; color:#c0392b; margin-bottom:10px; }
+        .error-box p { color:#888; }
+
+        @media print { body { background:white; } .btn-row { display:none; } #loadingScreen { display:none; } }
+        @media(max-width:600px) {
+            .hero { padding:32px 24px; } .hero h1 { font-size:1.6em; }
+            .chart-grid { grid-template-columns:1fr; }
+            .btn-row { grid-template-columns:1fr; }
+            .profile-card { padding:20px; }
+            .disc-panel { padding:20px 16px; }
+        }
+    </style>
+</head>
+<body>
+<div id="loadingScreen">
+    <div class="spinner"></div>
+    <p>Memuat hasil analisis DISC...</p>
+</div>
+<div class="page" id="app"></div>
+
+<script>
+// ═══════════════════════════════════════
+// TABEL WARNA
+// ═══════════════════════════════════════
+const TABEL = [
+    [1,'A','KUNING','KUNING'],[1,'B','HIJAU','HIJAU'],[1,'C','PUTIH','MERAH'],[1,'D','BIRU','BIRU'],
+    [2,'A','MERAH','MERAH'],[2,'B','BIRU','BIRU'],[2,'C','PUTIH','HIJAU'],[2,'D','PUTIH','KUNING'],
+    [3,'A','PUTIH','BIRU'],[3,'B','MERAH','MERAH'],[3,'C','KUNING','KUNING'],[3,'D','HIJAU','PUTIH'],
+    [4,'A','BIRU','PUTIH'],[4,'B','MERAH','MERAH'],[4,'C','PUTIH','HIJAU'],[4,'D','KUNING','KUNING'],
+    [5,'A','PUTIH','BIRU'],[5,'B','MERAH','MERAH'],[5,'C','KUNING','KUNING'],[5,'D','HIJAU','PUTIH'],
+    [6,'A','MERAH','MERAH'],[6,'B','PUTIH','HIJAU'],[6,'C','PUTIH','KUNING'],[6,'D','BIRU','PUTIH'],
+    [7,'A','HIJAU','HIJAU'],[7,'B','PUTIH','BIRU'],[7,'C','PUTIH','KUNING'],[7,'D','MERAH','PUTIH'],
+    [8,'A','KUNING','PUTIH'],[8,'B','PUTIH','HIJAU'],[8,'C','MERAH','MERAH'],[8,'D','BIRU','BIRU'],
+    [9,'A','MERAH','MERAH'],[9,'B','KUNING','PUTIH'],[9,'C','HIJAU','HIJAU'],[9,'D','PUTIH','BIRU'],
+    [10,'A','BIRU','BIRU'],[10,'B','KUNING','KUNING'],[10,'C','PUTIH','HIJAU'],[10,'D','MERAH','MERAH'],
+    [11,'A','PUTIH','KUNING'],[11,'B','BIRU','PUTIH'],[11,'C','HIJAU','HIJAU'],[11,'D','MERAH','MERAH'],
+    [12,'A','MERAH','PUTIH'],[12,'B','KUNING','KUNING'],[12,'C','HIJAU','HIJAU'],[12,'D','BIRU','PUTIH'],
+    [13,'A','HIJAU','PUTIH'],[13,'B','MERAH','MERAH'],[13,'C','KUNING','KUNING'],[13,'D','PUTIH','BIRU'],
+    [14,'A','MERAH','MERAH'],[14,'B','KUNING','PUTIH'],[14,'C','HIJAU','PUTIH'],[14,'D','PUTIH','BIRU'],
+    [15,'A','KUNING','KUNING'],[15,'B','MERAH','MERAH'],[15,'C','HIJAU','HIJAU'],[15,'D','PUTIH','PUTIH'],
+    [16,'A','BIRU','PUTIH'],[16,'B','MERAH','MERAH'],[16,'C','HIJAU','HIJAU'],[16,'D','KUNING','KUNING'],
+    [17,'A','BIRU','BIRU'],[17,'B','HIJAU','HIJAU'],[17,'C','KUNING','PUTIH'],[17,'D','MERAH','MERAH'],
+    [18,'A','KUNING','KUNING'],[18,'B','PUTIH','HIJAU'],[18,'C','MERAH','MERAH'],[18,'D','BIRU','BIRU'],
+    [19,'A','KUNING','PUTIH'],[19,'B','HIJAU','HIJAU'],[19,'C','PUTIH','BIRU'],[19,'D','PUTIH','MERAH'],
+    [20,'A','KUNING','KUNING'],[20,'B','BIRU','PUTIH'],[20,'C','HIJAU','HIJAU'],[20,'D','MERAH','MERAH'],
+    [21,'A','PUTIH','MERAH'],[21,'B','HIJAU','PUTIH'],[21,'C','KUNING','KUNING'],[21,'D','PUTIH','BIRU'],
+    [22,'A','HIJAU','HIJAU'],[22,'B','KUNING','KUNING'],[22,'C','BIRU','BIRU'],[22,'D','MERAH','MERAH'],
+    [23,'A','PUTIH','MERAH'],[23,'B','BIRU','PUTIH'],[23,'C','HIJAU','HIJAU'],[23,'D','KUNING','KUNING'],
+    [24,'A','PUTIH','KUNING'],[24,'B','HIJAU','HIJAU'],[24,'C','MERAH','PUTIH'],[24,'D','BIRU','PUTIH'],
+];
+
+// ═══════════════════════════════════════
+// KALKULASI
+// ═══════════════════════════════════════
+function hitungWarna(arr) {
+    const c = {MERAH:0,HIJAU:0,KUNING:0,BIRU:0,PUTIH:0};
+    arr.forEach(w => { if(c[w]!==undefined) c[w]++; });
+    return c;
+}
+function skorD1(v){if(v>=15&&v<=21)return 8;if(v>=13&&v<=14)return 6;if(v>=9&&v<=12)return 4;if(v>=7&&v<=8)return 2;if(v==3)return -4;if(v>=1&&v<=2)return -6;return -8;}
+function skorI1(v){if(v>=9&&v<=19)return 8;if(v>=7&&v<=8)return 6;if(v>=5&&v<=6)return 4;if(v==4)return 2;if(v==3)return -2;if(v==2)return -4;if(v==1)return -6;return -8;}
+function skorS1(v){if(v>=14&&v<=20)return 8;if(v>=10&&v<=12)return 6;if(v>=7&&v<=9)return 4;if(v>=5&&v<=6)return 2;if(v>=3&&v<=4)return -2;if(v==2)return -4;if(v>=0&&v<=1)return -6;return -8;}
+function skorC1(v){if(v>=11&&v<=17)return 8;if(v>=7&&v<=9)return 6;if(v>=5&&v<=6)return 4;if(v==4)return 2;if(v==3)return -2;if(v==2)return -4;if(v==1)return -6;return -8;}
+function skorD2(v){if(v>=0&&v<=1)return 8;if(v==2)return 6;if(v==3)return 4;if(v>=4&&v<=5)return 2;if(v>=6&&v<=8)return -2;if(v>=9&&v<=11)return -4;if(v>=12&&v<=14)return -6;return -8;}
+function skorI2(v){if(v==0)return 8;if(v==1)return 6;if(v>=2&&v<=3)return 4;if(v==4)return 2;if(v==5)return -2;if(v>=6&&v<=7)return -4;if(v>=8&&v<=9)return -6;return -8;}
+function skorS2(v){if(v>=0&&v<=1)return 8;if(v==2)return 6;if(v>=3&&v<=4)return 4;if(v>=5&&v<=6)return 2;if(v==7)return -2;if(v>=8&&v<=9)return -4;if(v>=10&&v<=11)return -6;return -8;}
+function skorC2(v){if(v>=0&&v<=1)return 8;if(v==2)return 6;if(v>=3&&v<=4)return 4;if(v>=5&&v<=6)return 2;if(v>=7&&v<=8)return -2;if(v>=9&&v<=10)return -4;if(v>=11&&v<=12)return -6;return -8;}
+function skorD3(v){if(v>=15&&v<=21)return 8;if(v>=10&&v<=14)return 6;if(v>=7&&v<=9)return 4;if(v>=1&&v<=5)return 2;if(v>=-4&&v<=0)return -2;if(v>=-9&&v<=-6)return -4;if(v>=-12&&v<=-10)return -6;return -8;}
+function skorI3(v){if(v>=8&&v<=18)return 8;if(v>=5&&v<=7)return 6;if(v>=3&&v<=4)return 4;if(v>=0&&v<=2)return 2;if(v>=-2&&v<=-1)return -2;if(v>=-5&&v<=-3)return -4;if(v>=-8&&v<=-6)return -6;return -8;}
+function skorS3(v){if(v>=11&&v<=20)return 8;if(v>=7&&v<=10)return 6;if(v>=3&&v<=6)return 4;if(v>=0&&v<=2)return 2;if(v>=-4&&v<=-1)return -2;if(v>=-7&&v<=-5)return -4;if(v==-8)return -6;return -8;}
+function skorC3(v){if(v>=6&&v<=17)return 8;if(v>=3&&v<=5)return 6;if(v>=1&&v<=2)return 4;if(v>=-2&&v<=0)return 2;if(v>=-4&&v<=-3)return -2;if(v>=-7&&v<=-5)return -4;if(v>=-10&&v<=-8)return -6;return -8;}
+
+function hitungDISC(jawabanStr) {
+    const discStr = '_;' + jawabanStr;
+    const parts = discStr.split(';').map(s => s.trim());
+    const jawaban = parts.map(p => p.split('_').map(s => s.trim()));
+    const hasilA=[], hasilB=[];
+    for(let i=1;i<jawaban.length;i++){
+        const soal=i, jwA=jawaban[i][0], jwB=jawaban[i][1];
+        if(!jwA||!jwB) continue;
+        const rowA=TABEL.find(r=>r[0]===soal&&r[1]===jwA);
+        const rowB=TABEL.find(r=>r[0]===soal&&r[1]===jwB);
+        if(rowA) hasilA.push(rowA[2]);
+        if(rowB) hasilB.push(rowB[3]);
+    }
+    const cA=hitungWarna(hasilA), cB=hitungWarna(hasilB);
+    const selisih={MERAH:cA.MERAH-cB.MERAH, HIJAU:cA.HIJAU-cB.HIJAU, KUNING:cA.KUNING-cB.KUNING, BIRU:cA.BIRU-cB.BIRU};
+    return {
+        public:  {D:skorD1(cA.MERAH),I:skorI1(cA.HIJAU),S:skorS1(cA.KUNING),C:skorC1(cA.BIRU)},
+        private: {D:skorD2(cB.MERAH),I:skorI2(cB.HIJAU),S:skorS2(cB.KUNING),C:skorC2(cB.BIRU)},
+        perceived:{D:skorD3(selisih.MERAH),I:skorI3(selisih.HIJAU),S:skorS3(selisih.KUNING),C:skorC3(selisih.BIRU)},
+        raw:{cA,cB,selisih}
+    };
+}
+
+// ═══════════════════════════════════════
+// METADATA & DESKRIPSI LENGKAP
+// ═══════════════════════════════════════
+const DISC_META = {
+    D: { name:'Dominance', label:'D — Dominance', color:'#c0392b', light:'#fdeaea', icon:'⚡', desc:'Berorientasi pada hasil, pengambil keputusan cepat, dan penuh percaya diri.' },
+    I: { name:'Influence',  label:'I — Influence',  color:'#e67e22', light:'#fef5ec', icon:'🌟', desc:'Komunikatif, antusias, dan mampu mempengaruhi orang lain secara positif.' },
+    S: { name:'Steadiness', label:'S — Steadiness', color:'#27ae60', light:'#eafaf1', icon:'🌿', desc:'Sabar, konsisten, dan menjadi penyeimbang dalam tim.' },
+    C: { name:'Compliance', label:'C — Compliance', color:'#2980b9', light:'#eaf4fb', icon:'🔍', desc:'Analitis, teliti, dan selalu mengutamakan kualitas serta prosedur.' },
+};
+
+// Kelebihan dan kekurangan per dimensi berdasarkan skor (positif vs negatif)
+const DISC_DETAIL = {
+    D: {
+        positif: {
+            kelebihan: [
+                "Percaya diri dan tegas dalam mengambil keputusan",
+                "Mampu memimpin dan mendorong tim menuju hasil nyata",
+                "Berani menghadapi tantangan dan kompetisi",
+                "Cepat bertindak dan tidak mudah menyerah",
+                "Efisien dalam menyelesaikan masalah"
+            ],
+            kekurangan: [
+                "Bisa terkesan terlalu agresif atau otoriter",
+                "Kurang sabar terhadap proses yang lambat",
+                "Kadang mengabaikan perasaan atau kebutuhan orang lain",
+                "Sulit menerima kritik atau delegasi",
+                "Berisiko mengambil keputusan terlalu cepat tanpa pertimbangan cukup"
+            ],
+            saran: [
+                "Latih active listening sebelum memberi keputusan",
+                "Luangkan waktu memahami perspektif anggota tim",
+                "Gunakan energi dominan untuk mentor, bukan hanya memimpin",
+                "Praktikkan manajemen konflik secara konstruktif",
+                "Delegasikan tugas secara sadar, bukan karena terpaksa"
+            ]
+        },
+        negatif: {
+            kelebihan: [
+                "Lebih kooperatif dan tidak memaksakan kehendak",
+                "Mudah bekerja dalam tim tanpa ego berlebihan",
+                "Lebih berhati-hati sebelum mengambil tindakan",
+                "Mampu mendengarkan dan mempertimbangkan pendapat orang lain"
+            ],
+            kekurangan: [
+                "Kurang percaya diri dalam situasi pengambilan keputusan",
+                "Cenderung menghindari tanggung jawab kepemimpinan",
+                "Mudah dikalahkan atau terbawa arus dalam kelompok",
+                "Sulit menunjukkan inisiatif di lingkungan kompetitif"
+            ],
+            saran: [
+                "Latih kepercayaan diri dengan mulai dari keputusan kecil",
+                "Ikuti pelatihan kepemimpinan atau public speaking",
+                "Cari mentor yang bisa mendorong Anda tampil lebih proaktif",
+                "Tetapkan target pribadi yang terukur setiap bulan",
+                "Jadikan ketidaknyamanan sebagai tanda pertumbuhan"
+            ]
+        }
+    },
+    I: {
+        positif: {
+            kelebihan: [
+                "Komunikatif, hangat, dan mudah disukai orang",
+                "Mampu memotivasi dan menginspirasi orang di sekitar",
+                "Antusias dan mampu menciptakan suasana positif",
+                "Kreatif dan penuh ide dalam situasi baru",
+                "Mudah membangun jaringan dan hubungan sosial"
+            ],
+            kekurangan: [
+                "Bisa terlalu banyak bicara dan kurang mendengarkan",
+                "Rentan terdistraksi oleh hal-hal menarik di luar fokus",
+                "Kadang berlebihan dalam menyampaikan sesuatu (over-promise)",
+                "Kurang disiplin dalam hal yang bersifat rutinitas",
+                "Pengambilan keputusan bisa dipengaruhi emosi sesaat"
+            ],
+            saran: [
+                "Kembangkan kemampuan active listening yang lebih mendalam",
+                "Gunakan jurnal atau to-do list untuk menjaga fokus",
+                "Pastikan janji yang dibuat realistis dan terukur",
+                "Latih disiplin waktu dengan teknik time-blocking",
+                "Manfaatkan kekuatan sosial untuk memimpin proyek tim"
+            ]
+        },
+        negatif: {
+            kelebihan: [
+                "Lebih tenang dan tidak reaktif secara emosional",
+                "Lebih fokus pada substansi daripada kesan",
+                "Mampu bekerja secara mandiri tanpa perlu validasi",
+                "Analitis dan tidak mudah terbawa suasana"
+            ],
+            kekurangan: [
+                "Kesulitan membangun hubungan interpersonal yang kuat",
+                "Terkesan dingin atau kurang antusias di mata orang lain",
+                "Kurang efektif dalam presentasi atau persuasi",
+                "Bisa terisolasi secara sosial dalam lingkungan kerja"
+            ],
+            saran: [
+                "Mulai dari percakapan kecil untuk meningkatkan keterbukaan",
+                "Ikuti komunitas atau kegiatan yang mendorong interaksi sosial",
+                "Latih ekspresi apresiasi kepada rekan kerja secara verbal",
+                "Pelajari teknik presentasi dasar untuk meningkatkan kepercayaan diri",
+                "Temukan cara mengekspresikan antusiasme dengan gaya sendiri"
+            ]
+        }
+    },
+    S: {
+        positif: {
+            kelebihan: [
+                "Sabar, bisa diandalkan, dan konsisten dalam tugas",
+                "Mampu menjaga keharmonisan dan suasana kondusif dalam tim",
+                "Setia dan berkomitmen jangka panjang",
+                "Pendengar yang baik dan empatik",
+                "Stabil dalam situasi penuh tekanan"
+            ],
+            kekurangan: [
+                "Resistensi terhadap perubahan yang tiba-tiba",
+                "Sulit mengakhiri hubungan atau situasi meski tidak produktif",
+                "Cenderung menghindari konflik meski diperlukan",
+                "Bisa terlalu lamban dalam merespons peluang baru",
+                "Sulit menyampaikan ketidaksetujuan secara langsung"
+            ],
+            saran: [
+                "Latih diri merespons perubahan sebagai peluang, bukan ancaman",
+                "Pelajari teknik asertif communication",
+                "Tetapkan batas (boundaries) yang sehat dalam hubungan",
+                "Coba pengalaman baru secara bertahap untuk memperluas zona nyaman",
+                "Gunakan kestabilan Anda sebagai fondasi untuk menggagas inovasi"
+            ]
+        },
+        negatif: {
+            kelebihan: [
+                "Adaptif dan fleksibel dalam menghadapi perubahan",
+                "Tidak terlalu terikat rutinitas, mudah bergerak",
+                "Energik dan mampu berpindah konteks dengan cepat",
+                "Terbuka terhadap hal-hal baru"
+            ],
+            kekurangan: [
+                "Kurang konsisten dan bisa tidak dapat diandalkan",
+                "Sulit membangun hubungan jangka panjang yang stabil",
+                "Mudah kehilangan fokus saat menghadapi tugas panjang",
+                "Impulsif dalam mengambil keputusan"
+            ],
+            saran: [
+                "Bangun rutinitas harian minimal untuk menjaga konsistensi",
+                "Gunakan aplikasi manajemen tugas untuk melacak komitmen",
+                "Investasikan waktu untuk mempererat hubungan yang bermakna",
+                "Latih kesabaran melalui mindfulness atau meditasi",
+                "Temukan passion yang bisa mempertahankan fokus jangka panjang"
+            ]
+        }
+    },
+    C: {
+        positif: {
+            kelebihan: [
+                "Teliti, akurat, dan berorientasi pada kualitas",
+                "Mampu menganalisis situasi secara mendalam",
+                "Menghargai prosedur dan aturan yang terstruktur",
+                "Mampu mencegah kesalahan melalui perencanaan matang",
+                "Sistematis dan terorganisir dalam bekerja"
+            ],
+            kekurangan: [
+                "Perfeksionis berlebihan yang bisa menghambat kemajuan",
+                "Sulit mengambil keputusan tanpa data yang lengkap",
+                "Terlalu kritis terhadap diri sendiri maupun orang lain",
+                "Kurang fleksibel ketika situasi membutuhkan improvisasi",
+                "Bisa terlalu kaku dalam mengikuti prosedur"
+            ],
+            saran: [
+                "Tetapkan standar 'cukup baik' agar tidak terjebak perfeksionisme",
+                "Latih pengambilan keputusan dengan informasi yang tersedia (bukan sempurna)",
+                "Kembangkan empati agar kritik tidak terasa menyakiti orang lain",
+                "Buat ruang untuk eksperimen dan trial-and-error",
+                "Gunakan analitisitas Anda untuk problem-solving kreatif"
+            ]
+        },
+        negatif: {
+            kelebihan: [
+                "Lebih fleksibel dan tidak terlalu kaku pada aturan",
+                "Mampu berimprovisasi dengan cepat",
+                "Tidak terbebani oleh detail yang berlebihan",
+                "Lebih terbuka pada pendekatan kreatif"
+            ],
+            kekurangan: [
+                "Rentan mengabaikan prosedur penting dan detail kritis",
+                "Kurang teliti sehingga sering terjadi kesalahan",
+                "Tidak menghargai aturan yang ada, bisa menciptakan konflik",
+                "Sulit dipercaya untuk tugas yang membutuhkan akurasi tinggi"
+            ],
+            saran: [
+                "Buat checklist sederhana untuk tugas-tugas penting",
+                "Pelajari pentingnya prosedur standar di bidang yang digeluti",
+                "Minta rekan kerja untuk mereview pekerjaan sebelum diserahkan",
+                "Latih kebiasaan double-check pada hal-hal krusial",
+                "Kembangkan ketelitian sebagai bentuk profesionalisme"
+            ]
+        }
+    }
+};
+
+const DESC = {
+    D: {
+        8:"Sangat percaya diri, agresif, dan berfokus pada hasil. Cenderung mengambil inisiatif dan siap menghadapi tantangan.",
+        6:"Mampu memimpin dan memotivasi orang lain. Berorientasi pada hasil, tetapi lebih mempertimbangkan pendapat tim.",
+        4:"Memiliki sifat dominan, tetapi juga terbuka untuk kolaborasi. Menyeimbangkan kepemimpinan dan kerja sama.",
+        2:"Lebih suka bekerja di belakang layar. Menghindari konflik dan tidak terlalu mengejar posisi kepemimpinan.",
+        "-2":"Cenderung menghindari konflik dan kurang percaya diri. Tidak menunjukkan keinginan untuk memimpin.",
+        "-4":"Hampir tidak menunjukkan sifat dominan. Lebih suka bekerja sama tanpa ambisi untuk memimpin.",
+        "-6":"Sangat menghindari pengambilan keputusan. Tidak nyaman dalam situasi kompetitif.",
+        "-8":"Sangat pasif dan cenderung menyerah pada orang lain. Tidak berinisiatif dalam situasi apa pun.",
+    },
+    I: {
+        8:"Sangat karismatik dan mampu memotivasi orang lain. Menyukai interaksi sosial dan berbicara di depan umum.",
+        6:"Mampu membangun hubungan yang kuat. Masih sangat sosial, tetapi lebih fokus pada hasil dan tujuan.",
+        4:"Menyukai interaksi sosial, tetapi tidak selalu berusaha menjadi pusat perhatian.",
+        2:"Lebih introvert dan tidak nyaman dalam situasi sosial. Mungkin lebih fokus pada pekerjaan daripada hubungan.",
+        "-2":"Hampir tidak berinteraksi secara sosial. Cenderung menghindari situasi komunikasi aktif.",
+        "-4":"Sangat tidak tertarik pada hubungan sosial. Lebih nyaman bekerja sendiri.",
+        "-6":"Sangat enggan berinteraksi dengan orang lain. Menghindari situasi sosial.",
+        "-8":"Sangat tertutup dan tidak berkomunikasi. Tidak mampu membangun hubungan sosial.",
+    },
+    S: {
+        8:"Sangat sabar dan dapat diandalkan. Mampu menjaga hubungan yang harmonis dan bekerja sama dengan baik.",
+        6:"Mampu beradaptasi dengan perubahan, tetapi lebih suka rutinitas. Menyukai lingkungan yang tenang.",
+        4:"Cukup fleksibel, tetapi terkadang tidak nyaman dengan perubahan. Menyeimbangkan stabilitas dan adaptasi.",
+        2:"Tidak terlalu nyaman dengan rutinitas. Lebih cepat beradaptasi dengan perubahan.",
+        "-2":"Sangat tidak stabil dan mudah terganggu. Tidak mampu menjaga fokus jangka panjang.",
+        "-4":"Sangat cepat beradaptasi, tetapi bisa kehilangan arah. Tidak nyaman dengan hubungan yang panjang.",
+        "-6":"Sangat tidak sabar dan sering merasa gelisah. Menghindari rutinitas.",
+        "-8":"Sangat tidak dapat diandalkan dan tidak mampu menjaga hubungan yang stabil.",
+    },
+    C: {
+        8:"Sangat detail-oriented dan selalu mengikuti aturan. Mampu menganalisis situasi dengan sangat baik.",
+        6:"Masih menghargai aturan dan detail, tetapi bisa lebih fleksibel dalam pendekatan.",
+        4:"Memiliki keseimbangan antara mengikuti aturan dan memberikan ruang untuk kreativitas.",
+        2:"Tidak terlalu terikat pada aturan. Lebih suka mengambil pendekatan yang lebih bebas.",
+        "-2":"Sangat mengabaikan aturan, cenderung mengambil risiko tanpa mempertimbangkan konsekuensi.",
+        "-4":"Hampir tidak mengikuti prosedur. Lebih suka cara yang tidak konvensional.",
+        "-6":"Sangat tidak teratur dan tidak menghargai detail. Cenderung mengabaikan semua aturan.",
+        "-8":"Sangat tidak teratur dan cenderung bertindak impulsif tanpa memperhatikan norma.",
+    }
+};
+
+function getDesc(t,v){ return DESC[t][String(v)]||''; }
+function dominanLabel(scores){
+    const pos=Object.entries(scores).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+    if(!pos.length) return 'Seimbang';
+    return pos.slice(0,2).map(([k])=>DISC_META[k].name).join(' / ');
+}
+
+// ═══════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════
+let charts = [];
+let innerTabState = {}; // track inner tab state per panel
+
+function renderDetailCard(k, isPos) {
+    const m = DISC_META[k];
+    const data = isPos ? DISC_DETAIL[k].positif : DISC_DETAIL[k].negatif;
+    const bgColor = isPos ? m.light : '#fff8f8';
+    const borderColor = isPos ? m.color : '#e74c3c';
+    const icon = isPos ? '✅' : '⚠️';
+    const label = isPos ? 'Dimensi Positif — ' + m.name : 'Dimensi Negatif — ' + m.name;
+
+    return `
+    <div class="detail-card" style="background:${bgColor};border-left-color:${borderColor}">
+        <h4 style="color:${borderColor}">${icon} ${label}</h4>
+        <div class="detail-sections">
+            <div class="detail-box">
+                <h5 style="color:#1e8449">💪 Kelebihan</h5>
+                <ul>${data.kelebihan.map(x=>`<li style="color:#2e7d32">${x}</li>`).join('')}</ul>
+            </div>
+            <div class="detail-box">
+                <h5 style="color:#c0392b">⚡ Area Perhatian</h5>
+                <ul>${data.kekurangan.map(x=>`<li style="color:#a93226">${x}</li>`).join('')}</ul>
+            </div>
+        </div>
+        <div class="tip-box">
+            <h5>🚀 Saran Pengembangan Diri</h5>
+            <ul>${data.saran.map(x=>`<li>${x}</li>`).join('')}</ul>
+        </div>
+    </div>`;
+}
+
+function renderBarPanel(scores, panelId) {
+    const keys = ['D','I','S','C'];
+    const maxAbs = 8;
+    const posKeys = keys.filter(k => scores[k] > 0);
+    const negKeys = keys.filter(k => scores[k] < 0);
+    const neuKeys = keys.filter(k => scores[k] === 0);
+
+    function barRows(ks) {
+        return ks.map(k => {
+            const v = scores[k], m = DISC_META[k];
+            const isPos = v > 0, isNeg = v < 0;
+            const pct = Math.abs(v) / maxAbs * 100;
+            const badgeCls = isPos ? 'score-pos' : isNeg ? 'score-neg' : 'score-neu';
+            const label = isPos ? `+${v}` : isNeg ? `${v}` : 'Netral';
+            return `
+            <div class="disc-row">
+                <div class="disc-row-head">
+                    <span class="disc-name">
+                        <span class="disc-dot" style="background:${m.color}"></span>
+                        ${m.label}
+                        <span style="font-size:.78em;font-weight:400;color:#999">${m.desc}</span>
+                    </span>
+                    <span class="disc-score-badge ${badgeCls}">Skala ${label}</span>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill" style="width:${pct}%;background:${m.color}"></div>
+                </div>
+                <div class="disc-desc">${getDesc(k,v)}</div>
+                ${renderDetailCard(k, isPos || v===0)}
+            </div>`;
+        }).join('');
+    }
+
+    const posHtml = posKeys.length > 0
+        ? `<div class="disc-bars">${barRows(posKeys)}</div>`
+        : `<div class="empty-state"><div class="emoji">🔍</div><p>Tidak ada dimensi positif yang menonjol pada panel ini.</p></div>`;
+
+    const negHtml = negKeys.length > 0
+        ? `<div class="disc-bars">${barRows(negKeys)}</div>`
+        : `<div class="empty-state"><div class="emoji">✨</div><p>Tidak ada dimensi negatif yang terdeteksi. Semua dimensi berada di rentang positif atau netral.</p></div>`;
+
+    const neuHtml = neuKeys.length > 0
+        ? `<div class="neutral-notice">📋 Dimensi <b>${neuKeys.join(', ')}</b> berada pada posisi <b>Netral (0)</b> — menandakan keseimbangan antara kecenderungan positif dan negatif pada aspek ini.</div>`
+        : '';
+
+    return `
+    <div class="inner-tabs">
+        <button class="inner-tab-btn pos-active" id="btn-pos-${panelId}" onclick="switchInner('${panelId}','pos')">🟢 Positif (${posKeys.length})</button>
+        <button class="inner-tab-btn" id="btn-neg-${panelId}" onclick="switchInner('${panelId}','neg')">🔴 Negatif (${negKeys.length})</button>
+    </div>
+    ${neuHtml}
+    <div class="inner-panel active" id="inner-pos-${panelId}">${posHtml}</div>
+    <div class="inner-panel" id="inner-neg-${panelId}">${negHtml}</div>`;
+}
+
+function switchInner(panelId, which) {
+    const posBtn = document.getElementById(`btn-pos-${panelId}`);
+    const negBtn = document.getElementById(`btn-neg-${panelId}`);
+    const posPanel = document.getElementById(`inner-pos-${panelId}`);
+    const negPanel = document.getElementById(`inner-neg-${panelId}`);
+    if (which === 'pos') {
+        posBtn.classList.add('pos-active'); negBtn.classList.remove('neg-active');
+        posPanel.classList.add('active'); negPanel.classList.remove('active');
+    } else {
+        negBtn.classList.add('neg-active'); posBtn.classList.remove('pos-active');
+        negPanel.classList.add('active'); posPanel.classList.remove('active');
+    }
+}
+
+function renderCharts(result) {
+    charts.forEach(c => c.destroy()); charts = [];
+    const selfTypes = [
+        {id:'chartPublic',  scores:result.public,  label:'Public Self'},
+        {id:'chartPrivate', scores:result.private, label:'Private Self'},
+    ];
+    selfTypes.forEach(({id, scores}) => {
+        const el = document.getElementById(id);
+        if(!el) return;
+        const ctx = el.getContext('2d');
+        charts.push(new Chart(ctx, {
+            type:'radar',
+            data:{
+                labels:['D','I','S','C'],
+                datasets:[{
+                    data:['D','I','S','C'].map(k=>Math.max(scores[k],0)),
+                    backgroundColor:'rgba(26,26,46,0.1)',
+                    borderColor:'#1a1a2e', borderWidth:2,
+                    pointBackgroundColor:['#c0392b','#e67e22','#27ae60','#2980b9'],
+                    pointRadius:5,
+                }]
+            },
+            options:{
+                responsive:true, maintainAspectRatio:false,
+                scales:{r:{min:0,max:8,ticks:{stepSize:2,display:false},grid:{color:'rgba(0,0,0,.08)'},pointLabels:{font:{size:14,weight:'bold'},color:'#333'}}},
+                plugins:{legend:{display:false}}
+            }
+        }));
+    });
+}
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
+    document.querySelectorAll('.disc-panel').forEach(p => p.classList.toggle('active', p.id==='panel-'+tab));
+}
+
+function buildSummary(result) {
+    // Collect all positive and negative keys across all three panels
+    const panels = ['public','private','perceived'];
+    const panelLabels = {public:'Public Self',private:'Private Self',perceived:'Perceived Self'};
+    const strengths = new Set();
+    const challenges = new Set();
+    const tips = new Set();
+
+    panels.forEach(p => {
+        ['D','I','S','C'].forEach(k => {
+            const v = result[p][k];
+            if (v > 0) {
+                const data = DISC_DETAIL[k].positif;
+                data.kelebihan.slice(0,2).forEach(s => strengths.add(s));
+                data.saran.slice(0,1).forEach(s => tips.add(s));
+            } else if (v < 0) {
+                const data = DISC_DETAIL[k].negatif;
+                data.kekurangan.slice(0,2).forEach(s => challenges.add(s));
+                data.saran.slice(0,1).forEach(s => tips.add(s));
+            }
+        });
+    });
+
+    const sList = [...strengths].slice(0,5).map(s=>`<li>${s}</li>`).join('');
+    const cList = [...challenges].slice(0,5).map(s=>`<li>${s}</li>`).join('');
+    const tList = [...tips].slice(0,5).map(s=>`<li>${s}</li>`).join('');
+
+    return `
+    <div class="summary-wrap">
+        <h2>📋 Ringkasan Profil Keseluruhan</h2>
+        <div class="summary-grid">
+            <div class="summary-col">
+                <h3>💪 Kekuatan Utama</h3>
+                <ul>${sList || '<li>—</li>'}</ul>
+            </div>
+            <div class="summary-col">
+                <h3>⚠️ Area Pengembangan</h3>
+                <ul>${cList || '<li>Semua dimensi tampak seimbang</li>'}</ul>
+            </div>
+            <div class="summary-col">
+                <h3>🚀 Prioritas Pengembangan Diri</h3>
+                <ul>${tList || '<li>Pertahankan keseimbangan yang ada</li>'}</ul>
+            </div>
+        </div>
+    </div>`;
+}
+
+function renderResult(data) {
+    const bio = JSON.parse(data.x_02 || '{}');
+    const x07 = JSON.parse(data.x_07 || '{}');
+    const discKey = x07['who_disc'] !== undefined ? 'who_disc' : (Object.keys(x07).find(k => k.includes('disc')) || '');
+    const jawabanStr = discKey ? x07[discKey] : '';
+
+    if (!jawabanStr || !jawabanStr.trim().includes('_')) {
+        document.getElementById('app').innerHTML = `<div class="error-box"><h2>⚠️ Data Belum Tersedia</h2><p>Peserta ini belum menyelesaikan Tes Kepribadian DISC.</p></div>`;
+        return;
+    }
+
+    const result = hitungDISC(jawabanStr);
+    const domPub = dominanLabel(result.public);
+    const domPri = dominanLabel(result.private);
+    const domPer = dominanLabel(result.perceived);
+
+    document.getElementById('app').innerHTML = `
+    <div class="hero">
+        <div class="hero-label">Laporan Psikologi</div>
+        <h1>Tes Kepribadian DISC</h1>
+        <p class="hero-sub">Analisis gaya perilaku berdasarkan metode DISC — lengkap dengan kelebihan, area pengembangan, dan saran diri</p>
+    </div>
+
+    <div class="profile-card">
+        <div class="profile-item"><div class="lbl">Nama</div><div class="val">${bio.nama||'—'}</div></div>
+        <div class="profile-item"><div class="lbl">Usia</div><div class="val">${bio.usia?bio.usia+' Tahun':'—'}</div></div>
+        <div class="profile-item"><div class="lbl">Pendidikan</div><div class="val">${bio.pendidikan||'—'}</div></div>
+        <div class="profile-item"><div class="lbl">Tanggal Tes</div><div class="val">${bio.tgl_tes||'—'}</div></div>
+    </div>
+
+    <!-- OUTER TABS -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="public"    onclick="switchTab('public')">🌐 Public Self</button>
+        <button class="tab-btn"        data-tab="private"   onclick="switchTab('private')">🔒 Private Self</button>
+        <button class="tab-btn"        data-tab="perceived" onclick="switchTab('perceived')">🔮 Perceived Self</button>
+    </div>
+
+    <!-- PANEL PUBLIC -->
+    <div class="disc-panel active" id="panel-public">
+        <div class="panel-title">Public Self <span class="badge">Tampak ke Orang Lain</span></div>
+        <p class="panel-sub">Tipe dominan: <b style="color:var(--dark)">${domPub}</b> &nbsp;·&nbsp; Bagaimana orang lain melihat perilaku Anda sehari-hari</p>
+        ${renderBarPanel(result.public,'public')}
+    </div>
+
+    <!-- PANEL PRIVATE -->
+    <div class="disc-panel" id="panel-private">
+        <div class="panel-title">Private Self <span class="badge">Diri Sebenarnya</span></div>
+        <p class="panel-sub">Tipe dominan: <b style="color:var(--dark)">${domPri}</b> &nbsp;·&nbsp; Kepribadian Anda yang sesungguhnya, di balik penampilan luar</p>
+        ${renderBarPanel(result.private,'private')}
+    </div>
+
+    <!-- PANEL PERCEIVED -->
+    <div class="disc-panel" id="panel-perceived">
+        <div class="panel-title">Perceived Self <span class="badge">Persepsi Diri Total</span></div>
+        <p class="panel-sub">Tipe dominan: <b style="color:var(--dark)">${domPer}</b> &nbsp;·&nbsp; Kesenjangan antara bagaimana Anda tampak dan siapa Anda sebenarnya</p>
+        ${renderBarPanel(result.perceived,'perceived')}
+    </div>
+
+    <!-- RADAR -->
+    <div class="chart-wrap">
+        <h2>📊 Perbandingan Public vs Private Self</h2>
+        <div class="chart-grid">
+            <div><div class="chart-box"><canvas id="chartPublic"></canvas></div><div class="chart-label">Public Self</div></div>
+            <div><div class="chart-box"><canvas id="chartPrivate"></canvas></div><div class="chart-label">Private Self</div></div>
+        </div>
+    </div>
+
+    <!-- SUMMARY -->
+    ${buildSummary(result)}
+
+    <!-- BUTTONS -->
+    <div class="btn-row">
+        <button class="btn btn-dark" onclick="downloadImg()">📥 Download JPG</button>
+        <button class="btn btn-outline" onclick="window.print()">🖨️ Cetak PDF</button>
+    </div>
+    `;
+
+    renderCharts(result);
+}
+
+// ═══════════════════════════════════════
+// LOAD DATA
+// ═══════════════════════════════════════
+async function loadData() {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token') || params.get('x_01');
+    const app = document.getElementById('app');
+    if (!token) {
+        hide(); app.innerHTML=`<div class="error-box"><h2>❌ Token Tidak Ditemukan</h2><p>Tambahkan ?token=xxx pada URL.</p></div>`; return;
+    }
+    try {
+        const res = await fetch(
+            `https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6?table=nilai1_json&x_01_eq=${token}`,
+            { headers: { 'X-Custom-Auth': 'admin' } }
+        );
+        const json = await res.json();
+        hide();
+        if (json.success && json.count > 0) {
+            renderResult(json.data[0]);
+        } else {
+            app.innerHTML=`<div class="error-box"><h2>❌ Data Tidak Ditemukan</h2><p>Token tidak valid atau belum ada data.</p></div>`;
+        }
+    } catch(e) {
+        hide(); app.innerHTML=`<div class="error-box"><h2>❌ Koneksi Gagal</h2><p>Tidak dapat terhubung ke server.</p></div>`;
+    }
+}
+
+function hide() {
+    const s=document.getElementById('loadingScreen');
+    s.style.opacity='0'; setTimeout(()=>s.style.display='none',500);
+}
+
+async function downloadImg() {
+    const btn=event.target;
+    btn.disabled=true; btn.textContent='⏳ Memproses...';
+    try {
+        const canvas=await html2canvas(document.getElementById('app'),{scale:2,backgroundColor:'#f4f4f8'});
+        const a=document.createElement('a');
+        a.download=`Hasil-DISC-${Date.now()}.jpg`;
+        a.href=canvas.toDataURL('image/jpeg',0.95); a.click();
+        btn.textContent='✅ Berhasil!';
+    } catch { btn.textContent='❌ Gagal'; }
+    setTimeout(()=>{ btn.disabled=false; btn.textContent='📥 Download JPG'; },2000);
+}
+
+loadData();
+</script>
+</body>
+</html>

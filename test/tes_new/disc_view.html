@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Tes DISC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --D:#c0392b; --I:#e67e22; --S:#27ae60; --C:#2980b9;
+            --dark:#1a1a2e; --mid:#2c2c54; --light:#f4f4f8; --white:#fff;
+            --radius:16px; --shadow:0 8px 32px rgba(0,0,0,.10);
+            --pos:#1e8449; --pos-light:#e8f8f0;
+            --neg:#c0392b; --neg-light:#fdeaea;
+            --tip:#5b2d8e; --tip-light:#f0eaff;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'DM Sans',sans-serif;background:var(--light);min-height:100vh;}
+
+        /* LOADING */
+        #loadingScreen{position:fixed;inset:0;background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity .5s;}
+        .spinner{width:56px;height:56px;border:4px solid rgba(255,255,255,.15);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:20px;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+        #loadingScreen p{color:rgba(255,255,255,.7);font-size:.95em;letter-spacing:.05em;}
+
+        /* LAYOUT */
+        .page{max-width:900px;margin:0 auto;padding:32px 16px 60px;}
+
+        /* HERO */
+        .hero{background:var(--dark);border-radius:var(--radius);padding:48px 40px 40px;margin-bottom:24px;position:relative;overflow:hidden;color:white;}
+        .hero::before{content:'DISC';position:absolute;right:-20px;top:-20px;font-family:'Playfair Display',serif;font-size:160px;font-weight:900;color:rgba(255,255,255,.04);line-height:1;pointer-events:none;}
+        .hero-label{font-size:.75em;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:10px;}
+        .hero h1{font-family:'Playfair Display',serif;font-size:2.2em;line-height:1.1;margin-bottom:6px;}
+        .hero-sub{color:rgba(255,255,255,.6);font-size:.95em;}
+
+        /* PROFILE CARD */
+        .profile-card{background:var(--white);border-radius:var(--radius);padding:28px 32px;margin-bottom:24px;box-shadow:var(--shadow);display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:20px;}
+        .profile-item .lbl{font-size:.72em;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#aaa;margin-bottom:4px;}
+        .profile-item .val{font-size:1.05em;font-weight:500;color:var(--dark);}
+
+        /* OUTER TABS */
+        .tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+        .tab-btn{padding:9px 22px;border:2px solid #e0e0e0;background:white;border-radius:99px;font-family:'DM Sans',sans-serif;font-size:.88em;font-weight:600;cursor:pointer;transition:.2s;color:#888;}
+        .tab-btn.active{background:var(--dark);border-color:var(--dark);color:white;}
+
+        /* DISC PANEL */
+        .disc-panel{background:var(--white);border-radius:var(--radius);padding:32px;margin-bottom:24px;box-shadow:var(--shadow);display:none;}
+        .disc-panel.active{display:block;}
+        .panel-title{font-family:'Playfair Display',serif;font-size:1.4em;color:var(--dark);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+        .panel-title .badge{font-size:.55em;background:var(--light);border-radius:99px;padding:4px 14px;color:#888;font-family:'DM Sans',sans-serif;font-weight:600;letter-spacing:.05em;text-transform:uppercase;}
+        .panel-sub{color:#888;font-size:.88em;margin-bottom:20px;}
+
+        /* INNER TABS */
+        .inner-tabs{display:flex;gap:8px;margin-bottom:20px;}
+        .inner-tab-btn{padding:7px 18px;border:2px solid #e0e0e0;background:white;border-radius:99px;font-family:'DM Sans',sans-serif;font-size:.83em;font-weight:600;cursor:pointer;transition:.2s;color:#888;}
+        .inner-tab-btn.pos-active{background:var(--pos-light);border-color:var(--pos);color:var(--pos);}
+        .inner-tab-btn.neg-active{background:var(--neg-light);border-color:var(--neg);color:var(--neg);}
+        .inner-panel{display:none;}
+        .inner-panel.active{display:block;}
+
+        /* DISC BARS */
+        .disc-bars{display:flex;flex-direction:column;gap:24px;}
+        .disc-row{display:flex;flex-direction:column;gap:6px;}
+        .disc-row-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+        .disc-name{display:flex;align-items:center;gap:10px;font-weight:600;font-size:.95em;color:var(--dark);}
+        .disc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+        .disc-score-badge{font-size:.78em;font-weight:700;padding:3px 12px;border-radius:99px;letter-spacing:.03em;white-space:nowrap;}
+        .score-pos{background:#e8f8f0;color:#1e8449;}
+        .score-neg{background:#fdeaea;color:#c0392b;}
+        .score-neu{background:#f0f0f0;color:#888;}
+        .bar-track{height:12px;background:#f0f0f0;border-radius:99px;overflow:hidden;}
+        .bar-fill{height:100%;border-radius:99px;transition:width 1.2s cubic-bezier(.4,0,.2,1);}
+        .disc-desc{font-size:.83em;color:#666;line-height:1.6;margin-top:2px;font-style:italic;}
+
+        /* DETAIL CARD */
+        .detail-card{border-radius:12px;padding:20px 22px;margin-top:12px;border-left:4px solid;animation:fadeIn .3s ease;}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+        .detail-card-title{font-size:.75em;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+
+        /* POSITIVE CARD: kelebihan full width, saran below */
+        .detail-section-label{font-size:.73em;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+        .detail-list{list-style:none;margin-bottom:14px;}
+        .detail-list li{font-size:.83em;color:#333;padding:5px 0 5px 18px;position:relative;border-bottom:1px solid rgba(0,0,0,.05);line-height:1.55;}
+        .detail-list li:last-child{border-bottom:none;}
+        .detail-list li::before{content:'•';position:absolute;left:4px;font-weight:900;}
+        .detail-list.neg-list li{color:#7b1a1a;}
+        .detail-list.neg-list li::before{color:#c0392b;}
+
+        .tip-box{background:var(--tip-light);border-radius:9px;padding:14px 16px;margin-top:4px;}
+        .tip-box .detail-section-label{color:var(--tip);}
+        .tip-list{list-style:none;}
+        .tip-list li{font-size:.83em;color:#3d1a6e;padding:5px 0 5px 20px;position:relative;border-bottom:1px solid rgba(91,45,142,.08);line-height:1.55;}
+        .tip-list li:last-child{border-bottom:none;}
+        .tip-list li::before{content:'✦';position:absolute;left:2px;font-size:.68em;color:var(--tip);top:6px;}
+
+        /* NEUTRAL */
+        .neutral-notice{background:#f8f8f8;border-radius:12px;padding:16px 18px;border-left:4px solid #ccc;font-size:.85em;color:#888;line-height:1.6;margin-bottom:10px;}
+
+        /* EMPTY */
+        .empty-state{text-align:center;padding:32px 20px;background:#f9f9f9;border-radius:12px;color:#aaa;font-size:.88em;}
+        .empty-state .emoji{font-size:2em;margin-bottom:8px;}
+
+        /* RADAR */
+        .chart-wrap{background:var(--white);border-radius:var(--radius);padding:32px;margin-bottom:24px;box-shadow:var(--shadow);}
+        .chart-wrap h2{font-family:'Playfair Display',serif;font-size:1.3em;color:var(--dark);margin-bottom:20px;}
+        .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+        .chart-box{position:relative;height:220px;}
+        .chart-label{text-align:center;font-size:.8em;color:#888;font-weight:600;margin-top:6px;text-transform:uppercase;letter-spacing:.05em;}
+
+        /* SUMMARY */
+        .summary-wrap{background:var(--dark);border-radius:var(--radius);padding:32px;margin-bottom:24px;box-shadow:var(--shadow);color:white;}
+        .summary-wrap h2{font-family:'Playfair Display',serif;font-size:1.3em;margin-bottom:20px;opacity:.9;}
+        .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;}
+        .summary-col{background:rgba(255,255,255,.07);border-radius:12px;padding:18px;}
+        .summary-col h3{font-size:.75em;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;opacity:.6;}
+        .summary-col ul{list-style:none;}
+        .summary-col li{font-size:.83em;padding:5px 0 5px 18px;position:relative;border-bottom:1px solid rgba(255,255,255,.06);line-height:1.5;opacity:.85;}
+        .summary-col li:last-child{border-bottom:none;}
+        .summary-col li::before{content:'→';position:absolute;left:0;opacity:.5;}
+
+        /* BUTTONS */
+        .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;}
+        .btn{padding:14px 24px;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.95em;font-weight:600;cursor:pointer;transition:.2s;}
+        .btn-dark{background:var(--dark);color:white;}
+        .btn-dark:hover{background:var(--mid);transform:translateY(-2px);}
+        .btn-outline{background:white;color:var(--dark);border:2px solid var(--dark);}
+        .btn-outline:hover{background:var(--dark);color:white;transform:translateY(-2px);}
+
+        /* ERROR */
+        .error-box{text-align:center;padding:80px 40px;background:white;border-radius:var(--radius);box-shadow:var(--shadow);}
+        .error-box h2{font-family:'Playfair Display',serif;font-size:1.8em;color:#c0392b;margin-bottom:10px;}
+        .error-box p{color:#888;}
+
+        @media print{body{background:white;}.btn-row{display:none;}#loadingScreen{display:none;}}
+        @media(max-width:600px){
+            .hero{padding:32px 24px;}.hero h1{font-size:1.6em;}
+            .chart-grid{grid-template-columns:1fr;}
+            .btn-row{grid-template-columns:1fr;}
+            .profile-card{padding:20px;}
+            .disc-panel{padding:20px 16px;}
+        }
+    </style>
+</head>
+<body>
+<div id="loadingScreen"><div class="spinner"></div><p>Memuat hasil analisis DISC...</p></div>
+<div class="page" id="app"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// TABEL WARNA
+// ═══════════════════════════════════════════════════════
+const TABEL=[
+    [1,'A','KUNING','KUNING'],[1,'B','HIJAU','HIJAU'],[1,'C','PUTIH','MERAH'],[1,'D','BIRU','BIRU'],
+    [2,'A','MERAH','MERAH'],[2,'B','BIRU','BIRU'],[2,'C','PUTIH','HIJAU'],[2,'D','PUTIH','KUNING'],
+    [3,'A','PUTIH','BIRU'],[3,'B','MERAH','MERAH'],[3,'C','KUNING','KUNING'],[3,'D','HIJAU','PUTIH'],
+    [4,'A','BIRU','PUTIH'],[4,'B','MERAH','MERAH'],[4,'C','PUTIH','HIJAU'],[4,'D','KUNING','KUNING'],
+    [5,'A','PUTIH','BIRU'],[5,'B','MERAH','MERAH'],[5,'C','KUNING','KUNING'],[5,'D','HIJAU','PUTIH'],
+    [6,'A','MERAH','MERAH'],[6,'B','PUTIH','HIJAU'],[6,'C','PUTIH','KUNING'],[6,'D','BIRU','PUTIH'],
+    [7,'A','HIJAU','HIJAU'],[7,'B','PUTIH','BIRU'],[7,'C','PUTIH','KUNING'],[7,'D','MERAH','PUTIH'],
+    [8,'A','KUNING','PUTIH'],[8,'B','PUTIH','HIJAU'],[8,'C','MERAH','MERAH'],[8,'D','BIRU','BIRU'],
+    [9,'A','MERAH','MERAH'],[9,'B','KUNING','PUTIH'],[9,'C','HIJAU','HIJAU'],[9,'D','PUTIH','BIRU'],
+    [10,'A','BIRU','BIRU'],[10,'B','KUNING','KUNING'],[10,'C','PUTIH','HIJAU'],[10,'D','MERAH','MERAH'],
+    [11,'A','PUTIH','KUNING'],[11,'B','BIRU','PUTIH'],[11,'C','HIJAU','HIJAU'],[11,'D','MERAH','MERAH'],
+    [12,'A','MERAH','PUTIH'],[12,'B','KUNING','KUNING'],[12,'C','HIJAU','HIJAU'],[12,'D','BIRU','PUTIH'],
+    [13,'A','HIJAU','PUTIH'],[13,'B','MERAH','MERAH'],[13,'C','KUNING','KUNING'],[13,'D','PUTIH','BIRU'],
+    [14,'A','MERAH','MERAH'],[14,'B','KUNING','PUTIH'],[14,'C','HIJAU','PUTIH'],[14,'D','PUTIH','BIRU'],
+    [15,'A','KUNING','KUNING'],[15,'B','MERAH','MERAH'],[15,'C','HIJAU','HIJAU'],[15,'D','PUTIH','PUTIH'],
+    [16,'A','BIRU','PUTIH'],[16,'B','MERAH','MERAH'],[16,'C','HIJAU','HIJAU'],[16,'D','KUNING','KUNING'],
+    [17,'A','BIRU','BIRU'],[17,'B','HIJAU','HIJAU'],[17,'C','KUNING','PUTIH'],[17,'D','MERAH','MERAH'],
+    [18,'A','KUNING','KUNING'],[18,'B','PUTIH','HIJAU'],[18,'C','MERAH','MERAH'],[18,'D','BIRU','BIRU'],
+    [19,'A','KUNING','PUTIH'],[19,'B','HIJAU','HIJAU'],[19,'C','PUTIH','BIRU'],[19,'D','PUTIH','MERAH'],
+    [20,'A','KUNING','KUNING'],[20,'B','BIRU','PUTIH'],[20,'C','HIJAU','HIJAU'],[20,'D','MERAH','MERAH'],
+    [21,'A','PUTIH','MERAH'],[21,'B','HIJAU','PUTIH'],[21,'C','KUNING','KUNING'],[21,'D','PUTIH','BIRU'],
+    [22,'A','HIJAU','HIJAU'],[22,'B','KUNING','KUNING'],[22,'C','BIRU','BIRU'],[22,'D','MERAH','MERAH'],
+    [23,'A','PUTIH','MERAH'],[23,'B','BIRU','PUTIH'],[23,'C','HIJAU','HIJAU'],[23,'D','KUNING','KUNING'],
+    [24,'A','PUTIH','KUNING'],[24,'B','HIJAU','HIJAU'],[24,'C','MERAH','PUTIH'],[24,'D','BIRU','PUTIH'],
+];
+
+// ═══════════════════════════════════════════════════════
+// KALKULASI
+// ═══════════════════════════════════════════════════════
+function hitungWarna(arr){const c={MERAH:0,HIJAU:0,KUNING:0,BIRU:0,PUTIH:0};arr.forEach(w=>{if(c[w]!==undefined)c[w]++;});return c;}
+function skorD1(v){if(v>=15&&v<=21)return 8;if(v>=13&&v<=14)return 6;if(v>=9&&v<=12)return 4;if(v>=7&&v<=8)return 2;if(v==3)return -4;if(v>=1&&v<=2)return -6;return -8;}
+function skorI1(v){if(v>=9&&v<=19)return 8;if(v>=7&&v<=8)return 6;if(v>=5&&v<=6)return 4;if(v==4)return 2;if(v==3)return -2;if(v==2)return -4;if(v==1)return -6;return -8;}
+function skorS1(v){if(v>=14&&v<=20)return 8;if(v>=10&&v<=12)return 6;if(v>=7&&v<=9)return 4;if(v>=5&&v<=6)return 2;if(v>=3&&v<=4)return -2;if(v==2)return -4;if(v>=0&&v<=1)return -6;return -8;}
+function skorC1(v){if(v>=11&&v<=17)return 8;if(v>=7&&v<=9)return 6;if(v>=5&&v<=6)return 4;if(v==4)return 2;if(v==3)return -2;if(v==2)return -4;if(v==1)return -6;return -8;}
+function skorD2(v){if(v>=0&&v<=1)return 8;if(v==2)return 6;if(v==3)return 4;if(v>=4&&v<=5)return 2;if(v>=6&&v<=8)return -2;if(v>=9&&v<=11)return -4;if(v>=12&&v<=14)return -6;return -8;}
+function skorI2(v){if(v==0)return 8;if(v==1)return 6;if(v>=2&&v<=3)return 4;if(v==4)return 2;if(v==5)return -2;if(v>=6&&v<=7)return -4;if(v>=8&&v<=9)return -6;return -8;}
+function skorS2(v){if(v>=0&&v<=1)return 8;if(v==2)return 6;if(v>=3&&v<=4)return 4;if(v>=5&&v<=6)return 2;if(v==7)return -2;if(v>=8&&v<=9)return -4;if(v>=10&&v<=11)return -6;return -8;}
+function skorC2(v){if(v>=0&&v<=1)return 8;if(v==2)return 6;if(v>=3&&v<=4)return 4;if(v>=5&&v<=6)return 2;if(v>=7&&v<=8)return -2;if(v>=9&&v<=10)return -4;if(v>=11&&v<=12)return -6;return -8;}
+function skorD3(v){if(v>=15&&v<=21)return 8;if(v>=10&&v<=14)return 6;if(v>=7&&v<=9)return 4;if(v>=1&&v<=5)return 2;if(v>=-4&&v<=0)return -2;if(v>=-9&&v<=-6)return -4;if(v>=-12&&v<=-10)return -6;return -8;}
+function skorI3(v){if(v>=8&&v<=18)return 8;if(v>=5&&v<=7)return 6;if(v>=3&&v<=4)return 4;if(v>=0&&v<=2)return 2;if(v>=-2&&v<=-1)return -2;if(v>=-5&&v<=-3)return -4;if(v>=-8&&v<=-6)return -6;return -8;}
+function skorS3(v){if(v>=11&&v<=20)return 8;if(v>=7&&v<=10)return 6;if(v>=3&&v<=6)return 4;if(v>=0&&v<=2)return 2;if(v>=-4&&v<=-1)return -2;if(v>=-7&&v<=-5)return -4;if(v==-8)return -6;return -8;}
+function skorC3(v){if(v>=6&&v<=17)return 8;if(v>=3&&v<=5)return 6;if(v>=1&&v<=2)return 4;if(v>=-2&&v<=0)return 2;if(v>=-4&&v<=-3)return -2;if(v>=-7&&v<=-5)return -4;if(v>=-10&&v<=-8)return -6;return -8;}
+
+function hitungDISC(jawabanStr){
+    const discStr='_;'+jawabanStr;
+    const parts=discStr.split(';').map(s=>s.trim());
+    const jawaban=parts.map(p=>p.split('_').map(s=>s.trim()));
+    const hasilA=[],hasilB=[];
+    for(let i=1;i<jawaban.length;i++){
+        const soal=i,jwA=jawaban[i][0],jwB=jawaban[i][1];
+        if(!jwA||!jwB) continue;
+        const rowA=TABEL.find(r=>r[0]===soal&&r[1]===jwA);
+        const rowB=TABEL.find(r=>r[0]===soal&&r[1]===jwB);
+        if(rowA) hasilA.push(rowA[2]);
+        if(rowB) hasilB.push(rowB[3]);
+    }
+    const cA=hitungWarna(hasilA),cB=hitungWarna(hasilB);
+    const selisih={MERAH:cA.MERAH-cB.MERAH,HIJAU:cA.HIJAU-cB.HIJAU,KUNING:cA.KUNING-cB.KUNING,BIRU:cA.BIRU-cB.BIRU};
+    return{
+        public: {D:skorD1(cA.MERAH),I:skorI1(cA.HIJAU),S:skorS1(cA.KUNING),C:skorC1(cA.BIRU)},
+        private:{D:skorD2(cB.MERAH),I:skorI2(cB.HIJAU),S:skorS2(cB.KUNING),C:skorC2(cB.BIRU)},
+        perceived:{D:skorD3(selisih.MERAH),I:skorI3(selisih.HIJAU),S:skorS3(selisih.KUNING),C:skorC3(selisih.BIRU)},
+        raw:{cA,cB,selisih}
+    };
+}
+
+// ═══════════════════════════════════════════════════════
+// META
+// ═══════════════════════════════════════════════════════
+const DISC_META={
+    D:{name:'Dominance',label:'D — Dominance',color:'#c0392b',light:'#fdeaea',icon:'⚡',desc:'Berorientasi hasil, pengambil keputusan cepat, penuh percaya diri.'},
+    I:{name:'Influence', label:'I — Influence', color:'#e67e22',light:'#fef5ec',icon:'🌟',desc:'Komunikatif, antusias, mampu mempengaruhi orang lain secara positif.'},
+    S:{name:'Steadiness',label:'S — Steadiness',color:'#27ae60',light:'#eafaf1',icon:'🌿',desc:'Sabar, konsisten, penyeimbang dalam tim.'},
+    C:{name:'Compliance',label:'C — Compliance',color:'#2980b9',light:'#eaf4fb',icon:'🔍',desc:'Analitis, teliti, mengutamakan kualitas dan prosedur.'},
+};
+
+// ═══════════════════════════════════════════════════════
+// DESKRIPSI SKALA (kalimat utama per skor)
+// ═══════════════════════════════════════════════════════
+const DESC={
+    D:{
+        8: "Sangat dominan dan tegas — mengambil kendali penuh, bergerak cepat menuju hasil, dan tidak mudah tergoyahkan oleh hambatan.",
+        6: "Dominan dan berorientasi hasil, namun masih terbuka mempertimbangkan masukan tim sebelum memutuskan arah.",
+        4: "Cukup asertif dan mau mengambil inisiatif, namun menyeimbangkannya dengan kolaborasi dan kepekaan terhadap orang lain.",
+        2: "Dominansi rendah — lebih nyaman bekerja di balik layar dan menghindari posisi yang menuntut kontrol penuh.",
+        "-2":"Cenderung mengalah dan menghindari konfrontasi; kurang percaya diri untuk tampil sebagai penggerak keputusan.",
+        "-4":"Hampir tidak menunjukkan dorongan untuk memimpin; lebih suka mengikuti arahan daripada memberi arahan.",
+        "-6":"Sangat pasif dalam situasi kompetitif — kesulitan besar mengambil keputusan atau mempertahankan pendapat.",
+        "-8":"Tidak berinisiatif sama sekali; dalam situasi apa pun cenderung menyerahkan kendali sepenuhnya kepada orang lain.",
+    },
+    I:{
+        8: "Sangat karismatik dan ekspresif — menjadi pusat energi dalam kelompok, mampu memotivasi dan menginspirasi dengan mudah.",
+        6: "Sangat sosial dan persuasif; membangun hubungan dengan antusias namun tetap menjaga fokus pada tujuan.",
+        4: "Menyukai interaksi sosial dan cukup mampu mempengaruhi orang lain, meski tidak selalu berusaha menjadi pusat perhatian.",
+        2: "Sedikit introvert dalam konteks sosial; lebih suka berbicara ketika diperlukan daripada mengambil panggung.",
+        "-2":"Interaksi sosial terasa kurang nyaman; cenderung menghindari percakapan yang tidak diperlukan.",
+        "-4":"Sangat tidak tertarik pada hubungan sosial; lebih efektif bekerja sendiri dengan gangguan minimal.",
+        "-6":"Enggan sekali berinteraksi dengan orang baru; situasi sosial terasa melelahkan dan tidak produktif.",
+        "-8":"Sangat tertutup — hampir tidak membangun komunikasi, dan hubungan kerja pun sangat sulit dijalin.",
+    },
+    S:{
+        8: "Sangat sabar dan dapat diandalkan — menjadi fondasi tim, menjaga keharmonisan, dan konsisten dalam jangka panjang.",
+        6: "Stabil dan setia; mampu beradaptasi bila perlu, tetapi lebih produktif dalam lingkungan yang teratur dan terprediksi.",
+        4: "Cukup seimbang antara stabilitas dan fleksibilitas; tidak terlalu kaku, namun tetap menghargai konsistensi.",
+        2: "Lebih dinamis dari kebanyakan — tidak terlalu terikat rutinitas dan cukup mudah beradaptasi dengan perubahan.",
+        "-2":"Kurang stabil dan mudah terdistraksi; menjaga fokus dalam jangka panjang menjadi tantangan nyata.",
+        "-4":"Sangat adaptif namun sulit berkomitmen jangka panjang; bisa kehilangan arah di tengah-tengah proyek.",
+        "-6":"Sangat tidak sabar dan gelisah — rutinitas terasa membelenggu, dan hubungan panjang sulit dipertahankan.",
+        "-8":"Sama sekali tidak dapat diandalkan dalam konsistensi; pola kerja tidak terduga dan sulit dipercaya untuk tugas berkelanjutan.",
+    },
+    C:{
+        8: "Sangat teliti dan sistematis — standar akurasi sangat tinggi, mengandalkan data dan prosedur sebelum bertindak.",
+        6: "Analitis dan menghargai kualitas; tetap fleksibel dalam pendekatan selama standar inti tetap terpenuhi.",
+        4: "Cukup teliti dan mengikuti aturan, namun masih memberikan ruang bagi kreativitas dan pendekatan yang lebih bebas.",
+        2: "Tidak terlalu terikat pada prosedur; lebih suka bergerak cepat daripada menunggu semua detail sempurna.",
+        "-2":"Cenderung mengabaikan aturan dan prosedur; pengambilan risiko dilakukan tanpa analisis yang memadai.",
+        "-4":"Hampir tidak mengikuti prosedur standar; pendekatan tidak konvensional dan sering melewatkan detail penting.",
+        "-6":"Sangat tidak teratur dan kurang menghargai detail; aturan dianggap penghalang daripada panduan.",
+        "-8":"Bertindak impulsif tanpa memperhitungkan prosedur atau konsekuensi — sangat sulit dipercaya untuk tugas yang memerlukan akurasi.",
+    }
+};
+
+// ═══════════════════════════════════════════════════════
+// DETAIL PER SKALA  (kelebihan + saran untuk POSITIF;
+//                    area perhatian + saran untuk NEGATIF)
+// Setiap entri berbeda secara substansial sesuai intensitas skalanya.
+// ═══════════════════════════════════════════════════════
+const DISC_SCALE={
+    D:{
+        // ── POSITIF ─────────────────────────────────────────
+        8:{
+            kelebihan:[
+                "Pemimpin alami yang mampu menggerakkan tim di bawah tekanan sekalipun",
+                "Pengambil keputusan cepat dan tidak ragu melaksanakan langkah berani",
+                "Sangat tangguh menghadapi penolakan, kegagalan, dan hambatan",
+                "Mendorong standar tinggi — dirinya sendiri maupun orang di sekitarnya",
+                "Efektif di lingkungan kompetitif yang membutuhkan ketegasan mutlak"
+            ],
+            saran:[
+                "Waspadai kecenderungan untuk mengabaikan masukan sebelum keputusan dieksekusi",
+                "Latih active-listening secara sadar — dengarkan sampai selesai, baru respons",
+                "Gunakan kekuatan memimpin untuk memberdayakan tim, bukan hanya mengarahkan",
+                "Kelola tempo: tidak setiap keputusan perlu kilat — beri ruang untuk deliberasi",
+                "Kembangkan empati agar kecepatan Anda tidak meninggalkan anggota tim yang lebih lambat"
+            ]
+        },
+        6:{
+            kelebihan:[
+                "Berorientasi hasil tanpa kehilangan kesadaran akan dinamika tim",
+                "Mampu memotivasi orang lain menuju target dengan cara yang terasa masuk akal",
+                "Percaya diri mengambil keputusan sambil tetap terbuka pada sudut pandang lain",
+                "Efisien dan tidak membuang waktu pada hal-hal yang tidak esensial",
+                "Dipercaya sebagai figur yang dapat diandalkan saat situasi menantang"
+            ],
+            saran:[
+                "Jadikan kebiasaan meminta satu putaran masukan sebelum keputusan besar diambil",
+                "Perhatikan ritme dan kenyamanan anggota tim yang lebih berorientasi proses",
+                "Gunakan kekuatan komunikasi Anda untuk menjelaskan 'mengapa', bukan hanya 'apa'",
+                "Hindari terlalu cepat menutup diskusi — ide terbaik sering muncul di akhir",
+                "Kembangkan kemampuan coaching untuk melipatgandakan dampak kepemimpinan Anda"
+            ]
+        },
+        4:{
+            kelebihan:[
+                "Asertif dalam menyampaikan pendapat tanpa mendominasi ruang diskusi",
+                "Mampu berinisiatif sekaligus menghargai kontribusi orang lain",
+                "Tidak mudah menyerah, namun juga tidak memaksakan kehendak",
+                "Keseimbangan antara kecepatan dan kehati-hatian membuat keputusan lebih solid",
+                "Cocok untuk peran yang membutuhkan kepemimpinan partisipatif"
+            ],
+            saran:[
+                "Tingkatkan kepercayaan diri untuk tampil lebih tegas saat situasi kritis",
+                "Pelajari cara membedakan kapan harus berkompromi dan kapan harus berpendirian",
+                "Manfaatkan posisi tengah ini sebagai jembatan antar kelompok yang berbeda gaya",
+                "Latih kemampuan memberi umpan balik konstruktif secara langsung",
+                "Bangun portofolio keberhasilan keputusan untuk memperkuat rasa percaya diri"
+            ]
+        },
+        2:{
+            kelebihan:[
+                "Kooperatif dan mudah bekerja dalam berbagai tipe tim",
+                "Tidak egois — menempatkan tujuan bersama di atas ambisi pribadi",
+                "Hati-hati dalam bertindak, mengurangi risiko keputusan impulsif",
+                "Diterima baik oleh lingkungan karena tidak mengancam posisi orang lain"
+            ],
+            saran:[
+                "Latih keberanian mengambil posisi ketika pendapat Anda benar-benar diperlukan",
+                "Identifikasi satu area di mana Anda bersedia tampil lebih memimpin secara proaktif",
+                "Coba teknik 'say it first' — ungkapkan ide Anda sebelum mendengar orang lain",
+                "Kenali perbedaan antara rendah hati yang sehat dan keengganan tampil yang merugikan",
+                "Minta umpan balik rutin dari atasan tentang kapan Anda perlu lebih tegas"
+            ]
+        },
+        // ── NEGATIF ─────────────────────────────────────────
+        "-2":{
+            perhatian:[
+                "Keengganan berkonflik bisa membuat Anda melepaskan posisi yang seharusnya Anda pertahankan",
+                "Kurang percaya diri muncul nyata saat keputusan tidak bisa dihindari",
+                "Rentan diabaikan dalam diskusi kelompok yang didominasi profil dominan",
+                "Inisiatif jarang muncul dari diri sendiri — menunggu arahan menjadi pola default"
+            ],
+            saran:[
+                "Mulai latihan kecil: ambil satu keputusan mandiri setiap hari tanpa meminta validasi",
+                "Pelajari teknik assertiveness dasar — menyampaikan pendapat tanpa agresif",
+                "Cari mentor yang bisa mendorong Anda untuk tampil lebih proaktif secara terstruktur",
+                "Ikuti satu proyek kecil sebagai penanggung jawab utama untuk membangun track record",
+                "Catat momen saat Anda mengalah padahal seharusnya tidak — jadikan bahan refleksi"
+            ]
+        },
+        "-4":{
+            perhatian:[
+                "Hampir tidak ada dorongan untuk memimpin — posisi pasif menjadi zona nyaman yang sulit ditinggalkan",
+                "Dalam situasi yang membutuhkan keberanian bertindak, Anda cenderung beku",
+                "Mudah kehilangan kredibilitas di lingkungan yang mengutamakan inisiatif",
+                "Ketergantungan pada arahan orang lain bisa menghambat pertumbuhan karier"
+            ],
+            saran:[
+                "Ikuti pelatihan kepemimpinan terstruktur, bukan hanya membaca — praktik langsung wajib",
+                "Tetapkan satu target kepemimpinan mikro per minggu (misal: pimpin rapat 15 menit)",
+                "Identifikasi sumber ketidakpercayaan diri dan kerjakan bersama coach atau konselor",
+                "Cari komunitas yang aman untuk berlatih berbicara dan memimpin tanpa tekanan",
+                "Ubah narasi internal: dari 'saya bukan tipe pemimpin' menjadi 'saya sedang belajar memimpin'"
+            ]
+        },
+        "-6":{
+            perhatian:[
+                "Sangat kesulitan membuat keputusan bahkan dalam hal-hal kecil sekalipun",
+                "Situasi kompetitif atau bertekanan tinggi membuat Anda tidak berfungsi optimal",
+                "Ketergantungan tinggi pada orang lain untuk menggerakkan segala sesuatu",
+                "Potensi besar yang dimiliki tidak tersalurkan karena minimnya inisiatif"
+            ],
+            saran:[
+                "Lakukan terapi atau coaching intensif untuk mengidentifikasi akar dari pasivitas ekstrem",
+                "Mulai dari lingkup sangat kecil: putuskan hal sederhana (menu makan siang) secara mandiri setiap hari",
+                "Bangun sistem akuntabilitas dengan teman terpercaya yang memantau kemajuan Anda",
+                "Pelajari kasus sukses orang dengan profil serupa yang berhasil membangun kepercayaan diri",
+                "Beri diri sendiri ruang untuk gagal kecil — itu bagian penting dari proses tumbuh"
+            ]
+        },
+        "-8":{
+            perhatian:[
+                "Tidak berinisiatif dalam situasi apa pun — menyerahkan semua kendali kepada pihak lain",
+                "Potensi diri hampir sepenuhnya tersembunyi karena tidak pernah ditampilkan",
+                "Risiko besar dimanfaatkan atau diabaikan dalam lingkungan sosial dan profesional",
+                "Pertumbuhan karier sangat terhambat tanpa perubahan pola perilaku yang mendasar"
+            ],
+            saran:[
+                "Prioritaskan konsultasi profesional (psikolog/konselor karier) sebagai langkah pertama",
+                "Buat perjanjian dengan diri sendiri: satu tindakan nyata setiap hari, sekecil apa pun",
+                "Kelilingi diri dengan orang-orang yang suportif dan percaya pada potensi Anda",
+                "Jangan bandingkan diri dengan orang lain — fokus pada progres pribadi dari titik saat ini",
+                "Dokumentasikan setiap langkah maju, sekecil apa pun, untuk membangun rasa percaya diri"
+            ]
+        },
+    },
+
+    I:{
+        8:{
+            kelebihan:[
+                "Energi sosial yang tinggi — mampu mencairkan suasana dan membangun kepercayaan dengan cepat",
+                "Komunikator alami yang bisa menyampaikan pesan sulit dengan cara yang mudah diterima",
+                "Inspiratif dan menular — antusiasme Anda mendorong semangat orang di sekitar",
+                "Jaringan relasi yang luas menjadi modal nyata dalam berbagai konteks pekerjaan",
+                "Kreatif dan penuh ide segar, terutama dalam brainstorming dan pemecahan masalah"
+            ],
+            saran:[
+                "Jaga fokus — antusiasme tinggi bisa membuat Anda terdistraksi dari prioritas utama",
+                "Pastikan janji yang dibuat benar-benar realistis: over-promise adalah risiko nyata Anda",
+                "Kembangkan kemampuan mendengarkan aktif, bukan hanya berbicara dengan meyakinkan",
+                "Gunakan energi sosial ini untuk membangun koalisi dalam proyek-proyek strategis",
+                "Latih kemampuan dokumentasi — tidak semua hal bisa bergantung pada komunikasi verbal"
+            ]
+        },
+        6:{
+            kelebihan:[
+                "Mampu membangun hubungan yang kuat dan bermakna, tidak sekadar kenalan permukaan",
+                "Persuasif namun tidak memaksa — orang merasa diajak, bukan ditekan",
+                "Antusias dalam bekerja sama dan menciptakan lingkungan yang menyenangkan",
+                "Mampu menjembatani perbedaan antar anggota tim dengan gaya komunikasi yang hangat",
+                "Fleksibel dalam pendekatan tanpa kehilangan tujuan utama"
+            ],
+            saran:[
+                "Tetapkan batasan yang jelas antara hubungan personal dan profesional",
+                "Latih kemampuan memberikan umpan balik negatif dengan cara yang tetap membangun",
+                "Buat sistem prioritas tugas agar energi sosial tidak menggerus produktivitas",
+                "Kembangkan ketelitian — detail teknis kadang luput dari perhatian Anda",
+                "Manfaatkan kemampuan membangun relasi untuk membuka peluang kolaborasi baru"
+            ]
+        },
+        4:{
+            kelebihan:[
+                "Cukup sosial untuk berkolaborasi efektif tanpa bergantung pada validasi orang lain",
+                "Mampu berkomunikasi dengan baik di berbagai konteks tanpa terkesan berlebihan",
+                "Seimbang antara kerja mandiri dan kerja tim",
+                "Tidak mudah terbawa emosi kelompok — cukup independen dalam penilaian"
+            ],
+            saran:[
+                "Dorong diri untuk lebih aktif membangun jaringan, terutama di luar zona nyaman Anda",
+                "Latih kemampuan presentasi untuk meningkatkan kepercayaan diri di depan umum",
+                "Gunakan kekuatan komunikasi yang ada untuk membuka peluang karier yang lebih luas",
+                "Coba peran fasilitator dalam rapat tim — ini peluang bagus mengembangkan dimensi I",
+                "Pelajari teknik storytelling untuk membuat pesan Anda lebih berkesan"
+            ]
+        },
+        2:{
+            kelebihan:[
+                "Lebih suka bicara berdasarkan isi daripada penampilan — dianggap substantif",
+                "Tidak bergantung pada persetujuan sosial untuk merasa produktif",
+                "Lebih mudah fokus pada pekerjaan tanpa terdistraksi oleh dinamika sosial",
+                "Dipercaya karena tidak terkesan penjilat atau terlalu ambisius secara sosial"
+            ],
+            saran:[
+                "Latih kemampuan small talk — percakapan ringan adalah investasi hubungan jangka panjang",
+                "Ikuti satu kegiatan networking per bulan, mulai dari yang terstruktur dan aman",
+                "Pelajari teknik memulai percakapan profesional tanpa rasa canggung",
+                "Cari tahu bagaimana gaya komunikasi Anda ditangkap orang lain — minta umpan balik jujur",
+                "Ingat bahwa kemampuan mempengaruhi orang adalah keterampilan yang bisa dilatih"
+            ]
+        },
+        "-2":{
+            perhatian:[
+                "Interaksi sosial terasa menguras energi — bisa membatasi kolaborasi yang dibutuhkan",
+                "Potensi terisolasi dari informasi penting yang hanya beredar melalui jaringan informal",
+                "Terkesan kurang antusias atau tidak peduli, meski itu bukan maksud Anda",
+                "Kesulitan mempengaruhi keputusan karena kurangnya koneksi dengan pihak yang berwenang"
+            ],
+            saran:[
+                "Mulai dengan satu hubungan profesional yang Anda investasikan secara konsisten",
+                "Latih cara mengungkapkan apresiasi secara verbal — sederhana namun berdampak besar",
+                "Coba platform komunikasi yang lebih tertulis (email, chat) jika percakapan langsung terasa berat",
+                "Temukan satu rekan yang bisa jadi partner untuk keluar dari zona nyaman secara bertahap",
+                "Ingat: membangun relasi bukan tentang menjadi ekstrovert, tapi tentang menunjukkan kehadiran"
+            ]
+        },
+        "-4":{
+            perhatian:[
+                "Hampir menghindari semua bentuk interaksi sosial yang tidak mutlak diperlukan",
+                "Kualitas pekerjaan bisa baik, tetapi kontribusi tidak terlihat karena minim komunikasi",
+                "Risiko dianggap tidak kooperatif atau tidak berminat pada kemajuan tim",
+                "Karier bisa stagnan jika kemampuan mempengaruhi orang tidak dikembangkan"
+            ],
+            saran:[
+                "Tentukan waktu khusus setiap minggu untuk berinteraksi dengan minimal dua rekan kerja",
+                "Pelajari teknik presentasi untuk membuat kontribusi Anda lebih terlihat",
+                "Cari konteks sosial yang lebih terstruktur — forum tanya jawab, diskusi teknis",
+                "Bangun kebiasaan menulis laporan atau update yang mengkomunikasikan kemajuan pekerjaan Anda",
+                "Jangan ragu meminta bantuan rekan yang lebih sosial untuk memperkenalkan Anda ke jaringan"
+            ]
+        },
+        "-6":{
+            perhatian:[
+                "Situasi sosial terasa sangat melelahkan sehingga sering dihindari sepenuhnya",
+                "Minimnya interaksi membuat Anda kehilangan banyak peluang informasi dan kolaborasi",
+                "Bisa dipersepsikan negatif tanpa Anda sadari — orang mungkin merasa diabaikan",
+                "Pekerjaan yang bergantung pada tim menjadi beban besar"
+            ],
+            saran:[
+                "Coba sesi coaching atau terapi untuk memahami sumber ketidaknyamanan sosial Anda",
+                "Mulai sangat kecil: kirim satu pesan apresiasi per hari kepada rekan kerja",
+                "Eksplorasi komunitas online berbasis minat — interaksi bertahap sebelum tatap muka",
+                "Baca buku tentang introvert sukses untuk mendapatkan strategi yang sesuai profil Anda",
+                "Jadikan keterbukaan sosial sebagai target pertumbuhan jangka panjang, bukan tekanan jangka pendek"
+            ]
+        },
+        "-8":{
+            perhatian:[
+                "Hampir tidak ada komunikasi yang dibangun secara aktif dalam konteks profesional",
+                "Isolasi sosial ekstrem berisiko menciptakan hambatan yang sangat sulit diurai",
+                "Pekerjaan tim menjadi sangat tidak efektif karena minimnya koordinasi",
+                "Kesehatan mental perlu diperhatikan — isolasi sosial berkorelasi dengan berbagai risiko psikologis"
+            ],
+            saran:[
+                "Prioritaskan konsultasi dengan profesional kesehatan mental sebagai langkah pertama",
+                "Tentukan satu interaksi bermakna per minggu — kualitas lebih penting dari kuantitas",
+                "Temukan satu medium komunikasi yang paling nyaman dan gunakan itu sebagai jembatan",
+                "Jangan menilai kemajuan dari standar orang lain — setiap langkah kecil adalah pencapaian nyata",
+                "Ingat bahwa koneksi manusia, meski tidak besar, adalah sumber kekuatan yang fundamental"
+            ]
+        },
+    },
+
+    S:{
+        8:{
+            kelebihan:[
+                "Fondasi tim yang tak ternilai — kehadiran Anda menciptakan rasa aman dan stabil",
+                "Konsisten dan dapat diandalkan dalam jangka panjang tanpa perlu pengawasan ketat",
+                "Pendengar yang empatik — membuat orang merasa didengar dan dihargai",
+                "Mampu meredam konflik dan menjaga harmoni bahkan dalam situasi tegang",
+                "Setia dan berkomitmen penuh pada tugas dan hubungan yang dijalani"
+            ],
+            saran:[
+                "Latih kemampuan merespons perubahan mendadak tanpa perlu waktu adaptasi yang sangat panjang",
+                "Pelajari cara menyampaikan ketidaksetujuan secara asertif — harmoni bukan berarti selalu setuju",
+                "Tetapkan batasan yang sehat agar kesetiaan Anda tidak dimanfaatkan pihak lain",
+                "Dorong diri untuk sesekali mengambil inisiatif — stabilitas Anda bisa jadi fondasi inovasi",
+                "Kembangkan kemampuan manajemen perubahan agar lebih adaptif tanpa kehilangan ketenangan"
+            ]
+        },
+        6:{
+            kelebihan:[
+                "Mampu bekerja efektif dalam lingkungan yang terstruktur maupun dinamis",
+                "Stabil namun tidak kaku — bisa menyesuaikan diri bila ada alasan yang jelas",
+                "Dipercaya sebagai rekan kerja yang tidak membawa kejutan negatif",
+                "Mampu menjaga kualitas hubungan kerja dalam jangka menengah-panjang",
+                "Tidak mudah stres oleh tekanan rutin yang terus-menerus"
+            ],
+            saran:[
+                "Latih penerimaan perubahan tanpa harus memahami seluruh konteks terlebih dahulu",
+                "Buka diri terhadap peluang baru meski awalnya terasa tidak familiar",
+                "Kembangkan toleransi terhadap ketidakpastian — tidak semua hal perlu terencana sempurna",
+                "Sesekali keluarkan pendapat kritis yang jujur, bukan hanya yang menjaga suasana",
+                "Eksplorasi peran yang membutuhkan sedikit lebih banyak fleksibilitas untuk menantang diri"
+            ]
+        },
+        4:{
+            kelebihan:[
+                "Fleksibel cukup untuk beradaptasi, stabil cukup untuk diandalkan",
+                "Tidak mendominasi dan tidak terlalu pasif — bekerja baik di hampir semua tim",
+                "Mampu menyelesaikan tugas rutin maupun yang memerlukan respons cepat",
+                "Tidak terlalu rentan terhadap burnout karena punya cadangan kesabaran yang cukup"
+            ],
+            saran:[
+                "Identifikasi kapan stabilitas Anda menjadi hambatan untuk bergerak lebih cepat",
+                "Latih kemampuan mengambil keputusan di bawah tekanan waktu",
+                "Gunakan kestabilan Anda sebagai keunggulan dalam proyek yang membutuhkan konsistensi",
+                "Sesekali ajukan ide baru, bukan hanya mendukung ide orang lain",
+                "Evaluasi apakah zona nyaman yang ada masih mendukung pertumbuhan jangka panjang"
+            ]
+        },
+        2:{
+            kelebihan:[
+                "Lebih dinamis dan responsif terhadap perubahan dibanding rata-rata",
+                "Tidak terikat rutinitas — mudah berpindah konteks saat diperlukan",
+                "Bisa tampil produktif di lingkungan yang berubah-ubah",
+                "Terbuka terhadap cara kerja baru tanpa perlu waktu adaptasi panjang"
+            ],
+            saran:[
+                "Bangun minimal satu rutinitas harian yang tidak dapat diganggu — ini fondasi konsistensi",
+                "Buat sistem pelacakan komitmen agar janji tidak terlupakan di tengah dinamika tinggi",
+                "Perhatikan apakah kecepatan adaptasi Anda membuat orang lain merasa tidak stabil",
+                "Investasikan waktu untuk mempererat setidaknya beberapa hubungan jangka panjang",
+                "Buat target jangka menengah (3–6 bulan) dan evaluasi secara rutin"
+            ]
+        },
+        "-2":{
+            perhatian:[
+                "Konsistensi mulai goyah — orang di sekitar mulai sulit memprediksi respons Anda",
+                "Tugas jangka panjang sering tidak selesai karena perhatian terpecah",
+                "Hubungan kerja bisa retak karena kesan tidak dapat diandalkan",
+                "Perubahan kecil pun bisa terasa mengganggu, membuat produktivitas turun"
+            ],
+            saran:[
+                "Gunakan teknik time-blocking untuk menjaga fokus tanpa terdistraksi",
+                "Buat daftar komitmen yang harus ditepati dan review setiap minggu",
+                "Identifikasi kebiasaan apa yang paling sering merusak konsistensi Anda",
+                "Temukan rekan yang bisa menjadi anchor konsistensi dalam tim Anda",
+                "Latih mindfulness untuk meningkatkan kemampuan tetap hadir di satu tugas"
+            ]
+        },
+        "-4":{
+            perhatian:[
+                "Sangat sulit berkomitmen jangka panjang — proyek sering ditinggalkan sebelum tuntas",
+                "Hubungan kerja menjadi tidak stabil karena pola yang tidak terduga",
+                "Orang lain merasa tidak bisa mengandalkan Anda untuk tanggung jawab kritis",
+                "Energi besar di awal sering habis jauh sebelum target tercapai"
+            ],
+            saran:[
+                "Pecah proyek besar menjadi sprint pendek dengan tonggak capaian yang jelas",
+                "Gunakan sistem reward pribadi setiap kali menyelesaikan satu komitmen penuh",
+                "Cari tahu apa yang biasanya memutus fokus Anda dan buat strategi mitigasinya",
+                "Pilih peran yang memang cocok dengan ritme Anda sambil membangun konsistensi secara bertahap",
+                "Minta umpan balik rutin tentang keandalan Anda dari rekan yang jujur"
+            ]
+        },
+        "-6":{
+            perhatian:[
+                "Ketidaksabaran dan kegelisahan sangat mengganggu kualitas dan kuantitas output",
+                "Rutiitas terasa membelenggu — tapi tanpa rutinitas, pekerjaan tidak pernah selesai",
+                "Hubungan yang membutuhkan kepercayaan jangka panjang sulit dibangun",
+                "Risiko burnout tinggi karena pola kerja yang tidak menentu dan tidak stabil"
+            ],
+            saran:[
+                "Lakukan eksplorasi mendalam tentang apa yang benar-benar ingin Anda capai — kurangnya stabilitas sering berakar dari tujuan yang belum jelas",
+                "Mulai dengan satu komitmen 30 hari yang sederhana dan selesaikan sampai tuntas",
+                "Coba latihan meditasi atau journaling untuk melatih toleransi terhadap ketenangan",
+                "Pertimbangkan karier atau peran yang secara struktural mendukung variasi tetapi memiliki tujuan tetap",
+                "Cari mentor yang bisa membantu Anda menerjemahkan energi tinggi menjadi output yang konsisten"
+            ]
+        },
+        "-8":{
+            perhatian:[
+                "Ketidakkonsistenan di level ini sangat merusak kepercayaan dan reputasi profesional",
+                "Hampir tidak ada pola yang bisa diandalkan — bahkan untuk hal-hal dasar sekali pun",
+                "Hubungan bermakna hampir tidak bisa dipertahankan",
+                "Produktivitas jangka panjang sangat rendah meski ada potensi di sana"
+            ],
+            saran:[
+                "Konsultasikan kondisi ini dengan psikolog atau konselor — mungkin ada faktor mendasar yang perlu ditangani",
+                "Mulai dari satu kebiasaan mikro: bangun pada waktu yang sama setiap hari selama 30 hari",
+                "Minta bantuan orang terpercaya untuk membantu Anda membuat struktur sederhana",
+                "Fokus hanya pada satu hal dalam satu waktu — eliminasi semua gangguan yang bisa ditunda",
+                "Kenali bahwa stabilitas bukan kelemahan — itu adalah fondasi dari kebebasan sejati"
+            ]
+        },
+    },
+
+    C:{
+        8:{
+            kelebihan:[
+                "Standar kualitas yang sangat tinggi — output Anda bisa dipercaya tanpa perlu diperiksa ulang",
+                "Analitis mendalam sebelum bertindak, meminimalkan risiko kesalahan yang mahal",
+                "Mampu menciptakan sistem dan prosedur yang meningkatkan efisiensi tim secara keseluruhan",
+                "Teliti dalam membaca kontrak, dokumen, dan data — aset besar dalam konteks high-stake",
+                "Dipercaya sebagai sumber informasi yang akurat dan tidak spekulatif"
+            ],
+            saran:[
+                "Latih kemampuan memutuskan dengan data yang 'cukup', bukan data yang 'sempurna'",
+                "Jaga agar standar tinggi Anda tidak berubah menjadi kritik yang mematahkan semangat tim",
+                "Jadwalkan sesi kreativitas yang bebas dari aturan untuk melatih fleksibilitas berpikir",
+                "Pelajari kapan harus 'good enough' — perfeksionisme bisa menjadi hambatan kecepatan",
+                "Gunakan ketelitian Anda sebagai pembeda, bukan alasan untuk menolak ketidaksempurnaan orang lain"
+            ]
+        },
+        6:{
+            kelebihan:[
+                "Menghargai kualitas tanpa kehilangan kemampuan bergerak",
+                "Mampu menganalisis situasi secara sistematis sebelum mengambil tindakan",
+                "Fleksibel dalam prosedur selama inti kualitas tetap terjaga",
+                "Dipercaya untuk tugas yang membutuhkan akurasi namun juga kecepatan moderat",
+                "Mampu mengkomunikasikan analisis secara efektif kepada berbagai jenis audiens"
+            ],
+            saran:[
+                "Waspadai kecenderungan over-analysis pada keputusan yang sebenarnya tidak kritikal",
+                "Latih kemampuan memberi ruang kepada rekan yang bekerja dengan gaya lebih intuitif",
+                "Kembangkan toleransi terhadap ambiguitas — tidak semua konteks menyediakan data lengkap",
+                "Dorong diri untuk sesekali bertindak tanpa rencana penuh — eksperimen kecil itu berharga",
+                "Bagikan keahlian analitis Anda melalui mentoring atau dokumentasi yang bisa diakses tim"
+            ]
+        },
+        4:{
+            kelebihan:[
+                "Seimbang antara mengikuti prosedur dan memberi ruang pada kreativitas",
+                "Tidak kaku — bisa bekerja di lingkungan yang campuran antara terstruktur dan fleksibel",
+                "Cukup teliti untuk menangkap kesalahan penting tanpa terjebak detail minor",
+                "Diterima baik oleh berbagai tipe rekan kerja karena pendekatan yang tidak ekstrem"
+            ],
+            saran:[
+                "Tingkatkan ketelitian pada area-area kritis yang memiliki dampak besar",
+                "Pelajari lebih dalam prosedur standar di bidang Anda untuk meningkatkan kompetensi",
+                "Buat template atau checklist sederhana untuk pekerjaan yang berulang",
+                "Latih diri memberikan review kritis yang membangun pada pekerjaan rekan",
+                "Pertimbangkan sertifikasi atau pelatihan di area yang membutuhkan ketelitian spesifik"
+            ]
+        },
+        2:{
+            kelebihan:[
+                "Bergerak cepat tanpa terlalu terbebani detail yang tidak esensial",
+                "Lebih mudah berimprovisasi dan menyesuaikan pendekatan secara real-time",
+                "Tidak kaku pada prosedur — bisa mencari solusi kreatif yang lebih efisien",
+                "Nyaman dalam situasi ambigu yang membuat profil C tinggi menjadi paralisis"
+            ],
+            saran:[
+                "Buat checklist minimal untuk tugas-tugas penting agar tidak ada yang terlewat",
+                "Minta rekan yang lebih teliti untuk mereview pekerjaan Anda sebelum diserahkan",
+                "Pelajari prosedur wajib di bidang Anda — bukan semua aturan bisa diabaikan",
+                "Latih kebiasaan double-check pada keputusan yang berdampak signifikan",
+                "Kembangkan rasa tanggung jawab terhadap kualitas output sebagai standar profesional"
+            ]
+        },
+        "-2":{
+            perhatian:[
+                "Prosedur dan aturan sering diabaikan tanpa mempertimbangkan konsekuensinya",
+                "Risiko membuat kesalahan yang bisa dicegah meningkat secara nyata",
+                "Terkesan tidak profesional di lingkungan yang mengutamakan akurasi dan kepatuhan",
+                "Pengambilan risiko tanpa analisis memadai bisa merugikan diri sendiri dan tim"
+            ],
+            saran:[
+                "Tetapkan satu aturan tidak bisa dilanggar per proyek dan patuhi tanpa pengecualian",
+                "Gunakan aplikasi manajemen tugas untuk melacak detail yang sering luput",
+                "Minta umpan balik spesifik dari atasan tentang area di mana ketelitian Anda perlu ditingkatkan",
+                "Pelajari bagaimana kesalahan kecil bisa berdampak besar — kembangkan kesadaran risiko",
+                "Jadikan kualitas output sebagai bagian dari identitas profesional Anda"
+            ]
+        },
+        "-4":{
+            perhatian:[
+                "Hampir tidak mengikuti prosedur — pekerjaan sering tidak memenuhi standar yang diharapkan",
+                "Detail kritis sering terlewat dan sulit dipercaya untuk tugas yang memerlukan akurasi",
+                "Konflik dengan rekan atau atasan yang mengutamakan kualitas menjadi sering",
+                "Reputasi profesional bisa rusak akibat pola kerja yang tidak terstruktur"
+            ],
+            saran:[
+                "Identifikasi tiga area kerja yang paling memerlukan ketelitian dan fokus di sana dulu",
+                "Temukan rekan teladan dalam hal prosedur dan pelajari pendekatan mereka secara konkret",
+                "Buat rutinitas review harian singkat (10 menit) untuk mengevaluasi kualitas output hari itu",
+                "Ikuti pelatihan manajemen kualitas atau prosedur standar di bidang Anda",
+                "Ubah perspektif: prosedur bukan kendala — itu jalan pintas menuju hasil yang bisa diprediksi"
+            ]
+        },
+        "-6":{
+            perhatian:[
+                "Sama sekali tidak menghargai detail dan aturan — menciptakan risiko nyata bagi tim dan organisasi",
+                "Output sering bermasalah secara kualitas dan membutuhkan koreksi besar dari pihak lain",
+                "Dipersepsikan tidak profesional dan tidak dapat dipercaya untuk tanggung jawab penting",
+                "Gaya kerja yang sangat tidak terstruktur menciptakan ketidakpastian bagi semua pihak yang terlibat"
+            ],
+            saran:[
+                "Lakukan audit mendalam terhadap dampak nyata dari kurangnya ketelitian Anda selama ini",
+                "Mulai dengan satu dokumen atau pekerjaan yang Anda kerjakan dengan standar sangat tinggi sebagai titik balik",
+                "Cari mentor yang bisa membimbing Anda membangun kebiasaan kerja yang lebih terstruktur",
+                "Buat konsekuensi konkret bagi diri sendiri setiap kali melewatkan prosedur penting",
+                "Pahami bahwa ketelitian adalah bentuk penghargaan kepada orang-orang yang bergantung pada pekerjaan Anda"
+            ]
+        },
+        "-8":{
+            perhatian:[
+                "Pola kerja impulsif tanpa prosedur menciptakan dampak negatif yang sangat nyata",
+                "Hampir mustahil dipercaya untuk tugas yang memerlukan presisi dan kepatuhan",
+                "Karier di bidang yang memerlukan ketelitian akan sangat terhambat tanpa perubahan mendasar",
+                "Dampak kesalahan yang terus berulang bisa merusak kepercayaan dan relasi secara permanen"
+            ],
+            saran:[
+                "Pertimbangkan konsultasi dengan coach karier untuk menemukan bidang yang lebih cocok dengan gaya Anda",
+                "Mulai dari yang paling fundamental: satu tugas, satu langkah, satu standar — dan tuntaskan",
+                "Bangun sistem akuntabilitas eksternal yang membantu Anda menjaga standar minimal",
+                "Pelajari kisah nyata tentang dampak fatal dari pengabaian prosedur — bangun kesadaran yang kuat",
+                "Kembangkan disiplin melalui kebiasaan harian kecil — ini fondasi dari semua ketelitian profesional"
+            ]
+        },
+    }
+};
+
+// ═══════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════
+let charts=[];
+
+function getScaleData(k,v){
+    const entry=DISC_SCALE[k][v];
+    if(!entry) return null;
+    return entry;
+}
+
+function renderDetailCardPos(k,v){
+    const m=DISC_META[k];
+    const d=getScaleData(k,v);
+    if(!d) return '';
+    const kelebihan=d.kelebihan||[];
+    const saran=d.saran||[];
+    return `
+    <div class="detail-card" style="background:${m.light};border-left-color:${m.color}">
+        <div class="detail-card-title" style="color:${m.color}">💪 Kelebihan pada skala +${v}</div>
+        <div class="detail-section-label" style="color:#1e8449">✅ Kelebihan</div>
+        <ul class="detail-list">${kelebihan.map(x=>`<li>${x}</li>`).join('')}</ul>
+        <div class="tip-box">
+            <div class="detail-section-label">🚀 Saran Pengembangan Diri</div>
+            <ul class="tip-list">${saran.map(x=>`<li>${x}</li>`).join('')}</ul>
+        </div>
+    </div>`;
+}
+
+function renderDetailCardNeg(k,v){
+    const m=DISC_META[k];
+    const d=getScaleData(k,v);
+    if(!d) return '';
+    const perhatian=d.perhatian||[];
+    const saran=d.saran||[];
+    return `
+    <div class="detail-card" style="background:#fff8f8;border-left-color:#e74c3c">
+        <div class="detail-card-title" style="color:#c0392b">⚠️ Area Perhatian pada skala ${v}</div>
+        <div class="detail-section-label" style="color:#c0392b">⚡ Hal-hal yang perlu diperhatikan</div>
+        <ul class="detail-list neg-list">${perhatian.map(x=>`<li>${x}</li>`).join('')}</ul>
+        <div class="tip-box">
+            <div class="detail-section-label">🚀 Saran Pengembangan Diri</div>
+            <ul class="tip-list">${saran.map(x=>`<li>${x}</li>`).join('')}</ul>
+        </div>
+    </div>`;
+}
+
+function renderBarPanel(scores,panelId){
+    const keys=['D','I','S','C'];
+    const maxAbs=8;
+    const posKeys=keys.filter(k=>scores[k]>0);
+    const negKeys=keys.filter(k=>scores[k]<0);
+    const neuKeys=keys.filter(k=>scores[k]===0);
+
+    function barRow(k,isPos){
+        const v=scores[k],m=DISC_META[k];
+        const pct=Math.abs(v)/maxAbs*100;
+        const badgeCls=v>0?'score-pos':v<0?'score-neg':'score-neu';
+        const label=v>0?`+${v}`:v<0?`${v}`:'Netral';
+        const card=isPos?renderDetailCardPos(k,v):renderDetailCardNeg(k,v);
+        return `
+        <div class="disc-row">
+            <div class="disc-row-head">
+                <span class="disc-name">
+                    <span class="disc-dot" style="background:${m.color}"></span>
+                    ${m.label}
+                </span>
+                <span class="disc-score-badge ${badgeCls}">Skala ${label}</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${m.color}"></div></div>
+            <div class="disc-desc">${DESC[k][String(v)]||''}</div>
+            ${card}
+        </div>`;
+    }
+
+    const posHtml=posKeys.length>0
+        ?`<div class="disc-bars">${posKeys.map(k=>barRow(k,true)).join('')}</div>`
+        :`<div class="empty-state"><div class="emoji">🔍</div><p>Tidak ada dimensi positif yang menonjol pada panel ini.</p></div>`;
+
+    const negHtml=negKeys.length>0
+        ?`<div class="disc-bars">${negKeys.map(k=>barRow(k,false)).join('')}</div>`
+        :`<div class="empty-state"><div class="emoji">✨</div><p>Tidak ada dimensi negatif — semua dimensi berada di rentang positif atau netral.</p></div>`;
+
+    const neuHtml=neuKeys.length>0
+        ?`<div class="neutral-notice">📋 Dimensi <b>${neuKeys.join(', ')}</b> berada pada posisi <b>Netral (0)</b> — keseimbangan antara kecenderungan positif dan negatif pada aspek ini.</div>`
+        :'';
+
+    return `
+    <div class="inner-tabs">
+        <button class="inner-tab-btn pos-active" id="btn-pos-${panelId}" onclick="switchInner('${panelId}','pos')">🟢 Positif (${posKeys.length})</button>
+        <button class="inner-tab-btn" id="btn-neg-${panelId}" onclick="switchInner('${panelId}','neg')">🔴 Negatif (${negKeys.length})</button>
+    </div>
+    ${neuHtml}
+    <div class="inner-panel active" id="inner-pos-${panelId}">${posHtml}</div>
+    <div class="inner-panel" id="inner-neg-${panelId}">${negHtml}</div>`;
+}
+
+function switchInner(panelId,which){
+    const posBtn=document.getElementById(`btn-pos-${panelId}`);
+    const negBtn=document.getElementById(`btn-neg-${panelId}`);
+    const posPanel=document.getElementById(`inner-pos-${panelId}`);
+    const negPanel=document.getElementById(`inner-neg-${panelId}`);
+    if(which==='pos'){
+        posBtn.classList.add('pos-active');negBtn.classList.remove('neg-active');
+        posPanel.classList.add('active');negPanel.classList.remove('active');
+    }else{
+        negBtn.classList.add('neg-active');posBtn.classList.remove('pos-active');
+        negPanel.classList.add('active');posPanel.classList.remove('active');
+    }
+}
+
+function renderCharts(result){
+    charts.forEach(c=>c.destroy());charts=[];
+    [{id:'chartPublic',scores:result.public},{id:'chartPrivate',scores:result.private}].forEach(({id,scores})=>{
+        const el=document.getElementById(id);if(!el)return;
+        charts.push(new Chart(el.getContext('2d'),{
+            type:'radar',
+            data:{labels:['D','I','S','C'],datasets:[{data:['D','I','S','C'].map(k=>Math.max(scores[k],0)),backgroundColor:'rgba(26,26,46,0.1)',borderColor:'#1a1a2e',borderWidth:2,pointBackgroundColor:['#c0392b','#e67e22','#27ae60','#2980b9'],pointRadius:5}]},
+            options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:8,ticks:{stepSize:2,display:false},grid:{color:'rgba(0,0,0,.08)'},pointLabels:{font:{size:14,weight:'bold'},color:'#333'}}},plugins:{legend:{display:false}}}
+        }));
+    });
+}
+
+function switchTab(tab){
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+    document.querySelectorAll('.disc-panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+tab));
+}
+
+function dominanLabel(scores){
+    const pos=Object.entries(scores).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+    if(!pos.length) return 'Seimbang';
+    return pos.slice(0,2).map(([k])=>DISC_META[k].name).join(' / ');
+}
+
+function buildSummary(result){
+    const panels=['public','private','perceived'];
+    const strengths=new Set(),challenges=new Set(),tips=new Set();
+    panels.forEach(p=>{
+        ['D','I','S','C'].forEach(k=>{
+            const v=result[p][k];
+            const d=getScaleData(k,v);
+            if(!d) return;
+            if(v>0){
+                (d.kelebihan||[]).slice(0,2).forEach(s=>strengths.add(s));
+                (d.saran||[]).slice(0,1).forEach(s=>tips.add(s));
+            }else if(v<0){
+                (d.perhatian||[]).slice(0,2).forEach(s=>challenges.add(s));
+                (d.saran||[]).slice(0,1).forEach(s=>tips.add(s));
+            }
+        });
+    });
+    const sl=[...strengths].slice(0,5).map(s=>`<li>${s}</li>`).join('');
+    const cl=[...challenges].slice(0,5).map(s=>`<li>${s}</li>`).join('');
+    const tl=[...tips].slice(0,5).map(s=>`<li>${s}</li>`).join('');
+    return `
+    <div class="summary-wrap">
+        <h2>📋 Ringkasan Profil Keseluruhan</h2>
+        <div class="summary-grid">
+            <div class="summary-col"><h3>💪 Kekuatan Utama</h3><ul>${sl||'<li>—</li>'}</ul></div>
+            <div class="summary-col"><h3>⚠️ Area Pengembangan</h3><ul>${cl||'<li>Semua dimensi tampak positif</li>'}</ul></div>
+            <div class="summary-col"><h3>🚀 Prioritas Pengembangan</h3><ul>${tl||'<li>Pertahankan keseimbangan yang ada</li>'}</ul></div>
+        </div>
+    </div>`;
+}
+
+function renderResult(data){
+    const bio=JSON.parse(data.x_02||'{}');
+    const x07=JSON.parse(data.x_07||'{}');
+    const discKey=x07['who_disc']!==undefined?'who_disc':(Object.keys(x07).find(k=>k.includes('disc'))||'');
+    const jawabanStr=discKey?x07[discKey]:'';
+    if(!jawabanStr||!jawabanStr.trim().includes('_')){
+        document.getElementById('app').innerHTML=`<div class="error-box"><h2>⚠️ Data Belum Tersedia</h2><p>Peserta ini belum menyelesaikan Tes Kepribadian DISC.</p></div>`;
+        return;
+    }
+    const result=hitungDISC(jawabanStr);
+    const domPub=dominanLabel(result.public);
+    const domPri=dominanLabel(result.private);
+    const domPer=dominanLabel(result.perceived);
+
+    document.getElementById('app').innerHTML=`
+    <div class="hero">
+        <div class="hero-label">Laporan Psikologi</div>
+        <h1>Tes Kepribadian DISC</h1>
+        <p class="hero-sub">Analisis gaya perilaku berdasarkan metode DISC — lengkap dengan kelebihan, area perhatian, dan saran pengembangan diri per skala</p>
+    </div>
+    <div class="profile-card">
+        <div class="profile-item"><div class="lbl">Nama</div><div class="val">${bio.nama||'—'}</div></div>
+        <div class="profile-item"><div class="lbl">Usia</div><div class="val">${bio.usia?bio.usia+' Tahun':'—'}</div></div>
+        <div class="profile-item"><div class="lbl">Pendidikan</div><div class="val">${bio.pendidikan||'—'}</div></div>
+        <div class="profile-item"><div class="lbl">Tanggal Tes</div><div class="val">${bio.tgl_tes||'—'}</div></div>
+    </div>
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="public"    onclick="switchTab('public')">🌐 Public Self</button>
+        <button class="tab-btn"        data-tab="private"   onclick="switchTab('private')">🔒 Private Self</button>
+        <button class="tab-btn"        data-tab="perceived" onclick="switchTab('perceived')">🔮 Perceived Self</button>
+    </div>
+    <div class="disc-panel active" id="panel-public">
+        <div class="panel-title">Public Self <span class="badge">Tampak ke Orang Lain</span></div>
+        <p class="panel-sub">Tipe dominan: <b style="color:var(--dark)">${domPub}</b> &nbsp;·&nbsp; Bagaimana orang lain melihat perilaku Anda sehari-hari</p>
+        ${renderBarPanel(result.public,'public')}
+    </div>
+    <div class="disc-panel" id="panel-private">
+        <div class="panel-title">Private Self <span class="badge">Diri Sebenarnya</span></div>
+        <p class="panel-sub">Tipe dominan: <b style="color:var(--dark)">${domPri}</b> &nbsp;·&nbsp; Kepribadian Anda yang sesungguhnya di balik penampilan luar</p>
+        ${renderBarPanel(result.private,'private')}
+    </div>
+    <div class="disc-panel" id="panel-perceived">
+        <div class="panel-title">Perceived Self <span class="badge">Persepsi Diri Total</span></div>
+        <p class="panel-sub">Tipe dominan: <b style="color:var(--dark)">${domPer}</b> &nbsp;·&nbsp; Kesenjangan antara bagaimana Anda tampak dan siapa Anda sebenarnya</p>
+        ${renderBarPanel(result.perceived,'perceived')}
+    </div>
+    <div class="chart-wrap">
+        <h2>📊 Perbandingan Public vs Private Self</h2>
+        <div class="chart-grid">
+            <div><div class="chart-box"><canvas id="chartPublic"></canvas></div><div class="chart-label">Public Self</div></div>
+            <div><div class="chart-box"><canvas id="chartPrivate"></canvas></div><div class="chart-label">Private Self</div></div>
+        </div>
+    </div>
+    ${buildSummary(result)}
+    <div class="btn-row">
+        <button class="btn btn-dark" onclick="downloadImg()">📥 Download JPG</button>
+        <button class="btn btn-outline" onclick="window.print()">🖨️ Cetak PDF</button>
+    </div>`;
+
+    renderCharts(result);
+}
+
+// ═══════════════════════════════════════════════════════
+// LOAD DATA
+// ═══════════════════════════════════════════════════════
+async function loadData(){
+    const params=new URLSearchParams(window.location.search);
+    const token=params.get('token')||params.get('x_01');
+    const app=document.getElementById('app');
+    if(!token){hide();app.innerHTML=`<div class="error-box"><h2>❌ Token Tidak Ditemukan</h2><p>Tambahkan ?token=xxx pada URL.</p></div>`;return;}
+    try{
+        const res=await fetch(`https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6?table=nilai1_json&x_01_eq=${token}`,{headers:{'X-Custom-Auth':'admin'}});
+        const json=await res.json();
+        hide();
+        if(json.success&&json.count>0){renderResult(json.data[0]);}
+        else{app.innerHTML=`<div class="error-box"><h2>❌ Data Tidak Ditemukan</h2><p>Token tidak valid atau belum ada data.</p></div>`;}
+    }catch(e){hide();app.innerHTML=`<div class="error-box"><h2>❌ Koneksi Gagal</h2><p>Tidak dapat terhubung ke server.</p></div>`;}
+}
+function hide(){const s=document.getElementById('loadingScreen');s.style.opacity='0';setTimeout(()=>s.style.display='none',500);}
+async function downloadImg(){
+    const btn=event.target;btn.disabled=true;btn.textContent='⏳ Memproses...';
+    try{
+        const canvas=await html2canvas(document.getElementById('app'),{scale:2,backgroundColor:'#f4f4f8'});
+        const a=document.createElement('a');a.download=`Hasil-DISC-${Date.now()}.jpg`;a.href=canvas.toDataURL('image/jpeg',.95);a.click();
+        btn.textContent='✅ Berhasil!';
+    }catch{btn.textContent='❌ Gagal';}
+    setTimeout(()=>{btn.disabled=false;btn.textContent='📥 Download JPG';},2000);
+}
+loadData();
+</script>
+</body>
+</html>

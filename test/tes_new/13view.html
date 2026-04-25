@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seperti Apa Jenis Cinta Saya?</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #fdf2f2 0%, #fce4ec 100%); 
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 20px; 
+            box-shadow: 0 15px 50px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #d63031 0%, #e17055 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 1.8em; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 0.95em; }
+        .content { padding: 30px; }
+        .profile-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border-left: 5px solid #d63031;
+        }
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .profile-item { display: flex; flex-direction: column; }
+        .profile-label { 
+            font-size: 0.85em; 
+            color: #666; 
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .profile-value { 
+            font-size: 1.05em; 
+            color: #2d3436;
+            font-weight: 500;
+        }
+        .chart-section {
+            margin: 30px 0;
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .chart-container { 
+            max-width: 450px; 
+            margin: 0 auto;
+            position: relative;
+        }
+        .result-section {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe9ec 100%);
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 8px solid #d63031;
+            margin: 25px 0;
+        }
+        .result-type {
+            font-size: 1.8em;
+            color: #d63031;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        .result-description {
+            font-size: 1.05em;
+            line-height: 1.8;
+            color: #2d3436;
+            margin-bottom: 20px;
+        }
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 25px 0;
+        }
+        .score-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-top: 3px solid #d63031;
+        }
+        .score-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .score-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #d63031;
+        }
+        .info-section {
+            background: #f1f3f5;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+        }
+        .info-title {
+            font-size: 1.3em;
+            color: #2d3436;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .info-list {
+            list-style: none;
+            padding: 0;
+        }
+        .info-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #dee2e6;
+            line-height: 1.6;
+        }
+        .info-list li:last-child { border-bottom: none; }
+        .info-list strong { color: #d63031; }
+        .advice-section {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border-left: 5px solid #27ae60;
+        }
+        .advice-title {
+            font-size: 1.3em;
+            color: #27ae60;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .advice-list {
+            list-style: none;
+            padding: 0;
+        }
+        .advice-list li {
+            padding: 10px 0 10px 25px;
+            position: relative;
+            line-height: 1.7;
+            color: #2d3436;
+        }
+        .advice-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #d63031 0%, #e17055 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(214, 48, 49, 0.3);
+        }
+        .btn-secondary {
+            background: white;
+            color: #d63031;
+            border: 2px solid #d63031;
+        }
+        .btn-secondary:hover {
+            background: #d63031;
+            color: white;
+        }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+        .error {
+            background: #fff5f5;
+            color: #e74c3c;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 5px solid #e74c3c;
+        }
+        @media print {
+            .buttons { display: none; }
+            body { background: white; }
+            .container { box-shadow: none; }
+        }
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.4em; }
+            .result-type { font-size: 1.4em; }
+            .buttons { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    <div class="loading">Memuat hasil analisis...</div>
+</div>
+
+<script>
+    const AUTH_KEY = "admin";
+    
+    const loveTypes = {
+        Eros: {
+            name: "Eros (Cinta Romantis)",
+            description: "Anda adalah tipe pecinta yang sangat romantis dan penuh gairah. Ketertarikan fisik dan kimia emosional sangat penting bagi Anda dalam menjalin hubungan.",
+            characteristics: [
+                "Sangat mementingkan chemistry dan ketertarikan fisik",
+                "Mudah jatuh cinta dan merasakan perasaan yang intens",
+                "Menghargai momen-momen romantis dan keintiman",
+                "Cenderung idealis dalam memandang cinta"
+            ],
+            advice: [
+                "Jangan hanya fokus pada aspek fisik, kembangkan juga koneksi emosional yang mendalam",
+                "Berikan waktu untuk mengenal pasangan secara menyeluruh",
+                "Kelola ekspektasi agar tetap realistis",
+                "Jaga keseimbangan antara passion dan komitmen jangka panjang"
+            ]
+        },
+        Ludus: {
+            name: "Ludus (Cinta Permainan)",
+            description: "Anda memandang cinta sebagai permainan yang menyenangkan dan petualangan. Anda menikmati kebebasan dan tidak terburu-buru untuk terikat dalam komitmen serius.",
+            characteristics: [
+                "Menganggap cinta sebagai sesuatu yang menyenangkan dan bebas",
+                "Tidak suka terikat komitmen yang terlalu serius",
+                "Menikmati proses mengenal banyak orang",
+                "Cenderung menghindari drama dan konflik emosional"
+            ],
+            advice: [
+                "Jujur dengan pasangan tentang ekspektasi Anda dalam hubungan",
+                "Hormati perasaan orang lain, jangan sampai menyakiti",
+                "Pertimbangkan bahwa komitmen bisa membawa kebahagiaan yang lebih mendalam",
+                "Evaluasi apakah gaya cinta Anda sudah sesuai dengan tahap hidup Anda saat ini"
+            ]
+        },
+        Storge: {
+            name: "Storge (Cinta Persahabatan)",
+            description: "Cinta Anda tumbuh dari fondasi persahabatan yang kuat. Anda membangun hubungan secara bertahap berdasarkan kepercayaan, kesamaan, dan kenyamanan bersama.",
+            characteristics: [
+                "Hubungan dimulai dari persahabatan yang mendalam",
+                "Mengutamakan kenyamanan dan kepercayaan",
+                "Cinta berkembang secara perlahan dan alami",
+                "Menghargai kebersamaan dan kebiasaan bersama"
+            ],
+            advice: [
+                "Jangan takut untuk menunjukkan sisi romantis Anda sesekali",
+                "Komunikasikan perasaan cinta secara verbal, jangan hanya lewat tindakan",
+                "Ciptakan momen-momen istimewa untuk menjaga api cinta tetap menyala",
+                "Hargai fondasi persahabatan yang sudah Andabangun"
+            ]
+        },
+        Pragma: {
+            name: "Pragma (Cinta Praktis)",
+            description: "Anda adalah tipe yang praktis dan logis dalam memilih pasangan. Anda mempertimbangkan berbagai faktor seperti kecocokan nilai, tujuan hidup, dan kompatibilitas jangka panjang.",
+            characteristics: [
+                "Memilih pasangan berdasarkan kriteria yang jelas",
+                "Mengutamakan kecocokan nilai, latar belakang, dan tujuan",
+                "Berpikir jangka panjang dalam hubungan",
+                "Realistis dan rasional dalam memandang cinta"
+            ],
+            advice: [
+                "Jangan terlalu kaku dengan checklist, beri ruang untuk spontanitas",
+                "Dengarkan juga kata hati, bukan hanya logika",
+                "Ingat bahwa hubungan butuh usaha, bukan hanya kecocokan di atas kertas",
+                "Belajar untuk lebih fleksibel dan menerima perbedaan"
+            ]
+        },
+        Mania: {
+            name: "Mania (Cinta Obsesif)",
+            description: "Anda mengalami cinta dengan intensitas yang sangat tinggi, seringkali diwarnai dengan perasaan cemburu, posesif, dan ketergantungan emosional yang kuat pada pasangan.",
+            characteristics: [
+                "Merasakan cinta dengan sangat intens dan mendalam",
+                "Cenderung cemburu dan membutuhkan banyak perhatian",
+                "Sering merasa insecure dalam hubungan",
+                "Kebahagiaan sangat bergantung pada pasangan"
+            ],
+            advice: [
+                "Kembangkan kepercayaan diri dan kemandirian emosional",
+                "Belajar mengelola rasa cemburu dengan berkomunikasi secara sehat",
+                "Jangan jadikan pasangan sebagai satu-satunya sumber kebahagiaan",
+                "Pertimbangkan konseling jika perasaan posesif mengganggu hubungan",
+                "Bangun hobi dan relasi sosial di luar hubungan romantis"
+            ]
+        },
+        Agape: {
+            name: "Agape (Cinta Tanpa Pamrih)",
+            description: "Anda adalah pecinta sejati yang memberikan cinta tanpa syarat. Kebahagiaan pasangan adalah prioritas utama Anda, bahkan jika harus berkorban untuk mereka.",
+            characteristics: [
+                "Sangat peduli dan penuh kasih sayang",
+                "Rela berkorban demi kebahagiaan pasangan",
+                "Mencintai tanpa mengharapkan balasan",
+                "Sangat setia dan komit dalam hubungan"
+            ],
+            advice: [
+                "Jangan lupakan kebutuhan dan kebahagiaan diri sendiri",
+                "Pastikan pengorbanan Anda dihargai dan tidak disalahgunakan",
+                "Tetapkan batasan yang sehat dalam hubungan",
+                "Cinta yang sehat adalah timbal balik, bukan satu arah",
+                "Ingat bahwa mencintai diri sendiri juga penting"
+            ]
+        }
+    };
+
+    async function loadData() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        if (!token) {
+            showError("Token tidak ditemukan di URL");
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6?table=nilai1_json&x_01_eq=${token}`, 
+                { headers: { 'X-Custom-Auth': AUTH_KEY } }
+            );
+            
+            const res = await response.json();
+            
+            if (res.success && res.count > 0) {
+                renderResults(res.data[0]);
+            } else {
+                showError("Data tidak ditemukan");
+            }
+        } catch (error) {
+            showError("Gagal memuat data: " + error.message);
+        }
+    }
+
+    function renderResults(data) {
+        const profile = JSON.parse(data.x_02 || "{}");
+
+        // Ambil jawaban dari x_07
+        const x07 = JSON.parse(data.x_07 || "{}");
+        const rawJawaban = x07['input-tes-jenis-cinta'] !== undefined
+            ? x07['input-tes-jenis-cinta']
+            : (x07['who_13'] !== undefined ? x07['who_13'] : "");
+
+        if (!rawJawaban) {
+            showError("Peserta belum mengerjakan Tes Jenis Cinta.");
+            return;
+        }
+
+        // Konversi jawaban A-E ke nilai 1-5, lalu hitung skor per tipe (7 soal/tipe)
+        const jawabanArr = rawJawaban.split(';').filter(v => v !== '');
+        const nilaiMap = { A: 1, B: 2, C: 3, D: 4, E: 5 };
+        const typesList = ['Eros', 'Ludus', 'Storge', 'Pragma', 'Mania', 'Agape'];
+        const scores = {};
+
+        typesList.forEach((type, idx) => {
+            let total = 0;
+            for (let i = 0; i < 7; i++) {
+                const jawaban = jawabanArr[idx * 7 + i] || '';
+                total += nilaiMap[jawaban] || 0;
+            }
+            scores[type] = total;
+        });
+
+        const dominant = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+        const dominantInfo = loveTypes[dominant];
+
+        const html = `
+            <div class="header">
+                <h1>Seperti Apa Jenis Cinta Saya?</h1>
+                <p>Hasil Analisis Berdasarkan Teori Lee's Love Styles</p>
+            </div>
+            
+            <div class="content" id="printable-area">
+                <div class="profile-section">
+                    <h3 style="margin-bottom: 15px; color: #2d3436;">Informasi Peserta</h3>
+                    <div class="profile-grid">
+                        <div class="profile-item">
+                            <span class="profile-label">Nama</span>
+                            <span class="profile-value">${profile.nama}</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="profile-label">Usia</span>
+                            <span class="profile-value">${profile.usia} Tahun</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="profile-label">Pendidikan</span>
+                            <span class="profile-value">${profile.pendidikan}</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="profile-label">Tanggal Tes</span>
+                            <span class="profile-value">${data.x_05}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <div class="result-type">${dominantInfo.name}</div>
+                    <div class="result-description">${dominantInfo.description}</div>
+                </div>
+
+                <div class="chart-section">
+                    <h3 style="text-align: center; margin-bottom: 20px; color: #2d3436;">Grafik Skor Gaya Cinta</h3>
+                    <div class="chart-container">
+                        <canvas id="loveChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="scores-grid">
+                    ${typesList.map(type => `
+                        <div class="score-card">
+                            <div class="score-label">${type}</div>
+                            <div class="score-value">${scores[type]}</div>
+                            <div style="font-size: 0.8em; color: #999; margin-top: 5px;">dari 35</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">Karakteristik Anda</div>
+                    <ul class="info-list">
+                        ${dominantInfo.characteristics.map(char => `<li><strong>•</strong> ${char}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="advice-section">
+                    <div class="advice-title">Saran untuk Anda</div>
+                    <ul class="advice-list">
+                        ${dominantInfo.advice.map(adv => `<li>${adv}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">Tentang 6 Gaya Cinta</div>
+                    <ul class="info-list">
+                        <li><strong>Eros:</strong> Cinta romantis yang penuh gairah dan ketertarikan fisik</li>
+                        <li><strong>Ludus:</strong> Cinta sebagai permainan yang menyenangkan tanpa komitmen berat</li>
+                        <li><strong>Storge:</strong> Cinta yang tumbuh dari persahabatan dan kepercayaan</li>
+                        <li><strong>Pragma:</strong> Cinta praktis berdasarkan kompatibilitas dan logika</li>
+                        <li><strong>Mania:</strong> Cinta obsesif yang intens dengan kecenderungan posesif</li>
+                        <li><strong>Agape:</strong> Cinta tanpa pamrih yang penuh pengorbanan</li>
+                    </ul>
+                </div>
+
+                <div class="buttons">
+                    <button class="btn-primary" onclick="window.print()">🖨️ Cetak Laporan</button>
+                    <button class="btn-secondary" onclick="downloadAsImage()">📥 Download Gambar</button>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('app').innerHTML = html;
+        drawChart(typesList, scores);
+    }
+
+    function drawChart(types, scores) {
+        const ctx = document.getElementById('loveChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: types,
+                datasets: [{
+                    label: 'Skor Anda',
+                    data: types.map(t => scores[t]),
+                    backgroundColor: 'rgba(214, 48, 49, 0.2)',
+                    borderColor: '#d63031',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#d63031',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#d63031',
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        suggestedMin: 7,
+                        suggestedMax: 35,
+                        ticks: {
+                            stepSize: 5,
+                            font: { size: 12 }
+                        },
+                        pointLabels: {
+                            font: { size: 13, weight: '600' }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Skor: ${context.parsed.r} dari 35`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function downloadAsImage() {
+        const element = document.getElementById('printable-area');
+        const buttons = document.querySelector('.buttons');
+        buttons.style.display = 'none';
+        
+        html2canvas(element, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            logging: false,
+            windowWidth: 1200
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Hasil-Jenis-Cinta-${new Date().getTime()}.jpg`;
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            link.click();
+            buttons.style.display = 'grid';
+        });
+    }
+
+    function showError(message) {
+        document.getElementById('app').innerHTML = `
+            <div class="header">
+                <h1>Seperti Apa Jenis Cinta Saya?</h1>
+            </div>
+            <div class="content">
+                <div class="error">
+                    <h3>Terjadi Kesalahan</h3>
+                    <p>${message}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    loadData();
+</script>
+
+</body>
+</html>

@@ -239,11 +239,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   .numpad-btn{width:46px;height:46px;font-size:1.05em;border-radius:10px}.numpad-btn.btn-space{width:80px}
 }
 @media(min-width:601px){#bottomBar{display:none!important}}
-/* ── WHO DUAL MODE ── */
-.who-dual-hint{text-align:center;padding:8px 16px;border-radius:99px;font-size:.82em;font-weight:700;margin-bottom:16px;transition:all .3s}
-.who-dual-hint.step1{background:#dbeafe;color:var(--primary)}
-.who-dual-hint.step2{background:#fef3c7;color:#92400e}
-.opt-grid-btn.who-selected-first{display:none!important}
 #screenTunggu .card{text-align:center}
 .tunggu-icon{font-size:3em;margin-bottom:16px}
 .tunggu-title{font-size:1.3em;font-weight:700;color:var(--text);margin-bottom:10px}
@@ -499,7 +494,7 @@ const ALL_CONFIG=[
 ];
 const API_W='https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
 const API_R='https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
-const TBL='nilai1_json',TBL_P='alat_tes',TBL_K='admin_kontrol',AUTH='admin',WHO_B='https://cipta.my.id/who2/';
+const TBL='nilai1_json',TBL_P='alat_tes',TBL_K='admin_kontrol',AUTH='admin',WHO_B='https://cipta.my.id/who1/';
 const CHARS='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
 let cu=null,cfg=null,qs=[],qi=0,ua=[],sc=0,tl=0,ti=null,tsi=null,tfci=null;
@@ -981,15 +976,7 @@ async function wOpen(idx){
   sl('Memuat tes...');
   try{
     const b=wBL[idx];if(!b.data)b.data=await(await fetch(b.dataUrl+'?v='+Date.now())).json();
-    const d=b.data;
-    cfg={
-      _taskId:b._taskId,title:d.title||'Tes',desc:d.desc||'',
-      instructions:d.instructions||'',exImgTop:d.exImgTop||'',
-      exImgBottom:d.exImgBottom||'',exNote:d.exNote||'',
-      saveField:d.saveField||'x_07',logField:d.logField||null,
-      dataUrl:b.dataUrl,_isWho:true,
-      _whoDual:(d.type||'')==='who_dual'  // ← tandai mode dual
-    };
+    const d=b.data;cfg={_taskId:b._taskId,title:d.title||'Tes',desc:d.desc||'',instructions:d.instructions||'',exImgTop:d.exImgTop||'',exImgBottom:d.exImgBottom||'',exNote:d.exNote||'',saveField:d.saveField||'x_07',logField:d.logField||null,dataUrl:b.dataUrl,_isWho:true};
     hl();$('startTitle').innerText=cfg.title;$('startInstructions').innerText=cfg.instructions||cfg.desc;$('exNote').innerText=cfg.exNote;
     const it=$('exImgTop'),ib=$('exImgBottom');it.style.display=cfg.exImgTop?'':'none';ib.style.display=cfg.exImgBottom?'':'none';
     if(cfg.exImgTop)it.src=cfg.exImgTop;if(cfg.exImgBottom)ib.src=cfg.exImgBottom;
@@ -1015,95 +1002,28 @@ async function wStart(){
   try{
     const d=wBL[wBI].data;wQs=d.questions||[];if(!wQs.length)throw new Error('Soal kosong.');
     const sv=localStorage.getItem('_st_'+cfg._taskId);
-    if(sv){
-      const s=JSON.parse(sv);
-      wQi=s.qIndex||0;wUA=s.userAnswers||[];wSkip=s.skippedIndices||[];wAns=s.answeredIndices||[];
-      wDualFirst=s.dualFirst||null;  // resume state dual
-    }
-    else{wQi=0;wUA=[];wSkip=[];wAns=[];wDualFirst=null;}
+    if(sv){const s=JSON.parse(sv);wQi=s.qIndex||0;wUA=s.userAnswers||[];wSkip=s.skippedIndices||[];wAns=s.answeredIndices||[]}
+    else{wQi=0;wUA=[];wSkip=[];wAns=[]}
     $('testTitle').innerText=cfg.title;ss('screenTest');wRQ();
   }catch(e){alert('Gagal: '+e.message);if(wBL.length>1)wDash()}finally{hl()}
 }
-
-// ── State tambahan untuk mode dual ──
-let wDualFirst=null; // menyimpan pilihan pertama (paling sesuai)
-
 function wRQ(){
-  wUP();
-  if(wQi<0||wQi>=wQs.length){if(wSkip.length>0){wQi=wSkip.shift();wSS()}else{wEnd();return}}
-  if(cfg._whoDual){wRQ_dual();return}  // ← arahkan ke render dual
-  // ── Mode normal (1 klik) ──
+  wUP();if(wQi<0||wQi>=wQs.length){if(wSkip.length>0){wQi=wSkip.shift();wSS()}else{wEnd();return}}
   const q=wQs[wQi],opts=q.options||{};
-  const wb=wSkip.includes(wQi)?' '+SB:'';let btns='';
-  for(const k of Object.keys(opts)){if(!opts[k])continue;btns+=`<button class="opt-grid-btn" onclick="wSC('${k}')"><span class="opt-key">${k}</span>${esc(opts[k])}</button>`}
+  const wb=wSkip.includes(wQi)?' '+SB:'';let btns='';for(const k of Object.keys(opts)){if(!opts[k])continue;btns+=`<button class="opt-grid-btn" onclick="wSC('${k}')"><span class="opt-key">${k}</span>${esc(opts[k])}</button>`}
   $('questionContent').innerHTML=`<div class="q-label">Soal No. ${wQi+1}${wb}</div><div class="q-text">${esc(q.question)}</div><div class="options-grid">${btns}</div>`;
-  $('actionBar').innerHTML='';
+  $('actionBar').innerHTML=`<button class="btn btn-outline btn-sm" onclick="wSK()">Lewati</button>`;
 }
-
-// ── Render mode dual ──
-function wRQ_dual(){
-  const q=wQs[wQi],opts=q.options||{};
-  const wb=wSkip.includes(wQi)?' '+SB:'';
-  const isStep2=wDualFirst!==null;
-  const hintCls=isStep2?'step2':'step1';
-  const hintTxt=isStep2
-    ?`<b style="color:#92400e">Langkah 2 / 2</b> — Pilih yang <u>PALING TIDAK SESUAI</u> diri Anda`
-    :`<b style="color:var(--primary)">Langkah 1 / 2</b> — Pilih yang <u>PALING SESUAI</u> diri Anda`;
-  let btns='';
-  for(const k of Object.keys(opts)){
-    if(!opts[k])continue;
-    const isFirst=k===wDualFirst;
-    const cls=isFirst?'opt-grid-btn who-selected-first':'opt-grid-btn';
-    const onclk=isFirst?'':`onclick="wSC_dual('${k}')"`;
-    const tag=isFirst?` <span style="font-size:.7em;background:var(--primary);color:#fff;border-radius:99px;padding:2px 8px;margin-left:4px">✓ Dipilih</span>`:'';
-    btns+=`<button class="${cls}" ${onclk}><span class="opt-key">${k}</span>${esc(opts[k])}${tag}</button>`;
-  }
-  $('questionContent').innerHTML=`
-    <div class="q-label">Soal No. ${wQi+1}${wb}</div>
-    <div class="q-text">${esc(q.question)}</div>
-    <div class="who-dual-hint ${hintCls}">${hintTxt}</div>
-    <div class="options-grid">${btns}</div>`;
-  $('actionBar').innerHTML='';
-}
-
-// ── Handler klik mode dual ──
-function wSC_dual(k){
-  if(wDualFirst===null){
-    // Klik pertama: simpan, render ulang dengan step 2
-    wDualFirst=k;
-    wSS();
-    wRQ_dual();
-  } else {
-    // Klik kedua: gabung, simpan ke wUA, lanjut
-    const combined=wDualFirst+'_'+k;
-    wDualFirst=null;
-    wMA(wQi);
-    wUA.push(combined);
-    wSS();
-    wGN();
-  }
-}
-
 function wSC(k){wMA(wQi);wUA.push(k);wSS();wGN()}
-function wSS(){localStorage.setItem('_st_'+cfg._taskId,JSON.stringify({qIndex:wQi,userAnswers:wUA,skippedIndices:wSkip,answeredIndices:wAns,dualFirst:wDualFirst}))}
-function wGN(){
-  let f=-1;for(let i=wQi+1;i<wQs.length;i++){if(!wAns.includes(i)&&!wSkip.includes(i)){f=i;break}}
-  if(f!==-1){wQi=f}else if(wSkip.length>0){wQi=wSkip.shift()}else{wSS();wEnd();return}
-  wDualFirst=null;wSS();wRQ();
-}
-function wSK(){
-  if(!wSkip.includes(wQi)&&!wAns.includes(wQi)){wSkip.push(wQi);wUA.push('SKIP')}
-  wDualFirst=null;
-  let f=-1;for(let i=wQi+1;i<wQs.length;i++){if(!wAns.includes(i)&&!wSkip.includes(i)){f=i;break}}
-  if(f!==-1){wQi=f}else if(wSkip.length>0){wQi=wSkip.shift()}else{wSS();wEnd();return}
-  wSS();wRQ();
-}
+function wSS(){localStorage.setItem('_st_'+cfg._taskId,JSON.stringify({qIndex:wQi,userAnswers:wUA,skippedIndices:wSkip,answeredIndices:wAns}))}
+function wGN(){let f=-1;for(let i=wQi+1;i<wQs.length;i++){if(!wAns.includes(i)&&!wSkip.includes(i)){f=i;break}}if(f!==-1){wQi=f}else if(wSkip.length>0){wQi=wSkip.shift()}else{wSS();wEnd();return}wSS();wRQ()}
+function wSK(){if(!wSkip.includes(wQi)&&!wAns.includes(wQi)){wSkip.push(wQi);wUA.push('SKIP')}let f=-1;for(let i=wQi+1;i<wQs.length;i++){if(!wAns.includes(i)&&!wSkip.includes(i)){f=i;break}}if(f!==-1){wQi=f}else if(wSkip.length>0){wQi=wSkip.shift()}else{wSS();wEnd();return}wSS();wRQ()}
 function wMA(idx){if(!wAns.includes(idx))wAns.push(idx);const p=wSkip.indexOf(idx);if(p!==-1){wSkip.splice(p,1);const u=wUA.indexOf('SKIP');if(u!==-1)wUA.splice(u,1)}}
 function wUP(){const t=wQs.length,d=wAns.length;$('progressBar').style.width=(t?Math.round((d/t)*100):0)+'%';let info=`Soal ${wQi+1} / ${t}`;if(wSkip.length>0)info+=` · ⟳ ${wSkip.length} dilewati`;$('progressInfo').innerText=info;const bt=$('bbTitle'),bp=$('bbProgress');if(bt)bt.innerText=cfg.title||'';if(bp)bp.innerText=info}
 function wAfT(){const i=wFindNext();if(i!==-1){wBI=i;wOpen(i)}else goNext2()}
 async function wEnd(){
   sl('Menyimpan...');const id=localStorage.getItem('db_id');
-  try{const cur=await aG(id),sf=cfg.saveField;let o={};try{o=JSON.parse(cur.data[sf]||'{}')}catch{}o[cfg._taskId]=wUA.join(';')+';';const v=JSON.stringify(o);await aP(id,{[sf]:v});localStorage.removeItem('_st_'+cfg._taskId);wDualFirst=null;cu=cur.data;cu[sf]=v;hl();wAfT()}
+  try{const cur=await aG(id),sf=cfg.saveField;let o={};try{o=JSON.parse(cur.data[sf]||'{}')}catch{}o[cfg._taskId]=wUA.join(';')+';';const v=JSON.stringify(o);await aP(id,{[sf]:v});localStorage.removeItem('_st_'+cfg._taskId);cu=cur.data;cu[sf]=v;hl();wAfT()}
   catch(e){alert('Gagal: '+e.message);hl()}
 }
 
