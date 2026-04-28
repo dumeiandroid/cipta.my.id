@@ -48,13 +48,13 @@ h1,h2,h3{font-family:'DM Serif Display',serif;font-weight:400}
 
 /* ─── TOPBAR (mobile) ─── */
 .topbar{
-  display:none;position:fixed;top:0;left:0;right:0;height:54px;
+  display:flex;position:fixed;top:0;left:0;right:0;height:54px;
   background:var(--text);z-index:80;align-items:center;justify-content:space-between;
   padding:0 16px;border-bottom:1px solid rgba(255,255,255,.08);
 }
 .topbar-logo{font-family:'DM Serif Display',serif;font-size:17px;color:#fff;letter-spacing:-.3px}
 .topbar-right{display:flex;align-items:center;gap:8px}
-.burger{background:none;border:none;cursor:pointer;padding:6px;color:rgba(255,255,255,.8);display:flex;flex-direction:column;gap:5px}
+.burger{background:none;border:none;cursor:pointer;padding:12px;color:rgba(255,255,255,.8);display:flex;flex-direction:column;gap:5px;min-width:48px;min-height:48px;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
 .burger span{display:block;width:22px;height:2px;background:currentColor;border-radius:2px;transition:all .25s}
 .burger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
 .burger.open span:nth-child(2){opacity:0;transform:scaleX(0)}
@@ -62,7 +62,7 @@ h1,h2,h3{font-family:'DM Serif Display',serif;font-weight:400}
 
 /* ─── SIDEBAR OVERLAY (mobile) ─── */
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:88;opacity:0;transition:opacity .25s}
-.sidebar-overlay.active{opacity:1}
+.sidebar-overlay.active{opacity:1;pointer-events:all}
 
 /* ─── LAYOUT ─── */
 .shell{display:grid;grid-template-columns:var(--sidebar-w) 1fr;min-height:100vh}
@@ -203,23 +203,29 @@ h1,h2,h3{font-family:'DM Serif Display',serif;font-weight:400}
 
 /* ─── MOBILE USER BADGE (topbar) ─── */
 .user-badge{
-  display:none;align-items:center;gap:6px;background:rgba(255,255,255,.1);
+  display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);
   border-radius:20px;padding:5px 10px 5px 6px;
 }
 .user-badge-av{width:26px;height:26px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
 .user-badge-name{font-size:12px;color:rgba(255,255,255,.85);font-weight:500}
 
-/* ─── RESPONSIVE ─── */
+/* ─── DESKTOP: sidebar visible, topbar hidden ─── */
+@media(min-width:769px){
+  .topbar{display:none !important}
+  .sidebar-overlay{display:none !important}
+  .shell{padding-top:0}
+  .sidebar{transform:none !important;position:sticky}
+}
+
+/* ─── MOBILE: topbar + burger, sidebar hidden by default ─── */
 @media(max-width:768px){
-  .topbar{display:flex}
-  .user-badge{display:flex}
   .shell{grid-template-columns:1fr;padding-top:54px}
   .sidebar{
     position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);
     transform:translateX(-100%);z-index:90;height:100vh;
   }
   .sidebar.open{transform:translateX(0)}
-  .sidebar-overlay{display:block}
+  .sidebar-overlay{display:block;pointer-events:none}
   .main{padding:20px 16px}
   .metric-grid{grid-template-columns:1fr 1fr}
   .gap-grid{grid-template-columns:1fr 1fr}
@@ -232,7 +238,6 @@ h1,h2,h3{font-family:'DM Serif Display',serif;font-weight:400}
   .card{padding:16px 16px}
   .actions{flex-direction:column;align-items:stretch}
   .actions .btn{text-align:center;justify-content:center}
-  .detail-jenjang~.detail-jenjang{grid-template-columns:1fr}
 }
 @media(max-width:480px){
   .metric-grid{grid-template-columns:1fr 1fr}
@@ -271,7 +276,7 @@ h1,h2,h3{font-family:'DM Serif Display',serif;font-weight:400}
   </div>
 </div>
 
-<!-- ─── TOPBAR (mobile) ─── */
+<!-- ─── TOPBAR (mobile) ─── -->
 <div class="topbar">
   <span class="topbar-logo">PAK Dosen</span>
   <div class="topbar-right">
@@ -279,7 +284,7 @@ h1,h2,h3{font-family:'DM Serif Display',serif;font-weight:400}
       <div class="user-badge-av" id="topbar-avatar">A</div>
       <span class="user-badge-name" id="topbar-uname">Admin</span>
     </div>
-    <button class="burger" id="burger-btn" onclick="toggleSidebar()" aria-label="Menu">
+    <button class="burger" id="burger-btn" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>
   </div>
@@ -753,7 +758,7 @@ async function doLogin(){
     }
   }catch(e){
     // Fallback: login hardcode jika API gagal (untuk testing)
-    if(user==='x_01' && pass==='x_02'){
+    if(user==='admin' && pass==='admin123'){
       currentUser = {id:1, username:'x_01', displayName:'Admin'};
       sessionStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
       if(remember) localStorage.setItem(REMEMBER_KEY, JSON.stringify({user:currentUser, savedUser:user, ts:Date.now()}));
@@ -782,8 +787,8 @@ function activateApp(){
   // Tampilkan nama user di topbar & sidebar
   if(currentUser){
     const name = currentUser.displayName||currentUser.username||'Admin';
-    document.getElementById('topbar-uname').textContent = name;
-    document.getElementById('topbar-avatar').textContent = name.charAt(0).toUpperCase();
+    const el1=document.getElementById('topbar-uname'); if(el1) el1.textContent=name;
+    const el2=document.getElementById('topbar-avatar'); if(el2) el2.textContent=name.charAt(0).toUpperCase();
   }
   loadLocal();
   renderAll();
@@ -1343,6 +1348,11 @@ function toast(msg){
 /* ════════════════════════════════════════
    INIT
    ════════════════════════════════════════ */
+document.getElementById('burger-btn').addEventListener('click', function(e){
+  e.preventDefault();
+  e.stopPropagation();
+  toggleSidebar();
+});
 checkAuth();
 </script>
 </body>
