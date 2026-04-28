@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Tracker PAK Dosen</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f6f2;--surface:#ffffff;--surface2:#f0ede6;--border:#e2ddd6;
+  --text:#1a1814;--text2:#6b6560;--text3:#a09b95;
+  --blue:#1a56c4;--blue-l:#e8f0fd;--blue-m:#c5d7fa;
+  --green:#1a7a4a;--green-l:#e6f5ed;
+  --amber:#92580a;--amber-l:#fef3e2;
+  --red:#b91c1c;--red-l:#fee2e2;
+  --teal:#0e7490;--teal-l:#e0f5f9;
+  --radius:10px;--radius-lg:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
+h1,h2,h3{font-family:'DM Serif Display',serif;font-weight:400}
+
+/* ─── LAYOUT ─── */
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.sidebar{background:var(--text);color:#fff;padding:0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.sb-logo{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sb-logo h1{font-size:20px;color:#fff;letter-spacing:-.3px}
+.sb-logo p{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;font-family:'DM Sans',sans-serif}
+.sb-nav{padding:16px 12px;flex:1;overflow-y:auto}
+.nav-section{font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.3);font-weight:600;margin:16px 0 6px 8px;font-family:'DM Sans',sans-serif}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.7);font-size:13px;transition:all .15s;margin-bottom:2px;font-family:'DM Sans',sans-serif}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:var(--blue);color:#fff}
+.nav-icon{width:16px;height:16px;opacity:.7;flex-shrink:0}
+.sb-profile{padding:16px 20px;border-top:1px solid rgba(255,255,255,.1)}
+.sb-profile-name{font-size:12px;color:rgba(255,255,255,.8);font-weight:500}
+.sb-profile-sub{font-size:11px;color:rgba(255,255,255,.4)}
+
+.main{overflow-y:auto;padding:32px 36px}
+.page-header{margin-bottom:28px}
+.page-title{font-size:28px;color:var(--text);letter-spacing:-.5px}
+.page-sub{font-size:13px;color:var(--text2);margin-top:4px}
+
+/* ─── CARDS ─── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;margin-bottom:16px}
+.card-sm{padding:16px 18px}
+.card-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:4px}
+.card-sub{font-size:12px;color:var(--text2);margin-bottom:14px}
+
+/* ─── METRIC GRID ─── */
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+.metric-label{font-size:11px;color:var(--text3);letter-spacing:.3px;margin-bottom:6px;text-transform:uppercase;font-weight:500}
+.metric-val{font-size:26px;font-family:'DM Serif Display',serif;color:var(--text)}
+.metric-sub{font-size:11px;color:var(--text2);margin-top:3px}
+
+/* ─── GAP CARDS ─── */
+.gap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.gap-card{border-radius:var(--radius);padding:16px 18px;border:1px solid}
+.gap-card.ok{background:var(--green-l);border-color:#a7d7bc;--gc:var(--green)}
+.gap-card.near{background:var(--blue-l);border-color:var(--blue-m);--gc:var(--blue)}
+.gap-card.far{background:var(--amber-l);border-color:#f5c97a;--gc:var(--amber)}
+.gap-card.vfar{background:#fef2f2;border-color:#fca5a5;--gc:var(--red)}
+.gap-label{font-size:11px;font-weight:600;color:var(--gc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.gap-val{font-size:22px;font-family:'DM Serif Display',serif;color:var(--text)}
+.gap-sub{font-size:11px;color:var(--text2);margin-top:3px}
+.bar{height:5px;background:rgba(0,0,0,.08);border-radius:99px;overflow:hidden;margin-top:8px}
+.bf{height:100%;border-radius:99px;background:var(--gc)}
+
+/* ─── TABLE ─── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{font-size:11px;font-weight:600;color:var(--text2);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);letter-spacing:.3px}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl-ok{color:var(--green);font-weight:500}
+.tbl-no{color:var(--red)}
+.tbl-warn{color:var(--amber)}
+
+/* ─── FORM ─── */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.fi{display:flex;flex-direction:column;gap:5px}
+.fi.full{grid-column:1/-1}
+.fi label{font-size:12px;color:var(--text2);font-weight:500}
+.fi input,.fi select,.fi textarea{padding:8px 12px;font-size:13px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border .15s}
+.fi input:focus,.fi select:focus,.fi textarea:focus{border-color:var(--blue)}
+.fi .hint{font-size:11px;color:var(--text3)}
+.fi textarea{min-height:60px;resize:vertical}
+
+/* ─── BUTTONS ─── */
+.btn{padding:8px 18px;font-size:13px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s}
+.btn:hover{background:var(--surface2)}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-primary:hover{background:#1448a8}
+.btn-danger{border-color:var(--red);color:var(--red)}
+.btn-danger:hover{background:var(--red-l)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px}
+.actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center}
+
+/* ─── BADGE ─── */
+.badge{display:inline-block;padding:2px 9px;font-size:11px;border-radius:99px;font-weight:500}
+.b-green{background:var(--green-l);color:var(--green)}
+.b-blue{background:var(--blue-l);color:var(--blue)}
+.b-amber{background:var(--amber-l);color:var(--amber)}
+.b-red{background:var(--red-l);color:var(--red)}
+.b-teal{background:var(--teal-l);color:var(--teal)}
+.b-gray{background:var(--surface2);color:var(--text2)}
+
+/* ─── KARYA LIST ─── */
+.karya-item{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);gap:12px}
+.karya-item:last-child{border-bottom:none}
+.karya-title{font-size:13px;color:var(--text);font-weight:500}
+.karya-meta{font-size:11px;color:var(--text2);margin-top:3px}
+.karya-ak{font-size:14px;font-weight:600;color:var(--blue);text-align:right;min-width:55px}
+
+/* ─── SYARAT ─── */
+.sy-row{display:flex;align-items:flex-start;gap:10px;padding:8px 12px;border-radius:8px;background:var(--surface2);margin-bottom:6px}
+.sy-row input{flex-shrink:0;margin-top:2px;accent-color:var(--blue)}
+.sy-text{font-size:12px;color:var(--text);flex:1;line-height:1.5}
+.sy-badge{font-size:10px;padding:2px 7px;border-radius:99px;flex-shrink:0;font-weight:600}
+
+/* ─── DOSEN SELECTOR ─── */
+.dosen-bar{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
+.dosen-select{flex:1;min-width:200px}
+
+/* ─── MODAL ─── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--surface);border-radius:var(--radius-lg);padding:24px 26px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;border:1px solid var(--border)}
+.modal-title{font-size:18px;margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--text2);margin-bottom:18px}
+.modal-close{float:right;cursor:pointer;font-size:18px;color:var(--text2);line-height:1}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;z-index:200;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ─── API STATUS ─── */
+.api-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+.api-dot.ok{background:var(--green)}.api-dot.err{background:var(--red)}.api-dot.loading{background:var(--amber)}
+
+/* ─── DETAIL JENJANG ─── */
+.detail-jenjang{background:var(--surface2);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px}
+.dj-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.dj-title{font-size:14px;font-weight:600;color:var(--text)}
+.prow{margin-bottom:7px}
+.prow-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:3px}
+
+.tab-bar{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto}
+.tab{padding:9px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text2);background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap;font-family:'DM Sans',sans-serif;font-weight:500}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.pane{display:none}.pane.active{display:block}
+
+@media(max-width:768px){
+  .shell{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .main{padding:20px 16px}
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <h1>PAK Dosen</h1>
+    <p>Tracker Angka Kredit · PO 2019</p>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-section">Menu Utama</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2V2zm0 7h5v5H2V9zm7-7h5v5H9V2zm0 7h5v5H9V9z"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" onclick="showPage('gap')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 11h3v4H1v-4zm4-5h3v9H5V6zm4-4h3v13H9V2zm4 2h3v11h-3V4z"/></svg>
+      Gap Analysis
+    </div>
+    <div class="nav-item" onclick="showPage('karya')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M4 0h8l4 4v11a1 1 0 01-1 1H1a1 1 0 01-1-1V1a1 1 0 011-1h3zm0 1H2v13h12V5h-3a1 1 0 01-1-1V1zm5 0v3h3L9 1zM4 7h8v1H4V7zm0 2h8v1H4V9zm0 2h5v1H4v-1z"/></svg>
+      Karya Ilmiah
+    </div>
+    <div class="nav-item" onclick="showPage('kegiatan')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H2a1 1 0 01-1-1V2zm1 0v12h12V2H2zm2 2h8v1H4V4zm0 2h5v1H4V6zm0 2h8v1H4V8zm0 2h5v1H4v-1z"/></svg>
+      Kegiatan Lain
+    </div>
+    <div class="nav-item" onclick="showPage('syarat')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M13.5 2l-7.5 7.5-3-3L2 7.5l4.5 4.5 9-9L13.5 2z"/></svg>
+      Syarat Khusus
+    </div>
+    <div class="nav-section">Data</div>
+    <div class="nav-item" onclick="showPage('profil')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6a5 5 0 0110 0H3z"/></svg>
+      Profil Dosen
+    </div>
+    <div class="nav-item" onclick="showPage('daftar')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2h14v2H1V2zm0 4h14v2H1V6zm0 4h14v2H1v-2zm0 4h8v2H1v-2z"/></svg>
+      Daftar Dosen
+    </div>
+  </nav>
+  <div class="sb-profile">
+    <div class="sb-profile-name" id="sb-nama">—</div>
+    <div class="sb-profile-sub" id="sb-jabatan">Belum memilih profil</div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+  <!-- API STATUS BAR -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:8px">
+    <div style="font-size:12px;color:var(--text2)">
+      <span class="api-dot loading" id="api-dot"></span>
+      <span id="api-status">Menghubungkan ke database...</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sm" onclick="saveToAPI()">💾 Simpan ke DB</button>
+      <button class="btn btn-sm" onclick="loadFromAPI()">🔄 Muat dari DB</button>
+    </div>
+  </div>
+
+  <!-- DOSEN SELECTOR (global) -->
+  <div class="dosen-bar" id="dosen-bar" style="display:none">
+    <select class="fi dosen-select" id="dosen-selector" onchange="loadDosenById()">
+      <option value="">— Pilih Dosen —</option>
+    </select>
+    <button class="btn btn-sm btn-primary" onclick="openModalTambahDosen()">+ Dosen Baru</button>
+  </div>
+
+  <!-- ═══ PAGES ═══ -->
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="pane active">
+    <div class="page-header">
+      <h2 class="page-title">Dashboard PAK</h2>
+      <p class="page-sub">Ringkasan angka kredit dan status kelayakan kenaikan jabatan</p>
+    </div>
+    <div class="metric-grid" id="metrics"></div>
+    <div class="gap-grid" id="gap-cards"></div>
+    <div class="card">
+      <div class="card-title">Status komponen per jenjang</div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th>Komponen</th><th>AK Perolehan</th>
+            <th>IV/b (550)</th><th>IV/c (700)</th><th>Profesor (1050)</th>
+          </tr></thead>
+          <tbody id="komponen-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Catatan & Perhatian</div>
+      <ul id="catatan-list" style="padding-left:1.2rem;font-size:13px;color:var(--text2);line-height:2"></ul>
+    </div>
+  </div>
+
+  <!-- GAP ANALYSIS -->
+  <div id="page-gap" class="pane">
+    <div class="page-header">
+      <h2 class="page-title">Gap Analysis</h2>
+      <p class="page-sub">Detail kekurangan angka kredit per jenjang dan estimasi yang dibutuhkan</p>
+    </div>
+    <div id="detail-gap"></div>
+  </div>
+
+  <!-- KARYA ILMIAH -->
+  <div id="page-karya" class="pane">
+    <div class="page-header">
+      <h2 class="page-title">Karya Ilmiah</h2>
+      <p class="page-sub">Input dan kelola semua karya ilmiah penelitian</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Tambah Karya</div>
+      <div class="form-grid">
+        <div class="fi full"><label>Judul karya / nama jurnal</label><input type="text" id="k-judul" placeholder="Judul lengkap karya ilmiah..."></div>
+        <div class="fi">
+          <label>Jenis karya</label>
+          <select id="k-jenis" onchange="autoAK()">
+            <option value="jib" data-ak="40">Jurnal internasional bereputasi (SJR>0.1)</option>
+            <option value="jit" data-ak="30">Jurnal internasional terindeks bereputasi</option>
+            <option value="ji" data-ak="20">Jurnal internasional lainnya</option>
+            <option value="jn12" data-ak="25">Jurnal nasional akreditasi 1–2</option>
+            <option value="jn34" data-ak="20">Jurnal nasional akreditasi 3–4</option>
+            <option value="jn56" data-ak="15">Jurnal nasional akreditasi 5–6</option>
+            <option value="jn" data-ak="10">Jurnal nasional tidak terakreditasi</option>
+            <option value="bref" data-ak="40">Buku referensi (ISBN)</option>
+            <option value="mono" data-ak="20">Monograf (ISBN)</option>
+            <option value="bc_i" data-ak="15">Book chapter internasional</option>
+            <option value="bc_n" data-ak="10">Book chapter nasional</option>
+            <option value="pros_sc" data-ak="25">Prosiding intl terindeks Scopus/IEEE/SPIE</option>
+            <option value="pros_i" data-ak="15">Prosiding internasional</option>
+            <option value="pros_n" data-ak="10">Prosiding nasional</option>
+            <option value="paten_n" data-ak="30">Paten nasional</option>
+            <option value="paten_i" data-ak="50">Paten internasional</option>
+            <option value="hki" data-ak="15">HKI lainnya</option>
+            <option value="lain" data-ak="0">Lainnya (manual)</option>
+          </select>
+        </div>
+        <div class="fi"><label>Tahun terbit</label><input type="number" id="k-tahun" value="2024" min="2000" max="2030"></div>
+        <div class="fi">
+          <label>Posisi penulis</label>
+          <select id="k-posisi" onchange="autoAK()">
+            <option value="pp_kor">Pertama + korespondensi (60% AK)</option>
+            <option value="pp">Pertama saja (40% AK)</option>
+            <option value="kor">Korespondensi saja (40% AK)</option>
+            <option value="pend">Pendamping (40%/n)</option>
+          </select>
+        </div>
+        <div class="fi"><label>Jumlah penulis total</label><input type="number" id="k-npenulis" value="2" min="1" oninput="autoAK()"></div>
+        <div class="fi"><label>AK maks jenis ini</label><input type="number" id="k-ak-maks" value="40" min="0"></div>
+        <div class="fi"><label>AK yang diperoleh</label><input type="number" id="k-ak" value="0" min="0" step="0.5"><span class="hint">Setelah distribusi posisi penulis</span></div>
+        <div class="fi">
+          <label>Status PAK</label>
+          <select id="k-status">
+            <option value="baru">Belum pernah digunakan</option>
+            <option value="lama">Sudah digunakan PAK sebelumnya</option>
+            <option value="sebagian">Digunakan sebagian</option>
+          </select>
+        </div>
+        <div class="fi">
+          <label>Peran sebagai syarat khusus</label>
+          <select id="k-syarat">
+            <option value="">Bukan syarat khusus</option>
+            <option value="sk_lkp">Syarat khusus Lektor Kepala</option>
+            <option value="sk_pr">Syarat khusus Profesor</option>
+          </select>
+        </div>
+        <div class="fi full"><label>Keterangan tambahan</label><textarea id="k-ket" placeholder="Nama jurnal, nomor ISSN, URL, dll..."></textarea></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="addKarya()">Tambah karya</button>
+        <button class="btn" onclick="autoAK()">Hitung AK otomatis</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="card-title" style="margin-bottom:0">Daftar Karya (<span id="k-count">0</span> karya · <span id="k-total-ak">0</span> AK)</div>
+        <div style="display:flex;gap:6px">
+          <select id="k-filter-status" onchange="renderKarya()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text)">
+            <option value="">Semua status</option>
+            <option value="baru">Belum digunakan</option>
+            <option value="lama">Sudah digunakan</option>
+            <option value="sebagian">Sebagian</option>
+          </select>
+        </div>
+      </div>
+      <div id="karya-list"></div>
+    </div>
+  </div>
+
+  <!-- KEGIATAN LAIN -->
+  <div id="page-kegiatan" class="pane">
+    <div class="page-header">
+      <h2 class="page-title">Kegiatan Lain</h2>
+      <p class="page-sub">Angka kredit dari komponen selain karya ilmiah penelitian</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Unsur Pendidikan</div>
+      <div class="form-grid">
+        <div class="fi"><label>Gelar akademik (AK)</label><input type="number" id="g-gelar" value="0" min="0" oninput="recalc()"><span class="hint">S3=200, S2=150 (hitung selisih jika sudah pernah)</span></div>
+        <div class="fi"><label>Pelaksanaan pendidikan / pengajaran (AK)</label><input type="number" id="g-pend" value="0" min="0" step="0.5" oninput="recalc()"><span class="hint">Perkuliahan, bimbingan, dosen PJA, dll</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Pengabdian Masyarakat & Penunjang</div>
+      <div class="form-grid">
+        <div class="fi"><label>Pengabdian kepada masyarakat (AK)</label><input type="number" id="g-ppm" value="0" min="0" step="0.5" oninput="recalc()"><span class="hint">Wajib min 0.5 AK per usulan</span></div>
+        <div class="fi"><label>Unsur penunjang (AK)</label><input type="number" id="g-pen" value="0" min="0" step="0.5" oninput="recalc()"><span class="hint">Maksimal 10% dari AK kumulatif target</span></div>
+      </div>
+    </div>
+    <div class="card" style="background:var(--blue-l);border-color:var(--blue-m)">
+      <div class="card-title" style="color:var(--blue)">Referensi nilai AK kegiatan umum</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:8px;font-size:12px;color:var(--text2)">
+        <div>📚 Mengajar 10 sks/semester (Lektor ke atas) = <strong>10 AK</strong></div>
+        <div>📚 Mengajar 2 sks berikutnya = <strong>0.5 AK/sks</strong></div>
+        <div>🎓 Bimbing disertasi (utama) = <strong>8 AK/lulusan</strong></div>
+        <div>🎓 Bimbing tesis (utama) = <strong>3 AK/lulusan</strong></div>
+        <div>🎓 Bimbing skripsi (utama) = <strong>1 AK/lulusan</strong></div>
+        <div>🏛 Rektor = <strong>6 AK/semester</strong></div>
+        <div>🏛 Dekan/Warek = <strong>5 AK/semester</strong></div>
+        <div>🏛 Ketua Jurusan/Kaprodi = <strong>3-4 AK/semester</strong></div>
+        <div>🌍 Pengabdian nasional ≥1 semester = <strong>3 AK</strong></div>
+        <div>🌍 Pengabdian lokal ≥1 semester = <strong>2 AK</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SYARAT KHUSUS -->
+  <div id="page-syarat" class="pane">
+    <div class="page-header">
+      <h2 class="page-title">Syarat Khusus Karya Ilmiah</h2>
+      <p class="page-sub">Centang yang sudah terpenuhi — berdasarkan PO PAK 2019 Tabel 6a</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Kenaikan pangkat Lektor Kepala (IV/a → IV/b → IV/c)</div>
+      <div class="card-sub">Syarat karya ilmiah untuk kenaikan pangkat dalam jabatan Lektor Kepala</div>
+      <div id="sy-lkp"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Kenaikan jabatan ke Profesor (reguler maupun loncat)</div>
+      <div class="card-sub">Syarat berdasarkan Tabel 6a, 6b, dan ketentuan khusus PO 2019</div>
+      <div id="sy-pr"></div>
+    </div>
+  </div>
+
+  <!-- PROFIL -->
+  <div id="page-profil" class="pane">
+    <div class="page-header">
+      <h2 class="page-title">Profil Dosen</h2>
+      <p class="page-sub">Data identitas dosen yang akan disimpan ke database</p>
+    </div>
+    <div class="card">
+      <div class="form-grid">
+        <div class="fi"><label>Nama lengkap</label><input type="text" id="p-nama" placeholder="Prof. Dr. ..."></div>
+        <div class="fi"><label>NIDN / NIP</label><input type="text" id="p-nidn" placeholder="0012345678"></div>
+        <div class="fi">
+          <label>Jabatan saat ini</label>
+          <select id="p-jabatan">
+            <option value="Lektor Kepala">Lektor Kepala</option>
+            <option value="Lektor">Lektor</option>
+            <option value="Asisten Ahli">Asisten Ahli</option>
+            <option value="Profesor">Profesor</option>
+          </select>
+        </div>
+        <div class="fi">
+          <label>Pangkat saat ini</label>
+          <select id="p-pangkat">
+            <option value="IV/a - Pembina (400 AK)">IV/a - Pembina (400 AK)</option>
+            <option value="IV/b - Pembina TK.I (550 AK)">IV/b - Pembina TK.I (550 AK)</option>
+            <option value="IV/c - Pembina Utama Muda (700 AK)">IV/c - Pembina Utama Muda (700 AK)</option>
+            <option value="IV/d - Pembina Utama Madya (850 AK)">IV/d - Pembina Utama Madya (850 AK)</option>
+            <option value="IV/e - Pembina Utama (1050 AK)">IV/e - Pembina Utama (1050 AK)</option>
+            <option value="III/c - Penata (150 AK)">III/c - Penata (150 AK)</option>
+            <option value="III/d - Penata TK.I (200 AK)">III/d - Penata TK.I (200 AK)</option>
+          </select>
+        </div>
+        <div class="fi">
+          <label>Target jabatan</label>
+          <select id="p-target">
+            <option value="Lektor Kepala IV/b">Lektor Kepala IV/b</option>
+            <option value="Lektor Kepala IV/c">Lektor Kepala IV/c</option>
+            <option value="Profesor">Profesor</option>
+          </select>
+        </div>
+        <div class="fi"><label>Program studi / Fakultas</label><input type="text" id="p-prodi" placeholder="Teknik Informatika / FT"></div>
+        <div class="fi"><label>Perguruan Tinggi</label><input type="text" id="p-pt" placeholder="Universitas ..."></div>
+        <div class="fi"><label>Email</label><input type="email" id="p-email" placeholder="dosen@univ.ac.id"></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="saveToAPI()">Simpan profil & data PAK ke database</button>
+        <button class="btn" onclick="resetAll()">Reset semua data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAFTAR DOSEN -->
+  <div id="page-daftar" class="pane">
+    <div class="page-header">
+      <h2 class="page-title">Daftar Dosen</h2>
+      <p class="page-sub">Semua dosen yang tersimpan di database</p>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <input type="text" id="search-nama" placeholder="Cari nama..." style="padding:8px 12px;font-size:13px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);flex:1;min-width:180px" oninput="filterDaftar()">
+      <select id="search-jabatan" style="padding:8px 12px;font-size:13px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)" onchange="filterDaftar()">
+        <option value="">Semua jabatan</option>
+        <option value="Lektor Kepala">Lektor Kepala</option>
+        <option value="Lektor">Lektor</option>
+        <option value="Profesor">Profesor</option>
+        <option value="Asisten Ahli">Asisten Ahli</option>
+      </select>
+      <button class="btn btn-sm btn-primary" onclick="openModalTambahDosen()">+ Tambah Dosen</button>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="tbl" id="daftar-tbl">
+        <thead><tr>
+          <th style="padding-left:18px">Nama</th><th>NIDN</th><th>Jabatan</th><th>Pangkat</th><th>AK Total</th><th>Target</th><th>Aksi</th>
+        </tr></thead>
+        <tbody id="daftar-tbody"></tbody>
+      </table>
+    </div>
+    <div id="daftar-empty" style="text-align:center;padding:40px;color:var(--text2);font-size:13px;display:none">Belum ada data dosen di database.</div>
+  </div>
+</main>
+</div>
+
+<!-- MODAL TAMBAH DOSEN -->
+<div class="modal-bg" id="modal-dosen" style="display:none">
+  <div class="modal">
+    <span class="modal-close" onclick="closeModal()">✕</span>
+    <h3 class="modal-title">Profil Dosen Baru</h3>
+    <p class="modal-sub">Data ini akan menjadi baris baru di database</p>
+    <div class="form-grid">
+      <div class="fi full"><label>Nama lengkap</label><input type="text" id="m-nama" placeholder="Prof. Dr. ..."></div>
+      <div class="fi"><label>NIDN / NIP</label><input type="text" id="m-nidn"></div>
+      <div class="fi">
+        <label>Jabatan saat ini</label>
+        <select id="m-jabatan">
+          <option>Lektor Kepala</option><option>Lektor</option><option>Asisten Ahli</option><option>Profesor</option>
+        </select>
+      </div>
+      <div class="fi">
+        <label>Pangkat</label>
+        <select id="m-pangkat">
+          <option value="IV/a - Pembina (400 AK)">IV/a - Pembina (400 AK)</option>
+          <option value="IV/b - Pembina TK.I (550 AK)">IV/b - Pembina TK.I (550 AK)</option>
+          <option value="IV/c - Pembina Utama Muda (700 AK)">IV/c - Pembina Utama Muda (700 AK)</option>
+        </select>
+      </div>
+      <div class="fi"><label>Target</label>
+        <select id="m-target">
+          <option>Lektor Kepala IV/b</option><option>Lektor Kepala IV/c</option><option>Profesor</option>
+        </select>
+      </div>
+      <div class="fi"><label>Prodi / Fakultas</label><input type="text" id="m-prodi"></div>
+      <div class="fi"><label>Perguruan Tinggi</label><input type="text" id="m-pt"></div>
+      <div class="fi"><label>Email</label><input type="email" id="m-email"></div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="createDosen()">Buat & Mulai Input PAK</button>
+      <button class="btn" onclick="closeModal()">Batal</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+const TABLE = 'pak_dosen';
+const HEADERS = {'Content-Type':'application/json','X-Custom-Auth':'admin','X-Table-Name':TABLE};
+
+// ─── STATE ───
+let db = {
+  id_x: null,
+  profil: {nama:'',nidn:'',jabatan:'Lektor Kepala',pangkat:'IV/a - Pembina (400 AK)',target:'Profesor',prodi:'',pt:'',email:''},
+  karya: [],
+  kegiatan: {gelar:0,pend:0,ppm:0,pen:0},
+  syarat: {}
+};
+let dosenList = [];
+
+// ─── JENJANG CONFIG ───
+const JENJANG = [
+  {id:'ivb', label:'Lektor Kepala IV/b', ak:550, pend:40, lit:40, dari:'IV/a → IV/b'},
+  {id:'ivc', label:'Lektor Kepala IV/c', ak:700, pend:40, lit:40, dari:'IV/b → IV/c'},
+  {id:'pr',  label:'Profesor (reguler)', ak:1050, pend:35, lit:45, dari:'Lektor Kepala → Profesor'},
+  {id:'pr_loncat', label:'Loncat ke Profesor', ak:1050, pend:35, lit:45, dari:'Loncat jabatan → Profesor'},
+];
+
+const SYARAT_CFG = {
+  lkp:[
+    {id:'ivb_jn_pangkat', label:'Min 1 jurnal nasional terakreditasi peringkat 3–6 sebagai penulis utama (untuk kenaikan pangkat IV/a→IV/b)', req:true},
+    {id:'ivc_jn_pangkat', label:'Min 1 jurnal nasional terakreditasi peringkat 1–2 sebagai penulis utama (untuk kenaikan pangkat ke IV/c dan Guru Besar)', req:true},
+    {id:'uji_kemiripan', label:'Semua karya ilmiah internasional telah diuji kemiripan (iThenticate/Turnitin) dengan hasil <25% per dokumen', req:true},
+    {id:'sk_lkp_jib', label:'Min 1 jurnal internasional (penulis pertama+korespondensi) — syarat khusus jika masa kerja <8 tahun sejak Asisten Ahli', req:false},
+  ],
+  pr:[
+    {id:'pr_jib', label:'Min 1 jurnal internasional bereputasi (SJR>0.1 atau JIF WoS ≥0.05) sebagai penulis pertama+korespondensi — WAJIB', req:true},
+    {id:'pr_hibah', label:'Pernah mendapat hibah penelitian kompetitif tingkat nasional/kementerian/internasional sebagai ketua peneliti', req:true},
+    {id:'pr_10thn', label:'Pengalaman kerja dosen tetap minimal 10 tahun', req:true},
+    {id:'pr_doktor', label:'Memiliki gelar Doktor (S3)', req:true},
+    {id:'pr_pangkat', label:'Pangkat minimal Pembina IV/a', req:true},
+    {id:'pr_bimbing', label:'Pernah membimbing/membantu bimbing program doktor (promotor/ko-promotor)', req:false},
+    {id:'pr_uji', label:'Pernah menguji min 3 mahasiswa program doktor (PT sendiri atau lain)', req:false},
+    {id:'pr_reviewer', label:'Menjadi reviewer di min 2 jurnal internasional bereputasi yang berbeda', req:false},
+    {id:'pr_3thn', label:'Kenaikan dari Lektor Kepala ke Profesor dilakukan min 3 tahun setelah lulus S3', req:true},
+    {id:'pr_loncat_4jib', label:'[Khusus loncat Lektor→Profesor] Min 4 jurnal internasional bereputasi sebagai penulis pertama', req:false},
+    {id:'pr_loncat_2jib', label:'[Khusus loncat Asisten Ahli→Lektor Kepala] Min 2 jurnal internasional bereputasi sebagai penulis pertama', req:false},
+  ]
+};
+
+// ─── API HELPERS ───
+async function apiFetch(url, opts={}){
+  const r = await fetch(url, {headers:HEADERS, ...opts});
+  return r.json();
+}
+
+async function loadFromAPI(){
+  setApiStatus('loading','Memuat data...');
+  try {
+    const res = await apiFetch(`${API}?table=${TABLE}&limit=100`);
+    if(res.success && res.data){
+      dosenList = res.data;
+      renderDosenSelector();
+      renderDaftar();
+      setApiStatus('ok',`${res.total} dosen ditemukan`);
+      toast('Data berhasil dimuat dari database');
+    } else {
+      setApiStatus('err','Gagal memuat data');
+    }
+  } catch(e){ setApiStatus('err','Koneksi gagal: '+e.message); }
+}
+
+async function saveToAPI(){
+  syncProfilFromForm();
+  const ak = getKomponenAK();
+  const payload = {
+    x_01: db.profil.nama,
+    x_02: db.profil.nidn,
+    x_03: db.profil.jabatan,
+    x_04: db.profil.pangkat,
+    x_05: String(ak.total.toFixed(1)),
+    x_06: db.profil.target,
+    x_07: JSON.stringify({karya:db.karya, kegiatan:db.kegiatan, syarat:db.syarat, profil_ext:{prodi:db.profil.prodi,pt:db.profil.pt,email:db.profil.email}}),
+    x_08: new Date().toISOString().slice(0,19).replace('T',' '),
+  };
+  try {
+    let res;
+    if(db.id_x){
+      res = await apiFetch(`${API}?table=${TABLE}&id_x=${db.id_x}`, {method:'PUT', body:JSON.stringify(payload)});
+    } else {
+      res = await apiFetch(`${API}?table=${TABLE}`, {method:'POST', body:JSON.stringify(payload)});
+      if(res.success && res.id_x) db.id_x = res.id_x;
+    }
+    if(res.success){
+      toast('✓ Data berhasil disimpan ke database');
+      saveLocal();
+      loadFromAPI();
+    } else { toast('⚠ Gagal menyimpan: '+(res.message||'')); }
+  } catch(e){ toast('⚠ Error: '+e.message); }
+}
+
+async function createDosen(){
+  const nama = document.getElementById('m-nama').value.trim();
+  if(!nama){ toast('Isi nama dosen terlebih dahulu'); return; }
+  const payload = {
+    x_01: nama,
+    x_02: document.getElementById('m-nidn').value,
+    x_03: document.getElementById('m-jabatan').value,
+    x_04: document.getElementById('m-pangkat').value,
+    x_05: '0',
+    x_06: document.getElementById('m-target').value,
+    x_07: JSON.stringify({karya:[],kegiatan:{gelar:0,pend:0,ppm:0,pen:0},syarat:{},profil_ext:{prodi:document.getElementById('m-prodi').value,pt:document.getElementById('m-pt').value,email:document.getElementById('m-email').value}}),
+    x_08: new Date().toISOString().slice(0,19).replace('T',' '),
+  };
+  try {
+    const res = await apiFetch(`${API}?table=${TABLE}`,{method:'POST',body:JSON.stringify(payload)});
+    if(res.success){
+      toast('✓ Dosen baru berhasil dibuat');
+      closeModal();
+      await loadFromAPI();
+      // Auto-load dosen baru
+      const newId = res.id_x;
+      const found = dosenList.find(d=>d.id_x===newId);
+      if(found) loadDosen(found);
+    } else { toast('⚠ '+res.message); }
+  } catch(e){ toast('⚠ Error: '+e.message); }
+}
+
+async function deleteDosen(id_x){
+  if(!confirm('Hapus data dosen ini dari database?')) return;
+  try {
+    const res = await apiFetch(`${API}?table=${TABLE}&id_x=${id_x}`,{method:'DELETE'});
+    if(res.success){ toast('Data dosen dihapus'); loadFromAPI(); }
+    else toast('⚠ Gagal hapus: '+res.message);
+  } catch(e){ toast('⚠ '+e.message); }
+}
+
+// ─── LOAD/RENDER DOSEN ───
+function loadDosenById(){
+  const id = parseInt(document.getElementById('dosen-selector').value);
+  if(!id) return;
+  const d = dosenList.find(x=>x.id_x===id);
+  if(d) loadDosen(d);
+}
+
+function loadDosen(d){
+  db.id_x = d.id_x;
+  db.profil.nama = d.x_01||'';
+  db.profil.nidn = d.x_02||'';
+  db.profil.jabatan = d.x_03||'Lektor Kepala';
+  db.profil.pangkat = d.x_04||'IV/a - Pembina (400 AK)';
+  db.profil.target = d.x_06||'Profesor';
+  try {
+    const pak = JSON.parse(d.x_07||'{}');
+    db.karya = pak.karya||[];
+    db.kegiatan = pak.kegiatan||{gelar:0,pend:0,ppm:0,pen:0};
+    db.syarat = pak.syarat||{};
+    if(pak.profil_ext){
+      db.profil.prodi = pak.profil_ext.prodi||'';
+      db.profil.pt = pak.profil_ext.pt||'';
+      db.profil.email = pak.profil_ext.email||'';
+    }
+  } catch(e){ db.karya=[]; db.kegiatan={gelar:0,pend:0,ppm:0,pen:0}; db.syarat={}; }
+
+  syncFormFromProfil();
+  document.getElementById('sb-nama').textContent = db.profil.nama||'—';
+  document.getElementById('sb-jabatan').textContent = (db.profil.jabatan||'') + ' · ' + (db.profil.pangkat||'');
+  saveLocal();
+  renderAll();
+  renderSyarat();
+  toast('Profil dimuat: '+db.profil.nama);
+  showPage('dashboard');
+}
+
+function renderDosenSelector(){
+  const sel = document.getElementById('dosen-selector');
+  sel.innerHTML = '<option value="">— Pilih Dosen —</option>' +
+    dosenList.map(d=>`<option value="${d.id_x}">${d.x_01||'(tanpa nama)'} — ${d.x_03||''} ${d.x_04||''}</option>`).join('');
+  document.getElementById('dosen-bar').style.display = 'flex';
+  if(db.id_x) sel.value = db.id_x;
+}
+
+function renderDaftar(){
+  const cari = (document.getElementById('search-nama').value||'').toLowerCase();
+  const jabF = document.getElementById('search-jabatan').value;
+  const filtered = dosenList.filter(d=>{
+    const nama = (d.x_01||'').toLowerCase();
+    const jab = d.x_03||'';
+    return (!cari||nama.includes(cari)) && (!jabF||jab===jabF);
+  });
+  const tbody = document.getElementById('daftar-tbody');
+  const empty = document.getElementById('daftar-empty');
+  if(!filtered.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML = filtered.map(d=>`<tr>
+    <td style="padding-left:18px;font-weight:500">${d.x_01||'—'}</td>
+    <td style="color:var(--text2)">${d.x_02||'—'}</td>
+    <td><span class="badge b-blue">${d.x_03||'—'}</span></td>
+    <td style="font-size:12px;color:var(--text2)">${d.x_04||'—'}</td>
+    <td><strong>${d.x_05||'0'}</strong></td>
+    <td style="font-size:12px">${d.x_06||'—'}</td>
+    <td>
+      <button class="btn btn-xs" onclick="loadDosen(dosenList.find(x=>x.id_x===${d.id_x}))">Buka</button>
+      <button class="btn btn-xs btn-danger" onclick="deleteDosen(${d.id_x})" style="margin-left:4px">Hapus</button>
+    </td>
+  </tr>`).join('');
+}
+
+function filterDaftar(){ renderDaftar(); }
+
+// ─── KALKULASI ───
+function getKomponenAK(){
+  const litAK = db.karya.filter(k=>k.status!=='lama').reduce((s,k)=>s+(parseFloat(k.ak)||0),0);
+  const g = db.kegiatan;
+  return {
+    gelar:g.gelar, pend:g.pend, lit:litAK, ppm:g.ppm, pen:g.pen,
+    total: g.gelar + g.pend + litAK + g.ppm + g.pen
+  };
+}
+
+function calcJenjang(j,k){
+  const base=j.ak, nonGelar=base-k.gelar;
+  const minPend=Math.round(nonGelar*j.pend/100);
+  const minLit=Math.round(nonGelar*j.lit/100);
+  const maxPen=Math.round(base*0.10);
+  const pen=Math.min(k.pen,maxPen);
+  const total=k.gelar+k.pend+k.lit+k.ppm+pen;
+  const gap=Math.max(0,base-total);
+  return {base,minPend,minLit,maxPen,pen,total,gap,
+    gapLit:Math.max(0,minLit-k.lit),
+    gapPend:Math.max(0,minPend-k.pend),
+    gapPpm:Math.max(0,0.5-k.ppm),
+    pct:Math.min(100,Math.round(total/base*100))};
+}
+
+// ─── RENDER ALL ───
+function renderAll(){
+  renderMetrics();
+  renderGapCards();
+  renderKomponenTable();
+  renderCatatan();
+  renderDetailGap();
+  renderKarya();
+}
+
+function renderMetrics(){
+  const k=getKomponenAK();
+  const c=calcJenjang(JENJANG[0],k);
+  document.getElementById('metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Total AK Terkumpul</div><div class="metric-val">${k.total.toFixed(1)}</div><div class="metric-sub">dari pangkat IV/a (400 AK)</div></div>
+    <div class="metric"><div class="metric-label">AK Penelitian</div><div class="metric-val">${k.lit.toFixed(1)}</div><div class="metric-sub">${db.karya.filter(x=>x.status!=='lama').length} karya aktif</div></div>
+    <div class="metric"><div class="metric-label">AK Pendidikan</div><div class="metric-val">${(k.gelar+k.pend).toFixed(1)}</div><div class="metric-sub">gelar + pengajaran</div></div>
+    <div class="metric"><div class="metric-label">Kurang ke IV/b</div><div class="metric-val">${c.gap.toFixed(1)}</div><div class="metric-sub">target 550 AK · ${c.pct}%</div></div>
+  `;
+}
+
+function renderGapCards(){
+  const k=getKomponenAK();
+  document.getElementById('gap-cards').innerHTML=JENJANG.map(j=>{
+    const c=calcJenjang(j,k);
+    const cls=c.gap===0?'ok':c.pct>=75?'near':c.pct>=40?'far':'vfar';
+    return `<div class="gap-card ${cls}">
+      <div class="gap-label">${j.label}</div>
+      <div class="gap-val">${c.gap===0?'✓ Tercapai':'-'+c.gap.toFixed(1)+' AK'}</div>
+      <div class="gap-sub">${c.pct}% dari ${j.ak} AK · ${j.dari}</div>
+      <div class="bar"><div class="bf" style="width:${c.pct}%"></div></div>
+      <div class="gap-sub" style="margin-top:6px">${c.gapLit>0?'Kurang penelitian: '+c.gapLit.toFixed(1)+' AK':'Komponen AK terpenuhi'}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderKomponenTable(){
+  const k=getKomponenAK();
+  const rows=[
+    {l:'Gelar akademik', v:k.gelar, jv:JENJANG.map(j=>({n:0,g:k.gelar}))},
+    {l:'Pelaksanaan pendidikan', v:k.pend, jv:JENJANG.map(j=>{const c=calcJenjang(j,k);return{n:c.minPend,g:k.pend}})},
+    {l:'Penelitian / karya ilmiah', v:k.lit, jv:JENJANG.map(j=>{const c=calcJenjang(j,k);return{n:c.minLit,g:k.lit}})},
+    {l:'Pengabdian masyarakat', v:k.ppm, jv:JENJANG.map(_=>({n:0.5,g:k.ppm}))},
+    {l:'Penunjang (maks 10%)', v:Math.min(k.pen,Math.round(550*0.1)), jv:JENJANG.map(j=>{const c=calcJenjang(j,k);return{n:0,g:c.pen,maks:c.maxPen}})},
+    {l:'TOTAL AK', v:k.total, jv:JENJANG.map(j=>{const c=calcJenjang(j,k);return{n:j.ak,g:k.total}}), bold:true},
+  ];
+  document.getElementById('komponen-tbody').innerHTML=rows.map(r=>`<tr>
+    <td${r.bold?' style="font-weight:600"':''}>${r.l}</td>
+    <td${r.bold?' style="font-weight:600"':''}>${r.v.toFixed(1)}</td>
+    ${r.jv.slice(0,3).map(v=>{
+      const ok=v.g>=v.n;
+      return `<td class="${ok?'tbl-ok':'tbl-no'}">${v.g.toFixed(1)}/${v.n>0?v.n.toFixed(1):'—'}${v.maks?' (maks '+v.maks+')':''}</td>`;
+    }).join('')}
+  </tr>`).join('');
+}
+
+function renderCatatan(){
+  const k=getKomponenAK();
+  const items=[
+    'Pangkat IV/a→IV/b: wajib min 1 jurnal nasional terakreditasi peringkat 3–6 sebagai penulis utama.',
+    'Pangkat ke IV/c / Guru Besar: wajib min 1 jurnal nasional terakreditasi peringkat 1–2 sebagai penulis utama.',
+    'Kelebihan AK penelitian dapat dipakai maks 80% untuk jenjang berikutnya.',
+    'Karya dari disertasi/tesis tidak dapat digunakan sebagai syarat khusus Profesor.',
+    'Untuk Profesor: harus min 10 tahun pengalaman sebagai dosen tetap.',
+    'Kenaikan Lektor Kepala→Profesor minimal 3 tahun setelah lulus S3.',
+    k.ppm<0.5?'⚠ Pengabdian masyarakat BELUM mencapai 0.5 AK — wajib ada.':'✓ Pengabdian masyarakat sudah terpenuhi.',
+    db.karya.filter(x=>x.status==='lama').length>0?`Info: ${db.karya.filter(x=>x.status==='lama').length} karya sudah digunakan PAK sebelumnya (tidak dihitung ulang).`:'',
+  ].filter(Boolean);
+  document.getElementById('catatan-list').innerHTML=items.map(i=>`<li>${i}</li>`).join('');
+}
+
+function renderDetailGap(){
+  const k=getKomponenAK();
+  document.getElementById('detail-gap').innerHTML=JENJANG.map(j=>{
+    const c=calcJenjang(j,k);
+    const cls=c.gap===0?'b-green':c.pct>=75?'b-blue':c.pct>=40?'b-amber':'b-red';
+    const est_jib=Math.ceil(c.gapLit/24), est_jn=Math.ceil(c.gapLit/12);
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="card-title" style="margin-bottom:0">${j.label}</div>
+        <span class="badge ${cls}">${c.gap===0?'Terpenuhi':c.pct+'%'}</span>
+      </div>
+      <div class="card-sub" style="margin-bottom:12px">${j.dari} · Target AK: ${j.ak}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div class="detail-jenjang">
+          <div class="prow-label"><span>Total AK</span><span style="font-weight:600">${c.total.toFixed(1)} / ${j.ak}</span></div>
+          <div class="bar" style="height:6px"><div class="bf" style="width:${c.pct}%;background:var(--blue)"></div></div>
+        </div>
+        <div class="detail-jenjang">
+          <div class="prow-label"><span>Penelitian (min ${j.lit}%)</span><span class="${k.lit>=c.minLit?'tbl-ok':'tbl-no'}">${k.lit.toFixed(1)} / ${c.minLit} AK</span></div>
+          <div class="bar" style="height:6px"><div class="bf" style="width:${Math.min(100,Math.round(k.lit/Math.max(c.minLit,1)*100))}%;background:var(--green)"></div></div>
+        </div>
+        <div class="detail-jenjang">
+          <div class="prow-label"><span>Pendidikan (min ${j.pend}%)</span><span class="${k.pend>=c.minPend?'tbl-ok':'tbl-no'}">${k.pend.toFixed(1)} / ${c.minPend} AK</span></div>
+          <div class="bar" style="height:6px"><div class="bf" style="width:${Math.min(100,Math.round(k.pend/Math.max(c.minPend,1)*100))}%;background:var(--amber)"></div></div>
+        </div>
+        <div class="detail-jenjang">
+          <div class="prow-label"><span>Pengabdian (min 0.5)</span><span class="${k.ppm>=0.5?'tbl-ok':'tbl-no'}">${k.ppm.toFixed(1)} AK</span></div>
+          <div class="bar" style="height:6px"><div class="bf" style="width:${Math.min(100,Math.round(k.ppm/0.5*100))}%;background:var(--teal)"></div></div>
+        </div>
+      </div>
+      ${c.gap>0?`<div style="background:var(--red-l);border-radius:8px;padding:12px 14px;font-size:12px">
+        <strong style="color:var(--red)">Yang masih perlu dipenuhi:</strong>
+        <ul style="margin-top:6px;padding-left:1.2rem;line-height:2;color:var(--text2)">
+          ${c.gapLit>0?`<li>Penelitian: tambah <strong>${c.gapLit.toFixed(1)} AK</strong> lagi ≈ ${est_jib} artikel jurnal internasional bereputasi atau ${est_jn} jurnal nasional akreditasi</li>`:''}
+          ${c.gapPend>0?`<li>Pendidikan: tambah <strong>${c.gapPend.toFixed(1)} AK</strong> lagi</li>`:''}
+          ${c.gapPpm>0?`<li>Pengabdian: wajib min 0.5 AK</li>`:''}
+          ${c.gap>0?`<li>Total kekurangan AK kumulatif: <strong>${c.gap.toFixed(1)} AK</strong></li>`:''}
+        </ul>
+      </div>`:`<div style="background:var(--green-l);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--green)">✓ Semua komponen AK terpenuhi. Pastikan syarat khusus karya ilmiah juga sudah dicek di tab Syarat Khusus.</div>`}
+    </div>`;
+  }).join('');
+}
+
+// ─── KARYA ───
+function autoAK(){
+  const sel=document.getElementById('k-jenis');
+  const maks=parseInt(sel.options[sel.selectedIndex].dataset.ak)||0;
+  document.getElementById('k-ak-maks').value=maks;
+  const pos=document.getElementById('k-posisi').value;
+  const n=parseInt(document.getElementById('k-npenulis').value)||2;
+  let ak=0;
+  if(pos==='pp_kor') ak=maks*0.60;
+  else if(pos==='pp'||pos==='kor') ak=maks*0.40;
+  else ak=maks*0.40/Math.max(n-1,1);
+  document.getElementById('k-ak').value=Math.round(ak*10)/10;
+}
+
+function addKarya(){
+  const judul=document.getElementById('k-judul').value.trim();
+  if(!judul){toast('Isi judul karya terlebih dahulu');return;}
+  const sel=document.getElementById('k-jenis');
+  db.karya.push({
+    judul, jenis:sel.options[sel.selectedIndex].text, jenis_id:sel.value,
+    tahun:document.getElementById('k-tahun').value,
+    posisi:document.getElementById('k-posisi').options[document.getElementById('k-posisi').selectedIndex].text,
+    posisi_id:document.getElementById('k-posisi').value,
+    npenulis:parseInt(document.getElementById('k-npenulis').value)||2,
+    ak_maks:parseFloat(document.getElementById('k-ak-maks').value)||0,
+    ak:parseFloat(document.getElementById('k-ak').value)||0,
+    status:document.getElementById('k-status').value,
+    syarat:document.getElementById('k-syarat').value,
+    ket:document.getElementById('k-ket').value,
+  });
+  document.getElementById('k-judul').value='';
+  document.getElementById('k-ket').value='';
+  saveLocal(); renderAll();
+  toast('Karya ditambahkan');
+}
+
+function delKarya(i){
+  if(!confirm('Hapus karya ini?'))return;
+  db.karya.splice(i,1);
+  saveLocal(); renderAll();
+}
+
+function renderKarya(){
+  const filter=document.getElementById('k-filter-status').value;
+  const list=filter?db.karya.filter(k=>k.status===filter):db.karya;
+  const totalAK=db.karya.filter(k=>k.status!=='lama').reduce((s,k)=>s+k.ak,0);
+  document.getElementById('k-count').textContent=db.karya.length;
+  document.getElementById('k-total-ak').textContent=totalAK.toFixed(1);
+  const el=document.getElementById('karya-list');
+  if(!list.length){el.innerHTML='<p style="font-size:13px;color:var(--text2);padding:10px 0">Belum ada karya'+(filter?' dengan filter ini':'')+'. Tambahkan di form di atas.</p>';return;}
+  el.innerHTML=list.map((k,i)=>`<div class="karya-item">
+    <div style="flex:1">
+      <div class="karya-title">${k.judul}</div>
+      <div class="karya-meta">${k.jenis} · ${k.tahun} · ${k.posisi}</div>
+      ${k.ket?`<div class="karya-meta" style="margin-top:2px;font-style:italic">${k.ket}</div>`:''}
+      <div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap">
+        <span class="badge ${k.status==='baru'?'b-green':k.status==='sebagian'?'b-amber':'b-gray'}">${k.status}</span>
+        ${k.syarat?`<span class="badge b-teal">${k.syarat}</span>`:''}
+      </div>
+    </div>
+    <div style="text-align:right;flex-shrink:0">
+      <div class="karya-ak">${k.ak.toFixed(1)} AK</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px">maks ${k.ak_maks||'?'}</div>
+      <button class="btn btn-xs btn-danger" style="margin-top:6px" onclick="delKarya(${db.karya.indexOf(k)})">hapus</button>
+    </div>
+  </div>`).join('');
+}
+
+// ─── SYARAT ───
+function renderSyarat(){
+  ['lkp','pr'].forEach(grp=>{
+    document.getElementById('sy-'+grp).innerHTML=SYARAT_CFG[grp].map(s=>{
+      const chk=db.syarat[s.id]||false;
+      return `<div class="sy-row">
+        <input type="checkbox" id="sy-${s.id}" ${chk?'checked':''} onchange="toggleSyarat('${s.id}')">
+        <span class="sy-text">${s.label}</span>
+        <span class="sy-badge ${chk?'b-green':'b-red'}">${chk?'✓':'✗'}</span>
+      </div>`;
+    }).join('');
+  });
+}
+
+function toggleSyarat(id){
+  db.syarat[id]=document.getElementById('sy-'+id).checked;
+  renderSyarat(); saveLocal();
+}
+
+// ─── KEGIATAN ───
+function recalc(){
+  db.kegiatan.gelar=parseFloat(document.getElementById('g-gelar').value)||0;
+  db.kegiatan.pend=parseFloat(document.getElementById('g-pend').value)||0;
+  db.kegiatan.ppm=parseFloat(document.getElementById('g-ppm').value)||0;
+  db.kegiatan.pen=parseFloat(document.getElementById('g-pen').value)||0;
+  saveLocal(); renderAll();
+}
+
+// ─── PROFIL ───
+function syncProfilFromForm(){
+  db.profil.nama=document.getElementById('p-nama').value;
+  db.profil.nidn=document.getElementById('p-nidn').value;
+  db.profil.jabatan=document.getElementById('p-jabatan').value;
+  db.profil.pangkat=document.getElementById('p-pangkat').value;
+  db.profil.target=document.getElementById('p-target').value;
+  db.profil.prodi=document.getElementById('p-prodi').value;
+  db.profil.pt=document.getElementById('p-pt').value;
+  db.profil.email=document.getElementById('p-email').value;
+  document.getElementById('sb-nama').textContent=db.profil.nama||'—';
+  document.getElementById('sb-jabatan').textContent=(db.profil.jabatan||'')+' · '+(db.profil.pangkat||'');
+}
+
+function syncFormFromProfil(){
+  setVal('p-nama',db.profil.nama);
+  setVal('p-nidn',db.profil.nidn);
+  setVal('p-jabatan',db.profil.jabatan);
+  setVal('p-pangkat',db.profil.pangkat);
+  setVal('p-target',db.profil.target);
+  setVal('p-prodi',db.profil.prodi);
+  setVal('p-pt',db.profil.pt);
+  setVal('p-email',db.profil.email);
+  setVal('g-gelar',db.kegiatan.gelar);
+  setVal('g-pend',db.kegiatan.pend);
+  setVal('g-ppm',db.kegiatan.ppm);
+  setVal('g-pen',db.kegiatan.pen);
+}
+
+function setVal(id,v){ const el=document.getElementById(id); if(el) el.value=v||''; }
+
+function resetAll(){
+  if(!confirm('Reset semua data lokal? Data di database tidak terpengaruh.'))return;
+  db={id_x:null,profil:{nama:'',nidn:'',jabatan:'Lektor Kepala',pangkat:'IV/a - Pembina (400 AK)',target:'Profesor',prodi:'',pt:'',email:''},karya:[],kegiatan:{gelar:0,pend:0,ppm:0,pen:0},syarat:{}};
+  syncFormFromProfil();
+  document.getElementById('sb-nama').textContent='—';
+  document.getElementById('sb-jabatan').textContent='Belum memilih profil';
+  saveLocal(); renderAll(); renderSyarat();
+  toast('Data lokal direset');
+}
+
+// ─── LOCAL STORAGE ───
+function saveLocal(){
+  try{localStorage.setItem('pak_v3',JSON.stringify(db));}catch(e){}
+}
+function loadLocal(){
+  try{
+    const d=localStorage.getItem('pak_v3');
+    if(d){ db=JSON.parse(d); syncFormFromProfil(); }
+  }catch(e){}
+}
+
+// ─── UI HELPERS ───
+function showPage(id){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const idx={'dashboard':0,'gap':1,'karya':2,'kegiatan':3,'syarat':4,'profil':5,'daftar':6}[id];
+  document.querySelectorAll('.nav-item')[idx]?.classList.add('active');
+}
+
+function openModalTambahDosen(){ document.getElementById('modal-dosen').style.display='flex'; }
+function closeModal(){ document.getElementById('modal-dosen').style.display='none'; }
+
+function setApiStatus(type,msg){
+  const dot=document.getElementById('api-dot');
+  const txt=document.getElementById('api-status');
+  dot.className='api-dot '+type; txt.textContent=msg;
+}
+
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ─── INIT ───
+loadLocal();
+renderAll();
+renderSyarat();
+autoAK();
+loadFromAPI();
+</script>
+</body>
+</html>
