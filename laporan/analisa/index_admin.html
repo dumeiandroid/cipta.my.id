@@ -1,0 +1,2454 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analisa Psikogram</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg:       #080b12;
+    --surface:  #0f1420;
+    --surface2: #161d2e;
+    --border:   #1e2a42;
+    --accent:   #5F4EDA;
+    --accent2:  #7c6ef0;
+    --kurang:   #ef4444;
+    --cukup:    #f59e0b;
+    --baik:     #22c55e;
+    --text:     #e2e8f0;
+    --muted:    #5a6a8a;
+    --radius:   16px;
+
+    /* Group colors */
+    --kem-color: #3b82f6;
+    --kem-bg: rgba(59,130,246,.12);
+    --kem-glow: rgba(59,130,246,.3);
+    --kep-color: #a855f7;
+    --kep-bg: rgba(168,85,247,.12);
+    --kep-glow: rgba(168,85,247,.3);
+    --sik-color: #10b981;
+    --sik-bg: rgba(16,185,129,.12);
+    --sik-glow: rgba(16,185,129,.3);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    background-image: radial-gradient(ellipse at 20% 0%, rgba(59,130,246,.06) 0%, transparent 50%),
+                      radial-gradient(ellipse at 80% 10%, rgba(168,85,247,.05) 0%, transparent 50%);
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    background: rgba(15,20,32,.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-title {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -.5px;
+  }
+  .topbar-title span { color: var(--accent2); }
+  .topbar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .topbar input[type="text"] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-family: inherit;
+    width: 160px;
+  }
+  .topbar input:focus { outline: none; border-color: var(--accent2); }
+  .btn-top {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .2s;
+  }
+  .btn-top:hover { background: var(--accent2); }
+  .btn-top:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-back {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-back:hover { background: var(--border); }
+
+  /* ── LOADING ── */
+  #loading-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15,17,23,.92);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 9999;
+    gap: 16px;
+  }
+  #loading-overlay.hidden { display: none; }
+  .spin {
+    width: 48px; height: 48px;
+    border: 4px solid rgba(95,78,218,.3);
+    border-top-color: var(--accent2);
+    border-radius: 50%;
+    animation: spin .75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .load-txt { font-size: 15px; color: var(--muted); }
+
+  /* ── SUMMARY STRIP ── */
+  .summary-strip {
+    display: flex;
+    gap: 12px;
+    padding: 20px 28px 0;
+    flex-wrap: wrap;
+  }
+  .sum-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 24px;
+    flex: 1;
+    min-width: 130px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .sum-box:hover { transform: translateY(-2px); }
+  .sum-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--sum-accent, var(--accent2));
+    border-radius: 0 0 0 0;
+  }
+  .sum-box::after {
+    content: attr(data-icon);
+    position: absolute;
+    right: 12px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 28px;
+    opacity: .12;
+    pointer-events: none;
+  }
+  .sum-num {
+    font-size: 34px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 5px;
+    font-variant-numeric: tabular-nums;
+  }
+  .sum-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+
+  /* ── MAIN GRID ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 18px;
+    padding: 20px 28px 40px;
+  }
+
+  /* ── RADAR OVERVIEW CARD ── */
+  .radar-overview-card {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    animation: cardIn .5s cubic-bezier(.22,1,.36,1) both;
+  }
+  .radar-overview-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(95,78,218,.12), rgba(168,85,247,.08));
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .radar-overview-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(95,78,218,.25);
+    border: 1px solid rgba(124,110,240,.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .radar-overview-body {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 32px;
+    align-items: center;
+  }
+  @media (max-width: 800px) {
+    .radar-overview-body { grid-template-columns: 1fr; }
+  }
+  .radar-canvas-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .radar-legend-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 640px) {
+    .radar-legend-grid { grid-template-columns: 1fr 1fr; }
+  }
+  .radar-legend-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+  }
+  .radar-legend-item:hover { background: rgba(255,255,255,.04); }
+  .radar-legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .radar-legend-name { font-size: 11px; font-weight: 600; flex: 1; color: var(--text); }
+  .radar-legend-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* ── CHART CARD ── */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color .25s, transform .25s, box-shadow .25s;
+    animation: cardIn .5s cubic-bezier(.22,1,.36,1) both;
+    position: relative;
+  }
+  .chart-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--card-accent, var(--border));
+    transition: opacity .25s;
+  }
+  .chart-card:hover {
+    border-color: var(--card-accent-hover, var(--accent));
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px var(--card-glow, rgba(95,78,218,.2));
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Card header groups */
+  .chart-card-head {
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .chart-card-icon {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .chart-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -.1px;
+  }
+  .chart-card-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 1px;
+    font-weight: 500;
+  }
+  .chart-card-body {
+    padding: 16px 18px;
+  }
+
+  /* Bar aspek */
+  .bar-section { margin-bottom: 8px; }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 9px;
+    cursor: pointer;
+  }
+  .bar-row:hover .bar-track { opacity: .85; }
+  .bar-label {
+    font-size: 11px;
+    width: 44px;
+    text-align: right;
+    color: var(--muted);
+    flex-shrink: 0;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    letter-spacing: -.1px;
+  }
+  .bar-track {
+    flex: 1;
+    background: var(--surface2);
+    border-radius: 99px;
+    height: 20px;
+    overflow: hidden;
+    position: relative;
+    transition: opacity .2s;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 9px;
+    font-size: 10px;
+    font-weight: 700;
+    color: white;
+    min-width: 24px;
+    transition: width .7s cubic-bezier(.4,0,.2,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
+    animation: shimmer 2.5s infinite;
+    animation-delay: var(--shimmer-delay, 0s);
+  }
+  @keyframes shimmer {
+    0% { left: -60%; }
+    100% { left: 160%; }
+  }
+  .bar-count {
+    font-size: 11px;
+    color: var(--muted);
+    width: 28px;
+    text-align: right;
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+  }
+  .legend-dots {
+    display: flex;
+    gap: 14px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .legend-dot {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Pie IQ */
+  .pie-wrap {
+    position: relative;
+    height: 210px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pie-center-text {
+    position: absolute;
+    text-align: center;
+    pointer-events: none;
+  }
+  .pie-center-num {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .pie-center-lbl {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+  }
+  .pie-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .pie-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 5px 8px;
+    border-radius: 6px;
+    transition: background .15s;
+  }
+  .pie-legend-row:hover { background: var(--surface2); }
+  .pie-legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .pie-legend-lbl { flex: 1; }
+  .pie-legend-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .pie-legend-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+    width: 38px;
+    text-align: right;
+  }
+
+  /* IQ spans full width */
+  .chart-card.iq-card {
+    grid-column: 1 / -1;
+  }
+  .iq-card .chart-card-body {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 640px) {
+    .iq-card .chart-card-body { grid-template-columns: 1fr; }
+    .pie-wrap { height: 180px; }
+  }
+
+  /* ── ERROR / EMPTY ── */
+  .error-box, .empty-box {
+    grid-column: 1/-1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 50px;
+    text-align: center;
+    color: var(--muted);
+  }
+  .error-box { border-color: var(--kurang); color: #fca5a5; }
+  .error-icon, .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+  /* ── MODAL POPUP ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 680px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0,0,0,.6);
+    animation: popIn .2s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes popIn {
+    from { transform: scale(.92); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .modal-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .modal-head-info { flex: 1; }
+  .modal-head-title { font-size: 16px; font-weight: 800; }
+  .modal-head-sub   { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .modal-close {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .modal-close:hover { background: var(--border); }
+
+  /* Kategori badge di modal head */
+  .kat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .modal-body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 16px 20px;
+  }
+
+  /* Search in modal */
+  .modal-search {
+    margin-bottom: 14px;
+  }
+  .modal-search input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-family: 'Outfit', sans-serif;
+  }
+  .modal-search input:focus { outline: none; border-color: var(--accent2); }
+
+  /* Modal table */
+  .modal-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .modal-table th {
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: 9px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0;
+  }
+  .modal-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(46,52,80,.5);
+    vertical-align: middle;
+  }
+  .modal-table tr:last-child td { border-bottom: none; }
+  .modal-table tr:hover td { background: var(--surface2); }
+
+  .skor-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px; height: 24px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .pill-k  { background: rgba(239,68,68,.2);  color: #fca5a5; }
+  .pill-c  { background: rgba(245,158,11,.2); color: #fcd34d; }
+  .pill-b  { background: rgba(34,197,94,.2);  color: #86efac; }
+
+  .nama-link {
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .nama-link:hover { color: var(--accent2); text-decoration: underline; }
+
+  /* Ranking no */
+  .rank-no {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    width: 24px;
+    text-align: center;
+  }
+
+  /* Filter chips di modal */
+  .filter-chips {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+    color: var(--muted);
+    background: transparent;
+    font-family: inherit;
+  }
+  .chip.active-k { background: rgba(239,68,68,.2);  color: #fca5a5; border-color: #ef4444; }
+  .chip.active-c { background: rgba(245,158,11,.2); color: #fcd34d; border-color: #f59e0b; }
+  .chip.active-b { background: rgba(34,197,94,.2);  color: #86efac; border-color: #22c55e; }
+  .chip.active-all { background: var(--accent); color: white; border-color: var(--accent); }
+  .chip:hover { border-color: var(--accent2); }
+
+  /* Empty modal */
+  .modal-empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* IQ colors */
+  :root {
+    --iq0: #7f1d1d; --iq1: #991b1b; --iq2: #b45309; --iq3: #78716c;
+    --iq4: #4ade80; --iq5: #3b82f6; --iq6: #8b5cf6;
+    --iq7: #a855f7; --iq8: #ec4899;
+  }
+
+  /* ── INSIGHT PANEL ── */
+  .insight-panel {
+    margin: 0 28px 48px;
+    display: none;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .insight-panel.visible { display: flex; }
+
+  .insight-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .insight-header-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(95,78,218,.3), rgba(168,85,247,.2));
+    border: 1px solid rgba(168,85,247,.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .insight-header-text h2 {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -.3px;
+  }
+  .insight-header-text p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* Health Score */
+  .health-score-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .health-score-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 28px;
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .health-score-ring {
+    position: relative;
+    width: 72px; height: 72px;
+    flex-shrink: 0;
+  }
+  .health-score-ring svg { transform: rotate(-90deg); }
+  .health-score-ring-num {
+    position: absolute;
+    inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .health-score-info h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .health-score-info p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .health-grade {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 6px;
+  }
+
+  /* Strength / Weakness section */
+  .sw-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 700px) { .sw-grid { grid-template-columns: 1fr; } }
+
+  .sw-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .sw-card-head {
+    padding: 13px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sw-card-head.strength { background: rgba(34,197,94,.08); border-bottom-color: rgba(34,197,94,.2); color: #86efac; }
+  .sw-card-head.weakness { background: rgba(239,68,68,.08); border-bottom-color: rgba(239,68,68,.2); color: #fca5a5; }
+  .sw-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    border-bottom: 1px solid rgba(46,52,80,.4);
+  }
+  .sw-item:last-child { border-bottom: none; }
+  .sw-item-icon { font-size: 18px; flex-shrink: 0; }
+  .sw-item-label { font-size: 13px; font-weight: 600; flex: 1; }
+  .sw-item-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .sw-pct-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    flex-shrink: 0;
+  }
+  .sw-pct-pill.good  { background: rgba(34,197,94,.15);  color: #86efac; }
+  .sw-pct-pill.bad   { background: rgba(239,68,68,.15);  color: #fca5a5; }
+  .sw-pct-pill.mid   { background: rgba(245,158,11,.15); color: #fcd34d; }
+
+  /* Rekomendasi cards */
+  .rekomendasi-section h3 {
+    font-size: 15px;
+    font-weight: 800;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .rekom-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 900px) {
+    .rekom-grid { grid-template-columns: 1fr; }
+  }
+  .rekom-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color .2s, transform .2s;
+  }
+  .rekom-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .rekom-card-head {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .rekom-aspek-icon { font-size: 20px; }
+  .rekom-aspek-name { font-size: 13px; font-weight: 700; flex: 1; }
+  .rekom-kurang-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fca5a5;
+    background: rgba(239,68,68,.15);
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+  .rekom-items { padding: 10px 0; }
+  .rekom-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(46,52,80,.3);
+    transition: background .15s;
+  }
+  .rekom-item:last-child { border-bottom: none; }
+  .rekom-item:hover { background: var(--surface2); }
+  .rekom-tipe-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+    white-space: nowrap;
+  }
+  .tipe-workshop   { background: rgba(59,130,246,.15);  color: #93c5fd; border: 1px solid rgba(59,130,246,.3); }
+  .tipe-seminar    { background: rgba(168,85,247,.15);  color: #d8b4fe; border: 1px solid rgba(168,85,247,.3); }
+  .tipe-program    { background: rgba(34,197,94,.15);   color: #86efac; border: 1px solid rgba(34,197,94,.3);  }
+  .tipe-konseling  { background: rgba(245,158,11,.15);  color: #fcd34d; border: 1px solid rgba(245,158,11,.3); }
+  .rekom-item-info { flex: 1; }
+  .rekom-item-judul { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+  .rekom-item-desc  { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .rekom-item-meta  {
+    display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap;
+  }
+  .rekom-meta-tag {
+    font-size: 10px;
+    color: var(--muted);
+    display: flex; align-items: center; gap: 3px;
+  }
+
+  /* Priority badge */
+  .priority-1 { border-top: 3px solid #ef4444; }
+  .priority-2 { border-top: 3px solid #f59e0b; }
+  .priority-3 { border-top: 3px solid #3b82f6; }
+
+  /* ── LOGIN OVERLAY ── */
+  .login-overlay {
+    position: fixed; inset: 0;
+    background: rgba(8,11,18,.97);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9000;
+    backdrop-filter: blur(8px);
+  }
+  .login-overlay.hidden { display: none; }
+  .login-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 32px 80px rgba(0,0,0,.6);
+    animation: popIn .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .login-logo {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .login-logo-icon {
+    width: 60px; height: 60px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(95,78,218,.4), rgba(168,85,247,.3));
+    border: 1px solid rgba(168,85,247,.5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    margin: 0 auto 12px;
+  }
+  .login-logo-title {
+    font-size: 20px; font-weight: 800; letter-spacing: -.5px;
+  }
+  .login-logo-sub {
+    font-size: 12px; color: var(--muted); margin-top: 3px;
+  }
+  .login-field { margin-bottom: 16px; }
+  .login-label {
+    font-size: 12px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .5px;
+    display: block; margin-bottom: 7px;
+  }
+  .login-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color .2s;
+  }
+  .login-input:focus { outline: none; border-color: var(--accent2); }
+  .login-remember {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--muted);
+    cursor: pointer; margin-bottom: 20px;
+  }
+  .login-remember input { cursor: pointer; accent-color: var(--accent2); width: 14px; height: 14px; }
+  .btn-login {
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .2s, transform .1s;
+  }
+  .btn-login:hover { background: var(--accent2); }
+  .btn-login:active { transform: scale(.98); }
+  .login-err {
+    background: rgba(239,68,68,.15);
+    border: 1px solid rgba(239,68,68,.4);
+    color: #fca5a5;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .login-err.show { display: block; }
+
+  /* ── KELOLA AKSES PANEL ── */
+  .kelola-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .kelola-overlay.open { display: flex; }
+  .kelola-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0,0,0,.6);
+    animation: popIn .2s cubic-bezier(.34,1.56,.64,1);
+  }
+  .kelola-head {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+    background: linear-gradient(135deg, rgba(95,78,218,.12), rgba(168,85,247,.08));
+  }
+  .kelola-head-title { font-size: 16px; font-weight: 800; flex: 1; }
+  .kelola-body { padding: 20px 22px; overflow-y: auto; flex: 1; }
+  .kelola-section-label {
+    font-size: 11px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .8px;
+    margin-bottom: 12px;
+  }
+  .kelola-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+  .kelola-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+  .kelola-item-name {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .kelola-item-badge {
+    font-size: 10px;
+    background: rgba(34,197,94,.15);
+    color: #86efac;
+    border: 1px solid rgba(34,197,94,.3);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-weight: 700;
+  }
+  .btn-hapus {
+    background: rgba(239,68,68,.15);
+    color: #fca5a5;
+    border: 1px solid rgba(239,68,68,.3);
+    border-radius: 7px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .15s;
+  }
+  .btn-hapus:hover { background: rgba(239,68,68,.3); }
+  .kelola-add {
+    display: flex; gap: 10px;
+  }
+  .kelola-add input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+  }
+  .kelola-add input:focus { outline: none; border-color: var(--accent2); }
+  .btn-tambah {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: background .2s;
+  }
+  .btn-tambah:hover { background: var(--accent2); }
+  .kelola-msg {
+    margin-top: 12px;
+    font-size: 13px;
+    min-height: 20px;
+  }
+  .msg-ok  { color: #86efac; }
+  .msg-err { color: #fca5a5; }
+
+  /* admin badge di topbar */
+  .admin-badge {
+    background: rgba(95,78,218,.2);
+    border: 1px solid rgba(124,110,240,.4);
+    color: var(--accent2);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-logout {
+    background: rgba(239,68,68,.15);
+    color: #fca5a5;
+    border: 1px solid rgba(239,68,68,.3);
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .15s;
+  }
+  .btn-logout:hover { background: rgba(239,68,68,.3); }
+  .btn-kelola {
+    background: linear-gradient(135deg, rgba(95,78,218,.3), rgba(168,85,247,.2));
+    color: var(--accent2);
+    border: 1px solid rgba(168,85,247,.4);
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .15s;
+  }
+  .btn-kelola:hover { background: rgba(168,85,247,.3); }
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN OVERLAY ══ -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">📊</div>
+      <div class="login-logo-title">Analisa <span style="color:var(--accent2)">Psikogram</span></div>
+      <div class="login-logo-sub">Admin Panel · Lidan Psikologi</div>
+    </div>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-field">
+      <label class="login-label">Username</label>
+      <input class="login-input" type="text" id="login-user" placeholder="Masukkan username" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Password</label>
+      <input class="login-input" type="password" id="login-pass" placeholder="Masukkan password" autocomplete="current-password">
+    </div>
+    <label class="login-remember">
+      <input type="checkbox" id="login-remember"> Ingat saya
+    </label>
+    <button class="btn-login" id="btn-login-submit" onclick="doLogin()">Masuk</button>
+  </div>
+</div>
+
+<!-- ══ KELOLA AKSES OVERLAY ══ -->
+<div class="kelola-overlay" id="kelola-overlay" onclick="closeKelolaOutside(event)">
+  <div class="kelola-box">
+    <div class="kelola-head">
+      <div style="font-size:20px">🔐</div>
+      <div class="kelola-head-title">Kelola Akses Tabel</div>
+      <button class="modal-close" onclick="closeKelola()">✕</button>
+    </div>
+    <div class="kelola-body">
+      <div class="kelola-section-label">Tabel yang Diaktifkan</div>
+      <div class="kelola-list" id="kelola-list">
+        <div style="color:var(--muted); font-size:13px; text-align:center; padding:20px;">Memuat...</div>
+      </div>
+      <div class="kelola-section-label">Tambah Tabel Baru</div>
+      <div class="kelola-add">
+        <input type="text" id="kelola-input" placeholder="nama_tabel_baru" onkeydown="if(event.key==='Enter')tambahTabel()">
+        <button class="btn-tambah" onclick="tambahTabel()">+ Tambah</button>
+      </div>
+      <div class="kelola-msg" id="kelola-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div id="loading-overlay" class="hidden">
+  <div class="spin"></div>
+  <div class="load-txt" id="load-txt">Memuat data analisa...</div>
+</div>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="topbar-title">📊 Analisa <span>Psikogram</span></div>
+  <div class="topbar-right">
+    <input type="text" id="inp-table" value="rekap_nilai1" placeholder="Nama tabel">
+    <button class="btn-top" onclick="loadData()">🔄 Muat Ulang</button>
+    <button class="btn-top btn-back" onclick="window.history.back()">← Kembali</button>
+    <button class="btn-kelola" onclick="openKelola()">🔐 Kelola Akses</button>
+    <div class="admin-badge" id="admin-badge" style="display:none;">👤 <span id="admin-name">Admin</span></div>
+    <button class="btn-logout" id="btn-logout" style="display:none;" onclick="doLogout()">Keluar</button>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="summary-strip" id="summary-strip" style="display:none;">
+  <div class="sum-box" style="--sum-accent:#7c6ef0;" data-icon="👥">
+    <div class="sum-num" id="sum-total" style="color:var(--accent2);">–</div>
+    <div class="sum-lbl">Total Peserta</div>
+  </div>
+  <div class="sum-box" style="--sum-accent:#22c55e;" data-icon="⭐">
+    <div class="sum-num" id="sum-baik" style="color:var(--baik);">–</div>
+    <div class="sum-lbl">Rata-rata Baik</div>
+  </div>
+  <div class="sum-box" style="--sum-accent:#f59e0b;" data-icon="📊">
+    <div class="sum-num" id="sum-cukup" style="color:var(--cukup);">–</div>
+    <div class="sum-lbl">Rata-rata Cukup</div>
+  </div>
+  <div class="sum-box" style="--sum-accent:#ef4444;" data-icon="⚡">
+    <div class="sum-num" id="sum-kurang" style="color:var(--kurang);">–</div>
+    <div class="sum-lbl">Rata-rata Kurang</div>
+  </div>
+  <div class="sum-box" style="--sum-accent:#c084fc;" data-icon="🧩">
+    <div class="sum-num" id="sum-iq-avg" style="color:#c084fc;">–</div>
+    <div class="sum-lbl">Rata-rata IQ</div>
+  </div>
+</div>
+
+<!-- Main Grid -->
+<div class="main-grid" id="main-grid"></div>
+
+<!-- Insight Panel -->
+<div class="insight-panel" id="insight-panel"></div>
+
+<!-- Modal Popup -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-head-info">
+        <div class="kat-badge" id="modal-badge"></div>
+        <div class="modal-head-title" id="modal-title">–</div>
+        <div class="modal-head-sub"  id="modal-sub">–</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-search">
+        <input type="text" id="modal-search-inp" placeholder="🔍 Cari nama..." oninput="filterModalTable()">
+      </div>
+      <div class="filter-chips" id="modal-chips"></div>
+      <div id="modal-table-wrap"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+const API = 'https://lidan-co-id.pages.dev/api/db_psikogram1';
+const SECRET = 'admin';
+const STORAGE_KEY = 'psiko_admin_session';
+
+// ── LOGIN STATE ──
+let currentAdmin = null;
+
+// ── INIT: Cek session tersimpan ──
+(function initSession() {
+  const saved = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      currentAdmin = JSON.parse(saved);
+      showAdminUI();
+      loadData();
+      return;
+    } catch(e) {}
+  }
+  // Tampilkan login
+  document.getElementById('login-overlay').classList.remove('hidden');
+  // Tambahkan enter key listener
+  document.getElementById('login-pass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+  document.getElementById('login-user').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('login-pass').focus();
+  });
+})();
+
+// ── DO LOGIN ──
+async function doLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const remember = document.getElementById('login-remember').checked;
+  const errEl = document.getElementById('login-err');
+  const btnEl = document.getElementById('btn-login-submit');
+
+  if (!user || !pass) {
+    errEl.textContent = 'Username dan password harus diisi.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  btnEl.disabled = true;
+  btnEl.textContent = 'Memverifikasi...';
+  errEl.classList.remove('show');
+
+  try {
+    const res = await fetch(`${API}?action=login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET, 'X-Role': 'admin' },
+      body: JSON.stringify({ username: user, password: pass })
+    });
+    const json = await res.json();
+    if (json.success) {
+      currentAdmin = { username: user, data: json.data };
+      const session = JSON.stringify(currentAdmin);
+      if (remember) localStorage.setItem(STORAGE_KEY, session);
+      else sessionStorage.setItem(STORAGE_KEY, session);
+      document.getElementById('login-overlay').classList.add('hidden');
+      showAdminUI();
+      loadData();
+    } else {
+      errEl.textContent = json.message || 'Username atau password salah.';
+      errEl.classList.add('show');
+    }
+  } catch(e) {
+    errEl.textContent = 'Gagal terhubung ke server.';
+    errEl.classList.add('show');
+  } finally {
+    btnEl.disabled = false;
+    btnEl.textContent = 'Masuk';
+  }
+}
+
+// ── SHOW ADMIN UI ──
+function showAdminUI() {
+  const badge = document.getElementById('admin-badge');
+  const logout = document.getElementById('btn-logout');
+  badge.style.display = 'flex';
+  logout.style.display = 'block';
+  document.getElementById('admin-name').textContent = currentAdmin?.username || 'Admin';
+}
+
+// ── DO LOGOUT ──
+function doLogout() {
+  localStorage.removeItem(STORAGE_KEY);
+  sessionStorage.removeItem(STORAGE_KEY);
+  currentAdmin = null;
+  location.reload();
+}
+
+// ══════════════════════════════════
+// ── KELOLA AKSES ──
+// ══════════════════════════════════
+let allowedTables = [];
+
+async function openKelola() {
+  document.getElementById('kelola-overlay').classList.add('open');
+  document.getElementById('kelola-msg').textContent = '';
+  await loadKelolaList();
+}
+
+function closeKelola() {
+  document.getElementById('kelola-overlay').classList.remove('open');
+}
+function closeKelolaOutside(e) {
+  if (e.target === document.getElementById('kelola-overlay')) closeKelola();
+}
+
+async function loadKelolaList() {
+  const listEl = document.getElementById('kelola-list');
+  listEl.innerHTML = '<div style="color:var(--muted); font-size:13px; text-align:center; padding:20px;">Memuat...</div>';
+  try {
+    const res = await fetch(`${API}?table=kontrol_admin&id_x=3`, {
+      headers: { 'X-Custom-Auth': SECRET }
+    });
+    const json = await res.json();
+    if (json.success && json.data) {
+      try {
+        const parsed = JSON.parse(json.data.x_01 || '{}');
+        allowedTables = parsed.tables_allowed || [];
+      } catch { allowedTables = []; }
+    } else {
+      allowedTables = [];
+    }
+  } catch { allowedTables = []; }
+  renderKelolaList();
+}
+
+function renderKelolaList() {
+  const listEl = document.getElementById('kelola-list');
+  if (!allowedTables.length) {
+    listEl.innerHTML = '<div style="color:var(--muted); font-size:13px; text-align:center; padding:20px;">Belum ada tabel yang diaktifkan</div>';
+    return;
+  }
+  listEl.innerHTML = allowedTables.map((t,i) => `
+    <div class="kelola-item">
+      <div class="kelola-item-name">${escHtml(t)}</div>
+      <div class="kelola-item-badge">✓ Aktif</div>
+      <button class="btn-hapus" onclick="hapusTabel(${i})">Hapus</button>
+    </div>
+  `).join('');
+}
+
+async function saveAllowed() {
+  const payload = { x_01: JSON.stringify({ tables_allowed: allowedTables }) };
+  // Cek dulu apakah row id_x=3 sudah ada
+  try {
+    const checkRes = await fetch(`${API}?table=kontrol_admin&id_x=3`, {
+      headers: { 'X-Custom-Auth': SECRET }
+    });
+    const checkJson = await checkRes.json();
+    if (checkJson.success && checkJson.data) {
+      // Update existing
+      const res = await fetch(`${API}?table=kontrol_admin&id_x=3`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET },
+        body: JSON.stringify(payload)
+      });
+      return (await res.json()).success;
+    } else {
+      // Create new (insert, lalu cek id_x — harusnya 3 kalau tabel baru)
+      const res = await fetch(`${API}?table=kontrol_admin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET },
+        body: JSON.stringify(payload)
+      });
+      return (await res.json()).success;
+    }
+  } catch { return false; }
+}
+
+async function tambahTabel() {
+  const inp = document.getElementById('kelola-input');
+  const name = inp.value.trim();
+  const msgEl = document.getElementById('kelola-msg');
+  if (!name) { msgEl.innerHTML = '<span class="msg-err">Nama tabel tidak boleh kosong.</span>'; return; }
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) { msgEl.innerHTML = '<span class="msg-err">Nama tabel tidak valid (huruf, angka, underscore saja).</span>'; return; }
+  if (allowedTables.includes(name)) { msgEl.innerHTML = '<span class="msg-err">Tabel sudah ada dalam daftar.</span>'; return; }
+
+  allowedTables.push(name);
+  renderKelolaList();
+  msgEl.innerHTML = '<span style="color:var(--muted)">Menyimpan...</span>';
+  const ok = await saveAllowed();
+  if (ok) {
+    inp.value = '';
+    msgEl.innerHTML = `<span class="msg-ok">✓ Tabel "${escHtml(name)}" berhasil ditambahkan.</span>`;
+  } else {
+    allowedTables.pop();
+    renderKelolaList();
+    msgEl.innerHTML = '<span class="msg-err">Gagal menyimpan. Coba lagi.</span>';
+  }
+}
+
+async function hapusTabel(idx) {
+  const name = allowedTables[idx];
+  const msgEl = document.getElementById('kelola-msg');
+  if (!confirm(`Nonaktifkan akses tabel "${name}"?`)) return;
+  allowedTables.splice(idx, 1);
+  renderKelolaList();
+  msgEl.innerHTML = '<span style="color:var(--muted)">Menyimpan...</span>';
+  const ok = await saveAllowed();
+  if (ok) {
+    msgEl.innerHTML = `<span class="msg-ok">✓ Tabel "${escHtml(name)}" dinonaktifkan.</span>`;
+  } else {
+    allowedTables.splice(idx, 0, name);
+    renderKelolaList();
+    msgEl.innerHTML = '<span class="msg-err">Gagal menyimpan. Coba lagi.</span>';
+  }
+}
+
+
+// ── ASPEK DEFINISI ──
+const ASPEK_KEMAMPUAN   = [
+  { label:'Kemampuan Umum',            key:'kemampuan_umum',            icon:'🧠', group:'KEMAMPUAN'   },
+  { label:'Daya Tangkap Visual',       key:'daya_tangkap_visual',       icon:'👁️', group:'KEMAMPUAN'   },
+  { label:'Berpikir Logis',            key:'kemampuan_berpikir_logis',  icon:'⚙️', group:'KEMAMPUAN'   },
+  { label:'Berpikir Abstrak',          key:'kemampuan_berpikir_abstrak',icon:'🔷', group:'KEMAMPUAN'   },
+  { label:'Penalaran Verbal',          key:'penalaran_verbal',          icon:'💬', group:'KEMAMPUAN'   },
+  { label:'Penalaran Numerik',         key:'penalaran_numerik',         icon:'🔢', group:'KEMAMPUAN'   },
+];
+const ASPEK_KEPRIBADIAN = [
+  { label:'Hasrat Berprestasi',        key:'hasrat_berprestasi',        icon:'🏆', group:'KEPRIBADIAN' },
+  { label:'Daya Tahan Stress',         key:'daya_tahan_stress',         icon:'💪', group:'KEPRIBADIAN' },
+  { label:'Kepercayaan Diri',          key:'kepercayaan_diri',          icon:'✨', group:'KEPRIBADIAN' },
+  { label:'Relasi Sosial',             key:'relasi_sosial',             icon:'🤝', group:'KEPRIBADIAN' },
+  { label:'Kerjasama',                 key:'kerjasama',                 icon:'👥', group:'KEPRIBADIAN' },
+];
+const ASPEK_SIKAP = [
+  { label:'Sistematika Kerja',         key:'sistematika_kerja',         icon:'📋', group:'SIKAP KERJA' },
+  { label:'Inisiatif',                 key:'inisiatif',                 icon:'🚀', group:'SIKAP KERJA' },
+  { label:'Kemandirian',               key:'kemandirian',               icon:'🦅', group:'SIKAP KERJA' },
+];
+const ALL_ASPEK = [...ASPEK_KEMAMPUAN, ...ASPEK_KEPRIBADIAN, ...ASPEK_SIKAP];
+
+const GROUP_COLORS = {
+  'KEMAMPUAN':   { bg:'var(--kem-bg)',  border:'var(--kem-color)', icon:'var(--kem-color)', glow:'var(--kem-glow)',  accent:'#3b82f6' },
+  'KEPRIBADIAN': { bg:'var(--kep-bg)',  border:'var(--kep-color)', icon:'var(--kep-color)', glow:'var(--kep-glow)',  accent:'#a855f7' },
+  'SIKAP KERJA': { bg:'var(--sik-bg)',  border:'var(--sik-color)', icon:'var(--sik-color)', glow:'var(--sik-glow)',  accent:'#10b981' },
+};
+
+// IQ kategori
+const IQ_KATEGORI = [
+  { label:'Sangat Rendah',      min:0,   max:69,  color:'#dc2626' },
+  { label:'Rendah',             min:70,  max:79,  color:'#ea580c' },
+  { label:'Di Bawah Rata-rata', min:80,  max:89,  color:'#ca8a04' },
+  { label:'Rata-rata Bawah',    min:90,  max:99,  color:'#64748b' },
+  { label:'Rata-rata',          min:100, max:109, color:'#22c55e' },
+  { label:'Di Atas Rata-rata',  min:110, max:119, color:'#3b82f6' },
+  { label:'Superior',           min:120, max:129, color:'#8b5cf6' },
+  { label:'Sangat Superior',    min:130, max:139, color:'#a855f7' },
+  { label:'Genius',             min:140, max:9999,color:'#ec4899' },
+];
+
+// ── GLOBAL STATE ──
+let allRows = [];        // raw data dari API
+let modalRows = [];      // baris yang sedang tampil di modal
+let modalActiveFilter = 'all';
+let pieChart = null;
+
+// ── KLASIFIKASI ──
+function klasSkor(s) {
+  if (s <= 4) return 'kurang';
+  if (s <= 6) return 'cukup';
+  return 'baik';
+}
+function klasIQ(iq) {
+  for (const k of IQ_KATEGORI) {
+    if (iq >= k.min && iq <= k.max) return k;
+  }
+  return IQ_KATEGORI[4];
+}
+
+// ── SAFE JSON PARSE ──
+function sj(str, fb) { try { return JSON.parse(str||'{}'); } catch { return fb; } }
+
+// ── LOAD DATA ──
+async function loadData() {
+  const table = document.getElementById('inp-table').value.trim() || 'rekap_nilai1';
+  document.getElementById('loading-overlay').classList.remove('hidden');
+  document.getElementById('load-txt').textContent = `Memuat data dari tabel "${table}"...`;
+  document.getElementById('main-grid').innerHTML = '';
+  document.getElementById('summary-strip').style.display = 'none';
+
+  try {
+    const url = `${API}?table=${encodeURIComponent(table)}`;
+    const res = await fetch(url, { headers:{ 'X-Custom-Auth': SECRET, 'Content-Type':'application/json' } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message || 'Gagal ambil data');
+    allRows = json.data || [];
+    if (allRows.length === 0) {
+      renderEmpty();
+    } else {
+      renderAll();
+      renderInsightPanel();
+    }
+  } catch(e) {
+    renderError(e.message);
+  } finally {
+    document.getElementById('loading-overlay').classList.add('hidden');
+  }
+}
+
+// ── RENDER ALL ──
+function renderAll() {
+  const grid = document.getElementById('main-grid');
+  grid.innerHTML = '';
+  _cardIndex = 0;
+
+  // Hitung summary
+  const total = allRows.length;
+  let sumBaik=0, sumCukup=0, sumKurang=0, iqTotal=0, iqCount=0;
+  allRows.forEach(row => {
+    const kem = sj(row.x_03,{}); const kep = sj(row.x_04,{}); const sik = sj(row.x_05,{});
+    ALL_ASPEK.forEach(a => {
+      const src = a.group==='KEMAMPUAN'?kem: a.group==='KEPRIBADIAN'?kep:sik;
+      const s = parseInt(src[a.key])||0;
+      if (s>0) { const k=klasSkor(s); if(k==='baik')sumBaik++; else if(k==='cukup')sumCukup++; else sumKurang++; }
+    });
+    const iq = parseInt(row.x_06)||0;
+    if (iq>0) { iqTotal+=iq; iqCount++; }
+  });
+
+  const totalScores = sumBaik+sumCukup+sumKurang;
+  document.getElementById('sum-total').textContent   = total;
+  document.getElementById('sum-baik').textContent    = totalScores>0?Math.round(sumBaik/total):'–';
+  document.getElementById('sum-cukup').textContent   = totalScores>0?Math.round(sumCukup/total):'–';
+  document.getElementById('sum-kurang').textContent  = totalScores>0?Math.round(sumKurang/total):'–';
+  document.getElementById('sum-iq-avg').textContent  = iqCount>0?Math.round(iqTotal/iqCount):'–';
+  document.getElementById('summary-strip').style.display = 'flex';
+
+  // Render Radar overview card
+  const radarCard = buildRadarCard();
+  grid.appendChild(radarCard);
+
+  // Render tiap aspek
+  ALL_ASPEK.forEach(aspek => {
+    const card = buildAspekCard(aspek);
+    grid.appendChild(card);
+  });
+
+  // Render IQ (full width)
+  const iqCard = buildIQCard();
+  grid.appendChild(iqCard);
+
+  // Animate bars after DOM settled
+  setTimeout(() => animateBars(), 50);
+}
+
+// ── BUILD RADAR OVERVIEW CARD ──
+let radarChart = null;
+function buildRadarCard() {
+  // Hitung % baik per aspek
+  const aspekStats = ALL_ASPEK.map(aspek => {
+    let baik=0, cukup=0, kurang=0;
+    allRows.forEach(row => {
+      const src = aspek.group==='KEMAMPUAN' ? sj(row.x_03,{})
+                : aspek.group==='KEPRIBADIAN' ? sj(row.x_04,{})
+                : sj(row.x_05,{});
+      const s = parseInt(src[aspek.key]) || 0;
+      if (s<=0) return;
+      const k = klasSkor(s);
+      if (k==='baik') baik++;
+      else if (k==='cukup') cukup++;
+      else kurang++;
+    });
+    const total = baik+cukup+kurang;
+    return {
+      ...aspek,
+      pctBaik:   total>0 ? Math.round(baik/total*100)   : 0,
+      pctCukup:  total>0 ? Math.round(cukup/total*100)  : 0,
+      pctKurang: total>0 ? Math.round(kurang/total*100) : 0,
+      total,
+    };
+  });
+
+  const card = document.createElement('div');
+  card.className = 'radar-overview-card';
+  card.style.animationDelay = '0ms';
+
+  const legendItems = aspekStats.map(a => {
+    const gc = GROUP_COLORS[a.group] || GROUP_COLORS['KEMAMPUAN'];
+    return `
+      <div class="radar-legend-item" onclick="openModal('${a.label}','all','${a.key}','${a.group}')">
+        <div class="radar-legend-dot" style="background:${gc.accent};"></div>
+        <div class="radar-legend-name">${a.icon} ${a.label}</div>
+        <div class="radar-legend-pct" style="color:${a.pctBaik>=50?'var(--baik)':a.pctBaik>=30?'var(--cukup)':'var(--kurang)'};">${a.pctBaik}%</div>
+      </div>`;
+  }).join('');
+
+  card.innerHTML = `
+    <div class="radar-overview-head">
+      <div class="radar-overview-icon">🕸️</div>
+      <div>
+        <div style="font-size:14px; font-weight:800; letter-spacing:-.2px;">Profil Kelompok — Overview Radar</div>
+        <div style="font-size:11px; color:var(--muted); margin-top:2px; font-weight:500;">Persentase siswa kategori <strong style="color:var(--baik);">Baik</strong> di setiap aspek · Klik item untuk detail</div>
+      </div>
+    </div>
+    <div class="radar-overview-body">
+      <div class="radar-canvas-wrap">
+        <canvas id="radar-main" width="300" height="300"></canvas>
+      </div>
+      <div class="radar-legend-grid">${legendItems}</div>
+    </div>`;
+
+  setTimeout(() => {
+    const ctx = card.querySelector('#radar-main').getContext('2d');
+    if (radarChart) radarChart.destroy();
+
+    const kemData  = aspekStats.filter(a=>a.group==='KEMAMPUAN').map(a=>a.pctBaik);
+    const kepData  = aspekStats.filter(a=>a.group==='KEPRIBADIAN').map(a=>a.pctBaik);
+    const sikData  = aspekStats.filter(a=>a.group==='SIKAP KERJA').map(a=>a.pctBaik);
+    const labels   = aspekStats.map(a => a.label.length > 14 ? a.label.split(' ').slice(0,2).join(' ') : a.label);
+
+    radarChart = new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Kemampuan',
+            data: [...kemData, ...Array(aspekStats.length - kemData.length).fill(null)],
+            backgroundColor: 'rgba(59,130,246,.15)',
+            borderColor: '#3b82f6',
+            borderWidth: 2,
+            pointBackgroundColor: '#3b82f6',
+            pointBorderColor: '#080b12',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            fill: true,
+          },
+          {
+            label: 'Kepribadian',
+            data: [...Array(ASPEK_KEMAMPUAN.length).fill(null), ...kepData, ...Array(ASPEK_SIKAP.length).fill(null)],
+            backgroundColor: 'rgba(168,85,247,.15)',
+            borderColor: '#a855f7',
+            borderWidth: 2,
+            pointBackgroundColor: '#a855f7',
+            pointBorderColor: '#080b12',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            fill: true,
+          },
+          {
+            label: 'Sikap Kerja',
+            data: [...Array(ASPEK_KEMAMPUAN.length + ASPEK_KEPRIBADIAN.length).fill(null), ...sikData],
+            backgroundColor: 'rgba(16,185,129,.15)',
+            borderColor: '#10b981',
+            borderWidth: 2,
+            pointBackgroundColor: '#10b981',
+            pointBorderColor: '#080b12',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            fill: true,
+          },
+        ]
+      },
+      options: {
+        responsive: false,
+        scales: {
+          r: {
+            min: 0,
+            max: 100,
+            ticks: {
+              stepSize: 25,
+              color: '#3a4a6a',
+              font: { size: 9, family: "'JetBrains Mono'" },
+              backdropColor: 'transparent',
+              callback: v => v + '%',
+            },
+            grid: { color: 'rgba(255,255,255,.06)' },
+            angleLines: { color: 'rgba(255,255,255,.06)' },
+            pointLabels: {
+              color: '#8a9ab8',
+              font: { size: 10, family: "'Outfit'", weight: '600' },
+            }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: ${ctx.raw !== null ? ctx.raw + '% Baik' : '–'}`,
+            },
+            bodyColor: '#e2e8f0',
+            backgroundColor: '#0f1420',
+            borderColor: '#1e2a42',
+            borderWidth: 1,
+          }
+        },
+        animation: { duration: 1000, easing: 'easeInOutQuart' },
+      }
+    });
+  }, 200);
+
+  return card;
+}
+
+// ── BUILD ASPEK CARD ──
+let _cardIndex = 0;
+function buildAspekCard(aspek) {
+  const gc = GROUP_COLORS[aspek.group] || GROUP_COLORS['KEMAMPUAN'];
+  const cardIdx = _cardIndex++;
+
+  // Hitung distribusi
+  const baik=[], cukup=[], kurang=[];
+  allRows.forEach(row => {
+    const src = aspek.group==='KEMAMPUAN' ? sj(row.x_03,{})
+              : aspek.group==='KEPRIBADIAN' ? sj(row.x_04,{})
+              : sj(row.x_05,{});
+    const s = parseInt(src[aspek.key]) || 0;
+    const iq = parseInt(row.x_06) || 0;
+    const bio = sj(row.x_02,{});
+    const nama = bio.nama || row.x_01 || '–';
+    const entry = { nama, skor:s, iq, id_x: row.id_x, x_01: row.x_01 };
+    if (s<=0) return;
+    const k = klasSkor(s);
+    if (k==='baik') baik.push(entry);
+    else if (k==='cukup') cukup.push(entry);
+    else kurang.push(entry);
+  });
+
+  const total = baik.length + cukup.length + kurang.length;
+
+  const card = document.createElement('div');
+  card.className = 'chart-card';
+  card.style.cssText = `
+    --card-accent: ${gc.accent};
+    --card-accent-hover: ${gc.accent};
+    --card-glow: ${gc.glow};
+    animation-delay: ${cardIdx * 45}ms;
+  `;
+
+  card.innerHTML = `
+    <div class="chart-card-head" style="background:${gc.bg}; border-bottom-color:${gc.accent}22;">
+      <div class="chart-card-icon" style="background:${gc.bg}; border:1px solid ${gc.accent}44; color:${gc.accent};">
+        ${aspek.icon}
+      </div>
+      <div>
+        <div class="chart-card-title">${aspek.label}</div>
+        <div class="chart-card-sub">${aspek.group} &bull; ${total} peserta</div>
+      </div>
+    </div>
+    <div class="chart-card-body">
+      ${buildBarRow('baik',   'Baik',   baik.length,   total, aspek, baik,   cukup, kurang, gc, 0)}
+      ${buildBarRow('cukup',  'Cukup',  cukup.length,  total, aspek, baik,   cukup, kurang, gc, 1)}
+      ${buildBarRow('kurang', 'Kurang', kurang.length,  total, aspek, baik,   cukup, kurang, gc, 2)}
+      <div class="legend-dots">
+        <div class="legend-dot" onclick="openModal('${aspek.label}','baik','${aspek.key}','${aspek.group}')">
+          <div class="dot" style="background:var(--baik)"></div><span>Baik (${baik.length})</span>
+        </div>
+        <div class="legend-dot" onclick="openModal('${aspek.label}','cukup','${aspek.key}','${aspek.group}')">
+          <div class="dot" style="background:var(--cukup)"></div><span>Cukup (${cukup.length})</span>
+        </div>
+        <div class="legend-dot" onclick="openModal('${aspek.label}','kurang','${aspek.key}','${aspek.group}')">
+          <div class="dot" style="background:var(--kurang)"></div><span>Kurang (${kurang.length})</span>
+        </div>
+      </div>
+    </div>`;
+
+  // Simpan data ke dataset card
+  card.dataset.aspekKey   = aspek.key;
+  card.dataset.aspekGroup = aspek.group;
+  card.dataset.aspekLabel = aspek.label;
+  card.dataset.baik   = JSON.stringify(baik.sort((a,b)=>b.skor-a.skor));
+  card.dataset.cukup  = JSON.stringify(cukup.sort((a,b)=>b.skor-a.skor));
+  card.dataset.kurang = JSON.stringify(kurang.sort((a,b)=>a.skor-b.skor));
+
+  return card;
+}
+
+function buildBarRow(kat, range, count, total, aspek, baik, cukup, kurang, gc, idx) {
+  const pct = total>0 ? Math.round((count/total)*100) : 0;
+  const gradients = {
+    baik:   'linear-gradient(90deg, #16a34a, #22c55e, #4ade80)',
+    cukup:  'linear-gradient(90deg, #d97706, #f59e0b, #fbbf24)',
+    kurang: 'linear-gradient(90deg, #dc2626, #ef4444, #f87171)',
+  };
+  const grad = gradients[kat] || gradients.baik;
+  const delay = `${idx * 0.4}s`;
+  return `
+    <div class="bar-row" onclick="openModal('${aspek.label}','${kat}','${aspek.key}','${aspek.group}')">
+      <div class="bar-label">${range}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:0%; background:${grad}; --shimmer-delay:${delay};" data-target="${pct}">
+          ${pct>=12 ? pct+'%' : ''}
+        </div>
+      </div>
+      <div class="bar-count">${count}</div>
+    </div>`;
+}
+
+function animateBars() {
+  document.querySelectorAll('.bar-fill').forEach(el => {
+    const target = el.dataset.target;
+    setTimeout(() => { el.style.width = target + '%'; }, 10);
+  });
+}
+
+// ── BUILD IQ CARD ──
+function buildIQCard() {
+  // Hitung distribusi IQ
+  const dist = IQ_KATEGORI.map(k => ({ ...k, entries:[] }));
+  allRows.forEach(row => {
+    const iq = parseInt(row.x_06) || 0;
+    if (!iq) return;
+    const bio = sj(row.x_02,{});
+    const nama = bio.nama || row.x_01 || '–';
+    const entry = { nama, iq, id_x: row.id_x, x_01: row.x_01 };
+    const kat = dist.find(d => iq >= d.min && iq <= d.max);
+    if (kat) kat.entries.push(entry);
+  });
+
+  const totalIQ = dist.reduce((s,d)=>s+d.entries.length, 0);
+  const iqValues = allRows.map(r=>parseInt(r.x_06)||0).filter(v=>v>0);
+  const iqAvg = iqValues.length ? Math.round(iqValues.reduce((a,b)=>a+b,0)/iqValues.length) : 0;
+
+  const card = document.createElement('div');
+  card.className = 'chart-card iq-card';
+  card.style.cssText = `--card-accent: #a855f7; --card-accent-hover: #a855f7; --card-glow: rgba(168,85,247,.25); animation-delay: ${_cardIndex * 45}ms;`;
+  _cardIndex++;
+  card.innerHTML = `
+    <div class="chart-card-head" style="background:rgba(168,85,247,.1); border-bottom-color:rgba(168,85,247,.3);">
+      <div class="chart-card-icon" style="background:rgba(168,85,247,.15); border:1px solid rgba(168,85,247,.3);">📊</div>
+      <div>
+        <div class="chart-card-title">Intelligence Quotient (IQ)</div>
+        <div class="chart-card-sub">Distribusi kategori IQ &bull; ${totalIQ} peserta &bull; Rata-rata: ${iqAvg}</div>
+      </div>
+    </div>
+    <div class="chart-card-body">
+      <div class="pie-wrap">
+        <canvas id="pie-iq" width="240" height="240"></canvas>
+        <div class="pie-center-text">
+          <div class="pie-center-num" style="color:#c084fc;">${iqAvg}</div>
+          <div class="pie-center-lbl">Rata-rata IQ</div>
+        </div>
+      </div>
+      <div class="pie-legend" id="pie-legend"></div>
+    </div>`;
+
+  // Simpan distribusi untuk modal
+  card.dataset.iqDist = JSON.stringify(dist);
+
+  // Render legenda
+  setTimeout(() => {
+    const legendEl = card.querySelector('#pie-legend');
+    dist.filter(d=>d.entries.length>0).forEach(d => {
+      const pct = totalIQ>0 ? Math.round(d.entries.length/totalIQ*100) : 0;
+      const row = document.createElement('div');
+      row.className = 'pie-legend-row';
+      row.innerHTML = `
+        <div class="pie-legend-dot" style="background:${d.color};"></div>
+        <div class="pie-legend-lbl">${d.label}</div>
+        <div class="pie-legend-count">${d.entries.length} orang</div>
+        <div class="pie-legend-pct">${pct}%</div>`;
+      row.onclick = () => openIQModal(d.label, d.entries, d.color, dist, totalIQ);
+      legendEl.appendChild(row);
+    });
+
+    // Draw pie chart
+    const ctx = card.querySelector('#pie-iq').getContext('2d');
+    if (pieChart) { pieChart.destroy(); }
+    const filtered = dist.filter(d=>d.entries.length>0);
+    pieChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: filtered.map(d=>d.label),
+        datasets: [{
+          data: filtered.map(d=>d.entries.length),
+          backgroundColor: filtered.map(d=>d.color+'cc'),
+          borderColor: filtered.map(d=>d.color),
+          borderWidth: 2,
+          hoverOffset: 8,
+        }]
+      },
+      options: {
+        cutout: '62%',
+        responsive: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const pct = totalIQ>0?Math.round(ctx.raw/totalIQ*100):0;
+                return ` ${ctx.label}: ${ctx.raw} orang (${pct}%)`;
+              }
+            },
+            bodyColor: '#e2e8f0',
+            backgroundColor: '#191c27',
+            borderColor: '#2e3450',
+            borderWidth: 1,
+          }
+        },
+        onClick: (evt, elements) => {
+          if (!elements.length) return;
+          const idx = elements[0].index;
+          const d = filtered[idx];
+          openIQModal(d.label, d.entries, d.color, dist, totalIQ);
+        }
+      }
+    });
+  }, 100);
+
+  return card;
+}
+
+// ── MODAL ASPEK ──
+let _modalAllEntries = { baik:[], cukup:[], kurang:[] };
+let _modalAspekLabel = '';
+let _modalAspekKey   = '';
+
+function openModal(aspekLabel, kat, aspekKey, aspekGroup) {
+  // Cari card yang sesuai
+  const cards = document.querySelectorAll('.chart-card');
+  let baik=[], cukup=[], kurang=[];
+  cards.forEach(c => {
+    if (c.dataset.aspekKey === aspekKey && c.dataset.aspekGroup === aspekGroup) {
+      baik   = JSON.parse(c.dataset.baik   || '[]');
+      cukup  = JSON.parse(c.dataset.cukup  || '[]');
+      kurang = JSON.parse(c.dataset.kurang || '[]');
+    }
+  });
+
+  _modalAllEntries = { baik, cukup, kurang };
+  _modalAspekLabel = aspekLabel;
+  _modalAspekKey   = aspekKey;
+  modalActiveFilter = kat;
+
+  updateModalContent();
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-search-inp').value = '';
+}
+
+function updateModalContent() {
+  const kat = modalActiveFilter;
+  const { baik, cukup, kurang } = _modalAllEntries;
+  const total = baik.length + cukup.length + kurang.length;
+
+  // Badge
+  const badgeEl = document.getElementById('modal-badge');
+  const colors = { baik:['#86efac','rgba(34,197,94,.2)'], cukup:['#fcd34d','rgba(245,158,11,.2)'], kurang:['#fca5a5','rgba(239,68,68,.2)'], all:['#a5b4fc','rgba(99,102,241,.2)'] };
+  const labels = { baik:'Baik (7–10)', cukup:'Cukup (5–6)', kurang:'Kurang (1–4)', all:'Semua Kategori' };
+  const [fc, bg] = colors[kat] || colors.all;
+  badgeEl.style.cssText = `color:${fc}; background:${bg};`;
+  badgeEl.textContent = labels[kat] || '';
+
+  document.getElementById('modal-title').textContent = _modalAspekLabel;
+
+  let entries;
+  if (kat==='all')    entries = [...baik,...cukup,...kurang];
+  else if (kat==='baik')   entries = baik;
+  else if (kat==='cukup')  entries = cukup;
+  else                      entries = kurang;
+
+  document.getElementById('modal-sub').textContent =
+    `${entries.length} peserta dari total ${total} peserta`;
+
+  // Chips filter
+  const chipsEl = document.getElementById('modal-chips');
+  chipsEl.innerHTML = '';
+  const chips = [
+    { key:'all',    label:`Semua (${total})`,       cls:'active-all' },
+    { key:'baik',   label:`Baik (${baik.length})`,  cls:'active-b' },
+    { key:'cukup',  label:`Cukup (${cukup.length})`,cls:'active-c' },
+    { key:'kurang', label:`Kurang (${kurang.length})`,cls:'active-k'},
+  ];
+  chips.forEach(ch => {
+    const btn = document.createElement('button');
+    btn.className = `chip ${kat===ch.key ? ch.cls : ''}`;
+    btn.textContent = ch.label;
+    btn.onclick = () => { modalActiveFilter = ch.key; document.getElementById('modal-search-inp').value=''; updateModalContent(); };
+    chipsEl.appendChild(btn);
+  });
+
+  // Store for search
+  modalRows = entries;
+  renderModalTable(entries);
+}
+
+function renderModalTable(entries) {
+  const wrap = document.getElementById('modal-table-wrap');
+  if (!entries.length) {
+    wrap.innerHTML = '<div class="modal-empty">😕 Tidak ada data pada kategori ini</div>';
+    return;
+  }
+  let html = `<table class="modal-table">
+    <thead><tr>
+      <th>#</th>
+      <th>Nama</th>
+      <th>Skor</th>
+      <th>IQ</th>
+    </tr></thead><tbody>`;
+  entries.forEach((e,i) => {
+    const kat = klasSkor(e.skor);
+    const pillCls = kat==='baik'?'pill-b': kat==='cukup'?'pill-c':'pill-k';
+    const iqKat = klasIQ(e.iq);
+    const finalUrl = `index_final.html?id_x=${e.id_x}&x_01=${encodeURIComponent(e.x_01||'')}`;
+    html += `<tr>
+      <td><span class="rank-no">${i+1}</span></td>
+      <td><a href="${finalUrl}" class="nama-link" target="_blank">${escHtml(e.nama)}</a></td>
+      <td><span class="skor-pill ${pillCls}">${e.skor}</span></td>
+      <td>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:${iqKat.color}; font-weight:700;">${e.iq||'–'}</span>
+        ${e.iq ? `<span style="font-size:10px; color:var(--muted); margin-left:4px;">${iqKat.label}</span>` : ''}
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function filterModalTable() {
+  const q = document.getElementById('modal-search-inp').value.toLowerCase();
+  const filtered = modalRows.filter(e => (e.nama||'').toLowerCase().includes(q));
+  renderModalTable(filtered);
+}
+
+// ── MODAL IQ ──
+let _iqModalRows = [];
+
+function openIQModal(katLabel, entries, color, dist, totalIQ) {
+  _iqModalRows = entries;
+  const badgeEl = document.getElementById('modal-badge');
+  badgeEl.style.cssText = `color:white; background:${color}cc;`;
+  badgeEl.textContent = katLabel;
+
+  document.getElementById('modal-title').textContent = `IQ — ${katLabel}`;
+  document.getElementById('modal-sub').textContent =
+    `${entries.length} peserta dari ${totalIQ} peserta`;
+
+  // Chips IQ: semua kategori yang ada
+  const chipsEl = document.getElementById('modal-chips');
+  chipsEl.innerHTML = '';
+  dist.filter(d=>d.entries.length>0).forEach(d => {
+    const btn = document.createElement('button');
+    btn.className = `chip ${d.label===katLabel ? '' : ''}`;
+    btn.style.cssText = d.label===katLabel ? `background:${d.color}33; color:${d.color}; border-color:${d.color};` : '';
+    btn.textContent = `${d.label} (${d.entries.length})`;
+    btn.onclick = () => {
+      openIQModal(d.label, d.entries, d.color, dist, totalIQ);
+    };
+    chipsEl.appendChild(btn);
+  });
+
+  modalRows = entries;
+  renderIQTable(entries);
+  document.getElementById('modal-search-inp').value = '';
+  document.getElementById('modal-search-inp').oninput = () => {
+    const q = document.getElementById('modal-search-inp').value.toLowerCase();
+    renderIQTable(entries.filter(e=>(e.nama||'').toLowerCase().includes(q)));
+  };
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function renderIQTable(entries) {
+  const wrap = document.getElementById('modal-table-wrap');
+  if (!entries.length) {
+    wrap.innerHTML = '<div class="modal-empty">😕 Tidak ada data</div>';
+    return;
+  }
+  const sorted = [...entries].sort((a,b)=>b.iq-a.iq);
+  let html = `<table class="modal-table">
+    <thead><tr>
+      <th>#</th>
+      <th>Nama</th>
+      <th>IQ</th>
+      <th>Kategori</th>
+    </tr></thead><tbody>`;
+  sorted.forEach((e,i) => {
+    const kat = klasIQ(e.iq);
+    const finalUrl = `index_final.html?id_x=${e.id_x}&x_01=${encodeURIComponent(e.x_01||'')}`;
+    html += `<tr>
+      <td><span class="rank-no">${i+1}</span></td>
+      <td><a href="${finalUrl}" class="nama-link" target="_blank">${escHtml(e.nama)}</a></td>
+      <td><span style="font-family:'JetBrains Mono',monospace; font-weight:800; font-size:15px; color:${kat.color};">${e.iq}</span></td>
+      <td><span style="font-size:12px; color:${kat.color}; font-weight:600;">${kat.label}</span></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// ── CLOSE MODAL ──
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+// ── EMPTY / ERROR ──
+function renderEmpty() {
+  document.getElementById('main-grid').innerHTML = `
+    <div class="empty-box">
+      <div class="empty-icon">📭</div>
+      <div>Tidak ada data ditemukan di tabel ini.</div>
+    </div>`;
+}
+function renderError(msg) {
+  document.getElementById('main-grid').innerHTML = `
+    <div class="error-box">
+      <div class="error-icon">❌</div>
+      <div style="font-weight:700; margin-bottom:8px;">Gagal memuat data</div>
+      <div style="font-size:13px;">${escHtml(msg)}</div>
+    </div>`;
+}
+
+// ── HELPER ──
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── DATA REKOMENDASI ──
+const REKOM_DATA = {
+  kemampuan_umum: {
+    deskripsi: "Kemampuan kognitif dan kecerdasan umum siswa",
+    rekomendasi: [
+      { tipe:'workshop',  judul:'Brain Training & Kognisi Dasar',       desc:'Sesi latihan otak terstruktur untuk meningkatkan daya ingat, konsentrasi, dan kecepatan berpikir.',  durasi:'2 hari', peserta:'Semua siswa',      icon:'🧠' },
+      { tipe:'program',   judul:'Program Remedial Kognitif',             desc:'Program belajar intensif 1 bulan dengan metode spaced repetition dan active recall.',               durasi:'1 bulan', peserta:'Siswa kurang',     icon:'📚' },
+      { tipe:'seminar',   judul:'Seminar Belajar Efektif & Berpikir Kritis', desc:'Pengenalan teknik belajar berbasis neurosains: mind mapping, chunking, dan elaborative interrogation.', durasi:'1 hari', peserta:'Siswa & guru', icon:'💡' },
+    ]
+  },
+  daya_tangkap_visual: {
+    deskripsi: "Kemampuan memproses dan memahami informasi visual",
+    rekomendasi: [
+      { tipe:'workshop',  judul:'Visual Learning Workshop',              desc:'Pelatihan membaca diagram, grafik, peta, dan simbol secara cepat dan akurat.',                       durasi:'1 hari',  peserta:'Semua siswa',      icon:'👁️' },
+      { tipe:'program',   judul:'Integrasi Media Visual di Kelas',        desc:'Program guru untuk mengintegrasikan infografis, video, dan diagram interaktif dalam pembelajaran.',  durasi:'1 semester', peserta:'Guru',         icon:'🎨' },
+      { tipe:'konseling', judul:'Asesmen Gaya Belajar Visual',            desc:'Sesi identifikasi gaya belajar individual dan penyusunan strategi belajar personal.',               durasi:'2 jam',   peserta:'Siswa kurang',     icon:'🔍' },
+    ]
+  },
+  kemampuan_berpikir_logis: {
+    deskripsi: "Kemampuan berpikir sistematis dan menggunakan logika",
+    rekomendasi: [
+      { tipe:'workshop',  judul:'Logika & Problem Solving Dasar',        desc:'Workshop interaktif menggunakan puzzle, teka-teki logika, dan soal analitis bertahap.',               durasi:'2 hari',  peserta:'Semua siswa',      icon:'⚙️' },
+      { tipe:'program',   judul:'Olimpiade Logika Internal Sekolah',      desc:'Kompetisi internal berbasis soal HOTS untuk memotivasi dan mengasah kemampuan berpikir logis.',     durasi:'1 semester', peserta:'Semua siswa',   icon:'🏅' },
+      { tipe:'seminar',   judul:'Computational Thinking untuk Siswa',     desc:'Pengenalan berpikir komputasional: dekomposisi masalah, pengenalan pola, dan algoritma sederhana.', durasi:'1 hari',  peserta:'Siswa & guru',     icon:'💻' },
+    ]
+  },
+  kemampuan_berpikir_abstrak: {
+    deskripsi: "Kemampuan memahami konsep non-konkret dan pola tersembunyi",
+    rekomendasi: [
+      { tipe:'workshop',  judul:'Abstract Thinking & Pattern Recognition', desc:'Latihan intensif mengenali pola tersembunyi, analogi, dan hubungan antar konsep abstrak.',        durasi:'1 hari',  peserta:'Semua siswa',      icon:'🔷' },
+      { tipe:'program',   judul:'Seni & Matematika Abstrak',               desc:'Program lintas mata pelajaran yang menghubungkan konsep matematika abstrak dengan ekspresi seni.',  durasi:'2 bulan', peserta:'Semua siswa',      icon:'🎭' },
+      { tipe:'konseling', judul:'Bimbingan Belajar Individual',             desc:'Pendampingan 1-on-1 untuk siswa dengan kesulitan memahami konsep abstrak.',                        durasi:'Berkelanjutan', peserta:'Siswa kurang', icon:'🤝' },
+    ]
+  },
+  penalaran_verbal: {
+    deskripsi: "Kemampuan memahami dan menggunakan bahasa secara efektif",
+    rekomendasi: [
+      { tipe:'program',   judul:'Program Literasi Sekolah',               desc:'Program membaca intensif, diskusi buku, dan debat terstruktur untuk meningkatkan kemampuan verbal.',  durasi:'1 semester', peserta:'Semua siswa',  icon:'📖' },
+      { tipe:'workshop',  judul:'Public Speaking & Komunikasi Efektif',   desc:'Pelatihan berbicara di depan umum, argumentasi logis, dan penyampaian ide secara terstruktur.',      durasi:'2 hari',  peserta:'Semua siswa',      icon:'🎤' },
+      { tipe:'seminar',   judul:'Seminar Kecerdasan Linguistik',           desc:'Memahami peran kecerdasan verbal dalam karir dan kehidupan sehari-hari.',                           durasi:'3 jam',   peserta:'Siswa & orang tua', icon:'💬' },
+    ]
+  },
+  penalaran_numerik: {
+    deskripsi: "Kemampuan berpikir dengan angka dan data",
+    rekomendasi: [
+      { tipe:'workshop',  judul:'Numerasi & Literasi Data',               desc:'Workshop memahami statistik dasar, membaca grafik data, dan menginterpretasi angka dalam konteks nyata.', durasi:'2 hari', peserta:'Semua siswa', icon:'🔢' },
+      { tipe:'program',   judul:'Matematika Kontekstual',                 desc:'Pendekatan pembelajaran matematika berbasis proyek nyata seperti keuangan, pengukuran, dan data sains.', durasi:'1 semester', peserta:'Semua siswa', icon:'📊' },
+      { tipe:'konseling', judul:'Mengatasi Math Anxiety',                 desc:'Sesi konseling dan terapi kognitif untuk siswa yang mengalami kecemasan terhadap matematika.',         durasi:'4 sesi',  peserta:'Siswa kurang',     icon:'💭' },
+    ]
+  },
+  hasrat_berprestasi: {
+    deskripsi: "Motivasi intrinsik untuk mencapai hasil terbaik",
+    rekomendasi: [
+      { tipe:'seminar',   judul:'Seminar Growth Mindset',                 desc:'Membangun pola pikir berkembang berdasarkan riset Carol Dweck tentang kecerdasan yang dapat ditumbuhkan.', durasi:'1 hari', peserta:'Semua siswa', icon:'🏆' },
+      { tipe:'program',   judul:'Program Mentoring Siswa Berprestasi',    desc:'Sistem mentoring di mana siswa berprestasi membimbing rekan yang kurang termotivasi.',               durasi:'1 semester', peserta:'Semua siswa',   icon:'⭐' },
+      { tipe:'konseling', judul:'Goal Setting & Motivasi Individual',     desc:'Pendampingan menyusun tujuan SMART dan rencana aksi personal untuk setiap siswa.',                  durasi:'Berkelanjutan', peserta:'Siswa kurang', icon:'🎯' },
+    ]
+  },
+  daya_tahan_stress: {
+    deskripsi: "Kemampuan mengelola tekanan dan tetap performa di bawah stress",
+    rekomendasi: [
+      { tipe:'workshop',  judul:'Manajemen Stress & Resiliensi Remaja',   desc:'Pelatihan teknik pernapasan, mindfulness, dan strategi koping yang sehat untuk siswa.',               durasi:'1 hari',  peserta:'Semua siswa',      icon:'💪' },
+      { tipe:'seminar',   judul:'Seminar Kesehatan Mental Sekolah',       desc:'Meningkatkan kesadaran tentang kesehatan mental, tanda-tanda burnout, dan cara mencari bantuan.',     durasi:'3 jam',   peserta:'Siswa, guru & orang tua', icon:'🧘' },
+      { tipe:'konseling', judul:'Konseling Manajemen Emosi',              desc:'Sesi konseling individual untuk siswa dengan tingkat stress tinggi dan kesulitan regulasi emosi.',     durasi:'Berkelanjutan', peserta:'Siswa kurang', icon:'💚' },
+    ]
+  },
+  kepercayaan_diri: {
+    deskripsi: "Keyakinan diri terhadap kemampuan dan keputusan sendiri",
+    rekomendasi: [
+      { tipe:'workshop',  judul:'Self-Confidence Building Workshop',      desc:'Aktivitas membangun kepercayaan diri melalui tantangan terstruktur, role play, dan umpan balik positif.', durasi:'2 hari', peserta:'Semua siswa', icon:'✨' },
+      { tipe:'program',   judul:'Ekstrakulikuler Seni Pertunjukan',       desc:'Program teater, debat, atau presentasi publik yang membangun rasa percaya diri secara alami.',        durasi:'1 semester', peserta:'Semua siswa',   icon:'🎭' },
+      { tipe:'konseling', judul:'Terapi Kognitif Harga Diri',             desc:'Sesi konseling untuk mengidentifikasi dan mengubah pola pikir negatif tentang diri sendiri.',         durasi:'6 sesi',  peserta:'Siswa kurang',     icon:'🌟' },
+    ]
+  },
+  relasi_sosial: {
+    deskripsi: "Kemampuan membangun dan menjaga hubungan interpersonal",
+    rekomendasi: [
+      { tipe:'workshop',  judul:'Social Skills & Empati',                 desc:'Pelatihan keterampilan sosial, active listening, empati, dan resolusi konflik secara damai.',         durasi:'1 hari',  peserta:'Semua siswa',      icon:'🤝' },
+      { tipe:'program',   judul:'Program Buddy System Sekolah',           desc:'Sistem teman sebangku terstruktur yang mendorong interaksi lintas kelompok dan budaya.',             durasi:'1 semester', peserta:'Semua siswa',   icon:'👫' },
+      { tipe:'seminar',   judul:'Seminar Anti Bullying & Inklusi',        desc:'Membangun budaya sekolah yang inklusif, aman, dan saling menghargai perbedaan.',                    durasi:'1 hari',   peserta:'Semua warga sekolah', icon:'🌈' },
+    ]
+  },
+  kerjasama: {
+    deskripsi: "Kemampuan bekerja efektif dalam tim",
+    rekomendasi: [
+      { tipe:'workshop',  judul:'Team Building & Collaborative Learning', desc:'Kegiatan outbound dan proyek kolaboratif yang membangun kepercayaan, komunikasi, dan sinergi tim.',   durasi:'2 hari',  peserta:'Semua siswa',      icon:'👥' },
+      { tipe:'program',   judul:'Project-Based Learning (PBL)',           desc:'Metode pembelajaran berbasis proyek kelompok lintas mata pelajaran dengan peran yang jelas.',        durasi:'1 semester', peserta:'Semua siswa & guru', icon:'📋' },
+      { tipe:'seminar',   judul:'Seminar Kepemimpinan & Teamwork',        desc:'Mengenal dinamika tim, peran kepemimpinan situasional, dan cara mengatasi konflik dalam kelompok.',  durasi:'1 hari',  peserta:'Siswa & guru',     icon:'🎖️' },
+    ]
+  },
+  sistematika_kerja: {
+    deskripsi: "Kemampuan bekerja secara terencana dan terorganisir",
+    rekomendasi: [
+      { tipe:'workshop',  judul:'Manajemen Waktu & Produktivitas',        desc:'Pelatihan teknik time blocking, to-do list efektif, dan prioritisasi tugas dengan metode Eisenhower.', durasi:'1 hari', peserta:'Semua siswa', icon:'📋' },
+      { tipe:'program',   judul:'Sistem Portofolio Belajar Siswa',        desc:'Program dokumentasi belajar terstruktur yang melatih perencanaan, pelaksanaan, dan evaluasi mandiri.', durasi:'1 semester', peserta:'Semua siswa', icon:'📁' },
+      { tipe:'seminar',   judul:'Seminar Organisasi Diri untuk Remaja',   desc:'Pengenalan sistem produktivitas adaptif untuk pelajar: GTD, Pomodoro, dan habit stacking.',         durasi:'3 jam',   peserta:'Siswa & orang tua', icon:'⏰' },
+    ]
+  },
+  inisiatif: {
+    deskripsi: "Kemauan bertindak proaktif tanpa harus diminta",
+    rekomendasi: [
+      { tipe:'program',   judul:'Student Entrepreneurship Program',       desc:'Program inkubasi ide dimana siswa merancang, merencanakan, dan mempresentasikan solusi nyata.',     durasi:'3 bulan', peserta:'Semua siswa',      icon:'🚀' },
+      { tipe:'workshop',  judul:'Design Thinking & Problem Solving',      desc:'Workshop menggunakan kerangka design thinking untuk menemukan dan memecahkan masalah nyata di sekolah.', durasi:'2 hari', peserta:'Semua siswa', icon:'💡' },
+      { tipe:'konseling', judul:'Coaching Proaktivitas Individual',       desc:'Sesi coaching untuk membantu siswa mengenali zona nyaman dan berani mengambil langkah pertama.',    durasi:'4 sesi',  peserta:'Siswa kurang',     icon:'🎯' },
+    ]
+  },
+  kemandirian: {
+    deskripsi: "Kemampuan belajar dan bekerja tanpa bergantung pada orang lain",
+    rekomendasi: [
+      { tipe:'program',   judul:'Self-Directed Learning Program',         desc:'Struktur belajar mandiri dengan target harian, jurnal refleksi, dan evaluasi diri mingguan.',       durasi:'1 semester', peserta:'Semua siswa',   icon:'🦅' },
+      { tipe:'workshop',  judul:'Workshop Kemandirian Belajar',           desc:'Pelatihan strategi belajar mandiri: self-monitoring, self-evaluation, dan self-regulation.',        durasi:'1 hari',  peserta:'Semua siswa',      icon:'📚' },
+      { tipe:'seminar',   judul:'Parenting: Mendukung Kemandirian Anak',  desc:'Seminar untuk orang tua tentang cara mendukung kemandirian tanpa over-parenting.',               durasi:'3 jam',   peserta:'Orang tua',        icon:'👨‍👩‍👧' },
+    ]
+  },
+};
+
+// ── RENDER INSIGHT PANEL ──
+function renderInsightPanel() {
+  const panel = document.getElementById('insight-panel');
+  if (!allRows.length) { panel.classList.remove('visible'); return; }
+
+  // Hitung % kurang per aspek
+  const aspekStats = ALL_ASPEK.map(aspek => {
+    let baik=0, cukup=0, kurang=0;
+    allRows.forEach(row => {
+      const src = aspek.group==='KEMAMPUAN' ? sj(row.x_03,{})
+                : aspek.group==='KEPRIBADIAN' ? sj(row.x_04,{})
+                : sj(row.x_05,{});
+      const s = parseInt(src[aspek.key]) || 0;
+      if (s<=0) return;
+      const k = klasSkor(s);
+      if (k==='baik') baik++;
+      else if (k==='cukup') cukup++;
+      else kurang++;
+    });
+    const total = baik+cukup+kurang;
+    return {
+      ...aspek,
+      baik, cukup, kurang, total,
+      pctBaik:   total>0 ? Math.round(baik/total*100)   : 0,
+      pctCukup:  total>0 ? Math.round(cukup/total*100)  : 0,
+      pctKurang: total>0 ? Math.round(kurang/total*100) : 0,
+    };
+  });
+
+  // Top 3 kekuatan (% baik tertinggi)
+  const strengths = [...aspekStats].sort((a,b)=>b.pctBaik-a.pctBaik).slice(0,3);
+  // Top 3 kelemahan (% kurang tertinggi)
+  const weaknesses = [...aspekStats].sort((a,b)=>b.pctKurang-a.pctKurang).slice(0,3);
+
+  // Health score: rata-rata % baik semua aspek
+  const healthScore = Math.round(aspekStats.reduce((s,a)=>s+a.pctBaik,0)/aspekStats.length);
+  const healthGrade = healthScore>=80?{label:'Sangat Baik',color:'#22c55e',bg:'rgba(34,197,94,.15)',emoji:'🌟'}
+                    : healthScore>=65?{label:'Baik',color:'#3b82f6',bg:'rgba(59,130,246,.15)',emoji:'✅'}
+                    : healthScore>=50?{label:'Cukup',color:'#f59e0b',bg:'rgba(245,158,11,.15)',emoji:'⚠️'}
+                    : {label:'Perlu Perhatian',color:'#ef4444',bg:'rgba(239,68,68,.15)',emoji:'🚨'};
+
+  const tipeLabel = { workshop:'Pelatihan/Workshop', seminar:'Seminar/Talkshow', program:'Program Sekolah', konseling:'Konseling' };
+  const tipeClass = { workshop:'tipe-workshop', seminar:'tipe-seminar', program:'tipe-program', konseling:'tipe-konseling' };
+  const tipeIcon  = { workshop:'🛠️', seminar:'🎙️', program:'🏫', konseling:'💬' };
+  const priorityLabel = ['🔴 Prioritas Utama','🟡 Prioritas Kedua','🔵 Prioritas Ketiga'];
+
+  // Build HTML
+  const circumference = 2 * Math.PI * 30;
+  const dashOffset = circumference - (healthScore / 100) * circumference;
+
+  panel.innerHTML = `
+    <!-- Header -->
+    <div class="insight-header">
+      <div class="insight-header-icon">📋</div>
+      <div class="insight-header-text">
+        <h2>Insight & Rekomendasi Sekolah</h2>
+        <p>Analisa otomatis berdasarkan data ${allRows.length} peserta · Top 3 area prioritas tindakan</p>
+      </div>
+    </div>
+
+    <!-- Health Score -->
+    <div class="health-score-row">
+      <div class="health-score-card">
+        <div class="health-score-ring">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="30" fill="none" stroke="var(--surface2)" stroke-width="7"/>
+            <circle cx="36" cy="36" r="30" fill="none" stroke="${healthGrade.color}" stroke-width="7"
+              stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}"
+              stroke-linecap="round" style="transition:stroke-dashoffset 1s ease;"/>
+          </svg>
+          <div class="health-score-ring-num" style="color:${healthGrade.color};">${healthScore}</div>
+        </div>
+        <div class="health-score-info">
+          <h3>Indeks Kesehatan Sekolah</h3>
+          <p>Rata-rata persentase siswa berkategori <strong>Baik</strong> di seluruh aspek psikogram.</p>
+          <div class="health-grade" style="background:${healthGrade.bg}; color:${healthGrade.color};">
+            ${healthGrade.emoji} ${healthGrade.label}
+          </div>
+        </div>
+      </div>
+      <div class="health-score-card" style="flex:2; min-width:300px;">
+        <div style="width:100%;">
+          <div style="font-size:13px; font-weight:700; margin-bottom:12px; color:var(--muted);">DISTRIBUSI RATA-RATA SEMUA ASPEK</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            ${['baik','cukup','kurang'].map(k => {
+              const avg = Math.round(aspekStats.reduce((s,a)=>s+a['pct'+k.charAt(0).toUpperCase()+k.slice(1)],0)/aspekStats.length);
+              const color = k==='baik'?'var(--baik)':k==='cukup'?'var(--cukup)':'var(--kurang)';
+              const label = k==='baik'?'Baik (7–10)':k==='cukup'?'Cukup (5–6)':'Kurang (1–4)';
+              return `<div style="display:flex; align-items:center; gap:10px;">
+                <div style="font-size:11px; color:var(--muted); width:72px;">${label}</div>
+                <div style="flex:1; background:var(--surface2); border-radius:99px; height:14px; overflow:hidden;">
+                  <div style="width:${avg}%; height:100%; background:${color}; border-radius:99px; transition:width 1s ease;"></div>
+                </div>
+                <div style="font-size:12px; font-family:'JetBrains Mono',monospace; font-weight:700; color:${color}; width:36px;">${avg}%</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kekuatan & Kelemahan -->
+    <div class="sw-grid">
+      <div class="sw-card">
+        <div class="sw-card-head strength">✅ &nbsp;3 Kekuatan Terbesar</div>
+        ${strengths.map(a=>`
+          <div class="sw-item">
+            <div class="sw-item-icon">${a.icon}</div>
+            <div style="flex:1;">
+              <div class="sw-item-label">${a.label}</div>
+              <div class="sw-item-sub">${a.group}</div>
+            </div>
+            <span class="sw-pct-pill good">${a.pctBaik}% Baik</span>
+          </div>`).join('')}
+      </div>
+      <div class="sw-card">
+        <div class="sw-card-head weakness">⚠️ &nbsp;3 Area Perlu Perhatian</div>
+        ${weaknesses.map(a=>`
+          <div class="sw-item">
+            <div class="sw-item-icon">${a.icon}</div>
+            <div style="flex:1;">
+              <div class="sw-item-label">${a.label}</div>
+              <div class="sw-item-sub">${a.group}</div>
+            </div>
+            <span class="sw-pct-pill bad">${a.pctKurang}% Kurang</span>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Rekomendasi -->
+    <div class="rekomendasi-section">
+      <h3>🎯 Rekomendasi Tindakan — Top 3 Prioritas</h3>
+      <div class="rekom-grid">
+        ${weaknesses.map((a, i) => {
+          const rekom = REKOM_DATA[a.key];
+          if (!rekom) return '';
+          return `
+            <div class="rekom-card priority-${i+1}">
+              <div class="rekom-card-head">
+                <span class="rekom-aspek-icon">${a.icon}</span>
+                <span class="rekom-aspek-name">${a.label}<br><small style="font-weight:400; color:var(--muted);">${priorityLabel[i]}</small></span>
+                <span class="rekom-kurang-pct">${a.pctKurang}% Kurang</span>
+              </div>
+              <div class="rekom-items">
+                ${rekom.rekomendasi.map(r=>`
+                  <div class="rekom-item">
+                    <span class="rekom-tipe-badge ${tipeClass[r.tipe]}">${tipeIcon[r.tipe]} ${tipeLabel[r.tipe]}</span>
+                    <div class="rekom-item-info">
+                      <div class="rekom-item-judul">${r.icon} ${r.judul}</div>
+                      <div class="rekom-item-desc">${r.desc}</div>
+                      <div class="rekom-item-meta">
+                        <span class="rekom-meta-tag">⏱️ ${r.durasi}</span>
+                        <span class="rekom-meta-tag">👤 ${r.peserta}</span>
+                      </div>
+                    </div>
+                  </div>`).join('')}
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+
+  panel.classList.add('visible');
+}
+
+// ── INIT ──
+// loadData() dipanggil dari initSession() setelah verifikasi login
+</script>
+</body>
+</html>
