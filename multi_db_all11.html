@@ -571,7 +571,6 @@ let   lazyTotal   = null; // null = belum tahu
 let   lazyLoading = false;
 let   lazyDB      = null;
 let   lazyTbl     = null;
-let   lazySeenIds = new Set(); // guard duplikat berdasarkan id_x
 
 async function loadData(){
   // Reset state lazy load
@@ -580,7 +579,6 @@ async function loadData(){
   lazyLoading = false;
   lazyDB      = activeDB;
   lazyTbl     = activeTbl;
-  lazySeenIds = new Set();
 
   const wrap = document.getElementById('tableWrap');
   wrap.innerHTML = '<div class="loading-txt">Memuat data</div>';
@@ -633,12 +631,7 @@ function buildTableShell(){
 function appendRows(rows){
   const tbody = document.getElementById('dataTbody');
   if(!tbody) return;
-  let added = 0;
   rows.forEach(row=>{
-    // Guard duplikat: skip baris yang id_x-nya sudah ditampilkan
-    if(lazySeenIds.has(row.id_x)) return;
-    lazySeenIds.add(row.id_x);
-    added++;
     const tr = document.createElement('tr');
     let cells = `<td><button class="btn-del" onclick="deleteRow(${row.id_x})"><i class="fa fa-trash"></i></button></td>`;
     cells += `<td class="td-id">${row.id_x}</td>`;
@@ -650,7 +643,6 @@ function appendRows(rows){
     tbody.appendChild(tr);
   });
   updateRowCount();
-  return added;
 }
 
 function appendSentinel(){
@@ -684,20 +676,15 @@ function attachObserver(){
     }
     lazyTotal  = batch.total ?? lazyTotal;
     lazyOffset += batch.data.length;
-    const added = appendRows(batch.data);
+    appendRows(batch.data);
 
-    // Stop jika sudah semua data (berdasarkan total dari API)
+    // Stop jika sudah semua data
     if(lazyTotal !== null && lazyOffset >= lazyTotal){
       if(lazyObserver) lazyObserver.disconnect();
       return;
     }
-    // Fallback 1: API lama tanpa total — stop jika batch < PAGE_SIZE
+    // Fallback: jika API abaikan offset (selalu return data sama), stop setelah batch < PAGE_SIZE
     if(lazyTotal === null && batch.data.length < PAGE_SIZE){
-      if(lazyObserver) lazyObserver.disconnect();
-      return;
-    }
-    // Fallback 2: Semua baris di batch sudah pernah ditampilkan (API loop/duplikat) — stop paksa
-    if(added === 0){
       if(lazyObserver) lazyObserver.disconnect();
     }
   }, { rootMargin: '200px' });
