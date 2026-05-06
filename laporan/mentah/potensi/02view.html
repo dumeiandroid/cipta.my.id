@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Tes Dominasi Otak</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="potensi_engine.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; padding: 20px;
+        }
+        .container {
+            max-width: 800px; margin: 0 auto; background: white;
+            border-radius: 20px; overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 40px; text-align: center;
+        }
+        .header h1 { font-size: 2em; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 1.1em; }
+        .content { padding: 40px; }
+        .profile-section {
+            background: #f8f9fa; padding: 25px; border-radius: 15px;
+            margin-bottom: 30px; border-left: 5px solid #667eea;
+        }
+        .profile-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px; margin-top: 15px;
+        }
+        .profile-label { font-size: 0.85em; color: #667eea; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+        .profile-value { font-size: 1.1em; color: #2c3e50; }
+        .chart-container { position: relative; height: 300px; margin: 30px 0; }
+        .result-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 30px; border-radius: 15px; margin: 30px 0; border-left: 8px solid;
+        }
+        .result-card h2 { font-size: 2.5em; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; }
+        .brain-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 25px 0; }
+        .brain-side {
+            background: white; padding: 20px; border-radius: 12px;
+            text-align: center; border: 3px solid; opacity: 0.7; transition: all 0.3s;
+        }
+        .brain-side.active { box-shadow: 0 5px 25px rgba(0,0,0,0.15); transform: scale(1.05); opacity: 1; }
+        .brain-percentage { font-size: 3em; font-weight: bold; margin: 15px 0; }
+        .info-section {
+            background: white; padding: 25px; border-radius: 15px;
+            margin: 20px 0; border: 2px solid #e9ecef;
+        }
+        .info-section h3 { color: #2c3e50; margin-bottom: 15px; font-size: 1.3em; display: flex; align-items: center; gap: 10px; }
+        .info-section ul { list-style: none; padding-left: 0; }
+        .info-section li { padding: 10px 0; padding-left: 30px; position: relative; line-height: 1.6; color: #555; }
+        .info-section li:before { content: "✓"; position: absolute; left: 0; color: #667eea; font-weight: bold; font-size: 1.2em; }
+        .button-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; }
+        button { padding: 15px 30px; border: none; border-radius: 10px; font-size: 1em; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+        .btn-download { background: #667eea; color: white; }
+        .btn-print { background: #2c3e50; color: white; }
+        .error-msg { text-align: center; padding: 60px 40px; color: #e74c3c; }
+        .loading { text-align: center; padding: 60px 40px; color: #7f8c8d; }
+        @media print { .button-group { display: none; } .container { box-shadow: none; } body { background: white; } }
+        @media (max-width: 600px) { .brain-comparison, .button-group { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="container" id="mainContainer">
+    <div class="loading">
+        <div style="font-size: 3em; margin-bottom: 20px;">⏳</div>
+        <h3>Memuat Hasil Analisis Dominasi Otak...</h3>
+    </div>
+</div>
+
+<script>
+PotensiEngine.load('02').then(result => {
+    const { dataDiri, skor, persentase, dominant, config } = result;
+    const isLeft = dominant === 'LEFT';
+    const isRight = dominant === 'RIGHT';
+
+    document.getElementById('mainContainer').innerHTML = `
+        <div class="header">
+            <h1>🧠 Hasil Tes Dominasi Otak</h1>
+            <p>Analisis Kecenderungan Berpikir Peserta</p>
+        </div>
+        <div class="content">
+            <div class="profile-section">
+                <h3 style="color: #2c3e50; margin-bottom: 15px;">📋 Informasi Peserta</h3>
+                <div class="profile-grid">
+                    <div class="profile-item"><span class="profile-label">Nama</span><span class="profile-value">${dataDiri.nama || '-'}</span></div>
+                    <div class="profile-item"><span class="profile-label">Usia</span><span class="profile-value">${dataDiri.usia || '-'} Thn</span></div>
+                    <div class="profile-item"><span class="profile-label">Pendidikan</span><span class="profile-value">${dataDiri.pendidikan || '-'}</span></div>
+                    <div class="profile-item"><span class="profile-label">Tanggal</span><span class="profile-value">${dataDiri.tgl_tes || '-'}</span></div>
+                </div>
+            </div>
+
+            <div class="result-card" style="border-color: ${config.color};">
+                <h2 style="color: ${config.color};">${config.icon} ${config.name}</h2>
+                <p style="font-size: 1.1em; color: #555; margin-bottom: 20px;">${config.description}</p>
+                <div class="brain-comparison">
+                    <div class="brain-side ${isLeft || dominant === 'BALANCED' ? 'active' : ''}" style="border-color: #2980b9;">
+                        <h3 style="color: #2980b9;">Otak Kiri</h3>
+                        <div class="brain-percentage" style="color: #2980b9;">${persentase.kiri}%</div>
+                    </div>
+                    <div class="brain-side ${isRight || dominant === 'BALANCED' ? 'active' : ''}" style="border-color: #e74c3c;">
+                        <h3 style="color: #e74c3c;">Otak Kanan</h3>
+                        <div class="brain-percentage" style="color: #e74c3c;">${persentase.kanan}%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container"><canvas id="myChart"></canvas></div>
+
+            <div class="info-section"><h3>🎯 Karakteristik</h3><ul>${config.characteristics.map(c => `<li>${c}</li>`).join('')}</ul></div>
+            <div class="info-section"><h3>💪 Kekuatan</h3><ul>${config.strengths.map(s => `<li>${s}</li>`).join('')}</ul></div>
+            <div class="info-section"><h3>💼 Karier Cocok</h3><ul>${config.careers.map(c => `<li>${c}</li>`).join('')}</ul></div>
+            <div class="info-section"><h3>💡 Tips Untuk Anda</h3><ul>${config.tips.map(t => `<li>${t}</li>`).join('')}</ul></div>
+
+            <div class="button-group">
+                <button class="btn-download" onclick="downloadAsImage()">📥 Download JPG</button>
+                <button class="btn-print" onclick="window.print()">🖨️ Cetak PDF</button>
+            </div>
+        </div>
+    `;
+
+    new Chart(document.getElementById('myChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: ['Otak Kiri', 'Otak Kanan'],
+            datasets: [{ data: [skor.kiri, skor.kanan], backgroundColor: ['#2980b9', '#e74c3c'], borderWidth: 5, borderColor: '#fff' }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+    });
+
+}).catch(err => {
+    document.getElementById('mainContainer').innerHTML =
+        `<div class="error-msg"><h2>${PotensiEngine.getErrorMessage(err.message)}</h2></div>`;
+});
+
+async function downloadAsImage() {
+    const btn = event.target;
+    btn.textContent = '⏳ Memproses...';
+    try {
+        const canvas = await html2canvas(document.getElementById('mainContainer'), { scale: 2 });
+        const link = document.createElement('a');
+        link.download = `Hasil-Tes-Otak.jpg`;
+        link.href = canvas.toDataURL('image/jpeg');
+        link.click();
+        btn.textContent = '📥 Download JPG';
+    } catch (e) { btn.textContent = '❌ Gagal'; }
+}
+</script>
+</body>
+</html>

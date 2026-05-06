@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kecanduan Hubungan</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="asmara_engine.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 20px; min-height: 100vh; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 15px 50px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+        .header h1 { font-size: 1.8em; margin-bottom: 10px; }
+        .content { padding: 30px; }
+        .profile-section { background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 25px; border-left: 5px solid #667eea; }
+        .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 10px; }
+        .profile-item { display: flex; flex-direction: column; }
+        .profile-label { font-size: 0.85em; color: #666; margin-bottom: 5px; font-weight: 600; }
+        .profile-value { font-size: 1.05em; color: #2d3436; }
+        .chart-section { margin: 30px 0; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .chart-container { max-width: 400px; margin: 0 auto; }
+        .score-display { display: flex; justify-content: center; margin: 25px 0; }
+        .score-item { background: white; padding: 15px 30px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 3px solid; }
+        .score-label { font-size: 0.85em; color: #666; margin-bottom: 5px; }
+        .score-value { font-size: 2em; font-weight: 700; }
+        .result-section { padding: 30px; border-radius: 15px; margin: 25px 0; border-left: 8px solid; }
+        .result-type { font-size: 1.8em; margin-bottom: 15px; font-weight: 700; }
+        .result-description { font-size: 1.05em; line-height: 1.8; color: #2d3436; }
+        .info-section { background: #f1f3f5; padding: 25px; border-radius: 12px; margin: 25px 0; }
+        .info-title { font-size: 1.3em; color: #2d3436; margin-bottom: 15px; font-weight: 600; }
+        .info-list { list-style: none; }
+        .info-list li { padding: 12px 0; border-bottom: 1px solid #dee2e6; line-height: 1.6; }
+        .info-list li:last-child { border-bottom: none; }
+        .info-list strong { color: #667eea; }
+        .advice-section { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 5px solid #27ae60; }
+        .advice-title { font-size: 1.3em; color: #27ae60; margin-bottom: 15px; font-weight: 600; }
+        .advice-list { list-style: none; }
+        .advice-list li { padding: 10px 0 10px 25px; position: relative; line-height: 1.7; color: #2d3436; }
+        .advice-list li:before { content: "✓"; position: absolute; left: 0; color: #27ae60; font-weight: bold; }
+        .buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 30px; }
+        button { padding: 15px 25px; border: none; border-radius: 10px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-secondary { background: white; color: #667eea; border: 2px solid #667eea; }
+        .loading { text-align: center; padding: 50px; color: #666; }
+        .error { background: #fff5f5; color: #e74c3c; padding: 30px; border-radius: 12px; text-align: center; border-left: 5px solid #e74c3c; }
+        @media print { .buttons { display: none; } body { background: white; } .container { box-shadow: none; } }
+    </style>
+</head>
+<body>
+<div class="container" id="app">
+    <div class="loading">Memuat hasil analisis...</div>
+</div>
+<script>
+AsmaraEngine.load('14').then(r => {
+    const { dataDiri, tanggal, total, typeInfo, config } = r;
+    const maxSkor = config.maxSkor;
+
+    const bgMap = { high:'linear-gradient(135deg,#fff5f5 0%,#ffe9e9 100%)', mid:'linear-gradient(135deg,#f0fff4 0%,#e6f7ed 100%)', low:'linear-gradient(135deg,#fffbea 0%,#fff3cd 100%)' };
+    const bgKey = Object.keys(bgMap)[config.levels.findIndex(lv=>lv.key===r.level)];
+
+    document.getElementById('app').innerHTML = `
+        <div class="header">
+            <h1>Kecanduan Hubungan</h1>
+            <p>Analisis Pola Ketergantungan dalam Hubungan Romantis</p>
+        </div>
+        <div class="content" id="printable-area">
+            <div class="profile-section">
+                <h3 style="margin-bottom:15px;color:#2d3436">Informasi Peserta</h3>
+                <div class="profile-grid">
+                    <div class="profile-item"><span class="profile-label">Nama</span><span class="profile-value">${dataDiri.nama||'-'}</span></div>
+                    <div class="profile-item"><span class="profile-label">Usia</span><span class="profile-value">${dataDiri.usia||'-'} Tahun</span></div>
+                    <div class="profile-item"><span class="profile-label">Pendidikan</span><span class="profile-value">${dataDiri.pendidikan||'-'}</span></div>
+                    <div class="profile-item"><span class="profile-label">Tanggal Tes</span><span class="profile-value">${tanggal}</span></div>
+                </div>
+            </div>
+            <div class="chart-section">
+                <h3 style="text-align:center;margin-bottom:20px;color:#2d3436">Distribusi Pola Hubungan</h3>
+                <div class="chart-container"><canvas id="addictionChart"></canvas></div>
+            </div>
+            <div class="score-display">
+                <div class="score-item" style="border-color:${typeInfo.color}">
+                    <div class="score-label">Total Nilai</div>
+                    <div class="score-value" style="color:${typeInfo.color}">${total}</div>
+                    <div style="font-size:0.85em;color:#666">dari ${maxSkor} maksimal</div>
+                </div>
+            </div>
+            <div class="result-section" style="background:${bgMap[r.level]||bgMap.mid};border-color:${typeInfo.color}">
+                <div class="result-type" style="color:${typeInfo.color}">${typeInfo.title}</div>
+                <div class="result-description">${typeInfo.description}</div>
+            </div>
+            <div class="info-section">
+                <div class="info-title">Karakteristik Anda</div>
+                <ul class="info-list">${typeInfo.characteristics.map(c=>`<li><strong>•</strong> ${c}</li>`).join('')}</ul>
+            </div>
+            <div class="advice-section">
+                <div class="advice-title">Saran untuk Anda</div>
+                <ul class="advice-list">${typeInfo.advice.map(a=>`<li>${a}</li>`).join('')}</ul>
+            </div>
+            <div class="info-section">
+                <div class="info-title">Tentang Pola Ketergantungan Hubungan</div>
+                <ul class="info-list">
+                    <li><strong>Kecanduan Hubungan:</strong> Ketergantungan emosional berlebihan pada pasangan</li>
+                    <li><strong>Hubungan Sehat:</strong> Keseimbangan antara kebersamaan dan kemandirian</li>
+                    <li><strong>Independen:</strong> Sangat mandiri, melihat hubungan sebagai pelengkap</li>
+                </ul>
+            </div>
+            <div class="buttons">
+                <button class="btn-primary" onclick="window.print()">🖨️ Cetak Laporan</button>
+                <button class="btn-secondary" onclick="downloadAsImage()">📥 Download Gambar</button>
+            </div>
+        </div>`;
+
+    const ctx = document.getElementById('addictionChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels:['Skor Kamu','Sisa'], datasets:[{ data:[total, maxSkor-total],
+            backgroundColor:[typeInfo.color,'#e9ecef'], borderWidth:3, borderColor:'#fff', hoverOffset:10 }] },
+        options: { responsive:true, maintainAspectRatio:true,
+            plugins:{ legend:{ position:'bottom' }, tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ${ctx.parsed}` } } } }
+    });
+}).catch(err => {
+    document.getElementById('app').innerHTML = `
+        <div class="header"><h1>Kecanduan Hubungan</h1></div>
+        <div class="content"><div class="error"><h3>Terjadi Kesalahan</h3><p>${err.message}</p></div></div>`;
+});
+
+function downloadAsImage() {
+    const el = document.getElementById('printable-area');
+    const btns = document.querySelector('.buttons'); btns.style.display='none';
+    html2canvas(el, { scale:2, backgroundColor:'#ffffff', logging:false, windowWidth:1200 }).then(canvas => {
+        const link = document.createElement('a'); link.download=`Hasil-Kecanduan-Hubungan-${Date.now()}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg',0.95); link.click(); btns.style.display='grid';
+    });
+}
+</script>
+</body>
+</html>

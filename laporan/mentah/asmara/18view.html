@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apakah Pasangan Kamu Siap Menjadi Pendamping Hidup?</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="asmara_engine.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --ideal: #27ae60; --kurang: #f39c12; --dini: #e74c3c; --bg: #fdfaf6; --text-dark: #2c3e50; --text-light: #7f8c8d; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: center; }
+        .container { background: white; width: 100%; max-width: 850px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #ff6b6b, #ee5a6f); color: white; padding: 30px; text-align: center; }
+        .header h1 { font-size: 26px; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+        .content { padding: 30px; }
+        .profile-section { background: var(--bg); padding: 20px; border-radius: 12px; margin-bottom: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .profile-item { display: flex; align-items: center; gap: 10px; }
+        .profile-item strong { color: var(--text-dark); font-size: 13px; }
+        .profile-item span { color: var(--text-light); font-size: 14px; }
+        .score-display { text-align: center; margin: 30px 0; padding: 30px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 15px; }
+        .score-number { font-size: 56px; font-weight: bold; background: linear-gradient(135deg, #ff6b6b, #ee5a6f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .score-label { color: var(--text-light); font-size: 14px; margin-top: 5px; }
+        .score-range { margin-top: 15px; font-size: 13px; color: var(--text-light); }
+        .chart-section { margin: 30px 0; }
+        .chart-wrapper { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .result-card { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 30px; border-radius: 15px; border-left: 6px solid; margin: 25px 0; }
+        .result-card h2 { font-size: 26px; margin-bottom: 15px; }
+        .result-card .description { color: var(--text-dark); line-height: 1.8; font-size: 15px; margin-bottom: 20px; }
+        .indicators { background: white; padding: 25px; border-radius: 12px; margin: 20px 0; }
+        .indicators h3 { color: var(--text-dark); font-size: 18px; margin-bottom: 15px; }
+        .indicator-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
+        .indicator-item { padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 3px solid; }
+        .indicator-item.positive { border-color: #27ae60; }
+        .indicator-item.negative { border-color: #e74c3c; }
+        .indicator-item .icon { font-size: 20px; margin-bottom: 8px; }
+        .indicator-item .text { font-size: 14px; color: var(--text-dark); line-height: 1.5; }
+        .warning-box { background: #f8d7da; border-left: 4px solid #e74c3c; padding: 20px; border-radius: 10px; margin: 20px 0; }
+        .warning-box h4 { color: #721c24; margin-bottom: 10px; }
+        .warning-box p { color: #721c24; line-height: 1.6; font-size: 14px; }
+        .suggestions { background: #fff3cd; border-left: 4px solid #ffc107; padding: 25px; border-radius: 12px; margin: 20px 0; }
+        .suggestions h3 { color: #856404; font-size: 18px; margin-bottom: 15px; }
+        .suggestions ul { list-style: none; padding: 0; }
+        .suggestions li { padding: 10px 0 10px 25px; position: relative; color: #856404; line-height: 1.6; }
+        .suggestions li:before { content: "💡"; position: absolute; left: 0; }
+        .action-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 30px; }
+        .btn { padding: 15px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-primary { background: linear-gradient(135deg, #ff6b6b, #ee5a6f); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,107,107,0.4); }
+        .btn-secondary { background: white; color: #ff6b6b; border: 2px solid #ff6b6b; }
+        .btn-secondary:hover { background: #ff6b6b; color: white; }
+        .loading { text-align: center; padding: 50px; color: var(--text-light); }
+        .error { text-align: center; padding: 50px; color: #e74c3c; }
+        @media print { body { background: white; } .action-buttons { display: none; } }
+        @media (max-width: 768px) { .header h1 { font-size: 20px; } .score-number { font-size: 42px; } .content { padding: 20px; } .indicator-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <div class="loading"><h2>⏳ Menganalisis kesiapan hubungan Anda...</h2><p>Mohon tunggu sebentar</p></div>
+    </div>
+    <script>
+AsmaraEngine.load('18').then(r => {
+    const { dataDiri, tanggal, total, typeInfo, config } = r;
+    const minSkor = config.minSkor, maxSkor = config.maxSkor;
+
+    document.getElementById('app').innerHTML = `
+        <div class="header">
+            <h1>💑 Apakah Pasangan Kamu Siap Menjadi Pendamping Hidup?</h1>
+            <p>Analisis Kesiapan dan Kematangan Hubungan</p>
+        </div>
+        <div class="content" id="downloadContent">
+            <div class="profile-section">
+                <div class="profile-item"><strong>👤 Nama:</strong><span>${dataDiri.nama||'-'}</span></div>
+                <div class="profile-item"><strong>🎂 Usia:</strong><span>${dataDiri.usia||'-'} Tahun</span></div>
+                <div class="profile-item"><strong>🎓 Pendidikan:</strong><span>${dataDiri.pendidikan||'-'}</span></div>
+                <div class="profile-item"><strong>📅 Tanggal Tes:</strong><span>${tanggal}</span></div>
+            </div>
+            <div class="score-display">
+                <div class="score-number">${total}</div>
+                <div class="score-label">Skor Kesiapan Hubungan</div>
+                <div class="score-range">Rentang: ${minSkor} - ${maxSkor} poin</div>
+            </div>
+            <div class="chart-section">
+                <div class="chart-wrapper"><canvas id="relationshipChart"></canvas></div>
+            </div>
+            <div class="result-card" style="border-color:${typeInfo.color}">
+                <h2 style="color:${typeInfo.color}">${typeInfo.icon} ${typeInfo.title}</h2>
+                <div class="description">${typeInfo.description}</div>
+                <div class="indicators">
+                    <h3>📊 Indikator Kesiapan</h3>
+                    <div class="indicator-grid">
+                        ${typeInfo.indicators.map(ind=>`
+                        <div class="indicator-item ${ind.type}">
+                            <div class="icon">${ind.icon}</div>
+                            <div class="text">${ind.text}</div>
+                        </div>`).join('')}
+                    </div>
+                </div>
+                ${typeInfo.warning ? `
+                <div class="warning-box">
+                    <h4>⚠️ Perhatian Penting</h4>
+                    <p>${typeInfo.warning}</p>
+                </div>` : ''}
+                <div class="suggestions">
+                    <h3>💡 Saran untuk Hubungan Anda</h3>
+                    <ul>${typeInfo.suggestions.map(s=>`<li>${s}</li>`).join('')}</ul>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="downloadAsImage()">📥 Download Hasil (JPG)</button>
+                <button class="btn btn-secondary" onclick="window.print()">🖨️ Cetak Laporan</button>
+            </div>
+        </div>`;
+
+    const ctx = document.getElementById('relationshipChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Skor Anda'],
+            datasets: [{ label:'Skor Kesiapan', data:[total], backgroundColor: typeInfo.color, borderRadius:10, barThickness:60 }]
+        },
+        options: {
+            indexAxis: 'y', responsive:true, maintainAspectRatio:true,
+            scales: {
+                x: { min: minSkor, max: maxSkor, ticks:{ stepSize:4,
+                    callback: v => v===minSkor ? `${minSkor} (Min)` : v===maxSkor ? `${maxSkor} (Max)` : v===20 ? '20 (Ideal)' : v },
+                    grid: { color:'rgba(0,0,0,0.1)' } },
+                y: { display: false }
+            },
+            plugins: { legend:{ display:false }, tooltip:{ callbacks:{ label: ctx => {
+                const v = ctx.parsed.x;
+                return `Skor: ${v} (${v>=29?'Pasangan Ideal':v>=20?'Cukup Baik':'Kurang Kedekatan'})`;
+            }}}}
+        }
+    });
+}).catch(err => {
+    document.getElementById('app').innerHTML = `<div class="error"><h2>❌ Oops!</h2><p>${err.message}</p></div>`;
+});
+
+async function downloadAsImage() {
+    const btn = event.target; btn.disabled=true; btn.textContent='⏳ Memproses...';
+    try {
+        const content = document.getElementById('downloadContent');
+        const canvas = await html2canvas(content, { scale:2, backgroundColor:'#ffffff', logging:false,
+            windowWidth: content.scrollWidth, windowHeight: content.scrollHeight });
+        canvas.toBlob(blob => {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `Hasil-Tes-Pasangan-${new Date().toISOString().split('T')[0]}.jpg`;
+            link.href = url; link.click(); URL.revokeObjectURL(url);
+            btn.disabled=false; btn.textContent='✅ Berhasil!';
+            setTimeout(()=>{ btn.innerHTML='📥 Download Hasil (JPG)'; },3000);
+        }, 'image/jpeg', 0.95);
+    } catch(e) {
+        btn.disabled=false; btn.textContent='❌ Gagal. Coba Lagi';
+        setTimeout(()=>{ btn.innerHTML='📥 Download Hasil (JPG)'; },3000);
+    }
+}
+    </script>
+</body>
+</html>

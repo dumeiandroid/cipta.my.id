@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisis Stres Kerja</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="karir_engine.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --bg: #f0f2f5; --text-dark: #2c3e50; --text-light: #7f8c8d; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+            min-height: 100vh; padding: 20px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .container { background: white; width: 100%; max-width: 850px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #8e44ad, #9b59b6); color: white; padding: 30px; text-align: center; }
+        .header h1 { font-size: 28px; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+        .content { padding: 30px; }
+
+        .profile-section { background: var(--bg); padding: 20px; border-radius: 12px; margin-bottom: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .profile-item { display: flex; align-items: center; gap: 10px; }
+        .profile-item strong { color: var(--text-dark); font-size: 13px; }
+        .profile-item span { color: var(--text-light); font-size: 14px; }
+
+        .score-display { text-align: center; margin: 30px 0; padding: 30px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 15px; }
+        .score-number { font-size: 56px; font-weight: bold; }
+        .score-label { color: var(--text-light); font-size: 14px; margin-top: 5px; }
+
+        .chart-section { margin: 30px 0; }
+        .chart-wrapper { max-width: 350px; margin: 0 auto; position: relative; }
+        .chart-center-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+        .big-number { font-size: 40px; font-weight: bold; }
+        .small-text { font-size: 14px; color: var(--text-light); }
+
+        .result-card { background: linear-gradient(135deg, #f8f9fa, #e9ecef); padding: 30px; border-radius: 15px; border-left: 6px solid; margin: 25px 0; }
+        .result-card h2 { font-size: 24px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .result-card .description { color: var(--text-dark); line-height: 1.8; font-size: 15px; }
+
+        .warning-box { background: #fff3cd; border: 1px solid #ffc107; padding: 20px; border-radius: 10px; margin: 20px 0; }
+        .warning-box h4 { color: #856404; margin-bottom: 8px; font-size: 15px; }
+        .warning-box p { color: #856404; font-size: 14px; line-height: 1.6; }
+
+        .indicators-section { margin-top: 25px; padding-top: 20px; border-top: 2px solid #eee; }
+        .indicators-section h3 { color: var(--text-dark); font-size: 16px; margin-bottom: 15px; }
+        .indicators-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+        .indicator-item { display: flex; align-items: center; gap: 10px; padding: 12px; background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .indicator-item.positive { border-left: 3px solid #4caf50; }
+        .indicator-item.negative { border-left: 3px solid #f44336; }
+        .ind-icon { font-size: 20px; flex-shrink: 0; }
+        .ind-text { font-size: 13px; color: var(--text-dark); line-height: 1.5; }
+
+        .suggestions { padding: 25px; border-radius: 12px; margin: 20px 0; }
+        .suggestions.safe { background: #e8f5e9; border-left: 4px solid #4caf50; }
+        .suggestions.safe h3 { color: #2e7d32; }
+        .suggestions.safe li { color: #2e7d32; }
+        .suggestions.warning { background: #fce4ec; border-left: 4px solid #e91e63; }
+        .suggestions.warning h3 { color: #880e4f; }
+        .suggestions.warning li { color: #880e4f; }
+        .suggestions h3 { font-size: 17px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .suggestions ul { list-style: none; padding: 0; }
+        .suggestions li { padding: 8px 0 8px 25px; position: relative; font-size: 14px; line-height: 1.6; }
+        .suggestions li:before { content: "💡"; position: absolute; left: 0; }
+
+        .action-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 30px; }
+        .btn { padding: 15px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-primary { background: linear-gradient(135deg, #8e44ad, #9b59b6); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(142,68,173,0.4); }
+        .btn-secondary { background: white; color: #8e44ad; border: 2px solid #8e44ad; }
+        .btn-secondary:hover { background: #8e44ad; color: white; }
+
+        .loading, .error { text-align: center; padding: 50px; color: var(--text-light); }
+        .error { color: #e74c3c; }
+        @media print { body { background: white; } .action-buttons { display: none; } }
+        @media (max-width: 768px) { .header h1 { font-size: 22px; } .content { padding: 20px; } .indicators-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="container" id="app">
+    <div class="loading"><h2>⏳ Menganalisis kondisi stres kerja Anda...</h2><p>Mohon tunggu sebentar</p></div>
+</div>
+<script>
+    KarirEngine.load('25')
+        .then(result => renderUI(result))
+        .catch(err => showError(err.message));
+
+    function showError(msg) {
+        document.getElementById('app').innerHTML = `<div class="error"><h2>❌ Oops!</h2><p>${msg}</p></div>`;
+    }
+
+    function renderUI(r) {
+        const { dataDiri, tanggal, skor, maxSkor, result } = r;
+        const isWarning = skor >= 4;
+
+        document.getElementById('app').innerHTML = `
+            <div class="header">
+                <h1>😰 Analisis Stres Kerja</h1>
+                <p>Evaluasi Kondisi Psikologis dalam Lingkungan Kerja</p>
+            </div>
+            <div class="content" id="downloadContent">
+                <div class="profile-section">
+                    <div class="profile-item"><strong>👤 Nama:</strong><span>${dataDiri.nama}</span></div>
+                    <div class="profile-item"><strong>🎂 Usia:</strong><span>${dataDiri.usia} Tahun</span></div>
+                    <div class="profile-item"><strong>🎓 Pendidikan:</strong><span>${dataDiri.pendidikan}</span></div>
+                    <div class="profile-item"><strong>📅 Tanggal Tes:</strong><span>${tanggal}</span></div>
+                </div>
+
+                <div class="score-display">
+                    <div class="score-number" style="color: ${result.color}">${skor}</div>
+                    <div class="score-label">Skor Beban Stres dari ${maxSkor}</div>
+                </div>
+
+                <div class="chart-section">
+                    <div class="chart-wrapper">
+                        <canvas id="stressChart"></canvas>
+                        <div class="chart-center-text">
+                            <div class="big-number" style="color: ${result.color}">${skor}</div>
+                            <div class="small-text">dari ${maxSkor}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card" style="border-color: ${result.color}">
+                    <h2 style="color: ${result.color}">${result.icon} ${result.title}</h2>
+                    <div class="description">${result.description}</div>
+
+                    ${result.warning ? `
+                        <div class="warning-box">
+                            <h4>⚠️ Perhatian Penting</h4>
+                            <p>${result.warning}</p>
+                        </div>` : ''}
+
+                    <div class="indicators-section">
+                        <h3>🔍 Indikator yang Teridentifikasi</h3>
+                        <div class="indicators-grid">
+                            ${result.indicators.map(ind => `
+                                <div class="indicator-item ${ind.type}">
+                                    <span class="ind-icon">${ind.icon}</span>
+                                    <span class="ind-text">${ind.text}</span>
+                                </div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="suggestions ${isWarning ? 'warning' : 'safe'}">
+                    <h3>💡 ${isWarning ? 'Langkah Penanganan Stres' : 'Saran Menjaga Kesehatan Mental'}</h3>
+                    <ul>${result.suggestions.map(s => `<li>${s}</li>`).join('')}</ul>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="downloadAsImage()">📥 Download Hasil (JPG)</button>
+                    <button class="btn btn-secondary" onclick="window.print()">🖨️ Cetak Laporan</button>
+                </div>
+            </div>`;
+
+        drawChart(skor, maxSkor, result.color);
+    }
+
+    function drawChart(skor, maxSkor, color) {
+        const ctx = document.getElementById('stressChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: { datasets: [{ data: [skor, maxSkor - skor], backgroundColor: [color, '#f1f1f1'], borderWidth: 0, cutout: '80%' }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+        });
+    }
+
+    async function downloadAsImage() {
+        const btn = event.target; btn.disabled = true; btn.textContent = '⏳ Memproses...';
+        try {
+            const canvas = await html2canvas(document.getElementById('downloadContent'), { scale: 2, backgroundColor: '#ffffff', logging: false });
+            canvas.toBlob(blob => {
+                const a = document.createElement('a');
+                a.download = `Hasil-Analisis-Stres-Kerja-${new Date().toISOString().split('T')[0]}.jpg`;
+                a.href = URL.createObjectURL(blob); a.click();
+                btn.disabled = false; btn.innerHTML = '📥 Download Hasil (JPG)';
+            }, 'image/jpeg', 0.95);
+        } catch(e) { btn.disabled = false; btn.textContent = '❌ Gagal. Coba Lagi'; }
+    }
+</script>
+</body>
+</html>

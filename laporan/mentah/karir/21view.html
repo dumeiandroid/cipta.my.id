@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apakah Saya Memiliki Jiwa Kepemimpinan?</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="karir_engine.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --bg: #f0f2f5; --text-dark: #2c3e50; --text-light: #7f8c8d; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            min-height: 100vh; padding: 20px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .container { background: white; width: 100%; max-width: 850px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; padding: 30px; text-align: center; }
+        .header h1 { font-size: 28px; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+        .content { padding: 30px; }
+
+        .profile-section { background: var(--bg); padding: 20px; border-radius: 12px; margin-bottom: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .profile-item { display: flex; align-items: center; gap: 10px; }
+        .profile-item strong { color: var(--text-dark); font-size: 13px; }
+        .profile-item span { color: var(--text-light); font-size: 14px; }
+
+        .score-display { text-align: center; margin: 30px 0; padding: 30px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 15px; }
+        .score-number { font-size: 56px; font-weight: bold; }
+        .score-label { color: var(--text-light); font-size: 14px; margin-top: 5px; }
+        .score-interpretation { margin-top: 10px; font-size: 13px; color: var(--text-light); }
+
+        .chart-section { margin: 30px 0; }
+        .chart-wrapper { max-width: 350px; margin: 0 auto; position: relative; }
+        .chart-center-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -20%); text-align: center; }
+        .big-number { font-size: 40px; font-weight: bold; }
+        .small-text { font-size: 14px; color: var(--text-light); }
+
+        .result-card { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 30px; border-radius: 15px; border-left: 6px solid #27ae60; margin: 25px 0; }
+        .result-card h2 { font-size: 24px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .result-card .description { color: var(--text-dark); line-height: 1.8; font-size: 15px; margin-bottom: 20px; }
+
+        .characteristics { margin-top: 20px; }
+        .characteristics h3 { color: var(--text-dark); font-size: 16px; margin-bottom: 12px; }
+        .characteristics ul { list-style: none; padding: 0; }
+        .characteristics li { padding: 8px 0 8px 25px; position: relative; color: var(--text-dark); font-size: 14px; line-height: 1.5; border-bottom: 1px solid #eee; }
+        .characteristics li:before { content: "✓"; position: absolute; left: 5px; color: #27ae60; font-weight: bold; }
+
+        .suggestions { margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee; }
+        .suggestions h3 { color: var(--text-dark); font-size: 16px; margin-bottom: 12px; }
+        .suggestions ul { list-style: none; padding: 0; }
+        .suggestions li { padding: 8px 0 8px 25px; position: relative; color: var(--text-dark); font-size: 14px; line-height: 1.5; }
+        .suggestions li:before { content: "🎯"; position: absolute; left: 0; }
+
+        .action-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 30px; }
+        .btn { padding: 15px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-primary { background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(39,174,96,0.4); }
+        .btn-secondary { background: white; color: #27ae60; border: 2px solid #27ae60; }
+        .btn-secondary:hover { background: #27ae60; color: white; }
+
+        .loading, .error { text-align: center; padding: 50px; color: var(--text-light); }
+        .error { color: #e74c3c; }
+        @media print { body { background: white; } .action-buttons { display: none; } }
+        @media (max-width: 768px) { .header h1 { font-size: 22px; } .content { padding: 20px; } }
+    </style>
+</head>
+<body>
+<div class="container" id="app">
+    <div class="loading"><h2>⏳ Menganalisis jiwa kepemimpinan Anda...</h2><p>Mohon tunggu sebentar</p></div>
+</div>
+<script>
+    KarirEngine.load('21')
+        .then(result => renderUI(result))
+        .catch(err => showError(err.message));
+
+    function showError(msg) {
+        document.getElementById('app').innerHTML = `<div class="error"><h2>❌ Oops!</h2><p>${msg}</p></div>`;
+    }
+
+    function renderUI(r) {
+        const { dataDiri, tanggal, skor, maxSkor, result } = r;
+        const visualValue = maxSkor - skor;
+
+        document.getElementById('app').innerHTML = `
+            <div class="header">
+                <h1>👑 Apakah Saya Memiliki Jiwa Kepemimpinan?</h1>
+                <p>Evaluasi Potensi dan Kualitas Kepemimpinan</p>
+            </div>
+            <div class="content" id="downloadContent">
+                <div class="profile-section">
+                    <div class="profile-item"><strong>👤 Nama:</strong><span>${dataDiri.nama}</span></div>
+                    <div class="profile-item"><strong>🎂 Usia:</strong><span>${dataDiri.usia} Tahun</span></div>
+                    <div class="profile-item"><strong>🎓 Pendidikan:</strong><span>${dataDiri.pendidikan}</span></div>
+                    <div class="profile-item"><strong>📅 Tanggal Tes:</strong><span>${tanggal}</span></div>
+                </div>
+
+                <div class="score-display">
+                    <div class="score-number" style="color: ${result.color}">${skor}</div>
+                    <div class="score-label">Total Skor Kepemimpinan</div>
+                    <div class="score-interpretation">Skor rendah = Kepemimpinan kuat | Skor tinggi = Perlu pengembangan</div>
+                </div>
+
+                <div class="chart-section">
+                    <div class="chart-wrapper">
+                        <canvas id="gaugeChart"></canvas>
+                        <div class="chart-center-text">
+                            <div class="big-number" style="color: ${result.color}">${skor}</div>
+                            <div class="small-text">dari ${maxSkor}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card" style="border-color: ${result.color}">
+                    <h2 style="color: ${result.color}">${result.icon} ${result.title}</h2>
+                    <div class="description">${result.description}</div>
+                    <div class="characteristics">
+                        <h3>💫 Karakteristik Kepemimpinan Anda</h3>
+                        <ul>${result.characteristics.map(c => `<li>${c}</li>`).join('')}</ul>
+                    </div>
+                    <div class="suggestions">
+                        <h3>🎯 Saran Pengembangan</h3>
+                        <ul>${result.suggestions.map(s => `<li>${s}</li>`).join('')}</ul>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="downloadAsImage()">📥 Download Hasil (JPG)</button>
+                    <button class="btn btn-secondary" onclick="window.print()">🖨️ Cetak Laporan</button>
+                </div>
+            </div>`;
+
+        drawGauge(visualValue, result.color);
+    }
+
+    function drawGauge(visualValue, color) {
+        const ctx = document.getElementById('gaugeChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: { datasets: [{ data: [visualValue, 42 - visualValue], backgroundColor: [color, '#eee'], borderWidth: 0, circumference: 180, rotation: 270, cutout: '85%' }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+        });
+    }
+
+    async function downloadAsImage() {
+        const btn = event.target; btn.disabled = true; btn.textContent = '⏳ Memproses...';
+        try {
+            const canvas = await html2canvas(document.getElementById('downloadContent'), { scale: 2, backgroundColor: '#ffffff', logging: false });
+            canvas.toBlob(blob => {
+                const a = document.createElement('a');
+                a.download = `Hasil-Tes-Kepemimpinan-${new Date().toISOString().split('T')[0]}.jpg`;
+                a.href = URL.createObjectURL(blob); a.click();
+                btn.disabled = false; btn.innerHTML = '📥 Download Hasil (JPG)';
+            }, 'image/jpeg', 0.95);
+        } catch(e) { btn.disabled = false; btn.textContent = '❌ Gagal. Coba Lagi'; }
+    }
+</script>
+</body>
+</html>

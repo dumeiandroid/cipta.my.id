@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Tes Keberanian Diri</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="karir_engine.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #6366f1;
+            --bg: #f0f2f5;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            background: white;
+            width: 100%;
+            max-width: 900px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 26px; margin-bottom: 8px; }
+        .header p { opacity: 0.85; font-size: 14px; }
+
+        .content { padding: 30px; }
+
+        .profile-section {
+            background: var(--bg);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        .profile-item { display: flex; align-items: center; gap: 10px; }
+        .profile-item strong { color: var(--text-dark); font-size: 13px; }
+        .profile-item span { color: var(--text-light); font-size: 14px; }
+
+        .score-display {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            margin: 25px 0;
+        }
+        .score-number { font-size: 64px; font-weight: 800; line-height: 1; }
+        .score-label { font-size: 14px; color: var(--text-light); margin-top: 8px; }
+
+        .chart-section { margin: 25px 0; }
+        .chart-wrapper {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 6px solid var(--primary);
+            margin: 25px 0;
+        }
+        .result-card h2 { font-size: 24px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+        .result-card .description { color: var(--text-dark); line-height: 1.8; font-size: 15px; }
+
+        .traits-section { margin: 25px 0; }
+        .traits-section h3 { font-size: 17px; color: var(--text-dark); margin-bottom: 15px; }
+        .trait-list { list-style: none; padding: 0; }
+        .trait-list li {
+            padding: 10px 15px 10px 35px;
+            position: relative;
+            color: var(--text-dark);
+            font-size: 14px;
+            line-height: 1.6;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .trait-list li:before { content: "✓"; position: absolute; left: 10px; font-weight: 700; }
+
+        .suggestions {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .suggestions h3 { color: #2e7d32; font-size: 17px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .suggestions ul { list-style: none; padding: 0; }
+        .suggestions li {
+            padding: 10px 0 10px 25px;
+            position: relative;
+            color: #2e7d32;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        .suggestions li:before { content: "💡"; position: absolute; left: 0; }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .btn {
+            padding: 15px 30px; border: none; border-radius: 10px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+            transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(99,102,241,0.4); }
+        .btn-secondary { background: white; color: #6366f1; border: 2px solid #6366f1; }
+        .btn-secondary:hover { background: #6366f1; color: white; }
+
+        .loading, .error { text-align: center; padding: 60px 30px; color: var(--text-light); }
+        .error { color: #e74c3c; }
+
+        @media print { body { background: white; } .action-buttons { display: none; } }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 20px; }
+            .content { padding: 20px; }
+            .score-number { font-size: 48px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    <div class="loading">
+        <h2>⏳ Menganalisis hasil tes Anda...</h2>
+        <p>Mohon tunggu sebentar</p>
+    </div>
+</div>
+
+<script>
+    KarirEngine.load('27')
+        .then(result => renderUI(result))
+        .catch(err => showError(err.message));
+
+    function showError(msg) {
+        document.getElementById('app').innerHTML = `
+            <div class="error">
+                <h2>❌ Oops!</h2>
+                <p>${msg}</p>
+            </div>`;
+    }
+
+    function renderUI(r) {
+        const { dataDiri, tanggal, skor, maxSkor, percentage, result } = r;
+
+        document.getElementById('app').innerHTML = `
+            <div class="header">
+                <h1>🦁 Tes Keberanian Diri</h1>
+                <p>Seberapa Berani Anda Menghadapi Tantangan?</p>
+            </div>
+
+            <div class="content" id="downloadContent">
+                <div class="profile-section">
+                    <div class="profile-item"><strong>👤 Nama:</strong><span>${dataDiri.nama}</span></div>
+                    <div class="profile-item"><strong>🎂 Usia:</strong><span>${dataDiri.usia} Tahun</span></div>
+                    <div class="profile-item"><strong>🎓 Pendidikan:</strong><span>${dataDiri.pendidikan}</span></div>
+                    <div class="profile-item"><strong>📅 Tanggal:</strong><span>${tanggal}</span></div>
+                </div>
+
+                <div class="score-display">
+                    <div class="score-number" style="color: ${result.color}">${skor}</div>
+                    <div class="score-label">dari ${maxSkor} poin (${percentage}%)</div>
+                </div>
+
+                <div class="chart-section">
+                    <div class="chart-wrapper">
+                        <canvas id="keberanianChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="result-card" style="border-color: ${result.color}">
+                    <h2 style="color: ${result.color}">${result.icon} ${result.title}</h2>
+                    <div class="description">${result.description}</div>
+                </div>
+
+                <div class="traits-section">
+                    <h3>🔍 Ciri-ciri Anda:</h3>
+                    <ul class="trait-list">
+                        ${result.traits.map(t => `<li>${t}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="suggestions">
+                    <h3>💡 Saran Pengembangan</h3>
+                    <ul>
+                        ${result.suggestions.map(s => `<li>${s}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="downloadAsImage()">📥 Download Hasil (JPG)</button>
+                    <button class="btn btn-secondary" onclick="window.print()">🖨️ Cetak Laporan</button>
+                </div>
+            </div>`;
+
+        drawChart(skor, maxSkor - skor, result.color);
+    }
+
+    function drawChart(skor, sisa, color) {
+        const ctx = document.getElementById('keberanianChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Skor Anda', 'Sisa'],
+                datasets: [{
+                    data: [skor, sisa],
+                    backgroundColor: [color, '#eee'],
+                    borderWidth: 0,
+                    cutout: '80%'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}` }
+                    }
+                }
+            }
+        });
+    }
+
+    async function downloadAsImage() {
+        const btn = event.target;
+        btn.disabled = true; btn.textContent = '⏳ Memproses...';
+        try {
+            const content = document.getElementById('downloadContent');
+            const canvas = await html2canvas(content, { scale: 2, backgroundColor: '#ffffff', logging: false });
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.download = `Hasil-Tes-Keberanian-${new Date().toISOString().split('T')[0]}.jpg`;
+                a.href = url; a.click();
+                URL.revokeObjectURL(url);
+                btn.disabled = false; btn.innerHTML = '📥 Download Hasil (JPG)';
+            }, 'image/jpeg', 0.95);
+        } catch(e) {
+            btn.disabled = false; btn.textContent = '❌ Gagal. Coba Lagi';
+        }
+    }
+</script>
+</body>
+</html>

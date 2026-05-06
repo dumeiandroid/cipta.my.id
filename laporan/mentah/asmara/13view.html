@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seperti Apa Jenis Cinta Saya?</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="asmara_engine.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #fdf2f2 0%, #fce4ec 100%); padding: 20px; min-height: 100vh; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 15px 50px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #d63031 0%, #e17055 100%); color: white; padding: 30px; text-align: center; }
+        .header h1 { font-size: 1.8em; margin-bottom: 10px; }
+        .content { padding: 30px; }
+        .profile-section { background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 25px; border-left: 5px solid #d63031; }
+        .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 10px; }
+        .profile-item { display: flex; flex-direction: column; }
+        .profile-label { font-size: 0.85em; color: #666; margin-bottom: 5px; font-weight: 600; }
+        .profile-value { font-size: 1.05em; color: #2d3436; font-weight: 500; }
+        .chart-section { margin: 30px 0; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .chart-container { max-width: 450px; margin: 0 auto; }
+        .result-section { background: linear-gradient(135deg, #fff5f5 0%, #ffe9ec 100%); padding: 30px; border-radius: 15px; border-left: 8px solid #d63031; margin: 25px 0; }
+        .result-type { font-size: 1.8em; color: #d63031; margin-bottom: 15px; font-weight: 700; }
+        .result-description { font-size: 1.05em; line-height: 1.8; color: #2d3436; }
+        .scores-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin: 25px 0; }
+        .score-card { background: white; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 3px solid #d63031; }
+        .score-label { font-size: 0.9em; color: #666; margin-bottom: 8px; }
+        .score-value { font-size: 1.8em; font-weight: 700; color: #d63031; }
+        .info-section { background: #f1f3f5; padding: 25px; border-radius: 12px; margin: 25px 0; }
+        .info-title { font-size: 1.3em; color: #2d3436; margin-bottom: 15px; font-weight: 600; }
+        .info-list { list-style: none; }
+        .info-list li { padding: 12px 0; border-bottom: 1px solid #dee2e6; line-height: 1.6; }
+        .info-list li:last-child { border-bottom: none; }
+        .info-list strong { color: #d63031; }
+        .advice-section { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 5px solid #27ae60; }
+        .advice-title { font-size: 1.3em; color: #27ae60; margin-bottom: 15px; font-weight: 600; }
+        .advice-list { list-style: none; }
+        .advice-list li { padding: 10px 0 10px 25px; position: relative; line-height: 1.7; color: #2d3436; }
+        .advice-list li:before { content: "✓"; position: absolute; left: 0; color: #27ae60; font-weight: bold; }
+        .buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 30px; }
+        button { padding: 15px 25px; border: none; border-radius: 10px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-primary { background: linear-gradient(135deg, #d63031 0%, #e17055 100%); color: white; }
+        .btn-secondary { background: white; color: #d63031; border: 2px solid #d63031; }
+        .loading { text-align: center; padding: 50px; color: #666; }
+        .error { background: #fff5f5; color: #e74c3c; padding: 30px; border-radius: 12px; text-align: center; border-left: 5px solid #e74c3c; }
+        @media print { .buttons { display: none; } body { background: white; } .container { box-shadow: none; } }
+        @media (max-width: 600px) { .header h1 { font-size: 1.4em; } .buttons { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="container" id="app">
+    <div class="loading">Memuat hasil analisis...</div>
+</div>
+<script>
+AsmaraEngine.load('13').then(r => {
+    const { dataDiri, tanggal, config, scores, dominant, typeInfo } = r;
+    const types = config.types;
+    const typesList = config.typesList;
+    const maxPerTipe = config.maxPerTipe;
+
+    document.getElementById('app').innerHTML = `
+        <div class="header">
+            <h1>Seperti Apa Jenis Cinta Saya?</h1>
+            <p>Hasil Analisis Berdasarkan Teori Lee's Love Styles</p>
+        </div>
+        <div class="content" id="printable-area">
+            <div class="profile-section">
+                <h3 style="margin-bottom:15px;color:#2d3436">Informasi Peserta</h3>
+                <div class="profile-grid">
+                    <div class="profile-item"><span class="profile-label">Nama</span><span class="profile-value">${dataDiri.nama||'-'}</span></div>
+                    <div class="profile-item"><span class="profile-label">Usia</span><span class="profile-value">${dataDiri.usia||'-'} Tahun</span></div>
+                    <div class="profile-item"><span class="profile-label">Pendidikan</span><span class="profile-value">${dataDiri.pendidikan||'-'}</span></div>
+                    <div class="profile-item"><span class="profile-label">Tanggal Tes</span><span class="profile-value">${tanggal}</span></div>
+                </div>
+            </div>
+            <div class="result-section">
+                <div class="result-type">${typeInfo.icon} ${typeInfo.name}</div>
+                <div class="result-description">${typeInfo.description}</div>
+            </div>
+            <div class="chart-section">
+                <h3 style="text-align:center;margin-bottom:20px;color:#2d3436">Grafik Skor Gaya Cinta</h3>
+                <div class="chart-container"><canvas id="loveChart"></canvas></div>
+            </div>
+            <div class="scores-grid">
+                ${typesList.map(t=>`
+                <div class="score-card">
+                    <div class="score-label">${t}</div>
+                    <div class="score-value">${scores[t]}</div>
+                    <div style="font-size:0.8em;color:#999;margin-top:5px">dari ${maxPerTipe}</div>
+                </div>`).join('')}
+            </div>
+            <div class="info-section">
+                <div class="info-title">Karakteristik Anda</div>
+                <ul class="info-list">${typeInfo.characteristics.map(c=>`<li><strong>•</strong> ${c}</li>`).join('')}</ul>
+            </div>
+            <div class="advice-section">
+                <div class="advice-title">Saran untuk Anda</div>
+                <ul class="advice-list">${typeInfo.advice.map(a=>`<li>${a}</li>`).join('')}</ul>
+            </div>
+            <div class="info-section">
+                <div class="info-title">Tentang 6 Gaya Cinta</div>
+                <ul class="info-list">
+                    <li><strong>Eros:</strong> Cinta romantis yang penuh gairah dan ketertarikan fisik</li>
+                    <li><strong>Ludus:</strong> Cinta sebagai permainan yang menyenangkan tanpa komitmen berat</li>
+                    <li><strong>Storge:</strong> Cinta yang tumbuh dari persahabatan dan kepercayaan</li>
+                    <li><strong>Pragma:</strong> Cinta praktis berdasarkan kompatibilitas dan logika</li>
+                    <li><strong>Mania:</strong> Cinta obsesif yang intens dengan kecenderungan posesif</li>
+                    <li><strong>Agape:</strong> Cinta tanpa pamrih yang penuh pengorbanan</li>
+                </ul>
+            </div>
+            <div class="buttons">
+                <button class="btn-primary" onclick="window.print()">🖨️ Cetak Laporan</button>
+                <button class="btn-secondary" onclick="downloadAsImage()">📥 Download Gambar</button>
+            </div>
+        </div>`;
+
+    const ctx = document.getElementById('loveChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: typesList,
+            datasets: [{ label:'Skor Anda', data: typesList.map(t=>scores[t]),
+                backgroundColor:'rgba(214,48,49,0.2)', borderColor:'#d63031', borderWidth:3,
+                pointBackgroundColor:'#d63031', pointBorderColor:'#fff', pointRadius:5 }]
+        },
+        options: {
+            scales: { r: { suggestedMin:7, suggestedMax:35, ticks:{ stepSize:5 }, pointLabels:{ font:{ size:13, weight:'600' } } } },
+            plugins: { legend:{ display:false } }
+        }
+    });
+}).catch(err => {
+    document.getElementById('app').innerHTML = `
+        <div class="header"><h1>Seperti Apa Jenis Cinta Saya?</h1></div>
+        <div class="content"><div class="error"><h3>Terjadi Kesalahan</h3><p>${err.message}</p></div></div>`;
+});
+
+function downloadAsImage() {
+    const el = document.getElementById('printable-area');
+    const btns = document.querySelector('.buttons'); btns.style.display='none';
+    html2canvas(el, { scale:2, backgroundColor:'#ffffff', logging:false, windowWidth:1200 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download=`Hasil-Jenis-Cinta-${Date.now()}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg',0.95); link.click();
+        btns.style.display='grid';
+    });
+}
+</script>
+</body>
+</html>
