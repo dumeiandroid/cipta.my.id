@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analisa Psikogram — Karakter, Potensi, Karir & Asmara</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --bg:       #080b12;
+  --surface:  #0f1420;
+  --surface2: #161d2e;
+  --border:   #1e2a42;
+  --accent:   #5F4EDA;
+  --accent2:  #7c6ef0;
+  --text:     #e2e8f0;
+  --muted:    #5a6a8a;
+  --radius:   16px;
+
+  --karakter-color: #a855f7;
+  --karakter-bg:    rgba(168,85,247,.12);
+  --karakter-glow:  rgba(168,85,247,.3);
+
+  --potensi-color:  #3b82f6;
+  --potensi-bg:     rgba(59,130,246,.12);
+  --potensi-glow:   rgba(59,130,246,.3);
+
+  --karir-color:    #f59e0b;
+  --karir-bg:       rgba(245,158,11,.12);
+  --karir-glow:     rgba(245,158,11,.3);
+
+  --asmara-color:   #ec4899;
+  --asmara-bg:      rgba(236,72,153,.12);
+  --asmara-glow:    rgba(236,72,153,.3);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(59,130,246,.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 10%, rgba(168,85,247,.05) 0%, transparent 50%);
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  background: rgba(15,20,32,.9);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-title { font-size: 17px; font-weight: 800; letter-spacing: -.5px; }
+.topbar-title span { color: var(--accent2); }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.topbar input[type="text"] {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-family: inherit;
+  width: 160px;
+}
+.topbar input:focus { outline: none; border-color: var(--accent2); }
+.btn-top {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .2s;
+}
+.btn-top:hover { background: var(--accent2); }
+.btn-back { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-back:hover { background: var(--border); }
+.admin-badge {
+  background: rgba(95,78,218,.2);
+  border: 1px solid rgba(124,110,240,.4);
+  color: var(--accent2);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-logout {
+  background: rgba(239,68,68,.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239,68,68,.3);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .15s;
+}
+.btn-logout:hover { background: rgba(239,68,68,.3); }
+
+/* ── LOADING ── */
+#loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15,17,23,.92);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 9999; gap: 16px;
+}
+#loading-overlay.hidden { display: none; }
+.spin {
+  width: 48px; height: 48px;
+  border: 4px solid rgba(95,78,218,.3);
+  border-top-color: var(--accent2);
+  border-radius: 50%;
+  animation: spin .75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.load-txt { font-size: 15px; color: var(--muted); }
+
+/* ── SUMMARY STRIP ── */
+.summary-strip {
+  display: flex;
+  gap: 12px;
+  padding: 20px 28px 0;
+  flex-wrap: wrap;
+}
+.sum-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 24px;
+  flex: 1;
+  min-width: 130px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.sum-box::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--sum-accent, var(--accent2));
+}
+.sum-box::after {
+  content: attr(data-icon);
+  position: absolute;
+  right: 12px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 28px;
+  opacity: .12;
+  pointer-events: none;
+}
+.sum-num { font-size: 34px; font-weight: 900; line-height: 1; margin-bottom: 5px; }
+.sum-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+
+/* ── SECTION HEADER ── */
+.section-divider {
+  margin: 28px 28px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.section-divider-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.section-divider-title { font-size: 16px; font-weight: 800; letter-spacing: -.3px; }
+.section-divider-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.section-count {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+/* ── MAIN GRID ── */
+.main-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 18px;
+  padding: 16px 28px 8px;
+}
+
+/* ── TES CARD ── */
+.tes-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color .25s, transform .25s, box-shadow .25s;
+  animation: cardIn .5s cubic-bezier(.22,1,.36,1) both;
+  position: relative;
+}
+.tes-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--card-accent, var(--border));
+}
+.tes-card:hover {
+  border-color: var(--card-accent, var(--accent));
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px var(--card-glow, rgba(95,78,218,.2));
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.tes-card-head {
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tes-card-icon {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.tes-card-title { font-size: 13px; font-weight: 700; line-height: 1.3; }
+.tes-card-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.tes-card-body { padding: 16px 18px; }
+
+/* ── BAR ROWS ── */
+.dist-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 9px;
+  cursor: pointer;
+}
+.dist-bar-row:hover .dist-bar-track { opacity: .82; }
+.dist-bar-label {
+  font-size: 11px;
+  width: 100px;
+  color: var(--text);
+  flex-shrink: 0;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dist-bar-track {
+  flex: 1;
+  background: var(--surface2);
+  border-radius: 99px;
+  height: 22px;
+  overflow: hidden;
+  position: relative;
+  transition: opacity .2s;
+}
+.dist-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 9px;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  min-width: 24px;
+  transition: width .7s cubic-bezier(.4,0,.2,1);
+  position: relative;
+  overflow: hidden;
+}
+.dist-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
+  animation: shimmer 2.5s infinite;
+}
+@keyframes shimmer { 0% { left: -60%; } 100% { left: 160%; } }
+.dist-bar-pct {
+  font-size: 12px;
+  color: var(--muted);
+  width: 42px;
+  text-align: right;
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+}
+.dist-bar-count {
+  font-size: 11px;
+  color: var(--muted);
+  width: 26px;
+  text-align: right;
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.72);
+  z-index: 1000;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 -8px 40px rgba(0,0,0,.6);
+  animation: slideUp .25s cubic-bezier(.22,1,.36,1);
+}
+@keyframes slideUp { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes popIn   { from { transform: scale(.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@media (min-width: 600px) {
+  .modal-overlay { align-items: center; justify-content: center; padding: 20px; }
+  .modal-box { border-radius: var(--radius); max-width: 560px; max-height: 85vh; box-shadow: 0 24px 80px rgba(0,0,0,.6); animation: popIn .2s cubic-bezier(.34,1.56,.64,1); }
+  .modal-handle { display: none; }
+}
+.modal-handle {
+  width: 40px; height: 4px;
+  background: var(--border);
+  border-radius: 99px;
+  margin: 10px auto 2px;
+  flex-shrink: 0;
+}
+.modal-head {
+  padding: 12px 16px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.modal-head-info { flex: 1; min-width: 0; }
+.modal-head-title { font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.modal-head-sub   { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.modal-close {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.modal-close:hover { background: var(--border); }
+.modal-body { overflow-y: auto; flex: 1; padding: 12px 14px; -webkit-overflow-scrolling: touch; }
+.modal-search { margin-bottom: 10px; }
+.modal-search input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 14px;
+  font-family: 'Outfit', sans-serif;
+}
+.modal-search input:focus { outline: none; border-color: var(--accent2); }
+.modal-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.modal-table th {
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 1;
+}
+.modal-table td {
+  padding: 11px 10px;
+  border-bottom: 1px solid rgba(46,52,80,.5);
+  vertical-align: middle;
+}
+.modal-table tr:last-child td { border-bottom: none; }
+@media (hover: hover) { .modal-table tr:hover td { background: var(--surface2); } }
+.modal-table tr:active td { background: var(--surface2); }
+.rank-no { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); width: 28px; text-align: center; }
+.nama-link { color: var(--text); font-weight: 600; font-size: 13px; }
+.modal-empty { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
+.tipe-pill {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ── ERROR / EMPTY ── */
+.err-box, .empty-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 50px;
+  text-align: center;
+  color: var(--muted);
+  margin: 28px;
+}
+.err-box { border-color: #ef4444; color: #fca5a5; }
+
+/* ── LOGIN OVERLAY ── */
+.login-overlay {
+  position: fixed; inset: 0;
+  background: rgba(8,11,18,.97);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9000;
+  backdrop-filter: blur(8px);
+}
+.login-overlay.hidden { display: none; }
+.login-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 32px 80px rgba(0,0,0,.6);
+  animation: popIn .25s cubic-bezier(.34,1.56,.64,1);
+}
+.login-logo { text-align: center; margin-bottom: 28px; }
+.login-logo-icon {
+  width: 60px; height: 60px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(95,78,218,.4), rgba(168,85,247,.3));
+  border: 1px solid rgba(168,85,247,.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  margin: 0 auto 12px;
+}
+.login-logo-title { font-size: 20px; font-weight: 800; letter-spacing: -.5px; }
+.login-logo-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.login-field { margin-bottom: 16px; }
+.login-label {
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .5px;
+  display: block; margin-bottom: 7px;
+}
+.login-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color .2s;
+}
+.login-input:focus { outline: none; border-color: var(--accent2); }
+.login-remember {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--muted);
+  cursor: pointer; margin-bottom: 20px;
+}
+.login-remember input { cursor: pointer; accent-color: var(--accent2); width: 14px; height: 14px; }
+.btn-login {
+  width: 100%;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .2s;
+}
+.btn-login:hover { background: var(--accent2); }
+.login-err {
+  background: rgba(239,68,68,.15);
+  border: 1px solid rgba(239,68,68,.4);
+  color: #fca5a5;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  display: none;
+}
+.login-err.show { display: block; }
+
+.pb40 { padding-bottom: 60px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">🧠</div>
+      <div class="login-logo-title">Analisa <span style="color:var(--accent2)">Psikogram</span></div>
+      <div class="login-logo-sub">Karakter · Potensi · Karir · Asmara</div>
+    </div>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-field">
+      <label class="login-label">Username</label>
+      <input class="login-input" type="text" id="login-user" placeholder="Masukkan username" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Password</label>
+      <input class="login-input" type="password" id="login-pass" placeholder="Masukkan password" autocomplete="current-password">
+    </div>
+    <label class="login-remember">
+      <input type="checkbox" id="login-remember"> Ingat saya
+    </label>
+    <button class="btn-login" id="btn-login-submit" onclick="doLogin()">Masuk</button>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loading-overlay" class="hidden">
+  <div class="spin"></div>
+  <div class="load-txt" id="load-txt">Memuat data...</div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-title">🧠 Analisa <span>Psikogram</span> — X12</div>
+  <div class="topbar-right">
+    <input type="text" id="inp-table" value="rekap_nilai1" placeholder="Nama tabel">
+    <button class="btn-top" onclick="loadData()">🔄 Muat Ulang</button>
+    <button class="btn-top btn-back" onclick="window.history.back()">← Kembali</button>
+    <div class="admin-badge" id="admin-badge" style="display:none;">👤 <span id="admin-name">Admin</span></div>
+    <button class="btn-logout" id="btn-logout" style="display:none;" onclick="doLogout()">Keluar</button>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div class="summary-strip" id="summary-strip" style="display:none;">
+  <div class="sum-box" style="--sum-accent:#7c6ef0;" data-icon="👥">
+    <div class="sum-num" id="sum-total" style="color:var(--accent2);">–</div>
+    <div class="sum-lbl">Total Peserta</div>
+  </div>
+  <div class="sum-box" style="--sum-accent:var(--karakter-color);" data-icon="🟣">
+    <div class="sum-num" id="sum-karakter" style="color:var(--karakter-color);">–</div>
+    <div class="sum-lbl">Data Karakter</div>
+  </div>
+  <div class="sum-box" style="--sum-accent:var(--potensi-color);" data-icon="🔵">
+    <div class="sum-num" id="sum-potensi" style="color:var(--potensi-color);">–</div>
+    <div class="sum-lbl">Data Potensi</div>
+  </div>
+  <div class="sum-box" style="--sum-accent:var(--karir-color);" data-icon="🟡">
+    <div class="sum-num" id="sum-karir" style="color:var(--karir-color);">–</div>
+    <div class="sum-lbl">Data Karir</div>
+  </div>
+  <div class="sum-box" style="--sum-accent:var(--asmara-color);" data-icon="🔴">
+    <div class="sum-num" id="sum-asmara" style="color:var(--asmara-color);">–</div>
+    <div class="sum-lbl">Data Asmara</div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div id="content" class="pb40"></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <div class="modal-head-info">
+        <div class="modal-head-title" id="modal-title">–</div>
+        <div class="modal-head-sub"   id="modal-sub">–</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-search">
+        <input type="text" id="modal-search-inp" placeholder="🔍 Cari nama..." oninput="filterModal()">
+      </div>
+      <div id="modal-table-wrap"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+const API         = 'https://lidan-co-id.pages.dev/api/db_psikogram1';
+const SECRET      = 'admin';
+const STORAGE_KEY = 'psiko_admin_session';
+
+let currentAdmin = null;
+let allRows      = [];
+let modalAllRows = [];  // semua baris untuk modal aktif
+
+// ── INIT SESSION ──
+(function initSession() {
+  const saved = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      currentAdmin = JSON.parse(saved);
+      showAdminUI();
+      loadData();
+      return;
+    } catch(e) {}
+  }
+  document.getElementById('login-overlay').classList.remove('hidden');
+  document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
+  document.getElementById('login-user').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('login-pass').focus(); });
+})();
+
+// ── LOGIN ──
+async function doLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const remember = document.getElementById('login-remember').checked;
+  const errEl = document.getElementById('login-err');
+  const btnEl = document.getElementById('btn-login-submit');
+  if (!user || !pass) { errEl.textContent='Username dan password harus diisi.'; errEl.classList.add('show'); return; }
+  btnEl.disabled=true; btnEl.textContent='Memverifikasi...'; errEl.classList.remove('show');
+  try {
+    const res = await fetch(`${API}?action=login`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'X-Custom-Auth':SECRET, 'X-Role':'admin' },
+      body: JSON.stringify({ username:user, password:pass })
+    });
+    const json = await res.json();
+    if (json.success) {
+      currentAdmin = { username:user, data:json.data };
+      const session = JSON.stringify(currentAdmin);
+      if (remember) localStorage.setItem(STORAGE_KEY, session);
+      else sessionStorage.setItem(STORAGE_KEY, session);
+      document.getElementById('login-overlay').classList.add('hidden');
+      showAdminUI();
+      loadData();
+    } else {
+      errEl.textContent = json.message || 'Username atau password salah.';
+      errEl.classList.add('show');
+    }
+  } catch(e) {
+    errEl.textContent = 'Gagal terhubung ke server.';
+    errEl.classList.add('show');
+  } finally {
+    btnEl.disabled=false; btnEl.textContent='Masuk';
+  }
+}
+function showAdminUI() {
+  document.getElementById('admin-badge').style.display = 'flex';
+  document.getElementById('btn-logout').style.display  = 'block';
+  document.getElementById('admin-name').textContent = currentAdmin?.username || 'Admin';
+}
+function doLogout() {
+  localStorage.removeItem(STORAGE_KEY);
+  sessionStorage.removeItem(STORAGE_KEY);
+  currentAdmin = null;
+  location.reload();
+}
+
+// ── HELPERS ──
+function sj(str, fb={}) { try { return JSON.parse(str||'{}'); } catch { return fb; } }
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function getNama(row) {
+  const b = sj(row.x_02, {});
+  return b.nama || row.x_01 || '—';
+}
+
+// ── LOAD DATA ──
+async function loadData() {
+  const table = document.getElementById('inp-table').value.trim() || 'rekap_nilai1';
+  const lo = document.getElementById('loading-overlay');
+  document.getElementById('load-txt').textContent = `Memuat data dari tabel "${table}"...`;
+  lo.classList.remove('hidden');
+  document.getElementById('content').innerHTML = '';
+  document.getElementById('summary-strip').style.display = 'none';
+  try {
+    const res = await fetch(`${API}?table=${encodeURIComponent(table)}`, {
+      headers: { 'X-Custom-Auth':SECRET, 'Content-Type':'application/json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message || 'Gagal ambil data');
+    allRows = json.data || [];
+    if (!allRows.length) {
+      document.getElementById('content').innerHTML = `<div class="empty-box"><div style="font-size:48px;margin-bottom:12px">📭</div><p>Tidak ada data di tabel ini.</p></div>`;
+    } else {
+      renderAll();
+    }
+  } catch(e) {
+    document.getElementById('content').innerHTML = `<div class="err-box"><div style="font-size:40px;margin-bottom:12px">⚠️</div><h2>${escHtml(e.message)}</h2></div>`;
+  } finally {
+    lo.classList.add('hidden');
+  }
+}
+
+// ── DOMINAN EXTRACTORS ──
+
+// Ambil dominan karakter dari x_12
+function getDominanKarakter(row) {
+  const x12 = sj(row.x_12||row.x_13, {});
+  const kar  = x12.karakter || {};
+  return {
+    tes04: getDominanTes04(kar.tes04),
+    tes05: getDominanTes05(kar.tes05),
+    tes06: getDominanTes06(kar.tes06),
+    tes07: getDominanTes07(kar.tes07),
+    tes08: getDominanTes08(kar.tes08),
+  };
+}
+function getDominanPotensi(row) {
+  let x12 = sj(row.x_12||'{}', {});
+  // Fallback: coba x_13
+  if (!x12.potensi) { const x13 = sj(row.x_13||'{}',{}); if(x13.potensi) x12=x13; }
+  const pot = x12.potensi || {};
+  return {
+    tes01: getDominanTes01(pot.tes01),
+    tes02: getDominanTes02(pot.tes02),
+    tes03: getDominanTes03(pot.tes03),
+  };
+}
+function getDominanKarir(row) {
+  let x12 = sj(row.x_12||'{}', {});
+  if (!x12.karir) { const x13=sj(row.x_13||'{}',{}); if(x13.karir) x12=x13; }
+  const kar = x12.karir || {};
+  return {
+    tes20: getDominanTes20(kar.tes20),
+    tes21: getDominanTes21(kar.tes21),
+    tes22: getDominanTes22(kar.tes22),
+    tes23: getDominanTes23(kar.tes23),
+    tes24: getDominanTes24(kar.tes24),
+    tes25: getDominanTes25(kar.tes25),
+    tes27: getDominanTes27(kar.tes27),
+  };
+}
+function getDominanAsmara(row) {
+  let x12 = sj(row.x_12||'{}', {});
+  if (!x12.asmara) { const x13=sj(row.x_13||'{}',{}); if(x13.asmara) x12=x13; }
+  const asm = x12.asmara || {};
+  return {
+    tes09: getDominanTes09(asm.tes09),
+    tes12: getDominanTes12(asm.tes12),
+    tes13: getDominanTes13(asm.tes13),
+    tes14: getDominanTes14(asm.tes14),
+    tes15: getDominanTes15(asm.tes15),
+    tes16: getDominanTes16(asm.tes16),
+    tes17: getDominanTes17(asm.tes17),
+    tes18: getDominanTes18(asm.tes18),
+  };
+}
+
+// ── PER-TES DOMINAN LOGIC ──
+
+// KARAKTER
+function getDominanTes04(d) {
+  if (!d) return null;
+  const MAP = { A:'Sanguinis', B:'Koleris', C:'Melankolis', D:'Plegmatis' };
+  // ambil dari field dominan dulu, fallback dari skor tertinggi
+  const dom = d.dominan;
+  if (dom && MAP[dom]) return MAP[dom];
+  // dari skor
+  const skor = d.skor || {};
+  const best = Object.entries(skor).sort((a,b)=>b[1]-a[1])[0];
+  return best ? (MAP[best[0]] || best[0]) : null;
+}
+function getDominanTes05(d) {
+  if (!d) return null;
+  const dom = d.dominan;
+  if (!dom) return null;
+  const MAP = { INTROVERT:'Introvert', EXTROVERT:'Extrovert', AMBIVERT:'Ambivert' };
+  return MAP[dom.toUpperCase()] || dom;
+}
+function getDominanTes06(d) {
+  if (!d) return null;
+  const dom = d.dominan;
+  if (!dom) return null;
+  if (dom==='A') return 'Sensing (S)';
+  if (dom==='B') return 'Intuitive (N)';
+  return dom;
+}
+function getDominanTes07(d) {
+  if (!d) return null;
+  const dom = d.dominan;
+  if (!dom) return null;
+  const MAP = { THINKING:'Thinking', FEELING:'Feeling' };
+  return MAP[dom.toUpperCase()] || dom;
+}
+function getDominanTes08(d) {
+  if (!d) return null;
+  const dom = d.dominan;
+  if (!dom) return null;
+  const MAP = { JUDGING:'Judging', PERCEIVING:'Perceiving' };
+  return MAP[dom.toUpperCase()] || dom;
+}
+
+// POTENSI
+function getDominanTes01(d) {
+  if (!d) return null;
+  const MAP = { A:'Visual', B:'Auditory', C:'Kinestetik' };
+  const dom = d.dominan;
+  if (dom && MAP[dom]) return MAP[dom];
+  // dari skor
+  const skor = d.skor || {};
+  const best = Object.entries(skor).sort((a,b)=>b[1]-a[1])[0];
+  return best ? (MAP[best[0]] || best[0]) : null;
+}
+function getDominanTes02(d) {
+  if (!d) return null;
+  const dom = d.dominan;
+  if (!dom) return null;
+  if (dom==='LEFT') return 'Otak Kiri';
+  if (dom==='RIGHT') return 'Otak Kanan';
+  return dom;
+}
+function getDominanTes03(d) {
+  if (!d) return null;
+  // dari sorted array ambil index 0
+  const sorted = d.sorted;
+  if (sorted && sorted.length) return sorted[0].nama || sorted[0].name || null;
+  // fallback dari skor obj
+  const skor = d.skor || {};
+  const best = Object.entries(skor).sort((a,b)=>b[1]-a[1])[0];
+  return best ? best[0] : null;
+}
+
+// KARIR
+function getDominanTes20(d) {
+  if (!d) return null;
+  const dom = d.dominan || d.careerCode;
+  if (!dom) return null;
+  // ambil 1 karakter pertama saja sebagai tipe dominan
+  const id = String(dom)[0].toUpperCase();
+  const MAP = { R:'Realistic', I:'Investigative', A:'Artistic', S:'Social', E:'Enterprising', C:'Conventional' };
+  return MAP[id] || id;
+}
+function getDominanTes21(d) {
+  if (!d) return null;
+  // d.title sudah berisi label hasil
+  if (d.title) return d.title;
+  // mapping dari skor
+  const s = d.skor || d.score || 0;
+  const max = d.maxSkor || 42;
+  const pct = s / max * 100;
+  if (pct <= 30) return 'Pemimpin Luar Biasa';
+  if (pct <= 55) return 'Pemimpin yang Baik';
+  if (pct <= 75) return 'Pemimpin Berkembang';
+  return 'Perlu Pengembangan';
+}
+function getDominanTes22(d) {
+  if (!d) return null;
+  // dominan bisa object atau string
+  const domObj = d.dominan;
+  if (domObj && typeof domObj === 'object') {
+    return domObj.name || domObj.nama || domObj.id || null;
+  }
+  if (typeof domObj === 'string') {
+    const MAP = { pat:'Paternalistis', demo:'Demokratis', oto:'Otokratis', lais:'Laissez Faire' };
+    return MAP[domObj] || domObj;
+  }
+  // dari scores
+  const scores = d.scores || d.styles || [];
+  if (scores.length) {
+    const best = [...scores].sort((a,b)=>b.score-a.score)[0];
+    return best.name || best.nama || best.id || null;
+  }
+  return null;
+}
+function getDominanTes23(d) {
+  if (!d) return null;
+  if (d.title) return d.title;
+  const pct = d.persen || (d.skor && d.maxSkor ? Math.round(d.skor/d.maxSkor*100) : 0);
+  if (pct >= 100) return 'Motivasi Sangat Kuat';
+  if (pct >= 70)  return 'Motivasi Kuat';
+  if (pct >= 50)  return 'Motivasi Cukup';
+  return 'Motivasi Perlu Dikembangkan';
+}
+function getDominanTes24(d) {
+  if (!d) return null;
+  if (d.title) return d.title;
+  const s = d.skor || 0, max = d.maxSkor || 30;
+  const pct = s/max*100;
+  if (pct >= 85) return 'Unggul & Prima';
+  if (pct >= 65) return 'Baik';
+  if (pct >= 45) return 'Cukup';
+  return 'Perlu Ditingkatkan';
+}
+function getDominanTes25(d) {
+  if (!d) return null;
+  if (d.title) return d.title;
+  const s = d.skor || 0, max = d.maxSkor || 12;
+  const pct = s/max*100;
+  if (pct >= 75) return 'Stres Negatif Tinggi';
+  if (pct >= 50) return 'Stres Sedang';
+  if (pct >= 25) return 'Stres Ringan';
+  return 'Stres Minimal';
+}
+function getDominanTes27(d) {
+  if (!d) return null;
+  if (d.title) return d.title;
+  const pct = d.persen || (d.skor && d.maxSkor ? Math.round(d.skor/d.maxSkor*100) : 0);
+  if (pct >= 80) return 'Keberanian Luar Biasa';
+  if (pct >= 60) return 'Berani';
+  if (pct >= 40) return 'Cukup Berani';
+  return 'Perlu Pengembangan';
+}
+
+// ASMARA
+function getDominanTes09(d) {
+  if (!d) return null;
+  const dom = d.dominant || d.dominan;
+  if (!dom) return null;
+  const MAP = { A:'Demokratis', B:'Otoriter', C:'Permisif' };
+  return MAP[dom] || dom;
+}
+function getDominanTes12(d) {
+  if (!d) return null;
+  const dom = d.dominant || d.dominan;
+  if (!dom) return null;
+  const MAP = {
+    A:'Words of Affirmation', B:'Acts of Service',
+    C:'Receiving Gifts', D:'Quality Time', E:'Physical Touch'
+  };
+  return MAP[dom] || dom;
+}
+function getDominanTes13(d) {
+  if (!d) return null;
+  const dom = d.dominant || d.dominan;
+  if (dom) return dom;
+  const scores = d.scores || {};
+  if (!Object.keys(scores).length) return null;
+  const best = Object.entries(scores).sort((a,b)=>b[1]-a[1])[0];
+  return best ? best[0] : null;
+}
+function getDominanTes14(d) {
+  if (!d) return null;
+  const MAP = {
+    low:    'Hubungan Seimbang',
+    medium: 'Cukup Terikat',
+    high:   'Sangat Terikat',
+  };
+  return MAP[d.level] || d.level || null;
+}
+function getDominanTes15(d) {
+  if (!d) return null;
+  const MAP = {
+    excellent:  'Sangat Mengenal Pasangan',
+    good:       'Cukup Mengenal Pasangan',
+    needsWork:  'Perlu Lebih Banyak Perhatian',
+    poor:       'Kurang Mengenal Pasangan',
+  };
+  return MAP[d.level] || d.level || null;
+}
+function getDominanTes16(d) {
+  if (!d) return null;
+  const MAP = {
+    loyal:       'Setia & Menyenangkan',
+    adventurous: 'Adventurous',
+    rigid:       'Sangat Ketat',
+  };
+  return MAP[d.level] || d.level || null;
+}
+function getDominanTes17(d) {
+  if (!d) return null;
+  const MAP = {
+    sahabat: 'Sahabat Sejati',
+    dekat:   'Teman Dekat',
+    biasa:   'Teman Biasa',
+  };
+  return MAP[d.level] || d.level || null;
+}
+function getDominanTes18(d) {
+  if (!d) return null;
+  const MAP = {
+    excellent: 'Pasangan Ideal',
+    baik:      'Pasangan Baik',
+    cukup:     'Cukup Baik',
+    poor:      'Perlu Banyak Kerja',
+  };
+  return MAP[d.level] || d.level || null;
+}
+
+// ── DISTRIBUSI: hitung % per tipe ──
+function hitungDistribusi(dominanArr) {
+  // dominanArr = array string (atau null jika tidak ada data)
+  const count = {};
+  let valid = 0;
+  dominanArr.forEach(v => {
+    if (!v) return;
+    valid++;
+    count[v] = (count[v] || 0) + 1;
+  });
+  // sort desc
+  const sorted = Object.entries(count)
+    .sort((a,b) => b[1]-a[1])
+    .map(([label, n]) => ({ label, n, pct: valid>0 ? Math.round(n/valid*100) : 0 }));
+  return { sorted, valid };
+}
+
+// ── COLORS PALETTE ──
+const PALETTE = [
+  '#5F4EDA','#3b82f6','#10b981','#f59e0b','#ec4899',
+  '#8b5cf6','#06b6d4','#84cc16','#f97316','#e11d48',
+  '#6366f1','#14b8a6','#eab308','#d946ef','#0ea5e9',
+];
+
+// ── RENDER ALL ──
+function renderAll() {
+  // hitung summary
+  let cKar=0, cPot=0, cKar2=0, cAsm=0;
+  allRows.forEach(row => {
+    const x12 = sj(row.x_12||'{}', {});
+    const x13 = sj(row.x_13||'{}', {});
+    const merged = { karakter: x12.karakter||x13.karakter, potensi: x12.potensi||x13.potensi, karir: x12.karir||x13.karir, asmara: x12.asmara||x13.asmara };
+    if (merged.karakter && Object.keys(merged.karakter).length) cKar++;
+    if (merged.potensi  && Object.keys(merged.potensi).length)  cPot++;
+    if (merged.karir    && Object.keys(merged.karir).length)    cKar2++;
+    if (merged.asmara   && Object.keys(merged.asmara).length)   cAsm++;
+  });
+  document.getElementById('sum-total').textContent    = allRows.length;
+  document.getElementById('sum-karakter').textContent = cKar;
+  document.getElementById('sum-potensi').textContent  = cPot;
+  document.getElementById('sum-karir').textContent    = cKar2;
+  document.getElementById('sum-asmara').textContent   = cAsm;
+  document.getElementById('summary-strip').style.display = 'flex';
+
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  window._barStore = {};
+
+  // ── KARAKTER ──
+  content.appendChild(buildSectionDivider('🟣','KARAKTER','Kepribadian & Karakter Dasar',
+    'var(--karakter-color)','var(--karakter-bg)', cKar+' peserta'));
+
+  const KARAKTER_TES = [
+    { key:'tes04', icon:'🔴', label:'Kepribadian Dasar', sub:'4 tipe temperamen dasar', extractor: r => getDominanKarakter(r).tes04 },
+    { key:'tes05', icon:'⚡', label:'Introvert – Extrovert', sub:'Orientasi energi sosial', extractor: r => getDominanKarakter(r).tes05 },
+    { key:'tes06', icon:'🔮', label:'Sensing – Intuitive', sub:'Cara memproses informasi', extractor: r => getDominanKarakter(r).tes06 },
+    { key:'tes07', icon:'🧠', label:'Thinking – Feeling', sub:'Dasar pengambilan keputusan', extractor: r => getDominanKarakter(r).tes07 },
+    { key:'tes08', icon:'📅', label:'Judging – Perceiving', sub:'Gaya hidup & struktur', extractor: r => getDominanKarakter(r).tes08 },
+  ];
+  const grid1 = buildGrid();
+  KARAKTER_TES.forEach((t,i) => {
+    const dominans = allRows.map(t.extractor);
+    const { sorted, valid } = hitungDistribusi(dominans);
+    // rows: array of { nama, dominan }
+    const rows = allRows.map(row => ({ nama: getNama(row), x01: row.x_01, dominan: t.extractor(row) })).filter(r=>r.dominan);
+    grid1.appendChild(buildTesCard(t, sorted, valid, rows, 'var(--karakter-color)','var(--karakter-bg)','var(--karakter-glow)', i));
+  });
+  content.appendChild(grid1);
+
+  // ── POTENSI ──
+  content.appendChild(buildSectionDivider('🔵','POTENSI','Gaya Belajar, Otak & Kecerdasan Majemuk',
+    'var(--potensi-color)','var(--potensi-bg)', cPot+' peserta'));
+
+  const POTENSI_TES = [
+    { key:'tes01', icon:'👁️', label:'Gaya Belajar', sub:'Visual / Auditory / Kinestetik', extractor: r => getDominanPotensi(r).tes01 },
+    { key:'tes02', icon:'🧩', label:'Dominasi Otak', sub:'Otak Kiri vs Otak Kanan', extractor: r => getDominanPotensi(r).tes02 },
+    { key:'tes03', icon:'💡', label:'Kecerdasan Majemuk', sub:'8 tipe kecerdasan Gardner', extractor: r => getDominanPotensi(r).tes03 },
+  ];
+  const grid2 = buildGrid();
+  POTENSI_TES.forEach((t,i) => {
+    const dominans = allRows.map(t.extractor);
+    const { sorted, valid } = hitungDistribusi(dominans);
+    const rows = allRows.map(row => ({ nama: getNama(row), x01: row.x_01, dominan: t.extractor(row) })).filter(r=>r.dominan);
+    grid2.appendChild(buildTesCard(t, sorted, valid, rows, 'var(--potensi-color)','var(--potensi-bg)','var(--potensi-glow)', i));
+  });
+  content.appendChild(grid2);
+
+  // ── KARIR ──
+  content.appendChild(buildSectionDivider('🟡','KARIR','Minat, Kepemimpinan & Manajemen Diri',
+    'var(--karir-color)','var(--karir-bg)', cKar2+' peserta'));
+
+  const KARIR_TES = [
+    { key:'tes20', icon:'🎯', label:'Minat Karier (RIASEC)', sub:'Tipe dominan Holland', extractor: r => getDominanKarir(r).tes20 },
+    { key:'tes21', icon:'👑', label:'Jiwa Kepemimpinan', sub:'Level potensi memimpin', extractor: r => getDominanKarir(r).tes21 },
+    { key:'tes22', icon:'🎭', label:'Gaya Kepemimpinan', sub:'4 tipe gaya memimpin', extractor: r => getDominanKarir(r).tes22 },
+    { key:'tes23', icon:'🔥', label:'Motivasi Kepemimpinan', sub:'Dorongan untuk memimpin', extractor: r => getDominanKarir(r).tes23 },
+    { key:'tes24', icon:'⏰', label:'Manajemen Waktu', sub:'Kemampuan mengelola waktu', extractor: r => getDominanKarir(r).tes24 },
+    { key:'tes25', icon:'😰', label:'Tingkat Stres', sub:'Kondisi stres kerja', extractor: r => getDominanKarir(r).tes25 },
+    { key:'tes27', icon:'🦁', label:'Keberanian Diri', sub:'Level keberanian menghadapi tantangan', extractor: r => getDominanKarir(r).tes27 },
+  ];
+  const grid3 = buildGrid();
+  KARIR_TES.forEach((t,i) => {
+    const dominans = allRows.map(t.extractor);
+    const { sorted, valid } = hitungDistribusi(dominans);
+    const rows = allRows.map(row => ({ nama: getNama(row), x01: row.x_01, dominan: t.extractor(row) })).filter(r=>r.dominan);
+    grid3.appendChild(buildTesCard(t, sorted, valid, rows, 'var(--karir-color)','var(--karir-bg)','var(--karir-glow)', i));
+  });
+  content.appendChild(grid3);
+
+  // ── ASMARA ──
+  content.appendChild(buildSectionDivider('🔴','ASMARA','Hubungan, Cinta & Persahabatan',
+    'var(--asmara-color)','var(--asmara-bg)', cAsm+' peserta'));
+
+  const ASMARA_TES = [
+    { key:'tes09', icon:'👨‍👩‍👧', label:'Pola Asuh', sub:'Gaya pengasuhan anak', extractor: r => getDominanAsmara(r).tes09 },
+    { key:'tes12', icon:'💝', label:'Bahasa Cinta', sub:'5 love languages dominan', extractor: r => getDominanAsmara(r).tes12 },
+    { key:'tes13', icon:'❤️‍🔥', label:'Tipe Cinta (Lee)', sub:'6 jenis cinta', extractor: r => getDominanAsmara(r).tes13 },
+    { key:'tes14', icon:'🔗', label:'Keterikatan Hubungan', sub:'Level ketergantungan emosional', extractor: r => getDominanAsmara(r).tes14 },
+    { key:'tes15', icon:'🤝', label:'Mengenal Pasangan', sub:'Kedalaman relasi pasangan', extractor: r => getDominanAsmara(r).tes15 },
+    { key:'tes16', icon:'💙', label:'Kesetiaan', sub:'Level komitmen & kesetiaan', extractor: r => getDominanAsmara(r).tes16 },
+    { key:'tes17', icon:'👫', label:'Kualitas Persahabatan', sub:'Tipe hubungan persahabatan', extractor: r => getDominanAsmara(r).tes17 },
+    { key:'tes18', icon:'💑', label:'Kualitas Pasangan', sub:'Level kecocokan pasangan', extractor: r => getDominanAsmara(r).tes18 },
+  ];
+  const grid4 = buildGrid();
+  ASMARA_TES.forEach((t,i) => {
+    const dominans = allRows.map(t.extractor);
+    const { sorted, valid } = hitungDistribusi(dominans);
+    const rows = allRows.map(row => ({ nama: getNama(row), x01: row.x_01, dominan: t.extractor(row) })).filter(r=>r.dominan);
+    grid4.appendChild(buildTesCard(t, sorted, valid, rows, 'var(--asmara-color)','var(--asmara-bg)','var(--asmara-glow)', i));
+  });
+  content.appendChild(grid4);
+}
+
+// ── BUILD HELPERS ──
+function buildSectionDivider(icon, title, sub, color, bg, count) {
+  const div = document.createElement('div');
+  div.className = 'section-divider';
+  div.innerHTML = `
+    <div class="section-divider-icon" style="background:${bg}; color:${color}; border:1px solid ${color}44;">${icon}</div>
+    <div>
+      <div class="section-divider-title" style="color:${color}">${title}</div>
+      <div class="section-divider-sub">${sub}</div>
+    </div>
+    <div class="section-count">${count}</div>`;
+  return div;
+}
+
+function buildGrid() {
+  const div = document.createElement('div');
+  div.className = 'main-grid';
+  return div;
+}
+
+// ── BAR DATA STORE (hindari inline JSON di onclick) ──
+window._barStore = {};
+
+function buildTesCard(tes, sorted, valid, rows, color, bg, glow, cardIdx) {
+  const card = document.createElement('div');
+  card.className = 'tes-card';
+  card.style.cssText = `--card-accent:${color}; --card-glow:${glow}; animation-delay:${cardIdx*50}ms;`;
+
+  let headHtml = `
+    <div class="tes-card-head" style="background:${bg}; border-bottom-color:${color}33;">
+      <div class="tes-card-icon" style="background:${bg}; border:1px solid ${color}44; color:${color};">${tes.icon}</div>
+      <div>
+        <div class="tes-card-title">${tes.label}</div>
+        <div class="tes-card-sub">${tes.sub} &bull; ${valid} peserta</div>
+      </div>
+    </div>`;
+
+  let barsHtml = '';
+  if (!sorted.length) {
+    barsHtml = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Tidak ada data</div>`;
+  } else {
+    sorted.forEach((item, i) => {
+      const fillColor = PALETTE[i % PALETTE.length];
+      const pctW = Math.max(item.pct, 3);
+      const storeIdx = Object.keys(window._barStore).length;
+      window._barStore[storeIdx] = {
+        tesLabel: tes.label, tesSub: tes.sub,
+        tipeLabel: item.label, pct: item.pct,
+        rows: rows.filter(r => r.dominan === item.label),
+        fillColor
+      };
+      barsHtml += `
+        <div class="dist-bar-row" data-bar-idx="${storeIdx}" style="cursor:pointer;">
+          <div class="dist-bar-label" title="${escHtml(item.label)}">${escHtml(item.label)}</div>
+          <div class="dist-bar-track">
+            <div class="dist-bar-fill" style="width:${pctW}%;background:${fillColor};">
+              ${item.pct > 15 ? item.pct+'%' : ''}
+            </div>
+          </div>
+          <div class="dist-bar-pct" style="color:${fillColor}">${item.pct}%</div>
+          <div class="dist-bar-count">${item.n}</div>
+        </div>`;
+    });
+  }
+
+  card.innerHTML = headHtml + `<div class="tes-card-body">${barsHtml}</div>`;
+
+  card.querySelectorAll('.dist-bar-row[data-bar-idx]').forEach(bar => {
+    bar.addEventListener('click', () => {
+      const stored = window._barStore[bar.dataset.barIdx];
+      if (!stored) return;
+      openModal(stored.tesLabel, stored.tesSub, stored.tipeLabel, stored.pct, stored.rows, stored.fillColor);
+    });
+  });
+
+  return card;
+}
+
+// ── MODAL ──
+let _modalRows = [];
+let _modalTipe = '';
+let _modalPct  = 0;
+let _modalColor = '';
+
+function openModal(tesLabel, tesSub, tipeLabel, pct, rows, fillColor) {
+  _modalRows  = rows || [];
+  _modalTipe  = tipeLabel;
+  _modalPct   = pct || 0;
+  _modalColor = fillColor || 'var(--accent2)';
+  document.getElementById('modal-title').textContent = `${tesLabel} — ${tipeLabel}`;
+  document.getElementById('modal-sub').textContent   = `${_modalRows.length} peserta · ${pct}% dari total · ${tesSub}`;
+  document.getElementById('modal-search-inp').value  = '';
+  renderModalTable(_modalRows);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+function filterModal() {
+  const q = document.getElementById('modal-search-inp').value.toLowerCase();
+  const filtered = _modalRows.filter(r => (r.nama||'').toLowerCase().includes(q));
+  renderModalTable(filtered);
+}
+function renderModalTable(rows) {
+  const wrap = document.getElementById('modal-table-wrap');
+  if (!rows.length) {
+    wrap.innerHTML = `<div class="modal-empty">Tidak ada peserta ditemukan.</div>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <table class="modal-table">
+      <thead><tr>
+        <th style="width:32px">#</th>
+        <th>Nama</th>
+        <th style="width:120px; text-align:center;">Tipe</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map((r,i) => `
+          <tr>
+            <td class="rank-no">${i+1}</td>
+            <td><span class="nama-link">${escHtml(r.nama)}</span></td>
+            <td style="text-align:center;">
+              <span class="tipe-pill" style="background:${escHtml(r.fillColor||_modalColor)}22; color:${escHtml(r.fillColor||_modalColor)}; border:1px solid ${escHtml(r.fillColor||_modalColor)}44;">
+                ${escHtml(r.dominan||_modalTipe)}
+              </span>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    <div style="margin-top:12px; padding:10px 12px; background:var(--surface2); border-radius:8px; border:1px solid var(--border); display:flex; align-items:center; gap:10px;">
+      <div style="flex:1; background:var(--border); border-radius:99px; height:8px; overflow:hidden;">
+        <div style="width:${_modalPct}%; height:100%; background:${_modalColor}; border-radius:99px;"></div>
+      </div>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color:${_modalColor};">${_modalPct}% dari total peserta</span>
+    </div>`;
+}
+</script>
+</body>
+</html>
