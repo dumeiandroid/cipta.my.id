@@ -378,22 +378,14 @@ let buckets=[
   {id:'mobeli',name:'Mobeli',color:'#f59e0b',apiUrl:'https://mobeli.my.id/api/r2_api_mobeli',publicUrl:'https://file.mobeli.my.id',password:'admin'},
   {id:'talentmap',name:'Talentmap',color:'#f4645f',apiUrl:'https://talentmap.my.id/api/r2_api_talentmap',publicUrl:'https://file.talentmap.my.id',password:'admin'},
   {id:'fam',name:'Fam Cipta',color:'#a78bfa',apiUrl:'https://cipta.my.id/api/r2_api_fam',publicUrl:'https://fam.cipta.my.id',password:'admin'},
-  {id:'img',name:'Img Cipta',color:'#fb7185',apiUrl:'https://cipta.my.id/api/r2_api_img',publicUrl:'https://img.cipta.my.id',password:'admin'},
-  {id:'ciptapersada',name:'Ciptapersada',color:'#34d399',apiUrl:'https://ciptapersada.my.id/api/r2_api_lidan',publicUrl:'https://asset.ciptapersada.my.id',password:'admin'},
-  {id:'mysupplier',name:'Mysupplier',color:'#60a5fa',apiUrl:'https://mysupplier.my.id/api/r2_api_lidan',publicUrl:'https://assets.mysupplier.my.id',password:'admin'},
-  {id:'goblast',name:'Goblast',color:'#f472b6',apiUrl:'https://goblast.my.id/api/r2_api_lidan',publicUrl:'https://assets.goblast.my.id',password:'admin'},
-  {id:'indahabadi',name:'Indahabadi',color:'#fb923c',apiUrl:'https://indahabadi.my.id/api/r2_api_lidan',publicUrl:'https://assets.indahabadi.my.id',password:'admin'},
+  {id:'img',name:'Img Cipta',color:'#fb7185',apiUrl:'https://cipta.my.id/api/r2_api_img',publicUrl:'https://img.cipta.my.id',password:'admin'}
 ];
 // Konfigurasi akun - bucket dalam 1 akun dijumlahkan
 const accounts = [
-  { id:'akun-lidan',       name:'Akun Lidan',       bucketIds:['lidan','fam','img'],  limit: 10*1024*1024*1024 },
-  { id:'akun-tabi',        name:'Akun Tabi',         bucketIds:['tabi'],               limit: 10*1024*1024*1024 },
-  { id:'akun-mobeli',      name:'Akun Mobeli',       bucketIds:['mobeli'],             limit: 10*1024*1024*1024 },
-  { id:'akun-talentmap',   name:'Akun Talentmap',    bucketIds:['talentmap'],          limit: 10*1024*1024*1024 },
-  { id:'akun-ciptapersada',name:'Akun Ciptapersada', bucketIds:['ciptapersada'],       limit: 10*1024*1024*1024 },
-  { id:'akun-mysupplier',  name:'Akun Mysupplier',   bucketIds:['mysupplier'],         limit: 10*1024*1024*1024 },
-  { id:'akun-goblast',     name:'Akun Goblast',      bucketIds:['goblast'],            limit: 10*1024*1024*1024 },
-  { id:'akun-indahabadi',  name:'Akun Indahabadi',   bucketIds:['indahabadi'],         limit: 10*1024*1024*1024 },
+  { id:'akun-lidan', name:'Akun Lidan', bucketIds:['lidan','fam','img'], limit: 10*1024*1024*1024 },
+  { id:'akun-tabi',  name:'Akun Tabi',  bucketIds:['tabi'],             limit: 10*1024*1024*1024 },
+  { id:'akun-mobeli',name:'Akun Mobeli',bucketIds:['mobeli'],           limit: 10*1024*1024*1024 },
+  { id:'akun-talentmap',name:'Akun Talentmap',bucketIds:['talentmap'],  limit: 10*1024*1024*1024 },
 ];
 let activeBucket=null,currentPrefix='',selectedFiles=new Set(),viewMode='grid',searchQuery='';
 let bucketFileCounts={},bucketSizes={},folderCache={};
@@ -488,8 +480,6 @@ async function loadFolder(prefix,forceRefresh=false){
     if(!res.ok)throw new Error(`HTTP ${res.status}`);
     const data=await res.json();
     const result=Array.isArray(data)?{files:data,folders:[]}:data;
-    const base=activeBucket.publicUrl.replace(/\/$/,'');
-    result.files=result.files.map(f=>({...f,url:`${base}/${f.key}`}));
     folderCache[cacheKey]=result;
     if(prefix==='')updateBucketCount(activeBucket.id);
     setStatus(`${result.files.length} file · ${result.folders.length} folder`);
