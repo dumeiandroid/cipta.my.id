@@ -1,0 +1,101 @@
+================================================================
+  MIDTRANS SNAP — REFERENSI INTEGRASI
+  Lidan Psikologi — PT Lidan Indah Abadi
+  Dibuat: Mei 2026
+================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. API KEYS — SANDBOX (TESTING)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Merchant ID  : M341071937
+  Client Key   : Mid-client-K6H00ISMLkeDCY58
+  Server Key   : Mid-server-YK5QtgPmkmDFeB9tNUe4kDW4
+
+  ⚠️  Server Key JANGAN pernah diletakkan di HTML/frontend!
+      Sudah disimpan aman di Cloudflare Environment Variables.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. URL PENTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  [SANDBOX — untuk testing]
+  snap.js       : https://app.sandbox.midtrans.com/snap/snap.js
+  API token     : https://app.sandbox.midtrans.com/snap/v1/transactions
+  Dashboard     : https://dashboard.sandbox.midtrans.com
+
+  [PRODUKSI — saat go-live, ganti semua URL sandbox di bawah ini]
+  snap.js       : https://app.midtrans.com/snap/snap.js
+  API token     : https://app.midtrans.com/snap/v1/transactions
+  Dashboard     : https://dashboard.midtrans.com
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. KARTU KREDIT TEST (SANDBOX)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Nomor Kartu  : 4811 1111 1111 1114
+  CVV          : 123
+  Exp Month    : Bulan apa saja (format MM, contoh: 02)
+  Exp Year     : Tahun masa depan (format YYYY, contoh: 2027)
+  OTP / 3DS    : 112233
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. STRUKTUR FILE YANG DITAMBAHKAN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Di GitHub repo lidan.co.id:
+
+  functions/
+  └── api/
+      └── snap-token.js   ← FILE BARU (Worker Cloudflare)
+
+  edukasi/
+  └── tes-iq-resmi.html   ← FILE DIUPDATE (ada snap.js + logika baru)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. CLOUDFLARE ENVIRONMENT VARIABLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Project      : lidan-co-id
+  Variable 1   : MIDTRANS_SERVER_KEY  → (Secret, sudah disimpan)
+  Variable 2   : MIDTRANS_CLIENT_KEY  → (Secret, sudah disimpan)
+
+  Lokasi setting:
+  dash.cloudflare.com → Workers & Pages → lidan-co-id
+  → Settings → Variables and Secrets
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. ALUR PEMBAYARAN (RINGKASAN)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. Customer isi form di tes-iq-resmi.html
+  2. Klik "Bayar Sekarang"
+  3. Data disimpan ke database (status: pending_payment)
+  4. HTML fetch ke /api/snap-token (Worker kita)
+  5. Worker panggil Midtrans API pakai Server Key
+  6. Midtrans return token
+  7. Popup Snap Midtrans muncul di browser customer
+  8. Customer pilih metode bayar & selesaikan pembayaran
+  9. onSuccess / onPending dipanggil → tampil success state
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. CHECKLIST GO-LIVE (SAAT PINDAH KE PRODUKSI)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  [ ] Ambil Client Key & Server Key PRODUKSI dari dashboard Midtrans
+  [ ] Update MIDTRANS_SERVER_KEY di Cloudflare → nilai produksi
+  [ ] Update MIDTRANS_CLIENT_KEY di Cloudflare → nilai produksi
+  [ ] Di snap-token.js: ganti URL sandbox → URL produksi
+  [ ] Di tes-iq-resmi.html: ganti src snap.js → URL produksi
+  [ ] Di tes-iq-resmi.html: ganti data-client-key → Client Key produksi
+  [ ] Test transaksi kecil pertama di produksi
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+8. ENDPOINT API INTERNAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Database API : https://lidan-co-id.pages.dev/api/contacts
+  Snap Token   : https://lidan-co-id.pages.dev/api/snap-token
+  Tabel        : pembelian
+
+================================================================

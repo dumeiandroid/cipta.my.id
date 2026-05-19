@@ -1,0 +1,180 @@
+================================================================
+  PANDUAN INTEGRASI MIDTRANS SNAP — LIDAN PSIKOLOGI
+  Tanggal: Mei 2026
+  Status: SANDBOX (Testing)
+================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BAGIAN A — LANGKAH-LANGKAH YANG SUDAH DILAKUKAN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+── LANGKAH 1: Ambil API Keys di Midtrans ──────────────────
+
+  Platform : https://dashboard.sandbox.midtrans.com
+  Menu     : Pengaturan → Access Keys
+
+  Catat:
+  • Merchant ID  : M341071937
+  • Client Key   : Mid-client-K6H00ISMLkeDCY58
+  • Server Key   : Mid-server-YK5QtgPmkmDFeB9tNUe4kDW4
+
+── LANGKAH 2: Simpan Keys di Cloudflare ───────────────────
+
+  Platform : https://dash.cloudflare.com
+  Menu     : Workers & Pages → lidan-co-id
+             → Settings → Variables and Secrets → + Add
+
+  Tambahkan 2 variable (Type: SECRET):
+  • Nama: MIDTRANS_SERVER_KEY
+    Value: Mid-server-YK5QtgPmkmDFeB9tNUe4kDW4
+
+  • Nama: MIDTRANS_CLIENT_KEY
+    Value: Mid-client-K6H00ISMLkeDCY58
+
+  ⚠️  Pastikan Type = Secret (bukan Plaintext) agar value
+      tidak terlihat dan terenkripsi.
+
+── LANGKAH 3: Buat File Worker Baru ───────────────────────
+
+  File baru dibuat di repo GitHub:
+  Lokasi : functions/api/snap-token.js
+  Fungsi : Menerima request dari HTML → memanggil API
+           Midtrans dengan Server Key → mengembalikan token
+
+  Setelah push ke GitHub, Cloudflare otomatis deploy.
+
+── LANGKAH 4: Update File HTML ────────────────────────────
+
+  File   : edukasi/tes-iq-resmi.html
+  
+  Perubahan yang dilakukan:
+  1. Tambah tag snap.js di <head>
+  2. Ganti fungsi submitCheckout() → sekarang memanggil
+     /api/snap-token lalu membuka popup Snap Midtrans
+  3. Perketat validasi email (min 2 karakter setelah titik)
+
+── LANGKAH 5: Testing ─────────────────────────────────────
+
+  • Jalankan HTML dari localhost (via XAMPP)
+  • Isi form dengan data valid termasuk email format benar
+    (contoh: nama@gmail.com — bukan c@c.c)
+  • Klik "Bayar Sekarang" → popup Midtrans muncul ✅
+  • Gunakan kartu test untuk simulasi pembayaran
+
+  Kartu Test Sandbox:
+  Nomor  : 4811 1111 1111 1114
+  CVV    : 123
+  Exp    : Bulan apa saja / tahun masa depan
+  OTP    : 112233
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BAGIAN B — CARA PINDAH KE PRODUKSI (GO-LIVE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+── STEP 1: Ambil Keys Produksi di Midtrans ────────────────
+
+  Platform : https://dashboard.midtrans.com  ← (tanpa sandbox)
+  Menu     : Pengaturan → Access Keys
+  Catat Client Key dan Server Key PRODUKSI (berbeda dengan sandbox)
+
+── STEP 2: Update di Cloudflare ───────────────────────────
+
+  Menu: Workers & Pages → lidan-co-id
+        → Settings → Variables and Secrets
+
+  Edit kedua variable:
+  • MIDTRANS_SERVER_KEY → ganti ke Server Key PRODUKSI
+  • MIDTRANS_CLIENT_KEY → ganti ke Client Key PRODUKSI
+
+── STEP 3: Ganti Kode di snap-token.js ────────────────────
+
+  File: functions/api/snap-token.js
+
+  CARI baris ini (sekitar baris 55):
+  ┌─────────────────────────────────────────────────────────┐
+  │ const MIDTRANS_URL =                                    │
+  │   "https://app.sandbox.midtrans.com/snap/v1/           │
+  │    transactions";                                       │
+  └─────────────────────────────────────────────────────────┘
+
+  GANTI menjadi:
+  ┌─────────────────────────────────────────────────────────┐
+  │ const MIDTRANS_URL =                                    │
+  │   "https://app.midtrans.com/snap/v1/transactions";     │
+  └─────────────────────────────────────────────────────────┘
+
+  (Hapus atau comment baris sandbox, aktifkan baris produksi
+   yang sudah ada di bawahnya sebagai komentar)
+
+── STEP 4: Ganti Kode di tes-iq-resmi.html ────────────────
+
+  PERUBAHAN 1 — src snap.js (di bagian <head>):
+
+  CARI:
+    src="https://app.sandbox.midtrans.com/snap/snap.js"
+
+  GANTI:
+    src="https://app.midtrans.com/snap/snap.js"
+
+  ---
+
+  PERUBAHAN 2 — data-client-key (di tag yang sama):
+
+  CARI:
+    data-client-key="Mid-client-K6H00ISMLkeDCY58"
+
+  GANTI:
+    data-client-key="[CLIENT KEY PRODUKSI ANDA]"
+
+── STEP 5: Push ke GitHub ─────────────────────────────────
+
+  Commit dan push kedua file yang diubah:
+  • functions/api/snap-token.js
+  • edukasi/tes-iq-resmi.html
+
+  Cloudflare akan otomatis deploy dalam ~30 detik.
+
+── STEP 6: Test Transaksi Pertama di Produksi ─────────────
+
+  Lakukan 1 transaksi nyata dengan nominal kecil untuk
+  memastikan semua berjalan sebelum promosi ke customer.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BAGIAN C — RINGKASAN FILE & LOKASI
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Repo GitHub  : dumeiandroid/lidan.co.id
+
+  File baru    : functions/api/snap-token.js
+  File diubah  : edukasi/tes-iq-resmi.html
+
+  API internal : https://lidan-co-id.pages.dev/api/contacts
+  Snap token   : https://lidan-co-id.pages.dev/api/snap-token
+  Tabel DB     : pembelian
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BAGIAN D — CATATAN PENTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✅ Server Key TIDAK PERNAH diletakkan di HTML/frontend
+  ✅ Server Key disimpan di Cloudflare Environment Variables
+  ✅ Email customer harus format valid (min domain 2 karakter)
+  ✅ Order ID harus unik setiap transaksi (sudah otomatis)
+  ⚠️  Sandbox dan Produksi menggunakan Keys yang BERBEDA
+  ⚠️  Jangan gunakan kartu test di lingkungan produksi
+
+================================================================
+kesimpulan yg dilakukan adalah:
+
+Ambil API Keys dari dashboard Midtrans Sandbox
+Simpan Server Key & Client Key di Cloudflare (sebagai Secret)
+Buat file baru functions/api/snap-token.js di GitHub
+Update tes-iq-resmi.html dengan snap.js + logika pembayaran baru
+
+Untuk go-live produksi nanti, hanya 4 hal yang diganti:
+
+Server Key & Client Key di Cloudflare → nilai produksi
+URL di snap-token.js → hilangkan kata sandbox
+URL & client key di HTML → versi produksi
