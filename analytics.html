@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Analytics — Lidan.co.id</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1e2333;
+    --border: #2a3045;
+    --accent: #4f8ef7;
+    --accent2: #7c5cbf;
+    --green: #34d399;
+    --yellow: #fbbf24;
+    --red: #f87171;
+    --text: #e8eaf0;
+    --muted: #6b7a99;
+    --font-display: 'DM Serif Display', serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: linear-gradient(rgba(79,142,247,0.03) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(79,142,247,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-area h1 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .logo-area h1 span { color: var(--accent); }
+
+  .logo-area p {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(52,211,153,0.1);
+    border: 1px solid rgba(52,211,153,0.2);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: var(--green);
+    font-weight: 500;
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  .refresh-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 13px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .refresh-btn:hover {
+    color: var(--text);
+    border-color: var(--accent);
+    background: rgba(79,142,247,0.08);
+  }
+
+  .period-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 28px;
+  }
+
+  .period-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .period-btn.active, .period-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  /* Tab sumber data */
+  .source-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    padding: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: fit-content;
+  }
+
+  .source-tab {
+    padding: 6px 14px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    border: none;
+    background: transparent;
+    font-family: var(--font-body);
+    transition: all 0.2s;
+  }
+
+  .source-tab.active {
+    background: var(--accent);
+    color: white;
+  }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .kpi-card:hover { border-color: rgba(79,142,247,0.3); }
+  .kpi-card:hover::before { opacity: 1; }
+
+  .kpi-label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+
+  .kpi-value {
+    font-family: var(--font-display);
+    font-size: 36px;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .kpi-sub { font-size: 12px; color: var(--muted); }
+
+  .kpi-icon {
+    position: absolute;
+    top: 18px; right: 18px;
+    font-size: 20px;
+    opacity: 0.3;
+  }
+
+  .chart-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 20px;
+  }
+
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 140px;
+  }
+
+  .bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .bar {
+    width: 100%;
+    background: linear-gradient(180deg, var(--accent), rgba(79,142,247,0.3));
+    border-radius: 4px 4px 0 0;
+    min-height: 4px;
+    transition: all 0.5s ease;
+    cursor: pointer;
+  }
+
+  .bar:hover { filter: brightness(1.2); }
+
+  .bar-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+
+  .list-item:last-child { border-bottom: none; }
+
+  .list-bar-wrap {
+    flex: 1;
+    position: relative;
+  }
+
+  .list-bar-bg {
+    position: absolute;
+    inset: -6px 0;
+    border-radius: 4px;
+    background: rgba(79,142,247,0.06);
+    transform-origin: left;
+  }
+
+  .list-label {
+    position: relative;
+    font-size: 13px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+  }
+
+  .list-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .donut-legend { flex: 1; }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  .legend-left {
+    display: flex;
+    align-items: center;
+    color: var(--text);
+  }
+
+  .legend-pct { color: var(--muted); font-size: 12px; }
+
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 13px;
+    gap: 10px;
+  }
+
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 10px;
+    padding: 16px 20px;
+    color: var(--red);
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  /* Badge sumber data */
+  .data-source-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-weight: 500;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .badge-ae {
+    background: rgba(52,211,153,0.12);
+    border: 1px solid rgba(52,211,153,0.25);
+    color: var(--green);
+  }
+
+  .badge-cf {
+    background: rgba(251,191,36,0.12);
+    border: 1px solid rgba(251,191,36,0.25);
+    color: var(--yellow);
+  }
+
+  .last-update {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 768px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-row { grid-template-columns: 1fr; }
+    .bottom-grid { grid-template-columns: 1fr; }
+    header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <div class="logo-area">
+      <h1>Analytics <span>lidan.co.id</span></h1>
+      <p id="dataSourceLabel">Dashboard statistik kunjungan — Analytics Engine</p>
+    </div>
+    <div class="header-right">
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        Live
+      </div>
+      <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+    </div>
+  </header>
+
+  <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px; flex-wrap:wrap;">
+    <div class="period-bar" style="margin-bottom:0">
+      <button class="period-btn active" onclick="setPeriod(24, this)">24 Jam</button>
+      <button class="period-btn" onclick="setPeriod(168, this)">7 Hari</button>
+      <button class="period-btn" onclick="setPeriod(720, this)">30 Hari</button>
+    </div>
+    <div class="source-tabs">
+      <button class="source-tab active" onclick="setSource('ae', this)" title="Data akurat dari tracking Anda sendiri">🎯 Analytics Engine</button>
+      <button class="source-tab" onclick="setSource('cf', this)" title="Data dari Cloudflare Zone">☁️ Cloudflare Zone</button>
+    </div>
+  </div>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon">👁</div>
+      <div class="kpi-label">Total Pageviews</div>
+      <div class="kpi-value" id="kpiViews"><div class="loading"><div class="spinner"></div></div></div>
+      <div class="kpi-sub" id="kpiViewsSub">Memuat...</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">👤</div>
+      <div class="kpi-label">Pengunjung Unik</div>
+      <div class="kpi-value" id="kpiVisitors"><div class="loading"><div class="spinner"></div></div></div>
+      <div class="kpi-sub" id="kpiVisitorsSub">Memuat...</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">⚡</div>
+      <div class="kpi-label" id="kpiLoadLabel">Total Requests</div>
+      <div class="kpi-value" id="kpiLoad"><div class="loading"><div class="spinner"></div></div></div>
+      <div class="kpi-sub" id="kpiLoadSub">Memuat...</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">🛡</div>
+      <div class="kpi-label" id="kpiBounceLabel">Threats Diblokir</div>
+      <div class="kpi-value" id="kpiBounce"><div class="loading"><div class="spinner"></div></div></div>
+      <div class="kpi-sub" id="kpiBounceSub">Memuat...</div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="card">
+      <div class="card-title">Kunjungan per Jam / Hari</div>
+      <div class="bar-chart" id="barChart">
+        <div class="loading"><div class="spinner"></div> Memuat grafik...</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        Halaman Terpopuler
+        <span class="data-source-badge badge-ae" id="pagesBadge">🎯 Akurat</span>
+      </div>
+      <div id="topPages"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+  <div class="bottom-grid">
+    <div class="card">
+      <div class="card-title">Asal Negara</div>
+      <div id="topCountries"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Perangkat</div>
+      <div id="deviceStats"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Browser</div>
+      <div id="browserStats"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+  <div class="last-update" id="lastUpdate">—</div>
+</div>
+
+<script>
+  // =============================================
+  // KONFIGURASI — sesuaikan dengan data Anda
+  // =============================================
+  const CONFIG = {
+    apiToken:  'cfut_ZvntvdVUIfAPgNy9FyKai3MRkJA3zhaJqyL2ipuHdd952935',
+    zoneId:    '9c3f514c3f168765c9b0268b512f38ed',
+    accountId: '26c738c71563611293e80902f79851c9',   // ← dari URL Cloudflare dashboard Anda
+    workerUrl: 'https://analytics-proxy.dumei-android.workers.dev',
+  };
+
+  let currentHours  = 24;
+  let currentSource = 'ae'; // 'ae' = Analytics Engine, 'cf' = Cloudflare Zone
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function fmt(n) {
+    if (n === null || n === undefined || isNaN(n)) return '—';
+    if (n >= 1000000) return (n/1000000).toFixed(1) + 'jt';
+    if (n >= 1000)    return (n/1000).toFixed(1) + 'rb';
+    return Math.round(n).toString();
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.style.display = 'block';
+    el.innerHTML = '⚠ ' + msg;
+  }
+
+  function hideError() {
+    document.getElementById('errorMsg').style.display = 'none';
+  }
+
+  function setLoading(ids) {
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    });
+  }
+
+  function setPeriod(hours, btn) {
+    currentHours = hours;
+    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadData();
+  }
+
+  function setSource(src, btn) {
+    currentSource = src;
+    document.querySelectorAll('.source-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const label = document.getElementById('dataSourceLabel');
+    if (src === 'ae') {
+      label.textContent = 'Dashboard statistik kunjungan — Analytics Engine (data akurat)';
+    } else {
+      label.textContent = 'Dashboard statistik kunjungan — Cloudflare Zone Analytics';
+    }
+    loadData();
+  }
+
+  // ── Fetch via Worker proxy ────────────────────────────────────────────────
+  async function cfetch(path, options = {}) {
+    const url    = CONFIG.workerUrl + path;
+    const isPost = options.method === 'POST';
+
+    const res = await fetch(url, {
+      method:  isPost ? 'POST' : 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CF-Token':   CONFIG.apiToken,
+        ...(options.headers || {}),
+      },
+      body: isPost ? options.body : undefined,
+    });
+
+    return res.json();
+  }
+
+  // ============================================================
+  // SUMBER 1: Analytics Engine (data akurat dari tracking Anda)
+  // ============================================================
+  async function loadFromAnalyticsEngine() {
+    try {
+      const json = await cfetch('/ae-stats', {
+        method: 'POST',
+        body: JSON.stringify({
+          accountId: CONFIG.accountId,
+          hours:     currentHours,
+        }),
+      });
+
+      if (!json.ok) throw new Error(json.error || 'Gagal ambil data AE');
+
+      const d = json.data;
+
+      // ── KPI ──────────────────────────────────────────────────
+      const totalRow = d.total?.data?.[0];
+      const total    = totalRow?.total || 0;
+
+      document.getElementById('kpiViews').textContent    = fmt(total);
+      document.getElementById('kpiViewsSub').textContent = 'Total kunjungan halaman';
+      document.getElementById('kpiVisitors').textContent = '—';
+      document.getElementById('kpiVisitorsSub').textContent = 'Data dari tracking';
+      document.getElementById('kpiLoadLabel').textContent   = 'Halaman Dilacak';
+      document.getElementById('kpiLoad').textContent        = fmt(d.pages?.data?.length || 0);
+      document.getElementById('kpiLoadSub').textContent     = 'Halaman unik dikunjungi';
+      document.getElementById('kpiBounceLabel').textContent = 'Periode';
+      document.getElementById('kpiBounce').textContent      = currentHours <= 24 ? '24 Jam' : currentHours <= 168 ? '7 Hari' : '30 Hari';
+      document.getElementById('kpiBounceSub').textContent   = 'Rentang waktu data';
+
+      // ── Halaman terpopuler ────────────────────────────────────
+      const pages = d.pages?.data || [];
+      if (pages.length) {
+        const maxP = pages[0]?.count || 1;
+        document.getElementById('topPages').innerHTML = pages.map(p => {
+          const pct   = Math.round((p.count / maxP) * 100);
+          const label = (p.path || '/').substring(0, 40);
+          return `<div class="list-item">
+            <div class="list-bar-wrap">
+              <div class="list-bar-bg" style="width:${pct}%"></div>
+              <div class="list-label" title="${p.path}">${label}</div>
+            </div>
+            <div class="list-count">${fmt(p.count)}</div>
+          </div>`;
+        }).join('');
+      } else {
+        document.getElementById('topPages').innerHTML =
+          '<div style="color:var(--muted);font-size:13px;padding:12px 0;">Belum ada data — kunjungi website Anda dulu!</div>';
+      }
+
+      // ── Negara ────────────────────────────────────────────────
+      const countryAgg = {};
+      (d.countries?.data || []).forEach(r => {
+        if (r.country && r.country !== 'XX') countryAgg[r.country] = r.count;
+      });
+      renderList('topCountries', countryAgg, true);
+
+      // ── Browser ───────────────────────────────────────────────
+      const browserAgg = {};
+      (d.browsers?.data || []).forEach(r => {
+        if (r.browser) browserAgg[r.browser] = r.count;
+      });
+      renderList('browserStats', browserAgg, false);
+
+      // ── Device ────────────────────────────────────────────────
+      const deviceAgg = {};
+      (d.devices?.data || []).forEach(r => {
+        if (r.device) deviceAgg[r.device] = r.count;
+      });
+      renderDevicesFromData(deviceAgg);
+
+      // ── Timeseries ────────────────────────────────────────────
+      const ts = (d.timeseries?.data || []).map(r => ({
+        since:    r.t,
+        requests: { all: r.count },
+      }));
+      renderBarChart(ts);
+
+    } catch (e) {
+      showError('Analytics Engine: ' + e.message);
+      ['kpiViews','kpiVisitors','kpiLoad','kpiBounce'].forEach(id => {
+        document.getElementById(id).textContent = '—';
+      });
+    }
+  }
+
+  // ============================================================
+  // SUMBER 2: Cloudflare Zone Analytics (data Cloudflare)
+  // ============================================================
+  async function loadFromCloudflare() {
+    try {
+      const now      = new Date();
+      const since    = new Date(now - currentHours * 60 * 60 * 1000);
+      const sinceDate = since.toISOString().split('T')[0];
+      const untilDate = now.toISOString().split('T')[0];
+
+      const query = `{
+        viewer {
+          zones(filter: {zoneTag: "${CONFIG.zoneId}"}) {
+            daily: httpRequests1dGroups(
+              limit: 30,
+              filter: { date_geq: "${sinceDate}", date_leq: "${untilDate}" }
+            ) {
+              dimensions { date }
+              sum { requests pageViews threats }
+              uniq { uniques }
+            }
+            countryData: httpRequests1dGroups(
+              limit: 30,
+              filter: { date_geq: "${sinceDate}", date_leq: "${untilDate}" }
+            ) {
+              sum { countryMap { clientCountryName requests } }
+            }
+            browserData: httpRequests1hGroups(
+              limit: 100,
+              filter: { date_geq: "${sinceDate}", date_leq: "${untilDate}" }
+            ) {
+              sum { browserMap { uaBrowserFamily pageViews } }
+            }
+          }
+        }
+      }`;
+
+      const json = await cfetch('/graphql', {
+        method: 'POST',
+        body:   JSON.stringify({ query }),
+      });
+
+      if (json.errors) throw new Error(json.errors[0]?.message);
+
+      const zone = json?.data?.viewer?.zones?.[0];
+      if (!zone) throw new Error('Data zona tidak ditemukan');
+
+      let totalRequests = 0, totalPageViews = 0, totalThreats = 0, totalUniques = 0;
+      (zone.daily || []).forEach(r => {
+        totalRequests  += r.sum?.requests  || 0;
+        totalPageViews += r.sum?.pageViews || 0;
+        totalThreats   += r.sum?.threats   || 0;
+        totalUniques   += r.uniq?.uniques  || 0;
+      });
+
+      document.getElementById('kpiViews').textContent    = fmt(totalPageViews);
+      document.getElementById('kpiViewsSub').textContent = 'Total pageviews';
+      document.getElementById('kpiVisitors').textContent    = fmt(totalUniques);
+      document.getElementById('kpiVisitorsSub').textContent = 'Pengunjung unik';
+      document.getElementById('kpiLoadLabel').textContent   = 'Total Requests';
+      document.getElementById('kpiLoad').textContent        = fmt(totalRequests);
+      document.getElementById('kpiLoadSub').textContent     = 'Semua request';
+      document.getElementById('kpiBounceLabel').textContent = 'Threats Diblokir';
+      document.getElementById('kpiBounce').textContent      = fmt(totalThreats);
+      document.getElementById('kpiBounceSub').textContent   = 'Threats diblokir';
+
+      // Timeseries
+      const ts = (zone.daily || []).map(t => ({
+        since:    t.dimensions?.date || '',
+        requests: { all: t.sum?.pageViews || 0 },
+      }));
+      renderBarChart(ts);
+
+      // Negara
+      const countryAgg = {};
+      (zone.countryData || []).forEach(r => {
+        (r.sum?.countryMap || []).forEach(c => {
+          const name = c.clientCountryName || 'Unknown';
+          countryAgg[name] = (countryAgg[name] || 0) + (c.requests || 0);
+        });
+      });
+      renderList('topCountries', countryAgg, false);
+
+      // Browser
+      const browserAgg = {};
+      (zone.browserData || []).forEach(r => {
+        (r.sum?.browserMap || []).forEach(b => {
+          const name = b.uaBrowserFamily || 'Lainnya';
+          browserAgg[name] = (browserAgg[name] || 0) + (b.pageViews || 0);
+        });
+      });
+      renderList('browserStats', browserAgg, false);
+      renderDevicesFromData({ 'Desktop': 1 });
+
+      // Top pages (tidak tersedia di free plan)
+      document.getElementById('topPages').innerHTML =
+        '<div style="color:var(--muted);font-size:13px;padding:8px 0;">Data halaman hanya tersedia di tab Analytics Engine ↑</div>';
+
+    } catch(e) {
+      showError('Cloudflare Zone: ' + e.message);
+      ['kpiViews','kpiVisitors','kpiLoad','kpiBounce'].forEach(id => {
+        document.getElementById(id).textContent = '—';
+      });
+    }
+  }
+
+  // ── Render helpers ────────────────────────────────────────────────────────
+  function renderBarChart(timeseries) {
+    if (!timeseries.length) {
+      document.getElementById('barChart').innerHTML =
+        '<div style="color:var(--muted);font-size:13px;">Belum ada data grafik</div>';
+      return;
+    }
+
+    const max  = Math.max(...timeseries.map(t => t.requests?.all || 0)) || 1;
+    const step = Math.ceil(timeseries.length / 14);
+    let html   = '';
+
+    timeseries.forEach((t, i) => {
+      if (i % step !== 0 && i !== timeseries.length - 1) return;
+      const val = t.requests?.all || 0;
+      const pct = Math.round((val / max) * 100);
+      const label = new Date(t.since).toLocaleDateString('id-ID', {
+        month: 'short', day: 'numeric',
+        ...(currentHours <= 48 ? { hour: '2-digit' } : {}),
+      });
+      html += `<div class="bar-group">
+        <div class="bar" style="height:${Math.max(pct, 2)}%" title="${label}: ${fmt(val)}"></div>
+        <div class="bar-label">${label}</div>
+      </div>`;
+    });
+
+    document.getElementById('barChart').innerHTML = html;
+  }
+
+  function renderList(containerId, obj, isCountry = false) {
+    const entries = Object.entries(obj).sort((a,b) => b[1]-a[1]).slice(0,8);
+    if (!entries.length) {
+      document.getElementById(containerId).innerHTML =
+        '<div style="color:var(--muted);font-size:13px;padding:12px 0;">Belum ada data</div>';
+      return;
+    }
+
+    const max = entries[0][1];
+    document.getElementById(containerId).innerHTML = entries.map(([key, val]) => {
+      const pct   = Math.round((val/max)*100);
+      const label = isCountry ? countryName(key) : key;
+      return `<div class="list-item">
+        <div class="list-bar-wrap">
+          <div class="list-bar-bg" style="width:${pct}%"></div>
+          <div class="list-label">${label}</div>
+        </div>
+        <div class="list-count">${fmt(val)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderDevicesFromData(deviceAgg) {
+    const colors   = { 'desktop':'#4f8ef7','mobile':'#7c5cbf','tablet':'#34d399' };
+    const entries  = Object.entries(deviceAgg).sort((a,b) => b[1]-a[1]);
+    const total    = entries.reduce((s,[,v]) => s+v, 0) || 1;
+
+    if (!entries.length) {
+      document.getElementById('deviceStats').innerHTML =
+        '<div style="color:var(--muted);font-size:13px;padding:12px 0;">Belum ada data</div>';
+      return;
+    }
+
+    document.getElementById('deviceStats').innerHTML =
+      '<div class="donut-legend">' +
+      entries.map(([key, val]) => {
+        const label = key.charAt(0).toUpperCase() + key.slice(1);
+        const pct   = Math.round((val / total) * 100);
+        const color = colors[key.toLowerCase()] || '#fbbf24';
+        return `<div class="legend-item">
+          <div class="legend-left">
+            <div class="legend-dot" style="background:${color}"></div>${label}
+          </div>
+          <div class="legend-pct">${pct}%</div>
+        </div>`;
+      }).join('') +
+      '</div>';
+  }
+
+  function countryName(code) {
+    const map = {
+      'ID':'🇮🇩 Indonesia','US':'🇺🇸 Amerika','SG':'🇸🇬 Singapura',
+      'MY':'🇲🇾 Malaysia','AU':'🇦🇺 Australia','GB':'🇬🇧 Inggris',
+      'JP':'🇯🇵 Jepang','CN':'🇨🇳 China','IN':'🇮🇳 India',
+      'DE':'🇩🇪 Jerman','FR':'🇫🇷 Prancis','NL':'🇳🇱 Belanda',
+      'CA':'🇨🇦 Kanada','KR':'🇰🇷 Korea','TH':'🇹🇭 Thailand',
+      'PH':'🇵🇭 Filipina','VN':'🇻🇳 Vietnam','BR':'🇧🇷 Brasil',
+      'Indonesia':'🇮🇩 Indonesia','United States':'🇺🇸 Amerika',
+      'Singapore':'🇸🇬 Singapura','Malaysia':'🇲🇾 Malaysia',
+    };
+    return map[code] || ('🌍 ' + code);
+  }
+
+  // ── Load utama ────────────────────────────────────────────────────────────
+  async function loadData() {
+    hideError();
+    document.getElementById('lastUpdate').textContent = 'Memuat data...';
+    setLoading(['kpiViews','kpiVisitors','kpiLoad','kpiBounce']);
+
+    if (currentSource === 'ae') {
+      await loadFromAnalyticsEngine();
+    } else {
+      await loadFromCloudflare();
+    }
+
+    const now = new Date();
+    document.getElementById('lastUpdate').textContent =
+      'Terakhir diperbarui: ' + now.toLocaleString('id-ID', {
+        day: 'numeric', month: 'long', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+      });
+  }
+
+  loadData();
+  setInterval(loadData, 5 * 60 * 1000); // refresh tiap 5 menit
+</script>
+</body>
+</html>
