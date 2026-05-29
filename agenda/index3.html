@@ -151,8 +151,12 @@ body {
       var(--line-color) calc(var(--line-h) - 1px),
       var(--line-color) var(--line-h)
     );
-  /* header=44px + note-header-meta=22px + editor padding-top=14px = 80px */
-  background-position: 0 80px;
+  /* Sinkronkan garis dengan teks editor:
+     page-header=44px, note-header-meta=20px, padding-top editor=14px
+     total offset teks pertama = 44+20+14 = 78px
+     78 mod 28 = 22px → mulai garis di 78px - (28-22) = 72px agar garis
+     tepat di bawah baris pertama */
+  background-position: 0 78px;
   pointer-events: none;
   z-index: 0;
 }
@@ -275,7 +279,6 @@ body {
   gap: 10px;
   min-height: 44px;
   flex-shrink: 0;
-  background: var(--paper);
 }
 
 .page-title-area {
@@ -300,7 +303,6 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: var(--paper);
 }
 
 .index-search-wrap {
@@ -436,75 +438,12 @@ body {
 
 .note-header-meta {
   padding: 2px 12px 2px 56px;
-  height: 22px;
+  height: 20px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  gap: 8px;
   border-bottom: 1px solid var(--line-color);
-}
-
-/* ═══════════════════════════════════════════════
-   NOTE PAGE HEADER — gaya buku klasik
-═══════════════════════════════════════════════ */
-.note-page-header {
-  position: relative;
-  z-index: 2;
-  padding: 0 14px 0 56px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border-bottom: 2px solid var(--paper-shadow);
-  flex-shrink: 0;
-}
-
-.note-page-header .header-dash {
-  font-family: var(--font-hand);
-  font-size: 13px;
-  color: var(--paper-shadow);
-  flex-shrink: 0;
-  user-select: none;
-}
-
-.note-page-header .header-angle {
-  font-family: var(--font-hand);
-  font-size: 12px;
-  color: var(--paper-shadow);
-  flex-shrink: 0;
-  user-select: none;
-}
-
-.note-page-header input.note-title-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-family: var(--font-hand);
-  font-size: 14px;
-  font-weight: 600;
-  font-style: italic;
-  color: var(--ink-faint);
-  text-align: center;
-  padding: 0;
-  cursor: text;
-  min-width: 0;
-}
-.note-page-header input.note-title-input::placeholder {
-  color: rgba(92,74,42,0.3);
-  font-style: italic;
-}
-
-.note-page-header .header-date {
-  font-family: var(--font-hand);
-  font-size: 12px;
-  font-style: italic;
-  color: var(--ink-faint);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.note-page-header .note-delete-btn {
-  flex-shrink: 0;
 }
 
 .note-title-input {
@@ -523,11 +462,10 @@ body {
 .note-title-input::placeholder { color: rgba(92,74,42,0.3); font-family: var(--font-title); font-style: italic; }
 
 .note-date-display {
-  font-family: var(--font-hand);
-  font-size: 11px;
-  font-style: italic;
+  font-family: var(--font-display);
+  font-size: 9px;
   color: var(--paper-shadow);
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   white-space: nowrap;
 }
 
@@ -543,8 +481,8 @@ body {
   position: absolute;
   inset: 0;
   padding: 6px 16px 4px 56px;
-  font-family: var(--font-hand);
-  font-size: 16px;
+  font-family: var(--font-body);
+  font-size: 14px;
   line-height: var(--line-h);
   color: var(--ink);
   outline: none;
@@ -552,6 +490,12 @@ body {
   word-break: break-word;
   white-space: pre-wrap;
   cursor: text;
+  /* Geser teks agar tepat di atas garis:
+     lined-paper mulai di 44px (page-header).
+     note-content-wrap mulai setelah 44px, lalu note-header-meta 20px.
+     Jadi editor mulai di offset 64px dari atas halaman.
+     64px mod 28px = 8px sudah lewat dari garis terakhir.
+     Perlu padding-top = 28px - 8px - 6px (font descent) = 14px */
   padding-top: 14px;
 }
 
@@ -1098,8 +1042,9 @@ body {
       </div>
       <div class="lined-paper"></div>
       <div id="right-page-content">
+        <!-- default: blank / welcome -->
         <div class="page-header">
-          <input id="note-title" class="note-title-input" placeholder="Judul catatan..." oninput="markDirty(); scheduleAutoSave();" onfocus="activateEditMode()">
+          <input id="note-title" class="note-title-input" placeholder="Judul catatan..." oninput="markDirty()" onfocus="activateEditMode()" style="flex:1;line-height:normal;height:auto;">
           <span class="page-num" id="right-page-num">—</span>
         </div>
         <div class="note-content-wrap">
@@ -1370,14 +1315,6 @@ function renderBlankNote() {
   openEditor();
 }
 
-function formatDateClassic(isoOrStr) {
-  try {
-    const d = new Date(isoOrStr);
-    if (isNaN(d)) return isoOrStr;
-    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-  } catch(e) { return isoOrStr; }
-}
-
 function buildNoteHTML(title, body, date, num, audioUrl, noteId) {
   const audioHtml = audioUrl ? `
     <div class="cassette-player" id="cassette-wrap">
@@ -1396,19 +1333,18 @@ function buildNoteHTML(title, body, date, num, audioUrl, noteId) {
       </div>
     </div>` : '';
 
-  const dateStr = date ? formatDateClassic(date) : formatDateClassic(new Date().toISOString());
   const deleteBtn = noteId ? `<button class="note-delete-btn" onclick="deleteNote(${noteId})" title="Hapus">✕</button>` : '';
 
   return `
     <div class="page-header">
-      <input id="note-title" class="note-title-input" placeholder="Judul catatan..." value="${escAttr(title)}" oninput="markDirty(); scheduleAutoSave();" onfocus="activateEditMode()">
+      <input id="note-title" class="note-title-input" placeholder="Judul catatan..." value="${escAttr(title)}" oninput="markDirty(); updatePageHeaderTitle(this.value)" onfocus="activateEditMode()" style="flex:1;line-height:normal;height:auto;">
       ${deleteBtn}
       <span class="page-num">${num}</span>
     </div>
     ${audioHtml}
     <div class="note-content-wrap">
       <div class="note-header-meta">
-        <span class="note-date-display">${dateStr}</span>
+        <span class="note-date-display">${date}</span>
       </div>
       <div class="note-editor-area">
         <div id="note-editor" class="note-editor"
@@ -1454,19 +1390,20 @@ function activateEditMode() {
 
 function openEditor() {
   let editor = document.getElementById('note-editor');
+  // Jika editor belum ada di DOM (halaman kosong), build dulu
   if (!editor) {
     state.currentNoteId = null;
     state.currentAudioUrl = null;
     state.dirty = false;
-    const dateStr = formatDateClassic(new Date().toISOString());
+    const now = new Date().toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' });
     document.getElementById('right-page-content').innerHTML =
       '<div class="page-header">' +
-        '<input id="note-title" class="note-title-input" placeholder="Judul catatan..." oninput="markDirty(); scheduleAutoSave();" onfocus="activateEditMode()">' +
+        '<input id="note-title" class="note-title-input" placeholder="Judul catatan..." oninput="markDirty(); scheduleAutoSave();" onfocus="activateEditMode()" style="flex:1;line-height:normal;height:auto;">' +
         '<span class="page-num">' + (state.notes.length + 1) + '</span>' +
       '</div>' +
       '<div class="note-content-wrap">' +
         '<div class="note-header-meta">' +
-          '<span class="note-date-display">' + dateStr + '</span>' +
+          '<span class="note-date-display">' + now + '</span>' +
         '</div>' +
         '<div class="note-editor-area">' +
           '<div id="note-editor" class="note-editor" contenteditable="false"' +
@@ -1480,6 +1417,7 @@ function openEditor() {
   if (!editor) return;
   editor.contentEditable = 'true';
   editor.focus();
+  // Place cursor at end
   const range = document.createRange();
   const sel = window.getSelection();
   range.selectNodeContents(editor);
@@ -1520,15 +1458,15 @@ function resetRightPage() {
   state.currentNoteId = null;
   state.currentAudioUrl = null;
   state.dirty = false;
-  const dateStr = formatDateClassic(new Date().toISOString());
+  const now = new Date().toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' });
   document.getElementById('right-page-content').innerHTML =
     '<div class="page-header">' +
-      '<input id="note-title" class="note-title-input" placeholder="Judul catatan..." oninput="markDirty(); scheduleAutoSave();" onfocus="activateEditMode()">' +
+      '<input id="note-title" class="note-title-input" placeholder="Judul catatan..." oninput="markDirty()" onfocus="activateEditMode()" style="flex:1;line-height:normal;height:auto;">' +
       '<span class="page-num">—</span>' +
     '</div>' +
     '<div class="note-content-wrap">' +
       '<div class="note-header-meta">' +
-        '<span class="note-date-display">' + dateStr + '</span>' +
+        '<span class="note-date-display">' + now + '</span>' +
       '</div>' +
       '<div class="note-editor-area">' +
         '<div id="note-editor" class="note-editor" contenteditable="false"' +
@@ -1878,11 +1816,18 @@ document.getElementById('cover-year').textContent = new Date().getFullYear();
 // Pastikan right page sudah punya editor aktif saat buku dibuka
 (function initRightPage() {
   const dateEl = document.getElementById('note-date-display');
-  if (dateEl) dateEl.textContent = formatDateClassic(new Date().toISOString());
+  if (dateEl) {
+    dateEl.textContent = new Date().toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' });
+  }
   const editor = document.getElementById('note-editor');
-  if (editor) editor.addEventListener('click', openEditor);
+  if (editor) {
+    editor.addEventListener('click', openEditor);
+  }
   const titleEl = document.getElementById('note-title');
-  if (titleEl) titleEl.addEventListener('focus', activateEditMode);
+  if (titleEl) {
+    titleEl.addEventListener('focus', activateEditMode);
+    // Jangan panggil openEditor dari sini agar fokus tidak direbut
+  }
   const rightContent = document.getElementById('right-page-content');
   if (rightContent) {
     rightContent.addEventListener('click', function(e) {
