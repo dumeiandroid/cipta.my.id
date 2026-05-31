@@ -1373,11 +1373,11 @@ function loginInit() {
 }
 
 async function doLogin() {
-  const userEl  = document.getElementById('login-user');
-  const passEl  = document.getElementById('login-pass');
-  const errEl   = document.getElementById('login-error');
-  const btn     = document.getElementById('login-btn');
-  const remember= document.getElementById('login-remember').checked;
+  const userEl   = document.getElementById('login-user');
+  const passEl   = document.getElementById('login-pass');
+  const errEl    = document.getElementById('login-error');
+  const btn      = document.getElementById('login-btn');
+  const remember = document.getElementById('login-remember').checked;
 
   const user = userEl.value.trim();
   const pass = passEl.value.trim();
@@ -1401,7 +1401,6 @@ async function doLogin() {
       } else {
         localStorage.removeItem(LOGIN_KEY);
       }
-      // Login sukses — tampilkan cover
       showView('view-cover');
     } else {
       errEl.textContent = 'Nama pengguna atau kata sandi salah.';
@@ -1631,11 +1630,37 @@ async function openNote(id) {
   document.getElementById('note-title').value = note.title;
   document.getElementById('right-date').textContent = formatDate(note.date);
   document.getElementById('left-date').textContent  = formatDate(note.date);
+
+  // Hapus cassette lama jika ada
   const oldCass = document.querySelector('.cassette-player');
   if (oldCass) oldCass.remove();
-  paginateHTML(note.content || '');
-  renderPages();
+
+  // Set HTML langsung dari x_02 (berisi inline audio block + gambar grid)
+  // JANGAN stripHtml - itu akan menghapus gambar dan audio block
+  const editor = document.getElementById('main-editor');
+  if (editor) {
+    editor.contentEditable = 'false';
+    editor.innerHTML = note.content || '';
+  }
+
+  // Isi halaman kiri hanya placeholder
+  const leftEditor = document.getElementById('left-editor');
+  if (leftEditor) {
+    leftEditor.innerHTML = '<em style="font-size:13px;color:var(--ink-muted);">&#8249; halaman pertama &#8250;</em>';
+  }
+
+  // Sembunyikan page dots (tidak dipaginasi lagi)
+  document.getElementById('page-dots').style.display = 'none';
+  window.pages = [note.content || ''];
+  window.currentPageIdx = 0;
+
+  // Nomor halaman
+  const rightNum = document.getElementById('right-page-num');
+  const leftNum  = document.getElementById('left-page-num');
+  if (rightNum) rightNum.textContent = '1';
+  if (leftNum)  leftNum.textContent  = '-';
 }
+
 function newNote() {
   window.currentNote    = { id: null, title: '', content: '', audioUrl: '', date: nowISO(), type: 'text' };
   window.pages          = [''];
@@ -1651,18 +1676,22 @@ function newNote() {
   if (editor)   { editor.innerHTML = ''; editor.contentEditable = 'false'; }
   const oldCass = document.querySelector('.cassette-player');
   if (oldCass) oldCass.remove();
-  renderPages();
+  document.getElementById('page-dots').style.display = 'none';
+  const rightNum = document.getElementById('right-page-num');
+  const leftNum  = document.getElementById('left-page-num');
+  if (rightNum) rightNum.textContent = (window.notes.length + 1) + '';
+  if (leftNum)  leftNum.textContent  = '-';
   setTimeout(() => activateEditor(), 150);
 }
+
 async function saveNote() {
   const titleEl  = document.getElementById('note-title');
   const editorEl = document.getElementById('main-editor');
   if (!titleEl || !editorEl || !window.currentNote) return;
-  const title = titleEl.value.trim() || 'Tanpa Judul';
-  const now   = nowISO();
-  if (window.pages && window.currentPageIdx != null)
-    window.pages[window.currentPageIdx] = editorEl.innerHTML;
-  const content = (window.pages || [editorEl.innerHTML]).join('');
+  const title   = titleEl.value.trim() || 'Tanpa Judul';
+  const content = editorEl.innerHTML;
+  const now     = nowISO();
+  // Deteksi tipe: audio jika ada inline-audio-block atau audioUrl lama
   const hasAudio = content.includes('inline-audio-block') || !!window.currentNote.audioUrl;
   const data = {
     x_01: title,
@@ -1690,6 +1719,7 @@ async function saveNote() {
   }
   setLoading(false);
 }
+
 function scheduleAutoSave() {
   clearTimeout(window.autoSaveTimer);
   window.autoSaveTimer = setTimeout(saveNote, 3000);
@@ -1698,174 +1728,56 @@ function scheduleAutoSave() {
 /* ════════════════════════════════════════════════
    PAGINATION — Auto-paging teks
 ════════════════════════════════════════════════ */
-/* ════════════════════════════════════════════════
-   HTML-AWARE PAGINATION
-   Struktur konten bisa berlapis (inline-block-wrapper).
-   Fungsi ini menelusuri rekursif untuk menemukan blok
-   note-img-grid dan inline-audio-block di mana pun letaknya,
-   lalu memisahkannya sebagai blok utuh per halaman.
-════════════════════════════════════════════════ */
-
-/**
- * Kumpulkan semua blok khusus (gambar/audio) dan teks
- * dari node secara rekursif menjadi array segmen flat.
- */
-function _collectSegments(node, segments) {
-  if (node.nodeType === Node.TEXT_NODE) {
-    const t = node.textContent.trim();
-    if (t) segments.push({ type: 'text', html: node.textContent });
-    return;
-  }
-  if (node.nodeType !== Node.ELEMENT_NODE) return;
-
-  // Blok khusus — ambil utuh
-  if (node.classList.contains('note-img-grid') ||
-      node.classList.contains('inline-audio-block')) {
-    segments.push({ type: 'special', html: node.outerHTML });
-    return;
-  }
-
-  // inline-block-wrapper — masuk ke dalamnya
-  if (node.classList.contains('inline-block-wrapper')) {
-    node.childNodes.forEach(child => _collectSegments(child, segments));
-    return;
-  }
-
-  // Elemen lain — cek apakah mengandung blok khusus di dalamnya
-  const hasSpecial = node.querySelector('.note-img-grid, .inline-audio-block');
-  if (hasSpecial) {
-    // Telusuri rekursif
-    node.childNodes.forEach(child => _collectSegments(child, segments));
-  } else {
-    // Tidak ada blok khusus — perlakukan sebagai teks
-    const t = (node.textContent || '').trim();
-    if (t) segments.push({ type: 'text', html: node.outerHTML });
-  }
-}
-
-function paginateHTML(htmlContent) {
-  const pageEl       = document.getElementById('right-page');
-  const headerH      = 56;
-  const pageH        = pageEl ? (pageEl.offsetHeight || 560) : 560;
-  const usableH      = pageH - headerH - 20;
-  const lh           = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height')) || 32;
+function paginateText(fullText) {
+  const pageEl   = document.getElementById('right-page');
+  const headerH  = 56;
+  const pageH    = pageEl ? (pageEl.offsetHeight || 560) : 560;
+  const usableH  = pageH - headerH - 20;
+  const lh       = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height')) || 32;
   const linesPerPage = Math.max(1, Math.floor(usableH / lh));
   const charsPerLine = 42;
-  const SPECIAL_LINES = Math.round(linesPerPage * 0.55);
 
-  if (!htmlContent || !htmlContent.trim()) {
-    window.pages = [''];
-    window.currentPageIdx = 0;
-    return;
-  }
+  if (!fullText || !fullText.trim()) { window.pages = ['']; window.currentPageIdx = 0; return; }
 
-  // Parse HTML dan kumpulkan segmen secara rekursif
-  const tmp = document.createElement('div');
-  tmp.innerHTML = htmlContent;
-  const segments = [];
-  tmp.childNodes.forEach(node => _collectSegments(node, segments));
-
-  // Jika tidak ada segmen sama sekali
-  if (segments.length === 0) {
-    window.pages = [''];
-    window.currentPageIdx = 0;
-    return;
-  }
-
+  const words = fullText.split(/\s+/);
   window.pages = [];
-  window.currentPageIdx = 0;
-  let pageParts = [];
-  let lineCount = 0;
+  let currentPage = '';
+  let lineCount   = 0;
+  let currentLine = '';
 
-  function flushPage() {
-    window.pages.push(pageParts.join(''));
-    pageParts = [];
-    lineCount = 0;
-  }
-
-  for (const seg of segments) {
-    if (seg.type === 'special') {
-      // Jika halaman sudah >40% terisi, pindah dulu
-      if (lineCount > linesPerPage * 0.4 && pageParts.length > 0) flushPage();
-      pageParts.push(seg.html);
-      lineCount += SPECIAL_LINES;
-      if (lineCount >= linesPerPage) flushPage();
+  for (const word of words) {
+    if ((currentLine + ' ' + word).trim().length > charsPerLine) {
+      lineCount++;
+      currentLine = word;
     } else {
-      // Teks biasa — paginate per kata
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = seg.html;
-      const plainText = tempDiv.textContent || tempDiv.innerText || '';
-      const words = plainText.split(/\s+/).filter(Boolean);
-      let currentLine  = '';
-      let currentChunk = '';
-      for (const word of words) {
-        const testLine = (currentLine + ' ' + word).trim();
-        if (testLine.length > charsPerLine) {
-          lineCount++;
-          currentLine = word;
-        } else {
-          currentLine = testLine;
-        }
-        currentChunk += (currentChunk ? ' ' : '') + word;
-        if (lineCount >= linesPerPage) {
-          pageParts.push(currentChunk.trim());
-          flushPage();
-          currentChunk = '';
-          currentLine  = '';
-        }
-      }
-      if (currentChunk.trim()) pageParts.push(currentChunk.trim());
+      currentLine = (currentLine + ' ' + word).trim();
+    }
+    currentPage += (currentPage ? ' ' : '') + word;
+    if (lineCount >= linesPerPage) {
+      window.pages.push(currentPage.trim());
+      currentPage = '';
+      lineCount   = 0;
+      currentLine = '';
     }
   }
-  if (pageParts.length > 0 || window.pages.length === 0) flushPage();
+  if (currentPage.trim() || window.pages.length === 0) window.pages.push(currentPage.trim());
+  window.currentPageIdx = 0; /* buka dari halaman pertama */
 }
 
-// Alias untuk kompatibilitas
-function paginateText(fullText) { paginateHTML(fullText); }
-
 function renderPages() {
-  const mainEditor = document.getElementById('main-editor');
-  const leftEditor = document.getElementById('left-editor');
-  const rightNum   = document.getElementById('right-page-num');
-  const leftNum    = document.getElementById('left-page-num');
-  if (!mainEditor) return;
-
-  const pg  = window.pages || [''];
-  const idx = window.currentPageIdx || 0;
-
-  if (!window.isEditorActive) {
-    mainEditor.contentEditable = 'false';
-    mainEditor.innerHTML = pg[idx] || '';
-  }
-  if (rightNum) rightNum.textContent = idx + 1;
-
-  if (leftEditor) {
-    if (window.isDesktop && idx > 0) {
-      leftEditor.innerHTML       = pg[idx - 1] || '';
-      leftEditor.style.color     = 'var(--ink)';
-      leftEditor.style.fontStyle = 'normal';
-      leftEditor.style.fontSize  = '17px';
-      if (leftNum) leftNum.textContent = idx;
-    } else {
-      leftEditor.innerHTML       = '<em style="font-size:13px;color:var(--ink-muted);">≺ halaman pertama ≻</em>';
-      leftEditor.style.color     = 'var(--ink-muted)';
-      leftEditor.style.fontStyle = 'italic';
-      if (leftNum) leftNum.textContent = '–';
-    }
-  }
-
-  const dotsWrap = document.getElementById('page-dots');
-  if (dotsWrap) dotsWrap.style.display = pg.length > 1 ? '' : 'none';
+  // Fungsi ini sekarang hanya mengupdate nomor halaman dan dots
+  // Konten editor diset langsung di openNote/newNote via innerHTML
+  const rightNum = document.getElementById('right-page-num');
+  const leftNum  = document.getElementById('left-page-num');
+  if (rightNum) rightNum.textContent = (window.currentPageIdx + 1) + '';
+  if (leftNum)  leftNum.textContent  = window.currentPageIdx > 0 ? window.currentPageIdx + '' : '-';
   renderDots();
 }
 
 function renderDots() {
   const dots = document.getElementById('page-dots');
   if (!dots) return;
-  if (!window.pages || window.pages.length <= 1) { dots.innerHTML = ''; return; }
-  dots.innerHTML = window.pages.map((_, i) =>
-    `<div class="page-dot ${i === window.currentPageIdx ? 'active' : ''}" onclick="goToPage(${i})"></div>`
-  ).join('');
+  dots.innerHTML = ''; // Dots disembunyikan karena tidak pakai paginasi
 }
 
 function goToPage(i) {
@@ -1873,13 +1785,7 @@ function goToPage(i) {
   renderPages();
 }
 function prevPage() { goToPage(window.currentPageIdx - 1); }
-function nextPage() {
-  if (window.isEditorActive) {
-    const ed = document.getElementById('main-editor');
-    if (ed) window.pages[window.currentPageIdx] = ed.innerHTML;
-  }
-  goToPage(window.currentPageIdx + 1);
-}
+function nextPage() { goToPage(window.currentPageIdx + 1); }
 
 /* ════════════════════════════════════════════════
    EDITOR
@@ -1923,9 +1829,8 @@ function deactivateEditor() {
 
 function onEditorInput() {
   const ed = document.getElementById('main-editor');
-  if (!ed || !window.pages) return;
-  window.pages[window.currentPageIdx] = ed.innerHTML;
-  renderDots();
+  // Simpan HTML penuh (termasuk gambar dan audio block) ke state
+  if (window.pages) window.pages[0] = ed.innerHTML;
   scheduleAutoSave();
 }
 

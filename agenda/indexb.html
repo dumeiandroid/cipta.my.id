@@ -1,0 +1,2732 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Agenda Klasik — Lidan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Caveat:wght@400;600;700&family=IM+Fell+English+SC&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════
+   CSS VARIABLES & RESET
+═══════════════════════════════════════════════ */
+:root {
+  --paper:        #f5f0e8;
+  --paper-dark:   #ede8d8;
+  --paper-shadow: #d4c9a8;
+  --ink:          #1a1208;
+  --ink-faint:    #5c4a2a;
+  --line-color:   rgba(100,140,200,0.22);
+  --red-line:     rgba(220,60,50,0.4);
+  --cover-bg:     #2c1a0e;
+  --cover-accent: #8b5e2a;
+  --gold:         #c9973a;
+  --gold-light:   #e8c870;
+  --spine:        #1e1008;
+  --toolbar-bg:   rgba(44,26,14,0.96);
+  --line-h:       28px;
+  --font-body:    'Courier Prime', monospace;
+  --font-display: 'Special Elite', cursive;
+  --font-hand:    'Caveat', cursive;
+  --font-title:   'IM Fell English SC', serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1008; }
+
+body {
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(139,94,42,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 50%, rgba(201,151,58,0.1) 0%, transparent 60%),
+    #1a1008;
+  user-select: none;
+}
+
+/* ═══════════════════════════════════════════════
+   BOOK CONTAINER
+═══════════════════════════════════════════════ */
+#book-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* ═══════════════════════════════════════════════
+   THE BOOK (Desktop: 2 pages, Mobile: 1 page)
+═══════════════════════════════════════════════ */
+#book {
+  position: relative;
+  display: flex;
+  width: min(860px, 95vw);
+  height: min(620px, 90vh);
+  filter: drop-shadow(0 30px 60px rgba(0,0,0,0.7)) drop-shadow(0 8px 16px rgba(0,0,0,0.5));
+  transform-style: preserve-3d;
+}
+
+/* Spine between pages (desktop only) */
+#book::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 100%;
+  background: linear-gradient(90deg, #1e1008 0%, #3d2410 30%, #5c3820 50%, #3d2410 70%, #1e1008 100%);
+  z-index: 10;
+  box-shadow: 0 0 20px rgba(0,0,0,0.8);
+}
+
+/* ═══════════════════════════════════════════════
+   PAGE BASE STYLES
+═══════════════════════════════════════════════ */
+.page {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  background: var(--paper);
+  overflow: hidden;
+  transition: opacity 0.3s ease;
+}
+
+/* Left page rounded corners */
+.page-left {
+  border-radius: 4px 0 0 4px;
+  background: linear-gradient(to right, var(--paper-dark) 0%, var(--paper) 6%);
+  box-shadow: inset -4px 0 8px rgba(0,0,0,0.08);
+}
+
+/* Right page rounded corners */
+.page-right {
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(to left, var(--paper-dark) 0%, var(--paper) 6%);
+  box-shadow: inset 4px 0 8px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+#right-page-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Paper texture overlay */
+.page::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+/* ═══════════════════════════════════════════════
+   LINED PAPER BACKGROUND
+═══════════════════════════════════════════════ */
+.lined-paper {
+  position: absolute;
+  inset: 0;
+  background-image:
+    /* Red margin line */
+    linear-gradient(90deg, transparent 48px, var(--red-line) 48px, var(--red-line) 50px, transparent 50px),
+    /* Horizontal lines */
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent calc(var(--line-h) - 1px),
+      var(--line-color) calc(var(--line-h) - 1px),
+      var(--line-color) var(--line-h)
+    );
+  /* header=44px + note-header-meta=22px + editor padding-top=14px = 80px */
+  background-position: 0 80px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   COVER PAGE
+═══════════════════════════════════════════════ */
+#page-cover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--cover-bg) 0%, #3d2010 40%, #2c1a0e 100%) !important;
+  cursor: pointer;
+  z-index: 5;
+}
+#page-cover::after { display: none; }
+
+/* Leather texture */
+#page-cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.4' numOctaves='6' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.12'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: 4px 0 0 4px;
+}
+
+.cover-ornament {
+  position: absolute;
+  inset: 12px;
+  border: 2px solid rgba(201,151,58,0.35);
+  border-radius: 2px;
+  pointer-events: none;
+}
+.cover-ornament::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(201,151,58,0.2);
+  border-radius: 1px;
+}
+
+.cover-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 20px;
+}
+
+.cover-year {
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--gold);
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  opacity: 0.8;
+  margin-bottom: 16px;
+}
+
+.cover-title {
+  font-family: var(--font-title);
+  font-size: clamp(28px, 5vw, 42px);
+  color: var(--gold-light);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.cover-subtitle {
+  font-family: var(--font-hand);
+  font-size: 15px;
+  color: rgba(201,151,58,0.7);
+  font-style: italic;
+  margin-bottom: 24px;
+}
+
+.cover-divider {
+  width: 80px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 16px auto;
+}
+
+.cover-monogram {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid rgba(201,151,58,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-family: var(--font-title);
+  font-size: 28px;
+  color: var(--gold);
+}
+
+.cover-hint {
+  font-family: var(--font-hand);
+  font-size: 13px;
+  color: rgba(201,151,58,0.45);
+  letter-spacing: 2px;
+  margin-top: 20px;
+  animation: pulse-hint 2.5s ease-in-out infinite;
+}
+@keyframes pulse-hint { 0%,100%{opacity:0.3} 50%{opacity:0.9} }
+
+/* ═══════════════════════════════════════════════
+   INDEX PAGE (Table of Contents)
+═══════════════════════════════════════════════ */
+.page-header {
+  position: relative;
+  z-index: 2;
+  padding: 12px 16px 8px 56px;
+  border-bottom: 2px solid var(--paper-shadow);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  flex-shrink: 0;
+  background: var(--paper);
+}
+
+.page-title-area {
+  font-family: var(--font-title);
+  font-size: 15px;
+  color: var(--ink-faint);
+  flex: 1;
+}
+
+.page-num {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--paper-shadow);
+  letter-spacing: 2px;
+}
+
+.index-content {
+  position: relative;
+  z-index: 2;
+  padding: 10px 16px 10px 56px;
+  height: calc(100% - 44px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+}
+
+.index-search-wrap {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.index-search {
+  width: 100%;
+  background: rgba(255,255,255,0.5);
+  border: 1px solid var(--paper-shadow);
+  border-radius: 3px;
+  padding: 6px 10px 6px 30px;
+  font-family: var(--font-hand);
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.index-search:focus { border-color: var(--cover-accent); }
+.index-search::placeholder { color: var(--paper-shadow); }
+
+.search-icon {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--paper-shadow);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.index-sort-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.sort-btn {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  background: transparent;
+  border: 1px solid var(--paper-shadow);
+  border-radius: 2px;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sort-btn.active, .sort-btn:hover {
+  background: var(--cover-bg);
+  color: var(--gold);
+  border-color: var(--cover-bg);
+}
+
+.index-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.index-list::-webkit-scrollbar { width: 4px; }
+.index-list::-webkit-scrollbar-thumb { background: var(--paper-shadow); border-radius: 2px; }
+
+.index-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 0;
+  border-bottom: 1px dashed rgba(92,74,42,0.2);
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: 2px;
+  padding-left: 4px;
+}
+.index-item:hover { background: rgba(201,151,58,0.08); }
+
+.index-item-num {
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--paper-shadow);
+  min-width: 20px;
+}
+
+.index-item-title {
+  font-family: var(--font-hand);
+  font-size: 15px;
+  color: var(--ink);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.index-item-type {
+  font-size: 14px;
+}
+
+.index-item-date {
+  font-family: var(--font-display);
+  font-size: 9px;
+  color: var(--paper-shadow);
+  letter-spacing: 1px;
+}
+
+.index-dots {
+  flex: 1;
+  border-bottom: 1px dotted var(--paper-shadow);
+  margin: 0 4px;
+  align-self: center;
+}
+
+.index-empty {
+  font-family: var(--font-hand);
+  font-size: 16px;
+  color: var(--paper-shadow);
+  text-align: center;
+  margin-top: 20px;
+  font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════
+   NOTE PAGE
+═══════════════════════════════════════════════ */
+.note-content-wrap {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 44px);
+  overflow: hidden;
+}
+
+.note-header-meta {
+  padding: 2px 12px 2px 56px;
+  height: 22px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--line-color);
+}
+
+/* ═══════════════════════════════════════════════
+   NOTE PAGE HEADER — gaya buku klasik
+═══════════════════════════════════════════════ */
+.note-page-header {
+  position: relative;
+  z-index: 2;
+  padding: 0 14px 0 56px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 2px solid var(--paper-shadow);
+  flex-shrink: 0;
+}
+
+.note-page-header .header-dash {
+  font-family: var(--font-hand);
+  font-size: 13px;
+  color: var(--paper-shadow);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.note-page-header .header-angle {
+  font-family: var(--font-hand);
+  font-size: 12px;
+  color: var(--paper-shadow);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.note-page-header input.note-title-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-hand);
+  font-size: 14px;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--ink-faint);
+  text-align: center;
+  padding: 0;
+  cursor: text;
+  min-width: 0;
+}
+.note-page-header input.note-title-input::placeholder {
+  color: rgba(92,74,42,0.3);
+  font-style: italic;
+}
+
+.note-page-header .header-date {
+  font-family: var(--font-hand);
+  font-size: 12px;
+  font-style: italic;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.note-page-header .note-delete-btn {
+  flex-shrink: 0;
+}
+
+.note-title-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-title);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-faint);
+  line-height: 1;
+  height: auto;
+  cursor: text;
+}
+.note-title-input::placeholder { color: rgba(92,74,42,0.3); font-family: var(--font-title); font-style: italic; }
+
+.note-date-display {
+  font-family: var(--font-hand);
+  font-size: 11px;
+  font-style: italic;
+  color: var(--paper-shadow);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.note-editor-area {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* The actual text editor */
+.note-editor {
+  position: absolute;
+  inset: 0;
+  padding: 6px 16px 4px 56px;
+  font-family: var(--font-hand);
+  font-size: 16px;
+  line-height: var(--line-h);
+  color: var(--ink);
+  outline: none;
+  overflow-y: auto;
+  word-break: break-word;
+  white-space: pre-wrap;
+  cursor: text;
+  padding-top: 14px;
+}
+
+.note-editor:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(92,74,42,0.3);
+  pointer-events: none;
+  font-family: var(--font-hand);
+  font-style: italic;
+}
+
+/* Audio player cassette */
+.cassette-player {
+  position: relative;
+  z-index: 3;
+  margin: 8px 16px 0 56px;
+  background: #2c1a0e;
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #5c3820;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.cassette-reels {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.cassette-reel {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #5c3820, #1e1008);
+  border: 2px solid #3d2410;
+  position: relative;
+  flex-shrink: 0;
+}
+.cassette-reel::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: #c9973a;
+  opacity: 0.6;
+}
+.cassette-reel.spinning {
+  animation: spin 1.5s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.cassette-tape-line {
+  height: 2px;
+  width: 20px;
+  background: #3d2410;
+}
+
+.cassette-controls {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  align-items: center;
+}
+
+.cassette-btn {
+  background: #1e1008;
+  border: 1px solid #3d2410;
+  color: var(--gold);
+  width: 26px;
+  height: 26px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: background 0.15s;
+}
+.cassette-btn:hover { background: #3d2410; }
+
+.cassette-progress {
+  flex: 1;
+  height: 3px;
+  background: #3d2410;
+  border-radius: 2px;
+  overflow: hidden;
+  cursor: pointer;
+}
+.cassette-progress-fill {
+  height: 100%;
+  background: var(--gold);
+  width: 0%;
+  transition: width 0.3s;
+}
+
+.cassette-time {
+  font-family: var(--font-display);
+  font-size: 9px;
+  color: var(--gold);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════
+   IMAGE GRID IN NOTE
+═══════════════════════════════════════════════ */
+/* Image grid — lives INSIDE the contenteditable editor as a block element */
+.note-img-grid {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  margin: 6px 0;
+  /* Prevent contenteditable from merging this with surrounding text */
+  user-select: none;
+  -webkit-user-select: none;
+  contenteditable: false; /* not a real attr but signals intent */
+}
+.note-img-grid.grid-1 { grid-template-columns: 1fr; }
+.note-img-grid.grid-2 { grid-template-columns: 1fr 1fr; }
+.note-img-grid.grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.note-img-grid.grid-4 { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
+
+.note-img-cell {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--paper-dark);
+  cursor: pointer;
+  min-height: 60px;
+}
+.note-img-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  max-height: 160px;
+  min-height: 60px;
+  transition: transform 0.2s;
+  pointer-events: none;
+}
+.note-img-cell:hover img { transform: scale(1.03); }
+.note-img-cell .img-del {
+  position: absolute;
+  top: 3px; right: 3px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  font-size: 11px;
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 4;
+}
+.note-img-cell:hover .img-del { opacity: 1; }
+
+/* Inline audio block inside editor */
+.inline-audio-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--cover-bg);
+  border: 1px solid rgba(201,151,58,0.3);
+  border-radius: 6px;
+  padding: 7px 10px;
+  margin: 6px 0;
+  width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.iab-icon { font-size: 16px; flex-shrink: 0; }
+.iab-play {
+  background: #1e1008; border: 1px solid #3d2410;
+  color: var(--gold); width: 26px; height: 26px;
+  border-radius: 3px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; flex-shrink: 0;
+}
+.iab-progress {
+  flex: 1; height: 3px; background: #3d2410;
+  border-radius: 2px; overflow: hidden; cursor: pointer;
+}
+.iab-progress-fill { height: 100%; background: var(--gold); width: 0%; transition: width 0.2s; }
+.iab-time {
+  font-family: var(--font-display); font-size: 9px;
+  color: var(--gold); letter-spacing: 1px; white-space: nowrap; flex-shrink: 0;
+}
+.iab-del {
+  background: none; border: none; color: rgba(220,80,80,0.6);
+  cursor: pointer; font-size: 12px; flex-shrink: 0; padding: 0 2px;
+}
+.iab-del:hover { color: #e05050; }
+
+/* Image lightbox */
+#img-lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.92);
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+#img-lightbox.open { display: flex; }
+#img-lightbox img {
+  max-width: 92vw;
+  max-height: 92vh;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+#img-lightbox .lb-close {
+  position: fixed;
+  top: 14px; right: 18px;
+  color: #fff; font-size: 28px;
+  cursor: pointer;
+  background: none; border: none;
+  line-height: 1;
+  z-index: 10000;
+}
+
+/* Image upload modal */
+#img-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0,0,0,0.65);
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+#img-modal.open { display: flex; }
+.img-modal-box {
+  background: var(--paper);
+  border-radius: 8px;
+  padding: 20px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  font-family: var(--font-body);
+}
+.img-modal-title {
+  font-family: var(--font-title);
+  font-size: 14px;
+  color: var(--ink-faint);
+  margin-bottom: 14px;
+  text-align: center;
+  letter-spacing: 1px;
+}
+.img-modal-grid-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  justify-content: center;
+}
+.grid-pick-btn {
+  flex: 1;
+  max-width: 72px;
+  aspect-ratio: 1;
+  background: var(--paper-dark);
+  border: 2px solid var(--paper-shadow);
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.15s;
+}
+.grid-pick-btn.selected {
+  border-color: var(--gold);
+  background: rgba(201,151,58,0.12);
+}
+.grid-pick-btn .gpb-grid {
+  display: grid;
+  gap: 2px;
+  width: 28px; height: 28px;
+}
+.gpb-grid.g1 { grid-template-columns: 1fr; }
+.gpb-grid.g2 { grid-template-columns: 1fr 1fr; }
+.gpb-grid.g3 { grid-template-columns: 1fr 1fr 1fr; }
+.gpb-grid.g4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.gpb-cell { background: var(--ink-faint); border-radius: 1px; opacity: 0.4; }
+.grid-pick-btn.selected .gpb-cell { opacity: 1; background: var(--gold); }
+.gpb-label { font-family: var(--font-display); font-size: 9px; color: var(--ink-faint); letter-spacing: 1px; }
+
+.img-modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.img-action-btn {
+  flex: 1;
+  padding: 10px 6px;
+  background: var(--cover-bg);
+  border: 1px solid rgba(201,151,58,0.35);
+  color: var(--gold);
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 1px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+}
+.img-action-btn:hover { background: rgba(201,151,58,0.15); border-color: var(--gold); }
+.img-action-btn .iab-icon { font-size: 20px; }
+
+/* File drop zone */
+.img-drop-zone {
+  border: 2px dashed var(--paper-shadow);
+  border-radius: 6px;
+  padding: 16px;
+  text-align: center;
+  font-family: var(--font-hand);
+  font-size: 13px;
+  color: var(--paper-shadow);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  margin-bottom: 10px;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.img-drop-zone.dragover { border-color: var(--gold); background: rgba(201,151,58,0.06); }
+.img-drop-zone .dz-preview {
+  display: flex; flex-wrap: wrap; gap: 4px; justify-content: center;
+}
+.img-drop-zone .dz-thumb {
+  width: 48px; height: 48px;
+  object-fit: cover; border-radius: 3px;
+}
+
+/* Upload progress */
+.img-upload-progress {
+  display: none;
+  margin-top: 8px;
+}
+.img-upload-progress.show { display: block; }
+.iup-bar-wrap {
+  height: 4px; background: var(--paper-dark);
+  border-radius: 2px; overflow: hidden; margin-bottom: 4px;
+}
+.iup-bar { height: 100%; background: var(--gold); width: 0%; transition: width 0.3s; }
+.iup-txt {
+  font-family: var(--font-display);
+  font-size: 9px; color: var(--ink-faint);
+  letter-spacing: 1px; text-align: center;
+}
+
+.img-modal-foot {
+  display: flex; gap: 8px;
+}
+.img-foot-btn {
+  flex: 1; padding: 8px;
+  border-radius: 4px; font-family: var(--font-display);
+  font-size: 10px; letter-spacing: 1px;
+  cursor: pointer; border: 1px solid;
+  transition: all 0.15s;
+}
+.img-foot-btn.cancel {
+  background: transparent;
+  border-color: var(--paper-shadow);
+  color: var(--ink-faint);
+}
+.img-foot-btn.cancel:hover { background: var(--paper-dark); }
+.img-foot-btn.confirm {
+  background: var(--cover-bg);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.img-foot-btn.confirm:hover { background: rgba(201,151,58,0.15); }
+
+/* Camera modal */
+#cam-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  background: #000;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+#cam-modal.open { display: flex; }
+#cam-video {
+  width: 100%;
+  max-width: 480px;
+  max-height: 70vh;
+  object-fit: cover;
+}
+.cam-controls {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  align-items: center;
+}
+.cam-snap-btn {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: #fff;
+  border: 4px solid rgba(255,255,255,0.4);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.cam-snap-btn:active { transform: scale(0.9); }
+.cam-close-btn {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+/* ═══════════════════════════════════════════════
+   TOOLBAR (WYSIWYG)
+═══════════════════════════════════════════════ */
+#toolbar {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: var(--toolbar-bg);
+  border-bottom: 2px solid var(--cover-accent);
+  padding: 6px 12px;
+  display: none;
+  align-items: center;
+  gap: 4px;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 95vw;
+}
+
+#toolbar.visible { display: flex; }
+
+.tb-btn {
+  background: transparent;
+  border: 1px solid rgba(201,151,58,0.3);
+  color: var(--gold-light);
+  width: 30px;
+  height: 28px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.tb-btn:hover, .tb-btn.active {
+  background: rgba(201,151,58,0.2);
+  border-color: var(--gold);
+}
+
+.tb-sep {
+  width: 1px;
+  height: 20px;
+  background: rgba(201,151,58,0.2);
+  margin: 0 2px;
+}
+
+.tb-select {
+  background: transparent;
+  border: 1px solid rgba(201,151,58,0.3);
+  color: var(--gold-light);
+  font-family: var(--font-display);
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  cursor: pointer;
+  height: 28px;
+  outline: none;
+}
+.tb-select option { background: #2c1a0e; color: var(--gold-light); }
+
+.tb-label {
+  font-family: var(--font-display);
+  font-size: 9px;
+  color: rgba(201,151,58,0.5);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 0 4px;
+}
+
+/* Voice indicator */
+#voice-indicator {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: rgba(220,50,50,0.15);
+  border: 1px solid rgba(220,50,50,0.4);
+  border-radius: 3px;
+}
+#voice-indicator.active { display: flex; }
+.voice-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #e05050;
+  animation: pulse-rec 1s ease-in-out infinite;
+}
+@keyframes pulse-rec { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+.voice-text {
+  font-family: var(--font-display);
+  font-size: 9px;
+  color: #e05050;
+  letter-spacing: 2px;
+}
+
+/* Record indicator */
+#rec-indicator {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: rgba(220,50,50,0.15);
+  border: 1px solid rgba(220,50,50,0.4);
+  border-radius: 3px;
+}
+#rec-indicator.active { display: flex; }
+
+/* ═══════════════════════════════════════════════
+   NAVIGATION ARROWS
+═══════════════════════════════════════════════ */
+.nav-arrow {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 50;
+  background: rgba(44,26,14,0.85);
+  border: 1px solid rgba(201,151,58,0.3);
+  color: var(--gold);
+  width: 40px;
+  height: 60px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
+}
+.nav-arrow:hover {
+  background: rgba(44,26,14,0.95);
+  border-color: var(--gold);
+  box-shadow: 0 0 12px rgba(201,151,58,0.3);
+}
+#nav-prev { left: 8px; }
+#nav-next { right: 8px; }
+.nav-arrow.hidden { opacity: 0; pointer-events: none; }
+
+/* ═══════════════════════════════════════════════
+   NEW NOTE BUTTON
+═══════════════════════════════════════════════ */
+#btn-new-note {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 50;
+  background: var(--cover-bg);
+  border: 2px solid var(--gold);
+  color: var(--gold);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  transition: all 0.2s;
+}
+#btn-new-note:hover {
+  background: var(--gold);
+  color: var(--cover-bg);
+  transform: scale(1.08);
+}
+
+/* ═══════════════════════════════════════════════
+   AUTO-SAVE STAMP
+═══════════════════════════════════════════════ */
+#save-stamp {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) scale(0.8) rotate(-8deg);
+  z-index: 200;
+  font-family: var(--font-title);
+  font-size: 18px;
+  color: rgba(50,150,80,0.7);
+  border: 3px solid rgba(50,150,80,0.7);
+  padding: 4px 14px;
+  border-radius: 4px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s, transform 0.4s;
+}
+#save-stamp.show {
+  opacity: 1;
+  transform: translateX(-50%) scale(1) rotate(-8deg);
+}
+
+/* ═══════════════════════════════════════════════
+   PAGE FLIP ANIMATION
+═══════════════════════════════════════════════ */
+.page.flip-out {
+  animation: flipOut 0.25s ease-in forwards;
+}
+.page.flip-in {
+  animation: flipIn 0.25s ease-out forwards;
+}
+@keyframes flipOut {
+  0% { opacity: 1; transform: perspective(800px) rotateY(0deg); }
+  100% { opacity: 0; transform: perspective(800px) rotateY(-15deg); }
+}
+@keyframes flipIn {
+  0% { opacity: 0; transform: perspective(800px) rotateY(15deg); }
+  100% { opacity: 1; transform: perspective(800px) rotateY(0deg); }
+}
+
+/* ═══════════════════════════════════════════════
+   LOADING STATE
+═══════════════════════════════════════════════ */
+.loading-spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(201,151,58,0.2);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ═══════════════════════════════════════════════
+   MOBILE: 1 PAGE LAYOUT — Cover → Index → Note
+═══════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  #book {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    filter: none;
+    /* Stack pages on top of each other, controlled by JS */
+    position: relative;
+  }
+  #book::before { display: none; }
+
+  /* Both pages take full width, positioned absolutely */
+  .page-left, .page-right {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    flex: none;
+  }
+
+  /* Default: left (cover/index) shown, right (note) hidden */
+  .page-left  { display: block; z-index: 2; }
+  .page-right { display: none;  z-index: 1; }
+
+  /* When mobile-show-note state: right shown, left hidden */
+  #book.mobile-note .page-left  { display: none; }
+  #book.mobile-note .page-right { display: flex; }
+
+  /* Cover fills full page on mobile */
+  #page-cover {
+    border-radius: 0 !important;
+  }
+  #page-cover::before { border-radius: 0; }
+
+  #nav-prev { left: 0; border-radius: 0 4px 4px 0; }
+  #nav-next { right: 0; border-radius: 4px 0 0 4px; }
+  #btn-new-note { bottom: 80px; }
+}
+
+/* ═══════════════════════════════════════════════
+   TOUCH SWIPE OVERLAY (mobile)
+═══════════════════════════════════════════════ */
+#swipe-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+@media (max-width: 600px) {
+  #swipe-overlay { display: block; pointer-events: none; }
+}
+
+/* ═══════════════════════════════════════════════
+   HOME BUTTON (back to Daftar Isi)
+═══════════════════════════════════════════════ */
+#btn-home {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 50;
+  background: var(--cover-bg);
+  border: 2px solid rgba(201,151,58,0.5);
+  color: var(--gold);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  transition: all 0.2s;
+  font-family: var(--font-display);
+}
+#btn-home:hover {
+  background: var(--gold);
+  color: var(--cover-bg);
+  border-color: var(--gold);
+  transform: scale(1.08);
+}
+#btn-home.visible { display: flex; }
+
+/* On mobile, show at bottom-right beside new-note btn */
+@media (max-width: 600px) {
+  #btn-home { bottom: 80px; left: 20px; }
+  #btn-new-note { bottom: 80px; right: 20px; }
+}
+
+/* Delete button */
+.note-delete-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: rgba(92,74,42,0.3);
+  font-size: 11px;
+  padding: 2px 4px;
+  transition: color 0.2s;
+}
+.note-delete-btn:hover { color: #c0392b; }
+
+.index-delete-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: rgba(92,74,42,0.25);
+  font-size: 12px;
+  padding: 1px 3px;
+  margin-left: 2px;
+  transition: color 0.2s, opacity 0.2s;
+  opacity: 0;
+  flex-shrink: 0;
+}
+.index-item:hover .index-delete-btn { opacity: 1; }
+.index-delete-btn:hover { color: #c0392b; opacity: 1; }
+
+/* Fold corner effect */
+.page-right::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 0 18px 18px;
+  border-color: transparent transparent var(--paper-shadow) transparent;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* Note page header tabs */
+.note-page-header-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 44px;
+  background: linear-gradient(to bottom, rgba(232,220,196,0.8), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Hole punches on left edge */
+.hole-punches {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  padding: 40px 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.hole {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #d4c9a8, #b8a882);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(255,255,255,0.5);
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ TOOLBAR ═══ -->
+<div id="toolbar">
+  <span class="tb-label">Format</span>
+  <button class="tb-btn" onclick="fmt('bold')" title="Bold"><b>B</b></button>
+  <button class="tb-btn" onclick="fmt('italic')" title="Italic"><i>I</i></button>
+  <button class="tb-btn" onclick="fmt('underline')" title="Underline"><u>U</u></button>
+  <button class="tb-btn" onclick="fmt('strikeThrough')" title="Strikethrough">S̶</button>
+  <div class="tb-sep"></div>
+  <select class="tb-select" onchange="fmt('fontSize', this.value); this.value=''">
+    <option value="">Size</option>
+    <option value="2">Kecil</option>
+    <option value="3">Normal</option>
+    <option value="4">Besar</option>
+    <option value="5">XL</option>
+  </select>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="fmt('insertUnorderedList')" title="List">☰</button>
+  <button class="tb-btn" onclick="fmt('insertOrderedList')" title="Numbered">1.</button>
+  <div class="tb-sep"></div>
+  <span class="tb-label">Suara</span>
+  <button class="tb-btn" id="btn-voice" onclick="toggleVoice()" title="Suara ke Teks">🎤</button>
+  <button class="tb-btn" id="btn-record" onclick="toggleRecord()" title="Rekam Audio">⏺</button>
+  <div id="voice-indicator">
+    <div class="voice-dot"></div>
+    <span class="voice-text">MENDENGAR</span>
+  </div>
+  <div id="rec-indicator">
+    <div class="voice-dot"></div>
+    <span class="voice-text">REC</span>
+  </div>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="openImgModal()" title="Tambah Gambar">🖼️</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="saveCurrentNote(true)" title="Simpan">💾</button>
+  <button class="tb-btn" onclick="closeEditor()" title="Tutup Editor">✕</button>
+</div>
+
+<!-- ═══ BOOK ═══ -->
+<div id="book-container">
+  <div id="book">
+
+    <!-- LEFT PAGE -->
+    <div class="page page-left" id="page-left">
+      <!-- Cover (shown initially) -->
+      <div id="page-cover" class="page" onclick="goToIndex()" style="position:absolute;inset:0;border-radius:4px 0 0 4px;">
+        <div class="cover-ornament"></div>
+        <div class="cover-content">
+          <div class="cover-year" id="cover-year">2026</div>
+          <div class="cover-monogram">L</div>
+          <div class="cover-divider"></div>
+          <div class="cover-title">Agenda<br>Klasik</div>
+          <div class="cover-subtitle">Buku Catatan Digital</div>
+          <div class="cover-divider"></div>
+          <div class="cover-hint">↩ Buka Buku</div>
+        </div>
+      </div>
+
+      <!-- Index page (hidden initially) -->
+      <div id="page-index" style="position:absolute;inset:0;display:none;">
+        <div class="hole-punches">
+          <div class="hole"></div><div class="hole"></div><div class="hole"></div>
+        </div>
+        <div class="lined-paper"></div>
+        <div class="page-header">
+          <div class="page-title-area">Daftar Isi</div>
+          <span class="page-num">i</span>
+        </div>
+        <div class="index-content">
+          <div class="index-search-wrap">
+            <span class="search-icon">🔍</span>
+            <input class="index-search" id="index-search" type="text" placeholder="Cari catatan..." oninput="filterIndex(this.value)">
+          </div>
+          <div class="index-sort-row">
+            <button class="sort-btn active" id="sort-new" onclick="sortIndex('new')">Terbaru</button>
+            <button class="sort-btn" id="sort-old" onclick="sortIndex('old')">Terlama</button>
+            <button class="sort-btn" id="sort-az" onclick="sortIndex('az')">A–Z</button>
+            <button class="sort-btn" id="sort-audio" onclick="sortIndex('audio')">Audio</button>
+          </div>
+          <div class="index-list" id="index-list">
+            <div class="index-empty">Belum ada catatan.<br>Tekan + untuk mulai.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PAGE (Note) -->
+    <div class="page page-right" id="page-right">
+      <div class="hole-punches">
+        <div class="hole"></div><div class="hole"></div><div class="hole"></div>
+      </div>
+      <div class="lined-paper"></div>
+      <div id="right-page-content">
+        <div class="page-header">
+          <input id="note-title" class="note-title-input" placeholder="Judul catatan..." oninput="markDirty(); scheduleAutoSave();" onfocus="activateEditMode()">
+          <span class="page-num" id="right-page-num">—</span>
+        </div>
+        <div class="note-content-wrap">
+          <div class="note-header-meta">
+            <span class="note-date-display" id="note-date-display"></span>
+          </div>
+          <div class="note-editor-area">
+            <div id="note-editor" class="note-editor"
+                 contenteditable="false"
+                 data-placeholder="Klik di sini untuk mulai menulis..."
+                 onclick="openEditor()"
+                 oninput="onEditorInput()"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ NAVIGATION ═══ -->
+<button class="nav-arrow hidden" id="nav-prev" onclick="navigatePage(-1)">‹</button>
+<button class="nav-arrow" id="nav-next" onclick="navigatePage(1)">›</button>
+<button id="btn-new-note" onclick="newNote()" title="Catatan Baru">＋</button>
+<button id="btn-home" onclick="goToIndex()" title="Daftar Isi">☰</button>
+<div id="save-stamp">TERSIMPAN</div>
+
+<!-- ═══ SWIPE OVERLAY (mobile) ═══ -->
+<div id="swipe-overlay"></div>
+
+<!-- ═══ HIDDEN AUDIO ELEMENT ═══ -->
+<audio id="audio-playback" style="display:none;"></audio>
+
+<!-- ═══ IMAGE LIGHTBOX ═══ -->
+<div id="img-lightbox" onclick="closeLightbox()">
+  <button class="lb-close" onclick="closeLightbox()">✕</button>
+  <img id="lb-img" src="" alt="">
+</div>
+
+<!-- ═══ IMAGE UPLOAD MODAL ═══ -->
+<div id="img-modal">
+  <div class="img-modal-box">
+    <div class="img-modal-title">Tambah Gambar</div>
+
+    <!-- Grid picker -->
+    <div class="img-modal-grid-row">
+      <button class="grid-pick-btn selected" id="gpb-1" onclick="selectGrid(1)" title="1 Gambar">
+        <div class="gpb-grid g1"><div class="gpb-cell"></div></div>
+        <span class="gpb-label">1</span>
+      </button>
+      <button class="grid-pick-btn" id="gpb-2" onclick="selectGrid(2)" title="2 Gambar">
+        <div class="gpb-grid g2"><div class="gpb-cell"></div><div class="gpb-cell"></div></div>
+        <span class="gpb-label">2</span>
+      </button>
+      <button class="grid-pick-btn" id="gpb-3" onclick="selectGrid(3)" title="3 Gambar">
+        <div class="gpb-grid g3"><div class="gpb-cell"></div><div class="gpb-cell"></div><div class="gpb-cell"></div></div>
+        <span class="gpb-label">3</span>
+      </button>
+      <button class="grid-pick-btn" id="gpb-4" onclick="selectGrid(4)" title="4 Gambar">
+        <div class="gpb-grid g4"><div class="gpb-cell"></div><div class="gpb-cell"></div><div class="gpb-cell"></div><div class="gpb-cell"></div></div>
+        <span class="gpb-label">4</span>
+      </button>
+    </div>
+
+    <!-- Upload actions -->
+    <div class="img-modal-actions">
+      <button class="img-action-btn" onclick="triggerFileInput()">
+        <span class="iab-icon">📁</span>
+        <span>File</span>
+      </button>
+      <button class="img-action-btn" onclick="openCamera()">
+        <span class="iab-icon">📷</span>
+        <span>Kamera</span>
+      </button>
+    </div>
+
+    <!-- Drop zone -->
+    <div class="img-drop-zone" id="img-drop-zone"
+         onclick="triggerFileInput()"
+         ondragover="onDzDragOver(event)"
+         ondragleave="onDzDragLeave(event)"
+         ondrop="onDzDrop(event)">
+      <div id="dz-hint">🖼️ Klik atau seret gambar ke sini</div>
+      <div class="dz-preview" id="dz-preview"></div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="img-upload-progress" id="img-upload-progress">
+      <div class="iup-bar-wrap"><div class="iup-bar" id="iup-bar"></div></div>
+      <div class="iup-txt" id="iup-txt">Mengunggah...</div>
+    </div>
+
+    <!-- Footer -->
+    <div class="img-modal-foot">
+      <button class="img-foot-btn cancel" onclick="closeImgModal()">Batal</button>
+      <button class="img-foot-btn confirm" id="img-confirm-btn" onclick="confirmImgUpload()">Sisipkan Gambar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden file input -->
+<input type="file" id="img-file-input" accept="image/*" multiple style="display:none;" onchange="onFileInputChange(event)">
+
+<!-- ═══ CAMERA MODAL ═══ -->
+<div id="cam-modal">
+  <video id="cam-video" autoplay playsinline muted></video>
+  <canvas id="cam-canvas" style="display:none;"></canvas>
+  <div class="cam-controls">
+    <button class="cam-close-btn" onclick="closeCamera()">✕ Tutup</button>
+    <button class="cam-snap-btn" onclick="snapPhoto()" title="Ambil Foto"></button>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   CONFIGURATION
+════════════════════════════════════════════════ */
+const API  = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+const R2   = 'https://lidan.co.id/api/upload_r2_lidan';
+const TABLE = 'agenda';
+const AUTH  = 'admin';
+
+/* ════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════ */
+let state = {
+  view: 'cover',      // 'cover' | 'book'
+  currentNoteId: null,
+  notes: [],          // loaded from API
+  filteredNotes: [],
+  sortMode: 'new',
+  editMode: false,
+  isRecording: false,
+  isSpeaking: false,
+  mediaRecorder: null,
+  audioChunks: [],
+  recognition: null,
+  autoSaveTimer: null,
+  currentAudioUrl: null,
+  dirty: false,
+  // Image state
+  currentImages: [],      // array of URLs saved to this note
+  imgGridCols: 1,         // selected grid (1-4)
+  pendingImgFiles: [],    // files staged in modal (not yet uploaded)
+  camStream: null,        // camera MediaStream
+};
+
+/* ════════════════════════════════════════════════
+   API HELPERS
+════════════════════════════════════════════════ */
+async function apiGet(params = {}) {
+  const url = new URL(API);
+  url.searchParams.set('table', TABLE);
+  url.searchParams.set('limit', '200');
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k,v));
+  try {
+    const r = await fetch(url, { headers: { 'X-Custom-Auth': AUTH } });
+    return await r.json();
+  } catch(e) { console.error('API GET error', e); return null; }
+}
+
+async function apiPost(data) {
+  try {
+    const r = await fetch(`${API}?table=${TABLE}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH },
+      body: JSON.stringify(data)
+    });
+    return await r.json();
+  } catch(e) { console.error('API POST error', e); return null; }
+}
+
+async function apiPut(id, data) {
+  try {
+    const r = await fetch(`${API}?table=${TABLE}&id_x=${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH },
+      body: JSON.stringify(data)
+    });
+    return await r.json();
+  } catch(e) { console.error('API PUT error', e); return null; }
+}
+
+async function apiDelete(id) {
+  try {
+    const r = await fetch(`${API}?table=${TABLE}&id_x=${id}`, {
+      method: 'DELETE',
+      headers: { 'X-Custom-Auth': AUTH }
+    });
+    return await r.json();
+  } catch(e) { console.error('API DELETE error', e); return null; }
+}
+
+async function uploadAudio(blob, filename) {
+  const fd = new FormData();
+  fd.append('file', blob, filename);
+  fd.append('customName', `audio/agenda_${Date.now()}.webm`);
+  try {
+    const r = await fetch(R2, {
+      method: 'POST',
+      headers: { 'X-Custom-Auth': AUTH },
+      body: fd
+    });
+    const j = await r.json();
+    return j.url || null;
+  } catch(e) { console.error('R2 upload error', e); return null; }
+}
+
+/* ════════════════════════════════════════════════
+   LOAD NOTES
+════════════════════════════════════════════════ */
+async function loadNotes() {
+  const res = await apiGet();
+  if (res && res.success && res.data) {
+    state.notes = res.data;
+    state.filteredNotes = [...state.notes];
+    renderIndex();
+  }
+}
+
+/* ════════════════════════════════════════════════
+   MOBILE DETECTION
+════════════════════════════════════════════════ */
+function isMobile() {
+  return window.innerWidth <= 600;
+}
+
+/* ════════════════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════════════════ */
+function goToIndex() {
+  const cover = document.getElementById('page-cover');
+  const index = document.getElementById('page-index');
+  const book  = document.getElementById('book');
+
+  // Save if we're coming from a note
+  if (state.currentNoteId || state.dirty) saveCurrentNote(false);
+
+  cover.style.display = 'none';
+  index.style.display = 'block';
+  state.view = 'book';
+
+  // Mobile: show left page (index), hide right page (note)
+  if (isMobile()) {
+    book.classList.remove('mobile-note');
+  }
+
+  document.getElementById('nav-prev').classList.remove('hidden');
+  document.getElementById('cover-year').textContent = new Date().getFullYear();
+
+  // Hide home button when at index
+  document.getElementById('btn-home').classList.remove('visible');
+
+  loadNotes();
+}
+
+function goToCover() {
+  saveCurrentNote(false);
+  const book = document.getElementById('book');
+
+  document.getElementById('page-cover').style.display = 'flex';
+  document.getElementById('page-index').style.display = 'none';
+  state.view = 'cover';
+  state.currentNoteId = null;
+  closeEditor();
+  document.getElementById('nav-prev').classList.add('hidden');
+  document.getElementById('btn-home').classList.remove('visible');
+
+  // Mobile: show left page (cover), hide right
+  if (isMobile()) {
+    book.classList.remove('mobile-note');
+  }
+
+  resetRightPage();
+}
+
+function goToNote() {
+  // Mobile: switch to right page (note)
+  if (isMobile()) {
+    const book = document.getElementById('book');
+    book.classList.add('mobile-note');
+  }
+  // Show home button on all devices when viewing a note
+  document.getElementById('btn-home').classList.add('visible');
+}
+
+function navigatePage(dir) {
+  if (state.view === 'cover') {
+    goToIndex(); return;
+  }
+  if (dir === -1) {
+    // Mobile: if showing note, go back to index; else go to cover
+    if (isMobile() && document.getElementById('book').classList.contains('mobile-note')) {
+      // Go back to index (left page)
+      document.getElementById('book').classList.remove('mobile-note');
+      document.getElementById('btn-home').classList.remove('visible');
+      saveCurrentNote(false);
+      return;
+    }
+    saveCurrentNote(false);
+    goToCover();
+  }
+}
+
+/* ════════════════════════════════════════════════
+   INDEX RENDER
+════════════════════════════════════════════════ */
+function renderIndex() {
+  const list = document.getElementById('index-list');
+  const notes = state.filteredNotes;
+  if (!notes.length) {
+    list.innerHTML = '<div class="index-empty">Belum ada catatan.<br>Tekan + untuk mulai.</div>';
+    return;
+  }
+  list.innerHTML = notes.map((n, i) => {
+    const title = n.x_01 || '(Tanpa Judul)';
+    const type = n.x_05 || 'text';
+    const date = n.x_04 ? n.x_04.split('T')[0] : '';
+    const icon = type === 'audio' ? '🎵' : '📝';
+    return `<div class="index-item" onclick="openNote(${n.id_x})">
+      <span class="index-item-num">${i+1}</span>
+      <span class="index-item-title">${escHtml(title)}</span>
+      <span class="index-item-type">${icon}</span>
+      <span class="index-dots"></span>
+      <span class="index-item-date">${date}</span>
+      <button class="index-delete-btn" onclick="event.stopPropagation(); deleteNoteFromIndex(${n.id_x})" title="Hapus">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function filterIndex(q) {
+  q = q.toLowerCase();
+  state.filteredNotes = state.notes.filter(n =>
+    (n.x_01||'').toLowerCase().includes(q) ||
+    (n.x_02||'').toLowerCase().includes(q)
+  );
+  renderIndex();
+}
+
+function sortIndex(mode) {
+  state.sortMode = mode;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sort-' + mode).classList.add('active');
+  const arr = [...state.filteredNotes];
+  if (mode === 'new') arr.sort((a,b) => b.id_x - a.id_x);
+  if (mode === 'old') arr.sort((a,b) => a.id_x - b.id_x);
+  if (mode === 'az') arr.sort((a,b) => (a.x_01||'').localeCompare(b.x_01||''));
+  if (mode === 'audio') {
+    arr.sort((a,b) => {
+      if (a.x_05==='audio' && b.x_05!=='audio') return -1;
+      if (b.x_05==='audio' && a.x_05!=='audio') return 1;
+      return 0;
+    });
+  }
+  state.filteredNotes = arr;
+  renderIndex();
+}
+
+/* ════════════════════════════════════════════════
+   OPEN / NEW NOTE
+════════════════════════════════════════════════ */
+function openNote(id) {
+  saveCurrentNote(false);
+  const note = state.notes.find(n => n.id_x === id);
+  if (!note) return;
+  state.currentNoteId = id;
+  state.currentAudioUrl = note.x_03 || null;
+  renderNoteOnRight(note);
+  // Mobile: switch to note (right) page
+  goToNote();
+}
+
+function newNote() {
+  saveCurrentNote(false);
+  if (state.view !== 'book') goToIndex();
+  closeEditor();
+  resetRightPage();
+  // Mobile: switch to note (right) page
+  goToNote();
+  setTimeout(() => {
+    openEditor();
+    const titleEl = document.getElementById('note-title');
+    if (titleEl) titleEl.focus();
+  }, 50);
+}
+
+function renderNoteOnRight(note) {
+  const area = document.getElementById('right-page-content');
+  const idx = state.notes.indexOf(note) + 1;
+  const hasAudio = note.x_05 === 'audio' && note.x_03;
+
+  // Parse images stored in x_06 as JSON array; x_07 stores grid cols
+  let imgs = [];
+  try { imgs = note.x_06 ? JSON.parse(note.x_06) : []; } catch(e) { imgs = []; }
+  const gridCols = parseInt(note.x_07) || 1;
+  state.currentImages = imgs;
+  state.imgGridCols = gridCols;
+
+  area.innerHTML = buildNoteHTML(
+    note.x_01 || '',
+    note.x_02 || '',
+    note.x_04 || '',
+    idx,
+    hasAudio ? note.x_03 : null,
+    note.id_x,
+    imgs,
+    gridCols
+  );
+
+  attachNoteEvents();
+  if (hasAudio) setupCassettePlayer(note.x_03);
+}
+
+function renderBlankNote() {
+  resetRightPage();
+  openEditor();
+}
+
+function formatDateClassic(isoOrStr) {
+  try {
+    const d = new Date(isoOrStr);
+    if (isNaN(d)) return isoOrStr;
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch(e) { return isoOrStr; }
+}
+
+function buildNoteHTML(title, body, date, num, audioUrl, noteId) {
+  const audioHtml = audioUrl ? `
+    <div class="cassette-player" id="cassette-wrap">
+      <div class="cassette-reels">
+        <div class="cassette-reel" id="reel-left"></div>
+        <div class="cassette-tape-line"></div>
+        <div class="cassette-reel" id="reel-right"></div>
+      </div>
+      <div class="cassette-controls">
+        <button class="cassette-btn" id="btn-play-pause" onclick="cassettePause()">▶</button>
+        <div class="cassette-progress" onclick="cassetteSeek(event)" id="cass-progress">
+          <div class="cassette-progress-fill" id="cass-fill"></div>
+        </div>
+        <span class="cassette-time" id="cass-time">0:00</span>
+        <button class="cassette-btn" onclick="deleteAudio()" title="Hapus Audio" style="color:#e05050;margin-left:4px;">✕</button>
+      </div>
+    </div>` : '';
+
+  const dateStr = date ? formatDateClassic(date) : formatDateClassic(new Date().toISOString());
+  const deleteBtn = noteId ? `<button class="note-delete-btn" onclick="deleteNote(${noteId})" title="Hapus">✕</button>` : '';
+
+  return `
+    <div class="page-header">
+      <input id="note-title" class="note-title-input" placeholder="Judul catatan..." value="${escAttr(title)}" oninput="markDirty(); scheduleAutoSave();" onfocus="activateEditMode()">
+      ${deleteBtn}
+      <span class="page-num">${num}</span>
+    </div>
+    ${audioHtml}
+    <div class="note-content-wrap">
+      <div class="note-header-meta">
+        <span class="note-date-display">${dateStr}</span>
+      </div>
+      <div class="note-editor-area">
+        <div id="note-editor" class="note-editor"
+             contenteditable="false"
+             data-placeholder="Klik untuk mulai menulis..."
+             onclick="openEditor()"
+             oninput="onEditorInput()">${body}</div>
+      </div>
+    </div>`;
+}
+
+function updatePageHeaderTitle(val) {
+  // title is now the input itself in page-header, no separate element to update
+  markDirty();
+  scheduleAutoSave();
+}
+
+function attachNoteEvents() {
+  const titleEl = document.getElementById('note-title');
+  if (titleEl) {
+    titleEl.addEventListener('input', () => { markDirty(); scheduleAutoSave(); });
+    titleEl.addEventListener('focus', activateEditMode);
+  }
+  const rightContent = document.getElementById('right-page-content');
+  if (rightContent) {
+    rightContent.addEventListener('click', function(e) {
+      if (!state.editMode && e.target.id !== 'note-title') openEditor();
+    });
+  }
+}
+
+/* ════════════════════════════════════════════════
+   EDITOR
+════════════════════════════════════════════════ */
+function activateEditMode() {
+  // Aktifkan mode edit (toolbar muncul) tanpa paksa fokus ke editor
+  state.editMode = true;
+  document.getElementById('toolbar').classList.add('visible');
+  // Pastikan editor bisa diketik
+  const editor = document.getElementById('note-editor');
+  if (editor) editor.contentEditable = 'true';
+}
+
+function openEditor() {
+  let editor = document.getElementById('note-editor');
+  if (!editor) {
+    state.currentNoteId = null;
+    state.currentAudioUrl = null;
+    state.dirty = false;
+    const dateStr = formatDateClassic(new Date().toISOString());
+    document.getElementById('right-page-content').innerHTML =
+      '<div class="page-header">' +
+        '<input id="note-title" class="note-title-input" placeholder="Judul catatan..." oninput="markDirty(); scheduleAutoSave();" onfocus="activateEditMode()">' +
+        '<span class="page-num">' + (state.notes.length + 1) + '</span>' +
+      '</div>' +
+      '<div class="note-content-wrap">' +
+        '<div class="note-header-meta">' +
+          '<span class="note-date-display">' + dateStr + '</span>' +
+        '</div>' +
+        '<div class="note-editor-area">' +
+          '<div id="note-editor" class="note-editor" contenteditable="false"' +
+          ' data-placeholder="Klik di sini untuk mulai menulis..."' +
+          ' onclick="openEditor()" oninput="onEditorInput()"></div>' +
+        '</div>' +
+      '</div>';
+    attachNoteEvents();
+    editor = document.getElementById('note-editor');
+  }
+  if (!editor) return;
+  editor.contentEditable = 'true';
+  editor.focus();
+  const range = document.createRange();
+  const sel = window.getSelection();
+  range.selectNodeContents(editor);
+  range.collapse(false);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  state.editMode = true;
+  document.getElementById('toolbar').classList.add('visible');
+}
+
+function closeEditor() {
+  const editor = document.getElementById('note-editor');
+  if (editor) editor.contentEditable = 'false';
+  state.editMode = false;
+  document.getElementById('toolbar').classList.remove('visible');
+  stopVoice();
+  stopRecord();
+}
+
+function fmt(cmd, val) {
+  document.execCommand(cmd, false, val || null);
+  document.getElementById('note-editor')?.focus();
+}
+
+function onEditorInput() {
+  markDirty();
+  scheduleAutoSave();
+}
+
+function markDirty() { state.dirty = true; }
+
+function scheduleAutoSave() {
+  clearTimeout(state.autoSaveTimer);
+  state.autoSaveTimer = setTimeout(() => saveCurrentNote(true), 3000);
+}
+
+function resetRightPage() {
+  state.currentNoteId = null;
+  state.currentAudioUrl = null;
+  state.currentImages = [];
+  state.imgGridCols = 1;
+  state.dirty = false;
+  const dateStr = formatDateClassic(new Date().toISOString());
+  document.getElementById('right-page-content').innerHTML =
+    '<div class="page-header">' +
+      '<input id="note-title" class="note-title-input" placeholder="Judul catatan..." oninput="markDirty(); scheduleAutoSave();" onfocus="activateEditMode()">' +
+      '<span class="page-num">—</span>' +
+    '</div>' +
+    '<div class="note-content-wrap">' +
+      '<div class="note-header-meta">' +
+        '<span class="note-date-display">' + dateStr + '</span>' +
+      '</div>' +
+      '<div class="note-editor-area">' +
+        '<div id="note-editor" class="note-editor" contenteditable="false"' +
+        ' data-placeholder="Klik di sini untuk mulai menulis..."' +
+        ' onclick="openEditor()" oninput="onEditorInput()"></div>' +
+      '</div>' +
+    '</div>';
+  attachNoteEvents();
+}
+
+/* ════════════════════════════════════════════════
+   SAVE NOTE
+════════════════════════════════════════════════ */
+async function saveCurrentNote(showStamp) {
+  if (!state.dirty) return;
+  const titleEl = document.getElementById('note-title');
+  const editorEl = document.getElementById('note-editor');
+  if (!titleEl || !editorEl) return;
+
+  const title = titleEl.value.trim();
+  const body = editorEl.innerHTML.trim();
+  if (!title && !body) return;
+
+  const now = new Date().toISOString();
+  const payload = {
+    x_01: title || '(Tanpa Judul)',
+    x_02: body,          // contains inline img grids + audio blocks as HTML
+    x_03: state.currentAudioUrl || '',
+    x_04: now,
+    x_05: state.currentAudioUrl ? 'audio' : 'text',
+  };
+
+  let res;
+  if (state.currentNoteId) {
+    res = await apiPut(state.currentNoteId, payload);
+  } else {
+    res = await apiPost(payload);
+    if (res && res.success) {
+      state.currentNoteId = res.id_x;
+    }
+  }
+
+  if (res && res.success) {
+    state.dirty = false;
+    await loadNotes();
+    if (showStamp) showSaveStamp();
+  }
+}
+
+function showSaveStamp() {
+  const stamp = document.getElementById('save-stamp');
+  stamp.classList.add('show');
+  setTimeout(() => stamp.classList.remove('show'), 1500);
+}
+
+/* ════════════════════════════════════════════════
+   DELETE NOTE
+════════════════════════════════════════════════ */
+async function deleteNote(id) {
+  if (!confirm('Hapus catatan ini?')) return;
+  const res = await apiDelete(id);
+  if (res && res.success) {
+    state.currentNoteId = null;
+    state.dirty = false;
+    await loadNotes();
+    resetRightPage();
+  }
+}
+
+async function deleteNoteFromIndex(id) {
+  if (!confirm('Hapus catatan ini?')) return;
+  const res = await apiDelete(id);
+  if (res && res.success) {
+    if (state.currentNoteId === id) {
+      state.currentNoteId = null;
+      state.dirty = false;
+      resetRightPage();
+    }
+    await loadNotes();
+  }
+}
+
+async function deleteAudio() {
+  if (!confirm('Hapus audio ini?')) return;
+  // Stop playback
+  const audioEl = document.getElementById('audio-playback');
+  if (audioEl) { audioEl.pause(); audioEl.src = ''; }
+  // Remove cassette UI
+  const cass = document.getElementById('cassette-wrap');
+  if (cass) cass.remove();
+  // Clear from state and save
+  state.currentAudioUrl = null;
+  markDirty();
+  await saveCurrentNote(true);
+}
+
+/* ════════════════════════════════════════════════
+   VOICE TO TEXT
+════════════════════════════════════════════════ */
+function toggleVoice() {
+  if (state.isSpeaking) stopVoice();
+  else startVoice();
+}
+
+function startVoice() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { alert('Speech Recognition tidak didukung browser ini.'); return; }
+  const editor = document.getElementById('note-editor');
+  if (!editor) return;
+
+  state.recognition = new SpeechRecognition();
+  state.recognition.lang = 'id-ID';
+  state.recognition.continuous = true;
+  state.recognition.interimResults = true;
+
+  // Simpan teks final yang sudah dikonfirmasi
+  let finalBase = editor.innerHTML.replace(/<span id="interim-text"[^>]*>.*?<\/span>/gi, '').trimEnd();
+
+  state.recognition.onresult = (e) => {
+    let interim = '';
+    let newFinal = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) newFinal += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    if (newFinal) {
+      // Konfirmasi teks final, hapus span interim
+      finalBase = (finalBase + (finalBase ? ' ' : '') + newFinal.trim()).trimEnd();
+      editor.innerHTML = finalBase + (interim ? `<span id="interim-text" style="color:rgba(92,74,42,0.45);font-style:italic;">${interim}</span>` : '');
+      markDirty();
+      scheduleAutoSave();
+    } else if (interim) {
+      // Tampilkan interim real-time sambil bicara
+      editor.innerHTML = finalBase + (finalBase ? ' ' : '') + `<span id="interim-text" style="color:rgba(92,74,42,0.45);font-style:italic;">${interim}</span>`;
+    }
+    // Scroll ke bawah
+    editor.scrollTop = editor.scrollHeight;
+  };
+
+  state.recognition.onerror = () => stopVoice();
+  state.recognition.onend = () => {
+    // Bersihkan interim span saat selesai
+    const interimEl = document.getElementById('interim-text');
+    if (interimEl) {
+      finalBase = (finalBase + ' ' + interimEl.textContent).trim();
+      interimEl.remove();
+    }
+    if (state.isSpeaking) state.recognition.start();
+  };
+  state.recognition.start();
+  state.isSpeaking = true;
+
+  document.getElementById('voice-indicator').classList.add('active');
+  document.getElementById('btn-voice').style.background = 'rgba(220,50,50,0.2)';
+  document.getElementById('btn-voice').style.borderColor = '#e05050';
+}
+
+function stopVoice() {
+  if (state.recognition) { state.recognition.stop(); state.recognition = null; }
+  state.isSpeaking = false;
+  // Bersihkan teks interim yang belum final
+  const interimEl = document.getElementById('interim-text');
+  if (interimEl) interimEl.remove();
+  document.getElementById('voice-indicator').classList.remove('active');
+  const btn = document.getElementById('btn-voice');
+  if (btn) { btn.style.background = ''; btn.style.borderColor = ''; }
+}
+
+/* ════════════════════════════════════════════════
+   AUDIO RECORDER
+════════════════════════════════════════════════ */
+function toggleRecord() {
+  if (state.isRecording) stopRecord();
+  else startRecord();
+}
+
+async function startRecord() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // Save caret position NOW before recording UI changes focus
+    saveCaretRange();
+    state.audioChunks = [];
+    state.mediaRecorder = new MediaRecorder(stream);
+    state.mediaRecorder.ondataavailable = (e) => state.audioChunks.push(e.data);
+    state.mediaRecorder.onstop = async () => {
+      const blob = new Blob(state.audioChunks, { type: 'audio/webm' });
+      stream.getTracks().forEach(t => t.stop());
+      showSaveStamp();
+      // Upload ke R2
+      const url = await uploadAudio(blob, `rec_${Date.now()}.webm`);
+      if (url) {
+        state.currentAudioUrl = url;
+        // Build inline audio block HTML and insert at saved cursor
+        const uid = 'aud_' + Date.now();
+        const audioBlockHtml = `<div class="inline-audio-block" data-uid="${uid}" data-url="${escAttr(url)}">
+          <span class="iab-icon">🎵</span>
+          <button class="iab-play" onclick="iabToggle(this)" data-uid="${uid}">▶</button>
+          <div class="iab-progress" onclick="iabSeek(event,this)" data-uid="${uid}">
+            <div class="iab-progress-fill" id="iab-fill-${uid}"></div>
+          </div>
+          <span class="iab-time" id="iab-time-${uid}">0:00</span>
+          <button class="iab-del" onclick="this.closest('.inline-audio-block').remove();markDirty();scheduleAutoSave();" title="Hapus">✕</button>
+        </div>`;
+        insertBlockAtCaret(audioBlockHtml);
+        markDirty();
+        await saveCurrentNote(true);
+      }
+    };
+    state.mediaRecorder.start();
+    state.isRecording = true;
+    document.getElementById('rec-indicator').classList.add('active');
+    const btn = document.getElementById('btn-record');
+    btn.style.background = 'rgba(220,50,50,0.2)';
+    btn.style.borderColor = '#e05050';
+    btn.textContent = '⏹';
+  } catch(e) { alert('Mikrofon tidak bisa diakses: ' + e.message); }
+}
+
+function stopRecord() {
+  if (state.mediaRecorder && state.isRecording) {
+    state.mediaRecorder.stop();
+    state.isRecording = false;
+  }
+  document.getElementById('rec-indicator').classList.remove('active');
+  const btn = document.getElementById('btn-record');
+  if (btn) { btn.style.background = ''; btn.style.borderColor = ''; btn.textContent = '⏺'; }
+}
+
+/* ════════════════════════════════════════════════
+   INLINE AUDIO BLOCK PLAYER
+   Each audio block has its own <audio> element
+   identified by data-uid on the block.
+════════════════════════════════════════════════ */
+// Keep track of all playing inline audio els
+const _iabAudios = {};
+
+function _getIabAudio(uid, url) {
+  if (!_iabAudios[uid]) {
+    const a = new Audio(url);
+    a.ontimeupdate = () => {
+      const dur = a.duration || 0;
+      const cur = a.currentTime || 0;
+      const fill = document.getElementById('iab-fill-' + uid);
+      const time = document.getElementById('iab-time-' + uid);
+      if (fill) fill.style.width = (dur ? (cur/dur*100) : 0) + '%';
+      if (time) time.textContent = fmtTime(cur) + ' / ' + fmtTime(dur);
+    };
+    a.onended = () => {
+      const btn = document.querySelector(`.iab-play[data-uid="${uid}"]`);
+      if (btn) btn.textContent = '▶';
+    };
+    _iabAudios[uid] = a;
+  }
+  return _iabAudios[uid];
+}
+
+function iabToggle(btn) {
+  const block = btn.closest('.inline-audio-block');
+  if (!block) return;
+  const uid = block.dataset.uid;
+  const url = block.dataset.url;
+  const a = _getIabAudio(uid, url);
+  if (a.paused) {
+    // Pause all others
+    Object.values(_iabAudios).forEach(x => { if (x !== a) x.pause(); });
+    document.querySelectorAll('.iab-play').forEach(b => { if (b !== btn) b.textContent = '▶'; });
+    a.play();
+    btn.textContent = '⏸';
+  } else {
+    a.pause();
+    btn.textContent = '▶';
+  }
+}
+
+function iabSeek(e, bar) {
+  const block = bar.closest('.inline-audio-block');
+  if (!block) return;
+  const uid = block.dataset.uid;
+  const url = block.dataset.url;
+  const a = _getIabAudio(uid, url);
+  if (!a.duration) return;
+  const rect = bar.getBoundingClientRect();
+  a.currentTime = ((e.clientX - rect.left) / rect.width) * a.duration;
+}
+
+/* ════════════════════════════════════════════════
+   CASSETTE PLAYER
+════════════════════════════════════════════════ */
+let audioEl = document.getElementById('audio-playback');
+
+function setupCassettePlayer(url) {
+  audioEl.src = url;
+  audioEl.ontimeupdate = updateCassetteUI;
+  audioEl.onended = () => {
+    document.getElementById('btn-play-pause').textContent = '▶';
+    document.getElementById('reel-left')?.classList.remove('spinning');
+    document.getElementById('reel-right')?.classList.remove('spinning');
+  };
+}
+
+function cassettePause() {
+  const btn = document.getElementById('btn-play-pause');
+  if (!btn) return;
+  if (audioEl.paused) {
+    audioEl.play();
+    btn.textContent = '⏸';
+    document.getElementById('reel-left')?.classList.add('spinning');
+    document.getElementById('reel-right')?.classList.add('spinning');
+  } else {
+    audioEl.pause();
+    btn.textContent = '▶';
+    document.getElementById('reel-left')?.classList.remove('spinning');
+    document.getElementById('reel-right')?.classList.remove('spinning');
+  }
+}
+
+function updateCassetteUI() {
+  const dur = audioEl.duration || 0;
+  const cur = audioEl.currentTime || 0;
+  const pct = dur ? (cur / dur * 100) : 0;
+  const fill = document.getElementById('cass-fill');
+  const time = document.getElementById('cass-time');
+  if (fill) fill.style.width = pct + '%';
+  if (time) time.textContent = fmtTime(cur) + ' / ' + fmtTime(dur);
+}
+
+function cassetteSeek(e) {
+  const bar = document.getElementById('cass-progress');
+  if (!bar || !audioEl.duration) return;
+  const rect = bar.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  audioEl.currentTime = pct * audioEl.duration;
+}
+
+function fmtTime(sec) {
+  if (isNaN(sec)) return '0:00';
+  const m = Math.floor(sec/60);
+  const s = Math.floor(sec%60).toString().padStart(2,'0');
+  return `${m}:${s}`;
+}
+
+/* ════════════════════════════════════════════════
+   IMAGE UPLOAD & GRID
+════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════
+   CARET SAVE / RESTORE
+   Simpan posisi kursor sebelum modal dibuka,
+   kemudian restore agar insert tepat di situ.
+════════════════════════════════════════════════ */
+let savedRange = null;   // Range object saved before modal opens
+
+function saveCaretRange() {
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount > 0) {
+    const r = sel.getRangeAt(0);
+    // Only save if caret is inside the editor
+    const ed = document.getElementById('note-editor');
+    if (ed && ed.contains(r.startContainer)) {
+      savedRange = r.cloneRange();
+      return;
+    }
+  }
+  // If no caret in editor, set range to END of editor
+  const ed = document.getElementById('note-editor');
+  if (ed) {
+    const r = document.createRange();
+    r.selectNodeContents(ed);
+    r.collapse(false); // collapse to end
+    savedRange = r;
+  }
+}
+
+function restoreCaretRange() {
+  const ed = document.getElementById('note-editor');
+  if (!ed || !savedRange) return;
+  ed.focus();
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(savedRange.cloneRange());
+}
+
+/* Insert an HTML string at saved caret position, then add a new paragraph after */
+function insertBlockAtCaret(html) {
+  const ed = document.getElementById('note-editor');
+  if (!ed) return;
+
+  restoreCaretRange();
+
+  // Use execCommand insertHTML if available (works in contenteditable)
+  // Wrap in a div to make it a block, plus empty <div><br></div> after for cursor
+  const blockHtml = `<div contenteditable="false" class="inline-block-wrapper">${html}</div><div><br></div>`;
+
+  try {
+    document.execCommand('insertHTML', false, blockHtml);
+  } catch(e) {
+    // Fallback: insert at end
+    ed.innerHTML += blockHtml;
+  }
+
+  // Move caret after the inserted block
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount > 0) {
+    const r = sel.getRangeAt(0);
+    r.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(r);
+  }
+  markDirty();
+  scheduleAutoSave();
+}
+
+/* ════════════════════════════════════════════════
+   IMAGE UPLOAD & GRID — INLINE AT CURSOR
+════════════════════════════════════════════════ */
+
+function openImgModal() {
+  // Save caret BEFORE modal opens (focus leaves editor)
+  saveCaretRange();
+  // Reset modal state
+  state.pendingImgFiles = [];
+  state.imgGridCols = state.imgGridCols || 1;
+  selectGrid(state.imgGridCols);
+  updateDzPreview();
+  document.getElementById('img-upload-progress').classList.remove('show');
+  document.getElementById('img-modal').classList.add('open');
+}
+
+function closeImgModal() {
+  document.getElementById('img-modal').classList.remove('open');
+  state.pendingImgFiles = [];
+  updateDzPreview();
+}
+
+// --- Grid picker ---
+function selectGrid(n) {
+  state.imgGridCols = n;
+  [1,2,3,4].forEach(i => {
+    document.getElementById('gpb-' + i)?.classList.toggle('selected', i === n);
+  });
+}
+
+// --- File input ---
+function triggerFileInput() {
+  // Update max before opening
+  document.getElementById('img-file-input').multiple = state.imgGridCols > 1;
+  const input = document.getElementById('img-file-input');
+  input.value = '';
+  input.click();
+}
+
+function onFileInputChange(e) {
+  addPendingFiles(Array.from(e.target.files));
+}
+
+function addPendingFiles(files) {
+  const max = state.imgGridCols;
+  const remaining = max - state.pendingImgFiles.length;
+  const toAdd = files.filter(f => f.type.startsWith('image/')).slice(0, remaining);
+  state.pendingImgFiles = state.pendingImgFiles.concat(toAdd);
+  updateDzPreview();
+}
+
+function updateDzPreview() {
+  const hint = document.getElementById('dz-hint');
+  const preview = document.getElementById('dz-preview');
+  if (!hint || !preview) return;
+  if (state.pendingImgFiles.length === 0) {
+    hint.style.display = '';
+    preview.innerHTML = '';
+  } else {
+    hint.style.display = 'none';
+    preview.innerHTML = '';
+    state.pendingImgFiles.forEach(f => {
+      const img = document.createElement('img');
+      img.className = 'dz-thumb';
+      img.src = URL.createObjectURL(f);
+      preview.appendChild(img);
+    });
+  }
+}
+
+// --- Drag & drop ---
+function onDzDragOver(e) {
+  e.preventDefault();
+  document.getElementById('img-drop-zone').classList.add('dragover');
+}
+function onDzDragLeave(e) {
+  document.getElementById('img-drop-zone').classList.remove('dragover');
+}
+function onDzDrop(e) {
+  e.preventDefault();
+  document.getElementById('img-drop-zone').classList.remove('dragover');
+  addPendingFiles(Array.from(e.dataTransfer.files));
+}
+
+// --- Upload to R2 ---
+async function uploadImagesToR2(files) {
+  const progress = document.getElementById('img-upload-progress');
+  const bar = document.getElementById('iup-bar');
+  const txt = document.getElementById('iup-txt');
+  progress.classList.add('show');
+  const urls = [];
+  for (let i = 0; i < files.length; i++) {
+    txt.textContent = `Mengunggah ${i+1}/${files.length}...`;
+    bar.style.width = Math.round((i / files.length) * 100) + '%';
+    const fd = new FormData();
+    const ext = files[i].name.split('.').pop() || 'jpg';
+    fd.append('file', files[i]);
+    fd.append('customName', `agenda/img_${Date.now()}_${i}.${ext}`);
+    try {
+      const r = await fetch(R2, { method:'POST', headers:{'X-Custom-Auth':AUTH}, body:fd });
+      const j = await r.json();
+      if (j.url) urls.push(j.url);
+    } catch(e) { console.error('Image upload error', e); }
+    bar.style.width = Math.round(((i+1) / files.length) * 100) + '%';
+  }
+  txt.textContent = 'Selesai!';
+  return urls;
+}
+
+// Build image grid HTML string (for inserting into editor)
+function buildImgGridHtml(urls, cols) {
+  const uid = 'ig_' + Date.now();
+  const cells = urls.map((url, i) => `
+    <div class="note-img-cell" onclick="openLightbox('${escAttr(url)}')">
+      <img src="${escAttr(url)}" alt="Gambar ${i+1}">
+      <button class="img-del" onclick="event.stopPropagation();this.closest('.note-img-grid').remove();markDirty();scheduleAutoSave();" title="Hapus">✕</button>
+    </div>`).join('');
+  return `<div class="note-img-grid grid-${cols}" data-uid="${uid}">${cells}</div>`;
+}
+
+// --- Confirm upload & INSERT AT CURSOR ---
+async function confirmImgUpload() {
+  if (state.pendingImgFiles.length === 0) { closeImgModal(); return; }
+  const btn = document.getElementById('img-confirm-btn');
+  btn.disabled = true;
+  btn.textContent = 'Mengunggah...';
+
+  const urls = await uploadImagesToR2(state.pendingImgFiles);
+
+  btn.disabled = false;
+  btn.textContent = 'Sisipkan Gambar';
+  closeImgModal();
+
+  if (urls.length > 0) {
+    const gridHtml = buildImgGridHtml(urls, state.imgGridCols);
+    insertBlockAtCaret(gridHtml);
+  }
+}
+
+// --- Lightbox ---
+function openLightbox(url) {
+  document.getElementById('lb-img').src = url;
+  document.getElementById('img-lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('img-lightbox').classList.remove('open');
+  document.getElementById('lb-img').src = '';
+}
+
+// --- Camera ---
+async function openCamera() {
+  // Save caret before leaving editor
+  saveCaretRange();
+  closeImgModal();
+  const modal = document.getElementById('cam-modal');
+  modal.classList.add('open');
+  try {
+    state.camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width:{ideal:1280}, height:{ideal:960} },
+      audio: false
+    });
+    document.getElementById('cam-video').srcObject = state.camStream;
+  } catch(e) {
+    alert('Kamera tidak bisa diakses: ' + e.message);
+    closeCamera();
+  }
+}
+
+function closeCamera() {
+  if (state.camStream) {
+    state.camStream.getTracks().forEach(t => t.stop());
+    state.camStream = null;
+  }
+  document.getElementById('cam-modal').classList.remove('open');
+  document.getElementById('cam-video').srcObject = null;
+}
+
+async function snapPhoto() {
+  const video = document.getElementById('cam-video');
+  const canvas = document.getElementById('cam-canvas');
+  canvas.width  = video.videoWidth  || 1280;
+  canvas.height = video.videoHeight || 960;
+  canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+  canvas.toBlob(async (blob) => {
+    if (!blob) return;
+    closeCamera();
+    const file = new File([blob], `foto_${Date.now()}.jpg`, { type: 'image/jpeg' });
+    openImgModal();
+    // Re-save caret (openImgModal already saved, but re-open resets pendingFiles)
+    state.pendingImgFiles = [file];
+    updateDzPreview();
+  }, 'image/jpeg', 0.88);
+}
+
+/* ════════════════════════════════════════════════
+   UTILS
+════════════════════════════════════════════════ */
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  return (s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* ════════════════════════════════════════════════
+   SWIPE (MOBILE)
+════════════════════════════════════════════════ */
+let touchStartX = 0, touchStartY = 0;
+const swipeOverlay = document.getElementById('swipe-overlay');
+
+swipeOverlay.addEventListener('touchstart', (e) => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+swipeOverlay.addEventListener('touchend', (e) => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if (Math.abs(dx) < 40 || Math.abs(dy) > Math.abs(dx)) return;
+  if (dx > 0) {
+    // Swipe right = go back
+    navigatePage(-1);
+  }
+  // Swipe left on index could open last note — currently no-op
+}, { passive: true });
+
+/* ════════════════════════════════════════════════
+   KEYBOARD SHORTCUTS
+════════════════════════════════════════════════ */
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === 's') { e.preventDefault(); saveCurrentNote(true); }
+    if (e.key === 'n') { e.preventDefault(); newNote(); }
+  }
+  if (e.key === 'Escape') closeEditor();
+});
+
+/* ════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════ */
+document.getElementById('cover-year').textContent = new Date().getFullYear();
+
+// Pastikan right page sudah punya editor aktif saat buku dibuka
+(function initRightPage() {
+  const dateEl = document.getElementById('note-date-display');
+  if (dateEl) dateEl.textContent = formatDateClassic(new Date().toISOString());
+  const editor = document.getElementById('note-editor');
+  if (editor) editor.addEventListener('click', openEditor);
+  const titleEl = document.getElementById('note-title');
+  if (titleEl) titleEl.addEventListener('focus', activateEditMode);
+  const rightContent = document.getElementById('right-page-content');
+  if (rightContent) {
+    rightContent.addEventListener('click', function(e) {
+      if (!state.editMode && e.target.id !== 'note-title') openEditor();
+    });
+  }
+})();
+</script>
+</body>
+</html>
