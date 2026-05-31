@@ -1,0 +1,2454 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda Klasik — Lidan</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Caveat:wght@400;600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   ROOT & RESET
+═══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --line-height: 32px;
+  --paper-bg: #fdf8f0;
+  --paper-bg2: #faf5ea;
+  --line-color: #b8d4e8;
+  --line-color2: #d4b896;
+  --leather-dark: #2c1a0e;
+  --leather-mid: #5c3a1e;
+  --leather-light: #8b5e3c;
+  --leather-accent: #c4855a;
+  --gold: #c9a84c;
+  --gold-dark: #8b6914;
+  --ink: #1a1008;
+  --ink-light: #3d2b1f;
+  --ink-muted: #7a5c42;
+  --red-accent: #8b2020;
+  --cover-bg: linear-gradient(160deg,#3d1f0a 0%,#6b3520 40%,#4a2210 70%,#2c1208 100%);
+  --shadow-paper: 4px 4px 20px rgba(0,0,0,0.35), -2px -2px 8px rgba(0,0,0,0.1);
+  --shadow-book: 0 20px 60px rgba(0,0,0,0.5), inset 0 0 30px rgba(0,0,0,0.1);
+  --font-display: 'Special Elite', cursive;
+  --font-hand: 'Caveat', cursive;
+  --font-serif: 'Libre Baskerville', serif;
+}
+
+body {
+  font-family: var(--font-serif);
+  background: #1a0f06;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, #2d1a08 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 80%, #1f0f04 0%, transparent 60%);
+  min-height: 100vh;
+  overflow: hidden;
+  color: var(--ink);
+}
+
+/* ═══════════════════════════════════════════════
+   APP SHELL & VIEWS
+═══════════════════════════════════════════════ */
+#app { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+
+.view {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+.view.active { opacity: 1; pointer-events: all; }
+
+/* ═══════════════════════════════════════════════
+   COVER PAGE
+═══════════════════════════════════════════════ */
+#view-cover {
+  background: var(--cover-bg);
+  flex-direction: column;
+  gap: 0;
+}
+
+.cover-book {
+  width: min(380px, 88vw);
+  background: var(--cover-bg);
+  border-radius: 4px 16px 16px 4px;
+  box-shadow:
+    var(--shadow-book),
+    inset -4px 0 12px rgba(0,0,0,0.4),
+    inset 4px 0 8px rgba(255,200,120,0.05);
+  position: relative;
+  padding: 40px 36px;
+  min-height: 480px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer;
+  border-left: 18px solid #1a0a02;
+  overflow: hidden;
+}
+
+.cover-book::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 3px,
+      rgba(255,200,100,0.02) 3px,
+      rgba(255,200,100,0.02) 4px
+    );
+  pointer-events: none;
+}
+
+.cover-book::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 18px; bottom: 0; width: 6px;
+  background: linear-gradient(90deg, rgba(255,180,80,0.15), transparent);
+  pointer-events: none;
+}
+
+.cover-spine-line {
+  position: absolute;
+  left: 26px; top: 20px; bottom: 20px;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(201,168,76,0.4) 20%, rgba(201,168,76,0.4) 80%, transparent);
+}
+
+.cover-ornament {
+  width: 140px; height: 4px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 10px 0;
+}
+
+.cover-ornament-double {
+  width: 140px; height: 8px;
+  display: flex; flex-direction: column; gap: 3px;
+  margin: 8px 0;
+}
+.cover-ornament-double span {
+  display: block; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.cover-ornament-double span:last-child {
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.5), transparent);
+}
+
+.cover-monogram {
+  font-family: var(--font-display);
+  font-size: 72px;
+  color: var(--gold);
+  text-shadow: 0 0 30px rgba(201,168,76,0.3), 2px 2px 4px rgba(0,0,0,0.8);
+  line-height: 1;
+  margin: 12px 0;
+}
+
+.cover-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--gold);
+  letter-spacing: 6px;
+  text-align: center;
+  text-shadow: 0 0 20px rgba(201,168,76,0.2);
+  margin: 4px 0;
+}
+
+.cover-subtitle {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 11px;
+  color: rgba(201,168,76,0.6);
+  letter-spacing: 3px;
+  text-align: center;
+  margin: 2px 0;
+}
+
+.cover-year {
+  font-family: var(--font-hand);
+  font-size: 18px;
+  color: rgba(201,168,76,0.5);
+  margin-top: 16px;
+}
+
+.cover-corner {
+  position: absolute;
+  width: 28px; height: 28px;
+  border-color: var(--gold);
+  border-style: solid;
+  opacity: 0.4;
+}
+.cover-corner.tl { top: 16px; left: 36px; border-width: 2px 0 0 2px; }
+.cover-corner.tr { top: 16px; right: 16px; border-width: 2px 2px 0 0; }
+.cover-corner.bl { bottom: 16px; left: 36px; border-width: 0 0 2px 2px; }
+.cover-corner.br { bottom: 16px; right: 16px; border-width: 0 2px 2px 0; }
+
+.cover-tap-hint {
+  font-family: var(--font-hand);
+  font-size: 14px;
+  color: rgba(201,168,76,0.5);
+  margin-top: 28px;
+  animation: breathe 2.5s ease-in-out infinite;
+}
+@keyframes breathe { 0%,100%{opacity:0.4} 50%{opacity:0.9} }
+
+/* ═══════════════════════════════════════════════
+   INDEX / DAFTAR ISI
+═══════════════════════════════════════════════ */
+#view-index { padding: 20px; }
+
+.index-book {
+  width: min(760px, 96vw);
+  max-height: 90vh;
+  background: var(--paper-bg);
+  border-radius: 2px 8px 8px 2px;
+  box-shadow: var(--shadow-paper);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.index-header {
+  background: linear-gradient(135deg, #3d1f0a, #6b3520);
+  padding: 18px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 3px solid var(--gold);
+}
+
+.index-header-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--gold);
+  letter-spacing: 3px;
+}
+
+.index-header-controls {
+  display: flex; gap: 10px; align-items: center;
+}
+
+.btn-retro {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 1px;
+  background: transparent;
+  border: 1.5px solid var(--gold);
+  color: var(--gold);
+  padding: 6px 14px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-retro:hover { background: var(--gold); color: var(--leather-dark); }
+
+.index-search-bar {
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(180,150,100,0.3);
+  background: rgba(253,248,240,0.8);
+  display: flex; gap: 10px; align-items: center;
+}
+
+.search-input-wrap {
+  flex: 1; position: relative;
+}
+.search-input-wrap input {
+  width: 100%;
+  font-family: var(--font-hand);
+  font-size: 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--leather-light);
+  padding: 4px 8px 4px 24px;
+  color: var(--ink);
+  outline: none;
+}
+.search-input-wrap input::placeholder { color: var(--ink-muted); font-style: italic; }
+.search-icon {
+  position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
+  font-size: 13px; color: var(--ink-muted);
+}
+
+.sort-select {
+  font-family: var(--font-serif);
+  font-size: 12px;
+  background: transparent;
+  border: 1px solid var(--leather-light);
+  color: var(--ink);
+  padding: 4px 8px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.index-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+.index-body::-webkit-scrollbar { width: 6px; }
+.index-body::-webkit-scrollbar-track { background: rgba(180,150,100,0.1); }
+.index-body::-webkit-scrollbar-thumb { background: var(--leather-light); border-radius: 2px; }
+
+.index-entry {
+  display: flex; align-items: baseline;
+  padding: 10px 24px;
+  border-bottom: 1px dashed rgba(180,150,100,0.2);
+  cursor: pointer;
+  transition: background 0.15s;
+  gap: 12px;
+}
+.index-entry:hover { background: rgba(180,150,100,0.08); }
+
+.entry-num {
+  font-family: var(--font-hand);
+  font-size: 13px;
+  color: var(--ink-muted);
+  min-width: 28px;
+}
+.entry-title {
+  font-family: var(--font-hand);
+  font-size: 17px;
+  color: var(--ink);
+  flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.entry-type {
+  font-family: var(--font-serif);
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 2px 7px;
+  border-radius: 2px;
+  border: 1px solid;
+}
+.entry-type.text { color: var(--leather-mid); border-color: var(--leather-light); }
+.entry-type.audio { color: var(--red-accent); border-color: var(--red-accent); }
+
+.entry-date {
+  font-family: var(--font-serif);
+  font-size: 10px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  font-style: italic;
+}
+
+.entry-dots {
+  flex: 1;
+  border-bottom: 1px dotted rgba(180,150,100,0.4);
+  margin: 0 4px;
+  height: 1px;
+  align-self: center;
+  min-width: 20px;
+}
+
+.index-empty {
+  padding: 40px 24px;
+  text-align: center;
+  font-family: var(--font-hand);
+  font-size: 18px;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+.index-footer {
+  padding: 12px 24px;
+  border-top: 2px solid rgba(180,150,100,0.3);
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(253,248,240,0.9);
+}
+.index-footer-hint {
+  font-family: var(--font-serif);
+  font-size: 10px;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════
+   BOOK / NOTE VIEW
+═══════════════════════════════════════════════ */
+#view-book { padding: 20px 10px; }
+
+.book-container {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  max-height: 88vh;
+}
+
+/* DESKTOP: two pages side-by-side */
+.page-spread {
+  display: flex;
+  gap: 0;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.page {
+  width: 380px;
+  height: min(560px, 82vh);
+  background: var(--paper-bg);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.page.left-page {
+  border-radius: 8px 0 0 8px;
+  background: var(--paper-bg2);
+  box-shadow: inset -4px 0 16px rgba(0,0,0,0.15), inset 0 0 2px rgba(0,0,0,0.05);
+}
+.page.right-page {
+  border-radius: 0 8px 8px 0;
+  box-shadow: inset 4px 0 8px rgba(0,0,0,0.08);
+}
+
+/* Binding shadow in the middle */
+.page-spread::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 50%; width: 20px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg,
+    rgba(0,0,0,0.2) 0%,
+    rgba(0,0,0,0.05) 30%,
+    transparent 50%,
+    rgba(0,0,0,0.05) 70%,
+    rgba(0,0,0,0.15) 100%
+  );
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* LINES on paper */
+.page-lines {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent calc(var(--line-height) - 1px),
+      var(--line-color) calc(var(--line-height) - 1px),
+      var(--line-color) var(--line-height)
+    );
+  background-position: 0 64px;
+}
+
+.page-margin-line {
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 52px;
+  width: 1px;
+  background: rgba(220,100,100,0.3);
+  pointer-events: none;
+}
+
+/* Page header */
+.page-header {
+  height: 56px;
+  padding: 10px 16px 4px;
+  border-bottom: 1.5px solid var(--gold-dark);
+  display: flex; align-items: flex-end; justify-content: space-between;
+  position: relative; z-index: 2;
+  flex-shrink: 0;
+}
+
+.page-num {
+  font-family: var(--font-hand);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.page-title-input {
+  font-family: var(--font-hand);
+  font-size: 17px;
+  color: var(--ink);
+  border: none;
+  background: transparent;
+  outline: none;
+  text-align: center;
+  flex: 1;
+  padding: 0 8px;
+}
+.page-title-input::placeholder { color: var(--ink-muted); font-style: italic; }
+
+.page-date-stamp {
+  font-family: var(--font-serif);
+  font-size: 10px;
+  color: var(--ink-muted);
+  font-style: italic;
+  white-space: nowrap;
+}
+
+/* Content area */
+.page-content {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The editable paper area */
+.paper-editor {
+  position: absolute; inset: 0;
+  flex: 1;
+  padding: 8px 16px 80px 58px;
+  font-family: var(--font-hand);
+  font-size: 17px;
+  line-height: var(--line-height);
+  color: var(--ink);
+  outline: none;
+  overflow-y: auto;       /* bisa scroll jika konten panjang */
+  overflow-x: hidden;
+  word-break: break-word;
+  white-space: pre-wrap;
+  z-index: 3;
+}
+.paper-editor[contenteditable="true"] { cursor: text; }
+.paper-editor[contenteditable="true"]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--ink-muted);
+  font-style: italic;
+  pointer-events: none;
+}
+
+/* Audio player (cassette style) */
+.cassette-player {
+  background: linear-gradient(135deg, #1a1a2e, #2d2d44);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 8px 0;
+  border: 1px solid rgba(201,168,76,0.3);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+}
+.cassette-reels {
+  display: flex; gap: 24px; justify-content: center; margin-bottom: 8px;
+}
+.cassette-reel {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 3px solid #c9a84c;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  animation: none;
+}
+.cassette-reel.spinning { animation: spin 1.5s linear infinite; }
+.cassette-reel::before {
+  content: ''; width: 8px; height: 8px;
+  background: #c9a84c; border-radius: 50%;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.cassette-label {
+  font-family: var(--font-hand);
+  font-size: 11px;
+  color: rgba(201,168,76,0.7);
+  text-align: center;
+  margin-bottom: 6px;
+}
+.cassette-controls {
+  display: flex; align-items: center; gap: 8px;
+}
+.cassette-btn {
+  background: transparent;
+  border: 1px solid rgba(201,168,76,0.5);
+  color: var(--gold);
+  width: 28px; height: 28px;
+  border-radius: 3px;
+  cursor: pointer; font-size: 10px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  font-family: monospace;
+}
+.cassette-btn:hover { background: rgba(201,168,76,0.15); }
+.cassette-progress {
+  flex: 1; height: 3px;
+  background: rgba(201,168,76,0.2);
+  border-radius: 2px; cursor: pointer;
+}
+.cassette-progress-fill {
+  height: 100%; background: var(--gold);
+  border-radius: 2px; width: 0%;
+  transition: width 0.3s;
+}
+.cassette-time {
+  font-family: var(--font-hand);
+  font-size: 10px; color: rgba(201,168,76,0.6);
+}
+
+/* ═══════════════════════════════════════════════
+   INLINE AUDIO BLOCK (disisip di kursor)
+═══════════════════════════════════════════════ */
+.inline-audio-block {
+  display: flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, #1a1a2e, #2d2d44);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 6px;
+  padding: 7px 10px;
+  margin: 6px 0;
+  width: 100%;
+  user-select: none; -webkit-user-select: none;
+}
+.iab-icon { font-size: 15px; flex-shrink: 0; }
+.iab-play {
+  background: rgba(201,168,76,0.15); border: 1px solid rgba(201,168,76,0.5);
+  color: var(--gold); width: 26px; height: 26px;
+  border-radius: 3px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; flex-shrink: 0;
+}
+.iab-play:hover { background: rgba(201,168,76,0.3); }
+.iab-progress {
+  flex: 1; height: 3px; background: rgba(201,168,76,0.2);
+  border-radius: 2px; overflow: hidden; cursor: pointer;
+}
+.iab-progress-fill { height: 100%; background: var(--gold); width: 0%; transition: width 0.2s; }
+.iab-time {
+  font-family: var(--font-hand); font-size: 10px;
+  color: rgba(201,168,76,0.7); white-space: nowrap; flex-shrink: 0;
+}
+.iab-del {
+  background: none; border: none; color: rgba(220,80,80,0.5);
+  cursor: pointer; font-size: 12px; flex-shrink: 0; padding: 0 2px;
+}
+.iab-del:hover { color: #e05050; }
+
+/* ═══════════════════════════════════════════════
+   IMAGE GRID (disisip di kursor)
+═══════════════════════════════════════════════ */
+.note-img-grid {
+  display: grid; gap: 4px; width: 100%; margin: 6px 0;
+  user-select: none; -webkit-user-select: none;
+}
+.note-img-grid.grid-1 { grid-template-columns: 1fr; }
+.note-img-grid.grid-2 { grid-template-columns: 1fr 1fr; }
+.note-img-grid.grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.note-img-grid.grid-4 { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
+
+.note-img-cell {
+  position: relative; overflow: hidden;
+  border-radius: 4px; background: rgba(180,150,100,0.15);
+  cursor: pointer; min-height: 60px;
+}
+.note-img-cell img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  max-height: 180px; min-height: 60px; transition: transform 0.2s; pointer-events: none;
+}
+.note-img-cell:hover img { transform: scale(1.03); }
+.note-img-cell .img-del {
+  position: absolute; top: 3px; right: 3px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0,0,0,0.65); color: #fff; font-size: 11px;
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.2s; z-index: 4;
+}
+.note-img-cell:hover .img-del { opacity: 1; }
+
+/* ═══════════════════════════════════════════════
+   LIGHTBOX
+═══════════════════════════════════════════════ */
+#img-lightbox {
+  display: none; position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.92);
+  align-items: center; justify-content: center; cursor: zoom-out;
+}
+#img-lightbox.open { display: flex; }
+#img-lightbox img {
+  max-width: 92vw; max-height: 92vh; object-fit: contain;
+  border-radius: 4px; box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+#img-lightbox .lb-close {
+  position: fixed; top: 14px; right: 18px;
+  color: #fff; font-size: 28px; cursor: pointer;
+  background: none; border: none; line-height: 1; z-index: 10000;
+}
+
+/* ═══════════════════════════════════════════════
+   IMAGE UPLOAD MODAL
+═══════════════════════════════════════════════ */
+#img-modal {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.65);
+  align-items: center; justify-content: center; padding: 16px;
+}
+#img-modal.open { display: flex; }
+.img-modal-box {
+  background: var(--paper-bg);
+  border-radius: 8px; padding: 20px; width: 100%; max-width: 380px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+}
+.img-modal-title {
+  font-family: var(--font-display); font-size: 14px; color: var(--ink-muted);
+  margin-bottom: 14px; text-align: center; letter-spacing: 2px;
+}
+.img-modal-grid-row {
+  display: flex; gap: 8px; margin-bottom: 14px; justify-content: center;
+}
+.grid-pick-btn {
+  flex: 1; max-width: 72px; aspect-ratio: 1;
+  background: rgba(180,150,100,0.1); border: 2px solid rgba(180,150,100,0.3);
+  border-radius: 6px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; transition: all 0.15s;
+}
+.grid-pick-btn.selected { border-color: var(--gold); background: rgba(201,168,76,0.1); }
+.grid-pick-btn .gpb-grid {
+  display: grid; gap: 2px; width: 28px; height: 28px;
+}
+.gpb-grid.g1 { grid-template-columns: 1fr; }
+.gpb-grid.g2 { grid-template-columns: 1fr 1fr; }
+.gpb-grid.g3 { grid-template-columns: 1fr 1fr 1fr; }
+.gpb-grid.g4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.gpb-cell { background: var(--ink-muted); border-radius: 1px; opacity: 0.35; }
+.grid-pick-btn.selected .gpb-cell { opacity: 1; background: var(--gold); }
+.gpb-label { font-family: var(--font-display); font-size: 9px; color: var(--ink-muted); letter-spacing: 1px; }
+
+.img-modal-actions { display: flex; gap: 8px; margin-bottom: 10px; }
+.img-action-btn {
+  flex: 1; padding: 10px 6px;
+  background: linear-gradient(135deg, var(--leather-dark), var(--leather-mid));
+  border: 1px solid rgba(201,168,76,0.3); color: var(--gold);
+  border-radius: 5px; cursor: pointer;
+  font-family: var(--font-display); font-size: 10px; letter-spacing: 1px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  transition: all 0.15s;
+}
+.img-action-btn:hover { border-color: var(--gold); }
+.img-action-btn .ia-icon { font-size: 20px; }
+
+.img-drop-zone {
+  border: 2px dashed rgba(180,150,100,0.4); border-radius: 6px;
+  padding: 16px; text-align: center;
+  font-family: var(--font-hand); font-size: 13px; color: var(--ink-muted);
+  cursor: pointer; transition: border-color 0.2s, background 0.2s;
+  margin-bottom: 10px; min-height: 60px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+}
+.img-drop-zone.dragover { border-color: var(--gold); background: rgba(201,168,76,0.05); }
+.dz-preview { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+.dz-thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 3px; }
+
+.img-upload-progress { display: none; margin-top: 8px; }
+.img-upload-progress.show { display: block; }
+.iup-bar-wrap { height: 4px; background: rgba(180,150,100,0.2); border-radius: 2px; overflow: hidden; margin-bottom: 4px; }
+.iup-bar { height: 100%; background: var(--gold); width: 0%; transition: width 0.3s; }
+.iup-txt { font-family: var(--font-display); font-size: 9px; color: var(--ink-muted); letter-spacing: 1px; text-align: center; }
+
+.img-modal-foot { display: flex; gap: 8px; }
+.img-foot-btn {
+  flex: 1; padding: 8px; border-radius: 4px;
+  font-family: var(--font-display); font-size: 10px; letter-spacing: 1px;
+  cursor: pointer; border: 1px solid; transition: all 0.15s;
+}
+.img-foot-btn.cancel { background: transparent; border-color: rgba(180,150,100,0.4); color: var(--ink-muted); }
+.img-foot-btn.cancel:hover { background: rgba(180,150,100,0.1); }
+.img-foot-btn.confirm { background: linear-gradient(135deg, var(--leather-dark), var(--leather-mid)); border-color: var(--gold); color: var(--gold); }
+.img-foot-btn.confirm:hover { background: rgba(201,168,76,0.1); }
+
+/* ═══════════════════════════════════════════════
+   CAMERA MODAL
+═══════════════════════════════════════════════ */
+#cam-modal {
+  display: none; position: fixed; inset: 0; z-index: 600;
+  background: #000; align-items: center; justify-content: center; flex-direction: column;
+}
+#cam-modal.open { display: flex; }
+#cam-video { width: 100%; max-width: 480px; max-height: 70vh; object-fit: cover; }
+.cam-controls { display: flex; gap: 16px; padding: 16px; align-items: center; }
+.cam-snap-btn {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: #fff; border: 4px solid rgba(255,255,255,0.4);
+  cursor: pointer; transition: transform 0.1s;
+}
+.cam-snap-btn:active { transform: scale(0.9); }
+.cam-close-btn {
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+  color: #fff; padding: 10px 18px; border-radius: 6px; cursor: pointer;
+  font-family: var(--font-display); font-size: 11px; letter-spacing: 1px;
+}
+
+/* ═══════════════════════════════════════════════
+   RECORDING INDICATORS
+═══════════════════════════════════════════════ */
+.rec-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: #e05050;
+  animation: pulse-rec 1s ease-in-out infinite; flex-shrink: 0;
+}
+@keyframes pulse-rec { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+.rec-label {
+  font-family: var(--font-display); font-size: 9px;
+  color: #e05050; letter-spacing: 1px;
+}
+.tool-indicator {
+  display: none; align-items: center; gap: 4px;
+  padding: 2px 8px; background: rgba(139,32,32,0.2);
+  border: 1px solid rgba(139,32,32,0.4); border-radius: 2px;
+}
+.tool-indicator.active { display: flex; }
+
+/* Navigation arrows */
+.nav-btn {
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  background: rgba(44,26,14,0.8);
+  border: 1.5px solid var(--gold);
+  color: var(--gold);
+  width: 36px; height: 60px;
+  border-radius: 4px;
+  cursor: pointer; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  z-index: 10;
+}
+.nav-btn:hover { background: rgba(201,168,76,0.2); }
+.nav-btn.left { left: -48px; }
+.nav-btn.right { right: -48px; }
+
+/* Toolbar (WYSIWYG) */
+.toolbar {
+  position: absolute;
+  bottom: 8px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--leather-dark), var(--leather-mid));
+  border: 1.5px solid var(--gold);
+  border-radius: 4px;
+  padding: 6px 10px;
+  display: flex; gap: 4px; align-items: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  z-index: 20;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+  white-space: nowrap;
+}
+.toolbar.visible { opacity: 1; pointer-events: all; }
+
+.tool-btn {
+  background: transparent;
+  border: 1px solid rgba(201,168,76,0.3);
+  color: var(--gold);
+  width: 28px; height: 28px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: var(--font-serif);
+  font-size: 12px;
+  font-weight: bold;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.tool-btn:hover { background: rgba(201,168,76,0.2); }
+.tool-btn.active { background: var(--gold); color: var(--leather-dark); }
+
+.tool-sep { width: 1px; height: 20px; background: rgba(201,168,76,0.3); margin: 0 2px; }
+
+.tool-btn-text {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  padding: 0 6px;
+  width: auto;
+}
+.tool-btn-text.recording { animation: rec-pulse 1s ease-in-out infinite; }
+@keyframes rec-pulse { 0%,100%{background:rgba(139,32,32,0.3);color:#ff6666} 50%{background:rgba(139,32,32,0.7);color:#fff} }
+
+/* Save indicator */
+.save-stamp {
+  position: fixed;
+  top: 20px; right: 20px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: var(--red-accent);
+  border: 2px solid var(--red-accent);
+  padding: 4px 12px;
+  border-radius: 3px;
+  transform: rotate(-8deg);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 100;
+}
+.save-stamp.show { opacity: 0.85; }
+
+/* Page nav back btn */
+.btn-back {
+  position: fixed;
+  top: 14px; left: 14px;
+  background: rgba(44,26,14,0.9);
+  border: 1.5px solid var(--gold);
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 11px; letter-spacing: 1px;
+  padding: 6px 14px;
+  border-radius: 3px;
+  cursor: pointer;
+  z-index: 50;
+  display: none;
+  transition: all 0.2s;
+}
+.btn-back:hover { background: rgba(201,168,76,0.15); }
+.btn-back.show { display: block; }
+
+.btn-new-note {
+  position: fixed;
+  top: 14px; right: 14px;
+  background: rgba(44,26,14,0.9);
+  border: 1.5px solid var(--gold);
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 11px; letter-spacing: 1px;
+  padding: 6px 14px;
+  border-radius: 3px;
+  cursor: pointer;
+  z-index: 50;
+  display: none;
+  transition: all 0.2s;
+}
+.btn-new-note:hover { background: rgba(201,168,76,0.15); }
+.btn-new-note.show { display: block; }
+
+/* ═══════════════════════════════════════════════
+   PAGE INDICATOR (dots)
+═══════════════════════════════════════════════ */
+.page-dots {
+  position: fixed;
+  bottom: 16px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 6px; align-items: center;
+  z-index: 20;
+}
+.page-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  border: 1px solid var(--gold);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.page-dot.active { background: var(--gold); }
+
+/* ═══════════════════════════════════════════════
+   MOBILE RESPONSIVE
+═══════════════════════════════════════════════ */
+@media (max-width: 820px) {
+  .page-spread { position: relative; }
+  .page-spread::after { display: none !important; }
+  .page.left-page { display: none !important; }
+  .page.right-page {
+    width: min(380px, 92vw) !important;
+    height: min(560px, 80vh) !important;
+    border-radius: 6px !important;
+    box-shadow: var(--shadow-paper) !important;
+  }
+  .nav-btn.left { left: -42px; }
+  .nav-btn.right { right: -42px; }
+}
+
+/* ═══════════════════════════════════════════════
+   LOADING OVERLAY
+═══════════════════════════════════════════════ */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(26,15,6,0.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.loading-overlay.show { opacity: 1; pointer-events: all; }
+.loading-text {
+  font-family: var(--font-display);
+  font-size: 16px; letter-spacing: 3px;
+  color: var(--gold);
+  animation: breathe 1.5s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════
+   SCROLLBAR GLOBAL
+═══════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: rgba(180,150,100,0.1); }
+::-webkit-scrollbar-thumb { background: var(--leather-light); border-radius: 3px; }
+
+/* ═══════════════════════════════════════════════
+   LOGIN SCREEN
+═══════════════════════════════════════════════ */
+#view-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: transparent;
+}
+.login-book {
+  background: linear-gradient(160deg,#3d1f0a 0%,#6b3520 40%,#4a2210 70%,#2c1208 100%);
+  border: 2px solid var(--gold-dark);
+  border-radius: 12px;
+  padding: 48px 40px 40px;
+  width: min(380px, 90vw);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 0 30px rgba(0,0,0,0.2);
+  position: relative;
+  text-align: center;
+}
+.login-book::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 8px;
+  pointer-events: none;
+}
+.login-monogram {
+  font-family: var(--font-display);
+  font-size: 48px;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 4px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+.login-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 4px;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+.login-subtitle {
+  font-family: var(--font-hand);
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-bottom: 32px;
+}
+.login-ornament {
+  width: 60px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dark), transparent);
+  margin: 0 auto 28px;
+}
+.login-field {
+  margin-bottom: 16px;
+  text-align: left;
+}
+.login-field label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--gold-dark);
+  margin-bottom: 6px;
+}
+.login-field input {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(253,248,240,0.08);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 6px;
+  color: var(--paper-bg);
+  font-family: var(--font-serif);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.login-field input:focus {
+  border-color: var(--gold);
+  background: rgba(253,248,240,0.12);
+}
+.login-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  cursor: pointer;
+}
+.login-remember input[type=checkbox] {
+  width: 16px; height: 16px;
+  accent-color: var(--gold);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.login-remember span {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  border: none;
+  border-radius: 6px;
+  color: var(--leather-dark);
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 3px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.login-btn:hover { opacity: 0.9; }
+.login-btn:active { transform: scale(0.98); }
+.login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.login-error {
+  margin-top: 14px;
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: #e05050;
+  min-height: 18px;
+}
+
+
+.btn-logout {
+  position: fixed;
+  bottom: 18px; right: 14px;
+  background: rgba(44,26,14,0.9);
+  border: 1.5px solid var(--gold-dark);
+  color: var(--ink-muted);
+  font-family: var(--font-display);
+  font-size: 10px; letter-spacing: 1px;
+  padding: 5px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  z-index: 50;
+  display: none;
+  transition: all 0.2s;
+}
+.btn-logout:hover { border-color: var(--gold); color: var(--gold); }
+.btn-logout.show { display: block; }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ────── COVER ────── -->
+  <div id="view-login" class="view active">
+    <div class="login-book">
+      <div class="login-monogram">𝔄</div>
+      <div class="login-title">AGENDA</div>
+      <div class="login-subtitle">Catatan Pribadi</div>
+      <div class="login-ornament"></div>
+      <div class="login-field">
+        <label>PENGGUNA</label>
+        <input type="text" id="login-user" placeholder="nama pengguna" autocomplete="username"
+               onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+      </div>
+      <div class="login-field">
+        <label>KATA SANDI</label>
+        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <label class="login-remember">
+        <input type="checkbox" id="login-remember">
+        <span>Ingat saya</span>
+      </label>
+      <button class="login-btn" id="login-btn" onclick="doLogin()">MASUK</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+
+  <div id="view-cover" class="view">
+    <div class="cover-book" onclick="showIndex()">
+      <div class="cover-corner tl"></div>
+      <div class="cover-corner tr"></div>
+      <div class="cover-corner bl"></div>
+      <div class="cover-corner br"></div>
+      <div class="cover-spine-line"></div>
+      <div class="cover-ornament-double"><span></span><span></span></div>
+      <div class="cover-monogram">𝔄</div>
+      <div class="cover-title">AGENDA</div>
+      <div class="cover-subtitle">CATATAN PRIBADI</div>
+      <div class="cover-ornament"></div>
+      <div class="cover-ornament-double"><span></span><span></span></div>
+      <div class="cover-year" id="cover-year">—</div>
+    </div>
+    <div class="cover-tap-hint">↑ Buka Buku ↑</div>
+  </div>
+
+  <!-- ────── INDEX ────── -->
+  <div id="view-index" class="view">
+    <div class="index-book">
+      <div class="index-header">
+        <div class="index-header-title">✦ DAFTAR ISI ✦</div>
+        <div class="index-header-controls">
+          <button class="btn-retro" onclick="showCover()">← TUTUP</button>
+          <button class="btn-retro" onclick="newNote()">+ BARU</button>
+        </div>
+      </div>
+      <div class="index-search-bar">
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Cari catatan..." oninput="filterIndex()">
+        </div>
+        <select class="sort-select" id="sort-select" onchange="sortIndex()">
+          <option value="newest">Terbaru</option>
+          <option value="oldest">Terlama</option>
+          <option value="az">A–Z</option>
+          <option value="za">Z–A</option>
+          <option value="audio">Audio</option>
+          <option value="text">Teks</option>
+        </select>
+      </div>
+      <div class="index-body" id="index-list"></div>
+      <div class="index-footer">
+        <span class="index-footer-hint" id="index-count">Memuat...</span>
+        <span class="index-footer-hint">Lidan Agenda © 2025</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────── BOOK / NOTE ────── -->
+  <div id="view-book" class="view">
+    <div class="book-container">
+      <button class="nav-btn left" onclick="prevPage()">‹</button>
+      <div class="page-spread" id="page-spread">
+
+        <!-- LEFT PAGE (desktop only) -->
+        <div class="page left-page" id="left-page">
+          <div class="page-lines"></div>
+          <div class="page-margin-line"></div>
+          <div class="page-header">
+            <span class="page-num" id="left-page-num">–</span>
+            <span class="page-title-input" style="text-align:center;font-family:var(--font-hand);font-size:16px;color:var(--ink-muted);font-style:italic;">
+              ≺ halaman sebelumnya ≻
+            </span>
+            <span class="page-date-stamp" id="left-date"></span>
+          </div>
+          <div class="page-content">
+            <div class="paper-editor" id="left-editor" style="color:var(--ink-muted);font-style:italic;font-size:14px;">
+              <!--  overflow dari halaman kanan akan tampil di sini  -->
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT PAGE (main) -->
+        <div class="page right-page" id="right-page">
+          <div class="page-lines"></div>
+          <div class="page-margin-line"></div>
+          <div class="page-header">
+            <span class="page-num" id="right-page-num">1</span>
+            <input class="page-title-input" id="note-title" type="text"
+              placeholder="Judul catatan..." oninput="scheduleAutoSave()">
+            <span class="page-date-stamp" id="right-date"></span>
+          </div>
+          <div class="page-content" id="main-page-content">
+            <div class="paper-editor" id="main-editor" contenteditable="false"
+              data-placeholder="Klik untuk mulai menulis..."
+              onclick="activateEditor()">
+            </div>
+          </div>
+          <!-- Toolbar -->
+          <div class="toolbar" id="toolbar">
+            <button class="tool-btn" title="Bold" onclick="fmt('bold')"><b>B</b></button>
+            <button class="tool-btn" title="Italic" onclick="fmt('italic')"><i>I</i></button>
+            <button class="tool-btn" title="Underline" onclick="fmt('underline')"><u>U</u></button>
+            <div class="tool-sep"></div>
+            <button class="tool-btn" title="Judul" onclick="fmt('h2')">H</button>
+            <button class="tool-btn" title="Kutipan" onclick="fmt('quote')">❝</button>
+            <div class="tool-sep"></div>
+            <button class="tool-btn tool-btn-text" id="btn-voice" onclick="toggleVoice()" title="Voice to Text">🎙 STT</button>
+            <button class="tool-btn tool-btn-text" id="btn-record" onclick="toggleRecord()" title="Rekam Audio Inline">⏺ REC</button>
+            <div class="tool-indicator" id="voice-indicator"><div class="rec-dot"></div><span class="rec-label">STT</span></div>
+            <div class="tool-indicator" id="rec-indicator"><div class="rec-dot"></div><span class="rec-label">REC</span></div>
+            <div class="tool-sep"></div>
+            <button class="tool-btn" onclick="openImgModal()" title="Tambah Gambar">🖼️</button>
+            <div class="tool-sep"></div>
+            <button class="tool-btn tool-btn-text" onclick="saveNote()" title="Simpan">💾 SIMPAN</button>
+            <button class="tool-btn" title="Selesai Edit" onclick="deactivateEditor()">✕</button>
+          </div>
+        </div>
+
+      </div>
+      <button class="nav-btn right" onclick="nextPage()">›</button>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+<!-- GLOBAL BUTTONS -->
+<button class="btn-back" id="btn-back" onclick="goBackToIndex()">← Daftar Isi</button>
+<button class="btn-new-note" id="btn-new-note-global" onclick="newNote()">+ Catatan Baru</button>
+<button class="btn-logout" id="btn-logout" onclick="doLogout()">↩ KELUAR</button>
+
+
+<!-- Page dots -->
+<div class="page-dots" id="page-dots" style="display:none;"></div>
+
+<!-- Save stamp -->
+<div class="save-stamp" id="save-stamp">TERSIMPAN</div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-text">MEMUAT . . .</div>
+</div>
+
+<!-- ═══ IMAGE LIGHTBOX ═══ -->
+<div id="img-lightbox" onclick="closeLightbox()">
+  <button class="lb-close" onclick="event.stopPropagation();closeLightbox()">✕</button>
+  <img id="lb-img" src="" alt="">
+</div>
+
+<!-- ═══ IMAGE UPLOAD MODAL ═══ -->
+<div id="img-modal">
+  <div class="img-modal-box">
+    <div class="img-modal-title">✦ TAMBAH GAMBAR ✦</div>
+    <div class="img-modal-grid-row">
+      <button class="grid-pick-btn selected" id="gpb-1" onclick="selectGrid(1)">
+        <div class="gpb-grid g1"><div class="gpb-cell"></div></div>
+        <span class="gpb-label">1</span>
+      </button>
+      <button class="grid-pick-btn" id="gpb-2" onclick="selectGrid(2)">
+        <div class="gpb-grid g2"><div class="gpb-cell"></div><div class="gpb-cell"></div></div>
+        <span class="gpb-label">2</span>
+      </button>
+      <button class="grid-pick-btn" id="gpb-3" onclick="selectGrid(3)">
+        <div class="gpb-grid g3"><div class="gpb-cell"></div><div class="gpb-cell"></div><div class="gpb-cell"></div></div>
+        <span class="gpb-label">3</span>
+      </button>
+      <button class="grid-pick-btn" id="gpb-4" onclick="selectGrid(4)">
+        <div class="gpb-grid g4"><div class="gpb-cell"></div><div class="gpb-cell"></div><div class="gpb-cell"></div><div class="gpb-cell"></div></div>
+        <span class="gpb-label">4</span>
+      </button>
+    </div>
+    <div class="img-modal-actions">
+      <button class="img-action-btn" onclick="triggerImgFileInput()">
+        <span class="ia-icon">📁</span><span>Pilih File</span>
+      </button>
+      <button class="img-action-btn" onclick="openImgCamera()">
+        <span class="ia-icon">📷</span><span>Kamera</span>
+      </button>
+    </div>
+    <div class="img-drop-zone" id="img-drop-zone"
+         onclick="triggerImgFileInput()"
+         ondragover="onDzDragOver(event)"
+         ondragleave="onDzDragLeave(event)"
+         ondrop="onDzDrop(event)">
+      <div id="dz-hint">🖼️ Klik atau seret gambar ke sini</div>
+      <div class="dz-preview" id="dz-preview"></div>
+    </div>
+    <div class="img-upload-progress" id="img-upload-progress">
+      <div class="iup-bar-wrap"><div class="iup-bar" id="iup-bar"></div></div>
+      <div class="iup-txt" id="iup-txt">Mengunggah...</div>
+    </div>
+    <div class="img-modal-foot">
+      <button class="img-foot-btn cancel" onclick="closeImgModal()">Batal</button>
+      <button class="img-foot-btn confirm" id="img-confirm-btn" onclick="confirmImgUpload()">Sisipkan Gambar</button>
+    </div>
+  </div>
+</div>
+<input type="file" id="img-file-input" accept="image/*" style="display:none;" onchange="onImgFileChange(event)">
+
+<!-- ═══ CAMERA MODAL (Gambar) ═══ -->
+<div id="cam-modal">
+  <video id="cam-video" autoplay playsinline muted></video>
+  <canvas id="cam-canvas" style="display:none;"></canvas>
+  <div class="cam-controls">
+    <button class="cam-close-btn" onclick="closeImgCamera()">✕ Tutup</button>
+    <button class="cam-snap-btn" onclick="snapImgPhoto()"></button>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   LOGIN
+════════════════════════════════════════════════ */
+const LOGIN_KEY = 'agenda_login_v1';
+
+function loginInit() {
+  // Default: checkbox TIDAK tercentang
+  document.getElementById('login-remember').checked = false;
+
+  const saved = localStorage.getItem(LOGIN_KEY);
+  if (saved) {
+    try {
+      const { user, pass } = JSON.parse(saved);
+      if (user && pass) {
+        // Ada data tersimpan — langsung masuk tanpa tampilkan login
+        document.getElementById('login-user').value = user;
+        document.getElementById('login-pass').value = pass;
+        document.getElementById('login-remember').checked = true;
+        // Auto-login langsung ke cover, skip halaman login
+        showView('view-cover');
+        return;
+      }
+    } catch(e) {
+      localStorage.removeItem(LOGIN_KEY);
+    }
+  }
+  // Tidak ada data tersimpan — tampilkan login (sudah active by default)
+}
+
+async function doLogin() {
+  const userEl  = document.getElementById('login-user');
+  const passEl  = document.getElementById('login-pass');
+  const errEl   = document.getElementById('login-error');
+  const btn     = document.getElementById('login-btn');
+  const remember= document.getElementById('login-remember').checked;
+
+  const user = userEl.value.trim();
+  const pass = passEl.value.trim();
+  if (!user || !pass) { errEl.textContent = 'Isi nama pengguna dan kata sandi.'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'MEMERIKSA...';
+  errEl.textContent = '';
+
+  try {
+    const url = new URL(window.API);
+    url.searchParams.set('table', 'admins');
+    url.searchParams.set('x_01', user);
+    const r = await fetch(url, { headers: { 'X-Custom-Auth': window.AUTH } });
+    const data = await r.json();
+    const rows = Array.isArray(data) ? data : (data.data || []);
+    const match = rows.find(row => row.x_01 === user && row.x_02 === pass);
+    if (match) {
+      if (remember) {
+        localStorage.setItem(LOGIN_KEY, JSON.stringify({ user, pass }));
+      } else {
+        localStorage.removeItem(LOGIN_KEY);
+      }
+      // Login sukses — tampilkan cover
+      showView('view-cover');
+    } else {
+      errEl.textContent = 'Nama pengguna atau kata sandi salah.';
+      passEl.value = '';
+      passEl.focus();
+    }
+  } catch(e) {
+    errEl.textContent = 'Gagal terhubung ke server.';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'MASUK';
+}
+function doLogout() {
+  localStorage.removeItem(LOGIN_KEY);
+  // Reset form login
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-remember').checked = false;
+  document.getElementById('login-error').textContent = '';
+  showView('view-login');
+}
+
+
+/* ════════════════════════════════════════════════
+   CONFIG API
+════════════════════════════════════════════════ */
+window.API   = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6';
+window.R2    = 'https://lidan.co.id/api/upload_r2_lidan';
+window.TABLE = 'agenda';
+window.AUTH  = 'admin';
+
+/* ════════════════════════════════════════════════
+   STATE — semua pakai window.* agar global
+════════════════════════════════════════════════ */
+window.notes          = [];
+window.currentNote    = null;
+window.pages          = [''];
+window.currentPageIdx = 0;
+window.autoSaveTimer  = null;
+window.mediaRecorder  = null;
+window.audioChunks    = [];
+window.recordingBlob  = null;
+window.speechRec      = null;
+window.isRecording    = false;
+window.isSpeaking     = false;
+window.isEditorActive = false;
+window.isDesktop      = window.innerWidth > 820;
+
+/* ════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  loginInit();
+  document.getElementById('cover-year').textContent = '— ' + new Date().getFullYear() + ' —';
+  setupSwipe();
+  window.addEventListener('resize', () => {
+    window.isDesktop = window.innerWidth > 820;
+    if (document.getElementById('view-book').classList.contains('active')) {
+      renderPages();
+    }
+  });
+});
+
+function setLoading(v) {
+  document.getElementById('loading').classList.toggle('show', v);
+}
+
+/* ════════════════════════════════════════════════
+   VIEW NAVIGATION
+════════════════════════════════════════════════ */
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const inBook   = id === 'view-book';
+  const inCover  = id === 'view-cover';
+  const inIndex  = id === 'view-index';
+  const showLogout = inBook || inCover || inIndex;
+  const btnBack   = document.getElementById('btn-back');
+  const btnNew    = document.getElementById('btn-new-note-global');
+  const btnLogout = document.getElementById('btn-logout');
+  const dots      = document.getElementById('page-dots');
+  if (btnBack)   btnBack.classList.toggle('show', inBook);
+  if (btnNew)    btnNew.classList.toggle('show', inBook);
+  if (btnLogout) btnLogout.classList.toggle('show', showLogout);
+  if (dots)      dots.style.display = inBook ? 'flex' : 'none';
+}
+
+function showCover() { showView('view-cover'); }
+
+async function showIndex() {
+  showView('view-index');
+  await loadNotes();
+}
+
+function goBackToIndex() {
+  deactivateEditor();
+  stopRecord();
+  stopVoice();
+  showIndex();
+}
+
+/* ════════════════════════════════════════════════
+   API — FETCH HELPERS
+════════════════════════════════════════════════ */
+async function apiGet(params = {}) {
+  const url = new URL(API);
+  url.searchParams.set('table', TABLE);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+  const r = await fetch(url, { headers: { 'X-Custom-Auth': AUTH } });
+  return r.json();
+}
+
+async function apiPost(data) {
+  const r = await fetch(API + '?table=' + TABLE, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH },
+    body: JSON.stringify(data)
+  });
+  return r.json();
+}
+
+async function apiPut(id, data) {
+  const r = await fetch(API + '?table=' + TABLE + '&id_x=' + id, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': AUTH },
+    body: JSON.stringify(data)
+  });
+  return r.json();
+}
+
+async function apiDelete(id) {
+  const r = await fetch(API + '?table=' + TABLE + '&id_x=' + id, {
+    method: 'DELETE',
+    headers: { 'X-Custom-Auth': AUTH }
+  });
+  return r.json();
+}
+
+async function uploadR2(blob, filename) {
+  const fd = new FormData();
+  fd.append('file', blob, filename);
+  // Gunakan filename langsung (sudah include path dari pemanggil)
+  fd.append('customName', filename);
+  const r = await fetch(R2, {
+    method: 'POST',
+    headers: { 'X-Custom-Auth': AUTH },
+    body: fd
+  });
+  const j = await r.json();
+  return j.url || ('https://assets.lidan.co.id/' + j.key);
+}
+
+/* ════════════════════════════════════════════════
+   NOTES CRUD
+════════════════════════════════════════════════ */
+async function loadNotes() {
+  setLoading(true);
+  try {
+    const res = await apiGet({ limit: 200 });
+    window.notes = (res.data || []).map(r => ({
+      id:       r.id_x,
+      title:    r.x_01 || 'Tanpa Judul',
+      content:  r.x_02 || '',
+      audioUrl: r.x_03 || '',
+      date:     r.x_04 || '',
+      type:     r.x_05 || 'text'
+    }));
+    renderIndex(window.notes);
+  } catch(e) {
+    console.error('loadNotes error:', e);
+    renderIndexError();
+  }
+  setLoading(false);
+}
+
+function renderIndex(list) {
+  const el  = document.getElementById('index-list');
+  const cnt = document.getElementById('index-count');
+  if (!list || !list.length) {
+    el.innerHTML = '<div class="index-empty">Belum ada catatan.<br>Tekan "+ BARU" untuk mulai menulis.</div>';
+    cnt.textContent = '0 catatan';
+    return;
+  }
+  cnt.textContent = list.length + ' catatan';
+  el.innerHTML = list.map((n, i) => `
+    <div class="index-entry" onclick="openNote(${n.id})">
+      <span class="entry-num">${String(i+1).padStart(2,'0')}</span>
+      <span class="entry-title">${escHtml(n.title)}</span>
+      <span class="entry-dots"></span>
+      <span class="entry-type ${n.type}">${n.type === 'audio' ? 'AUDIO' : 'TEKS'}</span>
+      <span class="entry-date">${formatDate(n.date)}</span>
+    </div>
+  `).join('');
+}
+
+function renderIndexError() {
+  document.getElementById('index-list').innerHTML =
+    '<div class="index-empty">Gagal memuat catatan.<br>Periksa koneksi & konfigurasi API.</div>';
+}
+
+function filterIndex() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const filtered = window.notes.filter(n =>
+    n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q)
+  );
+  renderIndex(filtered);
+}
+
+function sortIndex() {
+  const s = document.getElementById('sort-select').value;
+  let sorted = [...window.notes];
+  if      (s === 'newest') sorted.sort((a,b) => b.id - a.id);
+  else if (s === 'oldest') sorted.sort((a,b) => a.id - b.id);
+  else if (s === 'az')     sorted.sort((a,b) => a.title.localeCompare(b.title));
+  else if (s === 'za')     sorted.sort((a,b) => b.title.localeCompare(a.title));
+  else if (s === 'audio')  sorted = sorted.filter(n => n.type === 'audio');
+  else if (s === 'text')   sorted = sorted.filter(n => n.type === 'text');
+  renderIndex(sorted);
+}
+
+async function openNote(id) {
+  const note = window.notes.find(n => n.id === id);
+  if (!note) return;
+  window.currentNote = { ...note };
+  showView('view-book');
+  document.getElementById('note-title').value = note.title;
+  document.getElementById('right-date').textContent = formatDate(note.date);
+  document.getElementById('left-date').textContent  = formatDate(note.date);
+  const oldCass = document.querySelector('.cassette-player');
+  if (oldCass) oldCass.remove();
+  paginateHTML(note.content || '');
+  renderPages();
+}
+function newNote() {
+  window.currentNote    = { id: null, title: '', content: '', audioUrl: '', date: nowISO(), type: 'text' };
+  window.pages          = [''];
+  window.currentPageIdx = 0;
+  showView('view-book');
+  const titleEl = document.getElementById('note-title');
+  const dateEl  = document.getElementById('right-date');
+  const leftDate= document.getElementById('left-date');
+  const editor  = document.getElementById('main-editor');
+  if (titleEl)  titleEl.value = '';
+  if (dateEl)   dateEl.textContent  = formatDate(nowISO());
+  if (leftDate) leftDate.textContent = '';
+  if (editor)   { editor.innerHTML = ''; editor.contentEditable = 'false'; }
+  const oldCass = document.querySelector('.cassette-player');
+  if (oldCass) oldCass.remove();
+  renderPages();
+  setTimeout(() => activateEditor(), 150);
+}
+async function saveNote() {
+  const titleEl  = document.getElementById('note-title');
+  const editorEl = document.getElementById('main-editor');
+  if (!titleEl || !editorEl || !window.currentNote) return;
+  const title = titleEl.value.trim() || 'Tanpa Judul';
+  const now   = nowISO();
+  if (window.pages && window.currentPageIdx != null)
+    window.pages[window.currentPageIdx] = editorEl.innerHTML;
+  const content = (window.pages || [editorEl.innerHTML]).join('');
+  const hasAudio = content.includes('inline-audio-block') || !!window.currentNote.audioUrl;
+  const data = {
+    x_01: title,
+    x_02: content,
+    x_03: window.currentNote.audioUrl || '',
+    x_04: now,
+    x_05: hasAudio ? 'audio' : 'text'
+  };
+  setLoading(true);
+  try {
+    let res;
+    if (window.currentNote.id) {
+      res = await apiPut(window.currentNote.id, data);
+    } else {
+      res = await apiPost(data);
+      if (res.id_x) window.currentNote.id = res.id_x;
+    }
+    window.currentNote.title   = title;
+    window.currentNote.content = content;
+    window.currentNote.date    = now;
+    showStamp();
+  } catch(e) {
+    console.error('saveNote error:', e);
+    alert('Gagal menyimpan: ' + e.message);
+  }
+  setLoading(false);
+}
+function scheduleAutoSave() {
+  clearTimeout(window.autoSaveTimer);
+  window.autoSaveTimer = setTimeout(saveNote, 3000);
+}
+
+/* ════════════════════════════════════════════════
+   PAGINATION — Auto-paging teks
+════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════
+   HTML-AWARE PAGINATION
+   Struktur konten bisa berlapis (inline-block-wrapper).
+   Fungsi ini menelusuri rekursif untuk menemukan blok
+   note-img-grid dan inline-audio-block di mana pun letaknya,
+   lalu memisahkannya sebagai blok utuh per halaman.
+════════════════════════════════════════════════ */
+
+/**
+ * Kumpulkan semua blok khusus (gambar/audio) dan teks
+ * dari node secara rekursif menjadi array segmen flat.
+ */
+function _collectSegments(node, segments) {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const t = node.textContent.trim();
+    if (t) segments.push({ type: 'text', html: node.textContent });
+    return;
+  }
+  if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+  // Blok khusus — ambil utuh
+  if (node.classList.contains('note-img-grid') ||
+      node.classList.contains('inline-audio-block')) {
+    segments.push({ type: 'special', html: node.outerHTML });
+    return;
+  }
+
+  // inline-block-wrapper — masuk ke dalamnya
+  if (node.classList.contains('inline-block-wrapper')) {
+    node.childNodes.forEach(child => _collectSegments(child, segments));
+    return;
+  }
+
+  // Elemen lain — cek apakah mengandung blok khusus di dalamnya
+  const hasSpecial = node.querySelector('.note-img-grid, .inline-audio-block');
+  if (hasSpecial) {
+    // Telusuri rekursif
+    node.childNodes.forEach(child => _collectSegments(child, segments));
+  } else {
+    // Tidak ada blok khusus — perlakukan sebagai teks
+    const t = (node.textContent || '').trim();
+    if (t) segments.push({ type: 'text', html: node.outerHTML });
+  }
+}
+
+function paginateHTML(htmlContent) {
+  const pageEl       = document.getElementById('right-page');
+  const headerH      = 56;
+  const pageH        = pageEl ? (pageEl.offsetHeight || 560) : 560;
+  const usableH      = pageH - headerH - 20;
+  const lh           = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--line-height')) || 32;
+  const linesPerPage = Math.max(1, Math.floor(usableH / lh));
+  const charsPerLine = 42;
+  const SPECIAL_LINES = Math.round(linesPerPage * 0.55);
+
+  if (!htmlContent || !htmlContent.trim()) {
+    window.pages = [''];
+    window.currentPageIdx = 0;
+    return;
+  }
+
+  // Parse HTML dan kumpulkan segmen secara rekursif
+  const tmp = document.createElement('div');
+  tmp.innerHTML = htmlContent;
+  const segments = [];
+  tmp.childNodes.forEach(node => _collectSegments(node, segments));
+
+  // Jika tidak ada segmen sama sekali
+  if (segments.length === 0) {
+    window.pages = [''];
+    window.currentPageIdx = 0;
+    return;
+  }
+
+  window.pages = [];
+  window.currentPageIdx = 0;
+  let pageParts = [];
+  let lineCount = 0;
+
+  function flushPage() {
+    window.pages.push(pageParts.join(''));
+    pageParts = [];
+    lineCount = 0;
+  }
+
+  for (const seg of segments) {
+    if (seg.type === 'special') {
+      // Jika halaman sudah >40% terisi, pindah dulu
+      if (lineCount > linesPerPage * 0.4 && pageParts.length > 0) flushPage();
+      pageParts.push(seg.html);
+      lineCount += SPECIAL_LINES;
+      if (lineCount >= linesPerPage) flushPage();
+    } else {
+      // Teks biasa — paginate per kata
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = seg.html;
+      const plainText = tempDiv.textContent || tempDiv.innerText || '';
+      const words = plainText.split(/\s+/).filter(Boolean);
+      let currentLine  = '';
+      let currentChunk = '';
+      for (const word of words) {
+        const testLine = (currentLine + ' ' + word).trim();
+        if (testLine.length > charsPerLine) {
+          lineCount++;
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+        currentChunk += (currentChunk ? ' ' : '') + word;
+        if (lineCount >= linesPerPage) {
+          pageParts.push(currentChunk.trim());
+          flushPage();
+          currentChunk = '';
+          currentLine  = '';
+        }
+      }
+      if (currentChunk.trim()) pageParts.push(currentChunk.trim());
+    }
+  }
+  if (pageParts.length > 0 || window.pages.length === 0) flushPage();
+}
+
+// Alias untuk kompatibilitas
+function paginateText(fullText) { paginateHTML(fullText); }
+
+function renderPages() {
+  const mainEditor = document.getElementById('main-editor');
+  const leftEditor = document.getElementById('left-editor');
+  const rightNum   = document.getElementById('right-page-num');
+  const leftNum    = document.getElementById('left-page-num');
+  if (!mainEditor) return;
+
+  const pg  = window.pages || [''];
+  const idx = window.currentPageIdx || 0;
+
+  if (!window.isEditorActive) {
+    mainEditor.contentEditable = 'false';
+    mainEditor.innerHTML = pg[idx] || '';
+  }
+  if (rightNum) rightNum.textContent = idx + 1;
+
+  if (leftEditor) {
+    if (window.isDesktop && idx > 0) {
+      leftEditor.innerHTML       = pg[idx - 1] || '';
+      leftEditor.style.color     = 'var(--ink)';
+      leftEditor.style.fontStyle = 'normal';
+      leftEditor.style.fontSize  = '17px';
+      if (leftNum) leftNum.textContent = idx;
+    } else {
+      leftEditor.innerHTML       = '<em style="font-size:13px;color:var(--ink-muted);">≺ halaman pertama ≻</em>';
+      leftEditor.style.color     = 'var(--ink-muted)';
+      leftEditor.style.fontStyle = 'italic';
+      if (leftNum) leftNum.textContent = '–';
+    }
+  }
+
+  const dotsWrap = document.getElementById('page-dots');
+  if (dotsWrap) dotsWrap.style.display = pg.length > 1 ? '' : 'none';
+  renderDots();
+}
+
+function renderDots() {
+  const dots = document.getElementById('page-dots');
+  if (!dots) return;
+  if (!window.pages || window.pages.length <= 1) { dots.innerHTML = ''; return; }
+  dots.innerHTML = window.pages.map((_, i) =>
+    `<div class="page-dot ${i === window.currentPageIdx ? 'active' : ''}" onclick="goToPage(${i})"></div>`
+  ).join('');
+}
+
+function goToPage(i) {
+  window.currentPageIdx = Math.max(0, Math.min(window.pages.length - 1, i));
+  renderPages();
+}
+function prevPage() { goToPage(window.currentPageIdx - 1); }
+function nextPage() {
+  if (window.isEditorActive) {
+    const ed = document.getElementById('main-editor');
+    if (ed) window.pages[window.currentPageIdx] = ed.innerHTML;
+  }
+  goToPage(window.currentPageIdx + 1);
+}
+
+/* ════════════════════════════════════════════════
+   EDITOR
+════════════════════════════════════════════════ */
+function activateEditor() {
+  if (window.isEditorActive) return;
+  window.isEditorActive = true;
+  const ed = document.getElementById('main-editor');
+  ed.contentEditable = 'true';
+  ed.focus();
+  /* Pindahkan kursor ke akhir */
+  const range = document.createRange();
+  const sel   = window.getSelection();
+  range.selectNodeContents(ed);
+  range.collapse(false);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  document.getElementById('toolbar').classList.add('visible');
+  ed.addEventListener('input', onEditorInput);
+  // Simpan kursor awal
+  saveCaretRange();
+  // Update savedRange setiap kali kursor bergerak
+  ed.addEventListener('keyup', saveCaretRange);
+  ed.addEventListener('mouseup', saveCaretRange);
+}
+
+function deactivateEditor() {
+  window.isEditorActive = false;
+  const ed = document.getElementById('main-editor');
+  if (ed) {
+    ed.contentEditable = 'false';
+    ed.removeEventListener('input', onEditorInput);
+    ed.removeEventListener('keyup', saveCaretRange);
+    ed.removeEventListener('mouseup', saveCaretRange);
+  }
+  const tb = document.getElementById('toolbar');
+  if (tb) tb.classList.remove('visible');
+  stopVoice();
+  stopRecord();
+}
+
+function onEditorInput() {
+  const ed = document.getElementById('main-editor');
+  if (!ed || !window.pages) return;
+  window.pages[window.currentPageIdx] = ed.innerHTML;
+  renderDots();
+  scheduleAutoSave();
+}
+
+function fmt(cmd) {
+  if (cmd === 'h2') {
+    document.execCommand('formatBlock', false, 'h3');
+  } else if (cmd === 'quote') {
+    document.execCommand('formatBlock', false, 'blockquote');
+  } else {
+    document.execCommand(cmd, false, null);
+  }
+  document.getElementById('main-editor').focus();
+}
+
+/* ════════════════════════════════════════════════
+   VOICE TO TEXT (Speech Recognition)
+════════════════════════════════════════════════ */
+function toggleVoice() {
+  if (window.isSpeaking) stopVoice();
+  else startVoice();
+}
+
+function startVoice() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert('Browser tidak mendukung Speech Recognition.\nGunakan Chrome/Edge terbaru.');
+    return;
+  }
+  window.speechRec = new SpeechRecognition();
+  window.speechRec.lang = 'id-ID';
+  window.speechRec.continuous = true;
+  window.speechRec.interimResults = true;
+
+  window.speechRec.onresult = (e) => {
+    const ed = document.getElementById('main-editor');
+    let finalText = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) finalText += e.results[i][0].transcript;
+    }
+    if (finalText) {
+      ed.innerText = (ed.innerText || '') + finalText + ' ';
+      onEditorInput();
+    }
+  };
+
+  window.speechRec.onerror = () => { stopVoice(); };
+  window.speechRec.onend = () => { if (window.isSpeaking) window.speechRec.start(); };
+
+  window.speechRec.start();
+  window.isSpeaking = true;
+  activateEditor();
+  const btn = document.getElementById('btn-voice');
+  if (btn) { btn.textContent = '🎙 STOP'; btn.classList.add('recording'); }
+  document.getElementById('voice-indicator')?.classList.add('active');
+}
+
+function stopVoice() {
+  if (window.speechRec) { try { window.speechRec.stop(); } catch(e){} window.speechRec = null; }
+  window.isSpeaking = false;
+  const btn = document.getElementById('btn-voice');
+  if (btn) { btn.textContent = '🎙 STT'; btn.classList.remove('recording'); }
+  document.getElementById('voice-indicator')?.classList.remove('active');
+}
+
+/* ════════════════════════════════════════════════
+   AUDIO RECORDER (Inline at Cursor — sama dengan index.html)
+════════════════════════════════════════════════ */
+function toggleRecord() {
+  if (window.isRecording) stopRecord();
+  else startRecord();
+}
+
+async function startRecord() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // Simpan posisi kursor SEBELUM recording mulai
+    saveCaretRange();
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = async () => {
+      const blob = new Blob(audioChunks, { type: 'audio/webm' });
+      stream.getTracks().forEach(t => t.stop());
+      showStamp();
+      // Upload ke R2
+      const url = await uploadR2(blob, `agenda-audio/rec_${Date.now()}.webm`);
+      if (url) {
+        // Build inline audio block dan sisipkan di posisi kursor tersimpan
+        const uid = 'aud_' + Date.now();
+        const audioBlockHtml = `<div class="inline-audio-block" data-uid="${uid}" data-url="${escHtml(url)}">
+          <span class="iab-icon">🎵</span>
+          <button class="iab-play" onclick="iabToggle(this)" data-uid="${uid}">▶</button>
+          <div class="iab-progress" onclick="iabSeek(event,this)" data-uid="${uid}">
+            <div class="iab-progress-fill" id="iab-fill-${uid}"></div>
+          </div>
+          <span class="iab-time" id="iab-time-${uid}">0:00</span>
+          <button class="iab-del" onclick="this.closest('.inline-audio-block').remove();scheduleAutoSave();" title="Hapus">✕</button>
+        </div>`;
+        insertBlockAtCaret(audioBlockHtml);
+        await saveNote();
+      }
+    };
+    mediaRecorder.start(200);
+    isRecording = true;
+    window.isRecording = true;
+    const btn = document.getElementById('btn-record');
+    if (btn) { btn.textContent = '⏹ STOP'; btn.classList.add('recording'); }
+    document.getElementById('rec-indicator')?.classList.add('active');
+  } catch(e) {
+    alert('Tidak dapat mengakses mikrofon: ' + e.message);
+  }
+}
+
+function stopRecord() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  }
+  isRecording = false;
+  window.isRecording = false;
+  const btn = document.getElementById('btn-record');
+  if (btn) { btn.textContent = '⏺ REC'; btn.classList.remove('recording'); }
+  document.getElementById('rec-indicator')?.classList.remove('active');
+}
+
+/* ════════════════════════════════════════════════
+   INLINE AUDIO BLOCK PLAYER
+════════════════════════════════════════════════ */
+const _iabAudios = {};
+
+function _getIabAudio(uid, url) {
+  if (!_iabAudios[uid]) {
+    const a = new Audio(url);
+    a.ontimeupdate = () => {
+      const fill = document.getElementById('iab-fill-' + uid);
+      const time = document.getElementById('iab-time-' + uid);
+      const dur = a.duration || 0;
+      const cur = a.currentTime || 0;
+      if (fill) fill.style.width = (dur ? (cur/dur*100) : 0) + '%';
+      if (time) time.textContent = fmtTime(cur) + ' / ' + fmtTime(dur);
+    };
+    a.onended = () => {
+      const btn = document.querySelector(`.iab-play[data-uid="${uid}"]`);
+      if (btn) btn.textContent = '▶';
+    };
+    _iabAudios[uid] = a;
+  }
+  return _iabAudios[uid];
+}
+
+function iabToggle(btn) {
+  const block = btn.closest('.inline-audio-block');
+  if (!block) return;
+  const uid = block.dataset.uid;
+  const url = block.dataset.url;
+  const a = _getIabAudio(uid, url);
+  if (a.paused) {
+    Object.values(_iabAudios).forEach(x => { if (x !== a) x.pause(); });
+    document.querySelectorAll('.iab-play').forEach(b => { if (b !== btn) b.textContent = '▶'; });
+    a.play();
+    btn.textContent = '⏸';
+  } else {
+    a.pause();
+    btn.textContent = '▶';
+  }
+}
+
+function iabSeek(e, bar) {
+  const block = bar.closest('.inline-audio-block');
+  if (!block) return;
+  const uid = block.dataset.uid;
+  const url = block.dataset.url;
+  const a = _getIabAudio(uid, url);
+  if (!a.duration) return;
+  const rect = bar.getBoundingClientRect();
+  a.currentTime = ((e.clientX - rect.left) / rect.width) * a.duration;
+}
+
+/* ════════════════════════════════════════════════
+   CASSETTE PLAYER (tetap untuk audio lama dari x_03)
+════════════════════════════════════════════════ */
+function renderCassette(url) {
+  const content = document.getElementById('main-page-content');
+  const existingCassette = content.querySelector('.cassette-player');
+  if (existingCassette) existingCassette.remove();
+
+  const id = 'audio-' + Date.now();
+  const div = document.createElement('div');
+  div.className = 'cassette-player';
+  div.innerHTML = `
+    <audio id="${id}" src="${escHtml(url)}" preload="metadata"></audio>
+    <div class="cassette-label">♫ Rekaman Audio</div>
+    <div class="cassette-reels">
+      <div class="cassette-reel" id="reel-l-${id}"></div>
+      <div class="cassette-reel" id="reel-r-${id}"></div>
+    </div>
+    <div class="cassette-controls">
+      <button class="cassette-btn" id="play-btn-${id}" onclick="togglePlay('${id}')">▶</button>
+      <div class="cassette-progress" onclick="seekAudio('${id}', event)">
+        <div class="cassette-progress-fill" id="prog-${id}"></div>
+      </div>
+      <span class="cassette-time" id="time-${id}">0:00</span>
+    </div>
+  `;
+  content.insertBefore(div, content.querySelector('.paper-editor'));
+
+  const audio = document.getElementById(id);
+  audio.addEventListener('timeupdate', () => updateCassetteProgress(id));
+  audio.addEventListener('ended', () => {
+    document.getElementById('play-btn-' + id).textContent = '▶';
+    document.getElementById('reel-l-' + id).classList.remove('spinning');
+    document.getElementById('reel-r-' + id).classList.remove('spinning');
+  });
+}
+
+function togglePlay(id) {
+  const audio = document.getElementById(id);
+  const btn = document.getElementById('play-btn-' + id);
+  const rl = document.getElementById('reel-l-' + id);
+  const rr = document.getElementById('reel-r-' + id);
+  if (audio.paused) {
+    audio.play();
+    btn.textContent = '⏸';
+    rl.classList.add('spinning');
+    rr.classList.add('spinning');
+  } else {
+    audio.pause();
+    btn.textContent = '▶';
+    rl.classList.remove('spinning');
+    rr.classList.remove('spinning');
+  }
+}
+
+function updateCassetteProgress(id) {
+  const audio = document.getElementById(id);
+  if (!audio || !audio.duration) return;
+  const pct = (audio.currentTime / audio.duration) * 100;
+  const prog = document.getElementById('prog-' + id);
+  const timeEl = document.getElementById('time-' + id);
+  if (prog) prog.style.width = pct + '%';
+  if (timeEl) timeEl.textContent = fmtTime(audio.currentTime) + ' / ' + fmtTime(audio.duration);
+}
+
+function seekAudio(id, e) {
+  const audio = document.getElementById(id);
+  const bar = e.currentTarget;
+  const pct = e.offsetX / bar.offsetWidth;
+  audio.currentTime = pct * audio.duration;
+}
+
+function fmtTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return m + ':' + String(sec).padStart(2, '0');
+}
+
+/* ════════════════════════════════════════════════
+   CARET SAVE / RESTORE
+   (sama persis dengan index.html)
+════════════════════════════════════════════════ */
+let savedRange = null;
+
+function saveCaretRange() {
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount > 0) {
+    const r = sel.getRangeAt(0);
+    const ed = document.getElementById('main-editor');
+    if (ed && ed.contains(r.startContainer)) {
+      savedRange = r.cloneRange();
+      return;
+    }
+  }
+  // Jika tidak ada kursor di editor, arahkan ke akhir editor
+  const ed = document.getElementById('main-editor');
+  if (ed) {
+    const r = document.createRange();
+    r.selectNodeContents(ed);
+    r.collapse(false);
+    savedRange = r;
+  }
+}
+
+function restoreCaretRange() {
+  const ed = document.getElementById('main-editor');
+  if (!ed || !savedRange) return;
+  ed.focus();
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(savedRange.cloneRange());
+}
+
+/* Sisipkan HTML di posisi kursor tersimpan, lalu tambah baris kosong setelahnya */
+function insertBlockAtCaret(html) {
+  const ed = document.getElementById('main-editor');
+  if (!ed) return;
+  restoreCaretRange();
+  const blockHtml = `<div contenteditable="false" class="inline-block-wrapper">${html}</div><div><br></div>`;
+  try {
+    document.execCommand('insertHTML', false, blockHtml);
+  } catch(e) {
+    ed.innerHTML += blockHtml;
+  }
+  // Pindahkan kursor ke setelah blok yang baru disisipkan
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount > 0) {
+    const r = sel.getRangeAt(0);
+    r.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(r);
+  }
+  scheduleAutoSave();
+}
+
+/* ════════════════════════════════════════════════
+   IMAGE UPLOAD & GRID — INLINE AT CURSOR
+   (sama persis dengan index.html)
+════════════════════════════════════════════════ */
+let pendingImgFiles = [];
+let imgGridCols = 1;
+let camStream = null;
+
+function openImgModal() {
+  saveCaretRange(); // Simpan kursor sebelum modal dibuka
+  pendingImgFiles = [];
+  imgGridCols = imgGridCols || 1;
+  selectGrid(imgGridCols);
+  updateDzPreview();
+  document.getElementById('img-upload-progress').classList.remove('show');
+  document.getElementById('img-modal').classList.add('open');
+}
+
+function closeImgModal() {
+  document.getElementById('img-modal').classList.remove('open');
+  pendingImgFiles = [];
+  updateDzPreview();
+}
+
+function selectGrid(n) {
+  imgGridCols = n;
+  [1,2,3,4].forEach(i => {
+    document.getElementById('gpb-' + i)?.classList.toggle('selected', i === n);
+  });
+}
+
+function triggerImgFileInput() {
+  const input = document.getElementById('img-file-input');
+  input.multiple = imgGridCols > 1;
+  input.value = '';
+  input.click();
+}
+
+function onImgFileChange(e) {
+  addPendingImgFiles(Array.from(e.target.files));
+}
+
+function addPendingImgFiles(files) {
+  const max = imgGridCols;
+  const remaining = max - pendingImgFiles.length;
+  const toAdd = files.filter(f => f.type.startsWith('image/')).slice(0, remaining);
+  pendingImgFiles = pendingImgFiles.concat(toAdd);
+  updateDzPreview();
+}
+
+function updateDzPreview() {
+  const hint = document.getElementById('dz-hint');
+  const preview = document.getElementById('dz-preview');
+  if (!hint || !preview) return;
+  if (pendingImgFiles.length === 0) {
+    hint.style.display = '';
+    preview.innerHTML = '';
+  } else {
+    hint.style.display = 'none';
+    preview.innerHTML = '';
+    pendingImgFiles.forEach(f => {
+      const img = document.createElement('img');
+      img.className = 'dz-thumb';
+      img.src = URL.createObjectURL(f);
+      preview.appendChild(img);
+    });
+  }
+}
+
+function onDzDragOver(e) {
+  e.preventDefault();
+  document.getElementById('img-drop-zone').classList.add('dragover');
+}
+function onDzDragLeave() {
+  document.getElementById('img-drop-zone').classList.remove('dragover');
+}
+function onDzDrop(e) {
+  e.preventDefault();
+  document.getElementById('img-drop-zone').classList.remove('dragover');
+  addPendingImgFiles(Array.from(e.dataTransfer.files));
+}
+
+async function uploadImagesToR2(files) {
+  const progress = document.getElementById('img-upload-progress');
+  const bar = document.getElementById('iup-bar');
+  const txt = document.getElementById('iup-txt');
+  progress.classList.add('show');
+  const urls = [];
+  for (let i = 0; i < files.length; i++) {
+    txt.textContent = `Mengunggah ${i+1}/${files.length}...`;
+    bar.style.width = Math.round((i / files.length) * 100) + '%';
+    const ext = files[i].name.split('.').pop() || 'jpg';
+    try {
+      const url = await uploadR2(files[i], `agenda/img_${Date.now()}_${i}.${ext}`);
+      if (url) urls.push(url);
+    } catch(e) { console.error('Image upload error', e); }
+    bar.style.width = Math.round(((i+1) / files.length) * 100) + '%';
+  }
+  txt.textContent = 'Selesai!';
+  return urls;
+}
+
+function buildImgGridHtml(urls, cols) {
+  const uid = 'ig_' + Date.now();
+  const cells = urls.map((url, i) => `
+    <div class="note-img-cell" onclick="openLightbox('${escHtml(url)}')">
+      <img src="${escHtml(url)}" alt="Gambar ${i+1}">
+      <button class="img-del" onclick="event.stopPropagation();this.closest('.note-img-grid').remove();scheduleAutoSave();" title="Hapus">✕</button>
+    </div>`).join('');
+  return `<div class="note-img-grid grid-${cols}" data-uid="${uid}">${cells}</div>`;
+}
+
+async function confirmImgUpload() {
+  if (pendingImgFiles.length === 0) { closeImgModal(); return; }
+  const btn = document.getElementById('img-confirm-btn');
+  btn.disabled = true; btn.textContent = 'Mengunggah...';
+  const urls = await uploadImagesToR2(pendingImgFiles);
+  btn.disabled = false; btn.textContent = 'Sisipkan Gambar';
+  closeImgModal();
+  if (urls.length > 0) {
+    const gridHtml = buildImgGridHtml(urls, imgGridCols);
+    insertBlockAtCaret(gridHtml);
+  }
+}
+
+/* Lightbox */
+function openLightbox(url) {
+  document.getElementById('lb-img').src = url;
+  document.getElementById('img-lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('img-lightbox').classList.remove('open');
+  document.getElementById('lb-img').src = '';
+}
+
+/* Camera untuk gambar */
+async function openImgCamera() {
+  saveCaretRange();
+  closeImgModal();
+  document.getElementById('cam-modal').classList.add('open');
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width:{ideal:1280}, height:{ideal:960} },
+      audio: false
+    });
+    document.getElementById('cam-video').srcObject = camStream;
+  } catch(e) {
+    alert('Kamera tidak bisa diakses: ' + e.message);
+    closeImgCamera();
+  }
+}
+
+function closeImgCamera() {
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  document.getElementById('cam-modal').classList.remove('open');
+  document.getElementById('cam-video').srcObject = null;
+}
+
+async function snapImgPhoto() {
+  const video = document.getElementById('cam-video');
+  const canvas = document.getElementById('cam-canvas');
+  canvas.width  = video.videoWidth  || 1280;
+  canvas.height = video.videoHeight || 960;
+  canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+  canvas.toBlob(async (blob) => {
+    if (!blob) return;
+    closeImgCamera();
+    const file = new File([blob], `foto_${Date.now()}.jpg`, { type: 'image/jpeg' });
+    openImgModal();
+    pendingImgFiles = [file];
+    updateDzPreview();
+  }, 'image/jpeg', 0.88);
+}
+
+/* ════════════════════════════════════════════════
+   SWIPE (Mobile)
+════════════════════════════════════════════════ */
+function setupSwipe() {
+  let startX = 0;
+  const el = document.getElementById('page-spread');
+  el.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+  el.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 50) {
+      if (dx < 0) nextPage();
+      else prevPage();
+    }
+  });
+}
+
+/* ════════════════════════════════════════════════
+   UTILS
+════════════════════════════════════════════════ */
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function stripHtml(html) {
+  const d = document.createElement('div'); d.innerHTML = html; return d.innerText || '';
+}
+function nowISO() { return new Date().toISOString(); }
+function formatDate(iso) {
+  if (!iso) return '';
+  try {
+    return new Intl.DateTimeFormat('id-ID', { day:'numeric', month:'short', year:'numeric' }).format(new Date(iso));
+  } catch(e) { return iso.slice(0,10); }
+}
+function showStamp() {
+  const s = document.getElementById('save-stamp');
+  s.classList.add('show');
+  setTimeout(() => s.classList.remove('show'), 2000);
+}
+</script>
+</body>
+</html>
