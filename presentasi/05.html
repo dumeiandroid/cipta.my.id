@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Career Ready: Persiapan Dini Mahasiswa Tingkat Akhir</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            /* Palette Warna Premium */
+            --navy: #0F172A;
+            --navy-light: #1E293B;
+            --teal: #14B8A6;
+            --amber: #F59E0B;
+            --indigo: #6366F1;
+            --soft-white: #F8FAFC;
+            --text-main: #F1F5F9;
+            --text-muted: #94A3B8;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            
+            /* Transisi & Animasi */
+            --ease: cubic-bezier(0.76, 0, 0.24, 1);
+            --transition-speed: 0.6s;
+
+            /* Default Workspace Bound (Landscape) */
+            --slide-width: 100vw;
+            --slide-height: 100vh;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #090d16;
+            color: var(--text-main);
+            overflow: hidden; 
+            height: 100vh;
+            width: 100vw;
+            touch-action: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Wrapper luar simulasi orientasi */
+        #workspace {
+            width: var(--slide-width);
+            height: var(--slide-height);
+            overflow: hidden;
+            position: relative;
+            background-color: var(--navy);
+            transition: width 0.5s var(--ease), height 0.5s var(--ease);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Arsitektur Deck (Diatur dinamis via JS) */
+        #deck {
+            display: flex;
+            height: 100%;
+            transition: transform var(--transition-speed) var(--ease);
+            will-change: transform;
+        }
+
+        .slide {
+            width: var(--slide-width);
+            flex: 0 0 var(--slide-width);
+            height: 100%;
+            position: relative;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+            background-color: var(--navy);
+        }
+
+        /* Background Decor */
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.04) 0%, transparent 50%),
+                        radial-gradient(circle at 90% 80%, rgba(20, 184, 166, 0.04) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Progress Bar */
+        #progress-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: rgba(255,255,255,0.1);
+            z-index: 1000;
+        }
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--teal), var(--indigo));
+            transition: width 0.3s ease;
+        }
+
+        /* Typography */
+        h1, h2 { font-family: 'Playfair Display', serif; }
+        em { font-style: italic; color: var(--teal); font-weight: 600; }
+
+        .slide-title {
+            font-size: clamp(2rem, 4.2vw, 3.5rem);
+            margin-bottom: 20px;
+            line-height: 1.15;
+            z-index: 1;
+        }
+
+        .slide-desc {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            max-width: 750px;
+            margin-bottom: 40px;
+            z-index: 1;
+            line-height: 1.6;
+        }
+
+        /* Layouts */
+        .two-column {
+            display: flex;
+            gap: 60px;
+            align-items: center;
+            z-index: 1;
+            width: 100%;
+        }
+        .col-visual { flex: 1; display: flex; justify-content: center; align-items: center; }
+        .col-content { flex: 1; }
+
+        /* Pengganti Gambar Utama (Picsum / Unsplash) */
+        .img-fluid-presentation {
+            width: 100%;
+            max-width: 480px;
+            height: 320px;
+            object-fit: cover;
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            transition: transform 0.5s ease;
+        }
+        .img-fluid-presentation:hover {
+            transform: scale(1.02);
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .card-grid-flow {
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 20px; 
+            width: 100%; 
+            z-index: 1;
+        }
+
+        .card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 32px;
+            border-radius: 24px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--teal);
+            background: rgba(255,255,255,0.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        /* =========================================================================
+           ATURAN ISOLASI DAN KEAMANAN SVG (Mencegah Gepeng & Hilang)
+           ========================================================================= */
+        svg {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            flex-shrink: 0 !important; /* Kunci bentuk: anti-gepeng */
+        }
+        svg path, svg circle, svg rect, svg polygon, svg polyline {
+            fill: none !important; /* Hapus blok warna hitam internal */
+        }
+
+        /* Ikon Kecil SVG Di Dalam Kartu */
+        .svg-icon { 
+            width: 40px; 
+            height: 40px; 
+            stroke: var(--teal); 
+            stroke-width: 2; 
+            margin-bottom: 15px; 
+            display: block;
+        }
+
+        /* Animasi Konten */
+        .animate-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s var(--ease);
+        }
+        .active .animate-in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Kontrol Navigasi */
+        .nav-btn {
+            position: absolute;
+            bottom: 40px;
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            background: var(--navy-light);
+            border: 1px solid var(--glass-border);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background: var(--indigo); transform: scale(1.1); }
+        .nav-btn.hidden { opacity: 0; pointer-events: none; }
+        #prev-btn { left: 40px; }
+        #next-btn { right: 40px; }
+
+        /* Dots Indicator (Generated via JS) */
+        #dots-container {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+        .dot {
+            width: 8px; height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            transition: all 0.4s var(--ease);
+            cursor: pointer;
+        }
+        .dot.active { width: 32px; background: var(--teal); }
+
+        /* Top Control Bar (Hover Area Detector) */
+        .top-ctrl-wrapper {
+            position: fixed;
+            top: 0; right: 0;
+            padding: 30px 30px 60px 100px;
+            z-index: 1000;
+            background: transparent;
+        }
+        .top-ctrl { 
+            display: flex; gap: 12px; opacity: 0; 
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none; 
+        }
+        .top-ctrl-wrapper:hover .top-ctrl {
+            opacity: 1; transform: translateY(0); pointer-events: auto; 
+        }
+
+        .ctrl-btn { height: 44px; padding: 0 14px; background: var(--navy-light); border: 1px solid var(--glass-border); border-radius: 10px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; font-size: 0.85rem; font-weight: 600; transition: 0.3s; }
+        .ctrl-btn:hover { background: var(--indigo); border-color: var(--teal); }
+
+        /* Sidebar Navigation Drawer */
+        #sidebar { position: fixed; top: 0; right: -400px; width: 400px; height: 100%; background: var(--navy); border-left: 1px solid var(--glass-border); z-index: 2000; transition: right 0.5s var(--ease); padding: 40px; display: flex; flex-direction: column; overflow-y: auto; }
+        #sidebar.open { right: 0; }
+        #backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+        #backdrop.open { opacity: 1; pointer-events: auto; }
+        
+        .thumb-list { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
+        .thumb { display: flex; align-items: center; gap: 15px; padding: 12px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; cursor: pointer; transition: 0.3s; }
+        .thumb:hover { background: var(--navy-light); border-color: var(--teal); }
+        .thumb p { font-size: 0.85rem; font-weight: 500; }
+
+        /* Toast Message */
+        #toast { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); background: var(--indigo); color: white; padding: 12px 24px; border-radius: 30px; font-size: 0.9rem; opacity: 0; transition: 0.3s; z-index: 5000; pointer-events: none; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+
+        /* =========================================================================
+           PORTRAIT ENGINE CORE - OPTIMISASI TOTAL (BEBAS OVERFLOW & DESIGN PUNCAK)
+           ========================================================================= */
+        .forced-portrait .slide, 
+        @media (orientation: portrait) {
+            .slide { 
+                padding: 40px 24px 90px 24px !important; 
+                justify-content: flex-start !important; 
+            }
+
+            .slide-title { 
+                font-size: min(2.6vh, 1.5rem) !important; 
+                margin-bottom: 8px !important; 
+                text-align: center !important;
+                line-height: 1.25 !important;
+            }
+            
+            .slide-desc { 
+                font-size: min(1.45vh, 0.86rem) !important; 
+                max-width: 100% !important; 
+                margin-bottom: 16px !important; 
+                text-align: center !important;
+                line-height: 1.45 !important;
+            }
+            
+            .two-column { 
+                flex-direction: column !important; 
+                text-align: center !important; 
+                gap: 12px !important; 
+                width: 100% !important;
+            }
+            
+            .col-content { width: 100% !important; }
+            
+            .col-visual { 
+                order: -1 !important; 
+                max-height: 15vh !important; 
+                width: 100% !important;
+                margin-bottom: 5px !important;
+            }
+            
+            /* Gambar Utama menyusut proporsional di Mobile Portrait */
+            .img-fluid-presentation {
+                max-height: 14vh !important;
+                width: auto !important;
+                border-radius: 14px !important;
+                margin: 0 auto !important;
+            }
+            
+            .card-grid, .card-grid-flow { 
+                grid-template-columns: 1fr !important; 
+                gap: 8px !important; 
+                width: 100% !important;
+            }
+            
+            .card { padding: 10px 14px !important; border-radius: 12px !important; }
+            .card h3, .card h4, .card h5 { font-size: min(1.8vh, 0.95rem) !important; margin-bottom: 2px !important; }
+            .card p { font-size: min(1.35vh, 0.78rem) !important; line-height: 1.35 !important; }
+            
+            .svg-icon { width: 22px !important; height: 22px !important; margin-bottom: 2px !important; margin-left: auto; margin-right: auto; }
+
+            /* Penataan Khusus List & Grid Flow */
+            .slide[id="slide-1"] div[style*="padding-top: 30px"] { padding-top: 10px !important; gap: 24px !important; justify-content: center !important; }
+            .slide[id="slide-4"] ul { font-size: min(1.45vh, 0.82rem) !important; text-align: left !important; display: inline-block !important; width: 100% !important; }
+            .slide[id="slide-4"] li { margin-bottom: 4px !important; }
+            .slide[id="slide-10"] .card { flex-direction: column !important; text-align: center !important; gap: 4px !important; }
+            .slide[id="slide-10"] .card div[style*="font-size: 4rem"] { font-size: 2rem !important; }
+
+            /* Transformasi Tabel Jalan/Roadmap di Mobile */
+            .slide[id="slide-14"] table, .slide[id="slide-14"] tr, .slide[id="slide-14"] td { display: block !important; width: 100% !important; padding: 4px !important; }
+            .slide[id="slide-14"] td[style*="width: 25%"] { text-align: center !important; font-size: min(1.6vh, 0.85rem) !important; font-weight: bold; color: var(--teal) !important; }
+            .slide[id="slide-14"] td:not([style*="width: 25%"]) { font-size: min(1.35vh, 0.78rem) !important; color: var(--text-muted) !important; text-align: center !important; }
+            .slide[id="slide-14"] tr { border-bottom: 1px solid var(--glass-border) !important; padding-bottom: 6px !important; margin-bottom: 6px !important; }
+            .slide[id="slide-14"] .card { padding: 8px !important; }
+
+            /* Kontrol UI Adaptasi Mobile */
+            .top-ctrl-wrapper { padding: 12px !important; }
+            .top-ctrl { opacity: 1 !important; transform: translateY(0) !important; pointer-events: auto !important; }
+            .ctrl-btn span { display: none; } 
+            .nav-btn { bottom: 12px; width: 42px; height: 42px; }
+            #prev-btn { left: 12px; } #next-btn { right: 12px; }
+            #dots-container { bottom: 20px; gap: 6px; }
+            .dot { width: 6px; height: 6px; } .dot.active { width: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="progress-container"><div id="progress-bar"></div></div>
+
+    <div class="top-ctrl-wrapper">
+        <div class="top-ctrl">
+            <button class="ctrl-btn" onclick="togglePortraitSim()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                <span>Ubah Orientasi</span>
+            </button>
+            <button class="ctrl-btn" onclick="toggleFullscreen()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                <span>Layar Penuh</span>
+            </button>
+            <button class="ctrl-btn" onclick="toggleSidebar()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                <span>Menu Materi</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="workspace">
+        <div id="deck">
+
+            <div class="slide" id="slide-1">
+                <div class="two-column">
+                    <div class="col-content">
+                        <div style="background: rgba(20, 184, 166, 0.1); color: var(--teal); padding: 6px 16px; border-radius: 20px; display: inline-block; font-size: 0.85rem; font-weight: 600; margin-bottom: 20px;" class="animate-in">WORKSHOP PEMBEKALAN</div>
+                        <h1 class="slide-title animate-in" style="font-size: clamp(2.2rem, 5vw, 4rem);">Career Ready:<br>Persiapan Dini Mahasiswa <em>Tingkat Akhir</em></h1>
+                        <p class="slide-desc animate-in">Strategi taktis membangun portofolio, menembus pasar kerja global, dan memenangkan kompetisi industri sejak bangku kuliah.</p>
+                        <div style="display: flex; gap: 40px; padding-top: 30px;" class="animate-in">
+                            <div><p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Narasumber</p><p style="font-weight: 600; font-size: 1.05rem;">Tim Psikolog Lidan</p></div>
+                            <div><p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Penyelenggara</p><p style="font-weight: 600; font-size: 1.05rem;">PT Lidan Indah Abadi</p></div>
+                        </div>
+                    </div>
+                    <div class="col-visual animate-in">
+                        <img crossorigin="anonymous" src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&width=600&auto=format&fit=crop" class="img-fluid-presentation" alt="Career Presentation">
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-2">
+                <h2 class="slide-title animate-in">Kenyataan Pahit <em>Pasar Kerja</em> Saat Ini</h2>
+                <p class="slide-desc animate-in">Angka kelulusan terus naik, namun lapangan kerja formal bergerak selektif. Mengapa ijazah saja tidak lagi cukup?</p>
+                <div class="two-column">
+                    <div class="col-content">
+                        <div class="card animate-in" style="margin-bottom: 16px;">
+                            <h3 style="color: var(--amber); margin-bottom: 8px;">Disrupsi Keterampilan</h3>
+                            <p>Lebih dari 40% keahlian inti yang dibutuhkan industri telah berubah dalam 3 tahun terakhir akibat digitalisasi masif.</p>
+                        </div>
+                        <div class="card animate-in">
+                            <h3 style="color: var(--teal); margin-bottom: 8px;">Kesenjangan Ekspektasi</h3>
+                            <p>Perusahaan mencari kandidat dengan kesiapan adaptasi tinggi, kerja tim teruji, dan kepemimpinan fundamental.</p>
+                        </div>
+                    </div>
+                    <div class="col-visual animate-in">
+                        <img crossorigin="anonymous" src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&width=600&auto=format&fit=crop" class="img-fluid-presentation" alt="Job Market Reality">
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-3">
+                <h2 class="slide-title animate-in" style="text-align: center; margin-bottom: 10px;">3 Pilar Utama <em>Kesiapan Karir</em></h2>
+                <p class="slide-desc animate-in" style="text-align: center; margin-left: auto; margin-right: auto;">Fondasi mutlak yang wajib dipetakan dan dikuasai sebelum melepas status mahasiswa.</p>
+                <div class="card-grid">
+                    <div class="card animate-in">
+                        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <h3 style="margin-bottom: 10px; font-family: 'Playfair Display', serif;">1. Kapasitas Kognitif</h3>
+                        <p>Kemampuan penyelesaian masalah kompleks, analisa data secara kritis, logika bernalar tinggi, serta ketepatan pengambilan keputusan.</p>
+                    </div>
+                    <div class="card animate-in" style="border-color: var(--indigo);">
+                        <svg class="svg-icon" style="stroke: var(--indigo);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <h3 style="margin-bottom: 10px; font-family: 'Playfair Display', serif;">2. Kemandirian Sosial</h3>
+                        <p>Kemampuan komunikasi persuasif, manajemen kecerdasan emosional (EQ), adaptabilitas budaya kerja, dan navigasi kolaborasi lintas fungsi.</p>
+                    </div>
+                    <div class="card animate-in" style="border-color: var(--amber);">
+                        <svg class="svg-icon" style="stroke: var(--amber);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                            <polyline points="2 17 12 22 22 17"></polyline>
+                            <polyline points="2 12 12 17 22 12"></polyline>
+                        </svg>
+                        <h3 style="margin-bottom: 10px; font-family: 'Playfair Display', serif;">3. Orientasi Karir</h3>
+                        <p>Kejelasan visi masa depan, sinkronisasi antara minat kerja dengan potensi terdalam, serta kegigihan mengejar target profesi.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-4">
+                <div class="two-column">
+                    <div class="col-visual animate-in">
+                        <img crossorigin="anonymous" src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&width=600&auto=format&fit=crop" class="img-fluid-presentation" alt="Cognitive Skills">
+                    </div>
+                    <div class="col-content">
+                        <div style="color: var(--teal); font-weight: bold; font-size: 0.9rem; letter-spacing: 1px; margin-bottom: 10px;" class="animate-in">PILAR PERTAMA</div>
+                        <h2 class="slide-title animate-in">Mengasah <em>Kapasitas Kognitif</em></h2>
+                        <p class="slide-desc animate-in">Industri modern tidak lagi membayar apa yang Anda ketahui, melainkan membayar apa yang bisa Anda lakukan dari apa yang Anda ketahui.</p>
+                        <ul class="animate-in" style="list-style: none; color: var(--text-main);">
+                            <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--teal); font-weight: bold;">✔</span> <strong>Kemampuan Logika Numerik:</strong> Membaca tren pergerakan metrik data perusahaan.</li>
+                            <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--teal); font-weight: bold;">✔</span> <strong>Berpikir Abstrak:</strong> Menemukan solusi out-of-the-box di tengah ketidakpastian.</li>
+                            <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--teal); font-weight: bold;">✔</span> <strong>Ketahanan Kerja:</strong> Mempertahankan fokus konsentrasi tinggi di bawah tekanan beban waktu.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-5">
+                <h2 class="slide-title animate-in" style="text-align: center; margin-bottom: 10px;">Mengunci Keluwesan <em>Sosial Emosional</em></h2>
+                <p class="slide-desc animate-in" style="text-align: center; margin-left: auto; margin-right: auto;">Kecerdasan intelektual membawa Anda wawancara kerja, namun kecerdasan emosional yang meloloskan Anda.</p>
+                <div class="card-grid">
+                    <div class="card animate-in">
+                        <h4 style="color: var(--indigo); font-size: 1.2rem; margin-bottom: 8px;">Aspek Dominansi</h4>
+                        <p>Mengambil kendali inisiatif kepemimpinan proyek tanpa harus menunggu instruksi atasan secara kaku.</p>
+                    </div>
+                    <div class="card animate-in">
+                        <h4 style="color: var(--teal); font-size: 1.2rem; margin-bottom: 8px;">Aspek Sinergi</h4>
+                        <p>Membina relasi interpersonal yang harmonis serta meredam friksi konflik internal tim secara elegan.</p>
+                    </div>
+                    <div class="card animate-in">
+                        <h4 style="color: var(--amber); font-size: 1.2rem; margin-bottom: 8px;">Aspek Penyesuaian</h4>
+                        <p>Kelenturan mental menghadapi perubahan kebijakan, arahan, atau struktur tim kerja eksternal baru.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-6">
+                <div class="two-column">
+                    <div class="col-content">
+                        <div style="color: var(--amber); font-weight: bold; font-size: 0.9rem; letter-spacing: 1px; margin-bottom: 10px;" class="animate-in">PILAR KETIGA</div>
+                        <h2 class="slide-title animate-in">Menajamkan Arah <em>Orientasi Karir</em></h2>
+                        <p class="slide-desc animate-in">Menghindari jebakan "asal kerja". Sukses karir jangka panjang dibentuk dari sinkronisasi bakat kognitif dan ketertarikan minat.</p>
+                        <div class="card animate-in" style="background: rgba(245, 158, 11, 0.03); border-color: rgba(245, 158, 11, 0.1);">
+                            <p style="font-style: italic; line-height: 1.6;">"Seseorang yang bekerja sesuai minat dominannya memiliki tingkat retensi produktivitas 3x lipat lebih tinggi dan terhindar dari burnout dini dalam dunia kerja professional."</p>
+                        </div>
+                    </div>
+                    <div class="col-visual animate-in">
+                        <img crossorigin="anonymous" src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&width=600&auto=format&fit=crop" class="img-fluid-presentation" alt="Career Path Selection">
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-7">
+                <h2 class="slide-title animate-in" style="text-align: center; margin-bottom: 10px;">Metodologi Pemetaan <em>Profil Karir</em></h2>
+                <p class="slide-desc animate-in" style="text-align: center; margin-left: auto; margin-right: auto;">Guna mendiagnosa kesiapan mahasiswa secara presisi, asesmen psikologi formal mengukur parameter komprehensif berikut:</p>
+                <div class="card-grid">
+                    <div class="card animate-in">
+                        <h4 style="color: var(--teal); margin-bottom: 6px;">Tes Inteligensi Terapan</h4>
+                        <p>Menguji penalaran verbal, kecepatan berhitung numerik, fleksibilitas berpikir spasial, dan daya ingat.</p>
+                    </div>
+                    <div class="card animate-in">
+                        <h4 style="color: var(--indigo); margin-bottom: 6px;">Inventori Kepribadian</h4>
+                        <p>Melihat kecenderungan gaya kepemimpinan, kerangka kerja sama, stabilitas emosi, dan motivasi berprestasi.</p>
+                    </div>
+                    <div class="card animate-in">
+                        <h4 style="color: var(--amber); margin-bottom: 6px;">Skala Minat Industri</h4>
+                        <p>Mengidentifikasi ketertarikan spesifik bidang kerja utama seperti teknologi, operasional, kreatif, atau bisnis finansial.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-8">
+                <div class="two-column">
+                    <div class="col-visual animate-in">
+                        <img crossorigin="anonymous" src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&width=600&auto=format&fit=crop" class="img-fluid-presentation" alt="Data Analytics Integration">
+                    </div>
+                    <div class="col-content">
+                        <h2 class="slide-title animate-in">Sinkronisasi <em>Minat & Karir</em> Masif</h2>
+                        <p class="slide-desc animate-in">Hasil klasterisasi data membantu kampus merancang modul pengayaan kelas praktis yang tertarget sesuai rumpun minat terbesar mahasiswa.</p>
+                        <div style="display: flex; gap: 20px;" class="animate-in">
+                            <div style="flex: 1; padding: 16px; background: var(--glass); border-left: 4px solid var(--teal); border-radius: 4px 12px 12px 4px;">
+                                <div style="font-size: 1.8rem; font-weight: bold; color: var(--teal);">74%</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Mahasiswa Salah Memilih Rumpun Magang Awal</div>
+                            </div>
+                            <div style="flex: 1; padding: 16px; background: var(--glass); border-left: 4px solid var(--indigo); border-radius: 4px 12px 12px 4px;">
+                                <div style="font-size: 1.8rem; font-weight: bold; color: var(--indigo);">89%</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Mendongkrak Kepercayaan Diri Pasca Konseling</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-9">
+                <h2 class="slide-title animate-in">Membangun <em>Personal Branding</em> Bernilai Tinggi</h2>
+                <p class="slide-desc animate-in">Portofolio digital Anda adalah pengganti etalase resume masa kini. Publikasikan keahlian Anda agar industri yang mencari Anda.</p>
+                <div class="two-column">
+                    <div class="col-content">
+                        <div style="margin-bottom: 24px;" class="animate-in">
+                            <h3 style="color: var(--teal); font-size: 1.15rem; margin-bottom: 6px;">Optimasi LinkedIn Profesional</h3>
+                            <p style="font-size: 0.95rem; color: var(--text-muted);">Tulis headline berbasis nilai kontribusi nyata, sertakan rangkuman keahlian, dan unggah sertifikasi kompetensi formal.</p>
+                        </div>
+                        <div class="animate-in">
+                            <h3 style="color: var(--indigo); font-size: 1.15rem; margin-bottom: 6px;">Gudang Studi Kasus Projek</h3>
+                            <p style="font-size: 0.95rem; color: var(--text-muted);">Dokumentasikan proses pemecahan masalah dari projek riset, magang, atau kompetisi kampus ke platform terbuka.</p>
+                        </div>
+                    </div>
+                    <div class="col-visual animate-in">
+                        <img crossorigin="anonymous" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&width=600&auto=format&fit=crop" class="img-fluid-presentation" alt="Professional Networking">
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-10">
+                <h2 class="slide-title animate-in" style="text-align: center; margin-bottom: 10px;">Menguasai Teknik Wawancara <em>Model STAR</em></h2>
+                <p class="slide-desc animate-in" style="text-align: center; margin-left: auto; margin-right: auto;">Struktur narasi jawaban logis teruji yang disukai oleh para perekrut korporasi multinasional.</p>
+                <div class="card-grid-flow">
+                    <div class="card animate-in" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="font-size: 3rem; font-weight: 800; color: rgba(255,255,255,0.05); line-height: 1;">S</div>
+                        <h4 style="color: var(--teal);">Situation</h4>
+                        <p style="font-size: 0.85rem;">Gambarkan latar belakang konflik/tantangan projek nyata yang Anda hadapi.</p>
+                    </div>
+                    <div class="card animate-in" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="font-size: 3rem; font-weight: 800; color: rgba(255,255,255,0.05); line-height: 1;">T</div>
+                        <h4 style="color: var(--indigo);">Task</h4>
+                        <p style="font-size: 0.85rem;">Jelaskan tanggung jawab utama serta target objektif yang wajib diraih.</p>
+                    </div>
+                    <div class="card animate-in" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="font-size: 3rem; font-weight: 800; color: rgba(255,255,255,0.05); line-height: 1;">A</div>
+                        <h4 style="color: var(--amber);">Action</h4>
+                        <p style="font-size: 0.85rem;">Urai langkah-langkah taktis konkret yang Anda lakukan demi memecahkan masalah.</p>
+                    </div>
+                    <div class="card animate-in" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="font-size: 3rem; font-weight: 800; color: rgba(255,255,255,0.05); line-height: 1;">R</div>
+                        <h4 style="color: var(--text-main);">Result</h4>
+                        <p style="font-size: 0.85rem;">Sebutkan hasil akhir kuantitatif berbasis angka perubahan yang sukses dicapai.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-11">
+                <h2 class="slide-title animate-in" style="text-align: center; margin-bottom: 10px;">Aksi Kolektif <em>Pendampingan Kampus</em></h2>
+                <p class="slide-desc animate-in" style="text-align: center; margin-left: auto; margin-right: auto;">Peran strategis universitas dalam menjembatani masa transisi dunia akademik ke korporasi.</p>
+                <div class="card-grid">
+                    <div class="card animate-in">
+                        <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--teal); margin-bottom: 12px;"></div>
+                        <h4 style="margin-bottom: 6px;">Kurikulum Berbasis Kompetensi</h4>
+                        <p>Mengintegrasikan studi kasus bisnis riil terkini ke dalam tugas mata kuliah reguler di kelas.</p>
+                    </div>
+                    <div class="card animate-in">
+                        <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--indigo); margin-bottom: 12px;"></div>
+                        <h4 style="margin-bottom: 6px;">Konseling Karir Terpimpin</h4>
+                        <p>Fasilitas konseling berkala pasca psikotes guna membedah arah karir personal mahasiswa.</p>
+                    </div>
+                    <div class="card animate-in">
+                        <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--amber); margin-bottom: 12px;"></div>
+                        <h4 style="margin-bottom: 6px;">Kemitraan Strategis Industri</h4>
+                        <p>Membuka jalur khusus program magang terakreditasi, bursa kerja eksklusif, dan kuliah umum praktisi.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-12">
+                <div class="two-column">
+                    <div class="col-content">
+                        <h2 class="slide-title animate-in">Kekuatan Seni <em>Jejaring Kerja</em></h2>
+                        <p class="slide-desc animate-in">Lebih dari 70% lowongan posisi level strategis tidak pernah diiklankan secara umum. Pintu peluang itu dibuka lewat jaringan relasi terpercaya.</p>
+                        <div class="card animate-in">
+                            <p style="font-size: 0.95rem; color: var(--text-main); font-weight: 500;">"Your network is your net worth. Jangan hanya membangun relasi saat Anda butuh pekerjaan. Bangunlah relasi jauh sebelumnya dengan tulus berbagi nilai kemanfaatan."</p>
+                        </div>
+                    </div>
+                    <div class="col-visual animate-in">
+                        <img crossorigin="anonymous" src="https://images.unsplash.com/photo-1515187029135-18ee286d815b?q=80&width=600&auto=format&fit=crop" class="img-fluid-presentation" alt="Networking Events">
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-13">
+                <div class="two-column">
+                    <div class="col-visual animate-in">
+                        <img crossorigin="anonymous" src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&width=600&auto=format&fit=crop" class="img-fluid-presentation" alt="Modern Team Adaptive Work">
+                    </div>
+                    <div class="col-content">
+                        <h2 class="slide-title animate-in">Mentalitas Pembelajar: <em>Agilitas Mutlak</em></h2>
+                        <p class="slide-desc animate-in">Kunci utama agar bertahan di tengah gempuran otomatisasi AI adalah kecepatan melepas ilmu lama yang usang (unlearn) dan mempelajari keahlian baru (relearn).</p>
+                        <div style="border-left: 2px solid var(--teal); padding-left: 20px;" class="animate-in">
+                            <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-muted);">Karyawan lincah tidak akan cemas menghadapi dinamika perubahan tren inovasi, sebab mereka memandang tantangan berat sebagai peluang pertumbuhan kapasitas profesional diri.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-14">
+                <h2 class="slide-title animate-in" style="text-align: center; margin-bottom: 10px;">Garis Waktu Kesiapan <em>Menuju Industri</em></h2>
+                <p class="slide-desc animate-in" style="text-align: center; margin-left: auto; margin-right: auto;">Peta langkah operasional taktis mahasiswa tingkat akhir menyusun strategi karir unggul:</p>
+                <div class="card animate-in" style="background: var(--glass); width: 100%; border-radius: 16px;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <th style="padding: 12px 16px; color: var(--teal); font-size: 0.9rem;">Fase Waktu</th>
+                                <th style="padding: 12px 16px; color: var(--teal); font-size: 0.9rem;">Fokus Agenda Kerja Utama</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 12px 16px; font-weight: 600; width: 25%;">Bulan 1 - 2</td>
+                                <td style="padding: 12px 16px; font-size: 0.95rem;">Pelaksanaan Asesmen Psikologi Kesiapan Karir menyeluruh dan bedah peta bakat kognitif mahasiswa.</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 12px 16px; font-weight: 600;">Bulan 3 - 4</td>
+                                <td style="padding: 12px 16px; font-size: 0.95rem;">Penyusunan portofolio digital, optimalisasi LinkedIn, dan pelatihan intensif teknik wawancara STAR.</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px 16px; font-weight: 600;">Bulan 5 - 6</td>
+                                <td style="padding: 12px 16px; font-size: 0.95rem;">Aplikasi magang terarah, perluasan jejaring alumni mentor, dan transisi mulus menuju rekrutmen kerja formal.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-15">
+                <div class="two-column">
+                    <div class="col-content">
+                        <div style="background: rgba(99, 102, 241, 0.15); color: var(--indigo); padding: 6px 16px; border-radius: 20px; display: inline-block; font-size: 0.85rem; font-weight: 600; margin-bottom: 20px;" class="animate-in">SIAP MENANGKAP PELUANG</div>
+                        <h2 class="slide-title animate-in" style="font-size: clamp(2rem, 4.5vw, 3.8rem);">Mulai Langkah <em>Karir Hebat</em> Anda Sekarang</h2>
+                        <p class="slide-desc animate-in">Masa depan bukan milik mereka yang sekadar menunggu kelulusan, melainkan milik mereka yang gigih berinvestasi membangun kapasitas sejak hari ini.</p>
+                        <div class="card animate-in" style="border-color: var(--teal); background: rgba(20,184,166,0.02); display: inline-block; padding: 16px 24px; border-radius: 16px;">
+                            <p style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Konsultasi & Kemitraan Program</p>
+                            <p style="font-size: 1.3rem; font-weight: 700; color: var(--text-main);">PT Lidan Indah Abadi</p>
+                        </div>
+                    </div>
+                    <div class="col-visual animate-in">
+                        <img crossorigin="anonymous" src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&width=600&auto=format&fit=crop" class="img-fluid-presentation" alt="Successful Career Starts">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <button class="nav-btn" id="prev-btn" onclick="prevSlide()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <button class="nav-btn" id="next-btn" onclick="nextSlide()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </button>
+
+    <div id="dots-container"></div>
+
+    <div id="backdrop" onclick="toggleSidebar()"></div>
+    <div id="sidebar">
+        <h3 style="font-family: 'Playfair Display', serif; font-size: 1.6rem; margin-bottom: 10px;">Daftar Slide</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Klik untuk langsung melompat ke slide materi:</p>
+        <button class="ctrl-btn" onclick="triggerPDFExport()" style="width: 100%; margin-bottom: 20px; background: linear-gradient(135deg, var(--teal), var(--indigo)); border: none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Ekspor File PDF
+        </button>
+        <div class="thumb-list" id="sidebar-thumbs"></div>
+    </div>
+
+    <div id="toast">Notifikasi pesan sistem.</div>
+
+    <script>
+        let currentSlide = 0;
+        const deck = document.getElementById('deck');
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const workspace = document.getElementById('workspace');
+
+        // Fungsi Inisialisasi Kerangka Dinamis
+        function init() {
+            // Atur lebar horizontal deck secara dinamis agar sesuai jumlah slide asli
+            deck.style.width = `${totalSlides * 100}vw`;
+
+            // Membuat Indikator Dots Otomatis Berdasarkan Total Elemen Slide
+            const dotsContainer = document.getElementById('dots-container');
+            const thumbList = document.getElementById('sidebar-thumbs');
+            dotsContainer.innerHTML = '';
+            thumbList.innerHTML = '';
+
+            slides.forEach((slide, idx) => {
+                // Generate dots
+                const dot = document.createElement('div');
+                dot.className = `dot ${idx === 0 ? 'active' : ''}`;
+                dot.addEventListener('click', () => goToSlide(idx));
+                dotsContainer.appendChild(dot);
+
+                // Ambil judul slide untuk ditaruh di Sidebar Drawer
+                const rawTitle = slide.querySelector('.slide-title');
+                const titleText = rawTitle ? rawTitle.textContent.replace(/[\r\n\t]+/g, ' ').trim() : `Slide Materi ${idx + 1}`;
+                
+                const thumb = document.createElement('div');
+                thumb.className = 'thumb';
+                thumb.onclick = () => { goToSlide(idx); toggleSidebar(); };
+                thumb.innerHTML = `
+                    <div class="thumb-icon" style="background: ${idx % 3 === 0 ? 'var(--teal)' : idx % 3 === 1 ? 'var(--indigo)' : 'var(--amber)'}; width: 8px; height: 32px; border-radius: 4px;"></div>
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 0.75rem;">SLIDE ${idx + 1}</p>
+                        <p style="color: var(--text-main); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px;">${titleText}</p>
+                    </div>
+                `;
+                thumbList.appendChild(thumb);
+            });
+
+            goToSlide(0);
+        }
+
+        // Fungsi Pindah Slide
+        function goToSlide(index) {
+            currentSlide = index;
+            deck.style.transform = `translateX(-${currentSlide * (100 / totalSlides)}%)`;
+            
+            // Perbarui Elemen Aktif Animasi Masuk
+            slides.forEach((slide, idx) => {
+                if(idx === currentSlide) slide.classList.add('active');
+                else slide.classList.remove('active');
+            });
+
+            updateControls();
+        }
+
+        function nextSlide() { if (currentSlide < totalSlides - 1) goToSlide(currentSlide + 1); }
+        function prevSlide() { if (currentSlide > 0) goToSlide(currentSlide - 1); }
+
+        // Perbarui Kelayakan Tombol Navigasi & Progress Bar
+        function updateControls() {
+            document.getElementById('prev-btn').classList.toggle('hidden', currentSlide === 0);
+            document.getElementById('next-btn').classList.toggle('hidden', currentSlide === totalSlides - 1);
+
+            // Perbarui Dots
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, idx) => dot.classList.toggle('active', idx === currentSlide));
+
+            // Perbarui Progress Bar Linier Atas Screen
+            const pct = totalSlides > 1 ? (currentSlide / (totalSlides - 1)) * 100 : 100;
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+        }
+
+        // Toggle Simulasi Orientasi Paksa Portrait Ponsel
+        function togglePortraitSim() {
+            if (workspace.classList.contains('forced-portrait')) {
+                workspace.classList.remove('forced-portrait');
+                document.documentElement.style.setProperty('--slide-width', '100vw');
+                document.documentElement.style.setProperty('--slide-height', '100vh');
+                showToast("Berhasil beralih ke Mode Landscape (Desktop)");
+            } else {
+                workspace.classList.add('forced-portrait');
+                document.documentElement.style.setProperty('--slide-width', '420px');
+                document.documentElement.style.setProperty('--slide-height', '740px');
+                showToast("Berhasil beralih ke Mode Portrait Mobile (420px x 740px)");
+            }
+            setTimeout(() => goToSlide(currentSlide), 350);
+        }
+
+        // Fitur Layar Penuh (Fullscreen Mode)
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().then(() => showToast("Mode Layar Penuh Aktif"));
+            } else {
+                document.exitFullscreen().then(() => showToast("Keluar dari Layar Penuh"));
+            }
+        }
+
+        // Buka/Tutup Sidebar Menu Samping
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('backdrop').classList.toggle('open');
+        }
+
+        // Tampilkan Pesan Toast Sistem
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => toast.style.opacity = '0', 3000);
+        }
+
+        // ENGINE EKSPOR FILE PDF PREMIUM (PRESERVE ANTI-OVERFLOW)
+        async function triggerPDFExport() {
+            toggleSidebar();
+            showToast("Memulai konversi PDF premium. Harap tunggu...");
+
+            const { jsPDF } = window.jspdf;
+            const isPortraitMode = workspace.classList.contains('forced-portrait') || (window.innerHeight > window.innerWidth);
+            
+            // Konfigurasi kertas cetak otomatis mengikuti orientasi aktif
+            const pdfWidth = isPortraitMode ? 420 : 1920;
+            const pdfHeight = isPortraitMode ? 740 : 1080;
+            const pdfOrient = isPortraitMode ? 'p' : 'l';
+
+            const pdf = new jsPDF({ orientation: pdfOrient, unit: 'px', format: [pdfWidth, pdfHeight] });
+            const backupSlideIndex = currentSlide;
+
+            // Sembunyikan kontrol agar bersih dari cetakan
+            document.querySelector('.top-ctrl').style.visibility = 'hidden';
+            document.getElementById('prev-btn').style.visibility = 'hidden';
+            document.getElementById('next-btn').style.visibility = 'hidden';
+            document.getElementById('dots-container').style.visibility = 'hidden';
+            deck.style.transition = 'none';
+
+            // Loop tangkap slide satu per satu
+            for (let i = 0; i < totalSlides; i++) {
+                goToSlide(i);
+                await new Promise(res => setTimeout(res, 350)); // Jeda render transisi
+
+                const canvas = await html2canvas(workspace, {
+                    width: pdfWidth, height: pdfHeight,
+                    scale: 2, useCORS: true,
+                    backgroundColor: '#0F172A'
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                if (i > 0) pdf.addPage([pdfWidth, pdfHeight], pdfOrient);
+                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            }
+
+            // Kembalikan ke slide asal dan tampilkan kontrol kembali
+            deck.style.transition = 'transform var(--transition-speed) var(--ease)';
+            goToSlide(backupSlideIndex);
+            
+            document.querySelector('.top-ctrl').style.visibility = 'visible';
+            document.getElementById('prev-btn').style.visibility = 'visible';
+            document.getElementById('next-btn').style.visibility = 'visible';
+            document.getElementById('dots-container').style.visibility = 'visible';
+            updateControls();
+
+            pdf.save('Presentasi_Kesiapan_Karir.pdf');
+            showToast("Sukses! Berkas PDF berkualitas tinggi berhasil diunduh.");
+        }
+
+        // Listener Tombol Panah Keyboard
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        // Deteksi Usapan Jari Mobile Swipe
+        let touchXStart = 0;
+        document.addEventListener('touchstart', e => touchXStart = e.changedTouches[0].screenX);
+        document.addEventListener('touchend', e => {
+            let touchXEnd = e.changedTouches[0].screenX;
+            if (touchXStart - touchXEnd > 50) nextSlide();
+            if (touchXEnd - touchXStart > 50) prevSlide();
+        });
+
+        window.addEventListener('resize', () => {
+            goToSlide(currentSlide);
+        });
+
+        // Nyalakan Engine saat halaman selesai dimuat
+        window.onload = init;
+    </script>
+</body>
+</html>

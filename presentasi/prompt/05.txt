@@ -1,0 +1,57 @@
+Bertindaklah sebagai Senior Front-End Developer dan UI/UX Designer Spesialis Web-Based Presentation Deck. 
+
+Tugas Anda adalah membuat satu file HTML mandiri (Single File HTML) utuh yang berisi dek presentasi interaktif premium. 
+
+### SISTEM ARSITEKTUR DATA-DRIVEN (WAJIB):
+Seluruh konten presentasi, struktur slide, teks, tipe layout, hingga aset visual harus diatur sepenuhnya melalui sebuah variabel JSON / Object JavaScript (`const presentationData = [...]`) yang ditaruh di bagian atas tag `<script>`. 
+
+Fungsi `init()` pada JavaScript harus membaca JSON tersebut, mendeteksi jumlah slide secara dinamis, lalu melakukan **render HTML secara otomatis (Dynamic Append/Template Literal)** ke dalam elemen `#deck`.
+
+Sediakan contoh data JSON yang berisi minimal 5 slide dengan variasi layout berbeda (Cover, Dua Kolom, Grid Card, Tabel/Roadmap, dan Slide Penutup). Setiap objek slide dalam JSON harus memiliki properti struktural berikut untuk memisahkan aset foto dan ikon:
+- `id`: (number/string)
+- `type`: (misal: 'cover', 'two-column', 'grid', 'table', 'closing')
+- `title`: (string)
+- `subtitle` / `desc`: (string/array)
+- `imageUrl`: (string berisi URL gambar dari Picsum/Unsplash untuk digunakan sebagai foto utama atau background slide, misal: `https://picsum.photos/id/1018/1000/600`)
+- `svgIcon`: (string berupa kode raw inline SVG untuk icon kecil, bullet point custom, atau dekorasi grafis mikro)
+- `components`: (array untuk menampung data card atau baris tabel jika tipenya grid/table, di mana setiap card juga bisa memiliki `svgIcon` sendiri)
+
+### ATURAN KODE DINAMIS (RUNTIME CALCULATED):
+1. CSS Deck Dinamis: Jangan menulis lebar `#deck` dengan angka statis. Gunakan Javascript setelah proses render JSON selesai atau saat window resize untuk mengatur lebar `#deck` secara dinamis dengan rumus: `deck.style.width = (slides.length * 100) + 'vw'`.
+2. Javascript Navigasi Dinamis: Deteksi total slide hasil render menggunakan `const totalSlides = presentationData.length`. Gunakan variabel ini untuk semua batas logika navigasi `nextSlide()`, pembuatan indikator dots bulat secara otomatis via looping, pengisian daftar menu thumbnail di sidebar, dan penentuan persentase lebar `#progress-bar`.
+
+### STRUKTUR DAN TEKNOLOGI:
+1. HTML5 & CSS3 Murni: Gunakan arsitektur flexbox/grid untuk tata letak slide. Tidak boleh menggunakan framework CSS eksternal (Tanpa Tailwind, Tanpa Bootstrap).
+2. Google Fonts: Gunakan 'Playfair Display' untuk Heading (h1, h2, h3) dan 'Plus Jakarta Sans' untuk Body Text (p, li, td).
+3. Library Eksternal (Ekspor PDF): Wajib sertakan cdnjs untuk html2canvas (1.4.1) dan jspdf (2.5.1) di dalam tag <head> untuk mendukung fitur cetak PDF otomatis sesuai orientasi layar aktif.
+
+### ATURAN UTAMA DESIGN, VISUAL MIXED (PICSUM + SVG), & RESPONSIVITAS:
+1. Workspace Bound: Bungkus seluruh deck di dalam elemen `#workspace` dengan ukuran dinamis berbasis CSS Variables (`--slide-width` dan `--slide-height`).
+2. Kombinasi Visual (Picsum + SVG) Wajib di Setiap Slide:
+   - Gambar Besar/Foto: Harus merender properti `imageUrl` dari JSON (gunakan elemen `<img>` dengan `object-fit: cover` atau CSS `background-image`). Pastikan gambar memiliki overlay gelap agar teks di atasnya tetap kontras dan terbaca.
+   - Ikon & Ilustrasi Kecil: Tetap wajib merender properti `svgIcon` dari JSON sebagai elemen inline SVG murni (bukan link external) untuk menjaga ketajaman resolusi. SVG harus scalable (`viewBox` aktif) dengan warna fill/stroke yang sesuai dengan tema.
+3. Aturan Portrait Ketat (PENTING): Di dalam `@media (orientation: portrait)` atau kelas `.forced-portrait`:
+   - Perkecil padding `.slide` menjadi `40px 24px 90px 24px` agar ruang konten maksimal.
+   - Gunakan `flex-direction: column` untuk semua kelas `.two-column`. Bagian visual `<img>` atau elemen pembungkus gambar wajib ditaruh di atas teks menggunakan `order: -1`.
+   - Batasi tinggi elemen visual foto (`<img>`) maksimal `15vh` hingga `18vh` agar tidak mendorong konten teks ke bawah.
+   - Gunakan tipografi responsif berbasis viewport height (`vh`) untuk teks di mode portrait. Teks deskripsi tidak boleh lebih besar dari `18px` (Gunakan kisaran `1.4vh` hingga `1.5vh`) untuk menghindari overflow vertikal di layar 740px.
+   - Ubah semua layout grid menjadi satu kolom vertikal tunggal dengan `gap: 8px` dan padding kartu yang dipadatkan (`10px 14px`).
+
+### FITUR INTERAKTIF DECK:
+1. Navigasi Komplit: Tombol panah kiri-kanan (auto-hide di slide ujung), indikator dots bulat di bawah (di-generate otomatis via JS), swipe gesture untuk mobile, dan tombol keyboard (Arrow/Space).
+2. Progress Bar: Bar linear tipis di bagian atas layar untuk mendeteksi persentase posisi slide aktif (`(currentSlide / (totalSlides - 1)) * 100`).
+3. Top Control Bar: Menu melayang di kanan atas yang memiliki fitur Auto-Hide (hanya muncul saat kursor mendekat/hover) berisi tombol: Toggle Portrait Mode, Fullscreen Mode, dan Slides Menu Sidebar.
+4. Sidebar & Ekspor PDF: Menampilkan daftar mini seluruh slide (di-render otomatis dari JSON) yang bisa diklik untuk lompat langsung ke slide tujuan, serta tombol utama "Ekspor PDF" dengan teknik penundaan render (setTimeout 300ms per slide) agar hasil tangkapan html2canvas jernih dan sempurna.
+
+### PALETTE WARNA & STYLE PREMIUM (DARK MODE):
+- Background Utama Deck: `#0F172A` (Navy Deep) dengan kombinasi radial gradient halus.
+- Elemen Kartu/Glassmorphism: `rgba(255, 255, 255, 0.03)` dengan border tipis `rgba(255, 255, 255, 0.1)` dan efek backdrop-filter blur.
+- Warna Aksen Utama: `#14B8A6` (Teal) untuk teks penting/penekanan (em) dan `#6366F1` (Indigo), `#F59E0B` (Amber) untuk variasi komponen.
+- Warna Teks: Utama (`#F1F5F9`), Muted/Keterangan (`#94A3B8`).
+
+---
+
+### TOPIK UTAMA DECK (Isi JSON Contoh):
+"Strategi Digital Marketing 2026"
+
+Wajib berikan kode HTML penuh yang siap pakai dari awal `<!DOCTYPE html>` sampai akhir `</html>` dalam satu blok kode tunggal tanpa terpotong! Jangan berikan penjelasan teori, langsung berikan kodenya saja.

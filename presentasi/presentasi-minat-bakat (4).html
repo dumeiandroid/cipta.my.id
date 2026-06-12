@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Tes Minat & Bakat Siswa</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --teal: #0F9B8E;
+    --teal-light: #E0F5F3;
+    --teal-mid: #5DCBB8;
+    --indigo: #4A4ADF;
+    --indigo-light: #EEEEFF;
+    --amber: #F59E0B;
+    --amber-light: #FEF3C7;
+    --coral: #EF5350;
+    --coral-light: #FDECEA;
+    --mint: #10B981;
+    --navy: #1E2A4A;
+    --soft-white: #F8FAFB;
+    --card-bg: #FFFFFF;
+    --text-primary: #1A202C;
+    --text-secondary: #4A5568;
+    --text-muted: #718096;
+    --border: rgba(0,0,0,0.07);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+    --shadow-md: 0 8px 32px rgba(0,0,0,0.10);
+    --shadow-lg: 0 20px 60px rgba(0,0,0,0.14);
+    --radius: 20px;
+    --radius-sm: 12px;
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    font-family: var(--font-body);
+    background: var(--soft-white);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    touch-action: pan-x;
+  }
+
+  /* ── SLIDES CONTAINER ── */
+  #deck {
+    display: flex;
+    width: 100vw; height: 100vh;
+    transition: transform 0.6s cubic-bezier(0.76, 0, 0.24, 1);
+    will-change: transform;
+  }
+
+  .slide {
+    flex: 0 0 100vw;
+    width: 100vw; height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 40px;
+  }
+
+  /* ── PROGRESS BAR ── */
+  #progress-bar {
+    position: fixed; top: 0; left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--teal), var(--indigo));
+    transition: width 0.5s cubic-bezier(0.76, 0, 0.24, 1);
+    z-index: 100;
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* ── SLIDE COUNTER ── */
+  #slide-counter {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 8px; align-items: center;
+    z-index: 100;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  .dot.active {
+    width: 24px; border-radius: 4px;
+    background: var(--teal);
+  }
+
+  /* ── NAV BUTTONS ── */
+  .nav-btn {
+    position: fixed; top: 50%;
+    transform: translateY(-50%);
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    border: none;
+    background: white;
+    box-shadow: var(--shadow-md);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nav-btn:hover { transform: translateY(-50%) scale(1.08); box-shadow: var(--shadow-lg); }
+  .nav-btn:active { transform: translateY(-50%) scale(0.95); }
+  #btn-prev { left: 16px; }
+  #btn-next { right: 16px; }
+  .nav-btn svg { width: 22px; height: 22px; stroke: var(--teal); }
+  .nav-btn.hidden { opacity: 0; pointer-events: none; }
+
+  /* ── FULLSCREEN BUTTON ── */
+  #btn-fullscreen {
+    position: fixed; top: 16px; right: 16px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    z-index: 200;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #btn-fullscreen:hover { background: rgba(255,255,255,0.32); transform: scale(1.08); }
+  #btn-fullscreen:active { transform: scale(0.95); }
+  #btn-fullscreen svg { width: 20px; height: 20px; stroke: white; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
+
+  /* Toast notif */
+  #fs-toast {
+    position: fixed; bottom: 70px; left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: rgba(0,0,0,0.72);
+    color: white; font-size: 13px; font-weight: 500;
+    padding: 9px 20px; border-radius: 100px;
+    pointer-events: none; opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 300; white-space: nowrap;
+    backdrop-filter: blur(8px);
+  }
+  #fs-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── SLIDE 1 — COVER ── */
+  .slide-cover {
+    background: linear-gradient(145deg, #0d1b3e 0%, #1a3a6b 50%, #0F9B8E 100%);
+    flex-direction: column;
+    text-align: center;
+  }
+  .slide-cover::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 30%, rgba(15,155,142,0.3) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(74,74,223,0.2) 0%, transparent 50%);
+  }
+  .cover-content { position: relative; z-index: 1; max-width: 680px; }
+  .cover-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 100px;
+    padding: 6px 16px;
+    color: rgba(255,255,255,0.9);
+    font-size: 12px; font-weight: 500;
+    margin-bottom: 16px;
+    backdrop-filter: blur(8px);
+    animation: fadeUp 0.8s ease both;
+  }
+  .cover-badge span { width: 7px; height: 7px; background: var(--teal-mid); border-radius: 50%; display: inline-block; }
+  .cover-title {
+    font-family: var(--font-display);
+    font-size: clamp(30px, 5.5vw, 52px);
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 10px;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+  .cover-title em { color: var(--teal-mid); font-style: normal; }
+  .cover-sub {
+    font-size: clamp(14px, 2vw, 17px);
+    color: rgba(255,255,255,0.7);
+    font-weight: 300;
+    margin-bottom: 24px;
+    line-height: 1.6;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+  .cover-illus {
+    width: 180px; height: 180px;
+    margin: 0 auto 20px;
+    animation: float 4s ease-in-out infinite, fadeUp 0.8s 0.05s ease both;
+  }
+  .cover-meta {
+    display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+  .meta-item { color: rgba(255,255,255,0.6); font-size: 12px; font-weight: 400; }
+  .meta-item strong { color: #fff; font-weight: 600; display: block; font-size: 13px; }
+
+  /* ── SLIDE 2 — WHY ── */
+  .slide-why {
+    background: #fff;
+    gap: 60px;
+    flex-direction: row;
+    align-items: center;
+  }
+  .why-left { flex: 0 0 380px; }
+  .why-illus { width: 100%; max-width: 360px; animation: float 5s ease-in-out infinite; }
+  .why-right { flex: 1; }
+  .section-eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: 2.5px;
+    text-transform: uppercase; color: var(--teal);
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 4vw, 42px);
+    line-height: 1.2;
+    color: var(--navy);
+    margin-bottom: 20px;
+  }
+  .section-desc {
+    font-size: 16px; color: var(--text-secondary);
+    line-height: 1.8; margin-bottom: 28px;
+  }
+  .stat-row { display: flex; gap: 20px; }
+  .stat-card {
+    background: var(--soft-white);
+    border-radius: var(--radius-sm);
+    padding: 20px 24px;
+    flex: 1;
+    border: 1px solid var(--border);
+  }
+  .stat-num { font-size: 36px; font-weight: 800; color: var(--teal); line-height: 1; margin-bottom: 4px; }
+  .stat-label { font-size: 13px; color: var(--text-muted); }
+
+  /* ── SLIDE 3 — WHAT ── */
+  .slide-what {
+    background: linear-gradient(160deg, #F0FDF9 0%, #EEF2FF 100%);
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+    padding: 28px 40px;
+  }
+  .what-header { max-width: 560px; }
+  .what-header .section-desc { margin-bottom: 0; font-size: 14px; }
+  .what-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%; max-width: 780px;
+  }
+  .what-card {
+    background: #fff;
+    border-radius: var(--radius-sm);
+    padding: 16px 14px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: default;
+  }
+  .what-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+  .what-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+  .what-icon svg { width: 30px; height: 30px; }
+  .what-card h3 { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .what-card p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+  /* ── SLIDE 4 — TYPES ── */
+  .slide-types {
+    background: var(--navy);
+    flex-direction: column; gap: 36px;
+    align-items: center; text-align: center;
+  }
+  .slide-types .section-title { color: #fff; }
+  .slide-types .section-eyebrow { color: var(--teal-mid); }
+  .types-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px; width: 100%; max-width: 820px;
+  }
+  .type-card {
+    border-radius: var(--radius);
+    padding: 26px 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: transform 0.3s ease;
+    cursor: default;
+  }
+  .type-card:hover { transform: translateY(-5px); }
+  .type-card h3 { font-size: 15px; font-weight: 700; color: #fff; }
+  .type-card p { font-size: 12.5px; color: rgba(255,255,255,0.55); line-height: 1.5; }
+  .type-icon { width: 80px; height: 80px; }
+
+  /* ── SLIDE 5 — HOLLAND ── */
+  .slide-holland {
+    background: #fff;
+    flex-direction: row; gap: 60px; align-items: center;
+  }
+  .holland-left { flex: 1; }
+  .holland-right { flex: 0 0 380px; display: flex; align-items: center; justify-content: center; }
+  .holland-hex { position: relative; width: 340px; height: 340px; }
+  .hex-item {
+    position: absolute;
+    width: 100px; height: 100px;
+    border-radius: 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    font-size: 11px; font-weight: 700; text-align: center;
+    transition: transform 0.3s ease;
+    cursor: default;
+  }
+  .hex-item:hover { transform: scale(1.1); }
+  .hex-item span { font-size: 22px; }
+  .hex-item small { font-size: 10px; font-weight: 500; }
+
+  /* ── SLIDE 6 — PROCESS ── */
+  .slide-process {
+    background: linear-gradient(160deg, #FFF8F0 0%, #F0FDF9 100%);
+    flex-direction: column; gap: 36px; align-items: center; text-align: center;
+  }
+  .process-steps {
+    display: flex; gap: 0; width: 100%; max-width: 820px; align-items: flex-start;
+    position: relative;
+  }
+  .process-step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative; }
+  .process-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 32px; left: 50%;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, var(--teal), var(--indigo));
+    opacity: 0.3;
+  }
+  .step-circle {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 800;
+    color: #fff;
+    position: relative; z-index: 1;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  }
+  .step-title { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .step-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; max-width: 120px; }
+  .process-illus { width: 200px; animation: float 4s 1s ease-in-out infinite; }
+
+  /* ── SLIDE 7 — MANFAAT ── */
+  .slide-manfaat {
+    background: linear-gradient(145deg, #4A4ADF 0%, #0F9B8E 100%);
+    flex-direction: row; gap: 60px; align-items: center;
+  }
+  .manfaat-left { flex: 0 0 300px; }
+  .manfaat-right { flex: 1; }
+  .manfaat-illus { width: 100%; animation: float 4.5s ease-in-out infinite; }
+  .manfaat-list { display: flex; flex-direction: column; gap: 16px; }
+  .manfaat-item {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: var(--radius-sm);
+    padding: 18px 22px;
+    display: flex; gap: 16px; align-items: flex-start;
+    backdrop-filter: blur(8px);
+    transition: transform 0.2s ease;
+  }
+  .manfaat-item:hover { transform: translateX(6px); }
+  .manfaat-num { font-size: 28px; font-weight: 800; color: rgba(255,255,255,0.25); line-height: 1; flex-shrink: 0; }
+  .manfaat-text h4 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+  .manfaat-text p { font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.5; }
+
+  /* ── SLIDE 8 — RIASEC DETAIL ── */
+  .slide-riasec {
+    background: #fff;
+    flex-direction: column; gap: 28px; align-items: center; text-align: center;
+  }
+  .riasec-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 14px; width: 100%; max-width: 760px;
+  }
+  .riasec-card {
+    border-radius: var(--radius);
+    padding: 22px 18px;
+    display: flex; flex-direction: column; gap: 8px;
+    text-align: left;
+    border: 1.5px solid var(--border);
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .riasec-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+  .riasec-letter {
+    font-size: 36px; font-weight: 800;
+    line-height: 1;
+  }
+  .riasec-name { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .riasec-jobs { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+  .riasec-trait {
+    font-size: 11.5px; font-weight: 600;
+    padding: 4px 10px; border-radius: 100px;
+    display: inline-block; margin-top: 4px;
+  }
+
+  /* ── SLIDE 9 — CTA/CLOSING ── */
+  .slide-cta {
+    background: linear-gradient(145deg, #0d1b3e, #1a3a6b);
+    flex-direction: column; text-align: center; gap: 32px;
+    align-items: center;
+  }
+  .slide-cta::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(15,155,142,0.4) 0%, transparent 65%);
+  }
+  .cta-content { position: relative; z-index: 1; max-width: 620px; }
+  .cta-title {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 5.5vw, 52px);
+    color: #fff; line-height: 1.15; margin-bottom: 18px;
+  }
+  .cta-title em { color: var(--teal-mid); font-style: normal; }
+  .cta-desc { font-size: 17px; color: rgba(255,255,255,0.7); line-height: 1.7; margin-bottom: 36px; }
+  .cta-cards { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .cta-card {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: var(--radius-sm);
+    padding: 18px 24px;
+    text-align: center;
+    backdrop-filter: blur(8px);
+  }
+  .cta-card .cta-icon { font-size: 30px; margin-bottom: 8px; }
+  .cta-card p { font-size: 13px; color: rgba(255,255,255,0.75); font-weight: 500; }
+  .cta-illus { width: 220px; animation: float 4s ease-in-out infinite; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Slide enter animations */
+  .slide.active .animate-in {
+    animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .slide.active .animate-in:nth-child(2) { animation-delay: 0.1s; }
+  .slide.active .animate-in:nth-child(3) { animation-delay: 0.18s; }
+  .slide.active .animate-in:nth-child(4) { animation-delay: 0.26s; }
+  .slide.active .animate-in:nth-child(5) { animation-delay: 0.34s; }
+
+  /* Tablet adjustments */
+  @media (max-width: 900px) {
+    .slide-why, .slide-holland, .slide-manfaat {
+      flex-direction: column !important;
+      text-align: center;
+    }
+    .why-left, .holland-right, .manfaat-left { flex: none; }
+    .why-illus, .holland-hex, .manfaat-illus { max-width: 260px; margin: 0 auto; }
+    .stat-row { justify-content: center; }
+    .what-grid, .types-grid, .riasec-grid { grid-template-columns: repeat(2, 1fr); }
+    .process-steps { flex-wrap: wrap; gap: 24px; }
+    .process-step::after { display: none; }
+    .slide { padding: 28px 24px; }
+  }
+  @media (max-width: 600px) {
+    .what-grid, .types-grid, .riasec-grid { grid-template-columns: 1fr 1fr; }
+    .cover-title { font-size: 32px; }
+  }
+
+  /* ── SLIDE PANEL BUTTON ── */
+  #btn-panel {
+    position: fixed; top: 16px; right: 68px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    z-index: 200;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #btn-panel:hover { background: rgba(255,255,255,0.32); transform: scale(1.08); }
+  #btn-panel:active { transform: scale(0.95); }
+  #btn-panel svg { width: 20px; height: 20px; stroke: white; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
+
+  /* ── PANEL OVERLAY ── */
+  #slide-panel {
+    position: fixed; inset: 0;
+    z-index: 500;
+    display: flex;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  #slide-panel.open {
+    pointer-events: all;
+    opacity: 1;
+  }
+
+  /* Backdrop blur kiri (sisa layar, tutup panel) */
+  #panel-backdrop {
+    flex: 1;
+    background: rgba(10,16,40,0.55);
+    backdrop-filter: blur(6px);
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+  }
+
+  /* Panel sidebar kanan */
+  #panel-sidebar {
+    width: 300px;
+    background: #0f1729;
+    border-left: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1);
+    box-shadow: -8px 0 40px rgba(0,0,0,0.4);
+  }
+  #slide-panel.open #panel-sidebar {
+    transform: translateX(0);
+  }
+
+  #panel-header {
+    padding: 20px 20px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  #panel-header h3 {
+    font-size: 13px; font-weight: 700;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+  #panel-close {
+    width: 30px; height: 30px;
+    border-radius: 50%; border: none;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.6);
+    font-size: 18px; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  #panel-close:hover { background: rgba(255,255,255,0.16); color: #fff; }
+
+  #panel-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 12px 12px 20px;
+    display: flex; flex-direction: column; gap: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.15) transparent;
+  }
+  #panel-list::-webkit-scrollbar { width: 4px; }
+  #panel-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+  .panel-thumb {
+    display: flex; align-items: center; gap: 12px;
+    border-radius: 12px;
+    padding: 10px 12px;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.2s ease;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .panel-thumb:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.1);
+  }
+  .panel-thumb.current {
+    background: rgba(15,155,142,0.15);
+    border-color: rgba(15,155,142,0.5);
+  }
+  .panel-thumb.current::before {
+    content: '';
+    position: absolute; left: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 3px; height: 60%;
+    background: #0F9B8E;
+    border-radius: 0 3px 3px 0;
+  }
+
+  /* Mini preview kotak berwarna */
+  .thumb-preview {
+    width: 72px; height: 48px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .thumb-preview-inner {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .thumb-info { flex: 1; min-width: 0; }
+  .thumb-num {
+    font-size: 10px; font-weight: 700;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 1.5px; text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .thumb-title {
+    font-size: 13px; font-weight: 600;
+    color: rgba(255,255,255,0.85);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+  .thumb-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-top: 1px;
+  }
+  .panel-thumb.current .thumb-title { color: #5DCBB8; }
+  .panel-thumb.current .thumb-num { color: rgba(93,203,184,0.6); }
+
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<!-- PANEL BUTTON -->
+<button id="btn-panel" onclick="togglePanel()" aria-label="Daftar Slide">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="5" rx="1"/>
+    <rect x="14" y="3" width="7" height="5" rx="1"/>
+    <rect x="3" y="11" width="7" height="5" rx="1"/>
+    <rect x="14" y="11" width="7" height="5" rx="1"/>
+    <rect x="3" y="19" width="7" height="2" rx="1"/>
+    <rect x="14" y="19" width="7" height="2" rx="1"/>
+  </svg>
+</button>
+
+<!-- SLIDE PANEL OVERLAY -->
+<div id="slide-panel">
+  <div id="panel-backdrop" onclick="closePanel()"></div>
+  <div id="panel-sidebar">
+    <div id="panel-header">
+      <h3>Navigasi Slide</h3>
+      <button id="panel-close" onclick="closePanel()">×</button>
+    </div>
+    <div id="panel-list"></div>
+  </div>
+</div>
+
+<!-- FULLSCREEN BUTTON -->
+<button id="btn-fullscreen" onclick="toggleFullscreen()" aria-label="Fullscreen">
+  <svg id="fs-icon-expand" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+    <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+  </svg>
+  <svg id="fs-icon-compress" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+    <polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/>
+    <line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/>
+  </svg>
+</button>
+<div id="fs-toast"></div>
+
+<!-- NAV BUTTONS -->
+<button class="nav-btn hidden" id="btn-prev" onclick="navigate(-1)" aria-label="Sebelumnya">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+</button>
+<button class="nav-btn" id="btn-next" onclick="navigate(1)" aria-label="Berikutnya">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="9 18 15 12 9 6"/>
+  </svg>
+</button>
+
+<!-- SLIDE DOTS -->
+<div id="slide-counter"></div>
+
+<!-- ═══════════════════════════════════════════════════
+     DECK
+═══════════════════════════════════════════════════ -->
+<div id="deck">
+
+  <!-- SLIDE 1: COVER -->
+  <div class="slide slide-cover active">
+    <div class="cover-content">
+      <div class="cover-badge animate-in"><span></span> Program Pengembangan Siswa</div>
+
+      <!-- Ilustrasi SVG — siswa dengan bintang -->
+      <div class="cover-illus animate-in">
+        <svg viewBox="0 0 260 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Stars floating -->
+          <circle cx="30" cy="50" r="5" fill="#F59E0B" opacity="0.9"/>
+          <circle cx="220" cy="40" r="7" fill="#5DCBB8" opacity="0.8"/>
+          <circle cx="240" cy="120" r="4" fill="#F59E0B" opacity="0.7"/>
+          <circle cx="20" cy="160" r="6" fill="#A78BFA" opacity="0.8"/>
+          <!-- Book/platform -->
+          <rect x="60" y="190" width="140" height="16" rx="8" fill="#0d2a6b" opacity="0.4"/>
+          <!-- Body -->
+          <rect x="102" y="120" width="56" height="80" rx="10" fill="#4A4ADF"/>
+          <!-- Shirt detail -->
+          <rect x="108" y="128" width="44" height="40" rx="6" fill="#5E6DF5"/>
+          <!-- Collar -->
+          <polygon points="130,128 122,128 130,145" fill="white" opacity="0.8"/>
+          <polygon points="130,128 138,128 130,145" fill="white" opacity="0.6"/>
+          <!-- Legs -->
+          <rect x="108" y="195" width="18" height="32" rx="8" fill="#1E2A4A"/>
+          <rect x="134" y="195" width="18" height="32" rx="8" fill="#1E2A4A"/>
+          <!-- Shoes -->
+          <rect x="104" y="220" width="26" height="12" rx="6" fill="#111"/>
+          <rect x="130" y="220" width="26" height="12" rx="6" fill="#111"/>
+          <!-- Arms -->
+          <rect x="76" y="122" width="28" height="14" rx="7" fill="#4A4ADF"/>
+          <rect x="156" y="110" width="14" height="32" rx="7" fill="#4A4ADF"/>
+          <!-- Hand right holding star -->
+          <polygon points="170,90 175,105 190,105 179,114 183,129 170,120 157,129 161,114 150,105 165,105" fill="#F59E0B"/>
+          <!-- Head -->
+          <circle cx="130" cy="98" r="28" fill="#FDDBB4"/>
+          <!-- Hair -->
+          <path d="M103 95 Q105 72 130 68 Q155 72 157 95 Q148 82 130 80 Q112 82 103 95Z" fill="#2C1810"/>
+          <!-- Eyes -->
+          <circle cx="121" cy="96" r="4.5" fill="white"/>
+          <circle cx="139" cy="96" r="4.5" fill="white"/>
+          <circle cx="122" cy="97" r="2.5" fill="#1A202C"/>
+          <circle cx="140" cy="97" r="2.5" fill="#1A202C"/>
+          <circle cx="123" cy="96" r="1" fill="white"/>
+          <circle cx="141" cy="96" r="1" fill="white"/>
+          <!-- Smile -->
+          <path d="M120 106 Q130 114 140 106" stroke="#C97B3A" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <!-- Small stars around -->
+          <circle cx="55" cy="95" r="3" fill="#5DCBB8" opacity="0.9"/>
+          <circle cx="200" cy="80" r="4" fill="#A78BFA" opacity="0.8"/>
+          <circle cx="68" cy="145" r="2.5" fill="#F59E0B" opacity="0.7"/>
+        </svg>
+      </div>
+
+      <h1 class="cover-title animate-in">Tes <em>Minat & Bakat</em><br>untuk Siswa</h1>
+      <p class="cover-sub animate-in">Menemukan potensi terbaik setiap anak<br>melalui pendekatan ilmiah yang menyenangkan</p>
+      <div class="cover-meta animate-in">
+        <div class="meta-item"><strong>Berbasis Sains</strong>Teori Holland & RIASEC</div>
+        <div class="meta-item"><strong>Terstandar</strong>Alat ukur tervalidasi</div>
+        <div class="meta-item"><strong>Akurat</strong>Laporan individual lengkap</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: MENGAPA PENTING -->
+  <div class="slide slide-why">
+    <div class="why-left animate-in">
+      <svg class="why-illus" viewBox="0 0 360 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Ground -->
+        <ellipse cx="180" cy="310" rx="140" ry="18" fill="#E0F5F3" opacity="0.6"/>
+        <!-- Confused student with question marks -->
+        <!-- Body -->
+        <rect x="148" y="200" width="64" height="90" rx="12" fill="#EF5350"/>
+        <rect x="154" y="210" width="52" height="45" rx="8" fill="#F87171"/>
+        <!-- Legs -->
+        <rect x="155" y="285" width="20" height="38" rx="9" fill="#1E2A4A"/>
+        <rect x="185" y="285" width="20" height="38" rx="9" fill="#1E2A4A"/>
+        <rect x="149" y="316" width="30" height="13" rx="6" fill="#111"/>
+        <rect x="181" y="316" width="30" height="13" rx="6" fill="#111"/>
+        <!-- Arms shrug -->
+        <rect x="110" y="200" width="40" height="13" rx="6.5" fill="#EF5350" transform="rotate(-25 110 200)"/>
+        <rect x="210" y="200" width="40" height="13" rx="6.5" fill="#EF5350" transform="rotate(25 210 200)"/>
+        <!-- Head -->
+        <circle cx="180" cy="175" r="32" fill="#FDDBB4"/>
+        <!-- Hair -->
+        <path d="M149 172 Q151 147 180 142 Q209 147 211 172 Q202 158 180 155 Q158 158 149 172Z" fill="#2C1810"/>
+        <!-- Worried eyes -->
+        <circle cx="168" cy="170" r="5" fill="white"/>
+        <circle cx="192" cy="170" r="5" fill="white"/>
+        <circle cx="169" cy="172" r="3" fill="#333"/>
+        <circle cx="193" cy="172" r="3" fill="#333"/>
+        <!-- Worried mouth -->
+        <path d="M170 186 Q180 181 190 186" stroke="#C97B3A" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <!-- Eyebrows worried -->
+        <path d="M163 163 Q168 159 173 162" stroke="#2C1810" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M187 162 Q192 159 197 163" stroke="#2C1810" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <!-- Question marks -->
+        <text x="80" y="160" font-size="36" fill="#F59E0B" font-weight="800" opacity="0.9">?</text>
+        <text x="252" y="155" font-size="28" fill="#A78BFA" font-weight="800" opacity="0.8">?</text>
+        <text x="100" y="230" font-size="22" fill="#5DCBB8" font-weight="800" opacity="0.7">?</text>
+        <!-- Thought bubbles -->
+        <circle cx="220" cy="120" r="8" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+        <circle cx="232" cy="108" r="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+        <rect x="224" y="70" width="100" height="44" rx="12" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+        <text x="234" y="88" font-size="11" fill="#B45309" font-weight="600">Mau jadi</text>
+        <text x="234" y="103" font-size="11" fill="#B45309" font-weight="600">apa ya?</text>
+        <!-- Arrows pointing different ways -->
+        <text x="30" y="120" font-size="30" fill="#0F9B8E" opacity="0.5">↗</text>
+        <text x="280" y="240" font-size="30" fill="#4A4ADF" opacity="0.5">↙</text>
+      </svg>
+    </div>
+    <div class="why-right">
+      <p class="section-eyebrow animate-in">Mengapa Penting</p>
+      <h2 class="section-title animate-in">Banyak Siswa Belum Mengenal<br>Potensi Diri Sendiri</h2>
+      <p class="section-desc animate-in">Tanpa pemahaman minat dan bakat, siswa sering memilih jurusan atau karier yang tidak sesuai — berdampak pada semangat belajar, prestasi, dan masa depan mereka.</p>
+      <div class="stat-row animate-in">
+        <div class="stat-card">
+          <div class="stat-num">72%</div>
+          <div class="stat-label">Siswa belum punya gambaran karier yang jelas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">3×</div>
+          <div class="stat-label">Lebih produktif bila bekerja sesuai minat & bakat</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: APA ITU -->
+  <div class="slide slide-what">
+    <div class="what-header">
+      <p class="section-eyebrow animate-in" style="margin-bottom:6px;">Apa Itu</p>
+      <h2 class="section-title animate-in" style="font-size:clamp(22px,3.5vw,36px);margin-bottom:8px;">Tes Minat & Bakat</h2>
+      <p class="section-desc animate-in" style="font-size:14px;margin-bottom:0;line-height:1.6;">Alat bantu ilmiah untuk mengidentifikasi kecenderungan alami, kemampuan tersembunyi, dan arah pengembangan terbaik bagi setiap siswa.</p>
+    </div>
+    <div class="what-grid">
+      <div class="what-card animate-in">
+        <div class="what-icon" style="background:#E0F5F3;">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="16" r="9" fill="#0F9B8E"/>
+            <path d="M8 34c0-6.627 5.373-12 12-12s12 5.373 12 12" stroke="#0F9B8E" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.5"/>
+            <circle cx="20" cy="16" r="5" fill="white"/>
+          </svg>
+        </div>
+        <h3>Kenali Diri</h3>
+        <p>Memahami siapa dirimu, apa yang kamu sukai, dan apa yang kamu kuasai secara alami.</p>
+      </div>
+      <div class="what-card animate-in">
+        <div class="what-icon" style="background:#EEEEFF;">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect x="6" y="8" width="28" height="22" rx="5" fill="#4A4ADF"/>
+            <rect x="10" y="12" width="20" height="3" rx="1.5" fill="white" opacity="0.8"/>
+            <rect x="10" y="18" width="14" height="3" rx="1.5" fill="white" opacity="0.5"/>
+            <path d="M24 34 L16 34 L18 30 L22 30 Z" fill="#4A4ADF" opacity="0.5"/>
+            <rect x="14" y="33" width="12" height="2" rx="1" fill="#4A4ADF" opacity="0.4"/>
+          </svg>
+        </div>
+        <h3>Pilih Jurusan</h3>
+        <p>Dapatkan rekomendasi jurusan dan bidang studi yang paling sesuai dengan profilmu.</p>
+      </div>
+      <div class="what-card animate-in">
+        <div class="what-icon" style="background:#FEF3C7;">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <polygon points="20,5 25,15 37,15 27,23 31,35 20,27 9,35 13,23 3,15 15,15" fill="#F59E0B"/>
+          </svg>
+        </div>
+        <h3>Raih Prestasi</h3>
+        <p>Siswa yang belajar sesuai minat menunjukkan motivasi dan pencapaian yang lebih tinggi.</p>
+      </div>
+      <div class="what-card animate-in">
+        <div class="what-icon" style="background:#FDECEA;">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <path d="M20 6 C12 6 6 12 6 20 C6 28 12 34 20 34 C28 34 34 28 34 20" stroke="#EF5350" stroke-width="3" stroke-linecap="round" fill="none"/>
+            <path d="M28 6 L34 6 L34 12" stroke="#EF5350" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M34 6 L22 18" stroke="#EF5350" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <h3>Arah Karier</h3>
+        <p>Temukan profesi dan karier yang cocok sebelum terlambat membuat keputusan besar.</p>
+      </div>
+      <div class="what-card animate-in">
+        <div class="what-icon" style="background:#E0F5F3;">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect x="6" y="22" width="6" height="14" rx="3" fill="#0F9B8E" opacity="0.5"/>
+            <rect x="17" y="14" width="6" height="22" rx="3" fill="#0F9B8E" opacity="0.7"/>
+            <rect x="28" y="8" width="6" height="28" rx="3" fill="#0F9B8E"/>
+          </svg>
+        </div>
+        <h3>Ukur Kemampuan</h3>
+        <p>Visualisasikan kekuatan dan area pengembangan diri secara objektif dan terstruktur.</p>
+      </div>
+      <div class="what-card animate-in">
+        <div class="what-icon" style="background:#EEEEFF;">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <circle cx="14" cy="18" r="7" fill="#4A4ADF" opacity="0.7"/>
+            <circle cx="26" cy="18" r="7" fill="#0F9B8E" opacity="0.7"/>
+            <circle cx="20" cy="26" r="7" fill="#F59E0B" opacity="0.7"/>
+          </svg>
+        </div>
+        <h3>Laporan Personal</h3>
+        <p>Setiap siswa mendapat laporan unik yang mencerminkan profil individu mereka.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: JENIS TES -->
+  <div class="slide slide-types">
+    <div>
+      <p class="section-eyebrow animate-in">Jenis Tes</p>
+      <h2 class="section-title animate-in">4 Komponen Utama Pengukuran</h2>
+    </div>
+    <div class="types-grid">
+      <div class="type-card animate-in" style="background:rgba(15,155,142,0.15);">
+        <svg class="type-icon" viewBox="0 0 80 80" fill="none">
+          <!-- Heart/interest icon -->
+          <circle cx="40" cy="40" r="32" fill="rgba(15,155,142,0.2)"/>
+          <path d="M40 56 C40 56 20 44 20 30 C20 23 26 18 33 18 C36.5 18 39.5 20 40 22 C40.5 20 43.5 18 47 18 C54 18 60 23 60 30 C60 44 40 56 40 56Z" fill="#5DCBB8"/>
+        </svg>
+        <h3>Tes Minat</h3>
+        <p>Mengukur bidang aktivitas yang paling disukai siswa dalam kehidupan sehari-hari</p>
+      </div>
+      <div class="type-card animate-in" style="background:rgba(74,74,223,0.15);">
+        <svg class="type-icon" viewBox="0 0 80 80" fill="none">
+          <circle cx="40" cy="40" r="32" fill="rgba(74,74,223,0.2)"/>
+          <!-- Lightning/talent -->
+          <polygon points="46,16 28,44 40,44 34,64 52,36 40,36" fill="#818CF8"/>
+        </svg>
+        <h3>Tes Bakat</h3>
+        <p>Mengidentifikasi kemampuan dan kecepatan belajar alami yang dimiliki siswa</p>
+      </div>
+      <div class="type-card animate-in" style="background:rgba(245,158,11,0.15);">
+        <svg class="type-icon" viewBox="0 0 80 80" fill="none">
+          <circle cx="40" cy="40" r="32" fill="rgba(245,158,11,0.2)"/>
+          <!-- Brain/intelligence -->
+          <ellipse cx="40" cy="40" rx="18" ry="14" fill="none" stroke="#F59E0B" stroke-width="3"/>
+          <path d="M28 36 Q28 28 36 28" stroke="#F59E0B" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M52 36 Q52 28 44 28" stroke="#F59E0B" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <line x1="40" y1="26" x2="40" y2="54" stroke="#F59E0B" stroke-width="2" opacity="0.5"/>
+          <path d="M30 44 Q30 52 38 52" stroke="#F59E0B" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M50 44 Q50 52 42 52" stroke="#F59E0B" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </svg>
+        <h3>Tes Kecerdasan</h3>
+        <p>Mengukur kemampuan kognitif, penalaran, dan kecepatan pemrosesan informasi</p>
+      </div>
+      <div class="type-card animate-in" style="background:rgba(239,83,80,0.15);">
+        <svg class="type-icon" viewBox="0 0 80 80" fill="none">
+          <circle cx="40" cy="40" r="32" fill="rgba(239,83,80,0.2)"/>
+          <!-- Person/personality -->
+          <circle cx="40" cy="28" r="10" fill="#F87171"/>
+          <path d="M20 60 C20 48 28 42 40 42 C52 42 60 48 60 60" fill="#F87171"/>
+          <circle cx="28" cy="30" r="3" fill="#F87171" opacity="0.5"/>
+          <circle cx="52" cy="30" r="3" fill="#F87171" opacity="0.5"/>
+        </svg>
+        <h3>Tes Kepribadian</h3>
+        <p>Mengungkap tipe karakter dan cara kerja yang paling cocok bagi setiap individu</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: TEORI HOLLAND / RIASEC -->
+  <div class="slide slide-holland">
+    <div class="holland-left">
+      <p class="section-eyebrow animate-in">Dasar Ilmiah</p>
+      <h2 class="section-title animate-in">Teori Holland &<br>Model RIASEC</h2>
+      <p class="section-desc animate-in">Dikembangkan oleh John L. Holland, model ini mengklasifikasikan kepribadian dan minat karier ke dalam 6 tipe utama. Satu-satunya kerangka yang paling banyak digunakan secara global.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;" class="animate-in">
+        <div style="display:flex;align-items:center;gap:10px;background:#F8FAFB;border-radius:10px;padding:12px 16px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#EF5350;flex-shrink:0;"></div>
+          <span style="font-size:14px;color:#4A5568;"><strong style="color:#1A202C;">Realistic</strong> — Realistis, terampil tangan & teknis</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;background:#F8FAFB;border-radius:10px;padding:12px 16px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#4A4ADF;flex-shrink:0;"></div>
+          <span style="font-size:14px;color:#4A5568;"><strong style="color:#1A202C;">Investigative</strong> — Analitis, senang riset & berpikir</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;background:#F8FAFB;border-radius:10px;padding:12px 16px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#10B981;flex-shrink:0;"></div>
+          <span style="font-size:14px;color:#4A5568;"><strong style="color:#1A202C;">Artistic</strong> — Kreatif, imajinatif & ekspresif</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;background:#F8FAFB;border-radius:10px;padding:12px 16px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#0F9B8E;flex-shrink:0;"></div>
+          <span style="font-size:14px;color:#4A5568;"><strong style="color:#1A202C;">Social</strong> — Suka membantu, mengajar, berinteraksi</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;background:#F8FAFB;border-radius:10px;padding:12px 16px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#F59E0B;flex-shrink:0;"></div>
+          <span style="font-size:14px;color:#4A5568;"><strong style="color:#1A202C;">Enterprising</strong> — Pemimpin, persuasif, ambisus</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;background:#F8FAFB;border-radius:10px;padding:12px 16px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#8B5CF6;flex-shrink:0;"></div>
+          <span style="font-size:14px;color:#4A5568;"><strong style="color:#1A202C;">Conventional</strong> — Teratur, detail, prosedural</span>
+        </div>
+      </div>
+    </div>
+    <div class="holland-right animate-in">
+      <!-- Hexagon RIASEC -->
+      <div class="holland-hex">
+        <!-- R - Realistic -->
+        <div class="hex-item" style="top:0;left:50%;transform:translateX(-50%);background:#FDECEA;color:#B71C1C;">
+          <span>🔧</span><strong style="font-size:13px;color:#B71C1C;">R</strong><small>Realistic</small>
+        </div>
+        <!-- I - Investigative -->
+        <div class="hex-item" style="top:80px;right:0;background:#EDE7F6;color:#4527A0;">
+          <span>🔬</span><strong style="font-size:13px;color:#4527A0;">I</strong><small>Investigative</small>
+        </div>
+        <!-- A - Artistic -->
+        <div class="hex-item" style="bottom:80px;right:0;background:#E8F5E9;color:#1B5E20;">
+          <span>🎨</span><strong style="font-size:13px;color:#1B5E20;">A</strong><small>Artistic</small>
+        </div>
+        <!-- S - Social -->
+        <div class="hex-item" style="bottom:0;left:50%;transform:translateX(-50%);background:#E0F5F3;color:#004D40;">
+          <span>🤝</span><strong style="font-size:13px;color:#004D40;">S</strong><small>Social</small>
+        </div>
+        <!-- E - Enterprising -->
+        <div class="hex-item" style="bottom:80px;left:0;background:#FFF8E1;color:#E65100;">
+          <span>🚀</span><strong style="font-size:13px;color:#E65100;">E</strong><small>Enterprising</small>
+        </div>
+        <!-- C - Conventional -->
+        <div class="hex-item" style="top:80px;left:0;background:#E8EAF6;color:#283593;">
+          <span>📊</span><strong style="font-size:13px;color:#283593;">C</strong><small>Conventional</small>
+        </div>
+        <!-- Center label -->
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--navy);border-radius:50%;width:80px;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+          <span style="color:#5DCBB8;font-size:16px;font-weight:800;">RIASEC</span>
+          <span style="color:rgba(255,255,255,0.5);font-size:9px;">Holland</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: PROSES PELAKSANAAN -->
+  <div class="slide slide-process">
+    <div>
+      <p class="section-eyebrow animate-in">Alur Kegiatan</p>
+      <h2 class="section-title animate-in" style="color:var(--navy);">Proses Pelaksanaan Tes</h2>
+    </div>
+
+    <!-- Small floating illus -->
+    <svg class="process-illus animate-in" viewBox="0 0 200 180" fill="none">
+      <ellipse cx="100" cy="168" rx="70" ry="10" fill="#E0F5F3" opacity="0.5"/>
+      <!-- Clipboard -->
+      <rect x="40" y="30" width="120" height="140" rx="14" fill="white" stroke="#E2E8F0" stroke-width="2"/>
+      <rect x="72" y="18" width="56" height="24" rx="8" fill="#0F9B8E"/>
+      <rect x="80" y="22" width="40" height="12" rx="4" fill="white" opacity="0.7"/>
+      <!-- Checklist items -->
+      <rect x="56" y="62" width="88" height="10" rx="4" fill="#E0F5F3"/>
+      <rect x="56" y="82" width="72" height="10" rx="4" fill="#E0F5F3"/>
+      <rect x="56" y="102" width="80" height="10" rx="4" fill="#E0F5F3"/>
+      <rect x="56" y="122" width="64" height="10" rx="4" fill="#FEF3C7"/>
+      <!-- Checkmarks -->
+      <circle cx="50" cy="67" r="7" fill="#0F9B8E"/>
+      <path d="M46 67 L49 70 L54 64" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <circle cx="50" cy="87" r="7" fill="#0F9B8E"/>
+      <path d="M46 87 L49 90 L54 84" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <circle cx="50" cy="107" r="7" fill="#E0F5F3" stroke="#0F9B8E" stroke-width="1.5"/>
+      <circle cx="50" cy="127" r="7" fill="#E0F5F3" stroke="#CBD5E0" stroke-width="1.5"/>
+      <!-- Pencil -->
+      <rect x="130" y="140" width="10" height="40" rx="2" fill="#F59E0B" transform="rotate(-30 130 140)"/>
+      <polygon points="125,168 135,168 130,178" fill="#FDDBB4" transform="rotate(-30 130 160)"/>
+    </svg>
+
+    <div class="process-steps animate-in">
+      <div class="process-step">
+        <div class="step-circle" style="background:linear-gradient(135deg,#0F9B8E,#5DCBB8);">1</div>
+        <div class="step-title">Briefing</div>
+        <div class="step-desc">Penjelasan tujuan & prosedur kepada siswa</div>
+      </div>
+      <div class="process-step">
+        <div class="step-circle" style="background:linear-gradient(135deg,#4A4ADF,#818CF8);">2</div>
+        <div class="step-title">Pengisian</div>
+        <div class="step-desc">Mengerjakan soal & kuesioner secara mandiri</div>
+      </div>
+      <div class="process-step">
+        <div class="step-circle" style="background:linear-gradient(135deg,#F59E0B,#FCD34D);">3</div>
+        <div class="step-title">Skoring</div>
+        <div class="step-desc">Pengolahan hasil secara otomatis & terstandar</div>
+      </div>
+      <div class="process-step">
+        <div class="step-circle" style="background:linear-gradient(135deg,#EF5350,#F87171);">4</div>
+        <div class="step-title">Analisis</div>
+        <div class="step-desc">Penyusunan profil individual setiap siswa</div>
+      </div>
+      <div class="process-step">
+        <div class="step-circle" style="background:linear-gradient(135deg,#10B981,#34D399);">5</div>
+        <div class="step-title">Konseling</div>
+        <div class="step-desc">Diskusi hasil & rekomendasi pengembangan diri</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: MANFAAT -->
+  <div class="slide slide-manfaat">
+    <div class="manfaat-left animate-in">
+      <svg class="manfaat-illus" viewBox="0 0 300 320" fill="none">
+        <ellipse cx="150" cy="306" rx="110" ry="12" fill="rgba(255,255,255,0.1)"/>
+        <!-- Podium -->
+        <rect x="40" y="240" width="80" height="68" rx="8" fill="rgba(255,255,255,0.15)"/>
+        <rect x="130" y="210" width="80" height="98" rx="8" fill="rgba(255,255,255,0.25)"/>
+        <rect x="220" y="255" width="60" height="53" rx="8" fill="rgba(255,255,255,0.1)"/>
+        <!-- Numbers -->
+        <text x="64" y="286" font-size="26" font-weight="800" fill="rgba(255,255,255,0.7)" text-anchor="middle">2</text>
+        <text x="170" y="265" font-size="26" font-weight="800" fill="white" text-anchor="middle">1</text>
+        <text x="248" y="292" font-size="26" font-weight="800" fill="rgba(255,255,255,0.7)" text-anchor="middle">3</text>
+        <!-- Student 1st place (big) -->
+        <circle cx="170" cy="170" r="26" fill="#FDDBB4"/>
+        <path d="M146 167 Q148 148 170 144 Q192 148 194 167 Q186 156 170 154 Q154 156 146 167Z" fill="#2C1810"/>
+        <circle cx="160" cy="166" r="3.5" fill="white"/><circle cx="180" cy="166" r="3.5" fill="white"/>
+        <circle cx="161" cy="167" r="2" fill="#333"/><circle cx="181" cy="167" r="2" fill="#333"/>
+        <path d="M161 177 Q170 182 179 177" stroke="#C97B3A" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+        <rect x="148" y="193" width="44" height="55" rx="8" fill="#F59E0B"/>
+        <!-- Trophy above -->
+        <rect x="153" y="128" width="34" height="26" rx="4" fill="#F59E0B"/>
+        <rect x="159" y="122" width="22" height="8" rx="3" fill="#FCD34D"/>
+        <rect x="162" y="150" width="16" height="6" rx="2" fill="#F59E0B"/>
+        <rect x="156" y="155" width="28" height="4" rx="2" fill="#FCD34D"/>
+        <!-- Star on trophy -->
+        <polygon points="170,126 172,132 178,132 173,136 175,142 170,138 165,142 167,136 162,132 168,132" fill="white" opacity="0.9"/>
+      </svg>
+    </div>
+    <div class="manfaat-right">
+      <p class="section-eyebrow animate-in" style="color:rgba(255,255,255,0.6);">Manfaat Nyata</p>
+      <h2 class="section-title animate-in" style="color:#fff;margin-bottom:24px;">Dampak bagi<br>Siswa & Sekolah</h2>
+      <div class="manfaat-list">
+        <div class="manfaat-item animate-in">
+          <div class="manfaat-num">01</div>
+          <div class="manfaat-text">
+            <h4>Motivasi Belajar Meningkat</h4>
+            <p>Siswa yang tahu minatnya belajar lebih bersemangat dan fokus di bidang yang tepat.</p>
+          </div>
+        </div>
+        <div class="manfaat-item animate-in">
+          <div class="manfaat-num">02</div>
+          <div class="manfaat-text">
+            <h4>Pemilihan Jurusan Lebih Tepat</h4>
+            <p>Mengurangi salah jurusan yang sering terjadi karena pengaruh teman atau ekspektasi orang tua.</p>
+          </div>
+        </div>
+        <div class="manfaat-item animate-in">
+          <div class="manfaat-num">03</div>
+          <div class="manfaat-text">
+            <h4>Bimbingan Konselor Lebih Efektif</h4>
+            <p>Data hasil tes menjadi dasar diskusi yang objektif antara siswa, guru, dan orang tua.</p>
+          </div>
+        </div>
+        <div class="manfaat-item animate-in">
+          <div class="manfaat-num">04</div>
+          <div class="manfaat-text">
+            <h4>Reputasi Sekolah Meningkat</h4>
+            <p>Program berbasis data menunjukkan komitmen sekolah terhadap kualitas pengembangan siswa.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: RIASEC DETAIL -->
+  <div class="slide slide-riasec">
+    <div>
+      <p class="section-eyebrow animate-in">Profil Karier</p>
+      <h2 class="section-title animate-in" style="color:var(--navy);">Contoh Tipe & Rekomendasi Karier</h2>
+    </div>
+    <div class="riasec-grid">
+      <div class="riasec-card animate-in" style="background:#FFF5F5;border-color:#FECACA;">
+        <div class="riasec-letter" style="color:#EF5350;">R</div>
+        <div class="riasec-name">Realistic</div>
+        <div class="riasec-jobs">Insinyur · Mekanik · Arsitek · Pilot · Pertanian</div>
+        <span class="riasec-trait" style="background:#FDECEA;color:#B71C1C;">Praktis & Terampil</span>
+      </div>
+      <div class="riasec-card animate-in" style="background:#F5F3FF;border-color:#C4B5FD;">
+        <div class="riasec-letter" style="color:#7C3AED;">I</div>
+        <div class="riasec-name">Investigative</div>
+        <div class="riasec-jobs">Dokter · Ilmuwan · Programmer · Peneliti · Analis</div>
+        <span class="riasec-trait" style="background:#F5F3FF;color:#6D28D9;">Analitis & Ingin Tahu</span>
+      </div>
+      <div class="riasec-card animate-in" style="background:#F0FFF4;border-color:#A7F3D0;">
+        <div class="riasec-letter" style="color:#059669;">A</div>
+        <div class="riasec-name">Artistic</div>
+        <div class="riasec-jobs">Desainer · Penulis · Musisi · Fotografer · Aktor</div>
+        <span class="riasec-trait" style="background:#ECFDF5;color:#065F46;">Kreatif & Imajinatif</span>
+      </div>
+      <div class="riasec-card animate-in" style="background:#F0FDFA;border-color:#99F6E4;">
+        <div class="riasec-letter" style="color:#0F9B8E;">S</div>
+        <div class="riasec-name">Social</div>
+        <div class="riasec-jobs">Guru · Psikolog · Perawat · Konselor · HRD</div>
+        <span class="riasec-trait" style="background:#E0F5F3;color:#065F46;">Peduli & Komunikatif</span>
+      </div>
+      <div class="riasec-card animate-in" style="background:#FFFBEB;border-color:#FDE68A;">
+        <div class="riasec-letter" style="color:#D97706;">E</div>
+        <div class="riasec-name">Enterprising</div>
+        <div class="riasec-jobs">Pengusaha · Manajer · Politisi · Sales · Marketing</div>
+        <span class="riasec-trait" style="background:#FEF3C7;color:#92400E;">Pemimpin & Ambisius</span>
+      </div>
+      <div class="riasec-card animate-in" style="background:#EEF2FF;border-color:#C7D2FE;">
+        <div class="riasec-letter" style="color:#4338CA;">C</div>
+        <div class="riasec-name">Conventional</div>
+        <div class="riasec-jobs">Akuntan · Administrator · Sekretaris · Bankir</div>
+        <span class="riasec-trait" style="background:#E0E7FF;color:#3730A3;">Teratur & Detail</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: CLOSING CTA -->
+  <div class="slide slide-cta">
+    <div class="cta-content">
+      <svg class="cta-illus animate-in" viewBox="0 0 220 200" fill="none">
+        <ellipse cx="110" cy="190" rx="80" ry="10" fill="rgba(255,255,255,0.07)"/>
+        <!-- Group of students -->
+        <!-- Student 1 left -->
+        <circle cx="64" cy="110" r="18" fill="#FDDBB4"/><path d="M48 107 Q49 92 64 89 Q79 92 80 107 Q73 98 64 97 Q55 98 48 107Z" fill="#2C1810"/>
+        <circle cx="58" cy="108" r="2.5" fill="white"/><circle cx="70" cy="108" r="2.5" fill="white"/>
+        <circle cx="59" cy="109" r="1.5" fill="#333"/><circle cx="71" cy="109" r="1.5" fill="#333"/>
+        <path d="M59 117 Q64 120 69 117" stroke="#C97B3A" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <rect x="50" y="126" width="28" height="44" rx="7" fill="#4A4ADF"/>
+        <!-- Student 3 right -->
+        <circle cx="156" cy="108" r="18" fill="#FDDBB4"/><path d="M140 105 Q141 90 156 87 Q171 90 172 105 Q165 96 156 95 Q147 96 140 105Z" fill="#6B4226"/>
+        <circle cx="150" cy="106" r="2.5" fill="white"/><circle cx="162" cy="106" r="2.5" fill="white"/>
+        <circle cx="151" cy="107" r="1.5" fill="#333"/><circle cx="163" cy="107" r="1.5" fill="#333"/>
+        <path d="M151 115 Q156 118 161 115" stroke="#C97B3A" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <rect x="142" y="124" width="28" height="46" rx="7" fill="#EF5350"/>
+        <!-- Center student (taller/bigger = hero) -->
+        <circle cx="110" cy="96" r="22" fill="#FDDBB4"/><path d="M90 93 Q92 73 110 69 Q128 73 130 93 Q122 80 110 78 Q98 80 90 93Z" fill="#2C1810"/>
+        <circle cx="103" cy="92" r="3" fill="white"/><circle cx="117" cy="92" r="3" fill="white"/>
+        <circle cx="104" cy="93" r="2" fill="#333"/><circle cx="118" cy="93" r="2" fill="#333"/>
+        <path d="M104 104 Q110 108 116 104" stroke="#C97B3A" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <rect x="94" y="116" width="32" height="54" rx="8" fill="#F59E0B"/>
+        <!-- Stars above -->
+        <polygon points="110,30 113,40 123,40 115,46 118,56 110,50 102,56 105,46 97,40 107,40" fill="#F59E0B"/>
+        <polygon points="70,50 72,56 78,56 73,60 75,66 70,62 65,66 67,60 62,56 68,56" fill="#5DCBB8" opacity="0.8"/>
+        <polygon points="150,48 152,54 158,54 153,58 155,64 150,60 145,64 147,58 142,54 148,54" fill="#A78BFA" opacity="0.8"/>
+      </svg>
+      <h2 class="cta-title animate-in">Mulai Perjalanan<br>Menemukan <em>Potensi Terbaik</em><br>Setiap Siswa</h2>
+      <p class="cta-desc animate-in">Tes minat bakat bukan sekadar angket — ini adalah peta jalan menuju masa depan yang lebih terarah dan penuh makna bagi setiap anak didik kita.</p>
+      <div class="cta-cards animate-in">
+        <div class="cta-card">
+          <div class="cta-icon">📋</div>
+          <p>Konsultasi &<br>Perencanaan</p>
+        </div>
+        <div class="cta-card">
+          <div class="cta-icon">🎓</div>
+          <p>Pelaksanaan<br>di Sekolah</p>
+        </div>
+        <div class="cta-card">
+          <div class="cta-icon">📊</div>
+          <p>Laporan<br>Individual Siswa</p>
+        </div>
+        <div class="cta-card">
+          <div class="cta-icon">🤝</div>
+          <p>Sesi Konseling<br>Bersama</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#deck -->
+
+<script>
+  const TOTAL = 9;
+  let current = 0;
+  let startX = 0, isDragging = false, dragDist = 0;
+
+  const deck = document.getElementById('deck');
+  const progressBar = document.getElementById('progress-bar');
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+  const counter = document.getElementById('slide-counter');
+  const slides = document.querySelectorAll('.slide');
+
+  // Build dots
+  for (let i = 0; i < TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => goTo(i));
+    counter.appendChild(d);
+  }
+
+  function updateUI() {
+    deck.style.transform = `translateX(-${current * 100}vw)`;
+    progressBar.style.width = ((current + 1) / TOTAL * 100) + '%';
+    btnPrev.classList.toggle('hidden', current === 0);
+    btnNext.classList.toggle('hidden', current === TOTAL - 1);
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+    // Trigger slide animations
+    slides.forEach((s, i) => s.classList.toggle('active', i === current));
+    // Reset animations for incoming slide
+    const incoming = slides[current];
+    incoming.querySelectorAll('.animate-in').forEach(el => {
+      el.style.animation = 'none';
+      el.offsetHeight; // reflow
+      el.style.animation = '';
+    });
+  }
+
+  function goTo(n) {
+    if (n < 0 || n >= TOTAL) return;
+    current = n;
+    updateUI();
+  }
+
+  function navigate(dir) { goTo(current + dir); }
+
+  // Touch / mouse swipe
+  deck.addEventListener('touchstart', e => { startX = e.touches[0].clientX; isDragging = true; }, { passive: true });
+  deck.addEventListener('touchmove', e => {
+    if (!isDragging) return;
+    dragDist = e.touches[0].clientX - startX;
+    deck.style.transition = 'none';
+    deck.style.transform = `translateX(calc(-${current * 100}vw + ${dragDist}px))`;
+  }, { passive: true });
+  deck.addEventListener('touchend', () => {
+    isDragging = false;
+    deck.style.transition = '';
+    if (dragDist < -60) navigate(1);
+    else if (dragDist > 60) navigate(-1);
+    else updateUI();
+    dragDist = 0;
+  });
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') navigate(-1);
+  });
+
+
+  // Fullscreen
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        document.getElementById('fs-icon-expand').style.display = 'none';
+        document.getElementById('fs-icon-compress').style.display = '';
+        showToast('Tekan Esc atau klik ikon untuk keluar fullscreen');
+      }).catch(() => showToast('Fullscreen tidak didukung browser ini'));
+    } else {
+      document.exitFullscreen().then(() => {
+        document.getElementById('fs-icon-expand').style.display = '';
+        document.getElementById('fs-icon-compress').style.display = 'none';
+      });
+    }
+  }
+
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+      document.getElementById('fs-icon-expand').style.display = '';
+      document.getElementById('fs-icon-compress').style.display = 'none';
+    }
+  });
+
+  // Keyboard F for fullscreen
+  document.addEventListener('keydown', e => {
+    if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+  });
+
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('fs-toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+
+  // ── SLIDE PANEL ──
+  const SLIDES_META = [
+    { title: 'Cover', sub: 'Tes Minat & Bakat Siswa', bg: 'linear-gradient(135deg,#0d1b3e,#0F9B8E)', icon: '🎓' },
+    { title: 'Mengapa Penting', sub: 'Potensi diri siswa', bg: 'linear-gradient(135deg,#fff,#f0fdf9)', icon: '❓', dark: true },
+    { title: 'Apa Itu', sub: '6 fitur utama', bg: 'linear-gradient(135deg,#F0FDF9,#EEF2FF)', icon: '📋', dark: true },
+    { title: '4 Komponen', sub: 'Jenis-jenis tes', bg: 'linear-gradient(135deg,#1E2A4A,#2d3f6e)', icon: '🧩' },
+    { title: 'Teori Holland', sub: 'Model RIASEC', bg: 'linear-gradient(135deg,#fff,#f8f9ff)', icon: '⬡', dark: true },
+    { title: 'Proses', sub: '5 langkah pelaksanaan', bg: 'linear-gradient(135deg,#FFF8F0,#F0FDF9)', icon: '📝', dark: true },
+    { title: 'Manfaat', sub: 'Dampak nyata', bg: 'linear-gradient(135deg,#4A4ADF,#0F9B8E)', icon: '🏆' },
+    { title: 'Profil Karier', sub: 'Rekomendasi profesi', bg: 'linear-gradient(135deg,#fff,#fafafa)', icon: '🗂', dark: true },
+    { title: 'Penutup', sub: 'Mulai perjalanan', bg: 'linear-gradient(135deg,#0d1b3e,#1a3a6b)', icon: '🚀' },
+  ];
+
+  const panelList = document.getElementById('panel-list');
+  const panel = document.getElementById('slide-panel');
+
+  function buildPanel() {
+    panelList.innerHTML = '';
+    SLIDES_META.forEach(function(meta, i) {
+      var item = document.createElement('div');
+      item.className = 'panel-thumb' + (i === current ? ' current' : '');
+      item.innerHTML =
+        '<div class="thumb-preview" style="background:' + meta.bg + ';">' +
+          '<div class="thumb-preview-inner">' + meta.icon + '</div>' +
+        '</div>' +
+        '<div class="thumb-info">' +
+          '<div class="thumb-num">Slide ' + (i + 1) + '</div>' +
+          '<div class="thumb-title">' + meta.title + '</div>' +
+          '<div class="thumb-sub">' + meta.sub + '</div>' +
+        '</div>';
+      item.addEventListener('click', (function(idx) {
+        return function() {
+          closePanel();
+          setTimeout(function() { goTo(idx); }, 60);
+        };
+      })(i));
+      panelList.appendChild(item);
+    });
+  }
+
+  function togglePanel() {
+    if (panel.classList.contains('open')) closePanel();
+    else openPanel();
+  }
+  function openPanel() {
+    buildPanel();
+    panel.classList.add('open');
+    // Scroll active thumb into view
+    setTimeout(() => {
+      const active = panelList.querySelector('.current');
+      if (active) active.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }, 420);
+  }
+  function closePanel() {
+    panel.classList.remove('open');
+  }
+
+  // Keyboard: G for panel
+  document.addEventListener('keydown', e => {
+    if (e.key === 'g' || e.key === 'G') togglePanel();
+    if (e.key === 'Escape') closePanel();
+  });
+
+  updateUI();
+
+</script>
+</body>
+</html>

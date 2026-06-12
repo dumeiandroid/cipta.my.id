@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Presentasi Khotbah: Berikan Sesuai Tempatnya</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Library Ekspor CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #0F172A;
+            --bg-card: #1E293B;
+            --text-light: #F8FAFC;
+            --text-muted: #94A3B8;
+            --accent-teal: #0D9488;
+            --accent-amber: #D97706;
+            --accent-indigo: #4F46E5;
+            --font-display: 'Playfair Display', Georgia, serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: var(--font-body);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            touch-action: pan-x;
+        }
+
+        /* Arsitektur Deck Horizontal */
+        #viewport {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #deck {
+            display: flex;
+            width: 1500vw; /* 15 Slides */
+            height: 100vh;
+            transition: transform 0.6s cubic-bezier(0.76, 0, 0.24, 1);
+            will-change: transform;
+        }
+
+        .slide {
+            flex: 0 0 100vw;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            background-color: var(--bg-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem;
+        }
+
+        /* Progress Bar */
+        #progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            z-index: 100;
+        }
+        #progress-bar {
+            height: 100%;
+            width: 6.66%; /* 1/15 awal */
+            background: linear-gradient(90deg, var(--accent-teal), var(--accent-indigo));
+            transition: width 0.4s ease;
+        }
+
+        /* Tata Letak Konten & Animasi */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .layout-cover {
+            text-align: center;
+            align-items: center;
+        }
+
+        .layout-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .layout-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        /* Tipografi & Komponen */
+        .badge {
+            background: rgba(13, 148, 136, 0.2);
+            color: var(--accent-teal);
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border: 1px solid rgba(13, 148, 136, 0.3);
+            display: inline-block;
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: 3.5rem;
+            line-height: 1.2;
+            color: var(--text-light);
+        }
+        
+        h2 {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            color: var(--text-light);
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            color: var(--accent-teal);
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        blockquote {
+            border-left: 4px solid var(--accent-amber);
+            padding-left: 1.5rem;
+            font-style: italic;
+            color: var(--text-light);
+            background: rgba(217, 119, 6, 0.05);
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+        }
+
+        .card {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: var(--accent-teal);
+        }
+
+        /* Kontrol Statis Melayang */
+        .nav-btn {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            z-index: 90;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            background: var(--accent-teal);
+            border-color: var(--accent-teal);
+        }
+        #nav-prev { left: 2rem; }
+        #nav-next { right: 2rem; }
+        .nav-hidden { display: none !important; }
+
+        .top-ctrl {
+            position: fixed;
+            top: 1.5rem;
+            right: 2rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 95;
+        }
+        .icon-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.1); }
+
+        /* Slide Dots */
+        #dots-container {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.75rem;
+            z-index: 90;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dot.active {
+            width: 32px;
+            border-radius: 99px;
+            background: var(--accent-teal);
+        }
+
+        /* Sidebar Drawer */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            right: -350px;
+            width: 350px;
+            height: 100vh;
+            background: #111827;
+            border-left: 1px solid rgba(255,255,255,0.1);
+            z-index: 200;
+            transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        #sidebar.open { right: 0; }
+        #sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 199;
+            display: none;
+        }
+        .thumb-list {
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding-right: 0.5rem;
+        }
+        .thumb-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            background: var(--bg-card);
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .thumb-item:hover, .thumb-item.active {
+            border-color: var(--accent-teal);
+            background: rgba(13, 148, 136, 0.1);
+        }
+        .thumb-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            background: var(--accent-indigo);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-export {
+            background: var(--accent-teal);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-export:hover { background: #0f766e; }
+
+        /* Toast */
+        #toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--bg-card);
+            border-left: 4px solid var(--accent-teal);
+            padding: 1rem 1.5rem;
+            border-radius: 4px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
+            transform: translateY(150%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 300;
+        }
+        #toast.show { transform: translateY(0); }
+
+        /* Animasi Konten */
+        .animate-el {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .slide.active-slide .animate-el {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* Penundaan Bertingkat */
+        .slide.active-slide .del-1 { transition-delay: 0.1s; }
+        .slide.active-slide .del-2 { transition-delay: 0.2s; }
+        .slide.active-slide .del-3 { transition-delay: 0.3s; }
+        .slide.active-slide .del-4 { transition-delay: 0.4s; }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+        .svg-float {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* Alur Interaktif Diagram */
+        .flow-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.02);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px dashed rgba(255,255,255,0.1);
+        }
+        .flow-node {
+            text-align: center;
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            width: 280px;
+            border-bottom: 4px solid var(--accent-indigo);
+        }
+        .flow-arrow {
+            color: var(--accent-amber);
+            font-weight: bold;
+            font-size: 2rem;
+        }
+
+        /* Sembunyikan Kontrol Saat Ekspor */
+        .exporting .top-ctrl,
+        .exporting .nav-btn,
+        .exporting #dots-container {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="progress-container"><div id="progress-bar"></div></div>
+
+    <!-- Kontrol Luar Statis -->
+    <div class="top-ctrl">
+        <button class="icon-btn" id="btn-fullscreen" title="Fullscreen (F)">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-menu" title="Menu Panel (G)">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+    </div>
+
+    <button class="nav-btn nav-hidden" id="nav-prev">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <button class="nav-btn" id="nav-next">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
+
+    <div id="dots-container"></div>
+
+    <!-- Sidebar Panel Grid -->
+    <div id="sidebar-overlay"></div>
+    <div id="sidebar">
+        <h3 style="color: white; margin-bottom: 0.5rem;">Navigasi Slide</h3>
+        <button class="btn-export" onclick="exportDeckToPDF()">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Ekspor PDF (Sesuai Layar)
+        </button>
+        <div class="thumb-list" id="thumb-container"></div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast">Mode layar penuh diaktifkan</div>
+
+    <!-- Main Viewport Deck -->
+    <div id="viewport">
+        <div id="deck">
+            
+            <!-- SLIDE 1: COVER -->
+            <section class="slide active-slide">
+                <div class="container layout-cover">
+                    <span class="badge animate-el del-1">Matius 22:15-22 & Konfesi GBKP Bab 11</span>
+                    <h1 class="animate-el del-2" style="margin-top:1rem; margin-bottom: 1.5rem;">Berikan Sesuai Tempatnya</h1>
+                    <p class="animate-el del-3" style="max-width: 700px; font-size:1.3rem;">Menurunkan Ego di Hadapan Otoritas Duniawi Demi Ketaatan Mutlak Kepada Allah</p>
+                    <div class="svg-float animate-el del-4" style="margin-top: 2rem;">
+                        <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="1.5">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v12M6 12h12"/>
+                        </svg>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 2: LATAR BELAKANG / URGENSI -->
+            <section class="slide">
+                <div class="container layout-split">
+                    <div>
+                        <span class="badge animate-el del-1">I. Pembukaan</span>
+                        <h2 class="animate-el del-2" style="margin: 1rem 0;">Titik Balik Kelelahan Jiwa</h2>
+                        <p class="animate-el del-3">Saat usaha merangkak naik, lembar tagihan pajak dan regulasi birokrasi datang bertubi-tubi. Respons alami ego kita sering kali mengeluh, marah, dan berontak menolak tatanan hukum sipil.</p>
+                    </div>
+                    <div class="svg-float style-svg">
+                        <svg width="100%" height="250" viewBox="0 0 400 250" fill="none">
+                            <rect width="400" height="250" rx="16" fill="var(--bg-card)"/>
+                            <path d="M50 200 L150 150 L250 180 L350 70" stroke="var(--accent-amber)" stroke-width="4" stroke-linecap="round"/>
+                            <circle cx="350" cy="70" r="8" fill="var(--accent-teal)"/>
+                        </svg>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 3: PENJELASAN UMUM (INTEREST & DESIRE) -->
+            <section class="slide">
+                <div class="container layout-grid">
+                    <div class="card animate-el del-1">
+                        <div class="badge">Interest</div>
+                        <h3 style="margin-top:1rem;">Konfesi GBKP Bab 11</h3>
+                        <p>Menegaskan bahwa pemerintah—terlepas dari kekurangannya—adalah hamba Allah yang ditetapkan untuk menata ketertiban dunia.</p>
+                    </div>
+                    <div class="card animate-el del-2">
+                        <div class="badge">Desire</div>
+                        <h3 style="margin-top:1rem;">Kerinduan Iman</h3>
+                        <p>Mendambakan bisnis/hidup yang diberkati, kedamaian batin, serta berjalannya kewajiban sipil dan iman secara selaras.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 4: MASALAH UTAMA (DIKOTOMI MENTAL) -->
+            <section class="slide">
+                <div class="container layout-split">
+                    <div class="svg-float">
+                        <svg width="100%" height="250" viewBox="0 0 400 250" fill="none">
+                            <rect width="400" height="250" rx="16" fill="var(--bg-card)"/>
+                            <circle cx="150" cy="125" r="50" fill="rgba(79, 70, 229, 0.2)" stroke="var(--accent-indigo)" stroke-width="2"/>
+                            <circle cx="250" cy="125" r="50" fill="rgba(13, 148, 136, 0.2)" stroke="var(--accent-teal)" stroke-width="2"/>
+                            <path d="M200 80 L200 170" stroke="var(--accent-amber)" stroke-width="3" stroke-dasharray="6 6"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="badge animate-el del-1">Masalah Utama</span>
+                        <h2 class="animate-el del-2" style="margin: 1rem 0;">Kemunafikan Pekat</h2>
+                        <p class="animate-el del-3">Terjebak dalam dikotomi mental yang sempit: Menganggap urusan ibadah di gereja sebagai hal suci, namun melihat kewajiban hukum atau pajak kepada negara sebagai beban yang memuakkan.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 5: SOLUSI TEOLOGIS -->
+            <section class="slide">
+                <div class="container layout-cover">
+                    <span class="badge animate-el del-1">Solusi</span>
+                    <h2 class="animate-el del-2" style="margin: 1rem 0 2rem 0;">Solusi: Berikan Sesuai Tempatnya</h2>
+                    <div class="card animate-el del-3" style="max-width: 800px; text-align: left;">
+                        <p style="font-size: 1.2rem; color: var(--text-light);">"Firman Tuhan hari ini membongkar kemunafikan kita dan menuntut kita menundukkan ego sipil secara jujur di hadapan struktur duniawi demi ketaatan mutlak kita kepada kedaulatan Allah."</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 6: LATAR BELAKANG TEKS ALKITAB -->
+            <section class="slide">
+                <div class="container">
+                    <span class="badge animate-el del-1">II. Pembahasan</span>
+                    <h2 class="animate-el del-2">Konteks Historis Matius 22:15-22</h2>
+                    <blockquote class="animate-el del-3" style="margin: 1.5rem 0;">
+                        Orang Farisi dan Herodian bersekongkol menjebak Yesus dengan pertanyaan maut: "Apakah diperbolehkan membayar pajak kepada Kaisar Roma atau tidak?"
+                    </blockquote>
+                    <p class="animate-el del-4">Jika Yesus menjawab boleh, Ia dituduh mengkhianati bangsa Yahudi. Jika Ia menjawab tidak, Ia ditangkap sebagai pemberontak Roma. Yesus membedah motif busuk mereka secara radikal lewat sekeping dinar.</p>
+                </div>
+            </section>
+
+            <!-- SLIDE 7: POIN 1 - KETAATAN SIPIL (TEKS UTAMA) -->
+            <section class="slide">
+                <div class="container">
+                    <span class="badge animate-el del-1">Poin 1</span>
+                    <h2 class="animate-el del-2">Ketaatan Sipil yang Bertanggung Jawab</h2>
+                    <blockquote class="animate-el del-3" style="margin: 1rem 0;">
+                        "Tunjukkanlah kepada-Ku mata uang pajak itu." ... "Gambar dan tulisan siapakah ini?" Jawab mereka: "Gambar dan tulisan Kaisar." Lalu kata Yesus kepada mereka: "Berikanlah kepada Kaisar apa yang wajib kamu berikan kepada Kaisar..." (Ayat 19-21a)
+                    </blockquote>
+                    <p class="animate-el del-4"><strong>Konteks:</strong> Karena uang dinar dicetak dengan otoritas dan gambar Kaisar, ada kewajiban sipil dan finansial yang sah untuk mengembalikannya kepada tatanan negara demi ketertiban umum.</p>
+                </div>
+            </section>
+
+            <!-- SLIDE 8: POIN 1 - ALUR AIDA KESAKSIAN -->
+            <section class="slide">
+                <div class="container layout-grid">
+                    <div class="card animate-el del-1">
+                        <h3>A & I (Kesaksian)</h3>
+                        <p>Sadar bahwa fasilitas umum, keamanan, dan jalan raya di Medan diatur oleh pemeliharaan Tuhan lewat pemerintah. Melanggar hukum sipil berarti meremehkan ketetapan-Nya.</p>
+                    </div>
+                    <div class="card animate-el del-2">
+                        <h3>D & Masalah</h3>
+                        <p><strong>Desire:</strong> Bisnis bersih dan legal.<br><strong>Masalah:</strong> Ego ketamakan menggoda kita memanipulasi pajak atau menyuap demi jalan pintas birokrasi.</p>
+                    </div>
+                    <div class="card animate-el del-3" style="border-left: 4px solid var(--accent-teal);">
+                        <h3>A (Action/Solusi)</h3>
+                        <p>Merapikan laporan keuangan usaha tanpa manipulasi, membayar pajak jujur apa adanya, dan menolak keras memberi uang pelicin.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 9: POIN 2 - KEDAULATAN ALLAH (TEKS UTAMA) -->
+            <section class="slide">
+                <div class="container">
+                    <span class="badge animate-el del-1">Poin 2</span>
+                    <h2 class="animate-el del-2">Kedaulatan Mutlak Milik Allah</h2>
+                    <blockquote class="animate-el del-3" style="margin: 1rem 0;">
+                        "... dan kepada Allah apa yang wajib kamu berikan kepada Allah." (Ayat 21b)
+                    </blockquote>
+                    <p class="animate-el del-4"><strong>Konteks:</strong> Yesus membatasi kuasa totaliter negara. Jika uang memuat gambar Kaisar, maka roh dan kehidupan manusia memuat gambar Allah (*Imago Dei*). Hak milik mutlak atas eksistensi kita hanya milik Tuhan.</p>
+                </div>
+            </section>
+
+            <!-- SLIDE 10: POIN 2 - ALUR AIDA KESAKSIAN -->
+            <section class="slide">
+                <div class="container layout-grid">
+                    <div class="card animate-el del-1">
+                        <h3>A & I (Kesaksian)</h3>
+                        <p>Pernah terjebak mengorbankan integritas moral, keluarga, dan waktu ibadah demi menyenangkan "Kaisar duniawi" (relasi bisnis, bos, jabatan eksternal).</p>
+                    </div>
+                    <div class="card animate-el del-2">
+                        <h3>D & Masalah</h3>
+                        <p><strong>Desire:</strong> Iman yang kokoh.<br><strong>Masalah:</strong> Arus materialisme membuat kita lebih takut kehilangan validasi manusia/jabatan daripada kehilangan Allah.</p>
+                    </div>
+                    <div class="card animate-el del-3" style="border-left: 4px solid var(--accent-indigo);">
+                        <h3>A (Action/Solusi)</h3>
+                        <p>Menetapkan batas tegas: Menolak perintah palsu di kantor dengan santun, serta mematikan gawai kerja saat hari Minggu untuk perpulungen (PJJ).</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 11: POIN 3 - HIKMAT TERHADAP OTORITAS (TEKS UTAMA) -->
+            <section class="slide">
+                <div class="container">
+                    <span class="badge animate-el del-1">Poin 3</span>
+                    <h2 class="animate-el del-2">Kebijaksanaan di Tengah Provokasi</h2>
+                    <blockquote class="animate-el del-3" style="margin: 1rem 0;">
+                        "Mengapa kamu mencobai Aku, hai orang-orang munafik? ... Mendengar itu heranlah mereka dan meninggalkan Yesus lalu pergi." (Ayat 15-18, 22)
+                    </blockquote>
+                    <p class="animate-el del-4"><strong>Konteks:</strong> Yesus merespons provokasi dengan hikmat ilahi yang tenang, bukan dengan amarah meledak-ledak. Ia mengajarkan murid-murid-Nya untuk berpikir jernih dan kritis menghadapi intrik dunia.</p>
+                </div>
+            </section>
+
+            <!-- SLIDE 12: POIN 3 - ALUR AIDA KESAKSIAN -->
+            <section class="slide">
+                <div class="container layout-grid">
+                    <div class="card animate-el del-1">
+                        <h3>A & I (Kesaksian)</h3>
+                        <p>Dulu sering bersikap reaktif di media sosial atau grup percakapan, mudah mencaci kebijakan pemerintah, serta menyebarkan kritik destruktif tanpa filter.</p>
+                    </div>
+                    <div class="card animate-el del-2">
+                        <h3>D & Masalah</h3>
+                        <p><strong>Desire:</strong> Menjadi pembawa damai (*peacemaker*) Kristen.<br><strong>Masalah:</strong> Ego kelompok dan emosi mudah tersulut berita provokatif umpan klik (*clickbait*).</p>
+                    </div>
+                    <div class="card animate-el del-3" style="border-left: 4px solid var(--accent-amber);">
+                        <h3>A (Action/Solusi)</h3>
+                        <p>Berhenti berdebat kusir digital, menyaring kebenaran berita, dan melipat tangan untuk mendoakan jajaran pemerintah dari Kepala Desa hingga Presiden.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 13: DIAGRAM ALUR PROSES INTERAKTIF -->
+            <section class="slide">
+                <div class="container">
+                    <span class="badge animate-el del-1">Diagram Proses</span>
+                    <h2 class="animate-el del-2">Sinergi Kewajiban Sipil & Iman</h2>
+                    <div class="flow-container animate-el del-3">
+                        <div class="flow-node">
+                            <h3>1. Identifikasi Otoritas</h3>
+                            <p style="font-size:0.9rem;">Melihat gambar Kaisar pada kewajiban sipil (Hukum/Pajak).</p>
+                        </div>
+                        <div class="flow-arrow">&rarr;</div>
+                        <div class="flow-node" style="border-color: var(--accent-teal);">
+                            <h3>2. Penundukan Ego</h3>
+                            <p style="font-size:0.9rem;">Melakukan kewajiban secara jujur tanpa manipulasi.</p>
+                        </div>
+                        <div class="flow-arrow">&rarr;</div>
+                        <div class="flow-node" style="border-color: var(--accent-amber);">
+                            <h3>3. Kedaulatan Mutlak</h3>
+                            <p style="font-size:0.9rem;">Menyerahkan jiwa seutuhnya (*Imago Dei*) kepada Allah.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 14: KESIMPULAN & KOMITMEN NYATA -->
+            <section class="slide">
+                <div class="container">
+                    <span class="badge animate-el del-1">III. Penutup</span>
+                    <h2 class="animate-el del-2">3 Langkah Nyata Komitmen Praktis (3A)</h2>
+                    <div class="layout-grid" style="margin-top: 1rem;">
+                        <div class="card" style="border-top: 4px solid var(--accent-teal);">
+                            <h3 style="color:var(--accent-teal);">A1: Integritas Sipil</h3>
+                            <p>Hidup jujur dalam aturan hukum, administrasi, dan pajak tanpa manipulasi data.</p>
+                        </div>
+                        <div class="card" style="border-top: 4px solid var(--accent-indigo);">
+                            <h3 style="color:var(--accent-indigo);">A2: Filter Kedaulatan</h3>
+                            <p>Menolak kompromi dosa di lingkungan kerja demi menjaga kedaulatan Allah atas hidup kita.</p>
+                        </div>
+                        <div class="card" style="border-top: 4px solid var(--accent-amber);">
+                            <h3 style="color:var(--accent-amber);">A3: Altar Syafaat</h3>
+                            <p>Menyaring informasi publik dengan bijak serta rutin mendoakan aparatur pemerintah.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 15: MANFAAT & PENUTUP / CTA -->
+            <section class="slide">
+                <div class="container layout-split">
+                    <div>
+                        <span class="badge animate-el del-1">Dampak Iman</span>
+                        <h2 class="animate-el del-2" style="margin: 1rem 0;">Manfaat yang Diperoleh</h2>
+                        <p class="animate-el del-3" style="margin-bottom: 0.5rem;">&bull; <strong>Batin Tenang:</strong> Bebas dari ketakutan hukum dan pelanggaran moral.</p>
+                        <p class="animate-el del-3" style="margin-bottom: 0.5rem;">&bull; <strong>Spiritualitas Murni:</strong> Karakter iman murni dan kokoh di dalam Kristus.</p>
+                        <p class="animate-el del-3" style="margin-bottom: 0.5rem;">&bull; <strong>Garam & Terang:</strong> GBKP menjadi mitra strategis yang dihormati bangsa (*Pro Patria*).</p>
+                    </div>
+                    <div class="card layout-cover" style="background: rgba(13, 148, 136, 0.1); border: 1px solid var(--accent-teal);">
+                        <h3 style="color: white; font-family: var(--font-display); font-size: 2rem;">Solus Populi Romani</h3>
+                        <p style="margin: 1rem 0;">Ketika kita meletakkan kontrol ego diri, kita berjalan dalam kuasa penyertaan Allah yang sempurna.</p>
+                        <span style="font-weight: 700; color: var(--accent-teal);">Amin. Tuhan Yesus Memberkati.</span>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const totalSlides = 15;
+        const deck = document.getElementById('deck');
+        const progressBar = document.getElementById('progress-bar');
+        const prevBtn = document.getElementById('nav-prev');
+        const nextBtn = document.getElementById('nav-next');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const toast = document.getElementById('toast');
+
+        // Judul Slide Singkat Untuk Panel Drawer
+        const slideTitles = [
+            "Cover Utama", "Titik Balik Jiwa", "Interest & Desire", "Masalah Utama", 
+            "Solusi Teologis", "Konteks Historis", "Poin 1: Teks Utama", "Poin 1: AIDA", 
+            "Poin 2: Teks Utama", "Poin 2: AIDA", "Poin 3: Teks Utama", "Poin 3: AIDA", 
+            "Diagram Proses", "3A Komitmen Nyata", "Manfaat & Penutup"
+        ];
+
+        // Inisialisasi Dots dan Panel Drawer Thumbnail
+        const dotsContainer = document.getElementById('dots-container');
+        const thumbContainer = document.getElementById('thumb-container');
+        
+        for(let i=0; i<totalSlides; i++) {
+            // Pembuatan Dots
+            let dot = document.createElement('div');
+            dot.className = `dot ${i===0?'active':''}`;
+            dot.onclick = () => goToSlide(i);
+            dotsContainer.appendChild(dot);
+
+            // Pembuatan Drawer Item
+            let thumb = document.createElement('div');
+            thumb.className = `thumb-item ${i===0?'active':''}`;
+            thumb.onclick = () => { goToSlide(i); toggleMenu(); };
+            thumb.innerHTML = `
+                <div class="thumb-icon" style="background:${i%3===0?'var(--accent-teal)':i%3===1?'var(--accent-indigo)':'var(--accent-amber)'}">
+                    <span style="font-size:0.8rem; font-weight:bold; color:white;">${i+1}</span>
+                </div>
+                <div style="display:flex; flex-direction:column;">
+                    <span style="font-size:0.9rem; font-weight:600; color:white;">Slide ${i+1}</span>
+                    <span style="font-size:0.75rem; color:var(--text-muted);">${slideTitles[i]}</span>
+                </div>
+            `;
+            thumbContainer.appendChild(thumb);
+        }
+
+        function updateSlideUI() {
+            // Pergeseran Layar Horizontal
+            deck.style.transform = `translateX(-${currentSlide * 100}vw)`;
+            
+            // Perubahan Progress Bar
+            progressBar.style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+
+            // Atur Visibilitas Tombol Navigasi
+            if(currentSlide === 0) prevBtn.classList.add('nav-hidden');
+            else prevBtn.classList.remove('nav-hidden');
+
+            if(currentSlide === totalSlides - 1) nextBtn.classList.add('nav-hidden');
+            else nextBtn.classList.remove('nav-hidden');
+
+            // Aktivasi Kelas Slide Animasi Internal
+            const slides = document.querySelectorAll('.slide');
+            slides.forEach((s, idx) => {
+                if(idx === currentSlide) s.classList.add('active-slide');
+                else s.classList.remove('active-slide');
+            });
+
+            // Aktivasi Indikator Titik (Dots)
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((d, idx) => d.classList.toggle('active', idx === currentSlide));
+
+            // Aktivasi Item Panel Drawer
+            const thumbs = document.querySelectorAll('.thumb-item');
+            thumbs.forEach((t, idx) => t.classList.toggle('active', idx === currentSlide));
+        }
+
+        function goToSlide(index) {
+            if(index >= 0 && index < totalSlides) {
+                currentSlide = index;
+                updateSlideUI();
+            }
+        }
+
+        prevBtn.onclick = () => goToSlide(currentSlide - 1);
+        nextBtn.onclick = () => goToSlide(currentSlide + 1);
+
+        // Navigasi Keyboard
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                goToSlide(currentSlide + 1);
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                goToSlide(currentSlide - 1);
+            } else if (e.key.toLowerCase() === 'g') {
+                toggleMenu();
+            } else if (e.key.toLowerCase() === 'f') {
+                toggleFullscreen();
+            }
+        });
+
+        // Pengaturan Kontrol Menu Drawer Sidebar
+        function toggleMenu() {
+            sidebar.classList.toggle('open');
+            overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+        }
+        document.getElementById('btn-menu').onclick = toggleMenu;
+        overlay.onclick = toggleMenu;
+
+        // Pengaturan Kontrol Layar Penuh (Fullscreen)
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().then(() => {
+                    showToast("Mode layar penuh diaktifkan");
+                });
+            } else {
+                document.exitFullscreen().then(() => {
+                    showToast("Keluar dari mode layar penuh");
+                });
+            }
+        }
+        document.getElementById('btn-fullscreen').onclick = toggleFullscreen;
+
+        function showToast(msg) {
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // Sentuhan Geser Perangkat Bergerak (Mobile Touch Swiping)
+        let touchStartX = 0;
+        let touchEndX = 0;
+        window.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, false);
+        window.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchStartX - touchEndX > 50) goToSlide(currentSlide + 1); // Swipe kiri -> slide maju
+            if (touchEndX - touchStartX > 50) goToSlide(currentSlide - 1); // Swipe kanan -> slide mundur
+        }, false);
+
+        // ==========================================
+        // FITUR UTAMA: SISTEM EKSPOR KE PDF ASYNC
+        // ==========================================
+        async function exportDeckToPDF() {
+            showToast("Sedang memproses ekspor PDF, mohon tunggu...");
+            document.body.classList.add('exporting');
+            toggleMenu(); // Tutup drawer menu agar rapi
+
+            const { jsPDF } = window.jspdf;
+            // Gunakan rasio lanskap layar penuh presentasi modern 16:9 standard
+            const doc = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: [297, 167.06]
+            });
+
+            const originalActiveSlide = currentSlide;
+            const slides = document.querySelectorAll('.slide');
+
+            // Loop seluruh slide secara berkala instan
+            for (let i = 0; i < totalSlides; i++) {
+                // Pindah posisi slide instan tanpa transisi visual CSS
+                currentSlide = i;
+                deck.style.transition = 'none';
+                deck.style.transform = `translateX(-${i * 100}vw)`;
+                
+                // Beri kelas active-slide agar objek animasi internal langsung muncul penuh
+                slides.forEach((s, idx) => s.classList.toggle('active-slide', idx === i));
+                
+                // Jeda pendek micro-tasking untuk memastikan rendering DOM browser stabil
+                await new Promise(resolve => setTimeout(resolve, 150));
+
+                const canvas = await html2canvas(slides[i], {
+                    scale: 2, // Kualitas tangkapan layar HD tajam 2x lipat
+                    backgroundColor: '#0F172A',
+                    useCORS: true,
+                    logging: false,
+                    width: window.innerWidth,
+                    height: window.innerHeight
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                
+                if (i > 0) doc.addPage();
+                doc.addImage(imgData, 'JPEG', 0, 0, 297, 167.06);
+            }
+
+            // Kembalikan konfigurasi sistem dan posisi layar semula jemaat
+            currentSlide = originalActiveSlide;
+            deck.style.transition = 'transform 0.6s cubic-bezier(0.76, 0, 0.24, 1)';
+            updateSlideUI();
+
+            document.body.classList.remove('exporting');
+            doc.save('Khotbah_Berikan_Sesuai_Tempatnya_GBKP.pdf');
+            showToast("Unduhan PDF Anda berhasil dimulai!");
+        }
+    </script>
+</body>
+</html>

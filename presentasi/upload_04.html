@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Presentasi Lidan</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            --navy: #0F172A;
+            --navy-light: #1E293B;
+            --teal: #14B8A6;
+            --amber: #F59E0B;
+            --indigo: #6366F1;
+            --soft-white: #F8FAFC;
+            --text-main: #F1F5F9;
+            --text-muted: #94A3B8;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --ease: cubic-bezier(0.76, 0, 0.24, 1);
+            --transition-speed: 0.6s;
+            --slide-width: 100vw;
+            --slide-height: 100vh;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #090d16;
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh; width: 100vw;
+            touch-action: none;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        #workspace {
+            width: var(--slide-width); height: var(--slide-height);
+            overflow: hidden; position: relative;
+            background-color: var(--navy);
+            transition: width 0.5s var(--ease), height 0.5s var(--ease);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+
+        #deck {
+            display: flex;
+            height: 100%;
+            transition: transform var(--transition-speed) var(--ease);
+            will-change: transform;
+        }
+
+        .slide {
+            flex-shrink: 0;
+            width: var(--slide-width);
+            height: 100%;
+            position: relative;
+            padding: 60px;
+            display: flex; flex-direction: column; justify-content: center;
+            overflow: hidden;
+            background-color: var(--navy);
+            transition: width 0.5s var(--ease), padding 0.5s var(--ease);
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 10% 20%, rgba(99,102,241,0.05) 0%, transparent 50%),
+                        radial-gradient(circle at 90% 80%, rgba(20,184,166,0.05) 0%, transparent 50%);
+            z-index: 0; pointer-events: none;
+        }
+
+        #progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: rgba(255,255,255,0.1); z-index: 1000; }
+        #progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--teal), var(--indigo)); transition: width 0.3s ease; }
+
+        h1, h2 { font-family: 'Playfair Display', serif; }
+        em { font-style: italic; color: var(--teal); }
+
+        .slide-title { font-size: clamp(2rem, 4.5vw, 3.8rem); margin-bottom: 20px; line-height: 1.1; z-index: 1; }
+        .slide-desc { font-size: 1.15rem; color: var(--text-muted); max-width: 700px; margin-bottom: 40px; z-index: 1; }
+
+        .two-column { display: flex; gap: 60px; align-items: center; z-index: 1; width: 100%; }
+        .col-visual { flex: 1; display: flex; justify-content: center; align-items: center; }
+        .col-content { flex: 1; }
+
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; width: 100%; z-index: 1; }
+        .card {
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: 32px; border-radius: 24px;
+            transition: all 0.3s ease; backdrop-filter: blur(10px);
+        }
+        .card:hover { transform: translateY(-5px); border-color: var(--teal); background: rgba(255,255,255,0.05); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+
+        .card-grid-flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; width: 100%; position: relative; z-index: 1; }
+
+        .animate-in { opacity: 0; transform: translateY(20px); transition: all 0.8s var(--ease); }
+        .active .animate-in { opacity: 1; transform: translateY(0); }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .floating { animation: float 4s ease-in-out infinite; }
+
+        .nav-btn {
+            position: absolute; bottom: 40px;
+            width: 56px; height: 56px; border-radius: 50%;
+            background: var(--navy-light); border: 1px solid var(--glass-border);
+            color: white; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        .nav-btn:hover { background: var(--indigo); transform: scale(1.1); }
+        .nav-btn.hidden { opacity: 0; pointer-events: none; }
+        #prev-btn { left: 40px; }
+        #next-btn { right: 40px; }
+
+        #dots-container { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 100; }
+        .dot { width: 8px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 20px; transition: all 0.4s var(--ease); cursor: pointer; }
+        .dot.active { width: 32px; background: var(--teal); }
+
+        .top-ctrl-wrapper { position: fixed; top: 0; right: 0; padding: 30px 30px 60px 100px; z-index: 1000; background: transparent; }
+        .top-ctrl { display: flex; gap: 12px; opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; pointer-events: none; }
+        .top-ctrl-wrapper:hover .top-ctrl { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .ctrl-btn { height: 44px; padding: 0 14px; background: var(--navy-light); border: 1px solid var(--glass-border); border-radius: 10px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; font-size: 0.85rem; font-weight: 600; transition: 0.3s; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .ctrl-btn:hover { background: var(--indigo); border-color: var(--teal); }
+
+        #sidebar { position: fixed; top: 0; right: -400px; width: 400px; height: 100%; background: var(--navy); border-left: 1px solid var(--glass-border); z-index: 2000; transition: right 0.5s var(--ease); padding: 40px; display: flex; flex-direction: column; overflow-y: auto; }
+        #sidebar.open { right: 0; }
+        #backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+        #backdrop.open { opacity: 1; pointer-events: auto; }
+        .thumb-list { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
+        .thumb { display: flex; align-items: center; gap: 15px; padding: 12px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; cursor: pointer; transition: 0.3s; }
+        .thumb:hover { background: var(--navy-light); border-color: var(--teal); }
+        .thumb-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+
+        #toast { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); background: var(--indigo); color: white; padding: 12px 24px; border-radius: 30px; font-size: 0.9rem; opacity: 0; transition: 0.3s; z-index: 5000; pointer-events: none; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+
+        .svg-icon { width: 48px; height: 48px; fill: none; stroke: currentColor; stroke-width: 1.5; margin-bottom: 15px; }
+        .svg-large { width: 100%; max-width: 320px; height: auto; display: block; }
+
+        /* Upload screen */
+        #upload-screen {
+            position: fixed; inset: 0;
+            background: #090d16;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+            padding: 40px;
+            gap: 32px;
+        }
+        #upload-screen.hidden { opacity: 0; pointer-events: none; }
+
+        /* Panel kiri - upload */
+        .up-panel-left {
+            flex: 1; max-width: 480px;
+            background: var(--navy-light);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 60px 48px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center;
+            gap: 16px;
+            min-height: 400px;
+        }
+        .up-folder-icon {
+            width: 80px; height: 80px; margin-bottom: 8px;
+        }
+        .up-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem; color: var(--amber);
+            line-height: 1.2;
+        }
+        .up-subtitle {
+            font-size: 0.9rem; color: var(--text-muted);
+            line-height: 1.6; max-width: 320px;
+        }
+        .up-subtitle code {
+            background: rgba(255,255,255,0.08);
+            padding: 1px 6px; border-radius: 4px;
+            font-family: monospace; font-size: 0.85rem;
+            color: var(--teal);
+        }
+        #file-input { display: none; }
+        .up-btn {
+            margin-top: 8px;
+            padding: 14px 32px;
+            background: var(--amber);
+            color: #0F172A;
+            border: none; border-radius: 50px;
+            font-family: inherit; font-size: 0.95rem; font-weight: 700;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 10px;
+            transition: 0.3s; box-shadow: 0 8px 24px rgba(245,158,11,0.3);
+        }
+        .up-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(245,158,11,0.4); }
+        .up-hint { font-size: 0.78rem; color: var(--text-muted); font-style: italic; }
+        .up-drag-active { border-color: var(--amber) !important; background: rgba(245,158,11,0.05) !important; }
+
+        /* Panel kanan - contoh JSON */
+        .up-panel-right {
+            flex: 1; max-width: 520px;
+            background: #0d1526;
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            display: flex; flex-direction: column;
+            min-height: 400px;
+            overflow: hidden;
+        }
+        .up-json-header {
+            padding: 18px 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--glass-border);
+            flex-shrink: 0;
+        }
+        .up-json-label {
+            font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em;
+            color: var(--amber);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .up-copy-btn {
+            padding: 7px 16px;
+            background: var(--amber);
+            color: #0F172A;
+            border: none; border-radius: 20px;
+            font-family: inherit; font-size: 0.8rem; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; gap: 6px;
+            transition: 0.2s;
+        }
+        .up-copy-btn:hover { opacity: 0.85; }
+        .up-copy-btn.copied { background: var(--teal); }
+        .up-json-hint {
+            padding: 10px 24px;
+            font-size: 0.8rem; color: var(--text-muted);
+            border-bottom: 1px solid var(--glass-border);
+            line-height: 1.5; flex-shrink: 0;
+        }
+        .up-json-body {
+            flex: 1; overflow-y: auto; overflow-x: auto;
+            padding: 20px 24px;
+        }
+        .up-json-body pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.78rem;
+            line-height: 1.65;
+            color: #e2e8f0;
+            white-space: pre;
+        }
+        /* Syntax highlight colors */
+        .jk { color: #93c5fd; }  /* key */
+        .js { color: #86efac; }  /* string value */
+        .jn { color: #fda4af; }  /* number */
+        .jc { color: #6366f1; }  /* bracket/brace */
+        .jp { color: #94a3b8; }  /* punctuation */
+
+        /* Loading spinner (saat proses setelah upload) */
+        #loading-screen {
+            position: fixed; inset: 0;
+            background: var(--navy);
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column; gap: 16px;
+            z-index: 9998;
+            transition: opacity 0.5s ease;
+            display: none;
+        }
+        #loading-screen.show { display: flex; }
+        #loading-screen.hidden { opacity: 0; pointer-events: none; }
+        .loading-spinner {
+            width: 40px; height: 40px;
+            border: 3px solid var(--glass-border);
+            border-top-color: var(--teal);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Portrait Engine */
+        .forced-portrait .slide,
+        @media (orientation: portrait) {
+            .slide { padding: 40px 24px 90px 24px !important; justify-content: flex-start !important; }
+            .slide-title { font-size: min(2.8vh, 1.6rem) !important; margin-bottom: 8px !important; text-align: center !important; line-height: 1.25 !important; }
+            .slide-desc { font-size: min(1.5vh, 0.88rem) !important; max-width: 100% !important; margin-bottom: 16px !important; text-align: center !important; line-height: 1.45 !important; }
+            .two-column { flex-direction: column !important; text-align: center !important; gap: 12px !important; width: 100% !important; }
+            .col-content { width: 100% !important; }
+            .col-visual { order: -1 !important; max-height: 14vh !important; width: 100% !important; display: flex !important; justify-content: center !important; align-items: center !important; margin-bottom: 5px !important; }
+            .svg-large { max-height: 12vh !important; width: auto !important; margin: 0 auto !important; }
+            .card-grid, .card-grid-flow { grid-template-columns: 1fr !important; gap: 8px !important; width: 100% !important; }
+            .card { padding: 10px 14px !important; border-radius: 12px !important; }
+            .card h3, .card h4, .card h5 { font-size: min(1.8vh, 0.95rem) !important; margin-bottom: 2px !important; }
+            .card p { font-size: min(1.4vh, 0.8rem) !important; line-height: 1.3 !important; }
+            .svg-icon { width: 22px !important; height: 22px !important; margin-bottom: 2px !important; }
+            .top-ctrl-wrapper { padding: 12px !important; }
+            .top-ctrl { opacity: 1 !important; transform: translateY(0) !important; pointer-events: auto !important; }
+            .ctrl-btn span { display: none; }
+            .nav-btn { bottom: 12px; width: 42px; height: 42px; }
+            #prev-btn { left: 12px; }
+            #next-btn { right: 12px; }
+            #dots-container { bottom: 20px; gap: 6px; }
+            .dot { width: 6px; height: 6px; }
+            .dot.active { width: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Upload Screen -->
+<div id="upload-screen">
+    <!-- Panel Kiri: Upload -->
+    <div class="up-panel-left" id="dropZone">
+        <svg class="up-folder-icon" viewBox="0 0 80 80" fill="none">
+            <path d="M8 20C8 16.686 10.686 14 14 14H30L38 22H66C69.314 22 72 24.686 72 28V60C72 63.314 69.314 66 66 66H14C10.686 66 8 63.314 8 60V20Z" fill="#F59E0B" opacity="0.9"/>
+            <path d="M8 32H72V60C72 63.314 69.314 66 66 66H14C10.686 66 8 63.314 8 60V32Z" fill="#FBBF24"/>
+            <circle cx="40" cy="49" r="8" fill="#0F172A" opacity="0.25"/>
+            <path d="M37 49l3-3 3 3M40 46v8" stroke="#0F172A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+        </svg>
+        <h2 class="up-title">Upload File Konten JSON</h2>
+        <p class="up-subtitle">Pilih atau drag &amp; drop file <code>.json</code> yang berisi array data slide presentasi Anda.</p>
+        <input type="file" id="file-input" accept=".json">
+        <button class="up-btn" onclick="document.getElementById('file-input').click()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Pilih File .json
+        </button>
+        <p class="up-hint">Contoh: konten1.json, kampus.json</p>
+    </div>
+
+    <!-- Panel Kanan: Contoh Format JSON -->
+    <div class="up-panel-right">
+        <div class="up-json-header">
+            <span class="up-json-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                CONTOH FORMAT JSON
+            </span>
+            <button class="up-copy-btn" id="copyJsonBtn" onclick="copyExampleJson()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy Semua
+            </button>
+        </div>
+        <div class="up-json-hint">Salin contoh ini, lalu minta AI untuk mengisi konten sesuai topik yang Anda inginkan.</div>
+        <div class="up-json-body">
+            <pre id="exampleJsonPre"></pre>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Screen -->
+<div id="loading-screen">
+    <div class="loading-spinner"></div>
+    <p style="color: var(--text-muted); font-size: 0.9rem;">Memuat presentasi...</p>
+</div>
+
+<div id="workspace" style="display:none;">
+    <div id="progress-container"><div id="progress-bar"></div></div>
+
+    <button id="prev-btn" class="nav-btn hidden" onclick="prevSlide()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button id="next-btn" class="nav-btn" onclick="nextSlide()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+
+    <div id="dots-container"></div>
+    <div id="deck"></div>
+</div>
+
+<div class="top-ctrl-wrapper" style="display:none;" id="top-ctrl-wrapper">
+    <div class="top-ctrl">
+        <button id="orientation-btn" class="ctrl-btn" onclick="toggleOrientation()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+            <span>Portrait Mode</span>
+        </button>
+        <button class="ctrl-btn" onclick="toggleFullscreen()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+            <span>Fullscreen</span>
+        </button>
+        <button class="ctrl-btn" onclick="toggleSidebar()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span>Slides Menu</span>
+        </button>
+        <button class="ctrl-btn" onclick="downloadSelfContainedHTML()" style="border-color: var(--teal);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            <span>Download HTML</span>
+        </button>
+    </div>
+</div>
+
+<div id="backdrop" onclick="toggleSidebar()" style="display:none;"></div>
+
+<div id="sidebar" style="display:none;">
+    <h2 style="margin-bottom:15px; border-bottom:1px solid var(--glass-border); padding-bottom:10px; font-size:1.4rem;">Navigasi Slide</h2>
+    <button onclick="exportDeckToPDF()" style="width:100%; padding:14px; background:var(--teal); color:var(--navy); border:none; border-radius:10px; font-weight:700; cursor:pointer; margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:10px; font-family:inherit; font-size:0.95rem; box-shadow:0 4px 12px rgba(20,184,166,0.2); transition:0.2s;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        Ekspor PDF (Sesuai Orientasi)
+    </button>
+    <div id="sidebar-thumbs" class="thumb-list"></div>
+</div>
+
+<div id="toast">Notifikasi</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let currentSlide = 0;
+let totalSlides = 0;
+let isPortraitMode = false;
+let slideData = [];
+let pdfFilename = 'Presentasi';
+
+const workspace = document.getElementById('workspace');
+const deck = document.getElementById('deck');
+const dotsContainer = document.getElementById('dots-container');
+const sidebarThumbs = document.getElementById('sidebar-thumbs');
+const toast = document.getElementById('toast');
+const orientationBtn = document.getElementById('orientation-btn');
+
+// ============================================================
+// CONTOH JSON (ditampilkan di panel kanan upload screen)
+// ============================================================
+const EXAMPLE_JSON = {
+  "meta": {
+    "title": "Judul Presentasi Anda",
+    "pdfFilename": "NamaFile_PDF"
+  },
+  "slides": [
+    {
+      "id": 1,
+      "type": "hero",
+      "background": "radial-gradient(circle at center, #1E293B 0%, #0F172A 100%)",
+      "badge": "NAMA PROGRAM 2026",
+      "title": "Judul Besar:<br><em>Kata Kunci</em> Presentasi",
+      "desc": "Deskripsi singkat yang menjelaskan nilai utama presentasi ini.",
+      "meta1Label": "Presenter", "meta1Value": "Nama Presenter",
+      "meta2Label": "Modul", "meta2Value": "Nama Modul",
+      "image": { "type": "svg", "viewBox": "0 0 24 24", "stroke": "var(--teal)", "content": "<polygon points=\'12 2 2 22 12 17 22 22 12 2\' stroke-width=\'1.5\'/>" }
+    },
+    {
+      "id": 2,
+      "type": "two-column-left-image",
+      "title": "Judul Slide <em>Kata Kunci</em>",
+      "cardText": "Isi paragraf kartu. Bisa pakai <strong>bold</strong> untuk penekanan.",
+      "cardAccentColor": "var(--amber)",
+      "image": { "type": "svg", "viewBox": "0 0 24 24", "stroke": "var(--indigo)", "content": "<circle cx=\'12\' cy=\'12\' r=\'10\'/><path d=\'M12 2a14.5 14.5 0 0 0 0 20M2 12h20\'/>" }
+    },
+    {
+      "id": 3,
+      "type": "card-grid",
+      "title": "Judul Slide dengan <em>Kata Kunci</em>",
+      "cards": [
+        { "color": "var(--teal)", "icon": "<path stroke=\'currentColor\' d=\'M12 2L2 7l10 5 10-5-10-5zM2 12l10 5 10-5\'/>", "heading": "Poin 1", "text": "Penjelasan poin pertama." },
+        { "color": "var(--indigo)", "icon": "<circle cx=\'9\' cy=\'7\' r=\'4\' stroke=\'currentColor\'/>", "heading": "Poin 2", "text": "Penjelasan poin kedua.", "delay": "0.1s" },
+        { "color": "var(--amber)", "icon": "<path stroke=\'currentColor\' d=\'M22 19H4a2 2 0 0 1-2-2V5l2-3h5l2 3h9a2 2 0 0 1 2 2z\'/>", "heading": "Poin 3", "text": "Penjelasan poin ketiga.", "delay": "0.2s" }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "card-grid-flow",
+      "title": "Alur <em>Proses</em>",
+      "steps": [
+        { "num": "LANGKAH 01", "color": "var(--teal)", "heading": "Langkah 1", "text": "Deskripsi langkah pertama." },
+        { "num": "LANGKAH 02", "color": "var(--indigo)", "heading": "Langkah 2", "text": "Deskripsi langkah kedua.", "delay": "0.1s" },
+        { "num": "LANGKAH 03", "color": "var(--amber)", "heading": "Langkah 3", "text": "Deskripsi langkah ketiga.", "delay": "0.2s" },
+        { "num": "LANGKAH 04", "color": "var(--soft-white)", "heading": "Langkah 4", "text": "Deskripsi langkah keempat.", "delay": "0.3s" }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "roadmap",
+      "title": "Peta Jalan <em>Program</em>",
+      "rows": [
+        { "label": "Fase 1", "text": "Kegiatan di fase pertama." },
+        { "label": "Fase 2", "text": "Kegiatan di fase kedua." },
+        { "label": "Fase 3", "text": "Kegiatan di fase ketiga." }
+      ],
+      "image": { "type": "svg", "viewBox": "0 0 24 24", "content": "<path d=\'M9 18l6-6-6-6\' stroke=\'var(--indigo)\'/><circle cx=\'12\' cy=\'12\' r=\'10\' stroke=\'var(--amber)\' stroke-dasharray=\'3 3\'/>", "maxWidth": "160px" }
+    },
+    {
+      "id": 6,
+      "type": "closing",
+      "background": "linear-gradient(135deg, var(--navy) 0%, var(--indigo) 100%)",
+      "title": "Kalimat Penutup <em>yang Berkesan</em>",
+      "desc": "Kalimat motivasi atau ajakan bertindak untuk menutup presentasi.",
+      "ctaLabel": "MULAI SEKARANG",
+      "image": { "type": "svg", "viewBox": "0 0 24 24", "content": "<path d=\'M22 11.08V12a10 10 0 1 1-5.93-9.14\' stroke=\'var(--teal)\' stroke-width=\'1.5\'/><polyline points=\'22 4 12 14.01 9 11.01\' stroke=\'var(--amber)\' stroke-width=\'2\'/>", "maxWidth": "180px" }
+    }
+  ]
+};
+
+function renderExampleJson() {
+    const pre = document.getElementById('exampleJsonPre');
+    if (!pre) return;
+    pre.textContent = JSON.stringify(EXAMPLE_JSON, null, 2);
+}
+
+function copyExampleJson() {
+    const text = JSON.stringify(EXAMPLE_JSON, null, 2);
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyJsonBtn');
+        btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Tersalin!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Semua';
+            btn.classList.remove('copied');
+        }, 2500);
+    });
+}
+
+// ============================================================
+// UPLOAD & PARSE JSON
+// ============================================================
+function initUploadScreen() {
+    renderExampleJson();
+
+    const fileInput = document.getElementById('file-input');
+    const dropZone = document.getElementById('dropZone');
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files[0]) handleFile(e.target.files[0]);
+    });
+
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('up-drag-active'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('up-drag-active'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('up-drag-active');
+        const file = e.dataTransfer.files[0];
+        if (file && file.name.endsWith('.json')) handleFile(file);
+        else alert('Harap upload file .json');
+    });
+}
+
+function handleFile(file) {
+    const loadingEl = document.getElementById('loading-screen');
+    loadingEl.classList.add('show');
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            slideData = data.slides;
+            totalSlides = slideData.length;
+            pdfFilename = data.meta?.pdfFilename || file.name.replace('.json','');
+            document.title = data.meta?.title || file.name;
+
+            buildSlides();
+            init();
+
+            // Tampilkan presentasi
+            document.getElementById('workspace').style.display = '';
+            document.getElementById('top-ctrl-wrapper').style.display = '';
+            document.getElementById('backdrop').style.display = '';
+            document.getElementById('sidebar').style.display = '';
+            document.getElementById('toast').style.display = '';
+            // Sembunyikan upload screen & loading
+            document.getElementById('upload-screen').classList.add('hidden');
+            setTimeout(() => loadingEl.classList.remove('show'), 400);
+
+        } catch (err) {
+            loadingEl.classList.remove('show');
+            alert('Format JSON tidak valid: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+// ============================================================
+// HELPER: buat SVG element
+// ============================================================
+function makeSVG(img, extraStyle = '') {
+    if (!img || img.type !== 'svg') return '';
+    const w = img.width || '100%';
+    const h = img.height || 'auto';
+    const maxW = img.maxWidth ? `max-width:${img.maxWidth};` : 'max-width:320px;';
+    const stroke = img.stroke || 'none';
+    return `<svg width="${w}" height="${h}" viewBox="${img.viewBox}" fill="none" stroke="${stroke}" stroke-width="1.5" style="${maxW} height:auto; display:block; ${extraStyle}">
+        ${img.content}
+    </svg>`;
+}
+
+// ============================================================
+// SLIDE BUILDERS
+// ============================================================
+function buildSlides() {
+    deck.innerHTML = '';
+    slideData.forEach((s, idx) => {
+        const section = document.createElement('section');
+        section.className = 'slide' + (idx === 0 ? ' active' : '');
+        section.id = `slide-${s.id}`;
+        if (s.background) section.style.background = s.background;
+
+        section.innerHTML = buildSlideHTML(s);
+        deck.appendChild(section);
+    });
+    deck.style.width = `calc(${totalSlides} * var(--slide-width))`;
+}
+
+function buildSlideHTML(s) {
+    switch (s.type) {
+
+        case 'hero': return `
+            <div class="two-column">
+                <div class="col-content">
+                    <div class="animate-in" style="margin-bottom:15px;">
+                        <span style="background:var(--teal); padding:6px 16px; border-radius:50px; font-size:0.8rem; font-weight:700; color:var(--navy);">${s.badge}</span>
+                    </div>
+                    <h1 class="slide-title animate-in">${s.title}</h1>
+                    <p class="slide-desc animate-in">${s.desc}</p>
+                    <div class="animate-in" style="display:flex; gap:40px; border-top:1px solid var(--glass-border); padding-top:30px;">
+                        <div><small style="color:var(--text-muted)">${s.meta1Label}</small><br><strong style="font-size:0.95rem;">${s.meta1Value}</strong></div>
+                        <div><small style="color:var(--text-muted)">${s.meta2Label}</small><br><strong style="font-size:0.95rem;">${s.meta2Value}</strong></div>
+                    </div>
+                </div>
+                <div class="col-visual floating">
+                    ${makeSVG(s.image, 'width:100%; max-width:320px;')}
+                </div>
+            </div>`;
+
+        case 'two-column-left-image': return `
+            <div class="two-column">
+                <div class="col-visual floating">
+                    ${makeSVG(s.image, 'width:140px; height:140px;')}
+                </div>
+                <div class="col-content">
+                    <h2 class="slide-title animate-in">${s.title}</h2>
+                    ${s.desc ? `<p class="slide-desc animate-in">${s.desc}</p>` : ''}
+                    ${s.cardText ? `<div class="card animate-in" ${s.cardAccentColor ? `style="border-left:4px solid ${s.cardAccentColor};"` : ''}>
+                        <p style="line-height:1.6;">${s.cardText}</p>
+                    </div>` : ''}
+                </div>
+            </div>`;
+
+        case 'two-column-right-image': return `
+            <div class="two-column">
+                <div class="col-content" ${s.id === 14 ? 'style="flex:1.3;"' : ''}>
+                    <h2 class="slide-title animate-in">${s.title}</h2>
+                    ${s.desc ? `<p class="slide-desc animate-in">${s.desc}</p>` : ''}
+                    ${s.bulletPoints ? `
+                    <ul class="animate-in" style="list-style:none; line-height:1.8;">
+                        ${s.bulletPoints.map(b => `
+                        <li style="margin-bottom:8px; display:flex; gap:10px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="3" style="flex-shrink:0; margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>${b}</span>
+                        </li>`).join('')}
+                    </ul>` : ''}
+                </div>
+                <div class="col-visual floating">
+                    ${s.image?.type === 'cv-mockup' ? `
+                    <div class="card animate-in floating" style="width:200px; height:260px; border-radius:16px; background:rgba(255,255,255,0.05); padding:24px;">
+                        <div style="width:44px; height:44px; background:var(--teal); border-radius:50%; margin-bottom:20px; opacity:0.7"></div>
+                        <div style="width:100%; height:8px; background:var(--text-muted); margin-bottom:12px; opacity:0.3"></div>
+                        <div style="width:70%; height:8px; background:var(--text-muted); margin-bottom:12px; opacity:0.3"></div>
+                        <div style="width:100%; height:40px; background:var(--indigo); opacity:0.2; margin-top:40px; border-radius:8px;"></div>
+                    </div>` : makeSVG(s.image, `width:${s.image?.width || '140px'}; height:${s.image?.height || '140px'};`)}
+                </div>
+            </div>`;
+
+        case 'card-grid': return `
+            <h2 class="slide-title animate-in" style="text-align:center;">${s.title}</h2>
+            <div class="card-grid">
+                ${s.cards.map(c => `
+                <div class="card animate-in" ${c.delay ? `style="transition-delay:${c.delay};"` : ''}>
+                    <svg class="svg-icon" style="color:${c.color}" viewBox="0 0 24 24">${c.icon}</svg>
+                    <h${c.hLevel || 3}>${c.heading}</h${c.hLevel || 3}>
+                    <p style="color:var(--text-muted);">${c.text}</p>
+                </div>`).join('')}
+            </div>`;
+
+        case 'card-grid-numbered': return `
+            <h2 class="slide-title animate-in" style="text-align:center;">${s.title}</h2>
+            <div class="card-grid">
+                ${s.cards.map(c => `
+                <div class="card animate-in" ${c.delay ? `style="transition-delay:${c.delay};"` : ''}>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                        <div style="background:${c.bgColor}; padding:8px; border-radius:12px; display:flex; align-items:center; justify-content:center; width:38px; height:38px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${c.color}" stroke-width="2">${c.icon}</svg>
+                        </div>
+                        <div style="font-size:1.3rem; color:${c.color}; font-weight:800; opacity:0.5;">${c.num}</div>
+                    </div>
+                    <h4>${c.heading}</h4>
+                    <p style="color:var(--text-muted);">${c.text}</p>
+                </div>`).join('')}
+            </div>`;
+
+        case 'card-grid-flow': return `
+            <h2 class="slide-title animate-in" style="text-align:center;">${s.title}</h2>
+            <div class="card-grid-flow">
+                ${s.steps.map(step => `
+                <div class="card animate-in" style="text-align:center; border-top:4px solid ${step.color}; ${step.delay ? `transition-delay:${step.delay};` : ''}">
+                    <div style="font-size:0.7rem; font-weight:800; color:${step.color}; margin-bottom:2px;">${step.num}</div>
+                    <h4 style="margin-bottom:4px;">${step.heading}</h4>
+                    <p style="color:var(--text-muted);">${step.text}</p>
+                </div>`).join('')}
+            </div>`;
+
+        case 'card-icon-text': return `
+            <h2 class="slide-title animate-in" style="text-align:center;">${s.title}</h2>
+            <div class="card animate-in" style="display:flex; gap:30px; align-items:center;">
+                <div style="font-size:3rem; flex-shrink:0;">${s.icon}</div>
+                <div>
+                    <h3>${s.cardHeading}</h3>
+                    <p style="color:var(--text-muted); margin-top:5px; line-height:1.6;">${s.cardText}</p>
+                </div>
+            </div>`;
+
+        case 'card-grid-accented': return `
+            <h2 class="slide-title animate-in" style="text-align:center;">${s.title}</h2>
+            <div class="card-grid">
+                ${s.cards.map(c => `
+                <div class="card animate-in" style="background:${c.bg}; border-color:${c.color}; ${c.delay ? `transition-delay:${c.delay};` : ''}">
+                    <svg class="svg-icon" style="color:${c.color}" viewBox="0 0 24 24">${c.icon}</svg>
+                    <h4>${c.heading}</h4>
+                    <p style="color:var(--text-muted);">${c.text}</p>
+                </div>`).join('')}
+            </div>`;
+
+        case 'roadmap': return `
+            <div class="two-column">
+                <div class="col-content" style="flex:1.3;">
+                    <h2 class="slide-title animate-in">${s.title}</h2>
+                    <div class="card animate-in" style="background:var(--navy-light); padding:16px;">
+                        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:1.05rem;">
+                            ${s.rows.map((row, i) => `
+                            <tr ${i < s.rows.length - 1 ? 'style="border-bottom:1px solid var(--glass-border);"' : ''}>
+                                <td style="padding:10px 15px; font-weight:700; color:var(--teal); width:25%;">${row.label}</td>
+                                <td style="padding:10px 15px;">${row.text}</td>
+                            </tr>`).join('')}
+                        </table>
+                    </div>
+                </div>
+                <div class="col-visual floating">
+                    <svg class="svg-large" viewBox="${s.image.viewBox}" fill="none" stroke-width="1.5" style="max-width:${s.image.maxWidth || '160px'};">
+                        ${s.image.content}
+                    </svg>
+                </div>
+            </div>`;
+
+        case 'closing': return `
+            <div class="two-column" style="width:100%; text-align:left;">
+                <div class="col-content" style="flex:1.2;">
+                    <h1 class="slide-title animate-in">${s.title}</h1>
+                    <p class="slide-desc">${s.desc}</p>
+                    <div class="animate-in" style="text-align:center;">
+                        <button onclick="goToSlide(0)" style="padding:14px 32px; border-radius:50px; border:none; background:var(--teal); color:var(--navy); font-weight:700; cursor:pointer; font-family:inherit; font-size:1rem; box-shadow:0 10px 30px rgba(0,0,0,0.3); transition:0.3s;">${s.ctaLabel}</button>
+                    </div>
+                </div>
+                <div class="col-visual floating">
+                    <svg class="svg-large" viewBox="${s.image.viewBox}" fill="none" stroke-width="1" style="max-width:${s.image.maxWidth || '180px'};">
+                        ${s.image.content}
+                    </svg>
+                </div>
+            </div>`;
+
+        default:
+            return `<p style="color:var(--text-muted); z-index:1;">Tipe slide tidak dikenal: ${s.type}</p>`;
+    }
+}
+
+// ============================================================
+// NAVIGASI & KONTROL
+// ============================================================
+function init() {
+    dotsContainer.innerHTML = '';
+    sidebarThumbs.innerHTML = '';
+
+    for (let i = 0; i < totalSlides; i++) {
+        const dot = document.createElement('div');
+        dot.className = `dot ${i === 0 ? 'active' : ''}`;
+        dot.onclick = () => goToSlide(i);
+        dotsContainer.appendChild(dot);
+
+        const thumb = document.createElement('div');
+        thumb.className = 'thumb';
+        thumb.onclick = () => { goToSlide(i); toggleSidebar(); };
+        const iconColor = i % 3 === 0 ? 'var(--teal)' : (i % 3 === 1 ? 'var(--indigo)' : 'var(--amber)');
+        thumb.innerHTML = `
+            <div class="thumb-icon" style="background:${iconColor}; color:var(--navy); font-weight:bold">${i+1}</div>
+            <div><div style="font-weight:600; font-size:0.9rem">Slide ${i+1}</div></div>`;
+        sidebarThumbs.appendChild(thumb);
+    }
+    applyWorkspaceSize();
+}
+
+function applyWorkspaceSize() {
+    if (isPortraitMode) {
+        document.documentElement.style.setProperty('--slide-width', '420px');
+        document.documentElement.style.setProperty('--slide-height', '740px');
+        workspace.classList.add('forced-portrait');
+        orientationBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 12h.01"/></svg><span>Landscape Mode</span>`;
+    } else {
+        document.documentElement.style.setProperty('--slide-width', '100vw');
+        document.documentElement.style.setProperty('--slide-height', '100vh');
+        workspace.classList.remove('forced-portrait');
+        orientationBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg><span>Portrait Mode</span>`;
+    }
+    deck.style.width = `calc(${totalSlides} * var(--slide-width))`;
+    goToSlide(currentSlide);
+}
+
+function toggleOrientation() {
+    isPortraitMode = !isPortraitMode;
+    showToast(isPortraitMode ? "Tampilan Portrait Aktif" : "Tampilan Landscape Aktif");
+    applyWorkspaceSize();
+}
+
+function updateControls() {
+    document.getElementById('progress-bar').style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+    document.getElementById('prev-btn').classList.toggle('hidden', currentSlide === 0);
+    document.getElementById('next-btn').classList.toggle('hidden', currentSlide === totalSlides - 1);
+    document.querySelectorAll('.dot').forEach((dot, idx) => dot.classList.toggle('active', idx === currentSlide));
+    document.querySelectorAll('.slide').forEach((slide, idx) => slide.classList.toggle('active', idx === currentSlide));
+}
+
+function goToSlide(n) {
+    currentSlide = n;
+    const slideWidthStr = getComputedStyle(document.documentElement).getPropertyValue('--slide-width').trim();
+    deck.style.transform = slideWidthStr === '420px'
+        ? `translateX(-${currentSlide * 420}px)`
+        : `translateX(-${currentSlide * 100}vw)`;
+    updateControls();
+}
+
+function nextSlide() { if (currentSlide < totalSlides - 1) goToSlide(currentSlide + 1); }
+function prevSlide() { if (currentSlide > 0) goToSlide(currentSlide - 1); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('backdrop').classList.toggle('open'); }
+
+function showToast(msg) {
+    toast.innerText = msg; toast.style.opacity = 1;
+    setTimeout(() => toast.style.opacity = 0, 3000);
+}
+
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => {
+            if (isPortraitMode) document.documentElement.style.setProperty('--slide-height', '100vh');
+        });
+        showToast("Mode Fullscreen Aktif");
+    } else {
+        document.exitFullscreen?.().then(() => applyWorkspaceSize());
+        showToast("Keluar dari Fullscreen");
+    }
+}
+
+async function exportDeckToPDF() {
+    showToast("Sedang memproses dokumen PDF... Harap tunggu.");
+    const { jsPDF } = window.jspdf;
+    const width = workspace.offsetWidth;
+    const height = workspace.offsetHeight;
+    const pdf = new jsPDF({ orientation: width > height ? 'landscape' : 'portrait', unit: 'px', format: [width, height] });
+    const backupSlideIndex = currentSlide;
+
+    document.querySelector('.top-ctrl-wrapper').style.visibility = 'hidden';
+    document.getElementById('prev-btn').style.visibility = 'hidden';
+    document.getElementById('next-btn').style.visibility = 'hidden';
+    document.getElementById('dots-container').style.visibility = 'hidden';
+    if (document.getElementById('sidebar').classList.contains('open')) toggleSidebar();
+
+    for (let i = 0; i < totalSlides; i++) {
+        goToSlide(i);
+        deck.style.transition = 'none';
+        await new Promise(r => setTimeout(r, 300));
+        await html2canvas(document.getElementById(`slide-${i + 1}`), {
+            scale: 1.5, useCORS: true, logging: false, backgroundColor: '#0F172A', width, height
+        }).then(canvas => {
+            const pageImage = canvas.toDataURL('image/jpeg', 0.95);
+            if (i > 0) pdf.addPage([width, height], width > height ? 'landscape' : 'portrait');
+            pdf.addImage(pageImage, 'JPEG', 0, 0, width, height);
+        });
+    }
+
+    deck.style.transition = 'transform var(--transition-speed) var(--ease)';
+    goToSlide(backupSlideIndex);
+    document.querySelector('.top-ctrl-wrapper').style.visibility = 'visible';
+    document.getElementById('prev-btn').style.visibility = 'visible';
+    document.getElementById('next-btn').style.visibility = 'visible';
+    document.getElementById('dots-container').style.visibility = 'visible';
+    updateControls();
+    pdf.save(`${pdfFilename}_${width > height ? 'Landscape' : 'Portrait'}.pdf`);
+    showToast("Sukses! Dokumen PDF berhasil diunduh.");
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+    if (e.key === 'ArrowLeft') prevSlide();
+    if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+    if (e.key === 'g' || e.key === 'G') toggleSidebar();
+});
+
+let touchXStart = 0;
+workspace.addEventListener('touchstart', e => touchXStart = e.changedTouches[0].screenX);
+workspace.addEventListener('touchend', e => {
+    const touchXEnd = e.changedTouches[0].screenX;
+    if (touchXStart - touchXEnd > 50) nextSlide();
+    if (touchXEnd - touchXStart > 50) prevSlide();
+});
+
+window.addEventListener('resize', applyWorkspaceSize);
+
+// ============================================================
+// DOWNLOAD SELF-CONTAINED HTML
+// ============================================================
+function downloadSelfContainedHTML() {
+    showToast("Menyiapkan file HTML...");
+    try {
+        var dataJson = JSON.stringify({
+            meta: { title: document.title, pdfFilename: pdfFilename },
+            slides: slideData
+        });
+
+        var outputHTML = document.documentElement.outerHTML;
+
+        // 1. Hapus script PRELOADED lama jika ada (dari hasil download sebelumnya)
+        outputHTML = outputHTML.replace(/<script>\nwindow\.__PRELOADED[\s\S]*?<\/script>\n/g, '');
+
+        // 2. Sembunyikan upload-screen
+        outputHTML = outputHTML.replace(
+            /id="upload-screen"(?:\s+class="[^"]*")?/,
+            'id="upload-screen" class="hidden"'
+        );
+
+        // 3. Inject __PRELOADED sebelum script utama
+        var preloadBlock = '<script>\nwindow.__PRELOADED = ' + dataJson + ';\n<\/script>\n';
+        outputHTML = outputHTML.replace(
+            '<script>\n// ============================================================\n// STATE',
+            preloadBlock + '<script>\n// ============================================================\n// STATE'
+        );
+
+        // 4. Ganti baris initUploadScreen() yang TERAKHIR (pakai lastIndexOf agar tidak
+        //    mengenai string yang sama di dalam body fungsi downloadSelfContainedHTML)
+        var marker = '// Mulai\ninitUploadScreen();';
+        var lastIdx = outputHTML.lastIndexOf(marker);
+        if (lastIdx !== -1) {
+            var replacement = '// Mulai\n' +
+                'if (window.__PRELOADED) {\n' +
+                '    slideData = window.__PRELOADED.slides;\n' +
+                '    totalSlides = slideData.length;\n' +
+                '    pdfFilename = window.__PRELOADED.meta.pdfFilename || "Presentasi";\n' +
+                '    document.title = window.__PRELOADED.meta.title || "Presentasi";\n' +
+                '    document.getElementById("upload-screen").classList.add("hidden");\n' +
+                '    document.getElementById("workspace").style.display = "";\n' +
+                '    document.getElementById("top-ctrl-wrapper").style.display = "";\n' +
+                '    document.getElementById("backdrop").style.display = "";\n' +
+                '    document.getElementById("sidebar").style.display = "";\n' +
+                '    buildSlides();\n' +
+                '    init();\n' +
+                '} else {\n' +
+                '    initUploadScreen();\n' +
+                '}';
+            outputHTML = outputHTML.substring(0, lastIdx) + replacement + outputHTML.substring(lastIdx + marker.length);
+        }
+
+        // 5. Download
+        var filename = (pdfFilename || 'presentasi').replace(/[^a-z0-9_-]/gi, '_') + '.html';
+        var blob = new Blob([outputHTML], { type: 'text/html;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = filename; a.click();
+        URL.revokeObjectURL(url);
+        setTimeout(function() { showToast('File ' + filename + ' berhasil diunduh!'); }, 300);
+
+    } catch(e) {
+        console.error('Download error:', e);
+        showToast('Error: ' + e.message);
+    }
+}
+
+// Mulai
+initUploadScreen();
+</script>
+</body>
+</html>

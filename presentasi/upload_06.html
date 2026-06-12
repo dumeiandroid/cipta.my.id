@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Presentasi Lidan</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            --navy: #0F172A;
+            --navy-light: #1E293B;
+            --teal: #14B8A6;
+            --amber: #F59E0B;
+            --indigo: #6366F1;
+            --soft-white: #F8FAFC;
+            --text-main: #F1F5F9;
+            --text-muted: #94A3B8;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --ease: cubic-bezier(0.76, 0, 0.24, 1);
+            --transition-speed: 0.6s;
+            --slide-width: 100vw;
+            --slide-height: 100vh;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #090d16;
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh; width: 100vw;
+            touch-action: none;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* ===== UPLOAD SCREEN ===== */
+        #upload-screen {
+            position: fixed; inset: 0;
+            background: #090d16;
+            display: flex; align-items: center; justify-content: center; gap: 40px;
+            z-index: 9999;
+            flex-wrap: wrap;
+            padding: 40px;
+        }
+        #upload-screen.hidden { display: none; }
+
+        .upload-card {
+            background: var(--navy);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 48px 40px;
+            width: 380px;
+            text-align: center;
+            display: flex; flex-direction: column; align-items: center; gap: 16px;
+        }
+        .upload-card svg { color: var(--amber); }
+        .upload-card h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: var(--amber); }
+        .upload-card p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
+        .upload-card .badge { background: rgba(20,184,166,0.1); color: var(--teal); border: 1px solid rgba(20,184,166,0.3); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+
+        #file-input { display: none; }
+        .upload-btn {
+            margin-top: 8px;
+            padding: 14px 32px; border-radius: 50px;
+            background: var(--amber); color: var(--navy);
+            border: none; cursor: pointer;
+            font-family: inherit; font-size: 1rem; font-weight: 700;
+            display: flex; align-items: center; gap: 10px;
+            transition: 0.3s; box-shadow: 0 10px 30px rgba(245,158,11,0.3);
+        }
+        .upload-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 35px rgba(245,158,11,0.4); }
+        .upload-hint { font-size: 0.8rem; color: var(--text-muted); font-style: italic; }
+
+        .sample-card {
+            background: var(--navy);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 32px;
+            width: 420px;
+            max-height: 520px;
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .sample-card-header { display: flex; align-items: center; justify-content: space-between; }
+        .sample-card-header h3 { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+        .copy-btn {
+            padding: 8px 18px; border-radius: 20px;
+            background: var(--amber); color: var(--navy);
+            border: none; cursor: pointer;
+            font-family: inherit; font-size: 0.82rem; font-weight: 700;
+            display: flex; align-items: center; gap: 6px; transition: 0.2s;
+        }
+        .copy-btn:hover { opacity: 0.85; }
+        .sample-desc { font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; }
+        #sample-json-box {
+            background: #060a12;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px;
+            font-family: monospace;
+            font-size: 0.72rem;
+            color: #94a3b8;
+            overflow-y: auto;
+            max-height: 340px;
+            white-space: pre;
+            line-height: 1.5;
+        }
+
+        /* ===== WORKSPACE ===== */
+        .ws-hidden { display: none !important; }
+
+        #workspace {
+            width: var(--slide-width); height: var(--slide-height);
+            overflow: hidden; position: relative;
+            background-color: var(--navy);
+            transition: width 0.5s var(--ease), height 0.5s var(--ease);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+        #deck {
+            display: flex; height: 100%;
+            transition: transform var(--transition-speed) var(--ease);
+            will-change: transform;
+        }
+        .slide {
+            flex-shrink: 0;
+            width: var(--slide-width); height: 100%;
+            position: relative; padding: 60px;
+            display: flex; flex-direction: column; justify-content: center;
+            overflow: hidden; background-color: var(--navy);
+        }
+        .slide::before {
+            content: '';
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 10% 20%, rgba(99,102,241,0.04) 0%, transparent 50%),
+                        radial-gradient(circle at 90% 80%, rgba(20,184,166,0.04) 0%, transparent 50%);
+            z-index: 0; pointer-events: none;
+        }
+
+        #progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: rgba(255,255,255,0.1); z-index: 1000; }
+        #progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--teal), var(--indigo)); transition: width 0.3s ease; }
+
+        h1, h2 { font-family: 'Playfair Display', serif; }
+        em { font-style: italic; color: var(--teal); font-weight: 600; }
+
+        .slide-title { font-size: clamp(2rem, 4.2vw, 3.5rem); margin-bottom: 20px; line-height: 1.15; z-index: 1; }
+        .slide-desc { font-size: 1.15rem; color: var(--text-muted); max-width: 750px; margin-bottom: 40px; z-index: 1; line-height: 1.6; }
+
+        .two-column { display: flex; gap: 60px; align-items: center; z-index: 1; width: 100%; }
+        .col-visual { flex: 1; display: flex; justify-content: center; align-items: center; }
+        .col-content { flex: 1; }
+
+        .img-fluid-presentation {
+            width: 100%; max-width: 480px; height: 320px;
+            object-fit: cover; border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            transition: transform 0.5s ease;
+        }
+        .img-fluid-presentation:hover { transform: scale(1.02); }
+
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; width: 100%; z-index: 1; }
+        .card-grid-flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; width: 100%; z-index: 1; }
+
+        .card {
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: 32px; border-radius: 24px;
+            transition: all 0.3s ease; backdrop-filter: blur(10px);
+        }
+        .card:hover { transform: translateY(-5px); border-color: var(--teal); background: rgba(255,255,255,0.05); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+
+        /* Lucide icon dalam kartu */
+        .card-icon {
+            width: 40px; height: 40px;
+            margin-bottom: 15px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .card-icon svg {
+            width: 36px; height: 36px;
+            stroke-width: 1.75;
+        }
+
+        .animate-in { opacity: 0; transform: translateY(20px); transition: all 0.8s var(--ease); }
+        .active .animate-in { opacity: 1; transform: translateY(0); }
+
+        .nav-btn {
+            position: absolute; bottom: 40px;
+            width: 56px; height: 56px; border-radius: 50%;
+            background: var(--navy-light); border: 1px solid var(--glass-border);
+            color: white; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background: var(--indigo); transform: scale(1.1); }
+        .nav-btn.hidden { opacity: 0; pointer-events: none; }
+        #prev-btn { left: 40px; } #next-btn { right: 40px; }
+
+        #dots-container { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 100; }
+        .dot { width: 8px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 20px; transition: all 0.4s var(--ease); cursor: pointer; }
+        .dot.active { width: 32px; background: var(--teal); }
+
+        .top-ctrl-wrapper { position: fixed; top: 0; right: 0; padding: 30px 30px 60px 100px; z-index: 1000; background: transparent; }
+        .top-ctrl { display: flex; gap: 12px; opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease; pointer-events: none; }
+        .top-ctrl-wrapper:hover .top-ctrl { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        .ctrl-btn { height: 44px; padding: 0 14px; background: var(--navy-light); border: 1px solid var(--glass-border); border-radius: 10px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; font-size: 0.85rem; font-weight: 600; transition: 0.3s; }
+        .ctrl-btn:hover { background: var(--indigo); border-color: var(--teal); }
+
+        #sidebar { position: fixed; top: 0; right: -400px; width: 400px; height: 100%; background: var(--navy); border-left: 1px solid var(--glass-border); z-index: 2000; transition: right 0.5s var(--ease); padding: 40px; display: flex; flex-direction: column; overflow-y: auto; }
+        #sidebar.open { right: 0; }
+        #backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+        #backdrop.open { opacity: 1; pointer-events: auto; }
+
+        .thumb-list { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
+        .thumb { display: flex; align-items: center; gap: 15px; padding: 12px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; cursor: pointer; transition: 0.3s; }
+        .thumb:hover { background: var(--navy-light); border-color: var(--teal); }
+        .thumb p { font-size: 0.85rem; font-weight: 500; }
+
+        #toast { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); background: var(--indigo); color: white; padding: 12px 24px; border-radius: 30px; font-size: 0.9rem; opacity: 0; transition: 0.3s; z-index: 5000; pointer-events: none; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+
+        .forced-portrait .slide,
+        @media (orientation: portrait) {
+            .slide { padding: 40px 24px 90px 24px !important; justify-content: flex-start !important; }
+            .slide-title { font-size: min(2.6vh, 1.5rem) !important; margin-bottom: 8px !important; text-align: center !important; line-height: 1.25 !important; }
+            .slide-desc { font-size: min(1.45vh, 0.86rem) !important; max-width: 100% !important; margin-bottom: 16px !important; text-align: center !important; line-height: 1.45 !important; }
+            .two-column { flex-direction: column !important; text-align: center !important; gap: 12px !important; width: 100% !important; }
+            .col-content { width: 100% !important; }
+            .col-visual { order: -1 !important; max-height: 15vh !important; width: 100% !important; margin-bottom: 5px !important; }
+            .img-fluid-presentation { max-height: 14vh !important; width: auto !important; border-radius: 14px !important; margin: 0 auto !important; }
+            .card-grid, .card-grid-flow { grid-template-columns: 1fr !important; gap: 8px !important; width: 100% !important; }
+            .card { padding: 10px 14px !important; border-radius: 12px !important; }
+            .card h3, .card h4 { font-size: min(1.8vh, 0.95rem) !important; margin-bottom: 2px !important; }
+            .card p { font-size: min(1.35vh, 0.78rem) !important; line-height: 1.35 !important; }
+            .card-icon { width: 22px !important; height: 22px !important; margin-bottom: 2px !important; margin-left: auto; margin-right: auto; }
+            .card-icon svg { width: 20px !important; height: 20px !important; }
+            .top-ctrl-wrapper { padding: 12px !important; }
+            .top-ctrl { opacity: 1 !important; transform: translateY(0) !important; pointer-events: auto !important; }
+            .ctrl-btn span { display: none; }
+            .nav-btn { bottom: 12px; width: 42px; height: 42px; }
+            #prev-btn { left: 12px; } #next-btn { right: 12px; }
+            #dots-container { bottom: 20px; gap: 6px; }
+            .dot { width: 6px; height: 6px; } .dot.active { width: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== UPLOAD SCREEN ===== -->
+<div id="upload-screen">
+    <div class="upload-card">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" style="fill:rgba(245,158,11,0.15)!important;"/>
+            <polyline points="12 11 12 17"/>
+            <polyline points="9 14 12 11 15 14"/>
+        </svg>
+        <h2>Upload File Konten JSON</h2>
+        <p>Pilih atau drag &amp; drop file <span class="badge">.json</span> yang berisi array data slide presentasi Anda.</p>
+        <input type="file" id="file-input" accept=".json">
+        <button class="upload-btn" onclick="document.getElementById('file-input').click()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Pilih File .json
+        </button>
+        <span class="upload-hint">Contoh: konten1.json, kampus.json</span>
+    </div>
+
+    <div class="sample-card">
+        <div class="sample-card-header">
+            <h3>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Contoh Format JSON
+            </h3>
+            <button class="copy-btn" onclick="copySample()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy Semua
+            </button>
+        </div>
+        <p class="sample-desc">Salin contoh ini, lalu minta AI untuk mengisi konten sesuai topik yang Anda inginkan. Gunakan nama ikon dari <strong style="color:var(--teal);">lucide.dev/icons</strong></p>
+        <div id="sample-json-box"></div>
+    </div>
+</div>
+
+<!-- ===== PRESENTASI ===== -->
+<div id="progress-container"><div id="progress-bar"></div></div>
+
+<div class="top-ctrl-wrapper ws-hidden" id="top-ctrl-wrapper">
+    <div class="top-ctrl">
+        <button class="ctrl-btn" onclick="togglePortraitSim()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            <span>Ubah Orientasi</span>
+        </button>
+        <button class="ctrl-btn" onclick="toggleFullscreen()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            <span>Layar Penuh</span>
+        </button>
+        <button class="ctrl-btn" onclick="downloadSelfContainedHTML()" style="border-color:var(--teal);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Download HTML</span>
+        </button>
+        <button class="ctrl-btn" onclick="toggleSidebar()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            <span>Menu Materi</span>
+        </button>
+    </div>
+</div>
+
+<div id="workspace" class="ws-hidden">
+    <div id="deck"></div>
+</div>
+
+<button class="nav-btn hidden" id="prev-btn" onclick="prevSlide()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+</button>
+<button class="nav-btn hidden" id="next-btn" onclick="nextSlide()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+</button>
+
+<div id="dots-container"></div>
+<div id="backdrop" onclick="toggleSidebar()"></div>
+<div id="sidebar">
+    <h3 style="font-family:'Playfair Display',serif;font-size:1.6rem;margin-bottom:10px;">Daftar Slide</h3>
+    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:20px;">Klik untuk langsung melompat ke slide materi:</p>
+    <button class="ctrl-btn" onclick="triggerPDFExport()" style="width:100%;margin-bottom:20px;background:linear-gradient(135deg,var(--teal),var(--indigo));border:none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Ekspor File PDF
+    </button>
+    <div class="thumb-list" id="sidebar-thumbs"></div>
+</div>
+
+<div id="toast">Notifikasi pesan sistem.</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+var currentSlide = 0;
+var totalSlides = 0;
+var slideData = [];
+var pdfFilename = 'Presentasi';
+
+var deck, workspace;
+function getDeck() { return deck || (deck = document.getElementById('deck')); }
+function getWorkspace() { return workspace || (workspace = document.getElementById('workspace')); }
+
+// ============================================================
+// LUCIDE ICON HELPER
+// Render ikon Lucide berdasarkan nama string dari JSON.
+// Contoh: icon("briefcase", "var(--teal)")
+// Daftar nama icon: https://lucide.dev/icons
+// ============================================================
+function lucideIcon(name, color) {
+    if (!name) return '';
+    var col = color || 'var(--teal)';
+    // Lucide sudah di-load via CDN, gunakan lucide.createElement
+    try {
+        var el = lucide.createElement(lucide.icons[toCamelCase(name)]);
+        if (el) {
+            el.style.cssText = 'width:36px;height:36px;stroke:' + col + ';stroke-width:1.75;fill:none;display:block;';
+            return el.outerHTML;
+        }
+    } catch(e) {}
+    // Fallback: lingkaran kosong jika nama tidak dikenali
+    return '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="' + col + '" stroke-width="1.75"><circle cx="12" cy="12" r="10"/></svg>';
+}
+
+// Konversi "folder-open" → "FolderOpen" (camelCase untuk Lucide)
+function toCamelCase(str) {
+    return str.split('-').map(function(w, i) {
+        return w.charAt(0).toUpperCase() + w.slice(1);
+    }).join('');
+}
+
+// ============================================================
+// SAMPLE JSON
+// ============================================================
+var SAMPLE_JSON = {
+  "meta": {
+    "title": "Judul Presentasi Anda",
+    "pdfFilename": "nama_file_output"
+  },
+  "slides": [
+    {
+      "id": 1,
+      "type": "hero",
+      "badge": "LABEL BADGE ATAS",
+      "title": "Judul Utama <em>Presentasi</em>",
+      "desc": "Deskripsi singkat yang menjelaskan topik presentasi ini.",
+      "meta1Label": "Label Kiri",
+      "meta1Value": "Nilai Kiri",
+      "meta2Label": "Label Kanan",
+      "meta2Value": "Nilai Kanan",
+      "imageUrl": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=600&auto=format"
+    },
+    {
+      "id": 2,
+      "type": "two-col-image-right",
+      "title": "Judul Slide <em>Kata Kunci</em>",
+      "desc": "Paragraf deskripsi opsional untuk slide ini.",
+      "content": "<div class=\"card animate-in\"><h3 style=\"color:var(--amber);margin-bottom:8px;\">Sub Judul</h3><p>Isi kartu konten bebas HTML di sini.</p></div>",
+      "imageUrl": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=600&auto=format"
+    },
+    {
+      "id": 3,
+      "type": "card-grid",
+      "title": "Judul Slide <em>Kartu Grid</em>",
+      "desc": "Deskripsi opsional di atas kartu.",
+      "cards": [
+        {
+          "icon": "folder",
+          "iconColor": "var(--teal)",
+          "heading": "Kartu Satu",
+          "text": "Penjelasan isi kartu pertama."
+        },
+        {
+          "icon": "users",
+          "iconColor": "var(--indigo)",
+          "borderColor": "var(--indigo)",
+          "heading": "Kartu Dua",
+          "text": "Penjelasan isi kartu kedua."
+        },
+        {
+          "icon": "layers",
+          "iconColor": "var(--amber)",
+          "borderColor": "var(--amber)",
+          "heading": "Kartu Tiga",
+          "text": "Penjelasan isi kartu ketiga."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "two-col-image-left",
+      "title": "Judul Slide <em>Gambar Kiri</em>",
+      "desc": "Deskripsi opsional.",
+      "content": "<p style=\"color:var(--text-muted);line-height:1.7;\">Konten bebas HTML di kolom kanan.</p>",
+      "imageUrl": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=600&auto=format"
+    },
+    {
+      "id": 5,
+      "type": "card-flow",
+      "title": "Judul Slide <em>Alur Langkah</em>",
+      "desc": "Deskripsi opsional.",
+      "steps": [
+        { "letter": "S", "color": "var(--teal)", "heading": "Step 1", "text": "Penjelasan langkah pertama." },
+        { "letter": "T", "color": "var(--indigo)", "heading": "Step 2", "text": "Penjelasan langkah kedua." },
+        { "letter": "A", "color": "var(--amber)", "heading": "Step 3", "text": "Penjelasan langkah ketiga." },
+        { "letter": "R", "color": "var(--soft-white)", "heading": "Step 4", "text": "Penjelasan langkah keempat." }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "table",
+      "title": "Judul Slide <em>Tabel</em>",
+      "desc": "Deskripsi opsional di atas tabel.",
+      "tableHeader": ["Kolom A", "Kolom B"],
+      "tableRows": [
+        ["Baris 1 Kolom A", "Baris 1 Kolom B"],
+        ["Baris 2 Kolom A", "Baris 2 Kolom B"]
+      ]
+    },
+    {
+      "id": 7,
+      "type": "closing",
+      "badge": "PENUTUP",
+      "title": "Judul <em>Penutup</em> Presentasi",
+      "desc": "Kalimat penutup yang menginspirasi audiens untuk mengambil langkah.",
+      "companyLabel": "Label Perusahaan",
+      "companyName": "Nama Perusahaan / Institusi",
+      "imageUrl": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=600&auto=format"
+    }
+  ]
+};
+
+// ============================================================
+// UPLOAD SCREEN
+// ============================================================
+function initUploadScreen() {
+    document.getElementById('sample-json-box').textContent = JSON.stringify(SAMPLE_JSON, null, 2);
+    document.getElementById('file-input').addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+            try {
+                var json = JSON.parse(ev.target.result);
+                var meta = json.meta || {};
+                slideData = json.slides || json;
+                totalSlides = slideData.length;
+                pdfFilename = meta.pdfFilename || file.name.replace('.json','');
+                if (meta.title) document.title = meta.title;
+                document.getElementById('upload-screen').classList.add('hidden');
+                document.getElementById('workspace').classList.remove('ws-hidden');
+                document.getElementById('top-ctrl-wrapper').classList.remove('ws-hidden');
+                setTimeout(function() { buildSlides(); init(); }, 50);
+            } catch(err) {
+                alert('Format JSON tidak valid: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    var uploadCard = document.querySelector('.upload-card');
+    uploadCard.addEventListener('dragover', function(e) { e.preventDefault(); uploadCard.style.borderColor = 'var(--teal)'; });
+    uploadCard.addEventListener('dragleave', function() { uploadCard.style.borderColor = ''; });
+    uploadCard.addEventListener('drop', function(e) {
+        e.preventDefault(); uploadCard.style.borderColor = '';
+        var file = e.dataTransfer.files[0];
+        if (file && file.name.endsWith('.json')) {
+            var dt = new DataTransfer();
+            dt.items.add(file);
+            document.getElementById('file-input').files = dt.files;
+            document.getElementById('file-input').dispatchEvent(new Event('change'));
+        }
+    });
+}
+
+function copySample() {
+    navigator.clipboard.writeText(JSON.stringify(SAMPLE_JSON, null, 2)).then(function() {
+        var btn = document.querySelector('.copy-btn');
+        btn.textContent = '✓ Tersalin!';
+        setTimeout(function() { btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Semua'; }, 2000);
+    });
+}
+
+// ============================================================
+// SLIDE BUILDER
+// ============================================================
+function buildSlides() {
+    var d = getDeck();
+    d.innerHTML = '';
+    slideData.forEach(function(s, idx) {
+        var section = document.createElement('section');
+        section.className = 'slide' + (idx === 0 ? ' active' : '');
+        section.id = 'slide-' + (s.id || idx + 1);
+        if (s.background) section.style.background = s.background;
+        section.innerHTML = buildSlideHTML(s);
+        d.appendChild(section);
+    });
+    d.style.width = totalSlides * 100 + 'vw';
+    // Render semua ikon Lucide yang baru di-inject
+    if (window.lucide) lucide.createIcons();
+}
+
+function img(url, alt) {
+    return '<img crossorigin="anonymous" src="' + (url || '') + '" class="img-fluid-presentation" alt="' + (alt || '') + '">';
+}
+
+// ============================================================
+// RENDER SETIAP TIPE SLIDE
+// ============================================================
+function buildSlideHTML(s) {
+    switch (s.type) {
+
+        case 'hero': return (
+            '<div class="two-column">' +
+            '<div class="col-content">' +
+            (s.badge ? '<div style="background:rgba(20,184,166,0.1);color:var(--teal);padding:6px 16px;border-radius:20px;display:inline-block;font-size:0.85rem;font-weight:600;margin-bottom:20px;" class="animate-in">' + s.badge + '</div>' : '') +
+            '<h1 class="slide-title animate-in" style="font-size:clamp(2.2rem,5vw,4rem);">' + s.title + '</h1>' +
+            '<p class="slide-desc animate-in">' + s.desc + '</p>' +
+            '<div style="display:flex;gap:40px;padding-top:30px;" class="animate-in">' +
+            '<div><p style="font-size:0.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">' + (s.meta1Label||'') + '</p><p style="font-weight:600;font-size:1.05rem;">' + (s.meta1Value||'') + '</p></div>' +
+            '<div><p style="font-size:0.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">' + (s.meta2Label||'') + '</p><p style="font-weight:600;font-size:1.05rem;">' + (s.meta2Value||'') + '</p></div>' +
+            '</div></div>' +
+            '<div class="col-visual animate-in">' + img(s.imageUrl, s.imageAlt) + '</div>' +
+            '</div>');
+
+        case 'two-col-image-right': return (
+            '<h2 class="slide-title animate-in">' + s.title + '</h2>' +
+            (s.desc ? '<p class="slide-desc animate-in">' + s.desc + '</p>' : '') +
+            '<div class="two-column">' +
+            '<div class="col-content">' + (s.content || '') + '</div>' +
+            '<div class="col-visual animate-in">' + img(s.imageUrl, s.imageAlt) + '</div>' +
+            '</div>');
+
+        case 'two-col-image-left': return (
+            '<div class="two-column">' +
+            '<div class="col-visual animate-in">' + img(s.imageUrl, s.imageAlt) + '</div>' +
+            '<div class="col-content">' +
+            (s.badge ? '<div style="color:var(--teal);font-weight:bold;font-size:0.9rem;letter-spacing:1px;margin-bottom:10px;" class="animate-in">' + s.badge + '</div>' : '') +
+            '<h2 class="slide-title animate-in">' + s.title + '</h2>' +
+            (s.desc ? '<p class="slide-desc animate-in">' + s.desc + '</p>' : '') +
+            (s.content || '') +
+            '</div></div>');
+
+        case 'card-grid': return (
+            '<h2 class="slide-title animate-in"' + (s.center ? ' style="text-align:center;margin-bottom:10px;"' : '') + '>' + s.title + '</h2>' +
+            (s.desc ? '<p class="slide-desc animate-in"' + (s.center ? ' style="text-align:center;margin-left:auto;margin-right:auto;"' : '') + '>' + s.desc + '</p>' : '') +
+            '<div class="card-grid">' +
+            s.cards.map(function(c) {
+                var col = c.iconColor || 'var(--teal)';
+                return '<div class="card animate-in"' + (c.borderColor ? ' style="border-color:' + c.borderColor + ';"' : '') + '>' +
+                    (c.dot ? '<div style="width:12px;height:12px;border-radius:50%;background:' + c.dot + ';margin-bottom:12px;"></div>' : '') +
+                    (c.icon ? '<div class="card-icon"><i data-lucide="' + c.icon + '" style="color:' + col + ';width:36px;height:36px;"></i></div>' : '') +
+                    '<h3 style="margin-bottom:10px;font-family:\'Playfair Display\',serif;' + (c.headingColor ? 'color:' + c.headingColor + ';' : '') + '">' + c.heading + '</h3>' +
+                    '<p>' + c.text + '</p></div>';
+            }).join('') +
+            '</div>');
+
+        case 'card-flow': return (
+            '<h2 class="slide-title animate-in" style="text-align:center;margin-bottom:10px;">' + s.title + '</h2>' +
+            (s.desc ? '<p class="slide-desc animate-in" style="text-align:center;margin-left:auto;margin-right:auto;">' + s.desc + '</p>' : '') +
+            '<div class="card-grid-flow">' +
+            s.steps.map(function(st) {
+                return '<div class="card animate-in" style="display:flex;flex-direction:column;gap:10px;">' +
+                    '<div style="font-size:3rem;font-weight:800;color:rgba(255,255,255,0.05);line-height:1;">' + (st.letter||'') + '</div>' +
+                    '<h4 style="color:' + (st.color||'var(--teal)') + ';">' + st.heading + '</h4>' +
+                    '<p style="font-size:0.85rem;">' + st.text + '</p></div>';
+            }).join('') +
+            '</div>');
+
+        case 'table': return (
+            '<h2 class="slide-title animate-in" style="text-align:center;margin-bottom:10px;">' + s.title + '</h2>' +
+            (s.desc ? '<p class="slide-desc animate-in" style="text-align:center;margin-left:auto;margin-right:auto;">' + s.desc + '</p>' : '') +
+            '<div class="card animate-in" style="background:var(--glass);width:100%;border-radius:16px;">' +
+            '<table style="width:100%;border-collapse:collapse;text-align:left;">' +
+            (s.tableHeader ? '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1);">' +
+                s.tableHeader.map(function(h) { return '<th style="padding:12px 16px;color:var(--teal);font-size:0.9rem;">' + h + '</th>'; }).join('') +
+                '</tr></thead>' : '') +
+            '<tbody>' +
+            s.tableRows.map(function(row, ri) {
+                return '<tr' + (ri < s.tableRows.length-1 ? ' style="border-bottom:1px solid rgba(255,255,255,0.05);"' : '') + '>' +
+                    row.map(function(cell, ci) {
+                        return '<td style="padding:12px 16px;' + (ci===0 ? 'font-weight:600;width:25%;' : 'font-size:0.95rem;') + '">' + cell + '</td>';
+                    }).join('') + '</tr>';
+            }).join('') +
+            '</tbody></table></div>');
+
+        case 'closing': return (
+            '<div class="two-column">' +
+            '<div class="col-content">' +
+            (s.badge ? '<div style="background:rgba(99,102,241,0.15);color:var(--indigo);padding:6px 16px;border-radius:20px;display:inline-block;font-size:0.85rem;font-weight:600;margin-bottom:20px;" class="animate-in">' + s.badge + '</div>' : '') +
+            '<h2 class="slide-title animate-in" style="font-size:clamp(2rem,4.5vw,3.8rem);">' + s.title + '</h2>' +
+            '<p class="slide-desc animate-in">' + s.desc + '</p>' +
+            (s.companyName ? '<div class="card animate-in" style="border-color:var(--teal);background:rgba(20,184,166,0.02);display:inline-block;padding:16px 24px;border-radius:16px;">' +
+                (s.companyLabel ? '<p style="font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">' + s.companyLabel + '</p>' : '') +
+                '<p style="font-size:1.3rem;font-weight:700;color:var(--text-main);">' + s.companyName + '</p></div>' : '') +
+            '</div>' +
+            '<div class="col-visual animate-in">' + img(s.imageUrl, s.imageAlt) + '</div>' +
+            '</div>');
+
+        default: return (
+            '<h2 class="slide-title animate-in">' + (s.title||'Slide') + '</h2>' +
+            (s.desc ? '<p class="slide-desc animate-in">' + s.desc + '</p>' : '') +
+            (s.content ? '<div class="animate-in">' + s.content + '</div>' : ''));
+    }
+}
+
+// ============================================================
+// ENGINE
+// ============================================================
+function init() {
+    var dotsContainer = document.getElementById('dots-container');
+    var thumbList = document.getElementById('sidebar-thumbs');
+    dotsContainer.innerHTML = '';
+    thumbList.innerHTML = '';
+
+    document.querySelectorAll('.slide').forEach(function(slide, idx) {
+        var dot = document.createElement('div');
+        dot.className = 'dot' + (idx === 0 ? ' active' : '');
+        dot.addEventListener('click', function() { goToSlide(idx); });
+        dotsContainer.appendChild(dot);
+
+        var rawTitle = slide.querySelector('.slide-title');
+        var titleText = rawTitle ? rawTitle.textContent.replace(/[\r\n\t]+/g, ' ').trim() : ('Slide ' + (idx+1));
+        var thumb = document.createElement('div');
+        thumb.className = 'thumb';
+        thumb.onclick = function() { goToSlide(idx); toggleSidebar(); };
+        thumb.innerHTML = '<div style="background:' + (idx%3===0?'var(--teal)':idx%3===1?'var(--indigo)':'var(--amber)') + ';width:8px;height:32px;border-radius:4px;"></div>' +
+            '<div><p style="color:var(--text-muted);font-size:0.75rem;">SLIDE ' + (idx+1) + '</p>' +
+            '<p style="color:var(--text-main);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;">' + titleText + '</p></div>';
+        thumbList.appendChild(thumb);
+    });
+
+    goToSlide(0);
+}
+
+function goToSlide(index) {
+    var d = getDeck();
+    currentSlide = index;
+    d.style.transform = 'translateX(-' + (currentSlide * (100 / totalSlides)) + '%)';
+    document.querySelectorAll('.slide').forEach(function(slide, idx) {
+        slide.classList.toggle('active', idx === currentSlide);
+    });
+    updateControls();
+}
+
+function nextSlide() { if (currentSlide < totalSlides - 1) goToSlide(currentSlide + 1); }
+function prevSlide() { if (currentSlide > 0) goToSlide(currentSlide - 1); }
+
+function updateControls() {
+    document.getElementById('prev-btn').classList.toggle('hidden', currentSlide === 0);
+    document.getElementById('next-btn').classList.toggle('hidden', currentSlide === totalSlides - 1);
+    document.querySelectorAll('.dot').forEach(function(dot, idx) { dot.classList.toggle('active', idx === currentSlide); });
+    var pct = totalSlides > 1 ? (currentSlide / (totalSlides - 1)) * 100 : 100;
+    document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+function togglePortraitSim() {
+    var ws = getWorkspace();
+    if (ws.classList.contains('forced-portrait')) {
+        ws.classList.remove('forced-portrait');
+        document.documentElement.style.setProperty('--slide-width', '100vw');
+        document.documentElement.style.setProperty('--slide-height', '100vh');
+        showToast("Berhasil beralih ke Mode Landscape (Desktop)");
+    } else {
+        ws.classList.add('forced-portrait');
+        document.documentElement.style.setProperty('--slide-width', '420px');
+        document.documentElement.style.setProperty('--slide-height', '740px');
+        showToast("Berhasil beralih ke Mode Portrait Mobile (420px x 740px)");
+    }
+    setTimeout(function() { goToSlide(currentSlide); }, 350);
+}
+
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(function() { showToast("Mode Layar Penuh Aktif"); });
+    } else {
+        document.exitFullscreen().then(function() { showToast("Keluar dari Layar Penuh"); });
+    }
+}
+
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('backdrop').classList.toggle('open');
+}
+
+var toastTimer = null;
+function showToast(msg) {
+    var toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() { toast.style.opacity = '0'; toastTimer = null; }, 3000);
+}
+
+async function triggerPDFExport() {
+    var ws = getWorkspace();
+    var d = getDeck();
+    toggleSidebar();
+    showToast("Memulai konversi PDF premium. Harap tunggu...");
+    var jsPDF = window.jspdf.jsPDF;
+    var isPortraitMode = ws.classList.contains('forced-portrait');
+    var pdfWidth = isPortraitMode ? 420 : ws.offsetWidth;
+    var pdfHeight = isPortraitMode ? 740 : ws.offsetHeight;
+    var pdfOrient = isPortraitMode ? 'p' : 'l';
+    var pdf = new jsPDF({ orientation: pdfOrient, unit: 'px', format: [pdfWidth, pdfHeight] });
+    var backupSlide = currentSlide;
+    document.querySelector('.top-ctrl').style.visibility = 'hidden';
+    document.getElementById('prev-btn').style.visibility = 'hidden';
+    document.getElementById('next-btn').style.visibility = 'hidden';
+    document.getElementById('dots-container').style.visibility = 'hidden';
+    d.style.transition = 'none';
+    for (var i = 0; i < totalSlides; i++) {
+        goToSlide(i);
+        await new Promise(function(res) { setTimeout(res, 350); });
+        var canvas = await html2canvas(ws, { width: pdfWidth, height: pdfHeight, scale: 2, useCORS: true, backgroundColor: '#0F172A' });
+        var imgData = canvas.toDataURL('image/jpeg', 0.95);
+        if (i > 0) pdf.addPage([pdfWidth, pdfHeight], pdfOrient);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+    }
+    d.style.transition = 'transform var(--transition-speed) var(--ease)';
+    goToSlide(backupSlide);
+    document.querySelector('.top-ctrl').style.visibility = 'visible';
+    document.getElementById('prev-btn').style.visibility = 'visible';
+    document.getElementById('next-btn').style.visibility = 'visible';
+    document.getElementById('dots-container').style.visibility = 'visible';
+    updateControls();
+    pdf.save((pdfFilename || 'Presentasi') + '.pdf');
+    showToast("Sukses! Berkas PDF berkualitas tinggi berhasil diunduh.");
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+    if (e.key === 'ArrowLeft') prevSlide();
+});
+var touchXStart = 0;
+document.addEventListener('touchstart', function(e) { touchXStart = e.changedTouches[0].screenX; });
+document.addEventListener('touchend', function(e) {
+    var touchXEnd = e.changedTouches[0].screenX;
+    if (touchXStart - touchXEnd > 50) nextSlide();
+    if (touchXEnd - touchXStart > 50) prevSlide();
+});
+window.addEventListener('resize', function() { goToSlide(currentSlide); });
+
+// ============================================================
+// DOWNLOAD SELF-CONTAINED HTML
+// ============================================================
+function downloadSelfContainedHTML() {
+    showToast("Menyiapkan file HTML...");
+    try {
+        var dataJson = JSON.stringify({
+            meta: { title: document.title, pdfFilename: pdfFilename },
+            slides: slideData
+        });
+
+        var toast = document.getElementById('toast');
+        var toastOpacity = toast.style.opacity;
+        toast.style.opacity = '0';
+
+        var outputHTML = document.documentElement.outerHTML;
+
+        toast.style.opacity = toastOpacity;
+
+        outputHTML = outputHTML.replace(/<script>\nwindow\.__PRELOADED[\s\S]*?<\/script>\n/g, '');
+
+        outputHTML = outputHTML.replace(
+            /id="upload-screen"(?:\s+class="[^"]*")?/,
+            'id="upload-screen" class="hidden"'
+        );
+        outputHTML = outputHTML.replace(
+            'id="workspace" class="ws-hidden"',
+            'id="workspace"'
+        );
+        outputHTML = outputHTML.replace(
+            'class="top-ctrl-wrapper ws-hidden"',
+            'class="top-ctrl-wrapper"'
+        );
+
+        var preloadBlock = '<script>\nwindow.__PRELOADED = ' + dataJson + ';\n<\/script>\n';
+        outputHTML = outputHTML.replace(
+            '<script>\n// ============================================================\n// STATE',
+            preloadBlock + '<script>\n// ============================================================\n// STATE'
+        );
+
+        var marker = '// Mulai\ninitUploadScreen();';
+        var lastIdx = outputHTML.lastIndexOf(marker);
+        if (lastIdx !== -1) {
+            var replacement = '// Mulai\n' +
+                'if (window.__PRELOADED) {\n' +
+                '    slideData = window.__PRELOADED.slides;\n' +
+                '    totalSlides = slideData.length;\n' +
+                '    pdfFilename = window.__PRELOADED.meta.pdfFilename || "Presentasi";\n' +
+                '    document.title = window.__PRELOADED.meta.title || "Presentasi";\n' +
+                '    document.getElementById("upload-screen").classList.add("hidden");\n' +
+                '    document.getElementById("workspace").classList.remove("ws-hidden");\n' +
+                '    document.getElementById("top-ctrl-wrapper").classList.remove("ws-hidden");\n' +
+                '    setTimeout(function() { buildSlides(); init(); }, 50);\n' +
+                '} else {\n' +
+                '    initUploadScreen();\n' +
+                '}';
+            outputHTML = outputHTML.substring(0, lastIdx) + replacement + outputHTML.substring(lastIdx + marker.length);
+        }
+
+        var filename = (pdfFilename || 'presentasi').replace(/[^a-z0-9_-]/gi, '_') + '.html';
+        var blob = new Blob([outputHTML], { type: 'text/html;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = filename; a.click();
+        URL.revokeObjectURL(url);
+        setTimeout(function() { showToast('File ' + filename + ' berhasil diunduh!'); }, 300);
+
+    } catch(e) {
+        console.error('Download error:', e);
+        showToast('Error: ' + e.message);
+    }
+}
+
+// Mulai
+initUploadScreen();
+</script>
+</body>
+</html>
