@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Tracker - Magang</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #1a2332;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 span {
+            background: #2d3748;
+            color: white;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #f7fafc;
+            padding: 0 15px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            transition: border 0.2s;
+        }
+
+        .search-box:focus-within {
+            border-color: #4299e1;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 14px;
+            outline: none;
+            width: 200px;
+            color: #2d3748;
+        }
+
+        .search-box .icon {
+            color: #a0aec0;
+            font-size: 18px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66,153,225,0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #fc8181;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #f56565;
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-outline:hover {
+            background: #f7fafc;
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-xs {
+            padding: 3px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+
+        .btn-purple {
+            background: #9f7aea;
+            color: white;
+        }
+        .btn-purple:hover {
+            background: #805ad5;
+        }
+
+        .btn-cyan {
+            background: #38b2ac;
+            color: white;
+        }
+        .btn-cyan:hover {
+            background: #319795;
+        }
+
+        .list-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .list-header {
+            display: grid;
+            grid-template-columns: 60px 1.2fr 1fr 1fr 1fr 1fr 1fr 140px;
+            gap: 6px;
+            padding: 14px 16px;
+            background: #f7fafc;
+            font-weight: 700;
+            font-size: 11px;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .list-item {
+            display: grid;
+            grid-template-columns: 60px 1.2fr 1fr 1fr 1fr 1fr 1fr 140px;
+            gap: 6px;
+            padding: 14px 16px;
+            border-bottom: 1px solid #edf2f7;
+            align-items: center;
+            transition: background 0.15s;
+        }
+
+        .list-item:hover {
+            background: #f7fafc;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item .id {
+            font-weight: 700;
+            color: #4299e1;
+            font-size: 13px;
+        }
+
+        .list-item .field {
+            color: #2d3748;
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .list-item .field .label {
+            display: none;
+            font-weight: 600;
+            color: #a0aec0;
+            font-size: 11px;
+        }
+
+        .list-item .actions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .badge-level {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .badge-level.beginner {
+            background: #bee3f8;
+            color: #2a69ac;
+        }
+        .badge-level.intermediate {
+            background: #fefcbf;
+            color: #975a16;
+        }
+        .badge-level.advanced {
+            background: #e9d8fd;
+            color: #6b46c1;
+        }
+        .badge-level.expert {
+            background: #c6f6d5;
+            color: #276749;
+        }
+
+        .badge-status {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .badge-status.not-started {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+        .badge-status.in-progress {
+            background: #fefcbf;
+            color: #975a16;
+        }
+        .badge-status.completed {
+            background: #c6f6d5;
+            color: #276749;
+        }
+        .badge-status.mastered {
+            background: #e9d8fd;
+            color: #6b46c1;
+        }
+
+        .progress-mini {
+            display: inline-block;
+            width: 50px;
+            height: 6px;
+            background: #edf2f7;
+            border-radius: 4px;
+            overflow: hidden;
+            vertical-align: middle;
+        }
+
+        .progress-mini .fill {
+            height: 100%;
+            border-radius: 4px;
+            background: #4299e1;
+        }
+
+        .progress-mini .fill.high { background: #48bb78; }
+        .progress-mini .fill.medium { background: #ed8936; }
+        .progress-mini .fill.low { background: #fc8181; }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #a0aec0;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .empty-state h3 {
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 750px;
+            width: 100%;
+            max-height: 95vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-close {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: #fc8181;
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            background: #f56565;
+            transform: rotate(90deg);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a2332;
+            margin-bottom: 20px;
+            padding-right: 50px;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #edf2f7;
+            flex-wrap: wrap;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            max-width: 400px;
+        }
+
+        .toast.success {
+            background: #48bb78;
+        }
+        .toast.error {
+            background: #fc8181;
+        }
+        .toast.info {
+            background: #4299e1;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stats-summary .stat-card {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .stats-summary .stat-card .number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .stats-summary .stat-card .label {
+            font-size: 12px;
+            color: #a0aec0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stats-summary .stat-card .number.completed { color: #48bb78; }
+        .stats-summary .stat-card .number.in-progress { color: #ed8936; }
+        .stats-summary .stat-card .number.mastered { color: #9f7aea; }
+
+        @media (max-width: 992px) {
+            .list-header {
+                display: none;
+            }
+            .list-item {
+                grid-template-columns: 1fr;
+                gap: 4px;
+                padding: 16px;
+                border-bottom: 2px solid #edf2f7;
+            }
+            .list-item .id {
+                font-size: 12px;
+            }
+            .list-item .field .label {
+                display: inline;
+            }
+            .list-item .actions {
+                margin-top: 6px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box input {
+                width: 100%;
+            }
+            .modal {
+                padding: 20px;
+            }
+            .stats-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+            .stats-summary {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .modal::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal::-webkit-scrollbar-track {
+            background: #f7fafc;
+        }
+        .modal::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>
+                📚 Learning Tracker
+                <span>Magang</span>
+            </h1>
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Cari skill..." oninput="renderList()">
+                </div>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ Tambah Skill</button>
+                <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+            </div>
+        </div>
+
+        <!-- STATS SUMMARY -->
+        <div class="stats-summary" id="statsSummary">
+            <div class="stat-card">
+                <div class="number" id="statTotal">0</div>
+                <div class="label">Total Skill</div>
+            </div>
+            <div class="stat-card">
+                <div class="number in-progress" id="statInProgress">0</div>
+                <div class="label">🔄 In Progress</div>
+            </div>
+            <div class="stat-card">
+                <div class="number completed" id="statCompleted">0</div>
+                <div class="label">✅ Completed</div>
+            </div>
+            <div class="stat-card">
+                <div class="number mastered" id="statMastered">0</div>
+                <div class="label">🌟 Mastered</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="statAvgProgress">0%</div>
+                <div class="label">📊 Avg Progress</div>
+            </div>
+        </div>
+
+        <!-- LIST -->
+        <div class="list-container">
+            <div class="list-header">
+                <span>ID</span>
+                <span>Skill / Deskripsi</span>
+                <span>Magang</span>
+                <span>Level</span>
+                <span>Status</span>
+                <span>Progress</span>
+                <span>Target</span>
+                <span>Aksi</span>
+            </div>
+            <div id="listBody">
+                <div class="empty-state">
+                    <div class="icon">📚</div>
+                    <h3>Belum ada data learning</h3>
+                    <p>Klik "Tambah Skill" untuk mulai melacak pembelajaran magang</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORM -->
+    <div class="modal-overlay" id="formModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('formModal')">✕</button>
+            <div class="modal-title" id="formModalTitle">📚 Tambah Skill</div>
+            <div class="modal-body">
+                <input type="hidden" id="editId" value="">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📌 Nama Skill *</label>
+                        <input type="text" id="skillName" placeholder="Contoh: Copywriting, Excel, Public Speaking" required>
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Magang</label>
+                        <select id="internName">
+                            <option value="Magang 1">Magang 1</option>
+                            <option value="Magang 2">Magang 2</option>
+                            <option value="Magang 3">Magang 3</option>
+                            <option value="Magang 4">Magang 4</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Deskripsi Skill</label>
+                    <textarea id="skillDescription" placeholder="Deskripsi skill..." rows="2"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📊 Level Saat Ini</label>
+                        <select id="currentLevel">
+                            <option value="beginner">🔵 Beginner</option>
+                            <option value="intermediate" selected>🟡 Intermediate</option>
+                            <option value="advanced">🟣 Advanced</option>
+                            <option value="expert">🟢 Expert</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>🎯 Target Level</label>
+                        <select id="targetLevel">
+                            <option value="beginner">🔵 Beginner</option>
+                            <option value="intermediate">🟡 Intermediate</option>
+                            <option value="advanced" selected>🟣 Advanced</option>
+                            <option value="expert">🟢 Expert</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📂 Status</label>
+                        <select id="status">
+                            <option value="not-started">⏸️ Not Started</option>
+                            <option value="in-progress" selected>🔄 In Progress</option>
+                            <option value="completed">✅ Completed</option>
+                            <option value="mastered">🌟 Mastered</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>📊 Progress (%)</label>
+                        <input type="number" id="progress" value="0" min="0" max="100" step="5">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📅 Target Selesai</label>
+                        <input type="date" id="targetDate">
+                    </div>
+                    <div class="form-group">
+                        <label>⏱️ Waktu Belajar (Jam)</label>
+                        <input type="number" id="hoursSpent" value="0" min="0" step="0.5" placeholder="Jam">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Catatan / Resource</label>
+                    <textarea id="notes" placeholder="Resource belajar, catatan, dll..." rows="2"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>💬 Feedback Supervisor</label>
+                    <textarea id="feedback" placeholder="Feedback dari supervisor..." rows="2"></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-danger" id="deleteBtn" onclick="deleteSkill()" style="display:none;">🗑️ Hapus</button>
+                    <button class="btn btn-outline" onclick="closeModal('formModal')">Batal</button>
+                    <button class="btn btn-primary" id="saveBtn" onclick="saveSkill()">💾 Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'learning_tracker';
+        const SECRET = 'admin';
+
+        // ==================== STATE ====================
+        let allData = [];
+        let currentEditId = null;
+
+        const COLUMNS = {
+            skill_name: 'x_01',
+            intern_name: 'x_02',
+            description: 'x_03',
+            current_level: 'x_04',
+            target_level: 'x_05',
+            status: 'x_06',
+            progress: 'x_07',
+            target_date: 'x_08',
+            hours_spent: 'x_09',
+            notes: 'x_10',
+            feedback: 'x_11'
+        };
+
+        const LEVEL_LABELS = {
+            'beginner': '🔵 Beginner',
+            'intermediate': '🟡 Intermediate',
+            'advanced': '🟣 Advanced',
+            'expert': '🟢 Expert'
+        };
+
+        const STATUS_LABELS = {
+            'not-started': '⏸️ Not Started',
+            'in-progress': '🔄 In Progress',
+            'completed': '✅ Completed',
+            'mastered': '🌟 Mastered'
+        };
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('📚 Learning Tracker Started');
+            console.log('📡 Table:', TABLE);
+            refreshData();
+        });
+
+        // ==================== API HELPERS ====================
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': TABLE,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        ...getHeaders(),
+                        ...(options.headers || {})
+                    }
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error || err.message || `HTTP ${response.status}`);
+                }
+                return await response.json();
+            } catch (e) {
+                console.error('❌ API Error:', e.message);
+                throw e;
+            }
+        }
+
+        // ==================== DATA CRUD ====================
+        async function fetchData() {
+            try {
+                const result = await apiFetch('');
+                if (result.success && result.data) {
+                    allData = result.data.map(row => parseRow(row));
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            return {
+                id_x: row.id_x,
+                skill_name: row.x_01 || '',
+                intern_name: row.x_02 || '',
+                description: row.x_03 || '',
+                current_level: row.x_04 || 'beginner',
+                target_level: row.x_05 || 'advanced',
+                status: row.x_06 || 'not-started',
+                progress: parseInt(row.x_07) || 0,
+                target_date: row.x_08 || '',
+                hours_spent: parseFloat(row.x_09) || 0,
+                notes: row.x_10 || '',
+                feedback: row.x_11 || '',
+                _raw: row
+            };
+        }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                row[col] = data[key] || '';
+            }
+            return row;
+        }
+
+        async function createSkill(data) {
+            const row = buildRow(data);
+            return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function updateSkill(id, data) {
+            const row = buildRow(data);
+            return await apiFetch(`&id_x=${id}`, { method: 'PUT', body: JSON.stringify(row) });
+        }
+
+        async function deleteSkillApi(id) {
+            return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== RENDER ====================
+        function renderList() {
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = allData.filter(item =>
+                item.skill_name.toLowerCase().includes(search) ||
+                item.intern_name.toLowerCase().includes(search) ||
+                item.description.toLowerCase().includes(search) ||
+                item.notes.toLowerCase().includes(search)
+            );
+
+            const body = document.getElementById('listBody');
+
+            // Update stats
+            updateStats();
+
+            if (filtered.length === 0) {
+                body.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">${allData.length === 0 ? '📚' : '🔍'}</div>
+                        <h3>${allData.length === 0 ? 'Belum ada data learning' : 'Tidak ditemukan'}</h3>
+                        <p>${allData.length === 0 ? 'Klik "Tambah Skill" untuk mulai melacak pembelajaran magang' : 'Coba dengan kata kunci lain'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            body.innerHTML = filtered.map(item => {
+                const progress = item.progress || 0;
+                const progressClass = progress >= 80 ? 'high' : progress >= 50 ? 'medium' : 'low';
+
+                return `
+                    <div class="list-item">
+                        <div class="id">#${item.id_x}</div>
+                        <div class="field">
+                            <span class="label">Skill:</span> <strong>${escapeHtml(item.skill_name)}</strong>
+                            ${item.description ? `<br><span style="font-size:10px;color:#718096;">${escapeHtml(item.description.substring(0,30))}${item.description.length > 30 ? '...' : ''}</span>` : ''}
+                        </div>
+                        <div class="field"><span class="label">Magang:</span> ${escapeHtml(item.intern_name) || '-'}</div>
+                        <div class="field"><span class="label">Level:</span> <span class="badge-level ${item.current_level}">${LEVEL_LABELS[item.current_level] || item.current_level}</span></div>
+                        <div class="field"><span class="label">Status:</span> <span class="badge-status ${item.status}">${STATUS_LABELS[item.status] || item.status}</span></div>
+                        <div class="field">
+                            <span class="label">Progress:</span>
+                            ${progress}%
+                            <span class="progress-mini"><span class="fill ${progressClass}" style="width:${progress}%;"></span></span>
+                        </div>
+                        <div class="field"><span class="label">Target:</span> ${item.target_date ? new Date(item.target_date).toLocaleDateString('id-ID') : '-'}</div>
+                        <div class="actions">
+                            <button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>
+                            <button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateStats() {
+            const total = allData.length;
+            const inProgress = allData.filter(d => d.status === 'in-progress').length;
+            const completed = allData.filter(d => d.status === 'completed').length;
+            const mastered = allData.filter(d => d.status === 'mastered').length;
+
+            let totalProgress = 0;
+            allData.forEach(d => totalProgress += d.progress || 0);
+            const avgProgress = total > 0 ? Math.round(totalProgress / total) : 0;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statInProgress').textContent = inProgress;
+            document.getElementById('statCompleted').textContent = completed;
+            document.getElementById('statMastered').textContent = mastered;
+            document.getElementById('statAvgProgress').textContent = `${avgProgress}%`;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function refreshData() {
+            showToast('🔄 Memuat data...', 'info');
+            await fetchData();
+            renderList();
+            showToast(`✅ ${allData.length} skill dimuat`, 'success');
+        }
+
+        // ==================== MODAL FORM ====================
+        function openAddModal() {
+            console.log('📚 Opening Add Modal');
+            currentEditId = null;
+            document.getElementById('editId').value = '';
+            document.getElementById('formModalTitle').textContent = '📚 Tambah Skill';
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.getElementById('saveBtn').textContent = '💾 Simpan';
+
+            document.getElementById('skillName').value = '';
+            document.getElementById('internName').value = 'Magang 1';
+            document.getElementById('skillDescription').value = '';
+            document.getElementById('currentLevel').value = 'beginner';
+            document.getElementById('targetLevel').value = 'advanced';
+            document.getElementById('status').value = 'not-started';
+            document.getElementById('progress').value = 0;
+            document.getElementById('targetDate').value = '';
+            document.getElementById('hoursSpent').value = 0;
+            document.getElementById('notes').value = '';
+            document.getElementById('feedback').value = '';
+
+            document.getElementById('formModal').classList.add('active');
+            console.log('✅ Add Modal opened');
+        }
+
+        async function openEditModal(id) {
+            console.log('✏️ Opening Edit Modal for ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+
+            currentEditId = id;
+            document.getElementById('editId').value = id;
+            document.getElementById('formModalTitle').textContent = `✏️ Edit: ${item.skill_name}`;
+            document.getElementById('deleteBtn').style.display = 'inline-flex';
+            document.getElementById('saveBtn').textContent = '💾 Update';
+
+            document.getElementById('skillName').value = item.skill_name || '';
+            document.getElementById('internName').value = item.intern_name || 'Magang 1';
+            document.getElementById('skillDescription').value = item.description || '';
+            document.getElementById('currentLevel').value = item.current_level || 'beginner';
+            document.getElementById('targetLevel').value = item.target_level || 'advanced';
+            document.getElementById('status').value = item.status || 'not-started';
+            document.getElementById('progress').value = item.progress || 0;
+            document.getElementById('targetDate').value = item.target_date || '';
+            document.getElementById('hoursSpent').value = item.hours_spent || 0;
+            document.getElementById('notes').value = item.notes || '';
+            document.getElementById('feedback').value = item.feedback || '';
+
+            document.getElementById('formModal').classList.add('active');
+            console.log('✅ Edit Modal opened');
+        }
+
+        function closeModal(id) {
+            console.log('🔒 Closing modal:', id);
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // ==================== SAVE ====================
+        async function saveSkill() {
+            console.log('💾 Saving skill...');
+            const skillName = document.getElementById('skillName').value.trim();
+
+            if (!skillName) {
+                showToast('Nama Skill wajib diisi', 'error');
+                document.getElementById('skillName').focus();
+                return;
+            }
+
+            const data = {
+                skill_name: skillName,
+                intern_name: document.getElementById('internName').value,
+                description: document.getElementById('skillDescription').value.trim(),
+                current_level: document.getElementById('currentLevel').value,
+                target_level: document.getElementById('targetLevel').value,
+                status: document.getElementById('status').value,
+                progress: parseInt(document.getElementById('progress').value) || 0,
+                target_date: document.getElementById('targetDate').value,
+                hours_spent: parseFloat(document.getElementById('hoursSpent').value) || 0,
+                notes: document.getElementById('notes').value.trim(),
+                feedback: document.getElementById('feedback').value.trim()
+            };
+
+            console.log('📦 Data to save:', data);
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Menyimpan...';
+
+            try {
+                if (currentEditId) {
+                    console.log('🔄 Updating skill ID:', currentEditId);
+                    await updateSkill(currentEditId, data);
+                    showToast('✅ Skill berhasil diupdate!', 'success');
+                } else {
+                    console.log('➕ Creating new skill');
+                    await createSkill(data);
+                    showToast('✅ Skill berhasil dibuat!', 'success');
+                }
+                await refreshData();
+                closeModal('formModal');
+                console.log('✅ Save complete');
+            } catch (e) {
+                console.error('❌ Save failed:', e);
+                showToast('❌ Gagal menyimpan: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = currentEditId ? '💾 Update' : '💾 Simpan';
+            }
+        }
+
+        // ==================== DELETE ====================
+        async function confirmDelete(id) {
+            console.log('🗑️ Confirm delete ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            if (!confirm(`Hapus skill "${item.skill_name}" (ID: ${id})?`)) return;
+
+            try {
+                await deleteSkillApi(id);
+                showToast('✅ Skill berhasil dihapus', 'success');
+                await refreshData();
+                console.log('✅ Deleted skill ID:', id);
+            } catch (e) {
+                console.error('❌ Delete failed:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteSkill() {
+            const id = parseInt(document.getElementById('editId').value);
+            console.log('🗑️ Delete skill from modal, ID:', id);
+            if (!id) return;
+            if (!confirm('Hapus skill ini secara permanen?')) return;
+
+            try {
+                await deleteSkillApi(id);
+                showToast('✅ Skill berhasil dihapus', 'success');
+                closeModal('formModal');
+                await refreshData();
+                console.log('✅ Deleted skill ID:', id);
+            } catch (e) {
+                console.error('❌ Delete failed:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'info') {
+            console.log(`📢 Toast: [${type}] ${message}`);
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ==================== KEYBOARD ====================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => {
+                    m.classList.remove('active');
+                });
+            }
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        // ==================== DEBUG ====================
+        window.debug = {
+            allData: () => allData,
+            refresh: refreshData,
+            openAdd: openAddModal,
+            TABLE: TABLE,
+            COLUMNS: COLUMNS,
+            LEVEL_LABELS: LEVEL_LABELS,
+            STATUS_LABELS: STATUS_LABELS
+        };
+
+        console.log('📚 Learning Tracker Loaded!');
+        console.log('📡 Table:', TABLE);
+        console.log('📊 Type "debug" in console for helpers');
+        console.log('🔧 Debug commands:');
+        console.log('  - debug.allData()  : Lihat semua data');
+        console.log('  - debug.refresh()  : Refresh data');
+        console.log('  - debug.openAdd()  : Open add modal');
+        console.log('  - debug.LEVEL_LABELS : Lihat level labels');
+        console.log('  - debug.STATUS_LABELS : Lihat status labels');
+    </script>
+</body>
+</html>
