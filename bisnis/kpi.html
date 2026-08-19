@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPI Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #1a2332;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 span {
+            background: #2d3748;
+            color: white;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #f7fafc;
+            padding: 0 15px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            transition: border 0.2s;
+        }
+
+        .search-box:focus-within {
+            border-color: #4299e1;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 14px;
+            outline: none;
+            width: 200px;
+            color: #2d3748;
+        }
+
+        .search-box .icon {
+            color: #a0aec0;
+            font-size: 18px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66,153,225,0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #fc8181;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #f56565;
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-outline:hover {
+            background: #f7fafc;
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-xs {
+            padding: 3px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+
+        .btn-purple {
+            background: #9f7aea;
+            color: white;
+        }
+        .btn-purple:hover {
+            background: #805ad5;
+        }
+
+        .list-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .list-header {
+            display: grid;
+            grid-template-columns: 80px 2fr 1.5fr 1fr 1fr 140px;
+            gap: 10px;
+            padding: 14px 20px;
+            background: #f7fafc;
+            font-weight: 700;
+            font-size: 13px;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .list-item {
+            display: grid;
+            grid-template-columns: 80px 2fr 1.5fr 1fr 1fr 140px;
+            gap: 10px;
+            padding: 16px 20px;
+            border-bottom: 1px solid #edf2f7;
+            align-items: center;
+            transition: background 0.15s;
+            cursor: pointer;
+        }
+
+        .list-item:hover {
+            background: #f7fafc;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item .id {
+            font-weight: 700;
+            color: #4299e1;
+            font-size: 14px;
+        }
+
+        .list-item .name {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .list-item .category {
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .list-item .stats {
+            display: flex;
+            gap: 6px;
+            font-size: 12px;
+            color: #718096;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .list-item .stats .kpi-status {
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .list-item .stats .on-track {
+            background: #c6f6d5;
+            color: #276749;
+        }
+        .list-item .stats .at-risk {
+            background: #fefcbf;
+            color: #975a16;
+        }
+        .list-item .stats .behind {
+            background: #fed7d7;
+            color: #9b2c2c;
+        }
+
+        .list-item .stats .kpi-value {
+            background: #e2e8f0;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+
+        .list-item .date {
+            font-size: 13px;
+            color: #a0aec0;
+        }
+
+        .list-item .actions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #a0aec0;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .empty-state h3 {
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 95vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-close {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: #fc8181;
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            background: #f56565;
+            transform: rotate(90deg);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a2332;
+            margin-bottom: 20px;
+            padding-right: 50px;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        /* KPI Cards */
+        .kpi-section {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .kpi-section .section-title {
+            font-weight: 700;
+            font-size: 15px;
+            color: #2d3748;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .kpi-section .section-title .badge {
+            background: #4299e1;
+            color: white;
+            font-size: 11px;
+            padding: 1px 10px;
+            border-radius: 12px;
+        }
+
+        .kpi-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 10px;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .kpi-card .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .kpi-card .kpi-name {
+            font-weight: 700;
+            font-size: 14px;
+            color: #2d3748;
+        }
+
+        .kpi-card .kpi-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .kpi-card .kpi-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: 0.15s;
+            color: #a0aec0;
+        }
+
+        .kpi-card .kpi-actions button:hover {
+            background: #edf2f7;
+        }
+        .kpi-card .kpi-actions .delete-kpi:hover {
+            color: #fc8181;
+        }
+        .kpi-card .kpi-actions .edit-kpi:hover {
+            color: #4299e1;
+        }
+
+        .kpi-card .kpi-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 6px;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .kpi-card .kpi-details .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .kpi-card .kpi-details .detail-item .label {
+            color: #a0aec0;
+            font-weight: 500;
+        }
+
+        .kpi-card .kpi-status-badge {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 12px;
+            border-radius: 12px;
+        }
+
+        .kpi-card .kpi-status-badge.on-track {
+            background: #c6f6d5;
+            color: #276749;
+        }
+        .kpi-card .kpi-status-badge.at-risk {
+            background: #fefcbf;
+            color: #975a16;
+        }
+        .kpi-card .kpi-status-badge.behind {
+            background: #fed7d7;
+            color: #9b2c2c;
+        }
+
+        .kpi-card .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #edf2f7;
+            border-radius: 4px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .kpi-card .progress-bar .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .kpi-card .progress-bar .progress-fill.on-track {
+            background: #48bb78;
+        }
+        .kpi-card .progress-bar .progress-fill.at-risk {
+            background: #ed8936;
+        }
+        .kpi-card .progress-bar .progress-fill.behind {
+            background: #fc8181;
+        }
+
+        .add-kpi-row {
+            display: grid;
+            grid-template-columns: 1.5fr 0.7fr 0.7fr 0.7fr 0.7fr auto;
+            gap: 8px;
+            align-items: end;
+            padding: 12px;
+            background: white;
+            border-radius: 10px;
+            border: 2px dashed #e2e8f0;
+        }
+
+        .add-kpi-row .form-group {
+            gap: 3px;
+        }
+
+        .add-kpi-row .form-group label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #a0aec0;
+        }
+
+        .add-kpi-row .form-group input,
+        .add-kpi-row .form-group select {
+            padding: 6px 10px;
+            font-size: 13px;
+            border-radius: 8px;
+        }
+
+        .add-kpi-row .btn {
+            padding: 6px 14px;
+            font-size: 13px;
+            margin-bottom: 1px;
+        }
+
+        @media (max-width: 768px) {
+            .add-kpi-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+            .add-kpi-row .btn {
+                grid-column: span 2;
+            }
+            .kpi-card .kpi-details {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 2px solid #edf2f7;
+            flex-wrap: wrap;
+        }
+
+        .detail-section {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .detail-section .label {
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 13px;
+        }
+
+        .detail-section .value {
+            color: #2d3748;
+            font-size: 15px;
+            margin-top: 4px;
+        }
+
+        .detail-kpi-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .detail-kpi-item {
+            display: grid;
+            grid-template-columns: 1.5fr 0.7fr 0.7fr 0.7fr 0.7fr 0.7fr;
+            gap: 8px;
+            background: white;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            align-items: center;
+        }
+
+        .detail-kpi-item .kpi-desc {
+            font-size: 14px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .detail-kpi-item .kpi-detail {
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .detail-kpi-item .kpi-status-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .detail-kpi-item .kpi-status-badge.on-track {
+            background: #c6f6d5;
+            color: #276749;
+        }
+        .detail-kpi-item .kpi-status-badge.at-risk {
+            background: #fefcbf;
+            color: #975a16;
+        }
+        .detail-kpi-item .kpi-status-badge.behind {
+            background: #fed7d7;
+            color: #9b2c2c;
+        }
+
+        .stats-mini {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .stats-mini .stat-box {
+            background: white;
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stats-mini .stat-box .num {
+            font-weight: 700;
+            font-size: 18px;
+            color: #2d3748;
+        }
+
+        .stats-mini .stat-box .lbl {
+            font-size: 12px;
+            color: #a0aec0;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            max-width: 400px;
+        }
+
+        .toast.success {
+            background: #48bb78;
+        }
+        .toast.error {
+            background: #fc8181;
+        }
+        .toast.info {
+            background: #4299e1;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 992px) {
+            .list-header {
+                display: none;
+            }
+            .list-item {
+                grid-template-columns: 1fr;
+                gap: 6px;
+                padding: 16px;
+                border-bottom: 2px solid #edf2f7;
+            }
+            .list-item .id {
+                font-size: 13px;
+            }
+            .list-item .actions {
+                margin-top: 6px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box input {
+                width: 100%;
+            }
+            .modal {
+                padding: 20px;
+            }
+            .detail-kpi-item {
+                grid-template-columns: 1fr;
+                gap: 4px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+        }
+
+        .modal::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal::-webkit-scrollbar-track {
+            background: #f7fafc;
+        }
+        .modal::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .field-with-tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            z-index: auto;
+        }
+
+        .field-with-tooltip .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #4299e1;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            border: none;
+            font-family: inherit;
+            vertical-align: middle;
+            position: relative;
+            z-index: 2;
+        }
+
+        .field-with-tooltip .help-icon:hover {
+            background: #3182ce;
+            transform: scale(1.05);
+        }
+
+        .field-with-tooltip .tooltip-box {
+            visibility: hidden;
+            opacity: 0;
+            width: 380px;
+            max-width: 92vw;
+            background: #1a202c;
+            color: #e2e8f0;
+            text-align: left;
+            padding: 18px 22px;
+            border-radius: 14px;
+            position: fixed;
+            z-index: 9999999;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.92);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 400;
+            font-size: 13.5px;
+            line-height: 1.7;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+            pointer-events: none;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .field-with-tooltip .tooltip-box::after {
+            display: none;
+        }
+
+        .field-with-tooltip:hover .tooltip-box {
+            visibility: visible;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .field-with-tooltip.active .tooltip-box {
+            visibility: visible;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: auto;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-close {
+            display: none;
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .field-with-tooltip.active .tooltip-box .tip-close {
+            display: block;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-close button {
+            background: rgba(255, 255, 255, 0.12);
+            border: none;
+            color: white;
+            padding: 5px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-close button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .field-with-tooltip .tooltip-box .tip-title {
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-desc {
+            display: block;
+            color: #e2e8f0;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-example {
+            display: block;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 12.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>
+                📊 KPI Dashboard
+                <span>v1.0</span>
+            </h1>
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Cari KPI/proyek..." oninput="renderList()">
+                </div>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ Dashboard Baru</button>
+                <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+            </div>
+        </div>
+
+        <!-- LIST -->
+        <div class="list-container">
+            <div class="list-header">
+                <span>ID</span>
+                <span>Nama Dashboard</span>
+                <span>Departemen</span>
+                <span>Status / Jumlah KPI</span>
+                <span>Terakhir Update</span>
+                <span>Aksi</span>
+            </div>
+            <div id="listBody">
+                <div class="empty-state">
+                    <div class="icon">📊</div>
+                    <h3>Belum ada dashboard KPI</h3>
+                    <p>Klik "Dashboard Baru" untuk mulai memonitor performa bisnis!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORM -->
+    <div class="modal-overlay" id="formModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('formModal')">✕</button>
+            <div class="modal-title" id="formModalTitle">📊 Dashboard KPI Baru</div>
+            <div class="modal-body">
+                <input type="hidden" id="editId" value="">
+
+                <!-- Informasi Dashboard -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📌 Nama Dashboard *</label>
+                        <input type="text" id="dashboardName" placeholder="Contoh: Q4 2026 Performance" required>
+                    </div>
+                    <div class="form-group">
+                        <label>🏢 Departemen</label>
+                        <select id="department">
+                            <option value="Eksekutif">Eksekutif</option>
+                            <option value="Keuangan">Keuangan</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Sales">Sales</option>
+                            <option value="Operasional">Operasional</option>
+                            <option value="SDM">SDM</option>
+                            <option value="Teknologi">Teknologi</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Deskripsi</label>
+                    <textarea id="description" placeholder="Deskripsi dashboard..." rows="2"></textarea>
+                </div>
+
+                <!-- KPI List -->
+                <div class="kpi-section">
+                    <div class="section-title">
+                        📈 Daftar KPI
+                        <span class="badge" id="kpiCount">0 KPI</span>
+                        <span class="field-with-tooltip" data-tooltip="kpi">
+                            <button class="help-icon" onclick="toggleTooltip(event, this)">?</button>
+                            <div class="tooltip-box">
+                                <span class="tip-title">📈 Tips Menentukan KPI</span>
+                                <span class="tip-desc">KPI harus <strong>SMART</strong>: Specific, Measurable, Achievable, Relevant, Time-bound.</span>
+                                <span class="tip-example">
+                                    <strong>💡 Contoh:</strong><br>
+                                    • Revenue: Target 1M, Actual 850K (85%)<br>
+                                    • Customer Satisfaction: Target 4.5, Actual 4.2 (93%)<br>
+                                    • Churn Rate: Target 5%, Actual 6.2% (76%)
+                                </span>
+                                <span class="tip-close"><button onclick="closeTooltip(this)">Tutup</button></span>
+                            </div>
+                        </span>
+                    </div>
+                    <div class="kpi-list" id="kpiList"></div>
+                    <div class="add-kpi-row">
+                        <div class="form-group">
+                            <label>Nama KPI</label>
+                            <input type="text" id="kpiName" placeholder="Contoh: Revenue Q4">
+                        </div>
+                        <div class="form-group">
+                            <label>Target</label>
+                            <input type="number" id="kpiTarget" placeholder="100" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Actual</label>
+                            <input type="number" id="kpiActual" placeholder="85" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Unit</label>
+                            <select id="kpiUnit">
+                                <option value="%">%</option>
+                                <option value="Rp">Rp</option>
+                                <option value="$">$</option>
+                                <option value="unit">unit</option>
+                                <option value="orang">orang</option>
+                                <option value="score">score</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Kategori</label>
+                            <select id="kpiCategory">
+                                <option value="Keuangan">Keuangan</option>
+                                <option value="Pelanggan">Pelanggan</option>
+                                <option value="Operasional">Operasional</option>
+                                <option value="SDM">SDM</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Inovasi">Inovasi</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-success" onclick="addKPI()">+ Tambah</button>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-danger" id="deleteBtn" onclick="deleteDashboard()" style="display:none;">🗑️ Hapus</button>
+                    <button class="btn btn-outline" onclick="closeModal('formModal')">Batal</button>
+                    <button class="btn btn-primary" id="saveBtn" onclick="saveDashboard()">💾 Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+            <div class="modal-title" id="detailTitle">📊 Detail Dashboard</div>
+            <div class="modal-body">
+                <div class="stats-mini" id="detailStats"></div>
+                <div class="detail-section">
+                    <div class="label">📝 Deskripsi</div>
+                    <div class="value" id="detailDesc">-</div>
+                </div>
+                <div class="detail-section">
+                    <div class="label">📈 Daftar KPI</div>
+                    <div class="detail-kpi-list" id="detailKPI"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-warning" onclick="editFromDetail()">✏️ Edit</button>
+                    <button class="btn btn-outline" onclick="closeModal('detailModal')">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== TOOLTIP HANDLER ====================
+        function toggleTooltip(event, btn) {
+            event.stopPropagation();
+            const container = btn.closest('.field-with-tooltip');
+            const isActive = container.classList.contains('active');
+
+            document.querySelectorAll('.field-with-tooltip.active').forEach(el => {
+                if (el !== container) el.classList.remove('active');
+            });
+
+            if (isActive) {
+                container.classList.remove('active');
+            } else {
+                container.classList.add('active');
+            }
+        }
+
+        function closeTooltip(btn) {
+            const container = btn.closest('.field-with-tooltip');
+            container.classList.remove('active');
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.field-with-tooltip')) {
+                document.querySelectorAll('.field-with-tooltip.active').forEach(el => {
+                    el.classList.remove('active');
+                });
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.field-with-tooltip.active').forEach(el => {
+                    el.classList.remove('active');
+                });
+            }
+        });
+
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'kpi';
+        const SECRET = 'admin';
+
+        // ==================== STATE ====================
+        let allData = [];
+        let currentDetailId = null;
+        let currentEditId = null;
+
+        const COLUMNS = {
+            dashboard_name: 'x_01',
+            department: 'x_02',
+            description: 'x_03',
+            kpis: 'x_04' // JSON array
+        };
+
+        let formData = {
+            dashboard_name: '',
+            department: 'Eksekutif',
+            description: '',
+            kpis: []
+        };
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('📊 KPI Dashboard Started');
+            console.log('📡 Table:', TABLE);
+            refreshData();
+        });
+
+        // ==================== KPI HELPERS ====================
+        function getKPIStatus(target, actual) {
+            if (target === 0) return { status: 'on-track', label: '✅ On Track', progress: 100 };
+            const percentage = (actual / target) * 100;
+            const progress = Math.min(percentage, 100);
+            if (percentage >= 90) return { status: 'on-track', label: '✅ On Track', progress: progress };
+            if (percentage >= 70) return { status: 'at-risk', label: '⚠️ At Risk', progress: progress };
+            return { status: 'behind', label: '🔴 Behind', progress: progress };
+        }
+
+        // ==================== API HELPERS ====================
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': TABLE,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        ...getHeaders(),
+                        ...(options.headers || {})
+                    }
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error || err.message || `HTTP ${response.status}`);
+                }
+                return await response.json();
+            } catch (e) {
+                console.error('❌ API Error:', e.message);
+                throw e;
+            }
+        }
+
+        // ==================== DATA CRUD ====================
+        async function fetchData() {
+            try {
+                const result = await apiFetch('');
+                if (result.success && result.data) {
+                    allData = result.data.map(row => parseRow(row));
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            return {
+                id_x: row.id_x,
+                dashboard_name: row.x_01 || '',
+                department: row.x_02 || 'Eksekutif',
+                description: row.x_03 || '',
+                kpis: safeParseJSON(row.x_04),
+                _raw: row
+            };
+        }
+
+        function safeParseJSON(str) {
+            if (!str) return [];
+            try {
+                const parsed = JSON.parse(str);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                if (key === 'kpis') {
+                    const val = data[key] || [];
+                    row[col] = JSON.stringify(val);
+                } else {
+                    row[col] = data[key] || '';
+                }
+            }
+            return row;
+        }
+
+        async function createDashboard(data) {
+            const row = buildRow(data);
+            return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function updateDashboard(id, data) {
+            const row = buildRow(data);
+            return await apiFetch(`&id_x=${id}`, { method: 'PUT', body: JSON.stringify(row) });
+        }
+
+        async function deleteDashboardApi(id) {
+            return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== RENDER ====================
+        function renderList() {
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = allData.filter(item =>
+                item.dashboard_name.toLowerCase().includes(search) ||
+                item.department.toLowerCase().includes(search) ||
+                item.description.toLowerCase().includes(search)
+            );
+
+            const body = document.getElementById('listBody');
+            if (filtered.length === 0) {
+                body.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">${allData.length === 0 ? '📊' : '🔍'}</div>
+                        <h3>${allData.length === 0 ? 'Belum ada dashboard KPI' : 'Tidak ditemukan'}</h3>
+                        <p>${allData.length === 0 ? 'Klik "Dashboard Baru" untuk mulai memonitor performa bisnis!' : 'Coba dengan kata kunci lain'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            body.innerHTML = filtered.map(item => {
+                // Count KPIs by status
+                let onTrack = 0,
+                    atRisk = 0,
+                    behind = 0;
+                item.kpis.forEach(k => {
+                    const status = getKPIStatus(k.target, k.actual);
+                    if (status.status === 'on-track') onTrack++;
+                    else if (status.status === 'at-risk') atRisk++;
+                    else behind++;
+                });
+
+                const totalKPI = item.kpis.length;
+                const statusText = totalKPI > 0 ?
+                    `${onTrack} ✅ / ${atRisk} ⚠️ / ${behind} 🔴` :
+                    'Belum ada KPI';
+
+                const date = item._raw?.updated_at || item._raw?.created_at || '-';
+                const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID') : '-';
+
+                return `
+                    <div class="list-item" onclick="openDetail(${item.id_x})">
+                        <div class="id">#${item.id_x}</div>
+                        <div class="name">${escapeHtml(item.dashboard_name) || '(tanpa nama)'}</div>
+                        <div class="category">${escapeHtml(item.department) || '-'}</div>
+                        <div class="stats">
+                            <span class="kpi-value">${totalKPI} KPI</span>
+                            <span class="kpi-status ${totalKPI > 0 && behind === 0 && atRisk === 0 ? 'on-track' : totalKPI > 0 && behind > 0 ? 'behind' : totalKPI > 0 ? 'at-risk' : ''}">
+                                ${statusText}
+                            </span>
+                        </div>
+                        <div class="date">${displayDate}</div>
+                        <div class="actions" onclick="event.stopPropagation();">
+                            <button class="btn btn-outline btn-xs" onclick="openDetail(${item.id_x})">👁️</button>
+                            <button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>
+                            <button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function refreshData() {
+            showToast('🔄 Memuat data...', 'info');
+            await fetchData();
+            renderList();
+            showToast(`✅ ${allData.length} dashboard dimuat`, 'success');
+        }
+
+        // ==================== MODAL FORM ====================
+        function openAddModal() {
+            console.log('📊 Opening Add Modal');
+            currentEditId = null;
+            document.getElementById('editId').value = '';
+            document.getElementById('formModalTitle').textContent = '📊 Dashboard KPI Baru';
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.getElementById('saveBtn').textContent = '💾 Simpan';
+
+            formData = {
+                dashboard_name: '',
+                department: 'Eksekutif',
+                description: '',
+                kpis: []
+            };
+            document.getElementById('dashboardName').value = '';
+            document.getElementById('department').value = 'Eksekutif';
+            document.getElementById('description').value = '';
+            document.getElementById('kpiName').value = '';
+            document.getElementById('kpiTarget').value = '';
+            document.getElementById('kpiActual').value = '';
+            document.getElementById('kpiUnit').value = '%';
+            document.getElementById('kpiCategory').value = 'Keuangan';
+
+            renderKPIs();
+            document.getElementById('formModal').classList.add('active');
+            console.log('✅ Add Modal opened');
+        }
+
+        async function openEditModal(id) {
+            console.log('✏️ Opening Edit Modal for ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+
+            currentEditId = id;
+            document.getElementById('editId').value = id;
+            document.getElementById('formModalTitle').textContent = `✏️ Edit: ${item.dashboard_name}`;
+            document.getElementById('deleteBtn').style.display = 'inline-flex';
+            document.getElementById('saveBtn').textContent = '💾 Update';
+
+            formData = {
+                dashboard_name: item.dashboard_name || '',
+                department: item.department || 'Eksekutif',
+                description: item.description || '',
+                kpis: [...(item.kpis || [])]
+            };
+
+            document.getElementById('dashboardName').value = formData.dashboard_name;
+            document.getElementById('department').value = formData.department;
+            document.getElementById('description').value = formData.description;
+            document.getElementById('kpiName').value = '';
+            document.getElementById('kpiTarget').value = '';
+            document.getElementById('kpiActual').value = '';
+            document.getElementById('kpiUnit').value = '%';
+            document.getElementById('kpiCategory').value = 'Keuangan';
+
+            renderKPIs();
+            document.getElementById('formModal').classList.add('active');
+            console.log('✅ Edit Modal opened');
+        }
+
+        function closeModal(id) {
+            console.log('🔒 Closing modal:', id);
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // ==================== KPIs ====================
+        function renderKPIs() {
+            const container = document.getElementById('kpiList');
+            const count = document.getElementById('kpiCount');
+            const kpis = formData.kpis || [];
+
+            count.textContent = `${kpis.length} KPI`;
+
+            if (kpis.length === 0) {
+                container.innerHTML = `<div style="color:#a0aec0;font-size:13px;padding:8px 0;">Belum ada KPI. Tambahkan KPI!</div>`;
+            } else {
+                container.innerHTML = kpis.map((kpi, idx) => {
+                    const status = getKPIStatus(kpi.target, kpi.actual);
+                    const unit = kpi.unit || '%';
+                    return `
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <span class="kpi-name">${escapeHtml(kpi.name)}</span>
+                                <div class="kpi-actions">
+                                    <button class="edit-kpi" onclick="editKPI(${idx})" title="Edit">✏️</button>
+                                    <button class="delete-kpi" onclick="removeKPI(${idx})" title="Hapus">✕</button>
+                                </div>
+                            </div>
+                            <div class="kpi-details">
+                                <span class="detail-item"><span class="label">Target:</span> ${kpi.target} ${unit}</span>
+                                <span class="detail-item"><span class="label">Actual:</span> ${kpi.actual} ${unit}</span>
+                                <span class="detail-item"><span class="label">Progress:</span> ${status.progress.toFixed(1)}%</span>
+                                <span class="detail-item"><span class="label">Kategori:</span> ${kpi.category || '-'}</span>
+                                <span class="kpi-status-badge ${status.status}">${status.label}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill ${status.status}" style="width: ${status.progress}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function addKPI() {
+            const name = document.getElementById('kpiName').value.trim();
+            if (!name) {
+                showToast('Masukkan nama KPI', 'error');
+                document.getElementById('kpiName').focus();
+                return;
+            }
+
+            const target = parseFloat(document.getElementById('kpiTarget').value);
+            const actual = parseFloat(document.getElementById('kpiActual').value);
+
+            if (isNaN(target) || target <= 0) {
+                showToast('Target harus angka positif', 'error');
+                document.getElementById('kpiTarget').focus();
+                return;
+            }
+
+            if (isNaN(actual) || actual < 0) {
+                showToast('Actual harus angka', 'error');
+                document.getElementById('kpiActual').focus();
+                return;
+            }
+
+            const kpi = {
+                name: name,
+                target: target,
+                actual: actual,
+                unit: document.getElementById('kpiUnit').value,
+                category: document.getElementById('kpiCategory').value
+            };
+
+            if (!formData.kpis) formData.kpis = [];
+            formData.kpis.push(kpi);
+
+            document.getElementById('kpiName').value = '';
+            document.getElementById('kpiTarget').value = '';
+            document.getElementById('kpiActual').value = '';
+            document.getElementById('kpiUnit').value = '%';
+            document.getElementById('kpiCategory').value = 'Keuangan';
+
+            renderKPIs();
+            document.getElementById('kpiName').focus();
+            showToast(`✅ KPI "${name}" ditambahkan`, 'success');
+        }
+
+        function removeKPI(idx) {
+            if (!confirm('Hapus KPI ini?')) return;
+            formData.kpis.splice(idx, 1);
+            renderKPIs();
+            showToast('🗑️ KPI dihapus', 'info');
+        }
+
+        function editKPI(idx) {
+            const kpi = formData.kpis[idx];
+            const newName = prompt('Edit nama KPI:', kpi.name);
+            if (newName !== null && newName.trim() !== '') {
+                kpi.name = newName.trim();
+
+                const newTarget = prompt('Edit target:', kpi.target);
+                if (newTarget !== null && !isNaN(parseFloat(newTarget)) && parseFloat(newTarget) > 0) {
+                    kpi.target = parseFloat(newTarget);
+                }
+
+                const newActual = prompt('Edit actual:', kpi.actual);
+                if (newActual !== null && !isNaN(parseFloat(newActual)) && parseFloat(newActual) >= 0) {
+                    kpi.actual = parseFloat(newActual);
+                }
+
+                renderKPIs();
+                showToast('✏️ KPI diupdate', 'info');
+            }
+        }
+
+        // ==================== SAVE ====================
+        async function saveDashboard() {
+            console.log('💾 Saving dashboard...');
+            const name = document.getElementById('dashboardName').value.trim();
+
+            if (!name) {
+                showToast('Nama Dashboard wajib diisi', 'error');
+                document.getElementById('dashboardName').focus();
+                return;
+            }
+
+            const data = {
+                dashboard_name: name,
+                department: document.getElementById('department').value,
+                description: document.getElementById('description').value.trim(),
+                kpis: formData.kpis || []
+            };
+
+            console.log('📦 Data to save:', data);
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Menyimpan...';
+
+            try {
+                if (currentEditId) {
+                    console.log('🔄 Updating dashboard ID:', currentEditId);
+                    await updateDashboard(currentEditId, data);
+                    showToast('✅ Dashboard berhasil diupdate!', 'success');
+                } else {
+                    console.log('➕ Creating new dashboard');
+                    await createDashboard(data);
+                    showToast('✅ Dashboard berhasil dibuat!', 'success');
+                }
+                await refreshData();
+                closeModal('formModal');
+                console.log('✅ Save complete');
+            } catch (e) {
+                console.error('❌ Save failed:', e);
+                showToast('❌ Gagal menyimpan: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = currentEditId ? '💾 Update' : '💾 Simpan';
+            }
+        }
+
+        // ==================== DELETE ====================
+        async function confirmDelete(id) {
+            console.log('🗑️ Confirm delete ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            if (!confirm(`Hapus dashboard "${item.dashboard_name}" (ID: ${id})?`)) return;
+
+            try {
+                await deleteDashboardApi(id);
+                showToast('✅ Dashboard berhasil dihapus', 'success');
+                await refreshData();
+                console.log('✅ Deleted dashboard ID:', id);
+            } catch (e) {
+                console.error('❌ Delete failed:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteDashboard() {
+            const id = parseInt(document.getElementById('editId').value);
+            console.log('🗑️ Delete dashboard from modal, ID:', id);
+            if (!id) return;
+            if (!confirm('Hapus dashboard ini secara permanen?')) return;
+
+            try {
+                await deleteDashboardApi(id);
+                showToast('✅ Dashboard berhasil dihapus', 'success');
+                closeModal('formModal');
+                await refreshData();
+                console.log('✅ Deleted dashboard ID:', id);
+            } catch (e) {
+                console.error('❌ Delete failed:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== DETAIL ====================
+        async function openDetail(id) {
+            console.log('👁️ Opening detail ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+
+            currentDetailId = id;
+            document.getElementById('detailTitle').textContent = `📊 Detail: ${item.dashboard_name}`;
+
+            // Calculate stats
+            const totalKPI = item.kpis.length;
+            let onTrack = 0,
+                atRisk = 0,
+                behind = 0;
+            let totalProgress = 0;
+            item.kpis.forEach(k => {
+                const status = getKPIStatus(k.target, k.actual);
+                totalProgress += status.progress;
+                if (status.status === 'on-track') onTrack++;
+                else if (status.status === 'at-risk') atRisk++;
+                else behind++;
+            });
+            const avgProgress = totalKPI > 0 ? (totalProgress / totalKPI).toFixed(1) : 0;
+
+            document.getElementById('detailStats').innerHTML = `
+                <div class="stat-box"><span class="num">#${item.id_x}</span> <span class="lbl">ID</span></div>
+                <div class="stat-box"><span class="num">${totalKPI}</span> <span class="lbl">📈 Total KPI</span></div>
+                <div class="stat-box"><span class="num">${avgProgress}%</span> <span class="lbl">Rata-rata Progress</span></div>
+                <div class="stat-box"><span class="num">✅ ${onTrack} / ⚠️ ${atRisk} / 🔴 ${behind}</span> <span class="lbl">Status</span></div>
+                <div class="stat-box"><span class="num">🏢 ${escapeHtml(item.department)}</span> <span class="lbl">Departemen</span></div>
+            `;
+
+            document.getElementById('detailDesc').textContent = item.description || 'Tidak ada deskripsi';
+
+            if (item.kpis.length === 0) {
+                document.getElementById('detailKPI').innerHTML = `<span style="color:#a0aec0;font-size:13px;">Belum ada KPI</span>`;
+            } else {
+                document.getElementById('detailKPI').innerHTML = item.kpis.map(kpi => {
+                    const status = getKPIStatus(kpi.target, kpi.actual);
+                    const unit = kpi.unit || '%';
+                    return `
+                        <div class="detail-kpi-item">
+                            <span class="kpi-desc">${escapeHtml(kpi.name)}</span>
+                            <span class="kpi-detail">🎯 ${kpi.target} ${unit}</span>
+                            <span class="kpi-detail">📊 ${kpi.actual} ${unit}</span>
+                            <span class="kpi-detail">${status.progress.toFixed(1)}%</span>
+                            <span class="kpi-detail">${kpi.category || '-'}</span>
+                            <span class="kpi-status-badge ${status.status}">${status.label}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('detailModal').classList.add('active');
+            console.log('✅ Detail modal opened');
+        }
+
+        function editFromDetail() {
+            console.log('✏️ Edit from detail, ID:', currentDetailId);
+            if (currentDetailId) {
+                closeModal('detailModal');
+                setTimeout(() => openEditModal(currentDetailId), 300);
+            }
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'info') {
+            console.log(`📢 Toast: [${type}] ${message}`);
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ==================== KEYBOARD ====================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => {
+                    m.classList.remove('active');
+                });
+            }
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        // ==================== DEBUG ====================
+        window.debug = {
+            allData: () => allData,
+            formData: () => formData,
+            refresh: refreshData,
+            openAdd: openAddModal,
+            TABLE: TABLE,
+            COLUMNS: COLUMNS,
+            getKPIStatus: getKPIStatus
+        };
+
+        console.log('📊 KPI Dashboard Loaded!');
+        console.log('📡 Table:', TABLE);
+        console.log('📊 Type "debug" in console for helpers');
+        console.log('🔧 Debug commands:');
+        console.log('  - debug.allData()  : Lihat semua data');
+        console.log('  - debug.formData() : Lihat form data');
+        console.log('  - debug.refresh()  : Refresh data');
+        console.log('  - debug.openAdd()  : Open add modal');
+        console.log('  - debug.getKPIStatus(target, actual) : Get KPI status');
+    </script>
+</body>
+</html>
