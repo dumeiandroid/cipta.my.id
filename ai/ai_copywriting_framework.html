@@ -1,0 +1,2053 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Copywriting Framework</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #1a2332;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 span {
+            background: #2d3748;
+            color: white;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #f7fafc;
+            padding: 0 15px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            transition: border 0.2s;
+        }
+
+        .search-box:focus-within {
+            border-color: #ed64a6;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 14px;
+            outline: none;
+            width: 200px;
+            color: #2d3748;
+        }
+
+        .search-box .icon {
+            color: #a0aec0;
+            font-size: 18px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #ed64a6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #d53f8c;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(237,100,166,0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #fc8181;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #f56565;
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-outline:hover {
+            background: #f7fafc;
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-xs {
+            padding: 3px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+
+        .main-tabs-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .main-tabs-header {
+            display: flex;
+            border-bottom: 2px solid #edf2f7;
+            background: #f7fafc;
+            padding: 0 20px;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+        }
+
+        .main-tab-btn {
+            padding: 14px 24px;
+            border: none;
+            background: transparent;
+            font-weight: 700;
+            font-size: 14px;
+            color: #a0aec0;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .main-tab-btn:hover {
+            color: #2d3748;
+        }
+
+        .main-tab-btn.active {
+            color: #ed64a6;
+            border-bottom-color: #ed64a6;
+        }
+
+        .main-tab-btn .badge-main {
+            background: #edf2f7;
+            color: #4a5568;
+            font-size: 11px;
+            padding: 1px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .main-tab-btn.active .badge-main {
+            background: #fbb6ce;
+            color: #9b2c2c;
+        }
+
+        .main-tab-content {
+            padding: 24px 30px;
+            display: none;
+        }
+
+        .main-tab-content.active {
+            display: block;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 16px;
+        }
+
+        .tool-card {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .tool-card:hover {
+            border-color: #ed64a6;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(237,100,166,0.12);
+        }
+
+        .tool-card .tool-icon {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .tool-card .tool-name {
+            font-weight: 700;
+            font-size: 15px;
+            color: #2d3748;
+        }
+
+        .tool-card .tool-desc {
+            font-size: 12px;
+            color: #718096;
+            margin: 4px 0 12px;
+        }
+
+        .tool-card .tool-actions {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .tool-card .tool-actions .btn {
+            padding: 4px 12px;
+            font-size: 11px;
+        }
+
+        .studio-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .studio-left {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .studio-right {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #ed64a6;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .prompt-preview {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            min-height: 150px;
+            white-space: pre-wrap;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #2d3748;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .prompt-preview .placeholder {
+            color: #a0aec0;
+            font-style: italic;
+        }
+
+        .quill-wrapper {
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .quill-wrapper .ql-toolbar {
+            border: none;
+            border-bottom: 2px solid #e2e8f0;
+            background: #f7fafc;
+        }
+
+        .quill-wrapper .ql-container {
+            border: none;
+            min-height: 200px;
+            font-size: 14px;
+        }
+
+        .quill-wrapper .ql-editor {
+            min-height: 200px;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .history-filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .history-filters select,
+        .history-filters input {
+            padding: 8px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .history-filters select:focus,
+        .history-filters input:focus {
+            outline: none;
+            border-color: #ed64a6;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .history-item {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            border-color: #ed64a6;
+        }
+
+        .history-item .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .history-item .history-title {
+            font-weight: 700;
+            font-size: 15px;
+            color: #2d3748;
+        }
+
+        .history-item .history-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: #718096;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .history-item .history-meta .fw-badge {
+            background: #fbb6ce;
+            color: #9b2c2c;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .history-item .history-meta .ai-badge {
+            font-size: 10px;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .history-item .history-meta .ai-badge.chatgpt {
+            background: #10a37f;
+            color: white;
+        }
+        .history-item .history-meta .ai-badge.claude {
+            background: #d97757;
+            color: white;
+        }
+        .history-item .history-meta .ai-badge.gemini {
+            background: #4285f4;
+            color: white;
+        }
+        .history-item .history-meta .ai-badge.deepseek {
+            background: #4a6cf7;
+            color: white;
+        }
+        .history-item .history-meta .ai-badge.other {
+            background: #718096;
+            color: white;
+        }
+
+        .history-item .history-prompt {
+            font-size: 13px;
+            color: #4a5568;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid #ed64a6;
+            margin-bottom: 10px;
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+        .history-item .history-prompt:hover {
+            background: #f7fafc;
+        }
+
+        .history-item .history-prompt.expanded {
+            max-height: none;
+            white-space: pre-wrap;
+        }
+
+        .history-item .history-result {
+            font-size: 13px;
+            color: #2d3748;
+            margin-bottom: 8px;
+            max-height: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-item .history-result .ql-editor {
+            padding: 0;
+            max-height: 80px;
+            overflow: hidden;
+        }
+
+        .history-item .history-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            border-top: 1px solid #edf2f7;
+            padding-top: 10px;
+        }
+
+        .history-item .history-actions .btn {
+            padding: 3px 12px;
+            font-size: 11px;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #a0aec0;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .empty-state h3 {
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 850px;
+            width: 100%;
+            max-height: 95vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-close {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: #fc8181;
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            background: #f56565;
+            transform: rotate(90deg);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a2332;
+            margin-bottom: 20px;
+            padding-right: 50px;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #edf2f7;
+            flex-wrap: wrap;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            max-width: 400px;
+        }
+
+        .toast.success {
+            background: #48bb78;
+        }
+        .toast.error {
+            background: #fc8181;
+        }
+        .toast.info {
+            background: #4299e1;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-label {
+            font-weight: 700;
+            font-size: 14px;
+            color: #2d3748;
+            margin-top: 4px;
+            margin-bottom: 2px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #edf2f7;
+        }
+
+        .view-result-wrapper {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .view-result-wrapper .ql-editor {
+            padding: 0;
+        }
+
+        .view-result-wrapper .ql-editor h1,
+        .view-result-wrapper .ql-editor h2,
+        .view-result-wrapper .ql-editor h3 {
+            margin: 8px 0 4px;
+        }
+
+        .view-result-wrapper .ql-editor p {
+            margin: 4px 0;
+        }
+
+        .view-result-wrapper .ql-editor ul,
+        .view-result-wrapper .ql-editor ol {
+            padding-left: 20px;
+        }
+
+        .ai-source-select {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .ai-source-select select {
+            padding: 8px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            flex: 1;
+        }
+
+        .ai-source-select select:focus {
+            outline: none;
+            border-color: #ed64a6;
+        }
+
+        .add-ai-modal .modal {
+            max-width: 750px;
+        }
+
+        .add-ai-modal .prompt-display {
+            background: #f7fafc;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #4a5568;
+            max-height: 120px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            border-left: 3px solid #ed64a6;
+        }
+
+        @media (max-width: 992px) {
+            .studio-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .main-tabs-header {
+                padding: 0 12px;
+            }
+            .main-tab-btn {
+                padding: 12px 16px;
+                font-size: 13px;
+            }
+            .main-tab-content {
+                padding: 16px;
+            }
+            .tools-grid {
+                grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box input {
+                width: 100%;
+            }
+            .modal {
+                padding: 20px;
+            }
+            .history-item .history-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+            .tools-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .tool-card {
+                padding: 14px;
+            }
+            .tool-card .tool-icon {
+                font-size: 28px;
+            }
+            .main-tab-btn {
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+            .main-tab-content {
+                padding: 12px;
+            }
+            .history-filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        .modal::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal::-webkit-scrollbar-track {
+            background: #f7fafc;
+        }
+        .modal::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>
+                ✍️ AI Copywriting Framework
+                <span>v1.0</span>
+            </h1>
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Cari framework..." oninput="renderTools()">
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+            </div>
+        </div>
+
+        <!-- MAIN TABS -->
+        <div class="main-tabs-container">
+            <div class="main-tabs-header">
+                <button class="main-tab-btn active" data-tab="tab1" onclick="switchMainTab('tab1')">
+                    📚 Tools Library
+                    <span class="badge-main" id="tab1Badge">11</span>
+                </button>
+                <button class="main-tab-btn" data-tab="tab2" onclick="switchMainTab('tab2')">
+                    ✏️ AI Prompt Studio
+                    <span class="badge-main">New</span>
+                </button>
+                <button class="main-tab-btn" data-tab="tab3" onclick="switchMainTab('tab3')">
+                    📋 History
+                    <span class="badge-main" id="tab3Badge">0</span>
+                </button>
+            </div>
+
+            <!-- TAB 1: TOOLS LIBRARY -->
+            <div class="main-tab-content active" id="tab1">
+                <div class="tools-grid" id="toolsGrid"></div>
+            </div>
+
+            <!-- TAB 2: AI PROMPT STUDIO -->
+            <div class="main-tab-content" id="tab2">
+                <div class="studio-grid">
+                    <div class="studio-left">
+                        <div class="form-group">
+                            <label>📂 Pilih Framework</label>
+                            <select id="selectedTool" onchange="updateFormFields()"></select>
+                        </div>
+
+                        <div id="dynamicFields"></div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>📌 Judul Konten</label>
+                                <input type="text" id="resultTitle" placeholder="Judul konten...">
+                            </div>
+                            <div class="form-group">
+                                <label>👤 Dibuat Oleh</label>
+                                <input type="text" id="createdBy" placeholder="Nama...">
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="generatePrompt()">📝 Generate Prompt</button>
+                    </div>
+
+                    <div class="studio-right">
+                        <div class="form-group">
+                            <label>📄 Prompt yang Dihasilkan</label>
+                            <div class="prompt-preview" id="promptPreview">
+                                <span class="placeholder">Pilih framework dan isi form untuk menghasilkan prompt...</span>
+                            </div>
+                            <button class="btn btn-outline btn-sm" onclick="copyPrompt()" style="margin-top:6px;">📋 Copy Prompt</button>
+                        </div>
+
+                        <div class="form-group">
+                            <label>🤖 Pilih AI Source</label>
+                            <div class="ai-source-select">
+                                <select id="aiSource">
+                                    <option value="ChatGPT">ChatGPT</option>
+                                    <option value="Claude">Claude</option>
+                                    <option value="Gemini">Gemini</option>
+                                    <option value="DeepSeek">DeepSeek</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>📝 Hasil AI (Paste di sini)</label>
+                            <div class="quill-wrapper">
+                                <div id="resultEditor"></div>
+                            </div>
+                        </div>
+
+                        <div class="result-actions">
+                            <button class="btn btn-success" onclick="saveResult()">💾 Simpan Hasil</button>
+                            <button class="btn btn-warning" onclick="clearForm()">🗑️ Clear</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: HISTORY -->
+            <div class="main-tab-content" id="tab3">
+                <div class="history-filters">
+                    <select id="historyFilterTool" onchange="renderHistory()">
+                        <option value="all">📋 All Frameworks</option>
+                    </select>
+                    <input type="text" id="historySearch" placeholder="🔍 Cari..." oninput="renderHistory()">
+                    <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑️ Hapus Semua</button>
+                    <span style="font-size:13px;color:#718096;" id="historyCount">0 items</span>
+                </div>
+                <div class="history-list" id="historyList">
+                    <div class="empty-state">
+                        <div class="icon">✍️</div>
+                        <h3>Belum ada hasil</h3>
+                        <p>Pergi ke Tab "AI Prompt Studio" untuk mulai membuat copywriting</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL INFO -->
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
+            <div class="modal-title" id="infoModalTitle">📋 Framework Info</div>
+            <div class="modal-body" id="infoModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('infoModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL VIEW RESULT -->
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+            <div class="modal-title" id="viewModalTitle">👁️ Detail Konten</div>
+            <div class="modal-body">
+                <div id="viewMeta" style="font-size:13px;color:#718096;margin-bottom:12px;padding:8px 12px;background:#f7fafc;border-radius:8px;"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt:</div>
+                <div style="background:#f7fafc;padding:12px 16px;border-radius:8px;font-size:14px;color:#4a5568;white-space:pre-wrap;max-height:150px;overflow-y:auto;border-left:3px solid #ed64a6;" id="viewPrompt"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">🤖 Sumber AI:</div>
+                <div style="font-size:14px;color:#4a5568;margin-bottom:8px;" id="viewSource"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">📝 Hasil AI:</div>
+                <div class="view-result-wrapper" id="viewResultWrapper"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="copyViewResult()">📋 Copy</button>
+                <button class="btn btn-outline" onclick="closeModal('viewModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ADD AI RESULT -->
+    <div class="modal-overlay add-ai-modal" id="addAiModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('addAiModal')">✕</button>
+            <div class="modal-title" id="addAiModalTitle">🤖 Tambah Hasil AI Baru</div>
+            <div class="modal-body">
+                <input type="hidden" id="addAiId">
+
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt (tidak bisa diedit):</div>
+                <div class="prompt-display" id="addAiPromptDisplay"></div>
+
+                <div class="form-group">
+                    <label>🤖 Pilih AI Source</label>
+                    <select id="addAiSource">
+                        <option value="ChatGPT">ChatGPT</option>
+                        <option value="Claude">Claude</option>
+                        <option value="Gemini">Gemini</option>
+                        <option value="DeepSeek">DeepSeek</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Hasil AI (Paste di sini)</label>
+                    <div class="quill-wrapper">
+                        <div id="addAiEditor"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>👤 Dibuat Oleh</label>
+                    <input type="text" id="addAiCreatedBy" placeholder="Nama...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addAiModal')">Batal</button>
+                <button class="btn btn-success" onclick="saveAddAiResult()">💾 Simpan Hasil</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DUPLICATE -->
+    <div class="modal-overlay" id="duplicateModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('duplicateModal')">✕</button>
+            <div class="modal-title" id="duplicateModalTitle">📋 Duplikat Prompt</div>
+            <div class="modal-body">
+                <input type="hidden" id="dupId">
+
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📝 Edit Prompt (buat variasi baru):</div>
+                <div class="form-group">
+                    <textarea id="dupPromptEditor" rows="6" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;resize:vertical;"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📌 Judul Baru</label>
+                        <input type="text" id="dupTitle" placeholder="Judul baru...">
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Dibuat Oleh</label>
+                        <input type="text" id="dupCreatedBy" placeholder="Nama...">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('duplicateModal')">Batal</button>
+                <button class="btn btn-primary" onclick="saveDuplicate()">📝 Generate & Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== FRAMEWORK DEFINITIONS ====================
+        const FRAMEWORKS = {
+            hbt: {
+                id: 'hbt',
+                icon: '🎣',
+                name: 'HBT',
+                desc: 'Hook-Book-Look-Took untuk storytelling dan copywriting engaging.',
+                color: '#e53e3e',
+                fields: [
+                    { key: 'product_name', label: 'Nama Produk/Jasa', type: 'text', placeholder: 'Contoh: Aplikasi Konseling' },
+                    { key: 'target_audience', label: 'Target Audiens', type: 'text', placeholder: 'Contoh: Karyawan burnout' },
+                    { key: 'key_message', label: 'Pesan Utama', type: 'textarea', placeholder: 'Pesan utama yang ingin disampaikan...' },
+                    { key: 'call_to_action', label: 'Call to Action', type: 'text', placeholder: 'Contoh: Hubungi kami sekarang' }
+                ],
+                prompt_template: `Buat copywriting dengan framework HBT (Hook-Book-Look-Took) untuk produk {product_name} dengan target audiens {target_audience}. Pesan utama: {key_message}. Call to action: {call_to_action}. Berikan copywriting yang engaging dengan struktur: Hook (pembuka menarik), Book (cerita/informasi mendalam), Look (insight/koneksi dengan audiens), Took (call to action). Format dengan markdown.`
+            },
+            aida: {
+                id: 'aida',
+                icon: '🎯',
+                name: 'AIDA',
+                desc: 'Framework klasik untuk copywriting pemasaran.',
+                color: '#fc8181',
+                fields: [
+                    { key: 'product_name', label: 'Nama Produk/Jasa', type: 'text', placeholder: 'Contoh: Aplikasi Konseling' },
+                    { key: 'target_audience', label: 'Target Audiens', type: 'text', placeholder: 'Contoh: Karyawan burnout' },
+                    { key: 'benefit', label: 'Manfaat Utama', type: 'textarea', placeholder: 'Manfaat utama produk...' },
+                    { key: 'call_to_action', label: 'Call to Action', type: 'text', placeholder: 'Contoh: Hubungi kami sekarang' }
+                ],
+                prompt_template: `Buat copywriting dengan framework AIDA (Attention-Interest-Desire-Action) untuk produk {product_name} dengan target audiens {target_audience}. Manfaat utama: {benefit}. Call to action: {call_to_action}. Berikan copywriting yang persuasif dengan struktur: Attention (tarik perhatian), Interest (bangkitkan minat), Desire (bangkitkan keinginan), Action (call to action). Format dengan markdown.`
+            },
+            pas: {
+                id: 'pas',
+                icon: '💡',
+                name: 'PAS',
+                desc: 'Problem-Agitate-Solution untuk mengatasi masalah audiens.',
+                color: '#ed8936',
+                fields: [
+                    { key: 'product_name', label: 'Nama Produk/Jasa', type: 'text', placeholder: 'Contoh: Program Konseling' },
+                    { key: 'problem', label: 'Masalah Audiens', type: 'textarea', placeholder: 'Masalah yang dihadapi audiens...' },
+                    { key: 'solution', label: 'Solusi', type: 'textarea', placeholder: 'Solusi yang ditawarkan...' },
+                    { key: 'call_to_action', label: 'Call to Action', type: 'text', placeholder: 'Contoh: Daftar sekarang' }
+                ],
+                prompt_template: `Buat copywriting dengan framework PAS (Problem-Agitate-Solution) untuk produk {product_name}. Masalah audiens: {problem}. Solusi: {solution}. Call to action: {call_to_action}. Berikan copywriting yang efektif dengan struktur: Problem (identifikasi masalah), Agitate (perkuat masalah), Solution (berikan solusi). Format dengan markdown.`
+            },
+            p4: {
+                id: 'p4',
+                icon: '📋',
+                name: '4P',
+                desc: 'Promise-Picture-Proof-Push untuk copywriting persuasif.',
+                color: '#fefcbf',
+                fields: [
+                    { key: 'product_name', label: 'Nama Produk/Jasa', type: 'text', placeholder: 'Contoh: Layanan Psikologi' },
+                    { key: 'promise', label: 'Janji', type: 'text', placeholder: 'Janji yang diberikan...' },
+                    { key: 'benefit', label: 'Manfaat', type: 'textarea', placeholder: 'Manfaat yang didapat...' },
+                    { key: 'call_to_action', label: 'Call to Action', type: 'text', placeholder: 'Contoh: Konsultasi gratis' }
+                ],
+                prompt_template: `Buat copywriting dengan framework 4P (Promise-Picture-Proof-Push) untuk produk {product_name}. Janji: {promise}. Manfaat: {benefit}. Call to action: {call_to_action}. Berikan copywriting persuasif dengan struktur: Promise (janji), Picture (gambaran manfaat), Proof (bukti), Push (dorongan bertindak). Format dengan markdown.`
+            },
+            app: {
+                id: 'app',
+                icon: '📱',
+                name: 'APP',
+                desc: 'Aware-Promise-Prove-Push untuk membangun kesadaran dan aksi.',
+                color: '#48bb78',
+                fields: [
+                    { key: 'product_name', label: 'Nama Produk/Jasa', type: 'text', placeholder: 'Contoh: Program Mental Health' },
+                    { key: 'problem', label: 'Masalah', type: 'textarea', placeholder: 'Masalah audiens...' },
+                    { key: 'solution', label: 'Solusi', type: 'textarea', placeholder: 'Solusi yang ditawarkan...' },
+                    { key: 'call_to_action', label: 'Call to Action', type: 'text', placeholder: 'Contoh: Daftar sekarang' }
+                ],
+                prompt_template: `Buat copywriting dengan framework APP (Aware-Promise-Prove-Push) untuk produk {product_name}. Masalah: {problem}. Solusi: {solution}. Call to action: {call_to_action}. Berikan copywriting yang membangun kesadaran dengan struktur: Aware (buat sadar akan masalah), Promise (janji solusi), Prove (buktikan), Push (dorongan bertindak). Format dengan markdown.`
+            },
+            pastor: {
+                id: 'pastor',
+                icon: '⛪',
+                name: 'PASTOR',
+                desc: 'Problem-Agitate-Solution-Testimonial-Offer-Response untuk sales copy panjang.',
+                color: '#4299e1',
+                fields: [
+                    { key: 'product_name', label: 'Nama Produk/Jasa', type: 'text', placeholder: 'Contoh: Program Well-being' },
+                    { key: 'problem', label: 'Masalah', type: 'textarea', placeholder: 'Masalah audiens...' },
+                    { key: 'solution', label: 'Solusi', type: 'textarea', placeholder: 'Solusi yang ditawarkan...' },
+                    { key: 'offer', label: 'Penawaran Khusus', type: 'text', placeholder: 'Contoh: Diskon 50%' },
+                    { key: 'call_to_action', label: 'Call to Action', type: 'text', placeholder: 'Contoh: Hubungi sekarang' }
+                ],
+                prompt_template: `Buat copywriting dengan framework PASTOR (Problem-Agitate-Solution-Testimonial-Offer-Response) untuk produk {product_name}. Masalah: {problem}. Solusi: {solution}. Penawaran khusus: {offer}. Call to action: {call_to_action}. Berikan copywriting panjang yang efektif dengan struktur: Problem, Agitate, Solution, Testimonial, Offer, Response. Format dengan markdown.`
+            },
+            bab: {
+                id: 'bab',
+                icon: '🔀',
+                name: 'BAB',
+                desc: 'Before-After-Bridge untuk storytelling perubahan.',
+                color: '#9f7aea',
+                fields: [
+                    { key: 'product_name', label: 'Nama Produk/Jasa', type: 'text', placeholder: 'Contoh: Program Transformasi' },
+                    { key: 'before', label: 'Kondisi Sebelum', type: 'textarea', placeholder: 'Keadaan sebelum...' },
+                    { key: 'after', label: 'Kondisi Setelah', type: 'textarea', placeholder: 'Keadaan setelah...' },
+                    { key: 'call_to_action', label: 'Call to Action', type: 'text', placeholder: 'Contoh: Mulai perjalanan Anda' }
+                ],
+                prompt_template: `Buat copywriting dengan framework BAB (Before-After-Bridge) untuk produk {product_name}. Kondisi sebelum: {before}. Kondisi setelah: {after}. Call to action: {call_to_action}. Berikan copywriting storytelling dengan struktur: Before (keadaan sebelum), After (keadaan setelah), Bridge (penghubung/perubahan). Format dengan markdown.`
+            },
+            fab: {
+                id: 'fab',
+                icon: '⭐',
+                name: 'FAB',
+                desc: 'Features-Advantages-Benefits untuk menjelaskan produk.',
+                color: '#38b2ac',
+                fields: [
+                    { key: 'product_name', label: 'Nama Produk/Jasa', type: 'text', placeholder: 'Contoh: Aplikasi Konseling' },
+                    { key: 'features', label: 'Fitur', type: 'textarea', placeholder: 'Fitur produk...' },
+                    { key: 'advantages', label: 'Kelebihan', type: 'textarea', placeholder: 'Kelebihan dari fitur...' },
+                    { key: 'benefits', label: 'Manfaat', type: 'textarea', placeholder: 'Manfaat bagi pelanggan...' }
+                ],
+                prompt_template: `Buat copywriting dengan framework FAB (Features-Advantages-Benefits) untuk produk {product_name}. Fitur: {features}. Kelebihan: {advantages}. Manfaat: {benefits}. Berikan copywriting yang menjelaskan produk dengan struktur: Features (fitur), Advantages (kelebihan), Benefits (manfaat). Format dengan markdown.`
+            },
+            quest: {
+                id: 'quest',
+                icon: '❓',
+                name: 'QUEST',
+                desc: 'Question-Understand-Educate-Stimulate-Transition untuk edukasi audiens.',
+                color: '#ed64a6',
+                fields: [
+                    { key: 'topic', label: 'Topik', type: 'text', placeholder: 'Contoh: Kesehatan Mental' },
+                    { key: 'target_audience', label: 'Target Audiens', type: 'text', placeholder: 'Contoh: Karyawan' },
+                    { key: 'key_insight', label: 'Insight Kunci', type: 'textarea', placeholder: 'Insight yang ingin disampaikan...' },
+                    { key: 'call_to_action', label: 'Call to Action', type: 'text', placeholder: 'Contoh: Pelajari lebih lanjut' }
+                ],
+                prompt_template: `Buat copywriting dengan framework QUEST (Question-Understand-Educate-Stimulate-Transition) untuk topik {topic} dengan target audiens {target_audience}. Insight kunci: {key_insight}. Call to action: {call_to_action}. Berikan copywriting edukatif dengan struktur: Question (pertanyaan), Understand (pahami audiens), Educate (edukasi), Stimulate (stimulasi minat), Transition (transisi ke action). Format dengan markdown.`
+            },
+            scqa: {
+                id: 'scqa',
+                icon: '📊',
+                name: 'SCQA',
+                desc: 'Situation-Complication-Question-Answer untuk copywriting struktural.',
+                color: '#805ad5',
+                fields: [
+                    { key: 'topic', label: 'Topik', type: 'text', placeholder: 'Contoh: Kesehatan Mental di Tempat Kerja' },
+                    { key: 'situation', label: 'Situasi', type: 'textarea', placeholder: 'Situasi saat ini...' },
+                    { key: 'complication', label: 'Komplikasi', type: 'textarea', placeholder: 'Masalah yang muncul...' },
+                    { key: 'answer', label: 'Jawaban/Solusi', type: 'textarea', placeholder: 'Solusi yang ditawarkan...' }
+                ],
+                prompt_template: `Buat copywriting dengan framework SCQA (Situation-Complication-Question-Answer) untuk topik {topic}. Situasi: {situation}. Komplikasi: {complication}. Jawaban: {answer}. Berikan copywriting struktural dengan format: Situation, Complication, Question, Answer. Format dengan markdown.`
+            },
+            u4: {
+                id: 'u4',
+                icon: '4️⃣',
+                name: '4U',
+                desc: 'Useful-Urgent-Unique-Ultra-specific untuk headline dan judul.',
+                color: '#fc8181',
+                fields: [
+                    { key: 'topic', label: 'Topik', type: 'text', placeholder: 'Contoh: Program Konseling' },
+                    { key: 'target_audience', label: 'Target Audiens', type: 'text', placeholder: 'Contoh: HRD Perusahaan' },
+                    { key: 'key_benefit', label: 'Manfaat Kunci', type: 'text', placeholder: 'Contoh: Kurangi stres karyawan' },
+                    { key: 'call_to_action', label: 'Call to Action', type: 'text', placeholder: 'Contoh: Daftar sekarang' }
+                ],
+                prompt_template: `Buat headline dengan framework 4U (Useful-Urgent-Unique-Ultra-specific) untuk topik {topic} dengan target audiens {target_audience}. Manfaat kunci: {key_benefit}. Call to action: {call_to_action}. Berikan headline yang kuat dengan struktur: Useful (berguna), Urgent (urgensi), Unique (unik), Ultra-specific (sangat spesifik). Format dengan markdown.`
+            }
+        };
+
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'ai_copywriting_framework';
+        const SECRET = 'admin';
+
+        const FRAMEWORK_KEYS = Object.keys(FRAMEWORKS);
+
+        // ==================== STATE ====================
+        let allData = [];
+        let quillEditor = null;
+        let addAiEditor = null;
+        let viewData = null;
+        let currentPrompt = '';
+
+        const COLUMNS = {
+            framework_type: 'x_01',
+            title: 'x_02',
+            prompt: 'x_03',
+            field_values: 'x_04',
+            ai_source: 'x_05',
+            result: 'x_06',
+            created_by: 'x_07',
+            status: 'x_08',
+            notes: 'x_09'
+        };
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('✍️ AI Copywriting Framework Started');
+            console.log('📡 Table:', TABLE);
+
+            quillEditor = new Quill('#resultEditor', {
+                theme: 'snow',
+                placeholder: 'Paste hasil AI di sini...',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['blockquote', 'code-block'],
+                        ['link', 'image'],
+                        ['clean']
+                    ]
+                }
+            });
+
+            addAiEditor = new Quill('#addAiEditor', {
+                theme: 'snow',
+                placeholder: 'Paste hasil AI di sini...',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['blockquote', 'code-block'],
+                        ['link', 'image'],
+                        ['clean']
+                    ]
+                }
+            });
+
+            renderTools();
+            populateToolSelect();
+            updateFormFields();
+            refreshData();
+        });
+
+        // ==================== API HELPERS ====================
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': TABLE,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        ...getHeaders(),
+                        ...(options.headers || {})
+                    }
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error || err.message || `HTTP ${response.status}`);
+                }
+                return await response.json();
+            } catch (e) {
+                console.error('❌ API Error:', e.message);
+                throw e;
+            }
+        }
+
+        // ==================== DATA CRUD ====================
+        async function fetchData() {
+            try {
+                const result = await apiFetch('');
+                if (result.success && result.data) {
+                    allData = result.data.map(row => parseRow(row));
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            return {
+                id_x: row.id_x,
+                framework_type: row.x_01 || '',
+                title: row.x_02 || '',
+                prompt: row.x_03 || '',
+                field_values: safeParseJSON(row.x_04),
+                ai_source: row.x_05 || '',
+                result: row.x_06 || '',
+                created_by: row.x_07 || '',
+                status: row.x_08 || 'published',
+                notes: row.x_09 || '',
+                _raw: row
+            };
+        }
+
+        function safeParseJSON(str) {
+            if (!str) return {};
+            try {
+                return JSON.parse(str);
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                if (key === 'field_values') {
+                    row[col] = JSON.stringify(data[key] || {});
+                } else {
+                    row[col] = data[key] || '';
+                }
+            }
+            return row;
+        }
+
+        async function createResult(data) {
+            const row = buildRow(data);
+            return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function deleteResultApi(id) {
+            return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== RENDER TOOLS ====================
+        function renderTools() {
+            const container = document.getElementById('toolsGrid');
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            let filtered = FRAMEWORK_KEYS;
+            if (search) {
+                filtered = filtered.filter(key =>
+                    FRAMEWORKS[key].name.toLowerCase().includes(search) ||
+                    FRAMEWORKS[key].desc.toLowerCase().includes(search)
+                );
+            }
+
+            container.innerHTML = filtered.map(key => {
+                const fw = FRAMEWORKS[key];
+                const count = allData.filter(d => d.framework_type === fw.id).length;
+                return `
+                    <div class="tool-card" style="border-top:4px solid ${fw.color};">
+                        <span class="tool-icon">${fw.icon}</span>
+                        <div class="tool-name">${fw.name}</div>
+                        <div class="tool-desc">${fw.desc}</div>
+                        <div style="font-size:11px;color:#718096;margin-bottom:8px;">${count} konten</div>
+                        <div class="tool-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openInfoModal('${key}')">📖 Info</button>
+                            <button class="btn btn-primary btn-xs" onclick="useTool('${key}')">✏️ Create</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('tab1Badge').textContent = filtered.length;
+        }
+
+        function populateToolSelect() {
+            const select = document.getElementById('selectedTool');
+            select.innerHTML = FRAMEWORK_KEYS.map(key => {
+                const fw = FRAMEWORKS[key];
+                return `<option value="${key}">${fw.icon} ${fw.name}</option>`;
+            }).join('');
+        }
+
+        // ==================== UPDATE FORM FIELDS ====================
+        function updateFormFields() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const fw = FRAMEWORKS[toolKey];
+            if (!fw) return;
+
+            const container = document.getElementById('dynamicFields');
+            const values = getCurrentFieldValues();
+
+            let html = `<div class="section-label">📝 ${fw.icon} ${fw.name} - Form</div>`;
+
+            fw.fields.forEach(field => {
+                const fieldId = `field_${field.key}`;
+                const val = values[field.key] || '';
+                if (field.type === 'textarea') {
+                    html += `
+                        <div class="form-group">
+                            <label>${field.label}</label>
+                            <textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="form-group">
+                            <label>${field.label}</label>
+                            <input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}">
+                        </div>
+                    `;
+                }
+            });
+
+            container.innerHTML = html;
+        }
+
+        function getCurrentFieldValues() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const fw = FRAMEWORKS[toolKey];
+            if (!fw) return {};
+
+            const values = {};
+            fw.fields.forEach(field => {
+                const el = document.getElementById(`field_${field.key}`);
+                if (el) {
+                    values[field.key] = el.value;
+                }
+            });
+            return values;
+        }
+
+        function setFieldValues(values) {
+            const toolKey = document.getElementById('selectedTool').value;
+            const fw = FRAMEWORKS[toolKey];
+            if (!fw) return;
+
+            fw.fields.forEach(field => {
+                const el = document.getElementById(`field_${field.key}`);
+                if (el && values[field.key] !== undefined) {
+                    el.value = values[field.key] || '';
+                }
+            });
+        }
+
+        // ==================== GENERATE PROMPT ====================
+        function generatePrompt() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const fw = FRAMEWORKS[toolKey];
+            if (!fw) return;
+
+            const values = getCurrentFieldValues();
+
+            let allFilled = true;
+            fw.fields.forEach(field => {
+                if (!values[field.key] || !values[field.key].trim()) {
+                    allFilled = false;
+                }
+            });
+
+            if (!allFilled) {
+                showToast('❌ Semua field harus diisi!', 'error');
+                return;
+            }
+
+            let prompt = fw.prompt_template;
+            fw.fields.forEach(field => {
+                const placeholder = `{${field.key}}`;
+                const value = values[field.key] || '';
+                prompt = prompt.replace(new RegExp(placeholder, 'g'), value);
+            });
+
+            currentPrompt = prompt;
+            document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+
+            const titleInput = document.getElementById('resultTitle');
+            if (!titleInput.value) {
+                const firstField = fw.fields[0];
+                const firstValue = values[firstField.key] || '';
+                titleInput.value = `${fw.name} - ${firstValue}`;
+            }
+
+            showToast('✅ Prompt berhasil digenerate! Copy ke AI eksternal.', 'success');
+        }
+
+        // ==================== COPY PROMPT ====================
+        function copyPrompt() {
+            const prompt = document.getElementById('promptPreview').textContent;
+            if (!prompt || prompt.includes('Pilih tool')) {
+                showToast('❌ Tidak ada prompt untuk dicopy', 'error');
+                return;
+            }
+
+            navigator.clipboard.writeText(prompt).then(() => {
+                showToast('✅ Prompt berhasil disalin! Paste ke AI eksternal.', 'success');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = prompt;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('✅ Prompt berhasil disalin!', 'success');
+            });
+        }
+
+        // ==================== SAVE RESULT ====================
+        async function saveResult() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const title = document.getElementById('resultTitle').value.trim();
+            const createdBy = document.getElementById('createdBy').value.trim() || 'User';
+            const prompt = document.getElementById('promptPreview').textContent;
+
+            if (!title) {
+                showToast('❌ Judul wajib diisi', 'error');
+                document.getElementById('resultTitle').focus();
+                return;
+            }
+
+            if (!prompt || prompt.includes('Pilih tool')) {
+                showToast('❌ Generate prompt terlebih dahulu', 'error');
+                return;
+            }
+
+            const resultHtml = quillEditor.root.innerHTML;
+            if (!resultHtml || resultHtml === '<p><br></p>') {
+                showToast('❌ Paste hasil AI terlebih dahulu', 'error');
+                return;
+            }
+
+            const values = getCurrentFieldValues();
+
+            const data = {
+                framework_type: toolKey,
+                title: title,
+                prompt: prompt,
+                field_values: values,
+                ai_source: document.getElementById('aiSource').value,
+                result: resultHtml,
+                created_by: createdBy,
+                status: 'published',
+                notes: ''
+            };
+
+            try {
+                await createResult(data);
+                showToast('✅ Hasil berhasil disimpan!', 'success');
+                await refreshData();
+                clearForm();
+                switchMainTab('tab3');
+            } catch (e) {
+                console.error('❌ Save error:', e);
+                showToast('❌ Gagal menyimpan: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== CLEAR FORM ====================
+        function clearForm() {
+            quillEditor.root.innerHTML = '';
+            document.getElementById('resultTitle').value = '';
+            document.getElementById('promptPreview').innerHTML = '<span class="placeholder">Pilih framework dan isi form untuk menghasilkan prompt...</span>';
+            currentPrompt = '';
+        }
+
+        // ==================== USE TOOL ====================
+        function useTool(toolKey) {
+            document.getElementById('selectedTool').value = toolKey;
+            updateFormFields();
+            switchMainTab('tab2');
+            clearForm();
+            document.getElementById('resultTitle').value = '';
+            document.getElementById('createdBy').value = '';
+            showToast(`✏️ Beralih ke ${FRAMEWORKS[toolKey].name}`, 'info');
+        }
+
+        // ==================== RENDER HISTORY ====================
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            const filterTool = document.getElementById('historyFilterTool').value;
+            const search = document.getElementById('historySearch').value.toLowerCase().trim();
+
+            let filtered = allData;
+
+            if (filterTool !== 'all') {
+                filtered = filtered.filter(d => d.framework_type === filterTool);
+            }
+
+            if (search) {
+                filtered = filtered.filter(d =>
+                    d.title.toLowerCase().includes(search) ||
+                    d.created_by.toLowerCase().includes(search) ||
+                    d.prompt.toLowerCase().includes(search)
+                );
+            }
+
+            document.getElementById('historyCount').textContent = `${filtered.length} items`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">✍️</div>
+                        <h3>${allData.length === 0 ? 'Belum ada hasil' : 'Tidak ditemukan'}</h3>
+                        <p>${allData.length === 0 ? 'Pergi ke Tab "AI Prompt Studio" untuk mulai membuat copywriting' : 'Coba dengan kata kunci lain'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => {
+                const fw = FRAMEWORKS[item.framework_type];
+                const fwLabel = fw ? `${fw.icon} ${fw.name}` : item.framework_type;
+                const date = item._raw?.created_at || '-';
+                const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : '-';
+
+                const sourceClass = item.ai_source.toLowerCase();
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = item.result;
+                const plainResult = tempDiv.textContent.substring(0, 100) + (tempDiv.textContent.length > 100 ? '...' : '');
+
+                return `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <span class="history-title">${escapeHtml(item.title)}</span>
+                            <div class="history-meta">
+                                <span class="fw-badge">${fwLabel}</span>
+                                ${item.ai_source ? `<span class="ai-badge ${sourceClass}">${item.ai_source}</span>` : ''}
+                                <span>📅 ${displayDate}</span>
+                                <span>👤 ${escapeHtml(item.created_by)}</span>
+                            </div>
+                        </div>
+                        <div class="history-prompt" onclick="togglePrompt(this)">${escapeHtml(item.prompt.substring(0, 120))}${item.prompt.length > 120 ? '...' : ''}</div>
+                        <div class="history-result">${escapeHtml(plainResult)}</div>
+                        <div class="history-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openAddAiModal(${item.id_x})">➕ Tambah AI</button>
+                            <button class="btn btn-primary btn-xs" onclick="openDuplicateModal(${item.id_x})">📋 Duplikat</button>
+                            <button class="btn btn-outline btn-xs" onclick="openViewModal(${item.id_x})">👁️ Detail</button>
+                            <button class="btn btn-danger btn-xs" onclick="deleteResult(${item.id_x})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function togglePrompt(el) {
+            el.classList.toggle('expanded');
+        }
+
+        // ==================== OPEN ADD AI MODAL ====================
+        function openAddAiModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+
+            document.getElementById('addAiId').value = id;
+            document.getElementById('addAiPromptDisplay').textContent = item.prompt;
+            document.getElementById('addAiCreatedBy').value = item.created_by || 'User';
+            addAiEditor.root.innerHTML = '';
+
+            document.getElementById('addAiModal').classList.add('active');
+        }
+
+        async function saveAddAiResult() {
+            const id = parseInt(document.getElementById('addAiId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+
+            const aiSource = document.getElementById('addAiSource').value;
+            const createdBy = document.getElementById('addAiCreatedBy').value.trim() || 'User';
+            const resultHtml = addAiEditor.root.innerHTML;
+
+            if (!resultHtml || resultHtml === '<p><br></p>') {
+                showToast('❌ Paste hasil AI terlebih dahulu', 'error');
+                return;
+            }
+
+            const data = {
+                framework_type: originalItem.framework_type,
+                title: originalItem.title + ` (${aiSource})`,
+                prompt: originalItem.prompt,
+                field_values: originalItem.field_values || {},
+                ai_source: aiSource,
+                result: resultHtml,
+                created_by: createdBy,
+                status: 'published',
+                notes: `Hasil tambahan dari ${aiSource}`
+            };
+
+            try {
+                await createResult(data);
+                showToast('✅ Hasil AI baru berhasil disimpan!', 'success');
+                closeModal('addAiModal');
+                await refreshData();
+            } catch (e) {
+                console.error('❌ Save error:', e);
+                showToast('❌ Gagal menyimpan: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== OPEN DUPLICATE MODAL ====================
+        function openDuplicateModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+
+            document.getElementById('dupId').value = id;
+            document.getElementById('dupPromptEditor').value = item.prompt;
+            document.getElementById('dupTitle').value = item.title + ' (v2)';
+            document.getElementById('dupCreatedBy').value = item.created_by || 'User';
+
+            document.getElementById('duplicateModal').classList.add('active');
+        }
+
+        async function saveDuplicate() {
+            const id = parseInt(document.getElementById('dupId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+
+            const newPrompt = document.getElementById('dupPromptEditor').value.trim();
+            const newTitle = document.getElementById('dupTitle').value.trim();
+            const createdBy = document.getElementById('dupCreatedBy').value.trim() || 'User';
+
+            if (!newPrompt) {
+                showToast('❌ Prompt tidak boleh kosong', 'error');
+                return;
+            }
+
+            if (!newTitle) {
+                showToast('❌ Judul baru wajib diisi', 'error');
+                document.getElementById('dupTitle').focus();
+                return;
+            }
+
+            const data = {
+                framework_type: originalItem.framework_type,
+                title: newTitle,
+                prompt: newPrompt,
+                field_values: originalItem.field_values || {},
+                ai_source: '',
+                result: '',
+                created_by: createdBy,
+                status: 'published',
+                notes: 'Duplikat dari prompt sebelumnya'
+            };
+
+            try {
+                await createResult(data);
+                showToast('✅ Duplikat berhasil dibuat!', 'success');
+                closeModal('duplicateModal');
+
+                // Switch to studio with the new prompt
+                document.getElementById('selectedTool').value = originalItem.framework_type;
+                updateFormFields();
+                setFieldValues(originalItem.field_values || {});
+                document.getElementById('resultTitle').value = newTitle;
+                document.getElementById('createdBy').value = createdBy;
+                document.getElementById('promptPreview').innerHTML = escapeHtml(newPrompt);
+                currentPrompt = newPrompt;
+
+                switchMainTab('tab2');
+                await refreshData();
+            } catch (e) {
+                console.error('❌ Duplicate error:', e);
+                showToast('❌ Gagal menduplikat: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== DELETE FUNCTIONS ====================
+        async function deleteResult(id) {
+            if (!confirm('Hapus konten ini?')) return;
+            try {
+                await deleteResultApi(id);
+                showToast('✅ Konten berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) {
+                console.error('❌ Delete error:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        async function clearHistory() {
+            if (allData.length === 0) {
+                showToast('Tidak ada data', 'info');
+                return;
+            }
+            if (!confirm('Hapus semua data history? (Tidak bisa dibatalkan)')) return;
+
+            try {
+                for (const item of allData) {
+                    await deleteResultApi(item.id_x);
+                }
+                showToast('✅ Semua data berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) {
+                console.error('❌ Clear error:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== VIEW MODAL ====================
+        function openViewModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+
+            viewData = item;
+
+            const fw = FRAMEWORKS[item.framework_type];
+            const fwLabel = fw ? `${fw.icon} ${fw.name}` : item.framework_type;
+            const date = item._raw?.created_at || '-';
+            const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }) : '-';
+
+            document.getElementById('viewModalTitle').textContent = `👁️ ${escapeHtml(item.title)}`;
+
+            document.getElementById('viewMeta').innerHTML = `
+                <strong>Framework:</strong> ${fwLabel} &nbsp;|&nbsp;
+                <strong>AI Source:</strong> ${item.ai_source || '-'} &nbsp;|&nbsp;
+                <strong>Dibuat:</strong> ${displayDate} &nbsp;|&nbsp;
+                <strong>Oleh:</strong> ${escapeHtml(item.created_by)}
+            `;
+
+            document.getElementById('viewPrompt').textContent = item.prompt;
+            document.getElementById('viewSource').textContent = item.ai_source || '-';
+
+            const wrapper = document.getElementById('viewResultWrapper');
+            wrapper.innerHTML = `<div class="ql-editor">${item.result}</div>`;
+
+            document.getElementById('viewModal').classList.add('active');
+        }
+
+        function copyViewResult() {
+            const resultHtml = document.getElementById('viewResultWrapper').innerHTML;
+            if (!resultHtml) {
+                showToast('Tidak ada konten', 'error');
+                return;
+            }
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = resultHtml;
+            const plainText = tempDiv.textContent;
+
+            navigator.clipboard.writeText(plainText).then(() => {
+                showToast('✅ Konten berhasil disalin!', 'success');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = plainText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('✅ Konten berhasil disalin!', 'success');
+            });
+        }
+
+        // ==================== INFO MODAL ====================
+        function openInfoModal(toolKey) {
+            const fw = FRAMEWORKS[toolKey];
+            if (!fw) return;
+
+            const fieldsHtml = fw.fields.map(f =>
+                `<li><strong>${f.label}</strong> — ${f.placeholder}</li>`
+            ).join('');
+
+            document.getElementById('infoModalTitle').textContent = `📋 ${fw.icon} ${fw.name}`;
+            document.getElementById('infoModalBody').innerHTML = `
+                <div style="text-align:center;margin-bottom:12px;">
+                    <span style="font-size:48px;display:block;">${fw.icon}</span>
+                    <h3 style="font-size:20px;color:#2d3748;">${fw.name}</h3>
+                    <p style="color:#718096;font-size:14px;">${fw.desc}</p>
+                </div>
+                <div style="background:#f7fafc;border-radius:8px;padding:16px;margin-bottom:12px;">
+                    <h4 style="font-size:14px;color:#2d3748;margin-bottom:8px;">📝 Field yang Diisi:</h4>
+                    <ul style="padding-left:20px;color:#4a5568;font-size:13px;line-height:1.8;">
+                        ${fieldsHtml}
+                    </ul>
+                </div>
+                <div style="background:#f0fff4;border-radius:8px;padding:12px 16px;border-left:4px solid #38b2ac;">
+                    <strong style="color:#276749;">💡 Cara Penggunaan:</strong>
+                    <ol style="margin:4px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">
+                        <li>Pilih framework di Tab "AI Prompt Studio"</li>
+                        <li>Isi semua field yang tersedia</li>
+                        <li>Klik "Generate Prompt"</li>
+                        <li>Copy prompt, paste ke AI eksternal</li>
+                        <li>Copy hasil AI, paste di editor</li>
+                        <li>Pilih AI Source dan klik "Simpan Hasil"</li>
+                    </ol>
+                </div>
+            `;
+
+            document.getElementById('infoModal').classList.add('active');
+        }
+
+        // ==================== TAB FUNCTIONS ====================
+        function switchMainTab(tabId) {
+            document.querySelectorAll('.main-tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.main-tab-content').forEach(el => el.classList.remove('active'));
+
+            document.querySelector(`.main-tab-btn[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+
+            if (tabId === 'tab3') {
+                renderHistory();
+            }
+        }
+
+        // ==================== MODAL FUNCTIONS ====================
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // ==================== REFRESH ====================
+        async function refreshData() {
+            showToast('🔄 Memuat data...', 'info');
+            await fetchData();
+            renderTools();
+            updateHistoryFilter();
+            renderHistory();
+            document.getElementById('tab3Badge').textContent = allData.length;
+            showToast(`✅ ${allData.length} konten dimuat`, 'success');
+        }
+
+        function updateHistoryFilter() {
+            const select = document.getElementById('historyFilterTool');
+            const currentValue = select.value;
+
+            const frameworks = {};
+            allData.forEach(item => {
+                if (!frameworks[item.framework_type]) {
+                    frameworks[item.framework_type] = 0;
+                }
+                frameworks[item.framework_type]++;
+            });
+
+            select.innerHTML = `<option value="all">📋 All Frameworks (${allData.length})</option>`;
+            FRAMEWORK_KEYS.forEach(key => {
+                const fw = FRAMEWORKS[key];
+                const count = frameworks[key] || 0;
+                select.innerHTML += `<option value="${key}">${fw.icon} ${fw.name} (${count})</option>`;
+            });
+
+            if (currentValue) select.value = currentValue;
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ==================== HELPER ====================
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ==================== KEYBOARD ====================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => {
+                    m.classList.remove('active');
+                });
+            }
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        // ==================== DEBUG ====================
+        window.debug = {
+            allData: () => allData,
+            refresh: refreshData,
+            FRAMEWORKS: FRAMEWORKS,
+            FRAMEWORK_KEYS: FRAMEWORK_KEYS
+        };
+
+        console.log('✍️ AI Copywriting Framework Loaded!');
+        console.log('📡 Table:', TABLE);
+        console.log('📊 11 Framework siap pakai!');
+        console.log('🔧 Type "debug" in console for helpers');
+    </script>
+</body>
+</html>

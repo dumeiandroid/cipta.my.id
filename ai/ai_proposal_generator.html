@@ -1,0 +1,2076 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Proposal Generator</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #1a2332;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 span {
+            background: #2d3748;
+            color: white;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #f7fafc;
+            padding: 0 15px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            transition: border 0.2s;
+        }
+
+        .search-box:focus-within {
+            border-color: #805ad5;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 14px;
+            outline: none;
+            width: 200px;
+            color: #2d3748;
+        }
+
+        .search-box .icon {
+            color: #a0aec0;
+            font-size: 18px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #805ad5;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #6b46c1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(128,90,213,0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #fc8181;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #f56565;
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-outline:hover {
+            background: #f7fafc;
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-xs {
+            padding: 3px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+
+        .main-tabs-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .main-tabs-header {
+            display: flex;
+            border-bottom: 2px solid #edf2f7;
+            background: #f7fafc;
+            padding: 0 20px;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+        }
+
+        .main-tab-btn {
+            padding: 14px 24px;
+            border: none;
+            background: transparent;
+            font-weight: 700;
+            font-size: 14px;
+            color: #a0aec0;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .main-tab-btn:hover {
+            color: #2d3748;
+        }
+
+        .main-tab-btn.active {
+            color: #805ad5;
+            border-bottom-color: #805ad5;
+        }
+
+        .main-tab-btn .badge-main {
+            background: #edf2f7;
+            color: #4a5568;
+            font-size: 11px;
+            padding: 1px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .main-tab-btn.active .badge-main {
+            background: #e9d8fd;
+            color: #6b46c1;
+        }
+
+        .main-tab-content {
+            padding: 24px 30px;
+            display: none;
+        }
+
+        .main-tab-content.active {
+            display: block;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 16px;
+        }
+
+        .tool-card {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .tool-card:hover {
+            border-color: #805ad5;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(128,90,213,0.12);
+        }
+
+        .tool-card .tool-icon {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .tool-card .tool-name {
+            font-weight: 700;
+            font-size: 15px;
+            color: #2d3748;
+        }
+
+        .tool-card .tool-desc {
+            font-size: 12px;
+            color: #718096;
+            margin: 4px 0 12px;
+        }
+
+        .tool-card .tool-actions {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .tool-card .tool-actions .btn {
+            padding: 4px 12px;
+            font-size: 11px;
+        }
+
+        .studio-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .studio-left {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .studio-right {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #805ad5;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+
+        .prompt-preview {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            min-height: 150px;
+            white-space: pre-wrap;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #2d3748;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .prompt-preview .placeholder {
+            color: #a0aec0;
+            font-style: italic;
+        }
+
+        .quill-wrapper {
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .quill-wrapper .ql-toolbar {
+            border: none;
+            border-bottom: 2px solid #e2e8f0;
+            background: #f7fafc;
+        }
+
+        .quill-wrapper .ql-container {
+            border: none;
+            min-height: 200px;
+            font-size: 14px;
+        }
+
+        .quill-wrapper .ql-editor {
+            min-height: 200px;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .history-filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .history-filters select,
+        .history-filters input {
+            padding: 8px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .history-filters select:focus,
+        .history-filters input:focus {
+            outline: none;
+            border-color: #805ad5;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .history-item {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            border-color: #805ad5;
+        }
+
+        .history-item .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .history-item .history-title {
+            font-weight: 700;
+            font-size: 15px;
+            color: #2d3748;
+        }
+
+        .history-item .history-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: #718096;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .history-item .history-meta .type-badge {
+            background: #e9d8fd;
+            color: #6b46c1;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .history-item .history-meta .ai-badge {
+            font-size: 10px;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .history-item .history-meta .ai-badge.chatgpt {
+            background: #10a37f;
+            color: white;
+        }
+        .history-item .history-meta .ai-badge.claude {
+            background: #d97757;
+            color: white;
+        }
+        .history-item .history-meta .ai-badge.gemini {
+            background: #4285f4;
+            color: white;
+        }
+        .history-item .history-meta .ai-badge.deepseek {
+            background: #4a6cf7;
+            color: white;
+        }
+        .history-item .history-meta .ai-badge.other {
+            background: #718096;
+            color: white;
+        }
+
+        .history-item .history-prompt {
+            font-size: 13px;
+            color: #4a5568;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid #805ad5;
+            margin-bottom: 10px;
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+        .history-item .history-prompt:hover {
+            background: #f7fafc;
+        }
+
+        .history-item .history-prompt.expanded {
+            max-height: none;
+            white-space: pre-wrap;
+        }
+
+        .history-item .history-result {
+            font-size: 13px;
+            color: #2d3748;
+            margin-bottom: 8px;
+            max-height: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-item .history-result .ql-editor {
+            padding: 0;
+            max-height: 80px;
+            overflow: hidden;
+        }
+
+        .history-item .history-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            border-top: 1px solid #edf2f7;
+            padding-top: 10px;
+        }
+
+        .history-item .history-actions .btn {
+            padding: 3px 12px;
+            font-size: 11px;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #a0aec0;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .empty-state h3 {
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 850px;
+            width: 100%;
+            max-height: 95vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-close {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: #fc8181;
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            background: #f56565;
+            transform: rotate(90deg);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a2332;
+            margin-bottom: 20px;
+            padding-right: 50px;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #edf2f7;
+            flex-wrap: wrap;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            max-width: 400px;
+        }
+
+        .toast.success {
+            background: #48bb78;
+        }
+        .toast.error {
+            background: #fc8181;
+        }
+        .toast.info {
+            background: #4299e1;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-label {
+            font-weight: 700;
+            font-size: 14px;
+            color: #2d3748;
+            margin-top: 4px;
+            margin-bottom: 2px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #edf2f7;
+        }
+
+        .view-result-wrapper {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .view-result-wrapper .ql-editor {
+            padding: 0;
+        }
+
+        .view-result-wrapper .ql-editor h1,
+        .view-result-wrapper .ql-editor h2,
+        .view-result-wrapper .ql-editor h3 {
+            margin: 8px 0 4px;
+        }
+
+        .view-result-wrapper .ql-editor p {
+            margin: 4px 0;
+        }
+
+        .view-result-wrapper .ql-editor ul,
+        .view-result-wrapper .ql-editor ol {
+            padding-left: 20px;
+        }
+
+        .ai-source-select {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .ai-source-select select {
+            padding: 8px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            flex: 1;
+        }
+
+        .ai-source-select select:focus {
+            outline: none;
+            border-color: #805ad5;
+        }
+
+        .add-ai-modal .modal {
+            max-width: 750px;
+        }
+
+        .add-ai-modal .prompt-display {
+            background: #f7fafc;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #4a5568;
+            max-height: 120px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            border-left: 3px solid #805ad5;
+        }
+
+        @media (max-width: 992px) {
+            .studio-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .form-row-3 {
+                grid-template-columns: 1fr 1fr;
+            }
+            .main-tabs-header {
+                padding: 0 12px;
+            }
+            .main-tab-btn {
+                padding: 12px 16px;
+                font-size: 13px;
+            }
+            .main-tab-content {
+                padding: 16px;
+            }
+            .tools-grid {
+                grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box input {
+                width: 100%;
+            }
+            .modal {
+                padding: 20px;
+            }
+            .history-item .history-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+            .tools-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .tool-card {
+                padding: 14px;
+            }
+            .tool-card .tool-icon {
+                font-size: 28px;
+            }
+            .main-tab-btn {
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+            .main-tab-content {
+                padding: 12px;
+            }
+            .history-filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .form-row-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .modal::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal::-webkit-scrollbar-track {
+            background: #f7fafc;
+        }
+        .modal::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>
+                📄 AI Proposal Generator
+                <span>v1.0</span>
+            </h1>
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Cari proposal..." oninput="renderTools()">
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+            </div>
+        </div>
+
+        <!-- MAIN TABS -->
+        <div class="main-tabs-container">
+            <div class="main-tabs-header">
+                <button class="main-tab-btn active" data-tab="tab1" onclick="switchMainTab('tab1')">
+                    📚 Metode List
+                    <span class="badge-main" id="tab1Badge">6</span>
+                </button>
+                <button class="main-tab-btn" data-tab="tab2" onclick="switchMainTab('tab2')">
+                    ✏️ AI Prompt Studio
+                    <span class="badge-main">New</span>
+                </button>
+                <button class="main-tab-btn" data-tab="tab3" onclick="switchMainTab('tab3')">
+                    📋 History
+                    <span class="badge-main" id="tab3Badge">0</span>
+                </button>
+            </div>
+
+            <!-- TAB 1: METODE LIST -->
+            <div class="main-tab-content active" id="tab1">
+                <div class="tools-grid" id="toolsGrid"></div>
+            </div>
+
+            <!-- TAB 2: AI PROMPT STUDIO -->
+            <div class="main-tab-content" id="tab2">
+                <div class="studio-grid">
+                    <div class="studio-left">
+                        <div class="form-group">
+                            <label>📂 Pilih Metode Proposal</label>
+                            <select id="selectedTool" onchange="updateFormFields()"></select>
+                        </div>
+
+                        <div id="dynamicFields"></div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>📌 Judul Proposal</label>
+                                <input type="text" id="resultTitle" placeholder="Judul proposal...">
+                            </div>
+                            <div class="form-group">
+                                <label>👤 Dibuat Oleh</label>
+                                <input type="text" id="createdBy" placeholder="Nama...">
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="generatePrompt()">📝 Generate Prompt</button>
+                    </div>
+
+                    <div class="studio-right">
+                        <div class="form-group">
+                            <label>📄 Prompt yang Dihasilkan</label>
+                            <div class="prompt-preview" id="promptPreview">
+                                <span class="placeholder">Pilih metode dan isi form untuk menghasilkan prompt...</span>
+                            </div>
+                            <button class="btn btn-outline btn-sm" onclick="copyPrompt()" style="margin-top:6px;">📋 Copy Prompt</button>
+                        </div>
+
+                        <div class="form-group">
+                            <label>🤖 Pilih AI Source</label>
+                            <div class="ai-source-select">
+                                <select id="aiSource">
+                                    <option value="ChatGPT">ChatGPT</option>
+                                    <option value="Claude">Claude</option>
+                                    <option value="Gemini">Gemini</option>
+                                    <option value="DeepSeek">DeepSeek</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>📝 Hasil AI (Paste di sini)</label>
+                            <div class="quill-wrapper">
+                                <div id="resultEditor"></div>
+                            </div>
+                        </div>
+
+                        <div class="result-actions">
+                            <button class="btn btn-success" onclick="saveResult()">💾 Simpan Hasil</button>
+                            <button class="btn btn-warning" onclick="clearForm()">🗑️ Clear</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: HISTORY -->
+            <div class="main-tab-content" id="tab3">
+                <div class="history-filters">
+                    <select id="historyFilterTool" onchange="renderHistory()">
+                        <option value="all">📋 All Types</option>
+                    </select>
+                    <input type="text" id="historySearch" placeholder="🔍 Cari..." oninput="renderHistory()">
+                    <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑️ Hapus Semua</button>
+                    <span style="font-size:13px;color:#718096;" id="historyCount">0 items</span>
+                </div>
+                <div class="history-list" id="historyList">
+                    <div class="empty-state">
+                        <div class="icon">📄</div>
+                        <h3>Belum ada proposal</h3>
+                        <p>Pergi ke Tab "AI Prompt Studio" untuk mulai membuat proposal</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL INFO -->
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
+            <div class="modal-title" id="infoModalTitle">📋 Metode Info</div>
+            <div class="modal-body" id="infoModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('infoModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL VIEW RESULT -->
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+            <div class="modal-title" id="viewModalTitle">👁️ Detail Proposal</div>
+            <div class="modal-body">
+                <div id="viewMeta" style="font-size:13px;color:#718096;margin-bottom:12px;padding:8px 12px;background:#f7fafc;border-radius:8px;"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt:</div>
+                <div style="background:#f7fafc;padding:12px 16px;border-radius:8px;font-size:14px;color:#4a5568;white-space:pre-wrap;max-height:150px;overflow-y:auto;border-left:3px solid #805ad5;" id="viewPrompt"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">🤖 Sumber AI:</div>
+                <div style="font-size:14px;color:#4a5568;margin-bottom:8px;" id="viewSource"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">📝 Hasil AI:</div>
+                <div class="view-result-wrapper" id="viewResultWrapper"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="copyViewResult()">📋 Copy</button>
+                <button class="btn btn-outline" onclick="closeModal('viewModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ADD AI RESULT -->
+    <div class="modal-overlay add-ai-modal" id="addAiModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('addAiModal')">✕</button>
+            <div class="modal-title" id="addAiModalTitle">🤖 Tambah Hasil AI Baru</div>
+            <div class="modal-body">
+                <input type="hidden" id="addAiId">
+
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt (tidak bisa diedit):</div>
+                <div class="prompt-display" id="addAiPromptDisplay"></div>
+
+                <div class="form-group">
+                    <label>🤖 Pilih AI Source</label>
+                    <select id="addAiSource">
+                        <option value="ChatGPT">ChatGPT</option>
+                        <option value="Claude">Claude</option>
+                        <option value="Gemini">Gemini</option>
+                        <option value="DeepSeek">DeepSeek</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Hasil AI (Paste di sini)</label>
+                    <div class="quill-wrapper">
+                        <div id="addAiEditor"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>👤 Dibuat Oleh</label>
+                    <input type="text" id="addAiCreatedBy" placeholder="Nama...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addAiModal')">Batal</button>
+                <button class="btn btn-success" onclick="saveAddAiResult()">💾 Simpan Hasil</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DUPLICATE -->
+    <div class="modal-overlay" id="duplicateModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('duplicateModal')">✕</button>
+            <div class="modal-title" id="duplicateModalTitle">📋 Duplikat Prompt</div>
+            <div class="modal-body">
+                <input type="hidden" id="dupId">
+
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📝 Edit Prompt (buat variasi baru):</div>
+                <div class="form-group">
+                    <textarea id="dupPromptEditor" rows="6" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;resize:vertical;"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📌 Judul Baru</label>
+                        <input type="text" id="dupTitle" placeholder="Judul baru...">
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Dibuat Oleh</label>
+                        <input type="text" id="dupCreatedBy" placeholder="Nama...">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('duplicateModal')">Batal</button>
+                <button class="btn btn-primary" onclick="saveDuplicate()">📝 Generate & Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== PROPOSAL METHOD DEFINITIONS ====================
+        const PROPOSAL_METHODS = {
+            business: {
+                id: 'business',
+                icon: '🏢',
+                name: 'Proposal Bisnis',
+                desc: 'Business plan lengkap dengan analisis pasar, strategi, dan proyeksi keuangan.',
+                color: '#805ad5',
+                fields: [
+                    { key: 'company_name', label: 'Nama Perusahaan', type: 'text', placeholder: 'PT. Lidan Psikologi' },
+                    { key: 'company_address', label: 'Alamat Perusahaan', type: 'text', placeholder: 'Jl. Merdeka No. 123, Jakarta' },
+                    { key: 'company_phone', label: 'Telepon Perusahaan', type: 'text', placeholder: '021-1234567' },
+                    { key: 'company_email', label: 'Email Perusahaan', type: 'text', placeholder: 'info@lidan.co.id' },
+                    { key: 'recipient_name', label: 'Nama Penerima', type: 'text', placeholder: 'Bapak/Ibu Direktur' },
+                    { key: 'recipient_position', label: 'Jabatan Penerima', type: 'text', placeholder: 'Direktur Utama' },
+                    { key: 'recipient_company', label: 'Perusahaan Penerima', type: 'text', placeholder: 'PT. Maju Jaya' },
+                    { key: 'letter_date', label: 'Tanggal Surat', type: 'date' },
+                    { key: 'business_name', label: 'Nama Bisnis', type: 'text', placeholder: 'Lidan Psikologi' },
+                    { key: 'business_description', label: 'Deskripsi Bisnis', type: 'textarea', placeholder: 'Deskripsi bisnis yang akan dijalankan...' },
+                    { key: 'target_market', label: 'Target Pasar', type: 'text', placeholder: 'Perusahaan, Sekolah, Karyawan' },
+                    { key: 'investment', label: 'Estimasi Investasi', type: 'text', placeholder: 'Rp 500.000.000' }
+                ],
+                prompt_template: `Buat proposal bisnis lengkap untuk {business_name} dengan deskripsi: {business_description}. Target pasar: {target_market}. Estimasi investasi: {investment}.\n\nFORMAT OUTPUT:\n\n=== SURAT PENGANTAR ===\n\n[KOP SURAT]\n{company_name}\n{company_address}\nTelp: {company_phone} | Email: {company_email}\n\nPerihal: Proposal Bisnis - {business_name}\nLampiran: 1 (Proposal)\nTanggal: {letter_date}\n\nKepada Yth.\n{recipient_name}\n{recipient_position}\n{recipient_company}\n\nDengan hormat,\n\nSehubungan dengan rencana pengembangan bisnis {business_name}, kami mengajukan proposal bisnis ini sebagai acuan kerjasama. Proposal ini disusun secara komprehensif untuk memberikan gambaran yang jelas tentang potensi bisnis yang akan dijalankan.\n\nDemikian surat pengantar ini kami sampaikan. Atas perhatian dan kerjasamanya, kami ucapkan terima kasih.\n\nHormat kami,\n\n{created_by}\nDirektur {company_name}\n\n=== ISI PROPOSAL ===\n\nBAB 1: PENDAHULUAN\n1.1 Latar Belakang\n1.2 Tujuan\n1.3 Ruang Lingkup\n\nBAB 2: ANALISIS BISNIS\n2.1 Analisis Pasar\n2.2 Analisis Kompetitor\n2.3 SWOT Analysis\n\nBAB 3: STRATEGI BISNIS\n3.1 Strategi Pemasaran\n3.2 Strategi Operasional\n3.3 Strategi Keuangan\n\nBAB 4: RENCANA IMPLEMENTASI\n4.1 Timeline\n4.2 Anggaran\n4.3 Sumber Daya\n\nBAB 5: PENUTUP\n5.1 Kesimpulan\n5.2 Rekomendasi\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            project: {
+                id: 'project',
+                icon: '📊',
+                name: 'Proposal Proyek',
+                desc: 'Rencana proyek dengan timeline, budget, dan sumber daya.',
+                color: '#4299e1',
+                fields: [
+                    { key: 'company_name', label: 'Nama Perusahaan', type: 'text', placeholder: 'PT. Lidan Psikologi' },
+                    { key: 'company_address', label: 'Alamat Perusahaan', type: 'text', placeholder: 'Jl. Merdeka No. 123, Jakarta' },
+                    { key: 'company_phone', label: 'Telepon Perusahaan', type: 'text', placeholder: '021-1234567' },
+                    { key: 'company_email', label: 'Email Perusahaan', type: 'text', placeholder: 'info@lidan.co.id' },
+                    { key: 'recipient_name', label: 'Nama Penerima', type: 'text', placeholder: 'Bapak/Ibu Direktur' },
+                    { key: 'recipient_position', label: 'Jabatan Penerima', type: 'text', placeholder: 'Direktur Utama' },
+                    { key: 'recipient_company', label: 'Perusahaan Penerima', type: 'text', placeholder: 'PT. Maju Jaya' },
+                    { key: 'letter_date', label: 'Tanggal Surat', type: 'date' },
+                    { key: 'project_name', label: 'Nama Proyek', type: 'text', placeholder: 'Pengembangan Aplikasi Konseling' },
+                    { key: 'project_description', label: 'Deskripsi Proyek', type: 'textarea', placeholder: 'Deskripsi proyek yang akan dikerjakan...' },
+                    { key: 'duration', label: 'Durasi Proyek', type: 'text', placeholder: '6 bulan' },
+                    { key: 'budget', label: 'Estimasi Budget', type: 'text', placeholder: 'Rp 1.000.000.000' }
+                ],
+                prompt_template: `Buat proposal proyek untuk {project_name} dengan deskripsi: {project_description}. Durasi proyek: {duration}. Estimasi budget: {budget}.\n\nFORMAT OUTPUT:\n\n=== SURAT PENGANTAR ===\n\n[KOP SURAT]\n{company_name}\n{company_address}\nTelp: {company_phone} | Email: {company_email}\n\nPerihal: Proposal Proyek - {project_name}\nLampiran: 1 (Proposal)\nTanggal: {letter_date}\n\nKepada Yth.\n{recipient_name}\n{recipient_position}\n{recipient_company}\n\nDengan hormat,\n\nSehubungan dengan rencana pelaksanaan proyek {project_name}, kami mengajukan proposal ini untuk mendapatkan persetujuan dan dukungan. Proposal ini disusun secara detail untuk memastikan kelancaran pelaksanaan proyek.\n\nDemikian surat pengantar ini kami sampaikan. Atas perhatian dan kerjasamanya, kami ucapkan terima kasih.\n\nHormat kami,\n\n{created_by}\nManajer Proyek {company_name}\n\n=== ISI PROPOSAL ===\n\nBAB 1: PENDAHULUAN\n1.1 Latar Belakang\n1.2 Tujuan Proyek\n1.3 Manfaat Proyek\n\nBAB 2: RUANG LINGKUP PROYEK\n2.1 Deskripsi Pekerjaan\n2.2 Deliverables\n2.3 Batasan Proyek\n\nBAB 3: RENCANA PELAKSANAAN\n3.1 Metodologi\n3.2 Timeline Pelaksanaan\n3.3 Struktur Tim\n\nBAB 4: ANGGARAN\n4.1 Rincian Biaya\n4.2 Sumber Dana\n4.3 Proyeksi Cash Flow\n\nBAB 5: PENUTUP\n5.1 Kesimpulan\n5.2 Rekomendasi\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            services: {
+                id: 'services',
+                icon: '🛠️',
+                name: 'Proposal Penawaran Jasa',
+                desc: 'Penawaran layanan profesional dengan portofolio dan testimoni.',
+                color: '#ed8936',
+                fields: [
+                    { key: 'company_name', label: 'Nama Perusahaan', type: 'text', placeholder: 'PT. Lidan Psikologi' },
+                    { key: 'company_address', label: 'Alamat Perusahaan', type: 'text', placeholder: 'Jl. Merdeka No. 123, Jakarta' },
+                    { key: 'company_phone', label: 'Telepon Perusahaan', type: 'text', placeholder: '021-1234567' },
+                    { key: 'company_email', label: 'Email Perusahaan', type: 'text', placeholder: 'info@lidan.co.id' },
+                    { key: 'recipient_name', label: 'Nama Penerima', type: 'text', placeholder: 'Bapak/Ibu HRD' },
+                    { key: 'recipient_position', label: 'Jabatan Penerima', type: 'text', placeholder: 'HRD Manager' },
+                    { key: 'recipient_company', label: 'Perusahaan Penerima', type: 'text', placeholder: 'PT. Maju Jaya' },
+                    { key: 'letter_date', label: 'Tanggal Surat', type: 'date' },
+                    { key: 'service_name', label: 'Nama Jasa', type: 'text', placeholder: 'Layanan Konseling Psikologi' },
+                    { key: 'service_description', label: 'Deskripsi Jasa', type: 'textarea', placeholder: 'Deskripsi layanan yang ditawarkan...' },
+                    { key: 'price', label: 'Harga Penawaran', type: 'text', placeholder: 'Rp 50.000.000' },
+                    { key: 'portfolio', label: 'Portofolio', type: 'textarea', placeholder: 'Proyek atau klien sebelumnya...' }
+                ],
+                prompt_template: `Buat proposal penawaran jasa untuk {service_name} dengan deskripsi: {service_description}. Harga penawaran: {price}. Portofolio: {portfolio}.\n\nFORMAT OUTPUT:\n\n=== SURAT PENGANTAR ===\n\n[KOP SURAT]\n{company_name}\n{company_address}\nTelp: {company_phone} | Email: {company_email}\n\nPerihal: Penawaran Jasa - {service_name}\nLampiran: 1 (Proposal)\nTanggal: {letter_date}\n\nKepada Yth.\n{recipient_name}\n{recipient_position}\n{recipient_company}\n\nDengan hormat,\n\nSehubungan dengan kebutuhan perusahaan Bapak/Ibu akan layanan {service_name}, kami dengan ini mengajukan penawaran jasa untuk dipertimbangkan. Kami memiliki pengalaman dan kompetensi yang relevan dalam bidang ini.\n\nDemikian surat pengantar ini kami sampaikan. Kami menantikan kesempatan untuk dapat bekerjasama dengan perusahaan Bapak/Ibu.\n\nHormat kami,\n\n{created_by}\nDirektur {company_name}\n\n=== ISI PROPOSAL ===\n\nBAB 1: PENDAHULUAN\n1.1 Latar Belakang\n1.2 Tujuan Penawaran\n1.3 Profil Perusahaan\n\nBAB 2: LAYANAN\n2.1 Deskripsi Layanan\n2.2 Keunggulan\n2.3 Metodologi\n\nBAB 3: PORTOFOLIO\n3.1 Proyek Sebelumnya\n3.2 Testimoni Klien\n3.3 Penghargaan\n\nBAB 4: HARGA DAN PAKET\n4.1 Rincian Harga\n4.2 Paket Layanan\n4.3 Syarat dan Ketentuan\n\nBAB 5: PENUTUP\n5.1 Kesimpulan\n5.2 Komitmen Kami\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            collaboration: {
+                id: 'collaboration',
+                icon: '🤝',
+                name: 'Proposal Kerjasama',
+                desc: 'Proposal kemitraan atau kolaborasi antar perusahaan.',
+                color: '#38b2ac',
+                fields: [
+                    { key: 'company_name', label: 'Nama Perusahaan', type: 'text', placeholder: 'PT. Lidan Psikologi' },
+                    { key: 'company_address', label: 'Alamat Perusahaan', type: 'text', placeholder: 'Jl. Merdeka No. 123, Jakarta' },
+                    { key: 'company_phone', label: 'Telepon Perusahaan', type: 'text', placeholder: '021-1234567' },
+                    { key: 'company_email', label: 'Email Perusahaan', type: 'text', placeholder: 'info@lidan.co.id' },
+                    { key: 'recipient_name', label: 'Nama Penerima', type: 'text', placeholder: 'Bapak/Ibu CEO' },
+                    { key: 'recipient_position', label: 'Jabatan Penerima', type: 'text', placeholder: 'CEO' },
+                    { key: 'recipient_company', label: 'Perusahaan Penerima', type: 'text', placeholder: 'PT. Mitra Sejahtera' },
+                    { key: 'letter_date', label: 'Tanggal Surat', type: 'date' },
+                    { key: 'partnership_name', label: 'Nama Kerjasama', type: 'text', placeholder: 'Program Kesehatan Mental Bersama' },
+                    { key: 'partnership_description', label: 'Deskripsi Kerjasama', type: 'textarea', placeholder: 'Deskripsi kerjasama yang diusulkan...' },
+                    { key: 'benefits', label: 'Manfaat Kerjasama', type: 'textarea', placeholder: 'Manfaat bagi kedua belah pihak...' },
+                    { key: 'duration', label: 'Durasi Kerjasama', type: 'text', placeholder: '1 tahun' }
+                ],
+                prompt_template: `Buat proposal kerjasama untuk {partnership_name} dengan deskripsi: {partnership_description}. Manfaat kerjasama: {benefits}. Durasi kerjasama: {duration}.\n\nFORMAT OUTPUT:\n\n=== SURAT PENGANTAR ===\n\n[KOP SURAT]\n{company_name}\n{company_address}\nTelp: {company_phone} | Email: {company_email}\n\nPerihal: Proposal Kerjasama - {partnership_name}\nLampiran: 1 (Proposal)\nTanggal: {letter_date}\n\nKepada Yth.\n{recipient_name}\n{recipient_position}\n{recipient_company}\n\nDengan hormat,\n\nKami dari {company_name} bermaksud mengajukan proposal kerjasama dalam rangka {partnership_name}. Kami melihat adanya potensi sinergi yang besar antara kedua perusahaan.\n\nDemikian surat pengantar ini kami sampaikan. Kami berharap dapat membuka pintu kerjasama yang saling menguntungkan.\n\nHormat kami,\n\n{created_by}\nDirektur {company_name}\n\n=== ISI PROPOSAL ===\n\nBAB 1: PENDAHULUAN\n1.1 Latar Belakang\n1.2 Tujuan Kerjasama\n1.3 Ruang Lingkup\n\nBAB 2: PROFIL PERUSAHAAN\n2.1 Profil {company_name}\n2.2 Profil {recipient_company}\n2.3 Analisis Sinergi\n\nBAB 3: RENCANA KERJASAMA\n3.1 Ruang Lingkup Kerjasama\n3.2 Tanggung Jawab Masing-masing\n3.3 Timeline Pelaksanaan\n\nBAB 4: MANFAAT\n4.1 Manfaat bagi {company_name}\n4.2 Manfaat bagi {recipient_company}\n4.3 Manfaat bagi Pihak Lain\n\nBAB 5: PENUTUP\n5.1 Kesimpulan\n5.2 Harapan ke Depan\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            research: {
+                id: 'research',
+                icon: '🔬',
+                name: 'Proposal Penelitian',
+                desc: 'Proposal riset atau penelitian akademik.',
+                color: '#48bb78',
+                fields: [
+                    { key: 'company_name', label: 'Nama Institusi', type: 'text', placeholder: 'Universitas Indonesia' },
+                    { key: 'company_address', label: 'Alamat Institusi', type: 'text', placeholder: 'Jl. Salemba No. 4, Jakarta' },
+                    { key: 'company_phone', label: 'Telepon', type: 'text', placeholder: '021-1234567' },
+                    { key: 'company_email', label: 'Email', type: 'text', placeholder: 'research@ui.ac.id' },
+                    { key: 'recipient_name', label: 'Nama Penerima', type: 'text', placeholder: 'Kepala Lembaga Penelitian' },
+                    { key: 'recipient_position', label: 'Jabatan Penerima', type: 'text', placeholder: 'Kepala Lembaga' },
+                    { key: 'recipient_company', label: 'Institusi Penerima', type: 'text', placeholder: 'Lembaga Penelitian' },
+                    { key: 'letter_date', label: 'Tanggal Surat', type: 'date' },
+                    { key: 'research_title', label: 'Judul Penelitian', type: 'text', placeholder: 'Dampak Program Mental Health terhadap Produktivitas' },
+                    { key: 'research_description', label: 'Deskripsi Penelitian', type: 'textarea', placeholder: 'Deskripsi penelitian yang akan dilakukan...' },
+                    { key: 'methodology', label: 'Metodologi', type: 'textarea', placeholder: 'Metode yang akan digunakan...' },
+                    { key: 'budget', label: 'Estimasi Anggaran', type: 'text', placeholder: 'Rp 200.000.000' }
+                ],
+                prompt_template: `Buat proposal penelitian untuk "{research_title}" dengan deskripsi: {research_description}. Metodologi: {methodology}. Estimasi anggaran: {budget}.\n\nFORMAT OUTPUT:\n\n=== SURAT PENGANTAR ===\n\n[KOP INSTITUSI]\n{company_name}\n{company_address}\nTelp: {company_phone} | Email: {company_email}\n\nPerihal: Proposal Penelitian - {research_title}\nLampiran: 1 (Proposal)\nTanggal: {letter_date}\n\nKepada Yth.\n{recipient_name}\n{recipient_position}\n{recipient_company}\n\nDengan hormat,\n\nSehubungan dengan rencana pelaksanaan penelitian "{research_title}", kami mengajukan proposal penelitian ini untuk mendapatkan persetujuan dan dukungan dana.\n\nDemikian surat pengantar ini kami sampaikan. Atas perhatian dan dukungannya, kami ucapkan terima kasih.\n\nHormat kami,\n\n{created_by}\nKetua Peneliti\n\n=== ISI PROPOSAL ===\n\nBAB 1: PENDAHULUAN\n1.1 Latar Belakang\n1.2 Rumusan Masalah\n1.3 Tujuan Penelitian\n1.4 Manfaat Penelitian\n\nBAB 2: TINJAUAN PUSTAKA\n2.1 Landasan Teori\n2.2 Penelitian Terdahulu\n2.3 Kerangka Berpikir\n\nBAB 3: METODOLOGI\n3.1 Desain Penelitian\n3.2 Populasi dan Sampel\n3.3 Instrumen Penelitian\n3.4 Analisis Data\n\nBAB 4: RENCANA PENELITIAN\n4.1 Timeline Penelitian\n4.2 Anggaran Biaya\n4.3 Sumber Daya\n\nBAB 5: PENUTUP\n5.1 Kesimpulan\n5.2 Harapan\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            sponsorship: {
+                id: 'sponsorship',
+                icon: '🎪',
+                name: 'Proposal Sponsorship',
+                desc: 'Proposal sponsorship untuk event atau kegiatan.',
+                color: '#ed64a6',
+                fields: [
+                    { key: 'company_name', label: 'Nama Perusahaan', type: 'text', placeholder: 'PT. Lidan Psikologi' },
+                    { key: 'company_address', label: 'Alamat Perusahaan', type: 'text', placeholder: 'Jl. Merdeka No. 123, Jakarta' },
+                    { key: 'company_phone', label: 'Telepon Perusahaan', type: 'text', placeholder: '021-1234567' },
+                    { key: 'company_email', label: 'Email Perusahaan', type: 'text', placeholder: 'info@lidan.co.id' },
+                    { key: 'recipient_name', label: 'Nama Penerima', type: 'text', placeholder: 'Bapak/Ibu Direktur Marketing' },
+                    { key: 'recipient_position', label: 'Jabatan Penerima', type: 'text', placeholder: 'Direktur Marketing' },
+                    { key: 'recipient_company', label: 'Perusahaan Penerima', type: 'text', placeholder: 'PT. Sponsor Jaya' },
+                    { key: 'letter_date', label: 'Tanggal Surat', type: 'date' },
+                    { key: 'event_name', label: 'Nama Event', type: 'text', placeholder: 'Seminar Kesehatan Mental 2026' },
+                    { key: 'event_description', label: 'Deskripsi Event', type: 'textarea', placeholder: 'Deskripsi event yang akan dilaksanakan...' },
+                    { key: 'target_audience', label: 'Target Audiens', type: 'text', placeholder: 'HRD, Manajer, Karyawan' },
+                    { key: 'sponsorship_package', label: 'Paket Sponsorship', type: 'text', placeholder: 'Rp 100.000.000' }
+                ],
+                prompt_template: `Buat proposal sponsorship untuk event "{event_name}" dengan deskripsi: {event_description}. Target audiens: {target_audience}. Paket sponsorship: {sponsorship_package}.\n\nFORMAT OUTPUT:\n\n=== SURAT PENGANTAR ===\n\n[KOP SURAT]\n{company_name}\n{company_address}\nTelp: {company_phone} | Email: {company_email}\n\nPerihal: Proposal Sponsorship - {event_name}\nLampiran: 1 (Proposal)\nTanggal: {letter_date}\n\nKepada Yth.\n{recipient_name}\n{recipient_position}\n{recipient_company}\n\nDengan hormat,\n\nKami dari {company_name} bermaksud mengajukan proposal sponsorship untuk kegiatan {event_name}. Acara ini merupakan kesempatan strategis untuk meningkatkan visibilitas brand dan menjangkau target audiens yang tepat.\n\nDemikian surat pengantar ini kami sampaikan. Kami berharap dapat menjalin kerjasama yang saling menguntungkan.\n\nHormat kami,\n\n{created_by}\nDirektur {company_name}\n\n=== ISI PROPOSAL ===\n\nBAB 1: PENDAHULUAN\n1.1 Latar Belakang\n1.2 Tujuan Event\n1.3 Manfaat Sponsorship\n\nBAB 2: DESKRIPSI EVENT\n2.1 Profil Event\n2.2 Timeline Event\n2.3 Target Audiens\n\nBAB 3: PAKET SPONSORSHIP\n3.1 Paket Sponsorship\n3.2 Benefit untuk Sponsor\n3.3 Eksposur Brand\n\nBAB 4: ANGGARAN\n4.1 Rincian Anggaran\n4.2 Sumber Pendanaan\n4.3 Proyeksi ROI\n\nBAB 5: PENUTUP\n5.1 Kesimpulan\n5.2 Harapan Kerjasama\n\nFormat dengan markdown yang rapi dan profesional.`
+            }
+        };
+
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'ai_proposal_generator';
+        const SECRET = 'admin';
+
+        const METHOD_KEYS = Object.keys(PROPOSAL_METHODS);
+
+        // ==================== STATE ====================
+        let allData = [];
+        let quillEditor = null;
+        let addAiEditor = null;
+        let viewData = null;
+        let currentPrompt = '';
+
+        const COLUMNS = {
+            proposal_type: 'x_01',
+            title: 'x_02',
+            prompt: 'x_03',
+            field_values: 'x_04',
+            ai_source: 'x_05',
+            result: 'x_06',
+            created_by: 'x_07',
+            status: 'x_08',
+            notes: 'x_09'
+        };
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('📄 AI Proposal Generator Started');
+            console.log('📡 Table:', TABLE);
+
+            quillEditor = new Quill('#resultEditor', {
+                theme: 'snow',
+                placeholder: 'Paste hasil AI di sini...',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['blockquote', 'code-block'],
+                        ['link', 'image'],
+                        ['clean']
+                    ]
+                }
+            });
+
+            addAiEditor = new Quill('#addAiEditor', {
+                theme: 'snow',
+                placeholder: 'Paste hasil AI di sini...',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['blockquote', 'code-block'],
+                        ['link', 'image'],
+                        ['clean']
+                    ]
+                }
+            });
+
+            renderTools();
+            populateToolSelect();
+            updateFormFields();
+            refreshData();
+        });
+
+        // ==================== API HELPERS ====================
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': TABLE,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        ...getHeaders(),
+                        ...(options.headers || {})
+                    }
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error || err.message || `HTTP ${response.status}`);
+                }
+                return await response.json();
+            } catch (e) {
+                console.error('❌ API Error:', e.message);
+                throw e;
+            }
+        }
+
+        // ==================== DATA CRUD ====================
+        async function fetchData() {
+            try {
+                const result = await apiFetch('');
+                if (result.success && result.data) {
+                    allData = result.data.map(row => parseRow(row));
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            return {
+                id_x: row.id_x,
+                proposal_type: row.x_01 || '',
+                title: row.x_02 || '',
+                prompt: row.x_03 || '',
+                field_values: safeParseJSON(row.x_04),
+                ai_source: row.x_05 || '',
+                result: row.x_06 || '',
+                created_by: row.x_07 || '',
+                status: row.x_08 || 'published',
+                notes: row.x_09 || '',
+                _raw: row
+            };
+        }
+
+        function safeParseJSON(str) {
+            if (!str) return {};
+            try {
+                return JSON.parse(str);
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                if (key === 'field_values') {
+                    row[col] = JSON.stringify(data[key] || {});
+                } else {
+                    row[col] = data[key] || '';
+                }
+            }
+            return row;
+        }
+
+        async function createResult(data) {
+            const row = buildRow(data);
+            return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function deleteResultApi(id) {
+            return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== RENDER TOOLS ====================
+        function renderTools() {
+            const container = document.getElementById('toolsGrid');
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            let filtered = METHOD_KEYS;
+            if (search) {
+                filtered = filtered.filter(key =>
+                    PROPOSAL_METHODS[key].name.toLowerCase().includes(search) ||
+                    PROPOSAL_METHODS[key].desc.toLowerCase().includes(search)
+                );
+            }
+
+            container.innerHTML = filtered.map(key => {
+                const method = PROPOSAL_METHODS[key];
+                const count = allData.filter(d => d.proposal_type === method.id).length;
+                return `
+                    <div class="tool-card" style="border-top:4px solid ${method.color};">
+                        <span class="tool-icon">${method.icon}</span>
+                        <div class="tool-name">${method.name}</div>
+                        <div class="tool-desc">${method.desc}</div>
+                        <div style="font-size:11px;color:#718096;margin-bottom:8px;">${count} proposal</div>
+                        <div class="tool-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openInfoModal('${key}')">📖 Info</button>
+                            <button class="btn btn-primary btn-xs" onclick="useTool('${key}')">✏️ Create</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('tab1Badge').textContent = filtered.length;
+        }
+
+        function populateToolSelect() {
+            const select = document.getElementById('selectedTool');
+            select.innerHTML = METHOD_KEYS.map(key => {
+                const method = PROPOSAL_METHODS[key];
+                return `<option value="${key}">${method.icon} ${method.name}</option>`;
+            }).join('');
+        }
+
+        // ==================== UPDATE FORM FIELDS ====================
+        function updateFormFields() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const method = PROPOSAL_METHODS[toolKey];
+            if (!method) return;
+
+            const container = document.getElementById('dynamicFields');
+            const values = getCurrentFieldValues();
+
+            let html = `<div class="section-label">📝 ${method.icon} ${method.name} - Form</div>`;
+
+            // Pisahkan field menjadi 2 bagian: Surat Pengantar dan Isi Proposal
+            const letterFields = ['company_name', 'company_address', 'company_phone', 'company_email', 'recipient_name', 'recipient_position', 'recipient_company', 'letter_date'];
+            const contentFields = method.fields.filter(f => !letterFields.includes(f.key));
+
+            // Surat Pengantar
+            html += `<div style="font-weight:600;font-size:13px;color:#4a5568;margin-top:8px;margin-bottom:4px;">📧 Surat Pengantar</div>`;
+            method.fields.forEach(field => {
+                if (!letterFields.includes(field.key)) return;
+                const fieldId = `field_${field.key}`;
+                const val = values[field.key] || '';
+                if (field.type === 'date') {
+                    html += `
+                        <div class="form-group">
+                            <label>${field.label}</label>
+                            <input type="date" id="${fieldId}" value="${val}">
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="form-group">
+                            <label>${field.label}</label>
+                            <input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}">
+                        </div>
+                    `;
+                }
+            });
+
+            // Isi Proposal
+            html += `<div style="font-weight:600;font-size:13px;color:#4a5568;margin-top:12px;margin-bottom:4px;">📝 Isi Proposal</div>`;
+            contentFields.forEach(field => {
+                const fieldId = `field_${field.key}`;
+                const val = values[field.key] || '';
+                if (field.type === 'textarea') {
+                    html += `
+                        <div class="form-group">
+                            <label>${field.label}</label>
+                            <textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="form-group">
+                            <label>${field.label}</label>
+                            <input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}">
+                        </div>
+                    `;
+                }
+            });
+
+            container.innerHTML = html;
+        }
+
+        function getCurrentFieldValues() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const method = PROPOSAL_METHODS[toolKey];
+            if (!method) return {};
+
+            const values = {};
+            method.fields.forEach(field => {
+                const el = document.getElementById(`field_${field.key}`);
+                if (el) {
+                    values[field.key] = el.value;
+                }
+            });
+            return values;
+        }
+
+        function setFieldValues(values) {
+            const toolKey = document.getElementById('selectedTool').value;
+            const method = PROPOSAL_METHODS[toolKey];
+            if (!method) return;
+
+            method.fields.forEach(field => {
+                const el = document.getElementById(`field_${field.key}`);
+                if (el && values[field.key] !== undefined) {
+                    el.value = values[field.key] || '';
+                }
+            });
+        }
+
+        // ==================== GENERATE PROMPT ====================
+        function generatePrompt() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const method = PROPOSAL_METHODS[toolKey];
+            if (!method) return;
+
+            const values = getCurrentFieldValues();
+            const createdBy = document.getElementById('createdBy').value.trim() || 'User';
+
+            // Check all fields filled
+            let allFilled = true;
+            method.fields.forEach(field => {
+                if (!values[field.key] || !values[field.key].trim()) {
+                    allFilled = false;
+                }
+            });
+
+            if (!allFilled) {
+                showToast('❌ Semua field harus diisi!', 'error');
+                return;
+            }
+
+            // Generate prompt dari template
+            let prompt = method.prompt_template;
+            method.fields.forEach(field => {
+                const placeholder = `{${field.key}}`;
+                const value = values[field.key] || '';
+                prompt = prompt.replace(new RegExp(placeholder, 'g'), value);
+            });
+            prompt = prompt.replace(/{created_by}/g, createdBy);
+
+            currentPrompt = prompt;
+            document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+
+            // Auto fill title
+            const titleInput = document.getElementById('resultTitle');
+            if (!titleInput.value) {
+                const firstField = method.fields.find(f => f.key === 'business_name' || f.key === 'project_name' || f.key === 'service_name' || f.key === 'partnership_name' || f.key === 'research_title' || f.key === 'event_name');
+                if (firstField) {
+                    titleInput.value = `${method.name} - ${values[firstField.key] || ''}`;
+                }
+            }
+
+            showToast('✅ Prompt berhasil digenerate! Copy ke AI eksternal.', 'success');
+        }
+
+        // ==================== COPY PROMPT ====================
+        function copyPrompt() {
+            const prompt = document.getElementById('promptPreview').textContent;
+            if (!prompt || prompt.includes('Pilih metode')) {
+                showToast('❌ Tidak ada prompt untuk dicopy', 'error');
+                return;
+            }
+
+            navigator.clipboard.writeText(prompt).then(() => {
+                showToast('✅ Prompt berhasil disalin! Paste ke AI eksternal.', 'success');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = prompt;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('✅ Prompt berhasil disalin!', 'success');
+            });
+        }
+
+        // ==================== SAVE RESULT ====================
+        async function saveResult() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const title = document.getElementById('resultTitle').value.trim();
+            const createdBy = document.getElementById('createdBy').value.trim() || 'User';
+            const prompt = document.getElementById('promptPreview').textContent;
+
+            if (!title) {
+                showToast('❌ Judul proposal wajib diisi', 'error');
+                document.getElementById('resultTitle').focus();
+                return;
+            }
+
+            if (!prompt || prompt.includes('Pilih metode')) {
+                showToast('❌ Generate prompt terlebih dahulu', 'error');
+                return;
+            }
+
+            const resultHtml = quillEditor.root.innerHTML;
+            if (!resultHtml || resultHtml === '<p><br></p>') {
+                showToast('❌ Paste hasil AI terlebih dahulu', 'error');
+                return;
+            }
+
+            const values = getCurrentFieldValues();
+
+            const data = {
+                proposal_type: toolKey,
+                title: title,
+                prompt: prompt,
+                field_values: values,
+                ai_source: document.getElementById('aiSource').value,
+                result: resultHtml,
+                created_by: createdBy,
+                status: 'published',
+                notes: ''
+            };
+
+            try {
+                await createResult(data);
+                showToast('✅ Proposal berhasil disimpan!', 'success');
+                await refreshData();
+                clearForm();
+                switchMainTab('tab3');
+            } catch (e) {
+                console.error('❌ Save error:', e);
+                showToast('❌ Gagal menyimpan: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== CLEAR FORM ====================
+        function clearForm() {
+            quillEditor.root.innerHTML = '';
+            document.getElementById('resultTitle').value = '';
+            document.getElementById('promptPreview').innerHTML = '<span class="placeholder">Pilih metode dan isi form untuk menghasilkan prompt...</span>';
+            currentPrompt = '';
+        }
+
+        // ==================== USE TOOL ====================
+        function useTool(toolKey) {
+            document.getElementById('selectedTool').value = toolKey;
+            updateFormFields();
+            switchMainTab('tab2');
+            clearForm();
+            document.getElementById('resultTitle').value = '';
+            document.getElementById('createdBy').value = '';
+            showToast(`✏️ Beralih ke ${PROPOSAL_METHODS[toolKey].name}`, 'info');
+        }
+
+        // ==================== RENDER HISTORY ====================
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            const filterTool = document.getElementById('historyFilterTool').value;
+            const search = document.getElementById('historySearch').value.toLowerCase().trim();
+
+            let filtered = allData;
+
+            if (filterTool !== 'all') {
+                filtered = filtered.filter(d => d.proposal_type === filterTool);
+            }
+
+            if (search) {
+                filtered = filtered.filter(d =>
+                    d.title.toLowerCase().includes(search) ||
+                    d.created_by.toLowerCase().includes(search) ||
+                    d.prompt.toLowerCase().includes(search)
+                );
+            }
+
+            document.getElementById('historyCount').textContent = `${filtered.length} items`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📄</div>
+                        <h3>${allData.length === 0 ? 'Belum ada proposal' : 'Tidak ditemukan'}</h3>
+                        <p>${allData.length === 0 ? 'Pergi ke Tab "AI Prompt Studio" untuk mulai membuat proposal' : 'Coba dengan kata kunci lain'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => {
+                const method = PROPOSAL_METHODS[item.proposal_type];
+                const methodLabel = method ? `${method.icon} ${method.name}` : item.proposal_type;
+                const date = item._raw?.created_at || '-';
+                const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : '-';
+
+                const sourceClass = item.ai_source.toLowerCase();
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = item.result;
+                const plainResult = tempDiv.textContent.substring(0, 100) + (tempDiv.textContent.length > 100 ? '...' : '');
+
+                return `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <span class="history-title">${escapeHtml(item.title)}</span>
+                            <div class="history-meta">
+                                <span class="type-badge">${methodLabel}</span>
+                                ${item.ai_source ? `<span class="ai-badge ${sourceClass}">${item.ai_source}</span>` : ''}
+                                <span>📅 ${displayDate}</span>
+                                <span>👤 ${escapeHtml(item.created_by)}</span>
+                            </div>
+                        </div>
+                        <div class="history-prompt" onclick="togglePrompt(this)">${escapeHtml(item.prompt.substring(0, 120))}${item.prompt.length > 120 ? '...' : ''}</div>
+                        <div class="history-result">${escapeHtml(plainResult)}</div>
+                        <div class="history-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openAddAiModal(${item.id_x})">➕ Tambah AI</button>
+                            <button class="btn btn-primary btn-xs" onclick="openDuplicateModal(${item.id_x})">📋 Duplikat</button>
+                            <button class="btn btn-outline btn-xs" onclick="openViewModal(${item.id_x})">👁️ Detail</button>
+                            <button class="btn btn-danger btn-xs" onclick="deleteResult(${item.id_x})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function togglePrompt(el) {
+            el.classList.toggle('expanded');
+        }
+
+        // ==================== OPEN ADD AI MODAL ====================
+        function openAddAiModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+
+            document.getElementById('addAiId').value = id;
+            document.getElementById('addAiPromptDisplay').textContent = item.prompt;
+            document.getElementById('addAiCreatedBy').value = item.created_by || 'User';
+            addAiEditor.root.innerHTML = '';
+
+            document.getElementById('addAiModal').classList.add('active');
+        }
+
+        async function saveAddAiResult() {
+            const id = parseInt(document.getElementById('addAiId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+
+            const aiSource = document.getElementById('addAiSource').value;
+            const createdBy = document.getElementById('addAiCreatedBy').value.trim() || 'User';
+            const resultHtml = addAiEditor.root.innerHTML;
+
+            if (!resultHtml || resultHtml === '<p><br></p>') {
+                showToast('❌ Paste hasil AI terlebih dahulu', 'error');
+                return;
+            }
+
+            const data = {
+                proposal_type: originalItem.proposal_type,
+                title: originalItem.title + ` (${aiSource})`,
+                prompt: originalItem.prompt,
+                field_values: originalItem.field_values || {},
+                ai_source: aiSource,
+                result: resultHtml,
+                created_by: createdBy,
+                status: 'published',
+                notes: `Hasil tambahan dari ${aiSource}`
+            };
+
+            try {
+                await createResult(data);
+                showToast('✅ Hasil AI baru berhasil disimpan!', 'success');
+                closeModal('addAiModal');
+                await refreshData();
+            } catch (e) {
+                console.error('❌ Save error:', e);
+                showToast('❌ Gagal menyimpan: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== OPEN DUPLICATE MODAL ====================
+        function openDuplicateModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+
+            document.getElementById('dupId').value = id;
+            document.getElementById('dupPromptEditor').value = item.prompt;
+            document.getElementById('dupTitle').value = item.title + ' (v2)';
+            document.getElementById('dupCreatedBy').value = item.created_by || 'User';
+
+            document.getElementById('duplicateModal').classList.add('active');
+        }
+
+        async function saveDuplicate() {
+            const id = parseInt(document.getElementById('dupId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+
+            const newPrompt = document.getElementById('dupPromptEditor').value.trim();
+            const newTitle = document.getElementById('dupTitle').value.trim();
+            const createdBy = document.getElementById('dupCreatedBy').value.trim() || 'User';
+
+            if (!newPrompt) {
+                showToast('❌ Prompt tidak boleh kosong', 'error');
+                return;
+            }
+
+            if (!newTitle) {
+                showToast('❌ Judul baru wajib diisi', 'error');
+                document.getElementById('dupTitle').focus();
+                return;
+            }
+
+            const data = {
+                proposal_type: originalItem.proposal_type,
+                title: newTitle,
+                prompt: newPrompt,
+                field_values: originalItem.field_values || {},
+                ai_source: '',
+                result: '',
+                created_by: createdBy,
+                status: 'published',
+                notes: 'Duplikat dari prompt sebelumnya'
+            };
+
+            try {
+                await createResult(data);
+                showToast('✅ Duplikat berhasil dibuat!', 'success');
+                closeModal('duplicateModal');
+
+                document.getElementById('selectedTool').value = originalItem.proposal_type;
+                updateFormFields();
+                setFieldValues(originalItem.field_values || {});
+                document.getElementById('resultTitle').value = newTitle;
+                document.getElementById('createdBy').value = createdBy;
+                document.getElementById('promptPreview').innerHTML = escapeHtml(newPrompt);
+                currentPrompt = newPrompt;
+
+                switchMainTab('tab2');
+                await refreshData();
+            } catch (e) {
+                console.error('❌ Duplicate error:', e);
+                showToast('❌ Gagal menduplikat: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== DELETE FUNCTIONS ====================
+        async function deleteResult(id) {
+            if (!confirm('Hapus proposal ini?')) return;
+            try {
+                await deleteResultApi(id);
+                showToast('✅ Proposal berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) {
+                console.error('❌ Delete error:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        async function clearHistory() {
+            if (allData.length === 0) {
+                showToast('Tidak ada data', 'info');
+                return;
+            }
+            if (!confirm('Hapus semua data history? (Tidak bisa dibatalkan)')) return;
+
+            try {
+                for (const item of allData) {
+                    await deleteResultApi(item.id_x);
+                }
+                showToast('✅ Semua data berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) {
+                console.error('❌ Clear error:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== VIEW MODAL ====================
+        function openViewModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+
+            viewData = item;
+
+            const method = PROPOSAL_METHODS[item.proposal_type];
+            const methodLabel = method ? `${method.icon} ${method.name}` : item.proposal_type;
+            const date = item._raw?.created_at || '-';
+            const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }) : '-';
+
+            document.getElementById('viewModalTitle').textContent = `👁️ ${escapeHtml(item.title)}`;
+
+            document.getElementById('viewMeta').innerHTML = `
+                <strong>Metode:</strong> ${methodLabel} &nbsp;|&nbsp;
+                <strong>AI Source:</strong> ${item.ai_source || '-'} &nbsp;|&nbsp;
+                <strong>Dibuat:</strong> ${displayDate} &nbsp;|&nbsp;
+                <strong>Oleh:</strong> ${escapeHtml(item.created_by)}
+            `;
+
+            document.getElementById('viewPrompt').textContent = item.prompt;
+            document.getElementById('viewSource').textContent = item.ai_source || '-';
+
+            const wrapper = document.getElementById('viewResultWrapper');
+            wrapper.innerHTML = `<div class="ql-editor">${item.result}</div>`;
+
+            document.getElementById('viewModal').classList.add('active');
+        }
+
+        function copyViewResult() {
+            const resultHtml = document.getElementById('viewResultWrapper').innerHTML;
+            if (!resultHtml) {
+                showToast('Tidak ada konten', 'error');
+                return;
+            }
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = resultHtml;
+            const plainText = tempDiv.textContent;
+
+            navigator.clipboard.writeText(plainText).then(() => {
+                showToast('✅ Konten berhasil disalin!', 'success');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = plainText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('✅ Konten berhasil disalin!', 'success');
+            });
+        }
+
+        // ==================== INFO MODAL ====================
+        function openInfoModal(toolKey) {
+            const method = PROPOSAL_METHODS[toolKey];
+            if (!method) return;
+
+            const fieldsHtml = method.fields.map(f =>
+                `<li><strong>${f.label}</strong> — ${f.placeholder}</li>`
+            ).join('');
+
+            document.getElementById('infoModalTitle').textContent = `📋 ${method.icon} ${method.name}`;
+            document.getElementById('infoModalBody').innerHTML = `
+                <div style="text-align:center;margin-bottom:12px;">
+                    <span style="font-size:48px;display:block;">${method.icon}</span>
+                    <h3 style="font-size:20px;color:#2d3748;">${method.name}</h3>
+                    <p style="color:#718096;font-size:14px;">${method.desc}</p>
+                </div>
+                <div style="background:#f7fafc;border-radius:8px;padding:16px;margin-bottom:12px;">
+                    <h4 style="font-size:14px;color:#2d3748;margin-bottom:8px;">📝 Field yang Diisi:</h4>
+                    <ul style="padding-left:20px;color:#4a5568;font-size:13px;line-height:1.8;">
+                        ${fieldsHtml}
+                    </ul>
+                </div>
+                <div style="background:#f0fff4;border-radius:8px;padding:12px 16px;border-left:4px solid #38b2ac;">
+                    <strong style="color:#276749;">💡 Cara Penggunaan:</strong>
+                    <ol style="margin:4px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">
+                        <li>Pilih metode di Tab "AI Prompt Studio"</li>
+                        <li>Isi semua field yang tersedia (termasuk data surat pengantar)</li>
+                        <li>Klik "Generate Prompt"</li>
+                        <li>Copy prompt, paste ke AI eksternal</li>
+                        <li>Copy hasil AI, paste di editor</li>
+                        <li>Pilih AI Source dan klik "Simpan Hasil"</li>
+                    </ol>
+                </div>
+            `;
+
+            document.getElementById('infoModal').classList.add('active');
+        }
+
+        // ==================== TAB FUNCTIONS ====================
+        function switchMainTab(tabId) {
+            document.querySelectorAll('.main-tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.main-tab-content').forEach(el => el.classList.remove('active'));
+
+            document.querySelector(`.main-tab-btn[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+
+            if (tabId === 'tab3') {
+                renderHistory();
+            }
+        }
+
+        // ==================== MODAL FUNCTIONS ====================
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // ==================== REFRESH ====================
+        async function refreshData() {
+            showToast('🔄 Memuat data...', 'info');
+            await fetchData();
+            renderTools();
+            updateHistoryFilter();
+            renderHistory();
+            document.getElementById('tab3Badge').textContent = allData.length;
+            showToast(`✅ ${allData.length} proposal dimuat`, 'success');
+        }
+
+        function updateHistoryFilter() {
+            const select = document.getElementById('historyFilterTool');
+            const currentValue = select.value;
+
+            const types = {};
+            allData.forEach(item => {
+                if (!types[item.proposal_type]) {
+                    types[item.proposal_type] = 0;
+                }
+                types[item.proposal_type]++;
+            });
+
+            select.innerHTML = `<option value="all">📋 All Types (${allData.length})</option>`;
+            METHOD_KEYS.forEach(key => {
+                const method = PROPOSAL_METHODS[key];
+                const count = types[key] || 0;
+                select.innerHTML += `<option value="${key}">${method.icon} ${method.name} (${count})</option>`;
+            });
+
+            if (currentValue) select.value = currentValue;
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ==================== HELPER ====================
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ==================== KEYBOARD ====================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => {
+                    m.classList.remove('active');
+                });
+            }
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        // ==================== DEBUG ====================
+        window.debug = {
+            allData: () => allData,
+            refresh: refreshData,
+            PROPOSAL_METHODS: PROPOSAL_METHODS,
+            METHOD_KEYS: METHOD_KEYS
+        };
+
+        console.log('📄 AI Proposal Generator Loaded!');
+        console.log('📡 Table:', TABLE);
+        console.log('📊 6 Metode Proposal siap pakai!');
+        console.log('🔧 Type "debug" in console for helpers');
+    </script>
+</body>
+</html>
