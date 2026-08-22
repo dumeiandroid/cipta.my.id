@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lean Canvas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #1a2332;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 span {
+            background: #2d3748;
+            color: white;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #f7fafc;
+            padding: 0 15px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            transition: border 0.2s;
+        }
+
+        .search-box:focus-within {
+            border-color: #4299e1;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 14px;
+            outline: none;
+            width: 200px;
+            color: #2d3748;
+        }
+
+        .search-box .icon {
+            color: #a0aec0;
+            font-size: 18px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66,153,225,0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #fc8181;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #f56565;
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-outline:hover {
+            background: #f7fafc;
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-xs {
+            padding: 3px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+
+        .list-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .list-header {
+            display: grid;
+            grid-template-columns: 80px 2fr 1.5fr 1fr 1fr 140px;
+            gap: 10px;
+            padding: 14px 20px;
+            background: #f7fafc;
+            font-weight: 700;
+            font-size: 13px;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .list-item {
+            display: grid;
+            grid-template-columns: 80px 2fr 1.5fr 1fr 1fr 140px;
+            gap: 10px;
+            padding: 16px 20px;
+            border-bottom: 1px solid #edf2f7;
+            align-items: center;
+            transition: background 0.15s;
+            cursor: pointer;
+        }
+
+        .list-item:hover {
+            background: #f7fafc;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item .id {
+            font-weight: 700;
+            color: #4299e1;
+            font-size: 14px;
+        }
+
+        .list-item .name {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .list-item .problem {
+            color: #4a5568;
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .list-item .stats {
+            display: flex;
+            gap: 6px;
+            font-size: 12px;
+            color: #718096;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .list-item .stats .block-count {
+            background: #e2e8f0;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+
+        .list-item .date {
+            font-size: 13px;
+            color: #a0aec0;
+        }
+
+        .list-item .actions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #a0aec0;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .empty-state h3 {
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 1100px;
+            width: 100%;
+            max-height: 95vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-close {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: #fc8181;
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            background: #f56565;
+            transform: rotate(90deg);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a2332;
+            margin-bottom: 20px;
+            padding-right: 50px;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        /* Lean Canvas Grid */
+        .lean-canvas-section {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .lean-canvas-section .section-title {
+            font-weight: 700;
+            font-size: 15px;
+            color: #2d3748;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .lean-canvas-section .section-title .badge {
+            background: #e53e3e;
+            color: white;
+            font-size: 11px;
+            padding: 1px 10px;
+            border-radius: 12px;
+        }
+
+        .lean-canvas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .lean-block {
+            background: white;
+            border-radius: 10px;
+            padding: 14px 16px;
+            border: 1px solid #e2e8f0;
+            border-top: 4px solid #4299e1;
+        }
+
+        .lean-block .block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .lean-block .block-name {
+            font-weight: 700;
+            font-size: 13px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .lean-block .block-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .lean-block .block-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: 0.15s;
+            color: #a0aec0;
+        }
+
+        .lean-block .block-actions button:hover {
+            background: #edf2f7;
+        }
+        .lean-block .block-actions .delete-block:hover {
+            color: #fc8181;
+        }
+        .lean-block .block-actions .edit-block:hover {
+            color: #4299e1;
+        }
+
+        .lean-block .block-content {
+            font-size: 13px;
+            color: #4a5568;
+            line-height: 1.5;
+            min-height: 30px;
+        }
+
+        .lean-block .block-content .empty-text {
+            color: #a0aec0;
+            font-style: italic;
+        }
+
+        .lean-block .block-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 12px;
+            font-size: 11px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .add-block-row {
+            display: grid;
+            grid-template-columns: 0.7fr 1.5fr 0.6fr 0.6fr auto;
+            gap: 8px;
+            align-items: end;
+            padding: 12px;
+            background: white;
+            border-radius: 10px;
+            border: 2px dashed #e2e8f0;
+            margin-top: 12px;
+        }
+
+        .add-block-row .form-group {
+            gap: 3px;
+        }
+
+        .add-block-row .form-group label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #a0aec0;
+        }
+
+        .add-block-row .form-group input,
+        .add-block-row .form-group select,
+        .add-block-row .form-group textarea {
+            padding: 6px 10px;
+            font-size: 13px;
+            border-radius: 8px;
+        }
+
+        .add-block-row .form-group textarea {
+            min-height: 32px;
+            resize: vertical;
+        }
+
+        .add-block-row .btn {
+            padding: 6px 14px;
+            font-size: 13px;
+            margin-bottom: 1px;
+        }
+
+        @media (max-width: 992px) {
+            .lean-canvas-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .add-block-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+            .add-block-row .btn {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .lean-canvas-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 2px solid #edf2f7;
+            flex-wrap: wrap;
+        }
+
+        .detail-section {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .detail-section .label {
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 13px;
+        }
+
+        .detail-section .value {
+            color: #2d3748;
+            font-size: 15px;
+            margin-top: 4px;
+        }
+
+        .detail-lean-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .detail-lean-item {
+            background: white;
+            padding: 12px 14px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            border-top: 4px solid #4299e1;
+        }
+
+        .detail-lean-item .block-title {
+            font-weight: 700;
+            font-size: 13px;
+            color: #2d3748;
+        }
+
+        .detail-lean-item .block-content {
+            font-size: 13px;
+            color: #4a5568;
+            margin-top: 4px;
+            line-height: 1.5;
+        }
+
+        .stats-mini {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .stats-mini .stat-box {
+            background: white;
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stats-mini .stat-box .num {
+            font-weight: 700;
+            font-size: 18px;
+            color: #2d3748;
+        }
+
+        .stats-mini .stat-box .lbl {
+            font-size: 12px;
+            color: #a0aec0;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            max-width: 400px;
+        }
+
+        .toast.success {
+            background: #48bb78;
+        }
+        .toast.error {
+            background: #fc8181;
+        }
+        .toast.info {
+            background: #4299e1;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 992px) {
+            .list-header {
+                display: none;
+            }
+            .list-item {
+                grid-template-columns: 1fr;
+                gap: 6px;
+                padding: 16px;
+                border-bottom: 2px solid #edf2f7;
+            }
+            .list-item .id {
+                font-size: 13px;
+            }
+            .list-item .actions {
+                margin-top: 6px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box input {
+                width: 100%;
+            }
+            .modal {
+                padding: 20px;
+            }
+            .detail-lean-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .detail-lean-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+        }
+
+        .modal::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal::-webkit-scrollbar-track {
+            background: #f7fafc;
+        }
+        .modal::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .field-with-tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            z-index: auto;
+        }
+
+        .field-with-tooltip .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #4299e1;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            border: none;
+            font-family: inherit;
+            vertical-align: middle;
+            position: relative;
+            z-index: 2;
+        }
+
+        .field-with-tooltip .help-icon:hover {
+            background: #3182ce;
+            transform: scale(1.05);
+        }
+
+        .field-with-tooltip .tooltip-box {
+            visibility: hidden;
+            opacity: 0;
+            width: 380px;
+            max-width: 92vw;
+            background: #1a202c;
+            color: #e2e8f0;
+            text-align: left;
+            padding: 18px 22px;
+            border-radius: 14px;
+            position: fixed;
+            z-index: 9999999;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.92);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 400;
+            font-size: 13.5px;
+            line-height: 1.7;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+            pointer-events: none;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .field-with-tooltip .tooltip-box::after {
+            display: none;
+        }
+
+        .field-with-tooltip:hover .tooltip-box {
+            visibility: visible;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .field-with-tooltip.active .tooltip-box {
+            visibility: visible;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: auto;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-close {
+            display: none;
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .field-with-tooltip.active .tooltip-box .tip-close {
+            display: block;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-close button {
+            background: rgba(255, 255, 255, 0.12);
+            border: none;
+            color: white;
+            padding: 5px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-close button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .field-with-tooltip .tooltip-box .tip-title {
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-desc {
+            display: block;
+            color: #e2e8f0;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-example {
+            display: block;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 12.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN OVERLAY -->
+    <div id="loginOverlay" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);z-index:99999;align-items:center;justify-content:center;">
+        <div style="background:#fff;width:100%;max-width:380px;border-radius:16px;padding:36px 32px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <h1 style="font-size:22px;color:#2d3748;text-align:center;margin:0 0 6px;">🔐 Login</h1>
+            <p style="text-align:center;color:#718096;font-size:13px;margin:0 0 24px;">Masuk untuk mengakses Lean Canvas</p>
+            <div id="loginError" style="display:none;background:#fff5f5;color:#c53030;border:1px solid #feb2b2;padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:16px;"></div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:13px;color:#4a5568;margin-bottom:6px;font-weight:600;">Username</label>
+                <input type="text" id="loginUsername" autocomplete="username" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;">
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:13px;color:#4a5568;margin-bottom:6px;font-weight:600;">Password</label>
+                <input type="password" id="loginPassword" autocomplete="current-password" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:#4a5568;">
+                <input type="checkbox" id="loginRememberMe" style="width:auto;">
+                <label for="loginRememberMe" style="margin:0;font-weight:400;">Ingat saya (tetap login 30 hari)</label>
+            </div>
+            <button id="loginBtn" onclick="handleLogin()" style="width:100%;padding:11px;background:#667eea;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Masuk</button>
+        </div>
+    </div>
+
+    <div class="container" id="app">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>
+                📋 Lean Canvas
+                <span>v1.0</span>
+            </h1>
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Cari produk/ide..." oninput="renderList()">
+                </div>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ Canvas Baru</button>
+                <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+                <button class="btn btn-outline btn-sm" onclick="authLogout()" title="Logout">🚪 Logout</button>
+            </div>
+        </div>
+
+        <!-- LIST -->
+        <div class="list-container">
+            <div class="list-header">
+                <span>ID</span>
+                <span>Nama Produk</span>
+                <span>Masalah Utama</span>
+                <span>Blocks</span>
+                <span>Terakhir Update</span>
+                <span>Aksi</span>
+            </div>
+            <div id="listBody">
+                <div class="empty-state">
+                    <div class="icon">📋</div>
+                    <h3>Belum ada Lean Canvas</h3>
+                    <p>Klik "Canvas Baru" untuk membuat Lean Canvas untuk ide bisnis Anda!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORM -->
+    <div class="modal-overlay" id="formModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('formModal')">✕</button>
+            <div class="modal-title" id="formModalTitle">📋 Lean Canvas Baru</div>
+            <div class="modal-body">
+                <input type="hidden" id="editId" value="">
+
+                <!-- Informasi Produk -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📌 Nama Produk/Ide *</label>
+                        <input type="text" id="productName" placeholder="Contoh: Aplikasi Kasir UMKM" required>
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Founder/Tim</label>
+                        <input type="text" id="founder" placeholder="Nama founder atau tim">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Deskripsi Singkat</label>
+                    <textarea id="description" placeholder="Deskripsi produk/ide..." rows="2"></textarea>
+                </div>
+
+                <!-- Lean Canvas Blocks -->
+                <div class="lean-canvas-section">
+                    <div class="section-title">
+                        📋 Lean Canvas (9 Blocks)
+                        <span class="badge" id="blockCount">0 blocks</span>
+                        <span class="field-with-tooltip" data-tooltip="lean">
+                            <button class="help-icon" onclick="toggleTooltip(event, this)">?</button>
+                            <div class="tooltip-box">
+                                <span class="tip-title">📋 Tips Lean Canvas</span>
+                                <span class="tip-desc">Lean Canvas adalah 1-halaman business plan untuk startup. Fokus pada masalah, solusi, dan metrik kunci.</span>
+                                <span class="tip-example">
+                                    <strong>💡 9 Blocks:</strong><br>
+                                    1. 🔴 Problem - Masalah pelanggan<br>
+                                    2. 💡 Solution - Solusi yang ditawarkan<br>
+                                    3. 📊 Key Metrics - Metrik kesuksesan<br>
+                                    4. 🎯 Unique Value Prop - Nilai unik<br>
+                                    5. ⚡ Unfair Advantage - Keunggulan kompetitif<br>
+                                    6. 📢 Channels - Saluran distribusi<br>
+                                    7. 👥 Customer Segments - Segmen pelanggan<br>
+                                    8. 💰 Cost Structure - Struktur biaya<br>
+                                    9. 💵 Revenue Streams - Sumber pendapatan
+                                </span>
+                                <span class="tip-close"><button onclick="closeTooltip(this)">Tutup</button></span>
+                            </div>
+                        </span>
+                    </div>
+                    <div class="lean-canvas-grid" id="blockList"></div>
+                    <div class="add-block-row">
+                        <div class="form-group">
+                            <label>Block</label>
+                            <select id="blockType">
+                                <option value="Problem">🔴 Problem</option>
+                                <option value="Solution">💡 Solution</option>
+                                <option value="Key Metrics">📊 Key Metrics</option>
+                                <option value="Unique Value Prop">🎯 Unique Value Prop</option>
+                                <option value="Unfair Advantage">⚡ Unfair Advantage</option>
+                                <option value="Channels">📢 Channels</option>
+                                <option value="Customer Segments">👥 Customer Segments</option>
+                                <option value="Cost Structure">💰 Cost Structure</option>
+                                <option value="Revenue Streams">💵 Revenue Streams</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Konten</label>
+                            <input type="text" id="blockContent" placeholder="Isi block...">
+                        </div>
+                        <div class="form-group">
+                            <label>Prioritas</label>
+                            <select id="blockPriority">
+                                <option value="high">🔴 Tinggi</option>
+                                <option value="medium" selected>🟠 Sedang</option>
+                                <option value="low">🟢 Rendah</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="blockStatus">
+                                <option value="validated">✅ Validated</option>
+                                <option value="hypothesis" selected>🔬 Hypothesis</option>
+                                <option value="invalidated">❌ Invalidated</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-success" onclick="addBlock()">+ Tambah</button>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-danger" id="deleteBtn" onclick="deleteCanvas()" style="display:none;">🗑️ Hapus</button>
+                    <button class="btn btn-outline" onclick="closeModal('formModal')">Batal</button>
+                    <button class="btn btn-primary" id="saveBtn" onclick="saveCanvas()">💾 Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+            <div class="modal-title" id="detailTitle">📋 Detail Lean Canvas</div>
+            <div class="modal-body">
+                <div class="stats-mini" id="detailStats"></div>
+                <div class="detail-section">
+                    <div class="label">📝 Deskripsi</div>
+                    <div class="value" id="detailDesc">-</div>
+                </div>
+                <div class="detail-section">
+                    <div class="label">📋 Lean Canvas</div>
+                    <div class="detail-lean-grid" id="detailBlocks"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-warning" onclick="editFromDetail()">✏️ Edit</button>
+                    <button class="btn" style="background:#805ad5;color:#fff;" onclick="promptLeanCanvasFull()">🤖 Prompt Lengkap</button>
+                    <button class="btn btn-outline" onclick="closeModal('detailModal')">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== TOOLTIP HANDLER ====================
+        function toggleTooltip(event, btn) {
+            event.stopPropagation();
+            const container = btn.closest('.field-with-tooltip');
+            const isActive = container.classList.contains('active');
+
+            document.querySelectorAll('.field-with-tooltip.active').forEach(el => {
+                if (el !== container) el.classList.remove('active');
+            });
+
+            if (isActive) {
+                container.classList.remove('active');
+            } else {
+                container.classList.add('active');
+            }
+        }
+
+        function closeTooltip(btn) {
+            const container = btn.closest('.field-with-tooltip');
+            container.classList.remove('active');
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.field-with-tooltip')) {
+                document.querySelectorAll('.field-with-tooltip.active').forEach(el => {
+                    el.classList.remove('active');
+                });
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.field-with-tooltip.active').forEach(el => {
+                    el.classList.remove('active');
+                });
+            }
+        });
+
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'lean_canvas';
+        const SECRET = 'admin';
+
+        // ==================== STATE ====================
+        let allData = [];
+        let currentDetailId = null;
+        let currentDetailItem = null;
+        let currentEditId = null;
+
+        const COLUMNS = {
+            product_name: 'x_01',
+            founder: 'x_02',
+            description: 'x_03',
+            blocks: 'x_04', // JSON array
+            meta: 'x_05' // created_by/created_at JSON
+        };
+
+        let formData = {
+            product_name: '',
+            founder: '',
+            description: '',
+            blocks: []
+        };
+
+        // ==================== AUTH (SSO via cookie domain, inline per-file) ====================
+        // Login sekali di file ini -> otomatis login juga di file tool lain,
+        // karena session disimpan di cookie dengan domain=.lidan.co.id
+        // (dibaca bersama oleh semua file di domain yang sama). Logout di
+        // sini juga otomatis logout di file-file lain (cookie ikut terhapus).
+        const AUTH_API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const AUTH_USERS_TABLE = 'users';
+        const AUTH_SECRET = 'admin';
+        const AUTH_COOKIE_NAME = 'lidan_session';
+        const AUTH_COOKIE_DOMAIN = '.lidan.co.id';
+        const AUTH_REMEMBER_DAYS = 30;
+
+        function authSetCookie(name, value, days) {
+            let expires = '';
+            if (days) {
+                const d = new Date();
+                d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+                expires = '; expires=' + d.toUTCString();
+            }
+            const isRealDomain = location.hostname.endsWith('lidan.co.id');
+            const domainPart = isRealDomain ? `; domain=${AUTH_COOKIE_DOMAIN}` : '';
+            document.cookie = `${name}=${encodeURIComponent(value)}${expires}${domainPart}; path=/; SameSite=Lax`;
+        }
+
+        function authGetCookie(name) {
+            const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+            return match ? decodeURIComponent(match[1]) : null;
+        }
+
+        function authDeleteCookie(name) {
+            const isRealDomain = location.hostname.endsWith('lidan.co.id');
+            const domainPart = isRealDomain ? `; domain=${AUTH_COOKIE_DOMAIN}` : '';
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC${domainPart}; path=/;`;
+        }
+
+        function authGetSession() {
+            const raw = authGetCookie(AUTH_COOKIE_NAME);
+            if (!raw) return null;
+            try { return JSON.parse(raw); } catch (e) { return null; }
+        }
+
+        function authIsLoggedIn() { return !!authGetSession(); }
+
+        function authGetUsername() {
+            const s = authGetSession();
+            return s ? s.username : null;
+        }
+
+        function authIsAdmin() {
+            const s = authGetSession();
+            return !!s && s.username === 'admin';
+        }
+
+        // Login pakai GET: ambil seluruh baris tabel "users" via GET,
+        // lalu cocokkan username(x_01)/password(x_02) di browser.
+        async function authLogin(username, password, rememberMe) {
+            const url = `${AUTH_API_URL}?table=${AUTH_USERS_TABLE}`;
+            const res = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Custom-Auth': AUTH_SECRET,
+                    'X-Table-Name': AUTH_USERS_TABLE,
+                    'X-Role': 'admin'
+                }
+            });
+            if (!res.ok) throw new Error('Tidak bisa menghubungi server. Coba lagi.');
+            const result = await res.json();
+            const rows = (result && result.data) || [];
+            const match = rows.find(r => (r.x_01 || '') === username && (r.x_02 || '') === password);
+            if (!match) throw new Error('Username atau password salah');
+            const session = { username: match.x_01, id: match.id_x, loginAt: new Date().toISOString() };
+            authSetCookie(AUTH_COOKIE_NAME, JSON.stringify(session), rememberMe ? AUTH_REMEMBER_DAYS : null);
+            return session;
+        }
+
+        function authLogout() {
+            authDeleteCookie(AUTH_COOKIE_NAME);
+            window.location.reload();
+        }
+
+        function authFilterByOwner(data, ownerField) {
+            ownerField = ownerField || 'created_by';
+            if (authIsAdmin()) return data;
+            const username = authGetUsername();
+            return (data || []).filter(item => item[ownerField] === username);
+        }
+
+        // Simpan created_by + created_at sebagai 1 kolom JSON gabungan
+        // (hemat kolom). Kalau existingMetaJson ada isinya (update data
+        // lama), created_by/created_at asli dipertahankan, tidak ditimpa.
+        function authBuildMeta(existingMetaJson) {
+            if (existingMetaJson) {
+                try {
+                    const existing = JSON.parse(existingMetaJson);
+                    if (existing && existing.created_by) return JSON.stringify(existing);
+                } catch (e) { /* buat meta baru */ }
+            }
+            return JSON.stringify({ created_by: authGetUsername() || '-', created_at: new Date().toISOString() });
+        }
+
+        function authParseMeta(metaJson) {
+            if (!metaJson) return { created_by: '-', created_at: null };
+            try {
+                const parsed = JSON.parse(metaJson);
+                return { created_by: parsed.created_by || '-', created_at: parsed.created_at || null };
+            } catch (e) {
+                return { created_by: '-', created_at: null };
+            }
+        }
+
+        function authRenderUserBadge() {
+            const session = authGetSession();
+            if (!session) return;
+            let el = document.getElementById('authUserBadge');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'authUserBadge';
+                el.style.cssText = 'position:fixed;top:10px;right:16px;z-index:10000;background:#2d3748;color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
+                document.body.appendChild(el);
+            }
+            el.innerHTML = `👤 <b>${session.username}</b><button onclick="authLogout()" style="background:#e53e3e;color:#fff;border:none;padding:3px 10px;border-radius:12px;cursor:pointer;font-size:11px;">Logout</button>`;
+        }
+
+        // Tampilkan overlay login kalau belum ada session; kalau sudah,
+        // sembunyikan overlay dan lanjutkan load data seperti biasa.
+        function authRequireLogin(onSuccess) {
+            if (authIsLoggedIn()) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                authRenderUserBadge();
+                onSuccess();
+                return;
+            }
+            document.getElementById('loginOverlay').style.display = 'flex';
+        }
+
+        async function handleLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const rememberMe = document.getElementById('loginRememberMe').checked;
+            const errorEl = document.getElementById('loginError');
+            const btn = document.getElementById('loginBtn');
+
+            errorEl.style.display = 'none';
+            if (!username || !password) return;
+
+            btn.disabled = true;
+            btn.textContent = 'Memeriksa...';
+            try {
+                await authLogin(username, password, rememberMe);
+                document.getElementById('loginOverlay').style.display = 'none';
+                authRenderUserBadge();
+                refreshData();
+            } catch (e) {
+                errorEl.textContent = '❌ ' + e.message;
+                errorEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Masuk';
+            }
+        }
+
+        document.getElementById('loginPassword').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('📋 Lean Canvas Started');
+            console.log('📡 Table:', TABLE);
+            authRequireLogin(() => refreshData());
+        });
+
+        // ==================== API HELPERS ====================
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': TABLE,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        ...getHeaders(),
+                        ...(options.headers || {})
+                    }
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error || err.message || `HTTP ${response.status}`);
+                }
+                return await response.json();
+            } catch (e) {
+                console.error('❌ API Error:', e.message);
+                throw e;
+            }
+        }
+
+        // ==================== DATA CRUD ====================
+        async function fetchData() {
+            try {
+                const result = await apiFetch('');
+                if (result.success && result.data) {
+                    const parsed = result.data.map(row => parseRow(row));
+                    allData = authFilterByOwner(parsed, 'created_by');
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            const _meta = authParseMeta(row.x_05);
+            return {
+                id_x: row.id_x,
+                product_name: row.x_01 || '',
+                founder: row.x_02 || '',
+                description: row.x_03 || '',
+                blocks: safeParseJSON(row.x_04),
+                created_by: _meta.created_by,
+                created_at: _meta.created_at,
+                meta: row.x_05,
+                _raw: row
+            };
+        }
+
+        function safeParseJSON(str) {
+            if (!str) return [];
+            try {
+                const parsed = JSON.parse(str);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                if (key === 'meta') {
+                    row[col] = authBuildMeta(data.meta);
+                } else if (key === 'blocks') {
+                    const val = data[key] || [];
+                    row[col] = JSON.stringify(val);
+                } else {
+                    row[col] = data[key] || '';
+                }
+            }
+            return row;
+        }
+
+        async function createCanvas(data) {
+            const row = buildRow(data);
+            return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function updateCanvas(id, data) {
+            const row = buildRow(data);
+            return await apiFetch(`&id_x=${id}`, { method: 'PUT', body: JSON.stringify(row) });
+        }
+
+        async function deleteCanvasApi(id) {
+            return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== RENDER ====================
+        function renderList() {
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = allData.filter(item =>
+                item.product_name.toLowerCase().includes(search) ||
+                item.founder.toLowerCase().includes(search) ||
+                item.description.toLowerCase().includes(search)
+            );
+
+            const body = document.getElementById('listBody');
+            if (filtered.length === 0) {
+                body.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">${allData.length === 0 ? '📋' : '🔍'}</div>
+                        <h3>${allData.length === 0 ? 'Belum ada Lean Canvas' : 'Tidak ditemukan'}</h3>
+                        <p>${allData.length === 0 ? 'Klik "Canvas Baru" untuk membuat Lean Canvas untuk ide bisnis Anda!' : 'Coba dengan kata kunci lain'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            body.innerHTML = filtered.map(item => {
+                const totalBlocks = item.blocks.length;
+                const problemBlock = item.blocks.find(b => b.type === 'Problem');
+                const problemText = problemBlock ? problemBlock.content : '-';
+
+                const date = item._raw?.updated_at || item._raw?.created_at || '-';
+                const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID') : '-';
+
+                return `
+                    <div class="list-item" onclick="openDetail(${item.id_x})">
+                        <div class="id">#${item.id_x}</div>
+                        <div class="name">${escapeHtml(item.product_name) || '(tanpa nama)'}</div>
+                        <div class="problem">${escapeHtml(problemText)}</div>
+                        <div class="stats">
+                            <span class="block-count">${totalBlocks}/9 blocks</span>
+                        </div>
+                        <div class="date">${displayDate}</div>
+                        <div class="actions" onclick="event.stopPropagation();">
+                            <button class="btn btn-outline btn-xs" onclick="openDetail(${item.id_x})">👁️</button>
+                            <button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>
+                            <button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function refreshData() {
+            showToast('🔄 Memuat data...', 'info');
+            await fetchData();
+            renderList();
+            showToast(`✅ ${allData.length} Lean Canvas dimuat`, 'success');
+        }
+
+        // ==================== MODAL FORM ====================
+        function openAddModal() {
+            console.log('📋 Opening Add Modal');
+            currentEditId = null;
+            document.getElementById('editId').value = '';
+            document.getElementById('formModalTitle').textContent = '📋 Lean Canvas Baru';
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.getElementById('saveBtn').textContent = '💾 Simpan';
+
+            formData = {
+                product_name: '',
+                founder: '',
+                description: '',
+                blocks: []
+            };
+            document.getElementById('productName').value = '';
+            document.getElementById('founder').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('blockType').value = 'Problem';
+            document.getElementById('blockContent').value = '';
+            document.getElementById('blockPriority').value = 'medium';
+            document.getElementById('blockStatus').value = 'hypothesis';
+
+            renderBlocks();
+            document.getElementById('formModal').classList.add('active');
+            console.log('✅ Add Modal opened');
+        }
+
+        async function openEditModal(id) {
+            console.log('✏️ Opening Edit Modal for ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+
+            currentEditId = id;
+            document.getElementById('editId').value = id;
+            document.getElementById('formModalTitle').textContent = `✏️ Edit: ${item.product_name}`;
+            document.getElementById('deleteBtn').style.display = 'inline-flex';
+            document.getElementById('saveBtn').textContent = '💾 Update';
+
+            formData = {
+                meta: item.meta,
+                product_name: item.product_name || '',
+                founder: item.founder || '',
+                description: item.description || '',
+                blocks: [...(item.blocks || [])]
+            };
+
+            document.getElementById('productName').value = formData.product_name;
+            document.getElementById('founder').value = formData.founder;
+            document.getElementById('description').value = formData.description;
+            document.getElementById('blockType').value = 'Problem';
+            document.getElementById('blockContent').value = '';
+            document.getElementById('blockPriority').value = 'medium';
+            document.getElementById('blockStatus').value = 'hypothesis';
+
+            renderBlocks();
+            document.getElementById('formModal').classList.add('active');
+            console.log('✅ Edit Modal opened');
+        }
+
+        function closeModal(id) {
+            console.log('🔒 Closing modal:', id);
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // ==================== BLOCKS ====================
+        const BLOCK_ICONS = {
+            'Problem': '🔴',
+            'Solution': '💡',
+            'Key Metrics': '📊',
+            'Unique Value Prop': '🎯',
+            'Unfair Advantage': '⚡',
+            'Channels': '📢',
+            'Customer Segments': '👥',
+            'Cost Structure': '💰',
+            'Revenue Streams': '💵'
+        };
+
+        const BLOCK_COLORS = {
+            'Problem': '#e53e3e',
+            'Solution': '#48bb78',
+            'Key Metrics': '#4299e1',
+            'Unique Value Prop': '#9f7aea',
+            'Unfair Advantage': '#ed8936',
+            'Channels': '#38b2ac',
+            'Customer Segments': '#805ad5',
+            'Cost Structure': '#fc8181',
+            'Revenue Streams': '#48bb78'
+        };
+
+        function renderBlocks() {
+            const container = document.getElementById('blockList');
+            const count = document.getElementById('blockCount');
+            const blocks = formData.blocks || [];
+
+            count.textContent = `${blocks.length}/9 blocks`;
+
+            if (blocks.length === 0) {
+                container.innerHTML = `<div style="color:#a0aec0;font-size:13px;padding:8px 0;grid-column:span 3;text-align:center;">Belum ada block. Tambahkan 9 block Lean Canvas!</div>`;
+            } else {
+                container.innerHTML = blocks.map((block, idx) => {
+                    const icon = BLOCK_ICONS[block.type] || '📌';
+                    const color = BLOCK_COLORS[block.type] || '#4299e1';
+                    const priorityLabels = {
+                        'high': '🔴 Tinggi',
+                        'medium': '🟠 Sedang',
+                        'low': '🟢 Rendah'
+                    };
+                    const statusLabels = {
+                        'validated': '✅ Validated',
+                        'hypothesis': '🔬 Hypothesis',
+                        'invalidated': '❌ Invalidated'
+                    };
+                    return `
+                        <div class="lean-block" style="border-top-color: ${color}">
+                            <div class="block-header">
+                                <span class="block-name">${icon} ${block.type}</span>
+                                <div class="block-actions">
+                                    <button class="edit-block" onclick="editBlock(${idx})" title="Edit">✏️</button>
+                                    <button class="delete-block" onclick="removeBlock(${idx})" title="Hapus">✕</button>
+                                </div>
+                            </div>
+                            <div class="block-content">${escapeHtml(block.content || '<span class="empty-text">(kosong)</span>')}</div>
+                            <div class="block-meta">
+                                <span>Prioritas: ${priorityLabels[block.priority] || 'Sedang'}</span>
+                                <span>Status: ${statusLabels[block.status] || 'Hypothesis'}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function addBlock() {
+            const type = document.getElementById('blockType').value;
+            const content = document.getElementById('blockContent').value.trim();
+
+            if (!content) {
+                showToast('Masukkan konten block', 'error');
+                document.getElementById('blockContent').focus();
+                return;
+            }
+
+            // Check if block type already exists
+            if (formData.blocks && formData.blocks.some(b => b.type === type)) {
+                if (!confirm(`Block "${type}" sudah ada. Apakah Anda ingin menambahkan lagi?`)) {
+                    return;
+                }
+            }
+
+            const block = {
+                type: type,
+                content: content,
+                priority: document.getElementById('blockPriority').value,
+                status: document.getElementById('blockStatus').value
+            };
+
+            if (!formData.blocks) formData.blocks = [];
+            formData.blocks.push(block);
+
+            document.getElementById('blockType').value = 'Problem';
+            document.getElementById('blockContent').value = '';
+            document.getElementById('blockPriority').value = 'medium';
+            document.getElementById('blockStatus').value = 'hypothesis';
+
+            renderBlocks();
+            document.getElementById('blockContent').focus();
+            showToast(`✅ Block "${type}" ditambahkan`, 'success');
+        }
+
+        function removeBlock(idx) {
+            if (!confirm('Hapus block ini?')) return;
+            formData.blocks.splice(idx, 1);
+            renderBlocks();
+            showToast('🗑️ Block dihapus', 'info');
+        }
+
+        function editBlock(idx) {
+            const block = formData.blocks[idx];
+            const newType = prompt('Edit tipe block (Problem/Solution/Key Metrics/Unique Value Prop/Unfair Advantage/Channels/Customer Segments/Cost Structure/Revenue Streams):', block.type);
+            if (newType !== null && ['Problem', 'Solution', 'Key Metrics', 'Unique Value Prop', 'Unfair Advantage', 'Channels', 'Customer Segments', 'Cost Structure', 'Revenue Streams'].includes(newType)) {
+                block.type = newType;
+            }
+
+            const newContent = prompt('Edit konten:', block.content);
+            if (newContent !== null && newContent.trim() !== '') {
+                block.content = newContent.trim();
+            }
+
+            const newPriority = prompt('Edit prioritas (high/medium/low):', block.priority || 'medium');
+            if (newPriority !== null && ['high', 'medium', 'low'].includes(newPriority)) {
+                block.priority = newPriority;
+            }
+
+            const newStatus = prompt('Edit status (validated/hypothesis/invalidated):', block.status || 'hypothesis');
+            if (newStatus !== null && ['validated', 'hypothesis', 'invalidated'].includes(newStatus)) {
+                block.status = newStatus;
+            }
+
+            renderBlocks();
+            showToast('✏️ Block diupdate', 'info');
+        }
+
+        // ==================== SAVE ====================
+        async function saveCanvas() {
+            console.log('💾 Saving canvas...');
+            const name = document.getElementById('productName').value.trim();
+
+            if (!name) {
+                showToast('Nama Produk wajib diisi', 'error');
+                document.getElementById('productName').focus();
+                return;
+            }
+
+            const data = {
+                product_name: name,
+                founder: document.getElementById('founder').value.trim(),
+                description: document.getElementById('description').value.trim(),
+                blocks: formData.blocks || []
+            };
+
+            console.log('📦 Data to save:', data);
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Menyimpan...';
+
+            try {
+                if (currentEditId) {
+                    console.log('🔄 Updating canvas ID:', currentEditId);
+                    await updateCanvas(currentEditId, data);
+                    showToast('✅ Canvas berhasil diupdate!', 'success');
+                } else {
+                    console.log('➕ Creating new canvas');
+                    await createCanvas(data);
+                    showToast('✅ Canvas berhasil dibuat!', 'success');
+                }
+                await refreshData();
+                closeModal('formModal');
+                console.log('✅ Save complete');
+            } catch (e) {
+                console.error('❌ Save failed:', e);
+                showToast('❌ Gagal menyimpan: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = currentEditId ? '💾 Update' : '💾 Simpan';
+            }
+        }
+
+        // ==================== DELETE ====================
+        async function confirmDelete(id) {
+            console.log('🗑️ Confirm delete ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            if (!confirm(`Hapus canvas "${item.product_name}" (ID: ${id})?`)) return;
+
+            try {
+                await deleteCanvasApi(id);
+                showToast('✅ Canvas berhasil dihapus', 'success');
+                await refreshData();
+                console.log('✅ Deleted canvas ID:', id);
+            } catch (e) {
+                console.error('❌ Delete failed:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteCanvas() {
+            const id = parseInt(document.getElementById('editId').value);
+            console.log('🗑️ Delete canvas from modal, ID:', id);
+            if (!id) return;
+            if (!confirm('Hapus canvas ini secara permanen?')) return;
+
+            try {
+                await deleteCanvasApi(id);
+                showToast('✅ Canvas berhasil dihapus', 'success');
+                closeModal('formModal');
+                await refreshData();
+                console.log('✅ Deleted canvas ID:', id);
+            } catch (e) {
+                console.error('❌ Delete failed:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== DETAIL ====================
+
+        // ==================== AI PROMPT (per-baris) ====================
+        function aiPromptButtonHtml(onclickCall) {
+            return `<button class="ai-prompt-btn" onclick="${onclickCall}" title="Buat prompt AI untuk baris ini" style="background:#805ad5;color:#fff;border:none;width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:13px;line-height:1;margin-left:6px;flex-shrink:0;">🤖</button>`;
+        }
+
+        function showPromptPopup(promptText) {
+            let overlay = document.getElementById('aiPromptOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'aiPromptOverlay';
+                overlay.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:20px;';
+                overlay.innerHTML = `
+                    <div style="background:#fff;border-radius:12px;max-width:600px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                        <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+                            <h3 style="margin:0;font-size:16px;color:#2d3748;">🤖 Prompt untuk AI</h3>
+                            <button onclick="closePromptPopup()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#a0aec0;">✕</button>
+                        </div>
+                        <div style="padding:20px 24px;overflow-y:auto;">
+                            <p style="font-size:13px;color:#718096;margin:0 0 10px;">Salin prompt ini dan tempel ke AI (Claude/ChatGPT) untuk minta artikel lengkap berisi analisa, rekomendasi, dan langkah tindakan.</p>
+                            <textarea id="aiPromptTextArea" readonly style="width:100%;min-height:240px;padding:12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;line-height:1.5;resize:vertical;color:#2d3748;"></textarea>
+                        </div>
+                        <div style="padding:16px 24px;border-top:1px solid #e2e8f0;display:flex;gap:10px;justify-content:flex-end;">
+                            <button onclick="copyPromptText()" style="background:#4299e1;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;">📋 Copy Prompt</button>
+                            <button onclick="closePromptPopup()" style="background:#edf2f7;color:#4a5568;border:none;padding:10px 20px;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;">Tutup</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+                overlay.addEventListener('click', (e) => { if (e.target === overlay) closePromptPopup(); });
+            }
+            document.getElementById('aiPromptTextArea').value = promptText;
+            overlay.style.display = 'flex';
+        }
+
+        function closePromptPopup() {
+            const overlay = document.getElementById('aiPromptOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+
+        function copyPromptText() {
+            const ta = document.getElementById('aiPromptTextArea');
+            ta.select();
+            ta.setSelectionRange(0, 999999);
+            navigator.clipboard.writeText(ta.value).then(() => {
+                showToast('✅ Prompt berhasil disalin ke clipboard', 'success');
+            }).catch(() => {
+                document.execCommand('copy');
+                showToast('✅ Prompt berhasil disalin', 'success');
+            });
+        }
+
+        function promptLeanCanvasFull() {
+            const item = currentDetailItem;
+            const priorityLabels = { high: 'Tinggi', medium: 'Sedang', low: 'Rendah' };
+            const statusLabels = { validated: 'Validated', hypothesis: 'Hypothesis', invalidated: 'Invalidated' };
+            const blocksText = (item.blocks && item.blocks.length)
+                ? item.blocks.map((b, i) => `${i + 1}. ${b.type}\n   Isi: ${b.content || '-'}\n   Prioritas: ${priorityLabels[b.priority] || b.priority} | Status: ${statusLabels[b.status] || b.status}`).join('\n\n')
+                : '(belum ada block)';
+            const text = `Saya sedang menyusun Lean Canvas lengkap untuk produk "${item.product_name}".
+${item.description ? `Deskripsi: ${item.description}\n` : ''}
+Berikut seluruh block Lean Canvas saya:
+
+${blocksText}
+
+Berdasarkan keseluruhan data Lean Canvas di atas, tolong buatkan artikel analisis lengkap berisi:
+1. Ringkasan kesiapan model bisnis ini secara keseluruhan (block mana yang sudah kuat, mana yang masih hipotesis/belum tervalidasi)
+2. Keterkaitan antar block (misal problem vs solution, customer segment vs channels, revenue streams vs cost structure)
+3. Risiko terbesar yang perlu divalidasi lebih dulu
+4. Rekomendasi strategi untuk mempercepat validasi model bisnis ini
+5. Langkah-langkah tindakan konkret dengan prioritas`;
+            showPromptPopup(text);
+        }
+
+        function promptBlock(idx) {
+            const block = currentDetailItem.blocks[idx];
+            const priorityLabels = { high: 'Tinggi', medium: 'Sedang', low: 'Rendah' };
+            const statusLabels = { validated: 'Validated', hypothesis: 'Hypothesis', invalidated: 'Invalidated' };
+            const text = `Saya sedang menyusun Lean Canvas untuk produk "${currentDetailItem.product_name}".
+
+Berikut salah satu block dari Lean Canvas saya:
+- Block: ${block.type}
+- Isi: ${block.content || '-'}
+- Prioritas: ${priorityLabels[block.priority] || block.priority}
+- Status Validasi: ${statusLabels[block.status] || block.status}
+
+Berdasarkan data block ini, tolong buatkan artikel lengkap berisi:
+1. Analisis kekuatan dan risiko dari isi block ini
+2. Rekomendasi untuk memperkuat atau memvalidasi block ini
+3. Langkah-langkah tindakan konkret yang perlu dilakukan, terutama jika status masih hypothesis atau invalidated`;
+            showPromptPopup(text);
+        }
+
+
+        async function openDetail(id) {
+            console.log('👁️ Opening detail ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+
+            currentDetailId = id;
+            currentDetailItem = item;
+            document.getElementById('detailTitle').textContent = `📋 Detail: ${item.product_name}`;
+
+            // Calculate stats
+            const totalBlocks = item.blocks.length;
+            const validated = item.blocks.filter(b => b.status === 'validated').length;
+            const hypothesis = item.blocks.filter(b => b.status === 'hypothesis').length;
+            const invalidated = item.blocks.filter(b => b.status === 'invalidated').length;
+
+            document.getElementById('detailStats').innerHTML = `
+                <div class="stat-box"><span class="num">#${item.id_x}</span> <span class="lbl">ID</span></div>
+                <div class="stat-box"><span class="num">${totalBlocks}/9</span> <span class="lbl">📋 Blocks</span></div>
+                <div class="stat-box"><span class="num">✅ ${validated}</span> <span class="lbl">Validated</span></div>
+                <div class="stat-box"><span class="num">🔬 ${hypothesis}</span> <span class="lbl">Hypothesis</span></div>
+                <div class="stat-box"><span class="num">❌ ${invalidated}</span> <span class="lbl">Invalidated</span></div>
+                ${item.founder ? `<div class="stat-box"><span class="num">👤 ${escapeHtml(item.founder)}</span> <span class="lbl">Founder</span></div>` : ''}
+            `;
+
+            document.getElementById('detailDesc').textContent = item.description || 'Tidak ada deskripsi';
+
+            if (item.blocks.length === 0) {
+                document.getElementById('detailBlocks').innerHTML = `<span style="color:#a0aec0;font-size:13px;grid-column:span 3;text-align:center;">Belum ada block</span>`;
+            } else {
+                const priorityLabels = {
+                    'high': '🔴 Tinggi',
+                    'medium': '🟠 Sedang',
+                    'low': '🟢 Rendah'
+                };
+                const statusLabels = {
+                    'validated': '✅ Validated',
+                    'hypothesis': '🔬 Hypothesis',
+                    'invalidated': '❌ Invalidated'
+                };
+                document.getElementById('detailBlocks').innerHTML = item.blocks.map((block, idx) => {
+                    const icon = BLOCK_ICONS[block.type] || '📌';
+                    const color = BLOCK_COLORS[block.type] || '#4299e1';
+                    return `
+                        <div class="detail-lean-item" style="border-top-color: ${color}">
+                            <div class="block-title">${icon} ${block.type} ${aiPromptButtonHtml(`promptBlock(${idx})`)}</div>
+                            <div class="block-content">${escapeHtml(block.content || '-')}</div>
+                            <div style="font-size:11px;color:#718096;margin-top:4px;">
+                                ${priorityLabels[block.priority] || 'Sedang'} · ${statusLabels[block.status] || 'Hypothesis'}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('detailModal').classList.add('active');
+            console.log('✅ Detail modal opened');
+        }
+
+        function editFromDetail() {
+            console.log('✏️ Edit from detail, ID:', currentDetailId);
+            if (currentDetailId) {
+                closeModal('detailModal');
+                setTimeout(() => openEditModal(currentDetailId), 300);
+            }
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'info') {
+            console.log(`📢 Toast: [${type}] ${message}`);
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ==================== KEYBOARD ====================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => {
+                    m.classList.remove('active');
+                });
+            }
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        // ==================== DEBUG ====================
+        window.debug = {
+            allData: () => allData,
+            formData: () => formData,
+            refresh: refreshData,
+            openAdd: openAddModal,
+            TABLE: TABLE,
+            COLUMNS: COLUMNS,
+            BLOCK_ICONS: BLOCK_ICONS,
+            BLOCK_COLORS: BLOCK_COLORS
+        };
+
+        console.log('📋 Lean Canvas Loaded!');
+        console.log('📡 Table:', TABLE);
+        console.log('📊 Type "debug" in console for helpers');
+        console.log('🔧 Debug commands:');
+        console.log('  - debug.allData()  : Lihat semua data');
+        console.log('  - debug.formData() : Lihat form data');
+        console.log('  - debug.refresh()  : Refresh data');
+        console.log('  - debug.openAdd()  : Open add modal');
+        console.log('  - debug.BLOCK_ICONS : Lihat ikon block');
+        console.log('  - debug.BLOCK_COLORS : Lihat warna block');
+    </script>
+</body>
+</html>

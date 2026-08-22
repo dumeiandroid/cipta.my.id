@@ -7,6 +7,9 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <style>
+        /* ======================================== */
+        /* SEMUA STYLE SAMA SEPERTI SEBELUMNYA      */
+        /* ======================================== */
         * {
             margin: 0;
             padding: 0;
@@ -23,6 +26,151 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
+        }
+
+        /* LOGIN OVERLAY */
+        .login-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-overlay.active {
+            display: flex;
+        }
+
+        .login-box {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .login-box .login-icon {
+            font-size: 48px;
+            text-align: center;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .login-box h2 {
+            text-align: center;
+            font-size: 24px;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .login-box p {
+            text-align: center;
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .login-box .form-group {
+            margin-bottom: 14px;
+        }
+
+        .login-box .form-group label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #4a5568;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .login-box .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border 0.2s;
+        }
+
+        .login-box .form-group input:focus {
+            outline: none;
+            border-color: #e53e3e;
+        }
+
+        .login-box .form-remember {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .login-box .form-remember input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #e53e3e;
+        }
+
+        .login-box .form-remember label {
+            font-size: 13px;
+            color: #4a5568;
+            cursor: pointer;
+        }
+
+        .login-box .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: #e53e3e;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .login-box .btn-login:hover {
+            background: #c53030;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(229,62,62,0.3);
+        }
+
+        .login-box .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-box .login-error {
+            color: #fc8181;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .login-box .login-error.show {
+            display: block;
+        }
+
+        .login-box .login-loading {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .login-box .login-loading.show {
+            display: block;
         }
 
         .header {
@@ -59,6 +207,50 @@
             gap: 12px;
             flex-wrap: wrap;
             align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #4a5568;
+            background: #f7fafc;
+            padding: 4px 14px;
+            border-radius: 20px;
+        }
+
+        .user-info .user-role {
+            font-weight: 600;
+            padding: 1px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+        }
+
+        .user-info .user-role.admin {
+            background: #c6f6d5;
+            color: #276749;
+        }
+
+        .user-info .user-role.user {
+            background: #bee3f8;
+            color: #2a69ac;
+        }
+
+        .btn-logout {
+            padding: 4px 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            background: #fc8181;
+            color: white;
+            transition: 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: #f56565;
         }
 
         .search-box {
@@ -354,11 +546,31 @@
             max-height: 250px;
             overflow-y: auto;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: relative;
         }
 
         .prompt-preview .placeholder {
             color: #a0aec0;
             font-style: italic;
+        }
+
+        .prompt-preview .copy-prompt-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(229,62,62,0.9);
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
+        }
+
+        .prompt-preview .copy-prompt-btn:hover {
+            background: #c53030;
         }
 
         .quill-wrapper {
@@ -389,6 +601,49 @@
             gap: 10px;
             flex-wrap: wrap;
             margin-top: 8px;
+        }
+
+        .history-sub-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #edf2f7;
+            padding-bottom: 12px;
+        }
+
+        .history-sub-tab {
+            padding: 6px 16px;
+            border: none;
+            background: #f7fafc;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-sub-tab:hover {
+            background: #edf2f7;
+        }
+
+        .history-sub-tab.active {
+            background: #e53e3e;
+            color: white;
+        }
+
+        .history-sub-tab .sub-badge {
+            background: rgba(255,255,255,0.3);
+            color: white;
+            font-size: 10px;
+            padding: 1px 8px;
+            border-radius: 10px;
+            margin-left: 4px;
+        }
+
+        .history-sub-tab:not(.active) .sub-badge {
+            background: #edf2f7;
+            color: #4a5568;
         }
 
         .history-filters {
@@ -747,6 +1002,35 @@
             overflow-y: auto;
             white-space: pre-wrap;
             border-left: 3px solid #e53e3e;
+            position: relative;
+        }
+
+        .add-ai-modal .prompt-display .copy-prompt-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(229,62,62,0.9);
+            color: white;
+            border: none;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
+        }
+
+        .add-ai-modal .prompt-display .copy-prompt-btn:hover {
+            background: #c53030;
+        }
+
+        /* Hide main content when not logged in */
+        .main-content {
+            display: none;
+        }
+
+        .main-content.visible {
+            display: block;
         }
 
         @media (max-width: 992px) {
@@ -819,6 +1103,9 @@
             .form-row-3 {
                 grid-template-columns: 1fr;
             }
+            .login-box {
+                padding: 24px 20px;
+            }
         }
 
         .modal::-webkit-scrollbar {
@@ -840,125 +1127,178 @@
 </head>
 <body>
 
-    <div class="container" id="app">
-        <!-- HEADER -->
-        <div class="header">
-            <h1>
-                ⚖️ AI Contract Generator
-                <span>v1.0</span>
-            </h1>
-            <div class="header-actions">
-                <div class="search-box">
-                    <span class="icon">🔍</span>
-                    <input type="text" id="searchInput" placeholder="Cari kontrak..." oninput="renderTools()">
+    <!-- ======================================== -->
+    <!-- LOGIN OVERLAY -->
+    <!-- ======================================== -->
+    <div class="login-overlay active" id="loginOverlay">
+        <div class="login-box">
+            <span class="login-icon">🔐</span>
+            <h2>Login</h2>
+            <p>Masuk untuk mengakses AI Contract Generator</p>
+
+            <div class="form-group">
+                <label>👤 Username</label>
+                <input type="text" id="loginUsername" placeholder="Masukkan username" value="">
+            </div>
+
+            <div class="form-group">
+                <label>🔑 Password</label>
+                <input type="password" id="loginPassword" placeholder="Masukkan password" value="" onkeydown="if(event.key==='Enter') doLogin()">
+            </div>
+
+            <div class="form-remember">
+                <input type="checkbox" id="loginRemember" checked>
+                <label for="loginRemember">Ingat saya</label>
+            </div>
+
+            <button class="btn-login" id="loginBtn" onclick="doLogin()">Login</button>
+
+            <div class="login-error" id="loginError">❌ Username atau password salah!</div>
+            <div class="login-loading" id="loginLoading">⏳ Memeriksa...</div>
+        </div>
+    </div>
+
+    <!-- ======================================== -->
+    <!-- MAIN CONTENT -->
+    <!-- ======================================== -->
+    <div class="main-content" id="mainContent">
+
+        <div class="container" id="app">
+            <!-- HEADER -->
+            <div class="header">
+                <h1>
+                    ⚖️ AI Contract Generator
+                    <span>v1.0</span>
+                </h1>
+                <div class="header-actions">
+                    <span class="user-info" id="userInfo">
+                        👤 <span id="currentUser">-</span>
+                        <span class="user-role" id="userRole">user</span>
+                    </span>
+                    <button class="btn-logout" onclick="doLogout()">🚪 Logout</button>
+                    <div class="search-box">
+                        <span class="icon">🔍</span>
+                        <input type="text" id="searchInput" placeholder="Cari kontrak..." oninput="renderTools()">
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
                 </div>
-                <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+            </div>
+
+            <!-- MAIN TABS -->
+            <div class="main-tabs-container">
+                <div class="main-tabs-header">
+                    <button class="main-tab-btn active" data-tab="tab1" onclick="switchMainTab('tab1')">
+                        📚 Jenis Kontrak
+                        <span class="badge-main" id="tab1Badge">7</span>
+                    </button>
+                    <button class="main-tab-btn" data-tab="tab2" onclick="switchMainTab('tab2')">
+                        ✏️ AI Prompt Studio
+                        <span class="badge-main">New</span>
+                    </button>
+                    <button class="main-tab-btn" data-tab="tab3" onclick="switchMainTab('tab3')">
+                        📋 History
+                        <span class="badge-main" id="tab3Badge">0</span>
+                    </button>
+                </div>
+
+                <!-- TAB 1: JENIS KONTRAK -->
+                <div class="main-tab-content active" id="tab1">
+                    <div class="tools-grid" id="toolsGrid"></div>
+                </div>
+
+                <!-- TAB 2: AI PROMPT STUDIO -->
+                <div class="main-tab-content" id="tab2">
+                    <div class="studio-grid">
+                        <div class="studio-left">
+                            <div class="form-group">
+                                <label>📂 Pilih Jenis Kontrak</label>
+                                <select id="selectedTool" onchange="updateFormFields()"></select>
+                            </div>
+
+                            <div id="dynamicFields"></div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>📌 Judul Kontrak</label>
+                                    <input type="text" id="resultTitle" placeholder="Judul kontrak...">
+                                </div>
+                                <div class="form-group">
+                                    <label>👤 Dibuat Oleh</label>
+                                    <input type="text" id="createdBy" placeholder="Nama..." value="">
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary" onclick="generatePrompt()">📝 Generate Prompt</button>
+                        </div>
+
+                        <div class="studio-right">
+                            <div class="form-group">
+                                <label>📄 Prompt yang Dihasilkan</label>
+                                <div class="prompt-preview" id="promptPreview">
+                                    <span class="placeholder">Pilih jenis kontrak dan isi form untuk menghasilkan prompt...</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>🤖 Pilih AI Source</label>
+                                <div class="ai-source-select">
+                                    <select id="aiSource">
+                                        <option value="ChatGPT">ChatGPT</option>
+                                        <option value="Claude">Claude</option>
+                                        <option value="Gemini">Gemini</option>
+                                        <option value="DeepSeek">DeepSeek</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>📝 Hasil AI (Paste di sini)</label>
+                                <div class="quill-wrapper">
+                                    <div id="resultEditor"></div>
+                                </div>
+                            </div>
+
+                            <div class="result-actions">
+                                <button class="btn btn-success" onclick="saveResult()">💾 Simpan Hasil</button>
+                                <button class="btn btn-warning" onclick="clearForm()">🗑️ Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: HISTORY -->
+                <div class="main-tab-content" id="tab3">
+                    <div class="history-sub-tabs" id="historySubTabs">
+                        <button class="history-sub-tab active" data-subtab="all" onclick="switchHistorySubTab('all')">
+                            📋 All
+                            <span class="sub-badge" id="subAll">0</span>
+                        </button>
+                        <button class="history-sub-tab" data-subtab="today" onclick="switchHistorySubTab('today')">
+                            📅 Hari Ini
+                            <span class="sub-badge" id="subToday">0</span>
+                        </button>
+                    </div>
+
+                    <div class="history-filters">
+                        <select id="historyFilterTool" onchange="renderHistory()">
+                            <option value="all">📋 All Types</option>
+                        </select>
+                        <input type="text" id="historySearch" placeholder="🔍 Cari..." oninput="renderHistory()">
+                        <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑️ Hapus Semua</button>
+                        <span style="font-size:13px;color:#718096;" id="historyCount">0 items</span>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <div class="empty-state">
+                            <div class="icon">⚖️</div>
+                            <h3>Belum ada kontrak</h3>
+                            <p>Pergi ke Tab "AI Prompt Studio" untuk mulai membuat kontrak</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- MAIN TABS -->
-        <div class="main-tabs-container">
-            <div class="main-tabs-header">
-                <button class="main-tab-btn active" data-tab="tab1" onclick="switchMainTab('tab1')">
-                    📚 Jenis Kontrak
-                    <span class="badge-main" id="tab1Badge">6</span>
-                </button>
-                <button class="main-tab-btn" data-tab="tab2" onclick="switchMainTab('tab2')">
-                    ✏️ AI Prompt Studio
-                    <span class="badge-main">New</span>
-                </button>
-                <button class="main-tab-btn" data-tab="tab3" onclick="switchMainTab('tab3')">
-                    📋 History
-                    <span class="badge-main" id="tab3Badge">0</span>
-                </button>
-            </div>
-
-            <!-- TAB 1: JENIS KONTRAK -->
-            <div class="main-tab-content active" id="tab1">
-                <div class="tools-grid" id="toolsGrid"></div>
-            </div>
-
-            <!-- TAB 2: AI PROMPT STUDIO -->
-            <div class="main-tab-content" id="tab2">
-                <div class="studio-grid">
-                    <div class="studio-left">
-                        <div class="form-group">
-                            <label>📂 Pilih Jenis Kontrak</label>
-                            <select id="selectedTool" onchange="updateFormFields()"></select>
-                        </div>
-
-                        <div id="dynamicFields"></div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>📌 Judul Kontrak</label>
-                                <input type="text" id="resultTitle" placeholder="Judul kontrak...">
-                            </div>
-                            <div class="form-group">
-                                <label>👤 Dibuat Oleh</label>
-                                <input type="text" id="createdBy" placeholder="Nama...">
-                            </div>
-                        </div>
-
-                        <button class="btn btn-primary" onclick="generatePrompt()">📝 Generate Prompt</button>
-                    </div>
-
-                    <div class="studio-right">
-                        <div class="form-group">
-                            <label>📄 Prompt yang Dihasilkan</label>
-                            <div class="prompt-preview" id="promptPreview">
-                                <span class="placeholder">Pilih jenis kontrak dan isi form untuk menghasilkan prompt...</span>
-                            </div>
-                            <button class="btn btn-outline btn-sm" onclick="copyPrompt()" style="margin-top:6px;">📋 Copy Prompt</button>
-                        </div>
-
-                        <div class="form-group">
-                            <label>🤖 Pilih AI Source</label>
-                            <div class="ai-source-select">
-                                <select id="aiSource">
-                                    <option value="ChatGPT">ChatGPT</option>
-                                    <option value="Claude">Claude</option>
-                                    <option value="Gemini">Gemini</option>
-                                    <option value="DeepSeek">DeepSeek</option>
-                                    <option value="Lainnya">Lainnya</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>📝 Hasil AI (Paste di sini)</label>
-                            <div class="quill-wrapper">
-                                <div id="resultEditor"></div>
-                            </div>
-                        </div>
-
-                        <div class="result-actions">
-                            <button class="btn btn-success" onclick="saveResult()">💾 Simpan Hasil</button>
-                            <button class="btn btn-warning" onclick="clearForm()">🗑️ Clear</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 3: HISTORY -->
-            <div class="main-tab-content" id="tab3">
-                <div class="history-filters">
-                    <select id="historyFilterTool" onchange="renderHistory()">
-                        <option value="all">📋 All Types</option>
-                    </select>
-                    <input type="text" id="historySearch" placeholder="🔍 Cari..." oninput="renderHistory()">
-                    <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑️ Hapus Semua</button>
-                    <span style="font-size:13px;color:#718096;" id="historyCount">0 items</span>
-                </div>
-                <div class="history-list" id="historyList">
-                    <div class="empty-state">
-                        <div class="icon">⚖️</div>
-                        <h3>Belum ada kontrak</h3>
-                        <p>Pergi ke Tab "AI Prompt Studio" untuk mulai membuat kontrak</p>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- MODAL INFO -->
@@ -989,6 +1329,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-primary" onclick="copyViewResult()">📋 Copy</button>
+                <button class="btn btn-success" onclick="downloadViewDoc()">📥 Download .doc</button>
                 <button class="btn btn-outline" onclick="closeModal('viewModal')">Tutup</button>
             </div>
         </div>
@@ -1042,10 +1383,15 @@
             <div class="modal-title" id="duplicateModalTitle">📋 Duplikat Prompt</div>
             <div class="modal-body">
                 <input type="hidden" id="dupId">
+                <input type="hidden" id="dupFrameworkType">
 
-                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📝 Edit Prompt (buat variasi baru):</div>
                 <div class="form-group">
-                    <textarea id="dupPromptEditor" rows="6" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;resize:vertical;"></textarea>
+                    <label>📂 Jenis Kontrak</label>
+                    <input type="text" id="dupFrameworkDisplay" disabled style="background:#f7fafc;font-weight:600;">
+                </div>
+
+                <div id="dupDynamicFields">
+                    <!-- Dynamic fields from JavaScript -->
                 </div>
 
                 <div class="form-row">
@@ -1058,10 +1404,18 @@
                         <input type="text" id="dupCreatedBy" placeholder="Nama...">
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label>📄 Prompt yang Dihasilkan</label>
+                    <div class="prompt-preview" id="dupPromptPreview" style="min-height:100px;max-height:200px;">
+                        <span class="placeholder">Generate prompt dari form di atas...</span>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('duplicateModal')">Batal</button>
-                <button class="btn btn-primary" onclick="saveDuplicate()">📝 Generate & Simpan</button>
+                <button class="btn btn-primary" onclick="generateDuplicatePrompt()">📝 Generate Prompt</button>
+                <button class="btn btn-success" onclick="saveDuplicate()">💾 Simpan</button>
             </div>
         </div>
     </div>
@@ -1178,34 +1532,35 @@
                 ],
                 prompt_template: `Buat kontrak freelance antara {company_name} dan {freelancer_name}. Ruang lingkup proyek: {project_scope}. Fee: {fee}. Deadline: {deadline}. Deliverables: {deliverables}. Alamat perusahaan: {company_address}. Alamat freelancer: {freelancer_address}.\n\nFORMAT OUTPUT:\n\n=== SURAT PENGANTAR ===\n\n[KOP SURAT]\n{company_name}\n{company_address}\n\nPerihal: Penawaran Kerja Freelance\nLampiran: 1 (Kontrak Freelance)\nTanggal: {letter_date}\n\nKepada Yth.\n{freelancer_name}\n{freelancer_address}\n\nDengan hormat,\n\nKami dari {company_name} menawarkan kerjasama freelance kepada Bapak/Ibu untuk proyek {project_scope}. Bersama surat ini kami lampirkan kontrak freelance yang mengatur hak dan kewajiban selama pengerjaan.\n\nDemikian surat pengantar ini kami sampaikan.\n\nHormat kami,\n\n{created_by}\nDirektur {company_name}\n\n=== ISI KONTRAK ===\n\nKONTRAK FREELANCE\n\nPasal 1: Pihak-pihak\nPasal 2: Ruang Lingkup Pekerjaan\nPasal 3: Deliverables\nPasal 4: Deadline\nPasal 5: Fee dan Pembayaran\nPasal 6: Hak Kekayaan Intelektual\nPasal 7: Kerahasiaan\nPasal 8: Pemutusan Kontrak\nPasal 9: Lain-lain\n\nFormat dengan markdown yang rapi dan profesional.`
             },
-            // Tambahkan ke CONTRACT_TYPES
-ojt: {
-    id: 'ojt',
-    icon: '🎓',
-    name: 'Kontrak OJT',
-    desc: 'Perjanjian On the Job Training untuk program magang atau pelatihan kerja.',
-    color: '#d69e2e',
-    fields: [
-        { key: 'company_name', label: 'Nama Perusahaan', type: 'text', placeholder: 'PT. Lidan Psikologi' },
-        { key: 'company_address', label: 'Alamat Perusahaan', type: 'text', placeholder: 'Jl. Merdeka No. 123, Jakarta' },
-        { key: 'trainee_name', label: 'Nama Peserta OJT', type: 'text', placeholder: 'Ahmad Fauzi' },
-        { key: 'trainee_address', label: 'Alamat Peserta', type: 'text', placeholder: 'Jl. Kenanga No. 45, Jakarta' },
-        { key: 'trainee_school', label: 'Asal Institusi', type: 'text', placeholder: 'Universitas Indonesia' },
-        { key: 'start_date', label: 'Tanggal Mulai', type: 'date' },
-        { key: 'end_date', label: 'Tanggal Selesai', type: 'date' },
-        { key: 'department', label: 'Departemen Penempatan', type: 'text', placeholder: 'HRD / Psikologi' },
-        { key: 'supervisor', label: 'Nama Supervisor', type: 'text', placeholder: 'Budi Santoso' },
-        { key: 'objectives', label: 'Tujuan Pelatihan', type: 'textarea', placeholder: 'Tujuan yang ingin dicapai selama OJT...' },
-        { key: 'allowance', label: 'Uang Saku / Insentif', type: 'text', placeholder: 'Rp 2.000.000/bulan' }
-    ],
-    prompt_template: `Buat kontrak On the Job Training (OJT) antara {company_name} dan {trainee_name} dari {trainee_school}. Program OJT akan berlangsung dari {start_date} sampai {end_date} di departemen {department} dengan supervisor {supervisor}. Tujuan pelatihan: {objectives}. Uang saku: {allowance}. Alamat perusahaan: {company_address}. Alamat peserta: {trainee_address}.\n\nFORMAT OUTPUT:\n\n=== SURAT PENGANTAR ===\n\n[KOP SURAT]\n{company_name}\n{company_address}\n\nPerihal: Penerimaan Peserta On the Job Training (OJT)\nLampiran: 1 (Kontrak OJT)\nTanggal: {letter_date}\n\nKepada Yth.\n{trainee_name}\n{trainee_address}\n\nDengan hormat,\n\nSehubungan dengan program kerjasama antara {company_name} dan {trainee_school}, dengan ini kami menerima Bapak/Ibu untuk mengikuti program On the Job Training (OJT) di perusahaan kami. Bersama surat ini kami lampirkan kontrak OJT yang mengatur hak dan kewajiban selama masa pelatihan.\n\nDemikian surat pengantar ini kami sampaikan. Kami berharap program ini dapat memberikan manfaat bagi kedua belah pihak.\n\nHormat kami,\n\n{created_by}\nHRD {company_name}\n\n=== ISI KONTRAK ===\n\nKONTRAK ON THE JOB TRAINING (OJT)\n\nPasal 1: Pihak-pihak\nPasal 2: Masa Pelatihan\nPasal 3: Tempat Pelatihan\nPasal 4: Tujuan Pelatihan\nPasal 5: Hak Peserta OJT\nPasal 6: Kewajiban Peserta OJT\nPasal 7: Hak Perusahaan\nPasal 8: Kewajiban Perusahaan\nPasal 9: Pembimbing/Supervisor\nPasal 10: Uang Saku dan Fasilitas\nPasal 11: Jam Kerja\nPasal 12: Kerahasiaan\nPasal 13: Sertifikat\nPasal 14: Pemutusan Kontrak\nPasal 15: Lain-lain\n\nFormat dengan markdown yang rapi dan profesional.`
-}
+            ojt: {
+                id: 'ojt',
+                icon: '🎓',
+                name: 'Kontrak OJT',
+                desc: 'Perjanjian On the Job Training untuk program magang atau pelatihan kerja.',
+                color: '#d69e2e',
+                fields: [
+                    { key: 'company_name', label: 'Nama Perusahaan', type: 'text', placeholder: 'PT. Lidan Psikologi' },
+                    { key: 'company_address', label: 'Alamat Perusahaan', type: 'text', placeholder: 'Jl. Merdeka No. 123, Jakarta' },
+                    { key: 'trainee_name', label: 'Nama Peserta OJT', type: 'text', placeholder: 'Ahmad Fauzi' },
+                    { key: 'trainee_address', label: 'Alamat Peserta', type: 'text', placeholder: 'Jl. Kenanga No. 45, Jakarta' },
+                    { key: 'trainee_school', label: 'Asal Institusi', type: 'text', placeholder: 'Universitas Indonesia' },
+                    { key: 'start_date', label: 'Tanggal Mulai', type: 'date' },
+                    { key: 'end_date', label: 'Tanggal Selesai', type: 'date' },
+                    { key: 'department', label: 'Departemen Penempatan', type: 'text', placeholder: 'HRD / Psikologi' },
+                    { key: 'supervisor', label: 'Nama Supervisor', type: 'text', placeholder: 'Budi Santoso' },
+                    { key: 'objectives', label: 'Tujuan Pelatihan', type: 'textarea', placeholder: 'Tujuan yang ingin dicapai selama OJT...' },
+                    { key: 'allowance', label: 'Uang Saku / Insentif', type: 'text', placeholder: 'Rp 2.000.000/bulan' }
+                ],
+                prompt_template: `Buat kontrak On the Job Training (OJT) antara {company_name} dan {trainee_name} dari {trainee_school}. Program OJT akan berlangsung dari {start_date} sampai {end_date} di departemen {department} dengan supervisor {supervisor}. Tujuan pelatihan: {objectives}. Uang saku: {allowance}. Alamat perusahaan: {company_address}. Alamat peserta: {trainee_address}.\n\nFORMAT OUTPUT:\n\n=== SURAT PENGANTAR ===\n\n[KOP SURAT]\n{company_name}\n{company_address}\n\nPerihal: Penerimaan Peserta On the Job Training (OJT)\nLampiran: 1 (Kontrak OJT)\nTanggal: {letter_date}\n\nKepada Yth.\n{trainee_name}\n{trainee_address}\n\nDengan hormat,\n\nSehubungan dengan program kerjasama antara {company_name} dan {trainee_school}, dengan ini kami menerima Bapak/Ibu untuk mengikuti program On the Job Training (OJT) di perusahaan kami. Bersama surat ini kami lampirkan kontrak OJT yang mengatur hak dan kewajiban selama masa pelatihan.\n\nDemikian surat pengantar ini kami sampaikan. Kami berharap program ini dapat memberikan manfaat bagi kedua belah pihak.\n\nHormat kami,\n\n{created_by}\nHRD {company_name}\n\n=== ISI KONTRAK ===\n\nKONTRAK ON THE JOB TRAINING (OJT)\n\nPasal 1: Pihak-pihak\nPasal 2: Masa Pelatihan\nPasal 3: Tempat Pelatihan\nPasal 4: Tujuan Pelatihan\nPasal 5: Hak Peserta OJT\nPasal 6: Kewajiban Peserta OJT\nPasal 7: Hak Perusahaan\nPasal 8: Kewajiban Perusahaan\nPasal 9: Pembimbing/Supervisor\nPasal 10: Uang Saku dan Fasilitas\nPasal 11: Jam Kerja\nPasal 12: Kerahasiaan\nPasal 13: Sertifikat\nPasal 14: Pemutusan Kontrak\nPasal 15: Lain-lain\n\nFormat dengan markdown yang rapi dan profesional.`
+            }
         };
 
         // ==================== CONFIG ====================
         const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
         const TABLE = 'ai_contract_generator';
+        const USERS_TABLE = 'users';
         const SECRET = 'admin';
+        const STORAGE_KEY = 'ai_tools_user';
 
         const CONTRACT_KEYS = Object.keys(CONTRACT_TYPES);
 
@@ -1215,6 +1570,9 @@ ojt: {
         let addAiEditor = null;
         let viewData = null;
         let currentPrompt = '';
+        let currentHistorySubTab = 'all';
+        let currentUser = null;
+        let isAdmin = false;
 
         const COLUMNS = {
             contract_type: 'x_01',
@@ -1225,13 +1583,163 @@ ojt: {
             result: 'x_06',
             created_by: 'x_07',
             status: 'x_08',
-            notes: 'x_09'
+            notes: 'x_09',
+            created_date: 'x_10'
         };
+
+        // ==================== LOGIN FUNCTIONS ====================
+        function getStoredUser() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    if (parsed.username && parsed.timestamp) {
+                        const days = (Date.now() - parsed.timestamp) / (1000 * 60 * 60 * 24);
+                        if (days < 7) {
+                            return parsed.username;
+                        }
+                    }
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function saveUserToStorage(username, remember) {
+            const data = JSON.stringify({ username: username, timestamp: Date.now() });
+            if (remember) {
+                localStorage.setItem(STORAGE_KEY, data);
+            } else {
+                sessionStorage.setItem(STORAGE_KEY, data);
+            }
+        }
+
+        function clearUserStorage() {
+            localStorage.removeItem(STORAGE_KEY);
+            sessionStorage.removeItem(STORAGE_KEY);
+        }
+
+        function checkAutoLogin() {
+            const username = getStoredUser();
+            if (username) {
+                currentUser = username;
+                isAdmin = (username === 'admin');
+                showMainContent();
+                return true;
+            }
+            return false;
+        }
+
+        function showLogin() {
+            document.getElementById('loginOverlay').classList.add('active');
+            document.getElementById('mainContent').classList.remove('visible');
+        }
+
+        function showMainContent() {
+            document.getElementById('loginOverlay').classList.remove('active');
+            document.getElementById('mainContent').classList.add('visible');
+            document.getElementById('currentUser').textContent = currentUser;
+            const roleBadge = document.getElementById('userRole');
+            if (isAdmin) {
+                roleBadge.textContent = '👑 Admin';
+                roleBadge.className = 'user-role admin';
+            } else {
+                roleBadge.textContent = '👤 User';
+                roleBadge.className = 'user-role user';
+            }
+            document.getElementById('createdBy').value = currentUser;
+            refreshData();
+        }
+
+        async function doLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const remember = document.getElementById('loginRemember').checked;
+
+            if (!username || !password) {
+                showLoginError('Username dan password wajib diisi!');
+                return;
+            }
+
+            const btn = document.getElementById('loginBtn');
+            const errorEl = document.getElementById('loginError');
+            const loadingEl = document.getElementById('loginLoading');
+
+            btn.disabled = true;
+            loadingEl.classList.add('show');
+            errorEl.classList.remove('show');
+
+            try {
+                const response = await fetch(`${API_URL}?table=${USERS_TABLE}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Custom-Auth': SECRET,
+                        'X-Table-Name': USERS_TABLE,
+                        'X-Role': 'admin'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    const user = result.data.find(u =>
+                        u.x_01 === username && u.x_02 === password
+                    );
+
+                    if (user) {
+                        currentUser = username;
+                        isAdmin = (username === 'admin');
+                        saveUserToStorage(username, remember);
+                        showMainContent();
+                        showToast('✅ Login berhasil! Selamat datang, ' + username, 'success');
+                    } else {
+                        showLoginError('❌ Username atau password salah!');
+                    }
+                } else {
+                    showLoginError('❌ Gagal mengambil data user');
+                }
+            } catch (e) {
+                console.error('Login error:', e);
+                showLoginError('❌ Gagal login: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                loadingEl.classList.remove('show');
+            }
+        }
+
+        function showLoginError(message) {
+            const errorEl = document.getElementById('loginError');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+        }
+
+        function doLogout() {
+            if (!confirm('Yakin ingin logout?')) return;
+            clearUserStorage();
+            currentUser = null;
+            isAdmin = false;
+            showLogin();
+            showToast('👋 Logout berhasil', 'info');
+        }
 
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', () => {
             console.log('⚖️ AI Contract Generator Started');
             console.log('📡 Table:', TABLE);
+
+            if (!checkAutoLogin()) {
+                showLogin();
+            }
+
+            document.getElementById('loginPassword').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') doLogin();
+            });
+            document.getElementById('loginUsername').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') document.getElementById('loginPassword').focus();
+            });
 
             quillEditor = new Quill('#resultEditor', {
                 theme: 'snow',
@@ -1266,7 +1774,10 @@ ojt: {
             renderTools();
             populateToolSelect();
             updateFormFields();
-            refreshData();
+
+            if (currentUser) {
+                document.getElementById('createdBy').value = currentUser;
+            }
         });
 
         // ==================== API HELPERS ====================
@@ -1305,7 +1816,11 @@ ojt: {
             try {
                 const result = await apiFetch('');
                 if (result.success && result.data) {
-                    allData = result.data.map(row => parseRow(row));
+                    let data = result.data.map(row => parseRow(row));
+                    if (!isAdmin && currentUser) {
+                        data = data.filter(d => d.created_by === currentUser);
+                    }
+                    allData = data;
                     return allData;
                 }
                 allData = [];
@@ -1329,6 +1844,7 @@ ojt: {
                 created_by: row.x_07 || '',
                 status: row.x_08 || 'published',
                 notes: row.x_09 || '',
+                created_date: row.x_10 || '',
                 _raw: row
             };
         }
@@ -1482,7 +1998,6 @@ ojt: {
             const values = getCurrentFieldValues();
             const createdBy = document.getElementById('createdBy').value.trim() || 'User';
 
-            // Cek field wajib terisi
             let allFilled = true;
             type.fields.forEach(field => {
                 if (!values[field.key] || !values[field.key].trim()) {
@@ -1495,7 +2010,6 @@ ojt: {
                 return;
             }
 
-            // Generate prompt dari template
             let prompt = type.prompt_template;
             type.fields.forEach(field => {
                 const placeholder = `{${field.key}}`;
@@ -1506,11 +2020,11 @@ ojt: {
 
             currentPrompt = prompt;
             document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+            addCopyButtonToPrompt('promptPreview');
 
-            // Auto fill title
             const titleInput = document.getElementById('resultTitle');
             if (!titleInput.value) {
-                const firstField = type.fields.find(f => f.key === 'employee_name' || f.key === 'partner_name' || f.key === 'vendor_name' || f.key === 'freelancer_name');
+                const firstField = type.fields.find(f => f.key === 'employee_name' || f.key === 'partner_name' || f.key === 'vendor_name' || f.key === 'freelancer_name' || f.key === 'trainee_name');
                 if (firstField) {
                     titleInput.value = `${type.name} - ${values[firstField.key] || ''}`;
                 }
@@ -1519,33 +2033,45 @@ ojt: {
             showToast('✅ Prompt berhasil digenerate! Copy ke AI eksternal.', 'success');
         }
 
-        // ==================== COPY PROMPT ====================
-        function copyPrompt() {
-            const prompt = document.getElementById('promptPreview').textContent;
-            if (!prompt || prompt.includes('Pilih jenis')) {
-                showToast('❌ Tidak ada prompt untuk dicopy', 'error');
-                return;
-            }
+        function addCopyButtonToPrompt(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
 
-            navigator.clipboard.writeText(prompt).then(() => {
-                showToast('✅ Prompt berhasil disalin! Paste ke AI eksternal.', 'success');
-            }).catch(() => {
-                const textarea = document.createElement('textarea');
-                textarea.value = prompt;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                showToast('✅ Prompt berhasil disalin!', 'success');
-            });
+            const existing = container.querySelector('.copy-prompt-btn');
+            if (existing) existing.remove();
+
+            const btn = document.createElement('button');
+            btn.className = 'copy-prompt-btn';
+            btn.textContent = '📋 Copy';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const text = container.textContent.replace('📋 Copy', '').trim();
+                if (!text || text.includes('Pilih jenis')) {
+                    showToast('❌ Tidak ada prompt untuk dicopy', 'error');
+                    return;
+                }
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('✅ Prompt berhasil disalin!', 'success');
+                }).catch(() => {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    showToast('✅ Prompt berhasil disalin!', 'success');
+                });
+            };
+            container.style.position = 'relative';
+            container.appendChild(btn);
         }
 
         // ==================== SAVE RESULT ====================
         async function saveResult() {
             const toolKey = document.getElementById('selectedTool').value;
             const title = document.getElementById('resultTitle').value.trim();
-            const createdBy = document.getElementById('createdBy').value.trim() || 'User';
-            const prompt = document.getElementById('promptPreview').textContent;
+            const createdBy = document.getElementById('createdBy').value.trim() || currentUser || 'User';
+            const prompt = document.getElementById('promptPreview').textContent.replace('📋 Copy', '').trim();
 
             if (!title) {
                 showToast('❌ Judul kontrak wajib diisi', 'error');
@@ -1566,6 +2092,11 @@ ojt: {
 
             const values = getCurrentFieldValues();
 
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' +
+                String(today.getMonth() + 1).padStart(2, '0') + '-' +
+                String(today.getDate()).padStart(2, '0');
+
             const data = {
                 contract_type: toolKey,
                 title: title,
@@ -1575,7 +2106,8 @@ ojt: {
                 result: resultHtml,
                 created_by: createdBy,
                 status: 'published',
-                notes: ''
+                notes: '',
+                created_date: todayStr
             };
 
             try {
@@ -1605,17 +2137,33 @@ ojt: {
             switchMainTab('tab2');
             clearForm();
             document.getElementById('resultTitle').value = '';
-            document.getElementById('createdBy').value = '';
+            document.getElementById('createdBy').value = currentUser || '';
             showToast(`✏️ Beralih ke ${CONTRACT_TYPES[toolKey].name}`, 'info');
         }
 
-        // ==================== RENDER HISTORY ====================
+        // ==================== HISTORY ====================
+        function switchHistorySubTab(subtab) {
+            currentHistorySubTab = subtab;
+            document.querySelectorAll('.history-sub-tab').forEach(el => {
+                el.classList.toggle('active', el.dataset.subtab === subtab);
+            });
+            renderHistory();
+        }
+
         function renderHistory() {
             const container = document.getElementById('historyList');
             const filterTool = document.getElementById('historyFilterTool').value;
             const search = document.getElementById('historySearch').value.toLowerCase().trim();
 
             let filtered = allData;
+
+            if (currentHistorySubTab === 'today') {
+                const today = new Date();
+                const todayStr = today.getFullYear() + '-' +
+                    String(today.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(today.getDate()).padStart(2, '0');
+                filtered = filtered.filter(d => d.created_date === todayStr);
+            }
 
             if (filterTool !== 'all') {
                 filtered = filtered.filter(d => d.contract_type === filterTool);
@@ -1629,12 +2177,22 @@ ojt: {
                 );
             }
 
+            const totalAll = allData.length;
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' +
+                String(today.getMonth() + 1).padStart(2, '0') + '-' +
+                String(today.getDate()).padStart(2, '0');
+            const totalToday = allData.filter(d => d.created_date === todayStr).length;
+
+            document.getElementById('subAll').textContent = totalAll;
+            document.getElementById('subToday').textContent = totalToday;
+            document.getElementById('tab3Badge').textContent = totalAll;
             document.getElementById('historyCount').textContent = `${filtered.length} items`;
 
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="icon">⚖️</div>
+                        <div class="icon">${allData.length === 0 ? '⚖️' : '🔍'}</div>
                         <h3>${allData.length === 0 ? 'Belum ada kontrak' : 'Tidak ditemukan'}</h3>
                         <p>${allData.length === 0 ? 'Pergi ke Tab "AI Prompt Studio" untuk mulai membuat kontrak' : 'Coba dengan kata kunci lain'}</p>
                     </div>
@@ -1645,13 +2203,11 @@ ojt: {
             container.innerHTML = filtered.map(item => {
                 const type = CONTRACT_TYPES[item.contract_type];
                 const typeLabel = type ? `${type.icon} ${type.name}` : item.contract_type;
-                const date = item._raw?.created_at || '-';
+                const date = item.created_date || item._raw?.created_at || '-';
                 const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', {
                     day: '2-digit',
                     month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
+                    year: 'numeric'
                 }) : '-';
 
                 const sourceClass = item.ai_source.toLowerCase();
@@ -1668,6 +2224,7 @@ ojt: {
                                 ${item.ai_source ? `<span class="ai-badge ${sourceClass}">${item.ai_source}</span>` : ''}
                                 <span>📅 ${displayDate}</span>
                                 <span>👤 ${escapeHtml(item.created_by)}</span>
+                                ${isAdmin ? `<span style="font-size:10px;background:#c6f6d5;color:#276749;padding:1px 8px;border-radius:8px;">👑</span>` : ''}
                             </div>
                         </div>
                         <div class="history-prompt" onclick="togglePrompt(this)">${escapeHtml(item.prompt.substring(0, 120))}${item.prompt.length > 120 ? '...' : ''}</div>
@@ -1694,8 +2251,33 @@ ojt: {
 
             document.getElementById('addAiId').value = id;
             document.getElementById('addAiPromptDisplay').textContent = item.prompt;
-            document.getElementById('addAiCreatedBy').value = item.created_by || 'User';
+            document.getElementById('addAiCreatedBy').value = currentUser || '';
             addAiEditor.root.innerHTML = '';
+
+            const display = document.getElementById('addAiPromptDisplay');
+            const existingBtn = display.querySelector('.copy-prompt-btn');
+            if (existingBtn) existingBtn.remove();
+
+            const btn = document.createElement('button');
+            btn.className = 'copy-prompt-btn';
+            btn.textContent = '📋 Copy';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const text = display.textContent.replace('📋 Copy', '').trim();
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('✅ Prompt berhasil disalin!', 'success');
+                }).catch(() => {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    showToast('✅ Prompt berhasil disalin!', 'success');
+                });
+            };
+            display.style.position = 'relative';
+            display.appendChild(btn);
 
             document.getElementById('addAiModal').classList.add('active');
         }
@@ -1709,13 +2291,18 @@ ojt: {
             }
 
             const aiSource = document.getElementById('addAiSource').value;
-            const createdBy = document.getElementById('addAiCreatedBy').value.trim() || 'User';
+            const createdBy = document.getElementById('addAiCreatedBy').value.trim() || currentUser || 'User';
             const resultHtml = addAiEditor.root.innerHTML;
 
             if (!resultHtml || resultHtml === '<p><br></p>') {
                 showToast('❌ Paste hasil AI terlebih dahulu', 'error');
                 return;
             }
+
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' +
+                String(today.getMonth() + 1).padStart(2, '0') + '-' +
+                String(today.getDate()).padStart(2, '0');
 
             const data = {
                 contract_type: originalItem.contract_type,
@@ -1726,7 +2313,8 @@ ojt: {
                 result: resultHtml,
                 created_by: createdBy,
                 status: 'published',
-                notes: `Hasil tambahan dari ${aiSource}`
+                notes: `Hasil tambahan dari ${aiSource}`,
+                created_date: todayStr
             };
 
             try {
@@ -1746,11 +2334,105 @@ ojt: {
             if (!item) return;
 
             document.getElementById('dupId').value = id;
-            document.getElementById('dupPromptEditor').value = item.prompt;
+            document.getElementById('dupFrameworkType').value = item.contract_type;
+
+            const type = CONTRACT_TYPES[item.contract_type];
+            document.getElementById('dupFrameworkDisplay').value = type ? `${type.icon} ${type.name}` : item.contract_type;
+
             document.getElementById('dupTitle').value = item.title + ' (v2)';
-            document.getElementById('dupCreatedBy').value = item.created_by || 'User';
+            document.getElementById('dupCreatedBy').value = currentUser || '';
+
+            renderDuplicateFields(item.contract_type, item.field_values || {});
+            document.getElementById('dupPromptPreview').innerHTML = '<span class="placeholder">Generate prompt dari form di atas...</span>';
 
             document.getElementById('duplicateModal').classList.add('active');
+        }
+
+        function renderDuplicateFields(typeKey, values) {
+            const type = CONTRACT_TYPES[typeKey];
+            if (!type) return;
+
+            const container = document.getElementById('dupDynamicFields');
+
+            let html = `<div class="section-label">📝 ${type.icon} ${type.name} - Edit Field</div>`;
+
+            type.fields.forEach(field => {
+                const fieldId = `dup_field_${field.key}`;
+                const val = values[field.key] || '';
+                if (field.type === 'textarea') {
+                    html += `
+                        <div class="form-group">
+                            <label>${field.label}</label>
+                            <textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea>
+                        </div>
+                    `;
+                } else if (field.type === 'date') {
+                    html += `
+                        <div class="form-group">
+                            <label>${field.label}</label>
+                            <input type="date" id="${fieldId}" value="${val}">
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="form-group">
+                            <label>${field.label}</label>
+                            <input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}">
+                        </div>
+                    `;
+                }
+            });
+
+            container.innerHTML = html;
+        }
+
+        function getDuplicateFieldValues() {
+            const typeKey = document.getElementById('dupFrameworkType').value;
+            const type = CONTRACT_TYPES[typeKey];
+            if (!type) return {};
+
+            const values = {};
+            type.fields.forEach(field => {
+                const el = document.getElementById(`dup_field_${field.key}`);
+                if (el) {
+                    values[field.key] = el.value;
+                }
+            });
+            return values;
+        }
+
+        function generateDuplicatePrompt() {
+            const typeKey = document.getElementById('dupFrameworkType').value;
+            const type = CONTRACT_TYPES[typeKey];
+            if (!type) return;
+
+            const values = getDuplicateFieldValues();
+            const createdBy = document.getElementById('dupCreatedBy').value.trim() || currentUser || 'User';
+
+            let allFilled = true;
+            type.fields.forEach(field => {
+                if (!values[field.key] || !values[field.key].trim()) {
+                    allFilled = false;
+                }
+            });
+
+            if (!allFilled) {
+                showToast('❌ Semua field harus diisi!', 'error');
+                return;
+            }
+
+            let prompt = type.prompt_template;
+            type.fields.forEach(field => {
+                const placeholder = `{${field.key}}`;
+                const value = values[field.key] || '';
+                prompt = prompt.replace(new RegExp(placeholder, 'g'), value);
+            });
+            prompt = prompt.replace(/{created_by}/g, createdBy);
+
+            document.getElementById('dupPromptPreview').innerHTML = escapeHtml(prompt);
+            addCopyButtonToPrompt('dupPromptPreview');
+
+            showToast('✅ Prompt berhasil digenerate!', 'success');
         }
 
         async function saveDuplicate() {
@@ -1761,14 +2443,10 @@ ojt: {
                 return;
             }
 
-            const newPrompt = document.getElementById('dupPromptEditor').value.trim();
+            const typeKey = document.getElementById('dupFrameworkType').value;
             const newTitle = document.getElementById('dupTitle').value.trim();
-            const createdBy = document.getElementById('dupCreatedBy').value.trim() || 'User';
-
-            if (!newPrompt) {
-                showToast('❌ Prompt tidak boleh kosong', 'error');
-                return;
-            }
+            const createdBy = document.getElementById('dupCreatedBy').value.trim() || currentUser || 'User';
+            const prompt = document.getElementById('dupPromptPreview').textContent.replace('📋 Copy', '').trim();
 
             if (!newTitle) {
                 showToast('❌ Judul baru wajib diisi', 'error');
@@ -1776,16 +2454,29 @@ ojt: {
                 return;
             }
 
+            if (!prompt || prompt.includes('Generate prompt')) {
+                showToast('❌ Generate prompt terlebih dahulu', 'error');
+                return;
+            }
+
+            const values = getDuplicateFieldValues();
+
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' +
+                String(today.getMonth() + 1).padStart(2, '0') + '-' +
+                String(today.getDate()).padStart(2, '0');
+
             const data = {
-                contract_type: originalItem.contract_type,
+                contract_type: typeKey,
                 title: newTitle,
-                prompt: newPrompt,
-                field_values: originalItem.field_values || {},
+                prompt: prompt,
+                field_values: values,
                 ai_source: '',
                 result: '',
                 created_by: createdBy,
                 status: 'published',
-                notes: 'Duplikat dari prompt sebelumnya'
+                notes: 'Duplikat dari prompt sebelumnya',
+                created_date: todayStr
             };
 
             try {
@@ -1793,13 +2484,14 @@ ojt: {
                 showToast('✅ Duplikat berhasil dibuat!', 'success');
                 closeModal('duplicateModal');
 
-                document.getElementById('selectedTool').value = originalItem.contract_type;
+                document.getElementById('selectedTool').value = typeKey;
                 updateFormFields();
-                setFieldValues(originalItem.field_values || {});
+                setFieldValues(values);
                 document.getElementById('resultTitle').value = newTitle;
                 document.getElementById('createdBy').value = createdBy;
-                document.getElementById('promptPreview').innerHTML = escapeHtml(newPrompt);
-                currentPrompt = newPrompt;
+                document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+                addCopyButtonToPrompt('promptPreview');
+                currentPrompt = prompt;
 
                 switchMainTab('tab2');
                 await refreshData();
@@ -1853,7 +2545,7 @@ ojt: {
 
             const type = CONTRACT_TYPES[item.contract_type];
             const typeLabel = type ? `${type.icon} ${type.name}` : item.contract_type;
-            const date = item._raw?.created_at || '-';
+            const date = item.created_date || item._raw?.created_at || '-';
             const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', {
                 day: '2-digit',
                 month: 'short',
@@ -1869,6 +2561,7 @@ ojt: {
                 <strong>AI Source:</strong> ${item.ai_source || '-'} &nbsp;|&nbsp;
                 <strong>Dibuat:</strong> ${displayDate} &nbsp;|&nbsp;
                 <strong>Oleh:</strong> ${escapeHtml(item.created_by)}
+                ${isAdmin ? `&nbsp;|&nbsp; <span style="background:#c6f6d5;color:#276749;padding:1px 8px;border-radius:8px;font-size:11px;">👑 Admin View</span>` : ''}
             `;
 
             document.getElementById('viewPrompt').textContent = item.prompt;
@@ -1902,6 +2595,41 @@ ojt: {
                 document.body.removeChild(textarea);
                 showToast('✅ Konten berhasil disalin!', 'success');
             });
+        }
+
+        function downloadViewDoc() {
+            const title = viewData?.title || 'kontrak';
+            const content = document.getElementById('viewResultWrapper').innerHTML || '';
+
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>${escapeHtml(title)}</title>
+                    <style>
+                        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #2d3748; line-height: 1.8; max-width: 800px; margin: auto; }
+                        h1, h2, h3, h4 { color: #1a202c; }
+                        p { margin: 8px 0; }
+                        ul, ol { padding-left: 24px; }
+                    </style>
+                </head>
+                <body>
+                    ${content}
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob([htmlContent], { type: 'application/msword;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${title}.doc`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('✅ File .doc berhasil didownload!', 'success');
         }
 
         // ==================== INFO MODAL ====================
@@ -1962,6 +2690,10 @@ ojt: {
 
         // ==================== REFRESH ====================
         async function refreshData() {
+            if (!currentUser) {
+                showLogin();
+                return;
+            }
             showToast('🔄 Memuat data...', 'info');
             await fetchData();
             renderTools();
@@ -2041,12 +2773,18 @@ ojt: {
             allData: () => allData,
             refresh: refreshData,
             CONTRACT_TYPES: CONTRACT_TYPES,
-            CONTRACT_KEYS: CONTRACT_KEYS
+            CONTRACT_KEYS: CONTRACT_KEYS,
+            currentUser: () => currentUser,
+            isAdmin: () => isAdmin,
+            doLogin: doLogin,
+            doLogout: doLogout
         };
 
         console.log('⚖️ AI Contract Generator Loaded!');
         console.log('📡 Table:', TABLE);
-        console.log('📊 6 Jenis Kontrak siap pakai!');
+        console.log('📊 7 Jenis Kontrak siap pakai!');
+        console.log('👤 User:', currentUser || 'Not logged in');
+        console.log('👑 Admin:', isAdmin);
         console.log('🔧 Type "debug" in console for helpers');
     </script>
 </body>

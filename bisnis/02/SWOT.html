@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SWOT Manager - Analisis SWOT</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #1a2332;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 span {
+            background: #2d3748;
+            color: white;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #f7fafc;
+            padding: 0 15px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            transition: border 0.2s;
+        }
+
+        .search-box:focus-within {
+            border-color: #4299e1;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 14px;
+            outline: none;
+            width: 200px;
+            color: #2d3748;
+        }
+
+        .search-box .icon {
+            color: #a0aec0;
+            font-size: 18px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66,153,225,0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #fc8181;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #f56565;
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-outline:hover {
+            background: #f7fafc;
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-xs {
+            padding: 3px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+
+        .list-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .list-header {
+            display: grid;
+            grid-template-columns: 80px 2fr 1.5fr 1fr 1fr 140px;
+            gap: 10px;
+            padding: 14px 20px;
+            background: #f7fafc;
+            font-weight: 700;
+            font-size: 13px;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .list-item {
+            display: grid;
+            grid-template-columns: 80px 2fr 1.5fr 1fr 1fr 140px;
+            gap: 10px;
+            padding: 16px 20px;
+            border-bottom: 1px solid #edf2f7;
+            align-items: center;
+            transition: background 0.15s;
+            cursor: pointer;
+        }
+
+        .list-item:hover {
+            background: #f7fafc;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item .id {
+            font-weight: 700;
+            color: #4299e1;
+            font-size: 14px;
+        }
+
+        .list-item .project {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .list-item .desc {
+            color: #4a5568;
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .list-item .stats {
+            display: flex;
+            gap: 8px;
+            font-size: 12px;
+            color: #718096;
+            flex-wrap: wrap;
+        }
+
+        .list-item .stats span {
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .list-item .stats .strength {
+            background: #c6f6d5;
+            color: #276749;
+        }
+        .list-item .stats .weakness {
+            background: #fed7d7;
+            color: #9b2c2c;
+        }
+        .list-item .stats .opportunity {
+            background: #bee3f8;
+            color: #2a69ac;
+        }
+        .list-item .stats .threat {
+            background: #fefcbf;
+            color: #975a16;
+        }
+
+        .list-item .date {
+            font-size: 13px;
+            color: #a0aec0;
+        }
+
+        .list-item .actions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #a0aec0;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .empty-state h3 {
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 1100px;
+            width: 100%;
+            max-height: 95vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-close {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: #fc8181;
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            background: #f56565;
+            transform: rotate(90deg);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a2332;
+            margin-bottom: 20px;
+            padding-right: 50px;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        /* SWOT Grid */
+        .swot-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .swot-box {
+            border-radius: 12px;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            min-height: 150px;
+        }
+
+        .swot-box.strength {
+            background: #f0fff4;
+            border-color: #48bb78;
+        }
+        .swot-box.weakness {
+            background: #fff5f5;
+            border-color: #fc8181;
+        }
+        .swot-box.opportunity {
+            background: #ebf8ff;
+            border-color: #4299e1;
+        }
+        .swot-box.threat {
+            background: #fffff0;
+            border-color: #ed8936;
+        }
+
+        .swot-box .swot-title {
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .swot-box.strength .swot-title {
+            color: #276749;
+        }
+        .swot-box.weakness .swot-title {
+            color: #9b2c2c;
+        }
+        .swot-box.opportunity .swot-title {
+            color: #2a69ac;
+        }
+        .swot-box.threat .swot-title {
+            color: #975a16;
+        }
+
+        /* TOOLTIP */
+        .field-with-tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            z-index: auto;
+        }
+
+        .field-with-tooltip .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #4299e1;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            border: none;
+            font-family: inherit;
+            vertical-align: middle;
+            position: relative;
+            z-index: 2;
+        }
+
+        .field-with-tooltip .help-icon:hover {
+            background: #3182ce;
+            transform: scale(1.05);
+        }
+
+        .field-with-tooltip .tooltip-box {
+            visibility: hidden;
+            opacity: 0;
+            width: 380px;
+            max-width: 92vw;
+            background: #1a202c;
+            color: #e2e8f0;
+            text-align: left;
+            padding: 18px 22px;
+            border-radius: 14px;
+            position: fixed;
+            z-index: 9999999;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.92);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 400;
+            font-size: 13.5px;
+            line-height: 1.7;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+            pointer-events: none;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .field-with-tooltip .tooltip-box::after {
+            display: none;
+        }
+
+        .field-with-tooltip:hover .tooltip-box {
+            visibility: visible;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .field-with-tooltip.active .tooltip-box {
+            visibility: visible;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: auto;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-close {
+            display: none;
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .field-with-tooltip.active .tooltip-box .tip-close {
+            display: block;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-close button {
+            background: rgba(255, 255, 255, 0.12);
+            border: none;
+            color: white;
+            padding: 5px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-close button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .field-with-tooltip .tooltip-box .tip-title {
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-desc {
+            display: block;
+            color: #e2e8f0;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-example {
+            display: block;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 12.5px;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-title.strength {
+            color: #48bb78;
+        }
+        .field-with-tooltip .tooltip-box .tip-title.weakness {
+            color: #fc8181;
+        }
+        .field-with-tooltip .tooltip-box .tip-title.opportunity {
+            color: #63b3ed;
+        }
+        .field-with-tooltip .tooltip-box .tip-title.threat {
+            color: #ed8936;
+        }
+
+        .field-with-tooltip .tooltip-box .tip-example.strength {
+            color: #c6f6d5;
+        }
+        .field-with-tooltip .tooltip-box .tip-example.weakness {
+            color: #fed7d7;
+        }
+        .field-with-tooltip .tooltip-box .tip-example.opportunity {
+            color: #bee3f8;
+        }
+        .field-with-tooltip .tooltip-box .tip-example.threat {
+            color: #fefcbf;
+        }
+
+        .modal .field-with-tooltip .tooltip-box {
+            z-index: 9999999;
+        }
+
+        .modal-overlay {
+            z-index: 1000;
+        }
+        .modal {
+            z-index: 1001;
+            position: relative;
+        }
+
+        @media (max-width: 480px) {
+            .field-with-tooltip .tooltip-box {
+                width: 94vw;
+                max-width: 94vw;
+                padding: 16px 18px;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0.92);
+                font-size: 13px;
+            }
+            .field-with-tooltip:hover .tooltip-box,
+            .field-with-tooltip.active .tooltip-box {
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .field-with-tooltip .tooltip-box::-webkit-scrollbar {
+            width: 4px;
+        }
+        .field-with-tooltip .tooltip-box::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .field-with-tooltip .tooltip-box::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 10px;
+            min-height: 30px;
+        }
+
+        .item-chip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            font-size: 14px;
+            gap: 8px;
+        }
+
+        .item-chip .item-text {
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .item-chip .item-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .item-chip .item-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: 0.15s;
+            color: #a0aec0;
+        }
+
+        .item-chip .item-actions button:hover {
+            background: #edf2f7;
+        }
+        .item-chip .item-actions .delete-item:hover {
+            color: #fc8181;
+        }
+        .item-chip .item-actions .edit-item:hover {
+            color: #4299e1;
+        }
+
+        .add-item-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .add-item-row input {
+            flex: 1;
+            padding: 6px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .add-item-row input:focus {
+            border-color: #4299e1;
+        }
+
+        .add-item-row .btn {
+            padding: 6px 16px;
+            font-size: 13px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 2px solid #edf2f7;
+            flex-wrap: wrap;
+        }
+
+        .detail-swot-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .detail-swot-box {
+            border-radius: 12px;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .detail-swot-box h4 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 6px;
+        }
+
+        .detail-swot-box.strength {
+            background: #f0fff4;
+            border-color: #48bb78;
+        }
+        .detail-swot-box.weakness {
+            background: #fff5f5;
+            border-color: #fc8181;
+        }
+        .detail-swot-box.opportunity {
+            background: #ebf8ff;
+            border-color: #4299e1;
+        }
+        .detail-swot-box.threat {
+            background: #fffff0;
+            border-color: #ed8936;
+        }
+
+        .detail-swot-box h4.strength {
+            color: #276749;
+        }
+        .detail-swot-box h4.weakness {
+            color: #9b2c2c;
+        }
+        .detail-swot-box h4.opportunity {
+            color: #2a69ac;
+        }
+        .detail-swot-box h4.threat {
+            color: #975a16;
+        }
+
+        .detail-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .detail-items .tag {
+            background: white;
+            padding: 4px 14px;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            font-size: 13px;
+        }
+
+        .stats-mini {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .stats-mini .stat-box {
+            background: white;
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stats-mini .stat-box .num {
+            font-weight: 700;
+            font-size: 18px;
+            color: #2d3748;
+        }
+
+        .stats-mini .stat-box .lbl {
+            font-size: 12px;
+            color: #a0aec0;
+        }
+
+        .stats-mini .stat-box .num.strength {
+            color: #48bb78;
+        }
+        .stats-mini .stat-box .num.weakness {
+            color: #fc8181;
+        }
+        .stats-mini .stat-box .num.opportunity {
+            color: #4299e1;
+        }
+        .stats-mini .stat-box .num.threat {
+            color: #ed8936;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+        }
+
+        .toast.success {
+            background: #48bb78;
+        }
+        .toast.error {
+            background: #fc8181;
+        }
+        .toast.info {
+            background: #4299e1;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .list-header {
+                display: none;
+            }
+            .list-item {
+                grid-template-columns: 1fr;
+                gap: 6px;
+                padding: 16px;
+                border-bottom: 2px solid #edf2f7;
+            }
+            .list-item .id {
+                font-size: 13px;
+            }
+            .list-item .actions {
+                margin-top: 6px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .swot-grid {
+                grid-template-columns: 1fr;
+            }
+            .detail-swot-grid {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box input {
+                width: 100%;
+            }
+            .modal {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+            .list-item .stats span {
+                font-size: 11px;
+                padding: 1px 8px;
+            }
+        }
+
+        .modal::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal::-webkit-scrollbar-track {
+            background: #f7fafc;
+        }
+        .modal::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN OVERLAY -->
+    <div id="loginOverlay" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);z-index:99999;align-items:center;justify-content:center;">
+        <div style="background:#fff;width:100%;max-width:380px;border-radius:16px;padding:36px 32px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <h1 style="font-size:22px;color:#2d3748;text-align:center;margin:0 0 6px;">🔐 Login</h1>
+            <p style="text-align:center;color:#718096;font-size:13px;margin:0 0 24px;">Masuk untuk mengakses SWOT Manager</p>
+            <div id="loginError" style="display:none;background:#fff5f5;color:#c53030;border:1px solid #feb2b2;padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:16px;"></div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:13px;color:#4a5568;margin-bottom:6px;font-weight:600;">Username</label>
+                <input type="text" id="loginUsername" autocomplete="username" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;">
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block;font-size:13px;color:#4a5568;margin-bottom:6px;font-weight:600;">Password</label>
+                <input type="password" id="loginPassword" autocomplete="current-password" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:#4a5568;">
+                <input type="checkbox" id="loginRememberMe" style="width:auto;">
+                <label for="loginRememberMe" style="margin:0;font-weight:400;">Ingat saya (tetap login 30 hari)</label>
+            </div>
+            <button id="loginBtn" onclick="handleLogin()" style="width:100%;padding:11px;background:#667eea;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Masuk</button>
+        </div>
+    </div>
+
+    <div class="container" id="app">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>
+                📊 SWOT Manager
+                <span>v1.0</span>
+            </h1>
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Cari proyek..." oninput="renderList()">
+                </div>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ Tambah SWOT</button>
+                <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+                <button class="btn btn-outline btn-sm" onclick="authLogout()" title="Logout">🚪 Logout</button>
+            </div>
+        </div>
+
+        <!-- LIST -->
+        <div class="list-container">
+            <div class="list-header">
+                <span>ID</span>
+                <span>Nama Proyek</span>
+                <span>Deskripsi</span>
+                <span>Statistik</span>
+                <span>Terakhir Update</span>
+                <span>Aksi</span>
+            </div>
+            <div id="listBody">
+                <div class="empty-state">
+                    <div class="icon">📊</div>
+                    <h3>Belum ada analisis SWOT</h3>
+                    <p>Klik "Tambah SWOT" untuk membuat analisis SWOT pertama Anda</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORM -->
+    <div class="modal-overlay" id="formModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('formModal')">✕</button>
+            <div class="modal-title" id="formModalTitle">Tambah Analisis SWOT</div>
+            <div class="modal-body">
+                <input type="hidden" id="editId" value="">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📌 Nama Proyek *</label>
+                        <input type="text" id="projectName" placeholder="Contoh: Bisnis Kafe" required>
+                    </div>
+                    <div class="form-group">
+                        <label>📝 Deskripsi</label>
+                        <input type="text" id="description" placeholder="Deskripsi singkat...">
+                    </div>
+                </div>
+
+                <!-- SWOT GRID -->
+                <div class="swot-grid">
+                    <!-- STRENGTH -->
+                    <div class="swot-box strength">
+                        <div class="swot-title">
+                            💪 Strengths
+                            <span class="field-with-tooltip" data-tooltip="strength">
+                                <button class="help-icon" onclick="toggleTooltip(event, this)">?</button>
+                                <div class="tooltip-box">
+                                    <span class="tip-title strength">💪 Apa itu Strengths?</span>
+                                    <span class="tip-desc">Kelebihan atau keunggulan yang dimiliki oleh bisnis/proyek Anda. Apa yang membuat Anda lebih baik dari pesaing?</span>
+                                    <span class="tip-example strength"><strong>💡 Contoh:</strong> "Lokasi strategis", "Tim berpengalaman", "Produk unik", "Brand kuat"</span>
+                                    <span class="tip-close"><button onclick="closeTooltip(this)">Tutup</button></span>
+                                </div>
+                            </span>
+                        </div>
+                        <div class="item-list" id="strengthList"></div>
+                        <div class="add-item-row">
+                            <input type="text" id="strengthInput" placeholder="Tambah strength..." onkeydown="if(event.key==='Enter') addItem('strength')">
+                            <button class="btn btn-success btn-sm" onclick="addItem('strength')">+</button>
+                        </div>
+                    </div>
+
+                    <!-- WEAKNESS -->
+                    <div class="swot-box weakness">
+                        <div class="swot-title">
+                            ⚠️ Weaknesses
+                            <span class="field-with-tooltip" data-tooltip="weakness">
+                                <button class="help-icon" onclick="toggleTooltip(event, this)">?</button>
+                                <div class="tooltip-box">
+                                    <span class="tip-title weakness">⚠️ Apa itu Weaknesses?</span>
+                                    <span class="tip-desc">Kekurangan atau kelemahan yang dimiliki oleh bisnis/proyek Anda. Apa yang perlu diperbaiki?</span>
+                                    <span class="tip-example weakness"><strong>💡 Contoh:</strong> "Modal terbatas", "Kurang pengalaman", "Produk mudah ditiru", "Tim kecil"</span>
+                                    <span class="tip-close"><button onclick="closeTooltip(this)">Tutup</button></span>
+                                </div>
+                            </span>
+                        </div>
+                        <div class="item-list" id="weaknessList"></div>
+                        <div class="add-item-row">
+                            <input type="text" id="weaknessInput" placeholder="Tambah weakness..." onkeydown="if(event.key==='Enter') addItem('weakness')">
+                            <button class="btn btn-success btn-sm" onclick="addItem('weakness')">+</button>
+                        </div>
+                    </div>
+
+                    <!-- OPPORTUNITY -->
+                    <div class="swot-box opportunity">
+                        <div class="swot-title">
+                            🚀 Opportunities
+                            <span class="field-with-tooltip" data-tooltip="opportunity">
+                                <button class="help-icon" onclick="toggleTooltip(event, this)">?</button>
+                                <div class="tooltip-box">
+                                    <span class="tip-title opportunity">🚀 Apa itu Opportunities?</span>
+                                    <span class="tip-desc">Peluang atau kesempatan yang dapat dimanfaatkan untuk mengembangkan bisnis/proyek Anda.</span>
+                                    <span class="tip-example opportunity"><strong>💡 Contoh:</strong> "Pasar berkembang", "Teknologi baru", "Perubahan regulasi", "Kebutuhan baru"</span>
+                                    <span class="tip-close"><button onclick="closeTooltip(this)">Tutup</button></span>
+                                </div>
+                            </span>
+                        </div>
+                        <div class="item-list" id="opportunityList"></div>
+                        <div class="add-item-row">
+                            <input type="text" id="opportunityInput" placeholder="Tambah opportunity..." onkeydown="if(event.key==='Enter') addItem('opportunity')">
+                            <button class="btn btn-success btn-sm" onclick="addItem('opportunity')">+</button>
+                        </div>
+                    </div>
+
+                    <!-- THREAT -->
+                    <div class="swot-box threat">
+                        <div class="swot-title">
+                            🔥 Threats
+                            <span class="field-with-tooltip" data-tooltip="threat">
+                                <button class="help-icon" onclick="toggleTooltip(event, this)">?</button>
+                                <div class="tooltip-box">
+                                    <span class="tip-title threat">🔥 Apa itu Threats?</span>
+                                    <span class="tip-desc">Ancaman atau risiko yang dapat menghambat atau merugikan bisnis/proyek Anda.</span>
+                                    <span class="tip-example threat"><strong>💡 Contoh:</strong> "Pesaing baru", "Perubahan selera", "Krisis ekonomi", "Regulasi ketat"</span>
+                                    <span class="tip-close"><button onclick="closeTooltip(this)">Tutup</button></span>
+                                </div>
+                            </span>
+                        </div>
+                        <div class="item-list" id="threatList"></div>
+                        <div class="add-item-row">
+                            <input type="text" id="threatInput" placeholder="Tambah threat..." onkeydown="if(event.key==='Enter') addItem('threat')">
+                            <button class="btn btn-success btn-sm" onclick="addItem('threat')">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-danger" id="deleteBtn" onclick="deleteSwot()" style="display:none;">🗑️ Hapus SWOT</button>
+                    <button class="btn btn-outline" onclick="closeModal('formModal')">Batal</button>
+                    <button class="btn btn-primary" id="saveBtn" onclick="saveSwot()">💾 Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+            <div class="modal-title" id="detailTitle">Detail Analisis SWOT</div>
+            <div class="modal-body">
+                <div class="stats-mini" id="detailStats"></div>
+                <div class="detail-swot-grid" id="detailSwot"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-warning" onclick="editFromDetail()">✏️ Edit</button>
+                    <button class="btn" style="background:#805ad5;color:#fff;" onclick="promptSwotFull()">🤖 Prompt Lengkap</button>
+                    <button class="btn btn-outline" onclick="closeModal('detailModal')">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== TOOLTIP HANDLER ====================
+        function toggleTooltip(event, btn) {
+            event.stopPropagation();
+            const container = btn.closest('.field-with-tooltip');
+            const isActive = container.classList.contains('active');
+
+            document.querySelectorAll('.field-with-tooltip.active').forEach(el => {
+                if (el !== container) el.classList.remove('active');
+            });
+
+            if (isActive) {
+                container.classList.remove('active');
+            } else {
+                container.classList.add('active');
+            }
+        }
+
+        function closeTooltip(btn) {
+            const container = btn.closest('.field-with-tooltip');
+            container.classList.remove('active');
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.field-with-tooltip')) {
+                document.querySelectorAll('.field-with-tooltip.active').forEach(el => {
+                    el.classList.remove('active');
+                });
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.field-with-tooltip.active').forEach(el => {
+                    el.classList.remove('active');
+                });
+            }
+        });
+
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'swot';
+        const SECRET = 'admin';
+
+        // ==================== STATE ====================
+        let allData = [];
+        let currentDetailId = null;
+        let currentDetailItem = null;
+        let currentEditId = null;
+
+        const COLUMNS = {
+            project_name: 'x_01',
+            description: 'x_02',
+            strengths: 'x_03',
+            weaknesses: 'x_04',
+            opportunities: 'x_05',
+            threats: 'x_06',
+            meta: 'x_07' // created_by/created_at JSON
+        };
+
+        // ==================== FORM DATA ====================
+        let formData = {
+            project_name: '',
+            description: '',
+            strengths: [],
+            weaknesses: [],
+            opportunities: [],
+            threats: []
+        };
+
+        // ==================== AUTH (SSO via cookie domain, inline per-file) ====================
+        // Login sekali di file ini -> otomatis login juga di file tool lain,
+        // karena session disimpan di cookie dengan domain=.lidan.co.id
+        // (dibaca bersama oleh semua file di domain yang sama). Logout di
+        // sini juga otomatis logout di file-file lain (cookie ikut terhapus).
+        const AUTH_API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const AUTH_USERS_TABLE = 'users';
+        const AUTH_SECRET = 'admin';
+        const AUTH_COOKIE_NAME = 'lidan_session';
+        const AUTH_COOKIE_DOMAIN = '.lidan.co.id';
+        const AUTH_REMEMBER_DAYS = 30;
+
+        function authSetCookie(name, value, days) {
+            let expires = '';
+            if (days) {
+                const d = new Date();
+                d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+                expires = '; expires=' + d.toUTCString();
+            }
+            const isRealDomain = location.hostname.endsWith('lidan.co.id');
+            const domainPart = isRealDomain ? `; domain=${AUTH_COOKIE_DOMAIN}` : '';
+            document.cookie = `${name}=${encodeURIComponent(value)}${expires}${domainPart}; path=/; SameSite=Lax`;
+        }
+
+        function authGetCookie(name) {
+            const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+            return match ? decodeURIComponent(match[1]) : null;
+        }
+
+        function authDeleteCookie(name) {
+            const isRealDomain = location.hostname.endsWith('lidan.co.id');
+            const domainPart = isRealDomain ? `; domain=${AUTH_COOKIE_DOMAIN}` : '';
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC${domainPart}; path=/;`;
+        }
+
+        function authGetSession() {
+            const raw = authGetCookie(AUTH_COOKIE_NAME);
+            if (!raw) return null;
+            try { return JSON.parse(raw); } catch (e) { return null; }
+        }
+
+        function authIsLoggedIn() { return !!authGetSession(); }
+
+        function authGetUsername() {
+            const s = authGetSession();
+            return s ? s.username : null;
+        }
+
+        function authIsAdmin() {
+            const s = authGetSession();
+            return !!s && s.username === 'admin';
+        }
+
+        // Login pakai GET: ambil seluruh baris tabel "users" via GET,
+        // lalu cocokkan username(x_01)/password(x_02) di browser.
+        async function authLogin(username, password, rememberMe) {
+            const url = `${AUTH_API_URL}?table=${AUTH_USERS_TABLE}`;
+            const res = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Custom-Auth': AUTH_SECRET,
+                    'X-Table-Name': AUTH_USERS_TABLE,
+                    'X-Role': 'admin'
+                }
+            });
+            if (!res.ok) throw new Error('Tidak bisa menghubungi server. Coba lagi.');
+            const result = await res.json();
+            const rows = (result && result.data) || [];
+            const match = rows.find(r => (r.x_01 || '') === username && (r.x_02 || '') === password);
+            if (!match) throw new Error('Username atau password salah');
+            const session = { username: match.x_01, id: match.id_x, loginAt: new Date().toISOString() };
+            authSetCookie(AUTH_COOKIE_NAME, JSON.stringify(session), rememberMe ? AUTH_REMEMBER_DAYS : null);
+            return session;
+        }
+
+        function authLogout() {
+            authDeleteCookie(AUTH_COOKIE_NAME);
+            window.location.reload();
+        }
+
+        function authFilterByOwner(data, ownerField) {
+            ownerField = ownerField || 'created_by';
+            if (authIsAdmin()) return data;
+            const username = authGetUsername();
+            return (data || []).filter(item => item[ownerField] === username);
+        }
+
+        // Simpan created_by + created_at sebagai 1 kolom JSON gabungan
+        // (hemat kolom). Kalau existingMetaJson ada isinya (update data
+        // lama), created_by/created_at asli dipertahankan, tidak ditimpa.
+        function authBuildMeta(existingMetaJson) {
+            if (existingMetaJson) {
+                try {
+                    const existing = JSON.parse(existingMetaJson);
+                    if (existing && existing.created_by) return JSON.stringify(existing);
+                } catch (e) { /* buat meta baru */ }
+            }
+            return JSON.stringify({ created_by: authGetUsername() || '-', created_at: new Date().toISOString() });
+        }
+
+        function authParseMeta(metaJson) {
+            if (!metaJson) return { created_by: '-', created_at: null };
+            try {
+                const parsed = JSON.parse(metaJson);
+                return { created_by: parsed.created_by || '-', created_at: parsed.created_at || null };
+            } catch (e) {
+                return { created_by: '-', created_at: null };
+            }
+        }
+
+        function authRenderUserBadge() {
+            const session = authGetSession();
+            if (!session) return;
+            let el = document.getElementById('authUserBadge');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'authUserBadge';
+                el.style.cssText = 'position:fixed;top:10px;right:16px;z-index:10000;background:#2d3748;color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
+                document.body.appendChild(el);
+            }
+            el.innerHTML = `👤 <b>${session.username}</b><button onclick="authLogout()" style="background:#e53e3e;color:#fff;border:none;padding:3px 10px;border-radius:12px;cursor:pointer;font-size:11px;">Logout</button>`;
+        }
+
+        // Tampilkan overlay login kalau belum ada session; kalau sudah,
+        // sembunyikan overlay dan lanjutkan load data seperti biasa.
+        function authRequireLogin(onSuccess) {
+            if (authIsLoggedIn()) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                authRenderUserBadge();
+                onSuccess();
+                return;
+            }
+            document.getElementById('loginOverlay').style.display = 'flex';
+        }
+
+        async function handleLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const rememberMe = document.getElementById('loginRememberMe').checked;
+            const errorEl = document.getElementById('loginError');
+            const btn = document.getElementById('loginBtn');
+
+            errorEl.style.display = 'none';
+            if (!username || !password) return;
+
+            btn.disabled = true;
+            btn.textContent = 'Memeriksa...';
+            try {
+                await authLogin(username, password, rememberMe);
+                document.getElementById('loginOverlay').style.display = 'none';
+                authRenderUserBadge();
+                refreshData();
+            } catch (e) {
+                errorEl.textContent = '❌ ' + e.message;
+                errorEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Masuk';
+            }
+        }
+
+        document.getElementById('loginPassword').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('📊 SWOT Manager Started');
+            console.log('📡 Table:', TABLE);
+            authRequireLogin(() => refreshData());
+        });
+
+        // ==================== API HELPERS ====================
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': TABLE,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        ...getHeaders(),
+                        ...(options.headers || {})
+                    }
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error || err.message || `HTTP ${response.status}`);
+                }
+                return await response.json();
+            } catch (e) {
+                console.error('❌ API Error:', e.message);
+                throw e;
+            }
+        }
+
+        // ==================== DATA CRUD ====================
+        async function fetchData() {
+            try {
+                const result = await apiFetch('');
+                if (result.success && result.data) {
+                    const parsed = result.data.map(row => parseRow(row));
+                    allData = authFilterByOwner(parsed, 'created_by');
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            const _meta = authParseMeta(row.x_07);
+            return {
+                id_x: row.id_x,
+                project_name: row.x_01 || '',
+                description: row.x_02 || '',
+                strengths: safeParseJSON(row.x_03),
+                weaknesses: safeParseJSON(row.x_04),
+                opportunities: safeParseJSON(row.x_05),
+                threats: safeParseJSON(row.x_06),
+                created_by: _meta.created_by,
+                created_at: _meta.created_at,
+                meta: row.x_07,
+                _raw: row
+            };
+        }
+
+        function safeParseJSON(str) {
+            if (!str) return [];
+            try {
+                const parsed = JSON.parse(str);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                if (key === 'meta') {
+                    row[col] = authBuildMeta(data.meta);
+                } else if (key === 'project_name' || key === 'description') {
+                    row[col] = data[key] || '';
+                } else {
+                    const val = data[key] || [];
+                    row[col] = JSON.stringify(val);
+                }
+            }
+            return row;
+        }
+
+        async function createSwot(data) {
+            const row = buildRow(data);
+            return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function updateSwot(id, data) {
+            const row = buildRow(data);
+            return await apiFetch(`&id_x=${id}`, { method: 'PUT', body: JSON.stringify(row) });
+        }
+
+        async function deleteSwotApi(id) {
+            return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== RENDER ====================
+        function renderList() {
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = allData.filter(item =>
+                item.project_name.toLowerCase().includes(search) ||
+                item.description.toLowerCase().includes(search)
+            );
+
+            const body = document.getElementById('listBody');
+            if (filtered.length === 0) {
+                body.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">${allData.length === 0 ? '📊' : '🔍'}</div>
+                        <h3>${allData.length === 0 ? 'Belum ada analisis SWOT' : 'Tidak ditemukan'}</h3>
+                        <p>${allData.length === 0 ? 'Klik "Tambah SWOT" untuk membuat analisis SWOT pertama Anda' : 'Coba dengan kata kunci lain'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            body.innerHTML = filtered.map(item => {
+                const total = item.strengths.length + item.weaknesses.length +
+                    item.opportunities.length + item.threats.length;
+                const date = item._raw?.updated_at || item._raw?.created_at || '-';
+                const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID') : '-';
+
+                return `
+                    <div class="list-item" onclick="openDetail(${item.id_x})">
+                        <div class="id">#${item.id_x}</div>
+                        <div class="project">${escapeHtml(item.project_name) || '(tanpa nama)'}</div>
+                        <div class="desc">${escapeHtml(item.description) || '-'}</div>
+                        <div class="stats">
+                            <span class="strength">S ${item.strengths.length}</span>
+                            <span class="weakness">W ${item.weaknesses.length}</span>
+                            <span class="opportunity">O ${item.opportunities.length}</span>
+                            <span class="threat">T ${item.threats.length}</span>
+                            <span style="background:#e2e8f0;color:#4a5568;">Σ ${total}</span>
+                        </div>
+                        <div class="date">${displayDate}</div>
+                        <div class="actions" onclick="event.stopPropagation();">
+                            <button class="btn btn-outline btn-xs" onclick="openDetail(${item.id_x})">👁️</button>
+                            <button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>
+                            <button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function refreshData() {
+            showToast('🔄 Memuat data...', 'info');
+            await fetchData();
+            renderList();
+            showToast(`✅ ${allData.length} analisis SWOT dimuat`, 'success');
+        }
+
+        // ==================== MODAL FORM ====================
+        function openAddModal() {
+            console.log('📊 Opening Add Modal');
+            currentEditId = null;
+            document.getElementById('editId').value = '';
+            document.getElementById('formModalTitle').textContent = '➕ Tambah Analisis SWOT';
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.getElementById('saveBtn').textContent = '💾 Simpan';
+
+            formData = {
+                project_name: '',
+                description: '',
+                strengths: [],
+                weaknesses: [],
+                opportunities: [],
+                threats: []
+            };
+            document.getElementById('projectName').value = '';
+            document.getElementById('description').value = '';
+            
+            document.querySelectorAll('.add-item-row input').forEach(inp => {
+                if (inp) inp.value = '';
+            });
+
+            renderFormItems();
+            document.getElementById('formModal').classList.add('active');
+            console.log('✅ Add Modal opened');
+        }
+
+        async function openEditModal(id) {
+            console.log('✏️ Opening Edit Modal for ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+
+            currentEditId = id;
+            document.getElementById('editId').value = id;
+            document.getElementById('formModalTitle').textContent = `✏️ Edit SWOT: ${item.project_name}`;
+            document.getElementById('deleteBtn').style.display = 'inline-flex';
+            document.getElementById('saveBtn').textContent = '💾 Update';
+
+            formData = {
+                meta: item.meta,
+                project_name: item.project_name || '',
+                description: item.description || '',
+                strengths: [...(item.strengths || [])],
+                weaknesses: [...(item.weaknesses || [])],
+                opportunities: [...(item.opportunities || [])],
+                threats: [...(item.threats || [])]
+            };
+
+            document.getElementById('projectName').value = formData.project_name;
+            document.getElementById('description').value = formData.description;
+            
+            document.querySelectorAll('.add-item-row input').forEach(inp => {
+                if (inp) inp.value = '';
+            });
+
+            renderFormItems();
+            document.getElementById('formModal').classList.add('active');
+            console.log('✅ Edit Modal opened');
+        }
+
+        function closeModal(id) {
+            console.log('🔒 Closing modal:', id);
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // ==================== FORM ITEMS ====================
+        // Mapping: field name -> input ID suffix
+        // HTML menggunakan singular: strengthInput, weaknessInput, dll
+        // formData menggunakan plural: strengths, weaknesses, dll
+        const FIELD_MAP = {
+            'strength': 'strengths',
+            'weakness': 'weaknesses',
+            'opportunity': 'opportunities',
+            'threat': 'threats'
+        };
+
+        function renderFormItems() {
+            console.log('🎨 Rendering form items');
+            
+            // Mapping untuk list ID di HTML (singular)
+            const listMap = {
+                'strengths': 'strengthList',
+                'weaknesses': 'weaknessList',
+                'opportunities': 'opportunityList',
+                'threats': 'threatList'
+            };
+            
+            for (const [field, listId] of Object.entries(listMap)) {
+                const container = document.getElementById(listId);
+                if (!container) {
+                    console.warn('⚠️ Container not found:', listId);
+                    continue;
+                }
+                const items = formData[field] || [];
+                console.log(`📋 ${field}:`, items.length, 'items');
+                if (items.length === 0) {
+                    container.innerHTML = `<div style="color:#a0aec0;font-size:13px;padding:4px 0;">Belum ada item</div>`;
+                } else {
+                    container.innerHTML = items.map((text, idx) => `
+                        <div class="item-chip">
+                            <span class="item-text">${escapeHtml(text)}</span>
+                            <div class="item-actions">
+                                <button class="edit-item" onclick="editItem('${field}', ${idx})" title="Edit">✏️</button>
+                                <button class="delete-item" onclick="removeItem('${field}', ${idx})" title="Hapus">✕</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+            console.log('✅ Form items rendered');
+        }
+
+        function addItem(field) {
+            console.log('➕ Adding item to:', field);
+            
+            // Cari input dengan ID: field + 'Input' (contoh: strengthInput)
+            const inputId = field + 'Input';
+            console.log('🔍 Looking for input ID:', inputId);
+            
+            const input = document.getElementById(inputId);
+            if (!input) {
+                console.error('❌ Input not found:', inputId);
+                showToast('Error: Input tidak ditemukan', 'error');
+                return;
+            }
+            
+            const text = input.value.trim();
+            console.log('📝 Text:', text);
+            
+            if (!text) {
+                showToast('Masukkan teks terlebih dahulu', 'error');
+                return;
+            }
+            
+            // Konversi field singular ke plural untuk formData
+            const dataField = FIELD_MAP[field] || field;
+            console.log('📦 Data field:', dataField);
+            
+            if (!formData[dataField]) formData[dataField] = [];
+            formData[dataField].push(text);
+            input.value = '';
+            renderFormItems();
+            input.focus();
+            console.log('✅ Added item to:', dataField, 'Total:', formData[dataField].length);
+            showToast(`✅ Item ditambahkan ke ${dataField}`, 'success');
+        }
+
+        function removeItem(field, idx) {
+            console.log('🗑️ Removing item from:', field, 'index:', idx);
+            if (!confirm('Hapus item ini?')) return;
+            formData[field].splice(idx, 1);
+            renderFormItems();
+            console.log('✅ Removed item from:', field);
+        }
+
+        function editItem(field, idx) {
+            console.log('✏️ Editing item from:', field, 'index:', idx);
+            const newText = prompt('Edit item:', formData[field][idx]);
+            if (newText !== null && newText.trim() !== '') {
+                formData[field][idx] = newText.trim();
+                renderFormItems();
+                console.log('✅ Updated item in:', field);
+            }
+        }
+
+        // ==================== SAVE ====================
+        async function saveSwot() {
+            console.log('💾 Saving SWOT...');
+            const name = document.getElementById('projectName').value.trim();
+
+            if (!name) {
+                showToast('Nama Proyek wajib diisi', 'error');
+                document.getElementById('projectName').focus();
+                return;
+            }
+
+            const data = {
+                project_name: name,
+                description: document.getElementById('description').value.trim(),
+                strengths: formData.strengths || [],
+                weaknesses: formData.weaknesses || [],
+                opportunities: formData.opportunities || [],
+                threats: formData.threats || []
+            };
+
+            console.log('📦 Data to save:', data);
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Menyimpan...';
+
+            try {
+                if (currentEditId) {
+                    console.log('🔄 Updating SWOT ID:', currentEditId);
+                    await updateSwot(currentEditId, data);
+                    showToast('✅ SWOT berhasil diupdate!', 'success');
+                } else {
+                    console.log('➕ Creating new SWOT');
+                    await createSwot(data);
+                    showToast('✅ SWOT berhasil dibuat!', 'success');
+                }
+                await refreshData();
+                closeModal('formModal');
+                console.log('✅ Save complete');
+            } catch (e) {
+                console.error('❌ Save failed:', e);
+                showToast('❌ Gagal menyimpan: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = currentEditId ? '💾 Update' : '💾 Simpan';
+            }
+        }
+
+        // ==================== DELETE ====================
+        async function confirmDelete(id) {
+            console.log('🗑️ Confirm delete ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            if (!confirm(`Hapus SWOT "${item.project_name}" (ID: ${id})?`)) return;
+
+            try {
+                await deleteSwotApi(id);
+                showToast('✅ SWOT berhasil dihapus', 'success');
+                await refreshData();
+                console.log('✅ Deleted SWOT ID:', id);
+            } catch (e) {
+                console.error('❌ Delete failed:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteSwot() {
+            const id = parseInt(document.getElementById('editId').value);
+            console.log('🗑️ Delete SWOT from modal, ID:', id);
+            if (!id) return;
+            if (!confirm('Hapus SWOT ini secara permanen?')) return;
+
+            try {
+                await deleteSwotApi(id);
+                showToast('✅ SWOT berhasil dihapus', 'success');
+                closeModal('formModal');
+                await refreshData();
+                console.log('✅ Deleted SWOT ID:', id);
+            } catch (e) {
+                console.error('❌ Delete failed:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== DETAIL ====================
+
+        // ==================== AI PROMPT (per-baris) ====================
+        function aiPromptButtonHtml(onclickCall) {
+            return `<button class="ai-prompt-btn" onclick="${onclickCall}" title="Buat prompt AI untuk baris ini" style="background:#805ad5;color:#fff;border:none;width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:13px;line-height:1;margin-left:6px;flex-shrink:0;">🤖</button>`;
+        }
+
+        function showPromptPopup(promptText) {
+            let overlay = document.getElementById('aiPromptOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'aiPromptOverlay';
+                overlay.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:20px;';
+                overlay.innerHTML = `
+                    <div style="background:#fff;border-radius:12px;max-width:600px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                        <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+                            <h3 style="margin:0;font-size:16px;color:#2d3748;">🤖 Prompt untuk AI</h3>
+                            <button onclick="closePromptPopup()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#a0aec0;">✕</button>
+                        </div>
+                        <div style="padding:20px 24px;overflow-y:auto;">
+                            <p style="font-size:13px;color:#718096;margin:0 0 10px;">Salin prompt ini dan tempel ke AI (Claude/ChatGPT) untuk minta artikel lengkap berisi analisa, rekomendasi, dan langkah tindakan.</p>
+                            <textarea id="aiPromptTextArea" readonly style="width:100%;min-height:240px;padding:12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;line-height:1.5;resize:vertical;color:#2d3748;"></textarea>
+                        </div>
+                        <div style="padding:16px 24px;border-top:1px solid #e2e8f0;display:flex;gap:10px;justify-content:flex-end;">
+                            <button onclick="copyPromptText()" style="background:#4299e1;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;">📋 Copy Prompt</button>
+                            <button onclick="closePromptPopup()" style="background:#edf2f7;color:#4a5568;border:none;padding:10px 20px;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;">Tutup</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+                overlay.addEventListener('click', (e) => { if (e.target === overlay) closePromptPopup(); });
+            }
+            document.getElementById('aiPromptTextArea').value = promptText;
+            overlay.style.display = 'flex';
+        }
+
+        function closePromptPopup() {
+            const overlay = document.getElementById('aiPromptOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+
+        function copyPromptText() {
+            const ta = document.getElementById('aiPromptTextArea');
+            ta.select();
+            ta.setSelectionRange(0, 999999);
+            navigator.clipboard.writeText(ta.value).then(() => {
+                showToast('✅ Prompt berhasil disalin ke clipboard', 'success');
+            }).catch(() => {
+                document.execCommand('copy');
+                showToast('✅ Prompt berhasil disalin', 'success');
+            });
+        }
+
+        function promptSwotFull() {
+            const item = currentDetailItem;
+            const fmt = (arr) => (arr && arr.length) ? arr.map((t, i) => `  ${i + 1}. ${t}`).join('\n') : '  (tidak ada)';
+            const text = `Saya sedang melakukan analisis SWOT lengkap untuk "${item.project_name}".
+${item.description ? `Deskripsi: ${item.description}\n` : ''}
+Berikut seluruh data SWOT saya:
+
+💪 STRENGTHS (Kekuatan):
+${fmt(item.strengths)}
+
+⚠️ WEAKNESSES (Kelemahan):
+${fmt(item.weaknesses)}
+
+🚀 OPPORTUNITIES (Peluang):
+${fmt(item.opportunities)}
+
+🔥 THREATS (Ancaman):
+${fmt(item.threats)}
+
+Berdasarkan keseluruhan data SWOT di atas, tolong buatkan artikel analisis strategis lengkap berisi:
+1. Ringkasan kondisi bisnis saat ini berdasarkan seluruh elemen SWOT
+2. Analisis strategi SO (Strength-Opportunity), WO (Weakness-Opportunity), ST (Strength-Threat), dan WT (Weakness-Threat)
+3. Prioritas isu yang paling mendesak untuk ditangani
+4. Rekomendasi strategi bisnis secara menyeluruh
+5. Roadmap langkah-langkah tindakan (action plan) jangka pendek dan jangka panjang`;
+            showPromptPopup(text);
+        }
+
+        function promptSwotItem(category, idx) {
+            const labels = { strengths: 'Strength (Kekuatan)', weaknesses: 'Weakness (Kelemahan)', opportunities: 'Opportunity (Peluang)', threats: 'Threat (Ancaman)' };
+            const point = currentDetailItem[category][idx];
+            const text = `Saya sedang melakukan analisis SWOT untuk "${currentDetailItem.project_name}".
+
+Berikut salah satu poin ${labels[category] || category} saya:
+"${point}"
+
+Berdasarkan poin ini, tolong buatkan artikel lengkap berisi:
+1. Analisis mendalam mengapa poin ini penting/berpengaruh bagi bisnis saya
+2. Keterkaitan poin ini dengan elemen SWOT lain (misal strength vs opportunity, atau weakness vs threat)
+3. Rekomendasi strategi untuk memanfaatkan atau mengatasi poin ini
+4. Langkah-langkah tindakan konkret yang perlu dilakukan`;
+            showPromptPopup(text);
+        }
+
+
+        async function openDetail(id) {
+            console.log('👁️ Opening detail ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+
+            currentDetailId = id;
+            currentDetailItem = item;
+            document.getElementById('detailTitle').textContent = `📊 Detail SWOT: ${item.project_name}`;
+
+            const total = item.strengths.length + item.weaknesses.length +
+                item.opportunities.length + item.threats.length;
+
+            document.getElementById('detailStats').innerHTML = `
+                <div class="stat-box"><span class="num">#${item.id_x}</span> <span class="lbl">ID</span></div>
+                <div class="stat-box"><span class="num">${total}</span> <span class="lbl">Total Item</span></div>
+                <div class="stat-box"><span class="num strength">${item.strengths.length}</span> <span class="lbl">Strengths</span></div>
+                <div class="stat-box"><span class="num weakness">${item.weaknesses.length}</span> <span class="lbl">Weaknesses</span></div>
+                <div class="stat-box"><span class="num opportunity">${item.opportunities.length}</span> <span class="lbl">Opportunities</span></div>
+                <div class="stat-box"><span class="num threat">${item.threats.length}</span> <span class="lbl">Threats</span></div>
+                ${item.description ? `<div class="stat-box" style="flex:1;min-width:150px;"><span class="lbl">Deskripsi</span><br><span style="font-size:14px;color:#2d3748;">${escapeHtml(item.description)}</span></div>` : ''}
+            `;
+
+            const fields = [
+                { key: 'strengths', label: '💪 Strengths', cls: 'strength' },
+                { key: 'weaknesses', label: '⚠️ Weaknesses', cls: 'weakness' },
+                { key: 'opportunities', label: '🚀 Opportunities', cls: 'opportunity' },
+                { key: 'threats', label: '🔥 Threats', cls: 'threat' }
+            ];
+
+            document.getElementById('detailSwot').innerHTML = fields.map(f => `
+                <div class="detail-swot-box ${f.cls}">
+                    <h4 class="${f.cls}">${f.label}</h4>
+                    <div class="detail-items">
+                        ${(item[f.key] || []).length === 0 ?
+                            '<span style="color:#a0aec0;font-size:13px;">Tidak ada item</span>' :
+                            (item[f.key] || []).map((t, idx) => `<span class="tag" style="display:inline-flex;align-items:center;gap:4px;">${escapeHtml(t)} ${aiPromptButtonHtml(`promptSwotItem('${f.key}', ${idx})`)}</span>`).join('')
+                        }
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('detailModal').classList.add('active');
+            console.log('✅ Detail modal opened');
+        }
+
+        function editFromDetail() {
+            console.log('✏️ Edit from detail, ID:', currentDetailId);
+            if (currentDetailId) {
+                closeModal('detailModal');
+                setTimeout(() => openEditModal(currentDetailId), 300);
+            }
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'info') {
+            console.log(`📢 Toast: [${type}] ${message}`);
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ==================== KEYBOARD ====================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => {
+                    m.classList.remove('active');
+                });
+            }
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        // ==================== DEBUG ====================
+        window.debug = {
+            allData: () => allData,
+            formData: () => formData,
+            refresh: refreshData,
+            openAdd: openAddModal,
+            TABLE: TABLE,
+            COLUMNS: COLUMNS,
+            FIELD_MAP: FIELD_MAP,
+            checkElements: () => {
+                const result = {};
+                const fields = ['strength', 'weakness', 'opportunity', 'threat'];
+                fields.forEach(f => {
+                    const input = document.getElementById(f + 'Input');
+                    const list = document.getElementById(f + 'List');
+                    result[f] = {
+                        input: input ? '✅' : '❌',
+                        list: list ? '✅' : '❌',
+                        inputValue: input ? input.value : 'N/A',
+                        listItems: list ? list.children.length : 0
+                    };
+                });
+                console.table(result);
+                return result;
+            }
+        };
+
+        console.log('📊 SWOT Manager Loaded!');
+        console.log('📡 Table:', TABLE);
+        console.log('📊 Type "debug" in console for helpers');
+        console.log('🔧 Debug commands:');
+        console.log('  - debug.allData()      : Lihat semua data');
+        console.log('  - debug.formData()     : Lihat form data');
+        console.log('  - debug.refresh()      : Refresh data');
+        console.log('  - debug.openAdd()      : Open add modal');
+        console.log('  - debug.checkElements(): Check DOM elements');
+        console.log('  - debug.FIELD_MAP      : Lihat mapping field');
+    </script>
+</body>
+</html>

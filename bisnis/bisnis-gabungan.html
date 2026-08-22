@@ -1,0 +1,1996 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Tools Suite - All in One</title>
+    <style>
+        /* ======================================== */
+        /* RESET & BASE */
+        /* ======================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            color: #2d3748;
+            line-height: 1.6;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* ======================================== */
+        /* MAIN TABS */
+        /* ======================================== */
+        .main-tabs {
+            display: flex;
+            background: #1a202c;
+            padding: 0 20px;
+            flex-shrink: 0;
+            border-bottom: 3px solid #4299e1;
+            overflow-x: auto;
+        }
+
+        .main-tab-btn {
+            padding: 14px 28px;
+            background: transparent;
+            border: none;
+            color: #a0aec0;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .main-tab-btn:hover {
+            color: white;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .main-tab-btn.active {
+            color: white;
+            border-bottom-color: #4299e1;
+            background: rgba(66,153,225,0.1);
+        }
+
+        .main-tab-btn .badge {
+            background: #4299e1;
+            color: white;
+            font-size: 10px;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        .main-tab-content {
+            flex: 1;
+            overflow: hidden;
+            display: none;
+        }
+
+        .main-tab-content.active {
+            display: block;
+        }
+
+        /* ======================================== */
+        /* TAB 1: INDEX CONTENT */
+        /* ======================================== */
+        .tab-index-scroll {
+            height: 100%;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .tab-index-scroll .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ======================================== */
+        /* TAB 2: TOOLS CONTENT */
+        /* ======================================== */
+        .tab-tools {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: #f0f4f8;
+        }
+
+        .sub-tabs {
+            display: flex;
+            background: white;
+            padding: 8px 16px;
+            flex-shrink: 0;
+            border-bottom: 2px solid #e2e8f0;
+            overflow-x: auto;
+            gap: 4px;
+            flex-wrap: nowrap;
+        }
+
+        .sub-tab-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sub-tab-btn:hover {
+            background: #edf2f7;
+        }
+
+        .sub-tab-btn.active {
+            background: #4299e1;
+            color: white;
+        }
+
+        .sub-tab-btn .icon {
+            font-size: 16px;
+        }
+
+        .sub-tab-content {
+            flex: 1;
+            overflow: hidden;
+            display: none;
+            background: #f0f4f8;
+        }
+
+        .sub-tab-content.active {
+            display: block;
+        }
+
+        .tool-iframe-container {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+            position: relative;
+        }
+
+        .tool-iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .tool-iframe-container .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f4f8;
+            z-index: 1;
+            font-size: 18px;
+            color: #718096;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tool-iframe-container .loading-overlay .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #4299e1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .tool-iframe-container.loaded .loading-overlay {
+            display: none;
+        }
+
+        .tool-iframe-container .error-message {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+            background: #fff5f5;
+            z-index: 2;
+            flex-direction: column;
+            gap: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .tool-iframe-container .error-message .error-icon {
+            font-size: 48px;
+        }
+
+        .tool-iframe-container .error-message .error-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #e53e3e;
+        }
+
+        .tool-iframe-container .error-message .error-desc {
+            color: #718096;
+            max-width: 400px;
+        }
+
+        .tool-iframe-container .error-message .btn-retry {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tool-iframe-container .error-message .btn-retry:hover {
+            background: #3182ce;
+        }
+
+        .tool-iframe-container.has-error .error-message {
+            display: flex;
+        }
+
+        .tool-iframe-container.has-error .loading-overlay {
+            display: none;
+        }
+
+        /* ======================================== */
+        /* INDEX STYLES */
+        /* ======================================== */
+        .header-index {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: white;
+            padding: 40px 30px 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            border-bottom: 4px solid #4299e1;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-index h1 {
+            font-size: 32px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-index h1 span {
+            background: #4299e1;
+            font-size: 14px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .header-index p {
+            color: #a0aec0;
+            font-size: 16px;
+            margin-top: 4px;
+        }
+
+        .header-badge {
+            background: rgba(66, 153, 225, 0.2);
+            padding: 8px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(66, 153, 225, 0.3);
+            font-size: 14px;
+            color: #bee3f8;
+        }
+
+        .tools-nav {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 24px 30px;
+            margin-bottom: 30px;
+        }
+
+        .tools-nav h2 {
+            font-size: 18px;
+            color: #1a202c;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tools-nav h2 .count {
+            background: #4299e1;
+            color: white;
+            font-size: 13px;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+        }
+
+        .tool-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: #f7fafc;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+
+        .tool-link:hover {
+            background: #edf2f7;
+            border-color: #4299e1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66,153,225,0.2);
+        }
+
+        .tool-link .icon {
+            font-size: 20px;
+        }
+
+        .tool-link .badge-new {
+            background: #48bb78;
+            color: white;
+            font-size: 9px;
+            padding: 1px 8px;
+            border-radius: 10px;
+            margin-left: auto;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .tool-link .badge-info {
+            background: #4299e1;
+            color: white;
+            font-size: 8px;
+            padding: 1px 6px;
+            border-radius: 10px;
+            margin-left: auto;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .article-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .article-section h2 {
+            font-size: 28px;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .article-section .subtitle {
+            color: #718096;
+            font-size: 16px;
+            margin-bottom: 24px;
+        }
+
+        .article-section .divider {
+            height: 3px;
+            background: linear-gradient(to right, #4299e1, #9f7aea);
+            border-radius: 4px;
+            margin-bottom: 30px;
+            width: 80px;
+        }
+
+        .article-content h3 {
+            font-size: 20px;
+            color: #2d3748;
+            margin-top: 28px;
+            margin-bottom: 12px;
+        }
+
+        .article-content h3:first-of-type {
+            margin-top: 0;
+        }
+
+        .article-content p {
+            color: #4a5568;
+            margin-bottom: 14px;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 24px;
+            margin-bottom: 16px;
+            color: #4a5568;
+        }
+
+        .article-content ul li,
+        .article-content ol li {
+            margin-bottom: 6px;
+        }
+
+        .article-content .highlight-box {
+            background: #f7fafc;
+            border-left: 4px solid #4299e1;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+
+        .article-content .highlight-box strong {
+            color: #2d3748;
+        }
+
+        .tool-card-article {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .tool-card-article .tool-item {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .tool-card-article .tool-item:hover {
+            border-color: #4299e1;
+            box-shadow: 0 4px 12px rgba(66,153,225,0.15);
+            transform: translateY(-2px);
+        }
+
+        .tool-card-article .tool-item .tool-icon {
+            font-size: 28px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .tool-card-article .tool-item .tool-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: #2d3748;
+        }
+
+        .tool-card-article .tool-item .tool-desc {
+            font-size: 13px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .tool-card-article .tool-item .tool-link-small {
+            display: inline-block;
+            margin-top: 8px;
+            color: #4299e1;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .tool-card-article .tool-item .tool-link-small:hover {
+            text-decoration: underline;
+        }
+
+        .toc {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 16px 0 24px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .toc h4 {
+            font-size: 15px;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .toc ul {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 4px 20px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .toc ul li {
+            margin: 0;
+            padding: 0;
+        }
+
+        .toc ul li a {
+            color: #4299e1;
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .toc ul li a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-index {
+            background: #1a202c;
+            color: #a0aec0;
+            padding: 30px 0;
+            border-top: 4px solid #4299e1;
+            text-align: center;
+            font-size: 14px;
+            border-radius: 16px;
+            margin-top: 20px;
+        }
+
+        /* ======================================== */
+        /* MODAL POPUP */
+        /* ======================================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 40px;
+            position: relative;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-close {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: #fc8181;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 22px;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .modal-close:hover {
+            background: #f56565;
+            transform: rotate(90deg);
+        }
+
+        .modal .modal-icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .modal .modal-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .modal .modal-subtitle {
+            color: #718096;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .modal .modal-divider {
+            height: 3px;
+            background: linear-gradient(to right, #4299e1, #9f7aea);
+            border-radius: 4px;
+            margin-bottom: 24px;
+            width: 60px;
+        }
+
+        .modal .modal-body h4 {
+            font-size: 18px;
+            color: #2d3748;
+            margin-top: 20px;
+            margin-bottom: 8px;
+        }
+
+        .modal .modal-body h4:first-of-type {
+            margin-top: 0;
+        }
+
+        .modal .modal-body p {
+            color: #4a5568;
+            margin-bottom: 12px;
+            line-height: 1.7;
+        }
+
+        .modal .modal-body ul,
+        .modal .modal-body ol {
+            padding-left: 24px;
+            margin-bottom: 14px;
+            color: #4a5568;
+        }
+
+        .modal .modal-body ul li,
+        .modal .modal-body ol li {
+            margin-bottom: 4px;
+        }
+
+        .modal .modal-body .highlight-box {
+            background: #f7fafc;
+            border-left: 4px solid #4299e1;
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+
+        .modal .modal-body .highlight-box strong {
+            color: #2d3748;
+        }
+
+        .modal .modal-footer {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 2px solid #edf2f7;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .modal .modal-footer .btn-open-tool {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal .modal-footer .btn-open-tool:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+        }
+
+        .modal .modal-footer .btn-close-modal {
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal .modal-footer .btn-close-modal:hover {
+            background: #cbd5e0;
+        }
+
+        .modal::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal::-webkit-scrollbar-track {
+            background: #f7fafc;
+            border-radius: 10px;
+        }
+        .modal::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        /* ======================================== */
+        /* SCROLLBAR */
+        /* ======================================== */
+        .tab-index-scroll::-webkit-scrollbar,
+        .sub-tabs::-webkit-scrollbar,
+        .main-tabs::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+
+        .tab-index-scroll::-webkit-scrollbar-track,
+        .sub-tabs::-webkit-scrollbar-track,
+        .main-tabs::-webkit-scrollbar-track {
+            background: #f0f4f8;
+        }
+
+        .tab-index-scroll::-webkit-scrollbar-thumb,
+        .sub-tabs::-webkit-scrollbar-thumb,
+        .main-tabs::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        /* ======================================== */
+        /* RESPONSIVE */
+        /* ======================================== */
+        @media (max-width: 992px) {
+            .tool-card-article {
+                grid-template-columns: 1fr;
+            }
+            .tools-grid {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            }
+            .toc ul {
+                grid-template-columns: 1fr 1fr;
+            }
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .header-index h1 {
+                font-size: 26px;
+            }
+            .main-tab-btn {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+            .sub-tab-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            .modal {
+                padding: 30px 24px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header-index h1 {
+                font-size: 20px;
+                flex-wrap: wrap;
+            }
+            .header-index h1 span {
+                font-size: 11px;
+                padding: 2px 10px;
+            }
+            .tools-grid {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            }
+            .tool-link {
+                font-size: 12px;
+                padding: 8px 10px;
+            }
+            .article-section {
+                padding: 20px 16px;
+            }
+            .article-section h2 {
+                font-size: 22px;
+            }
+            .article-content h3 {
+                font-size: 17px;
+            }
+            .toc ul {
+                grid-template-columns: 1fr;
+            }
+            .main-tabs {
+                padding: 0 10px;
+            }
+            .main-tab-btn {
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+            .sub-tabs {
+                padding: 4px 8px;
+            }
+            .sub-tab-btn {
+                padding: 4px 10px;
+                font-size: 11px;
+            }
+            .sub-tab-btn .icon {
+                font-size: 13px;
+            }
+            .modal {
+                padding: 20px 16px;
+            }
+            .modal .modal-title {
+                font-size: 22px;
+            }
+            .modal .modal-footer {
+                flex-direction: column;
+            }
+            .modal .modal-footer .btn-open-tool,
+            .modal .modal-footer .btn-close-modal {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- MAIN TABS -->
+        <div class="main-tabs">
+            <button class="main-tab-btn active" data-tab="tab-index" onclick="switchMainTab('tab-index')">
+                🏠 Beranda
+                <span class="badge">Home</span>
+            </button>
+            <button class="main-tab-btn" data-tab="tab-tools" onclick="switchMainTab('tab-tools')">
+                🚀 Tools
+                <span class="badge">14</span>
+            </button>
+        </div>
+
+        <!-- TAB 1: INDEX -->
+        <div class="main-tab-content active" id="tab-index">
+            <div class="tab-index-scroll">
+                <div class="container">
+                    <!-- HEADER -->
+                    <div class="header-index">
+                        <div class="header-content">
+                            <div>
+                                <h1>
+                                    🏢 Business Tools Suite
+                                    <span>v2.0</span>
+                                </h1>
+                                <p>Kumpulan lengkap tools strategic management untuk membantu bisnis Anda</p>
+                            </div>
+                            <div class="header-badge">
+                                📊 14 Tools Siap Pakai
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOOLS NAVIGATION -->
+                    <nav class="tools-nav">
+                        <h2>
+                            🚀 Akses Cepat Tools
+                            <span class="count">14 Tools</span>
+                        </h2>
+                        <div class="tools-grid">
+                            <button class="tool-link" onclick="openModal('vpc')">
+                                <span class="icon">🎯</span> VPC
+                                <span class="badge-info">info</span>
+                            </button>
+                            <button class="tool-link" onclick="openModal('swot')">
+                                <span class="icon">📊</span> SWOT
+                                <span class="badge-info">info</span>
+                            </button>
+                            <button class="tool-link" onclick="openModal('brainstorming')">
+                                <span class="icon">🧠</span> Brainstorming
+                                <span class="badge-info">info</span>
+                            </button>
+                            <button class="tool-link" onclick="openModal('competitive')">
+                                <span class="icon">🏆</span> Competitive
+                                <span class="badge-info">info</span>
+                            </button>
+                            <button class="tool-link" onclick="openModal('risk')">
+                                <span class="icon">⚠️</span> Risk
+                                <span class="badge-info">info</span>
+                            </button>
+                            <button class="tool-link" onclick="openModal('kpi')">
+                                <span class="icon">📊</span> KPI
+                                <span class="badge-info">info</span>
+                            </button>
+                            <button class="tool-link" onclick="openModal('customer_journey')">
+                                <span class="icon">🗺️</span> Customer Journey
+                                <span class="badge-info">info</span>
+                            </button>
+                            <button class="tool-link" onclick="openModal('porters')">
+                                <span class="icon">🏛️</span> Porter's
+                                <span class="badge-info">info</span>
+                            </button>
+                            <button class="tool-link" onclick="openModal('okr')">
+                                <span class="icon">🎯</span> OKR
+                                <span class="badge-info">info</span>
+                            </button>
+                            <button class="tool-link" onclick="openModal('marketing_mix')">
+                                <span class="icon">📢</span> Marketing Mix
+                                <span class="badge-info">info</span>
+                            </button>
+                            <button class="tool-link" onclick="openModal('pestel')">
+                                <span class="icon">🌍</span> PESTEL
+                                <span class="badge-info">info</span>
+                            </button>
+                            <button class="tool-link" onclick="openModal('lean_canvas')">
+                                <span class="icon">📋</span> Lean Canvas
+                                <span class="badge-info">info</span>
+                            </button>
+                            <button class="tool-link" onclick="openModal('bmc')">
+                                <span class="icon">🏢</span> BMC
+                                <span class="badge-info">info</span>
+                            </button>
+                            <button class="tool-link" onclick="openModal('contacts')">
+                                <span class="icon">📇</span> Contacts
+                                <span class="badge-info">info</span>
+                            </button>
+                            <button class="tool-link" onclick="switchMainTab('tab-tools')" style="background:#ebf8ff;border-color:#4299e1;">
+                                <span class="icon">🚀</span> Buka Semua Tools
+                                <span class="badge-new">Go</span>
+                            </button>
+                        </div>
+                    </nav>
+
+                    <!-- ARTICLE -->
+                    <article class="article-section">
+                        <h2>📖 Panduan Lengkap Strategic Management Tools</h2>
+                        <p class="subtitle">Memahami dan mengaplikasikan tools bisnis untuk kesuksesan perusahaan Anda</p>
+                        <div class="divider"></div>
+
+                        <div class="toc">
+                            <h4>📑 Daftar Isi</h4>
+                            <ul>
+                                <li><a onclick="document.querySelector('#apa-itu').scrollIntoView({behavior:'smooth'})">Apa Itu Strategic Management Tools?</a></li>
+                                <li><a onclick="document.querySelector('#manfaat').scrollIntoView({behavior:'smooth'})">Manfaat Menggunakan Tools</a></li>
+                                <li><a onclick="document.querySelector('#analisis').scrollIntoView({behavior:'smooth'})">Tools Analisis</a></li>
+                                <li><a onclick="document.querySelector('#perencanaan').scrollIntoView({behavior:'smooth'})">Tools Perencanaan</a></li>
+                                <li><a onclick="document.querySelector('#pemantauan').scrollIntoView({behavior:'smooth'})">Tools Pemantauan</a></li>
+                                <li><a onclick="document.querySelector('#cara-pakai').scrollIntoView({behavior:'smooth'})">Cara Terbaik Menggunakan</a></li>
+                                <li><a onclick="document.querySelector('#integrasi').scrollIntoView({behavior:'smooth'})">Integrasi Tools</a></li>
+                                <li><a onclick="document.querySelector('#kesimpulan').scrollIntoView({behavior:'smooth'})">Kesimpulan</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="article-content">
+                            <h3 id="apa-itu">🏢 Apa Itu Strategic Management Tools?</h3>
+                            <p>
+                                <strong>Strategic Management Tools</strong> adalah serangkaian framework, metode, dan aplikasi
+                                yang digunakan oleh para pemimpin bisnis, manajer, dan profesional untuk merumuskan,
+                                mengimplementasikan, dan mengevaluasi strategi perusahaan.
+                            </p>
+
+                            <h3 id="manfaat">💡 Manfaat Menggunakan Strategic Management Tools</h3>
+                            <div class="highlight-box">
+                                <p><strong>🎯 5 Manfaat Utama:</strong></p>
+                                <ol>
+                                    <li><strong>Pengambilan Keputusan Lebih Baik</strong></li>
+                                    <li><strong>Visualisasi Strategi</strong></li>
+                                    <li><strong>Identifikasi Peluang &amp; Ancaman</strong></li>
+                                    <li><strong>Komunikasi Tim yang Efektif</strong></li>
+                                    <li><strong>Peningkatan Kinerja</strong></li>
+                                </ol>
+                            </div>
+
+                            <h3 id="analisis">🔍 Tools Analisis</h3>
+                            <div class="tool-card-article">
+                                <div class="tool-item" onclick="openModal('swot')">
+                                    <span class="tool-icon">📊</span>
+                                    <div class="tool-name">SWOT Analysis</div>
+                                    <div class="tool-desc">Menganalisis Strengths, Weaknesses, Opportunities, dan Threats.</div>
+                                    <button class="tool-link-small">📖 Baca Selengkapnya →</button>
+                                </div>
+                                <div class="tool-item" onclick="openModal('pestel')">
+                                    <span class="tool-icon">🌍</span>
+                                    <div class="tool-name">PESTEL Analysis</div>
+                                    <div class="tool-desc">Menganalisis faktor Political, Economic, Social, Technological, Environmental, Legal.</div>
+                                    <button class="tool-link-small">📖 Baca Selengkapnya →</button>
+                                </div>
+                                <div class="tool-item" onclick="openModal('porters')">
+                                    <span class="tool-icon">🏛️</span>
+                                    <div class="tool-name">Porter's Five Forces</div>
+                                    <div class="tool-desc">Menganalisis 5 kekuatan industri.</div>
+                                    <button class="tool-link-small">📖 Baca Selengkapnya →</button>
+                                </div>
+                                <div class="tool-item" onclick="openModal('competitive')">
+                                    <span class="tool-icon">🏆</span>
+                                    <div class="tool-name">Competitive Analysis</div>
+                                    <div class="tool-desc">Membandingkan bisnis Anda dengan kompetitor.</div>
+                                    <button class="tool-link-small">📖 Baca Selengkapnya →</button>
+                                </div>
+                                <div class="tool-item" onclick="openModal('risk')">
+                                    <span class="tool-icon">⚠️</span>
+                                    <div class="tool-name">Risk Assessment</div>
+                                    <div class="tool-desc">Mengidentifikasi dan memprioritaskan risiko.</div>
+                                    <button class="tool-link-small">📖 Baca Selengkapnya →</button>
+                                </div>
+                                <div class="tool-item" onclick="openModal('customer_journey')">
+                                    <span class="tool-icon">🗺️</span>
+                                    <div class="tool-name">Customer Journey Map</div>
+                                    <div class="tool-desc">Memetakan pengalaman pelanggan.</div>
+                                    <button class="tool-link-small">📖 Baca Selengkapnya →</button>
+                                </div>
+                            </div>
+
+                            <h3 id="perencanaan">📋 Tools Perencanaan</h3>
+                            <div class="tool-card-article">
+                                <div class="tool-item" onclick="openModal('bmc')">
+                                    <span class="tool-icon">🏢</span>
+                                    <div class="tool-name">Business Model Canvas</div>
+                                    <div class="tool-desc">9 blok untuk menggambarkan model bisnis.</div>
+                                    <button class="tool-link-small">📖 Baca Selengkapnya →</button>
+                                </div>
+                                <div class="tool-item" onclick="openModal('lean_canvas')">
+                                    <span class="tool-icon">📋</span>
+                                    <div class="tool-name">Lean Canvas</div>
+                                    <div class="tool-desc">Versi ringkas BMC untuk startup.</div>
+                                    <button class="tool-link-small">📖 Baca Selengkapnya →</button>
+                                </div>
+                                <div class="tool-item" onclick="openModal('vpc')">
+                                    <span class="tool-icon">🎯</span>
+                                    <div class="tool-name">Value Proposition Canvas</div>
+                                    <div class="tool-desc">Memetakan nilai yang ditawarkan.</div>
+                                    <button class="tool-link-small">📖 Baca Selengkapnya →</button>
+                                </div>
+                                <div class="tool-item" onclick="openModal('okr')">
+                                    <span class="tool-icon">🎯</span>
+                                    <div class="tool-name">OKR</div>
+                                    <div class="tool-desc">Objectives &amp; Key Results.</div>
+                                    <button class="tool-link-small">📖 Baca Selengkapnya →</button>
+                                </div>
+                                <div class="tool-item" onclick="openModal('marketing_mix')">
+                                    <span class="tool-icon">📢</span>
+                                    <div class="tool-name">Marketing Mix (4P/7P)</div>
+                                    <div class="tool-desc">Merancang strategi pemasaran.</div>
+                                    <button class="tool-link-small">📖 Baca Selengkapnya →</button>
+                                </div>
+                                <div class="tool-item" onclick="openModal('brainstorming')">
+                                    <span class="tool-icon">🧠</span>
+                                    <div class="tool-name">Brainstorming Board</div>
+                                    <div class="tool-desc">Menampung dan melacak ide tim.</div>
+                                    <button class="tool-link-small">📖 Baca Selengkapnya →</button>
+                                </div>
+                            </div>
+
+                            <h3 id="pemantauan">📊 Tools Pemantauan</h3>
+                            <div class="tool-card-article">
+                                <div class="tool-item" onclick="openModal('kpi')">
+                                    <span class="tool-icon">📊</span>
+                                    <div class="tool-name">KPI Dashboard</div>
+                                    <div class="tool-desc">Memantau indikator kinerja utama.</div>
+                                    <button class="tool-link-small">📖 Baca Selengkapnya →</button>
+                                </div>
+                                <div class="tool-item" onclick="openModal('contacts')">
+                                    <span class="tool-icon">📇</span>
+                                    <div class="tool-name">Contacts Database</div>
+                                    <div class="tool-desc">Mengelola data kontak pelanggan.</div>
+                                    <button class="tool-link-small">📖 Baca Selengkapnya →</button>
+                                </div>
+                            </div>
+
+                            <h3 id="cara-pakai">💎 Cara Terbaik Menggunakan Tools Ini</h3>
+                            <p>Mulai dengan <strong>SWOT</strong> untuk audit internal, lalu <strong>PESTEL</strong> untuk analisis eksternal. Gunakan <strong>BMC</strong> atau <strong>Lean Canvas</strong> untuk merancang model bisnis. Tetapkan <strong>OKR</strong> dan pantau dengan <strong>KPI Dashboard</strong>.</p>
+
+                            <h3 id="integrasi">🔄 Integrasi Tools</h3>
+                            <div class="highlight-box">
+                                <p><strong>📋 Recommended Workflow:</strong></p>
+                                <ol>
+                                    <li>Analisis Eksternal: PESTEL → Porter's Five Forces → Competitive Analysis</li>
+                                    <li>Analisis Internal: SWOT → Value Proposition Canvas</li>
+                                    <li>Perencanaan: Lean Canvas / BMC → OKR → Marketing Mix</li>
+                                    <li>Eksekusi: KPI Dashboard → Risk Assessment → Customer Journey</li>
+                                </ol>
+                            </div>
+
+                            <h3 id="kesimpulan">🎯 Kesimpulan</h3>
+                            <p>Strategic Management Tools adalah aset berharga bagi setiap organisasi. Mulailah dengan satu tool hari ini.</p>
+
+                            <div class="highlight-box" style="background:#ebf8ff;border-color:#4299e1;">
+                                <p><strong>🚀 Siap Memulai?</strong> Pilih salah satu tool di atas.</p>
+                            </div>
+                        </div>
+                    </article>
+
+                    <footer class="footer-index">
+                        <p>🏢 Business Tools Suite &copy; 2026 - Strategic Management Tools</p>
+                        <p style="font-size:13px;margin-top:4px;">Dibuat dengan ❤️ untuk membantu bisnis Indonesia berkembang</p>
+                    </footer>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: TOOLS -->
+        <div class="main-tab-content" id="tab-tools">
+            <div class="tab-tools">
+                <div class="sub-tabs" id="subTabs">
+                    <button class="sub-tab-btn active" data-subtab="vpc" onclick="switchSubTab('vpc')">
+                        <span class="icon">🎯</span> VPC
+                    </button>
+                    <button class="sub-tab-btn" data-subtab="swot" onclick="switchSubTab('swot')">
+                        <span class="icon">📊</span> SWOT
+                    </button>
+                    <button class="sub-tab-btn" data-subtab="brainstorming" onclick="switchSubTab('brainstorming')">
+                        <span class="icon">🧠</span> Brainstorming
+                    </button>
+                    <button class="sub-tab-btn" data-subtab="competitive" onclick="switchSubTab('competitive')">
+                        <span class="icon">🏆</span> Competitive
+                    </button>
+                    <button class="sub-tab-btn" data-subtab="risk" onclick="switchSubTab('risk')">
+                        <span class="icon">⚠️</span> Risk
+                    </button>
+                    <button class="sub-tab-btn" data-subtab="kpi" onclick="switchSubTab('kpi')">
+                        <span class="icon">📊</span> KPI
+                    </button>
+                    <button class="sub-tab-btn" data-subtab="customer_journey" onclick="switchSubTab('customer_journey')">
+                        <span class="icon">🗺️</span> Journey
+                    </button>
+                    <button class="sub-tab-btn" data-subtab="porters" onclick="switchSubTab('porters')">
+                        <span class="icon">🏛️</span> Porter's
+                    </button>
+                    <button class="sub-tab-btn" data-subtab="okr" onclick="switchSubTab('okr')">
+                        <span class="icon">🎯</span> OKR
+                    </button>
+                    <button class="sub-tab-btn" data-subtab="marketing_mix" onclick="switchSubTab('marketing_mix')">
+                        <span class="icon">📢</span> Marketing Mix
+                    </button>
+                    <button class="sub-tab-btn" data-subtab="pestel" onclick="switchSubTab('pestel')">
+                        <span class="icon">🌍</span> PESTEL
+                    </button>
+                    <button class="sub-tab-btn" data-subtab="lean_canvas" onclick="switchSubTab('lean_canvas')">
+                        <span class="icon">📋</span> Lean Canvas
+                    </button>
+                    <button class="sub-tab-btn" data-subtab="bmc" onclick="switchSubTab('bmc')">
+                        <span class="icon">🏢</span> BMC
+                    </button>
+                    <button class="sub-tab-btn" data-subtab="contacts" onclick="switchSubTab('contacts')">
+                        <span class="icon">📇</span> Contacts
+                    </button>
+                </div>
+
+                <!-- Sub Tab Contents -->
+                <div class="sub-tab-content active" id="subtab-vpc">
+                    <div class="tool-iframe-container" id="iframe-vpc">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <span>⏳ Memuat VPC...</span>
+                        </div>
+                        <div class="error-message">
+                            <div class="error-icon">⚠️</div>
+                            <div class="error-title">Gagal Memuat Tool</div>
+                            <div class="error-desc">Pastikan file VPC.html tersedia di direktori yang sama.</div>
+                            <button class="btn-retry" onclick="retryLoadTool('vpc')">🔄 Coba Lagi</button>
+                        </div>
+                        <iframe src="VPC.html" onload="handleIframeLoad(this)"></iframe>
+                    </div>
+                </div>
+                <div class="sub-tab-content" id="subtab-swot">
+                    <div class="tool-iframe-container" id="iframe-swot">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <span>⏳ Memuat SWOT...</span>
+                        </div>
+                        <div class="error-message">
+                            <div class="error-icon">⚠️</div>
+                            <div class="error-title">Gagal Memuat Tool</div>
+                            <div class="error-desc">Pastikan file SWOT.html tersedia di direktori yang sama.</div>
+                            <button class="btn-retry" onclick="retryLoadTool('swot')">🔄 Coba Lagi</button>
+                        </div>
+                        <iframe src="SWOT.html" onload="handleIframeLoad(this)"></iframe>
+                    </div>
+                </div>
+                <div class="sub-tab-content" id="subtab-brainstorming">
+                    <div class="tool-iframe-container" id="iframe-brainstorming">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <span>⏳ Memuat Brainstorming...</span>
+                        </div>
+                        <div class="error-message">
+                            <div class="error-icon">⚠️</div>
+                            <div class="error-title">Gagal Memuat Tool</div>
+                            <div class="error-desc">Pastikan file brainstorming.html tersedia di direktori yang sama.</div>
+                            <button class="btn-retry" onclick="retryLoadTool('brainstorming')">🔄 Coba Lagi</button>
+                        </div>
+                        <iframe src="brainstorming.html" onload="handleIframeLoad(this)"></iframe>
+                    </div>
+                </div>
+                <div class="sub-tab-content" id="subtab-competitive">
+                    <div class="tool-iframe-container" id="iframe-competitive">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <span>⏳ Memuat Competitive Analysis...</span>
+                        </div>
+                        <div class="error-message">
+                            <div class="error-icon">⚠️</div>
+                            <div class="error-title">Gagal Memuat Tool</div>
+                            <div class="error-desc">Pastikan file competitive.html tersedia di direktori yang sama.</div>
+                            <button class="btn-retry" onclick="retryLoadTool('competitive')">🔄 Coba Lagi</button>
+                        </div>
+                        <iframe src="competitive.html" onload="handleIframeLoad(this)"></iframe>
+                    </div>
+                </div>
+                <div class="sub-tab-content" id="subtab-risk">
+                    <div class="tool-iframe-container" id="iframe-risk">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <span>⏳ Memuat Risk Assessment...</span>
+                        </div>
+                        <div class="error-message">
+                            <div class="error-icon">⚠️</div>
+                            <div class="error-title">Gagal Memuat Tool</div>
+                            <div class="error-desc">Pastikan file risk.html tersedia di direktori yang sama.</div>
+                            <button class="btn-retry" onclick="retryLoadTool('risk')">🔄 Coba Lagi</button>
+                        </div>
+                        <iframe src="risk.html" onload="handleIframeLoad(this)"></iframe>
+                    </div>
+                </div>
+                <div class="sub-tab-content" id="subtab-kpi">
+                    <div class="tool-iframe-container" id="iframe-kpi">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <span>⏳ Memuat KPI Dashboard...</span>
+                        </div>
+                        <div class="error-message">
+                            <div class="error-icon">⚠️</div>
+                            <div class="error-title">Gagal Memuat Tool</div>
+                            <div class="error-desc">Pastikan file kpi.html tersedia di direktori yang sama.</div>
+                            <button class="btn-retry" onclick="retryLoadTool('kpi')">🔄 Coba Lagi</button>
+                        </div>
+                        <iframe src="kpi.html" onload="handleIframeLoad(this)"></iframe>
+                    </div>
+                </div>
+                <div class="sub-tab-content" id="subtab-customer_journey">
+                    <div class="tool-iframe-container" id="iframe-customer_journey">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <span>⏳ Memuat Customer Journey...</span>
+                        </div>
+                        <div class="error-message">
+                            <div class="error-icon">⚠️</div>
+                            <div class="error-title">Gagal Memuat Tool</div>
+                            <div class="error-desc">Pastikan file customer_journey_map.html tersedia di direktori yang sama.</div>
+                            <button class="btn-retry" onclick="retryLoadTool('customer_journey')">🔄 Coba Lagi</button>
+                        </div>
+                        <iframe src="customer_journey_map.html" onload="handleIframeLoad(this)"></iframe>
+                    </div>
+                </div>
+                <div class="sub-tab-content" id="subtab-porters">
+                    <div class="tool-iframe-container" id="iframe-porters">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <span>⏳ Memuat Porter's Five Forces...</span>
+                        </div>
+                        <div class="error-message">
+                            <div class="error-icon">⚠️</div>
+                            <div class="error-title">Gagal Memuat Tool</div>
+                            <div class="error-desc">Pastikan file porters_five_forces.html tersedia di direktori yang sama.</div>
+                            <button class="btn-retry" onclick="retryLoadTool('porters')">🔄 Coba Lagi</button>
+                        </div>
+                        <iframe src="porters_five_forces.html" onload="handleIframeLoad(this)"></iframe>
+                    </div>
+                </div>
+                <div class="sub-tab-content" id="subtab-okr">
+                    <div class="tool-iframe-container" id="iframe-okr">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <span>⏳ Memuat OKR...</span>
+                        </div>
+                        <div class="error-message">
+                            <div class="error-icon">⚠️</div>
+                            <div class="error-title">Gagal Memuat Tool</div>
+                            <div class="error-desc">Pastikan file okr.html tersedia di direktori yang sama.</div>
+                            <button class="btn-retry" onclick="retryLoadTool('okr')">🔄 Coba Lagi</button>
+                        </div>
+                        <iframe src="okr.html" onload="handleIframeLoad(this)"></iframe>
+                    </div>
+                </div>
+                <div class="sub-tab-content" id="subtab-marketing_mix">
+                    <div class="tool-iframe-container" id="iframe-marketing_mix">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <span>⏳ Memuat Marketing Mix...</span>
+                        </div>
+                        <div class="error-message">
+                            <div class="error-icon">⚠️</div>
+                            <div class="error-title">Gagal Memuat Tool</div>
+                            <div class="error-desc">Pastikan file marketing_mix.html tersedia di direktori yang sama.</div>
+                            <button class="btn-retry" onclick="retryLoadTool('marketing_mix')">🔄 Coba Lagi</button>
+                        </div>
+                        <iframe src="marketing_mix.html" onload="handleIframeLoad(this)"></iframe>
+                    </div>
+                </div>
+                <div class="sub-tab-content" id="subtab-pestel">
+                    <div class="tool-iframe-container" id="iframe-pestel">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <span>⏳ Memuat PESTEL...</span>
+                        </div>
+                        <div class="error-message">
+                            <div class="error-icon">⚠️</div>
+                            <div class="error-title">Gagal Memuat Tool</div>
+                            <div class="error-desc">Pastikan file pestel.html tersedia di direktori yang sama.</div>
+                            <button class="btn-retry" onclick="retryLoadTool('pestel')">🔄 Coba Lagi</button>
+                        </div>
+                        <iframe src="pestel.html" onload="handleIframeLoad(this)"></iframe>
+                    </div>
+                </div>
+                <div class="sub-tab-content" id="subtab-lean_canvas">
+                    <div class="tool-iframe-container" id="iframe-lean_canvas">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <span>⏳ Memuat Lean Canvas...</span>
+                        </div>
+                        <div class="error-message">
+                            <div class="error-icon">⚠️</div>
+                            <div class="error-title">Gagal Memuat Tool</div>
+                            <div class="error-desc">Pastikan file lean_canvas.html tersedia di direktori yang sama.</div>
+                            <button class="btn-retry" onclick="retryLoadTool('lean_canvas')">🔄 Coba Lagi</button>
+                        </div>
+                        <iframe src="lean_canvas.html" onload="handleIframeLoad(this)"></iframe>
+                    </div>
+                </div>
+                <div class="sub-tab-content" id="subtab-bmc">
+                    <div class="tool-iframe-container" id="iframe-bmc">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <span>⏳ Memuat BMC...</span>
+                        </div>
+                        <div class="error-message">
+                            <div class="error-icon">⚠️</div>
+                            <div class="error-title">Gagal Memuat Tool</div>
+                            <div class="error-desc">Pastikan file business_model_canvas.html tersedia di direktori yang sama.</div>
+                            <button class="btn-retry" onclick="retryLoadTool('bmc')">🔄 Coba Lagi</button>
+                        </div>
+                        <iframe src="business_model_canvas.html" onload="handleIframeLoad(this)"></iframe>
+                    </div>
+                </div>
+                <div class="sub-tab-content" id="subtab-contacts">
+                    <div class="tool-iframe-container" id="iframe-contacts">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <span>⏳ Memuat Contacts Database...</span>
+                        </div>
+                        <div class="error-message">
+                            <div class="error-icon">⚠️</div>
+                            <div class="error-title">Gagal Memuat Tool</div>
+                            <div class="error-desc">Pastikan file contacts_filter_dinamis7.html tersedia di direktori yang sama.</div>
+                            <button class="btn-retry" onclick="retryLoadTool('contacts')">🔄 Coba Lagi</button>
+                        </div>
+                        <iframe src="contacts_filter_dinamis7.html" onload="handleIframeLoad(this)"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL POPUP -->
+    <div class="modal-overlay" id="toolModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // TOOL DATA
+        // ========================================
+        const TOOL_DATA = {
+            vpc: {
+                icon: '🎯',
+                title: 'Value Proposition Canvas',
+                subtitle: 'Memetakan nilai yang ditawarkan kepada pelanggan',
+                file: 'VPC.html',
+                content: `
+                    <span class="modal-icon">🎯</span>
+                    <h2 class="modal-title">Value Proposition Canvas</h2>
+                    <p class="modal-subtitle">Memetakan nilai yang ditawarkan kepada pelanggan</p>
+                    <div class="modal-divider"></div>
+                    <div class="modal-body">
+                        <h4>📌 Apa itu Value Proposition Canvas?</h4>
+                        <p>VPC membantu bisnis memahami kebutuhan pelanggan dan merancang produk yang tepat.</p>
+                        <h4>🧩 6 Komponen VPC</h4>
+                        <ul>
+                            <li><strong>Customer Jobs</strong> - Pekerjaan pelanggan</li>
+                            <li><strong>Pains</strong> - Kesulitan pelanggan</li>
+                            <li><strong>Gains</strong> - Keuntungan yang diinginkan</li>
+                            <li><strong>Products & Services</strong> - Produk yang ditawarkan</li>
+                            <li><strong>Pain Relievers</strong> - Solusi mengatasi kesulitan</li>
+                            <li><strong>Gain Creators</strong> - Menciptakan keuntungan</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-open-tool" onclick="openToolFromModal('vpc')">🚀 Buka Tool</button>
+                        <button class="btn-close-modal" onclick="closeModal()">Tutup</button>
+                    </div>
+                `
+            },
+            swot: {
+                icon: '📊',
+                title: 'SWOT Analysis',
+                subtitle: 'Analisis Kekuatan, Kelemahan, Peluang, dan Ancaman',
+                file: 'SWOT.html',
+                content: `
+                    <span class="modal-icon">📊</span>
+                    <h2 class="modal-title">SWOT Analysis</h2>
+                    <p class="modal-subtitle">Analisis Kekuatan, Kelemahan, Peluang, dan Ancaman</p>
+                    <div class="modal-divider"></div>
+                    <div class="modal-body">
+                        <h4>📌 Apa itu SWOT Analysis?</h4>
+                        <p>SWOT adalah framework klasik untuk menganalisis posisi strategis bisnis.</p>
+                        <h4>🧩 4 Komponen SWOT</h4>
+                        <ul>
+                            <li><strong>Strengths</strong> - Kekuatan internal</li>
+                            <li><strong>Weaknesses</strong> - Kelemahan internal</li>
+                            <li><strong>Opportunities</strong> - Peluang eksternal</li>
+                            <li><strong>Threats</strong> - Ancaman eksternal</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-open-tool" onclick="openToolFromModal('swot')">🚀 Buka Tool</button>
+                        <button class="btn-close-modal" onclick="closeModal()">Tutup</button>
+                    </div>
+                `
+            },
+            brainstorming: {
+                icon: '🧠',
+                title: 'Brainstorming Board',
+                subtitle: 'Menampung, Mengorganisir, dan Melacak Ide',
+                file: 'brainstorming.html',
+                content: `
+                    <span class="modal-icon">🧠</span>
+                    <h2 class="modal-title">Brainstorming Board</h2>
+                    <p class="modal-subtitle">Menampung, Mengorganisir, dan Melacak Ide</p>
+                    <div class="modal-divider"></div>
+                    <div class="modal-body">
+                        <h4>📌 Apa itu Brainstorming Board?</h4>
+                        <p>Alat untuk mengumpulkan, mengorganisir, dan melacak ide-ide dari tim.</p>
+                        <h4>🧩 Komponen</h4>
+                        <ul>
+                            <li><strong>Sesi Brainstorming</strong> - Topik yang dibahas</li>
+                            <li><strong>Ide</strong> - Setiap ide yang diajukan</li>
+                            <li><strong>Status</strong> - Baru, Proses, Selesai, Ditahan</li>
+                            <li><strong>Prioritas</strong> - Tinggi, Sedang, Rendah</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-open-tool" onclick="openToolFromModal('brainstorming')">🚀 Buka Tool</button>
+                        <button class="btn-close-modal" onclick="closeModal()">Tutup</button>
+                    </div>
+                `
+            },
+            competitive: {
+                icon: '🏆',
+                title: 'Competitive Analysis',
+                subtitle: 'Membandingkan Bisnis dengan Kompetitor',
+                file: 'competitive.html',
+                content: `
+                    <span class="modal-icon">🏆</span>
+                    <h2 class="modal-title">Competitive Analysis</h2>
+                    <p class="modal-subtitle">Membandingkan Bisnis dengan Kompetitor</p>
+                    <div class="modal-divider"></div>
+                    <div class="modal-body">
+                        <h4>📌 Apa itu Competitive Analysis?</h4>
+                        <p>Proses mengidentifikasi dan menganalisis kompetitor untuk memahami posisi bisnis.</p>
+                        <h4>🧩 Aspek yang Dianalisis</h4>
+                        <ul>
+                            <li><strong>Harga</strong> - Strategi harga</li>
+                            <li><strong>Kualitas</strong> - Kualitas produk</li>
+                            <li><strong>Fitur</strong> - Fitur yang ditawarkan</li>
+                            <li><strong>Layanan</strong> - Kualitas layanan</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-open-tool" onclick="openToolFromModal('competitive')">🚀 Buka Tool</button>
+                        <button class="btn-close-modal" onclick="closeModal()">Tutup</button>
+                    </div>
+                `
+            },
+            risk: {
+                icon: '⚠️',
+                title: 'Risk Assessment Matrix',
+                subtitle: 'Mengidentifikasi dan Memprioritaskan Risiko',
+                file: 'risk.html',
+                content: `
+                    <span class="modal-icon">⚠️</span>
+                    <h2 class="modal-title">Risk Assessment Matrix</h2>
+                    <p class="modal-subtitle">Mengidentifikasi dan Memprioritaskan Risiko</p>
+                    <div class="modal-divider"></div>
+                    <div class="modal-body">
+                        <h4>📌 Apa itu Risk Assessment Matrix?</h4>
+                        <p>Alat untuk mengidentifikasi dan memprioritaskan risiko berdasarkan probabilitas dan dampak.</p>
+                        <h4>🧩 Level Risiko</h4>
+                        <ul>
+                            <li><strong>🟢 Low</strong> - Risiko rendah</li>
+                            <li><strong>🟡 Medium</strong> - Risiko sedang</li>
+                            <li><strong>🟠 High</strong> - Risiko tinggi</li>
+                            <li><strong>🔴 Critical</strong> - Risiko kritis</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-open-tool" onclick="openToolFromModal('risk')">🚀 Buka Tool</button>
+                        <button class="btn-close-modal" onclick="closeModal()">Tutup</button>
+                    </div>
+                `
+            },
+            kpi: {
+                icon: '📊',
+                title: 'KPI Dashboard',
+                subtitle: 'Memantau Indikator Kinerja Utama',
+                file: 'kpi.html',
+                content: `
+                    <span class="modal-icon">📊</span>
+                    <h2 class="modal-title">KPI Dashboard</h2>
+                    <p class="modal-subtitle">Memantau Indikator Kinerja Utama</p>
+                    <div class="modal-divider"></div>
+                    <div class="modal-body">
+                        <h4>📌 Apa itu KPI Dashboard?</h4>
+                        <p>Alat untuk memvisualisasikan dan memantau Key Performance Indicators.</p>
+                        <h4>🧩 Komponen KPI</h4>
+                        <ul>
+                            <li><strong>Target</strong> - Nilai yang ingin dicapai</li>
+                            <li><strong>Actual</strong> - Nilai aktual</li>
+                            <li><strong>Progress</strong> - Persentase pencapaian</li>
+                            <li><strong>Status</strong> - On Track, At Risk, Behind</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-open-tool" onclick="openToolFromModal('kpi')">🚀 Buka Tool</button>
+                        <button class="btn-close-modal" onclick="closeModal()">Tutup</button>
+                    </div>
+                `
+            },
+            customer_journey: {
+                icon: '🗺️',
+                title: 'Customer Journey Map',
+                subtitle: 'Memetakan Pengalaman Pelanggan',
+                file: 'customer_journey_map.html',
+                content: `
+                    <span class="modal-icon">🗺️</span>
+                    <h2 class="modal-title">Customer Journey Map</h2>
+                    <p class="modal-subtitle">Memetakan Pengalaman Pelanggan</p>
+                    <div class="modal-divider"></div>
+                    <div class="modal-body">
+                        <h4>📌 Apa itu Customer Journey Map?</h4>
+                        <p>Visualisasi proses yang dilalui pelanggan dari awal hingga akhir.</p>
+                        <h4>🧩 Komponen</h4>
+                        <ul>
+                            <li><strong>Stage</strong> - Tahap perjalanan</li>
+                            <li><strong>Aktivitas</strong> - Apa yang dilakukan</li>
+                            <li><strong>Emosi</strong> - Positif, Netral, Negatif</li>
+                            <li><strong>Touchpoint</strong> - Titik interaksi</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-open-tool" onclick="openToolFromModal('customer_journey')">🚀 Buka Tool</button>
+                        <button class="btn-close-modal" onclick="closeModal()">Tutup</button>
+                    </div>
+                `
+            },
+            porters: {
+                icon: '🏛️',
+                title: "Porter's Five Forces",
+                subtitle: 'Menganalisis Intensitas Persaingan Industri',
+                file: 'porters_five_forces.html',
+                content: `
+                    <span class="modal-icon">🏛️</span>
+                    <h2 class="modal-title">Porter's Five Forces</h2>
+                    <p class="modal-subtitle">Menganalisis Intensitas Persaingan Industri</p>
+                    <div class="modal-divider"></div>
+                    <div class="modal-body">
+                        <h4>📌 Apa itu Porter's Five Forces?</h4>
+                        <p>Framework untuk menganalisis daya tarik industri.</p>
+                        <h4>🧩 5 Kekuatan Porter</h4>
+                        <ul>
+                            <li><strong>Threat of New Entrants</strong> - Ancaman pendatang</li>
+                            <li><strong>Bargaining Power of Buyers</strong> - Daya tawar pembeli</li>
+                            <li><strong>Bargaining Power of Suppliers</strong> - Daya tawar pemasok</li>
+                            <li><strong>Threat of Substitutes</strong> - Ancaman substitusi</li>
+                            <li><strong>Industry Rivalry</strong> - Persaingan industri</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-open-tool" onclick="openToolFromModal('porters')">🚀 Buka Tool</button>
+                        <button class="btn-close-modal" onclick="closeModal()">Tutup</button>
+                    </div>
+                `
+            },
+            okr: {
+                icon: '🎯',
+                title: 'OKR - Objectives & Key Results',
+                subtitle: 'Menetapkan Tujuan dan Mengukur Hasil',
+                file: 'okr.html',
+                content: `
+                    <span class="modal-icon">🎯</span>
+                    <h2 class="modal-title">OKR - Objectives & Key Results</h2>
+                    <p class="modal-subtitle">Menetapkan Tujuan dan Mengukur Hasil</p>
+                    <div class="modal-divider"></div>
+                    <div class="modal-body">
+                        <h4>📌 Apa itu OKR?</h4>
+                        <p>Framework penetapan tujuan yang populer digunakan oleh Google, Intel, dan LinkedIn.</p>
+                        <h4>🧩 2 Komponen OKR</h4>
+                        <ul>
+                            <li><strong>Objective</strong> - Tujuan ambisius</li>
+                            <li><strong>Key Results</strong> - Metrik terukur</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-open-tool" onclick="openToolFromModal('okr')">🚀 Buka Tool</button>
+                        <button class="btn-close-modal" onclick="closeModal()">Tutup</button>
+                    </div>
+                `
+            },
+            marketing_mix: {
+                icon: '📢',
+                title: 'Marketing Mix (4P/7P)',
+                subtitle: 'Merancang Strategi Pemasaran',
+                file: 'marketing_mix.html',
+                content: `
+                    <span class="modal-icon">📢</span>
+                    <h2 class="modal-title">Marketing Mix (4P/7P)</h2>
+                    <p class="modal-subtitle">Merancang Strategi Pemasaran</p>
+                    <div class="modal-divider"></div>
+                    <div class="modal-body">
+                        <h4>📌 Apa itu Marketing Mix?</h4>
+                        <p>Framework untuk merancang strategi pemasaran.</p>
+                        <h4>🧩 7P Marketing Mix</h4>
+                        <ul>
+                            <li><strong>Product</strong> - Produk</li>
+                            <li><strong>Price</strong> - Harga</li>
+                            <li><strong>Place</strong> - Distribusi</li>
+                            <li><strong>Promotion</strong> - Promosi</li>
+                            <li><strong>People</strong> - SDM</li>
+                            <li><strong>Process</strong> - Proses</li>
+                            <li><strong>Physical Evidence</strong> - Bukti fisik</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-open-tool" onclick="openToolFromModal('marketing_mix')">🚀 Buka Tool</button>
+                        <button class="btn-close-modal" onclick="closeModal()">Tutup</button>
+                    </div>
+                `
+            },
+            pestel: {
+                icon: '🌍',
+                title: 'PESTEL Analysis',
+                subtitle: 'Menganalisis Faktor Eksternal Bisnis',
+                file: 'pestel.html',
+                content: `
+                    <span class="modal-icon">🌍</span>
+                    <h2 class="modal-title">PESTEL Analysis</h2>
+                    <p class="modal-subtitle">Menganalisis Faktor Eksternal Bisnis</p>
+                    <div class="modal-divider"></div>
+                    <div class="modal-body">
+                        <h4>📌 Apa itu PESTEL Analysis?</h4>
+                        <p>Framework untuk menganalisis faktor-faktor eksternal yang mempengaruhi bisnis.</p>
+                        <h4>🧩 6 Faktor PESTEL</h4>
+                        <ul>
+                            <li><strong>Political</strong> - Kebijakan pemerintah</li>
+                            <li><strong>Economic</strong> - Ekonomi</li>
+                            <li><strong>Social</strong> - Sosial budaya</li>
+                            <li><strong>Technological</strong> - Teknologi</li>
+                            <li><strong>Environmental</strong> - Lingkungan</li>
+                            <li><strong>Legal</strong> - Hukum</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-open-tool" onclick="openToolFromModal('pestel')">🚀 Buka Tool</button>
+                        <button class="btn-close-modal" onclick="closeModal()">Tutup</button>
+                    </div>
+                `
+            },
+            lean_canvas: {
+                icon: '📋',
+                title: 'Lean Canvas',
+                subtitle: 'Business Plan 1-Halaman untuk Startup',
+                file: 'lean_canvas.html',
+                content: `
+                    <span class="modal-icon">📋</span>
+                    <h2 class="modal-title">Lean Canvas</h2>
+                    <p class="modal-subtitle">Business Plan 1-Halaman untuk Startup</p>
+                    <div class="modal-divider"></div>
+                    <div class="modal-body">
+                        <h4>📌 Apa itu Lean Canvas?</h4>
+                        <p>Adaptasi dari BMC yang dikembangkan untuk startup dan validasi ide.</p>
+                        <h4>🧩 9 Block Lean Canvas</h4>
+                        <ul>
+                            <li><strong>Problem</strong> - Masalah</li>
+                            <li><strong>Solution</strong> - Solusi</li>
+                            <li><strong>Key Metrics</strong> - Metrik</li>
+                            <li><strong>Unique Value Prop</strong> - Nilai unik</li>
+                            <li><strong>Unfair Advantage</strong> - Keunggulan</li>
+                            <li><strong>Channels</strong> - Saluran</li>
+                            <li><strong>Customer Segments</strong> - Segmen</li>
+                            <li><strong>Cost Structure</strong> - Biaya</li>
+                            <li><strong>Revenue Streams</strong> - Pendapatan</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-open-tool" onclick="openToolFromModal('lean_canvas')">🚀 Buka Tool</button>
+                        <button class="btn-close-modal" onclick="closeModal()">Tutup</button>
+                    </div>
+                `
+            },
+            bmc: {
+                icon: '🏢',
+                title: 'Business Model Canvas (BMC)',
+                subtitle: 'Menggambarkan Model Bisnis Secara Utuh',
+                file: 'business_model_canvas.html',
+                content: `
+                    <span class="modal-icon">🏢</span>
+                    <h2 class="modal-title">Business Model Canvas (BMC)</h2>
+                    <p class="modal-subtitle">Menggambarkan Model Bisnis Secara Utuh</p>
+                    <div class="modal-divider"></div>
+                    <div class="modal-body">
+                        <h4>📌 Apa itu Business Model Canvas?</h4>
+                        <p>Alat untuk menggambarkan model bisnis secara visual dalam satu halaman.</p>
+                        <h4>🧩 9 Block BMC</h4>
+                        <ul>
+                            <li><strong>Customer Segments</strong> - Segmen</li>
+                            <li><strong>Value Propositions</strong> - Nilai</li>
+                            <li><strong>Channels</strong> - Saluran</li>
+                            <li><strong>Customer Relationships</strong> - Hubungan</li>
+                            <li><strong>Revenue Streams</strong> - Pendapatan</li>
+                            <li><strong>Key Resources</strong> - Sumber daya</li>
+                            <li><strong>Key Activities</strong> - Aktivitas</li>
+                            <li><strong>Key Partnerships</strong> - Mitra</li>
+                            <li><strong>Cost Structure</strong> - Biaya</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-open-tool" onclick="openToolFromModal('bmc')">🚀 Buka Tool</button>
+                        <button class="btn-close-modal" onclick="closeModal()">Tutup</button>
+                    </div>
+                `
+            },
+            contacts: {
+                icon: '📇',
+                title: 'Contacts Database',
+                subtitle: 'Mengelola Data Kontak dengan Filter Dinamis',
+                file: 'contacts_filter_dinamis7.html',
+                content: `
+                    <span class="modal-icon">📇</span>
+                    <h2 class="modal-title">Contacts Database</h2>
+                    <p class="modal-subtitle">Mengelola Data Kontak dengan Filter Dinamis</p>
+                    <div class="modal-divider"></div>
+                    <div class="modal-body">
+                        <h4>📌 Apa itu Contacts Database?</h4>
+                        <p>Sistem manajemen kontak untuk menyimpan dan mengelola data pelanggan.</p>
+                        <h4>🧩 Fitur</h4>
+                        <ul>
+                            <li><strong>CRUD Lengkap</strong> - Create, Read, Update, Delete</li>
+                            <li><strong>Filter Dinamis</strong> - Filter berbagai kolom</li>
+                            <li><strong>Bulk Insert</strong> - Tambah banyak data</li>
+                            <li><strong>Pencarian</strong> - Cari kontak cepat</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-open-tool" onclick="openToolFromModal('contacts')">🚀 Buka Tool</button>
+                        <button class="btn-close-modal" onclick="closeModal()">Tutup</button>
+                    </div>
+                `
+            }
+        };
+
+        // ========================================
+        // MODAL FUNCTIONS
+        // ========================================
+        function openModal(toolKey) {
+            const data = TOOL_DATA[toolKey];
+            if (!data) return;
+
+            const modal = document.getElementById('toolModal');
+            document.getElementById('modalContent').innerHTML = data.content;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('toolModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function openToolFromModal(toolKey) {
+            closeModal();
+            switchMainTab('tab-tools');
+            setTimeout(() => switchSubTab(toolKey), 200);
+        }
+
+        document.getElementById('toolModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+            if (e.ctrlKey && e.key === '1') { e.preventDefault(); switchMainTab('tab-index'); }
+            if (e.ctrlKey && e.key === '2') { e.preventDefault(); switchMainTab('tab-tools'); }
+        });
+
+        // ========================================
+        // TAB SWITCHING
+        // ========================================
+        function switchMainTab(tabId) {
+            document.querySelectorAll('.main-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.main-tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelector(`.main-tab-btn[data-tab="${tabId}"]`).classList.add('active');
+
+            if (tabId === 'tab-tools') {
+                const activeSub = document.querySelector('.sub-tab-btn.active');
+                if (!activeSub) {
+                    const firstSub = document.querySelector('.sub-tab-btn');
+                    if (firstSub) switchSubTab(firstSub.dataset.subtab);
+                }
+            }
+        }
+
+        function switchSubTab(subTabId) {
+            document.querySelectorAll('.sub-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sub-tab-btn').forEach(el => el.classList.remove('active'));
+
+            const content = document.getElementById(`subtab-${subTabId}`);
+            if (content) content.classList.add('active');
+
+            const btn = document.querySelector(`.sub-tab-btn[data-subtab="${subTabId}"]`);
+            if (btn) btn.classList.add('active');
+
+            // Reload iframe
+            const container = document.getElementById(`iframe-${subTabId}`);
+            if (container) {
+                const iframe = container.querySelector('iframe');
+                const overlay = container.querySelector('.loading-overlay');
+                if (iframe) {
+                    const fileMap = {
+                        'vpc': 'VPC.html',
+                        'swot': 'SWOT.html',
+                        'brainstorming': 'brainstorming.html',
+                        'competitive': 'competitive.html',
+                        'risk': 'risk.html',
+                        'kpi': 'kpi.html',
+                        'customer_journey': 'customer_journey_map.html',
+                        'porters': 'porters_five_forces.html',
+                        'okr': 'okr.html',
+                        'marketing_mix': 'marketing_mix.html',
+                        'pestel': 'pestel.html',
+                        'lean_canvas': 'lean_canvas.html',
+                        'bmc': 'business_model_canvas.html',
+                        'contacts': 'contacts_filter_dinamis7.html'
+                    };
+                    
+                    if (!iframe.src || iframe.src === '' || iframe.src.includes('about:blank')) {
+                        if (fileMap[subTabId]) {
+                            iframe.src = fileMap[subTabId];
+                        }
+                    } else {
+                        const src = iframe.src.split('?')[0];
+                        iframe.src = src + '?t=' + Date.now();
+                    }
+                    
+                    if (overlay) {
+                        container.classList.remove('loaded');
+                        container.classList.remove('has-error');
+                    }
+                }
+            }
+        }
+
+        // ========================================
+        // IFRAME HANDLER
+        // ========================================
+        function handleIframeLoad(iframe) {
+            const container = iframe.parentElement;
+            container.classList.add('loaded');
+            container.classList.remove('has-error');
+        }
+
+        function retryLoadTool(toolName) {
+            const container = document.getElementById(`iframe-${toolName}`);
+            if (container) {
+                const iframe = container.querySelector('iframe');
+                const fileMap = {
+                    'vpc': 'VPC.html',
+                    'swot': 'SWOT.html',
+                    'brainstorming': 'brainstorming.html',
+                    'competitive': 'competitive.html',
+                    'risk': 'risk.html',
+                    'kpi': 'kpi.html',
+                    'customer_journey': 'customer_journey_map.html',
+                    'porters': 'porters_five_forces.html',
+                    'okr': 'okr.html',
+                    'marketing_mix': 'marketing_mix.html',
+                    'pestel': 'pestel.html',
+                    'lean_canvas': 'lean_canvas.html',
+                    'bmc': 'business_model_canvas.html',
+                    'contacts': 'contacts_filter_dinamis7.html'
+                };
+                if (iframe && fileMap[toolName]) {
+                    container.classList.remove('loaded');
+                    container.classList.remove('has-error');
+                    iframe.src = fileMap[toolName] + '?t=' + Date.now();
+                }
+            }
+        }
+
+        // Handle iframe error
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.tool-iframe-container iframe').forEach(iframe => {
+                iframe.addEventListener('error', function() {
+                    const container = this.parentElement;
+                    container.classList.remove('loaded');
+                    container.classList.add('has-error');
+                });
+            });
+
+            console.log('✅ Business Tools Suite All-in-One loaded!');
+            console.log('📌 Shortcuts: Ctrl+1 = Beranda, Ctrl+2 = Tools');
+            console.log('💡 Jika tool tidak muncul, jalankan server lokal (Live Server / Python HTTP Server)');
+        });
+    </script>
+</body>
+</html>
