@@ -4,6 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Tools Suite - Psikologi</title>
+    <script>
+        // ==================== AUTH GUARD (Sales Tools Suite - SSO) ====================
+        const AUTH_SESSION_KEY = 'lidan_sales_session';
+        const AUTH_LOGIN_PAGE = 'login.html';
+
+        function getAuthSession() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+        function clearAuthSession() { localStorage.removeItem(AUTH_SESSION_KEY); }
+        function isSupervisor(session) { return !!session && String(session.role || '').toLowerCase() === 'spv'; }
+        function logout() { clearAuthSession(); window.location.href = AUTH_LOGIN_PAGE; }
+
+        let CURRENT_USER = getAuthSession();
+        if (!CURRENT_USER || !CURRENT_USER.username) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.replace(AUTH_LOGIN_PAGE + '?return=' + returnUrl);
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === AUTH_SESSION_KEY && !e.newValue) {
+                window.location.href = AUTH_LOGIN_PAGE;
+            }
+        });
+    </script>
     <style>
         /* ======================================== */
         /* RESET & BASE */
@@ -80,6 +107,45 @@
             font-size: 14px;
             color: #e9d8fd;
         }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #fff;
+        }
+        .user-badge .role-tag {
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .user-badge .role-tag.spv { background: #9f7aea; }
+        .user-badge .role-tag.sales { background: #4299e1; }
+        .btn-logout {
+            background: #fc8181;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-logout:hover { background: #f56565; }
 
         /* ======================================== */
         /* NAVIGATION - TOOLS GRID */
@@ -691,8 +757,15 @@
                 </h1>
                 <p>Tools untuk tim sales layanan psikologi - dari lead hingga closing</p>
             </div>
-            <div class="header-badge">
-                📊 5 Tools Siap Pakai
+            <div class="header-right">
+                <div class="header-badge">
+                    📊 5 Tools Siap Pakai
+                </div>
+                <div class="user-badge" id="userBadge">
+                    <span id="userBadgeName">👤 -</span>
+                    <span class="role-tag" id="userBadgeRole">-</span>
+                    <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+                </div>
             </div>
         </div>
     </header>
@@ -727,7 +800,7 @@
                     <span class="icon">📊</span> Sales Pipeline
                     <span class="badge-info">info</span>
                 </button>
-                <button class="tool-link" onclick="openModal('sales_dashboard')">
+                <button class="tool-link spv-only" onclick="openModal('sales_dashboard')">
                     <span class="icon">📈</span> Sales Dashboard
                     <span class="badge-info">info</span>
                 </button>
@@ -756,7 +829,7 @@
                     <li><a href="#visit-tracker">Sales Visit Tracker</a></li>
                     <li><a href="#client-profile">Client Company Profile</a></li>
                     <li><a href="#sales-pipeline">Sales Pipeline</a></li>
-                    <li><a href="#sales-dashboard">Sales Dashboard</a></li>
+                    <li class="spv-only"><a href="#sales-dashboard">Sales Dashboard</a></li>
                     <li><a href="#integrasi">Integrasi Tools</a></li>
                     <li><a href="#kesimpulan">Kesimpulan</a></li>
                 </ul>
@@ -871,16 +944,18 @@
                 <!-- ======================================== -->
                 <!-- SECTION: SALES DASHBOARD -->
                 <!-- ======================================== -->
-                <h3 id="sales-dashboard">📈 5. Sales Dashboard</h3>
-                <div class="tool-card-article">
-                    <div class="tool-item" onclick="openModal('sales_dashboard')">
-                        <span class="tool-icon">📈</span>
-                        <div class="tool-name">Sales Dashboard</div>
-                        <div class="tool-desc">
-                            Dashboard untuk supervisor memonitor tim sales.
-                            <br><strong>Fitur:</strong> Statistik real-time, Pipeline chart, Ranking sales, Alert & notifikasi
+                <div class="spv-only">
+                    <h3 id="sales-dashboard">📈 5. Sales Dashboard</h3>
+                    <div class="tool-card-article">
+                        <div class="tool-item" onclick="openModal('sales_dashboard')">
+                            <span class="tool-icon">📈</span>
+                            <div class="tool-name">Sales Dashboard</div>
+                            <div class="tool-desc">
+                                Dashboard untuk supervisor memonitor tim sales.
+                                <br><strong>Fitur:</strong> Statistik real-time, Pipeline chart, Ranking sales, Alert & notifikasi
+                            </div>
+                            <button class="tool-link-small" onclick="event.stopPropagation();openModal('sales_dashboard')">📖 Baca Selengkapnya →</button>
                         </div>
-                        <button class="tool-link-small" onclick="event.stopPropagation();openModal('sales_dashboard')">📖 Baca Selengkapnya →</button>
                     </div>
                 </div>
 
@@ -950,7 +1025,7 @@
                     <span class="icon">📊</span> Sales Pipeline
                     <span class="badge-info">info</span>
                 </button>
-                <button class="tool-link" onclick="openModal('sales_dashboard')">
+                <button class="tool-link spv-only" onclick="openModal('sales_dashboard')">
                     <span class="icon">📈</span> Sales Dashboard
                     <span class="badge-info">info</span>
                 </button>
@@ -1150,7 +1225,7 @@
                 icon: '📈',
                 title: 'Sales Dashboard',
                 subtitle: 'Dashboard untuk supervisor memonitor tim sales',
-                file: 'sales_dashboard.html',
+                file: 'sales_dashboard1.html',
                 content: `
                     <h4>📌 Apa itu Sales Dashboard?</h4>
                     <p>
@@ -1269,6 +1344,25 @@
         console.log('%c📊 5 Sales Tools Siap Pakai', 'font-size:14px;color:#718096;');
         console.log('%c📋 Tools: Lead Management, Visit Tracker, Client Profile, Sales Pipeline, Sales Dashboard', 'font-size:13px;color:#a0aec0;');
         console.log('%c💡 Klik tombol "info" atau card tool untuk detail setiap tool.', 'font-size:13px;color:#a0aec0;');
+
+        // ========================================
+        // USER BADGE & ROLE-BASED VISIBILITY
+        // ========================================
+        function initUserBadge() {
+            const nameEl = document.getElementById('userBadgeName');
+            const roleEl = document.getElementById('userBadgeRole');
+            if (nameEl) nameEl.textContent = '👤 ' + (CURRENT_USER.username || '-');
+            if (roleEl) {
+                roleEl.textContent = isSupervisor(CURRENT_USER) ? 'Supervisor' : 'Sales';
+                roleEl.className = 'role-tag ' + (isSupervisor(CURRENT_USER) ? 'spv' : 'sales');
+            }
+
+            // Sembunyikan menu/section Sales Dashboard untuk yang bukan supervisor
+            if (!isSupervisor(CURRENT_USER)) {
+                document.querySelectorAll('.spv-only').forEach(el => el.style.display = 'none');
+            }
+        }
+        initUserBadge();
     </script>
 </body>
 </html>

@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Executive Dashboard - Talent & Career Assessment Report</title>
+<style>
+  :root{
+    --navy:#0b2a5b;
+    --blue:#1e4fb8;
+    --blue-light:#3d7bf0;
+    --orange:#f5941f;
+    --lightblue-bg:#eaf1fd;
+    --gray-track:#dbe3f0;
+    --text-dark:#0b2a5b;
+    --text-body:#3b4a63;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Arial,Helvetica,sans-serif;
+    background:#e9edf3;
+    color:var(--text-dark);
+  }
+  .page{
+    max-width:1080px;
+    margin:20px auto;
+    background:#fff;
+    padding:24px;
+    border:1px solid #d7deea;
+  }
+  .i{width:1em;height:1em;display:inline-block;vertical-align:-0.15em;}
+
+  /* ===== HEADER ===== */
+  .header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding-bottom:18px;
+    border-bottom:3px solid var(--navy);
+    margin-bottom:18px;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{
+    width:52px;height:52px;border-radius:10px;
+    background:linear-gradient(135deg,var(--blue-light),var(--navy));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:800;font-size:26px;
+  }
+  .brand-name{font-size:22px;font-weight:800;color:var(--navy);line-height:1.1;}
+  .brand-name span{color:var(--orange);}
+  .brand-sub{font-size:9px;letter-spacing:1.5px;color:var(--text-body);font-weight:600;}
+
+  .header-title{text-align:center;flex:1;}
+  .header-title h1{
+    font-size:34px;letter-spacing:1px;color:var(--navy);font-weight:800;
+  }
+  .header-title h1 span{color:var(--blue-light);}
+  .header-title h2{
+    font-size:13px;letter-spacing:3px;color:var(--text-body);font-weight:600;margin-top:2px;
+  }
+
+  .report-meta{
+    background:var(--navy);color:#fff;font-size:11px;
+    padding:10px 16px;border-radius:6px;line-height:1.9;min-width:230px;
+  }
+  .report-meta b{display:inline-block;width:90px;}
+
+  /* ===== TOP GRID ===== */
+  .top-grid{
+    display:grid;
+    grid-template-columns:230px 1fr;
+    gap:14px;
+    margin-bottom:14px;
+  }
+
+  .profile-card{
+    background:var(--navy);
+    color:#fff;
+    border-radius:10px;
+    padding:16px;
+    text-align:center;
+  }
+  .profile-photo{
+    width:130px;height:130px;border-radius:50%;
+    margin:0 auto 10px;overflow:hidden;border:3px solid var(--blue-light);
+    background:#fff;display:flex;align-items:center;justify-content:center;
+  }
+  .profile-photo .i{width:70px;height:70px;color:#c9d6ef;}
+  .profile-name{font-size:16px;font-weight:800;}
+  .profile-class{color:var(--orange);font-size:11px;font-weight:700;margin-bottom:10px;}
+  .profile-details{
+    text-align:left;font-size:10.5px;line-height:2;
+    border-top:1px solid rgba(255,255,255,0.2);
+    padding-top:8px;margin-top:6px;
+  }
+  .profile-details div{display:flex;gap:6px;}
+  .profile-details b{min-width:62px;font-weight:600;color:#bcd0f7;}
+  .profile-quote{
+    margin-top:10px;font-size:9.5px;font-style:italic;color:#cfdcf7;
+    border-top:1px solid rgba(255,255,255,0.2);padding-top:8px;
+  }
+
+  .score-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr 1fr;
+    gap:10px;
+  }
+  .talent-index{
+    grid-column:span 4;
+    background:var(--lightblue-bg);
+    border-radius:10px;
+    padding:14px 18px;
+    display:flex;
+    align-items:center;
+    gap:20px;
+  }
+  .talent-index .ti-left{flex:0 0 140px;text-align:left;}
+  .ti-label{font-size:11px;font-weight:700;color:var(--text-body);letter-spacing:0.5px;}
+  .ti-number{font-size:52px;font-weight:800;color:var(--blue);line-height:1;}
+  .ti-number sub{font-size:16px;color:var(--text-body);font-weight:600;}
+  .ti-stars{color:var(--orange);font-size:16px;margin:4px 0;}
+  .ti-badge{font-size:15px;font-weight:800;color:var(--navy);letter-spacing:1px;}
+  .ti-desc{
+    flex:1;font-size:11.5px;color:var(--text-body);line-height:1.6;
+    border-left:1px solid #c9d6ef;padding-left:18px;
+  }
+
+  .stat-card{
+    background:var(--lightblue-bg);
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  .stat-icon{
+    width:30px;height:30px;border-radius:7px;
+    background:var(--blue);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;margin-bottom:6px;
+  }
+  .stat-label{font-size:10.5px;font-weight:700;color:var(--text-body);letter-spacing:0.3px;text-transform:uppercase;line-height:1.2;margin-bottom:4px;height:26px;}
+  .stat-value{font-size:26px;font-weight:800;color:var(--navy);}
+  .stat-value small{font-size:13px;color:var(--text-body);font-weight:600;}
+  .stat-tag{font-size:10px;font-weight:700;color:var(--blue);margin:4px 0 6px;}
+  .bar-track{position:relative;height:6px;background:var(--gray-track);border-radius:4px;overflow:hidden;}
+  .bar-fill{position:absolute;left:0;top:0;bottom:0;background:var(--blue);border-radius:4px;}
+
+  /* ===== SECTION HEADERS ===== */
+  .section-box{
+    background:#fff;border:1px solid #e1e7f2;border-radius:10px;
+    padding:14px 16px;margin-bottom:12px;
+  }
+  .section-title{
+    font-size:12px;font-weight:800;color:var(--navy);letter-spacing:0.5px;
+    margin-bottom:12px;
+  }
+
+  .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;}
+
+  /* Radar chart */
+  .kognitif-body{display:flex;gap:6px;align-items:center;}
+  .radar-wrap{position:relative;width:190px;height:190px;flex:0 0 190px;margin:14px 26px 14px 34px;}
+  .radar-label{position:absolute;font-size:9px;font-weight:700;color:var(--navy);white-space:nowrap;line-height:1.25;}
+  .radar-label small{display:block;font-weight:600;color:var(--text-body);font-size:8.5px;}
+  .kog-list{flex:1;font-size:10.5px;}
+  .kog-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px dashed #eee;}
+  .kog-name{color:var(--text-body);}
+  .kog-line{position:relative;flex:1;height:5px;background:var(--gray-track);border-radius:3px;margin:0 8px;overflow:hidden;}
+  .kog-line i{position:absolute;left:0;top:0;bottom:0;background:var(--blue-light);border-radius:3px;}
+  .kog-val{font-weight:700;color:var(--navy);width:28px;text-align:right;}
+  .iq-total{margin-top:8px;font-size:12px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:8px;}
+  .iq-badge{background:var(--blue);color:#fff;font-size:10px;padding:3px 10px;border-radius:12px;letter-spacing:1px;}
+
+  /* RIASEC bars */
+  .riasec-row{display:flex;align-items:center;gap:8px;font-size:10.5px;margin-bottom:9px;}
+  .riasec-icon{width:20px;text-align:center;color:var(--blue);}
+  .riasec-name{width:76px;color:var(--text-body);}
+  .riasec-track{position:relative;flex:1;height:9px;background:var(--gray-track);border-radius:5px;overflow:hidden;}
+  .riasec-fill{position:absolute;left:0;top:0;bottom:0;background:var(--blue);}
+  .riasec-fill.orange{background:var(--orange);}
+  .riasec-val{width:26px;text-align:right;font-weight:700;color:var(--navy);}
+
+  /* Donut */
+  .donut-wrap{display:flex;flex-direction:column;align-items:center;}
+  .donut{
+    width:150px;height:150px;border-radius:50%;
+    background:conic-gradient(
+      var(--navy) 0% 40%,
+      var(--blue-light) 40% 60%,
+      #a9c6f5 60% 80%,
+      var(--orange) 80% 100%
+    );
+    display:flex;align-items:center;justify-content:center;
+  }
+  .donut-hole{width:88px;height:88px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--navy);}
+  .donut-hole .i{width:34px;height:34px;}
+  .donut-legend{width:100%;font-size:10.5px;margin-top:10px;}
+  .donut-legend div{display:flex;align-items:center;justify-content:space-between;padding:3px 0;}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px;}
+
+  /* Personality/EQ/Softskill three col */
+  .prog-row{display:flex;align-items:center;gap:8px;font-size:10.5px;margin-bottom:10px;}
+  .prog-icon{width:18px;text-align:center;color:var(--blue);}
+  .prog-name{width:98px;color:var(--text-body);}
+  .prog-track{position:relative;flex:1;height:7px;background:var(--gray-track);border-radius:4px;overflow:hidden;}
+  .prog-fill{position:absolute;left:0;top:0;bottom:0;background:var(--blue);border-radius:4px;}
+  .prog-val{width:22px;text-align:right;font-weight:700;color:var(--navy);}
+
+  .softskill-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;}
+  .ss-row{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;padding:6px 0;border-bottom:1px solid #f0f2f7;}
+  .ss-name{display:flex;align-items:center;gap:6px;color:var(--text-body);}
+  .ss-name .i{color:var(--blue);}
+  .ss-val{font-weight:800;color:var(--navy);}
+
+  /* Strengths / develop */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .strength-title{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;color:#fff;background:var(--blue);padding:8px 12px;border-radius:8px 8px 0 0;}
+  .strength-title.orange{background:var(--orange);}
+  .strength-body{border:1px solid #e1e7f2;border-top:none;border-radius:0 0 8px 8px;padding:14px;}
+  .strength-icons{display:flex;justify-content:space-between;text-align:center;}
+  .strength-icons div{flex:1;font-size:9.5px;color:var(--text-body);font-weight:600;}
+  .strength-icons .ic{
+    width:38px;height:38px;border-radius:50%;background:var(--lightblue-bg);color:var(--blue);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:16px;
+  }
+  .strength-icons .ic .i{width:18px;height:18px;}
+  .develop-item{display:flex;gap:10px;margin-bottom:12px;}
+  .develop-item:last-child{margin-bottom:0;}
+  .develop-item .ic{
+    width:34px;height:34px;flex:0 0 34px;border-radius:50%;background:#fff4e6;color:var(--orange);
+    display:flex;align-items:center;justify-content:center;font-size:15px;
+  }
+  .develop-item .ic .i{width:16px;height:16px;}
+  .develop-item b{font-size:11px;color:var(--navy);display:block;}
+  .develop-item p{font-size:10px;color:var(--text-body);margin-top:2px;line-height:1.4;}
+
+  /* Recommendations */
+  .rec-list{font-size:11px;}
+  .rec-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0f2f7;}
+  .rec-row .name{color:var(--text-body);display:flex;align-items:center;gap:6px;}
+  .rec-row .name .i{color:var(--blue);}
+  .rec-row .name b{color:var(--navy);margin-right:2px;}
+  .rec-stars{color:var(--orange);font-size:11px;}
+  .rec-pct{font-weight:800;color:var(--navy);margin-right:8px;}
+
+  /* Action plan */
+  .action-box{background:var(--navy);color:#fff;border-radius:10px;padding:14px 16px;}
+  .action-title{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;margin-bottom:12px;}
+  .action-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:10px;}
+  .action-cols h4{color:var(--orange);font-size:10.5px;margin-bottom:6px;}
+  .action-cols ul{padding-left:14px;line-height:1.7;color:#dbe6f9;}
+  .next-step{
+    background:rgba(255,255,255,0.08);
+    border-radius:8px;padding:10px 12px;margin-top:12px;
+    display:flex;align-items:center;gap:12px;font-size:10px;
+  }
+  .qr-box{width:56px;height:56px;background:#fff;border-radius:6px;flex:0 0 56px;
+    display:flex;align-items:center;justify-content:center;color:#0b2a5b;font-size:9px;font-weight:700;text-align:center;}
+  .next-step b{display:block;font-size:11px;margin-bottom:2px;}
+  .link-btn{display:inline-block;margin-top:6px;background:var(--orange);color:#fff;font-weight:700;padding:3px 10px;border-radius:5px;font-size:10px;}
+
+  /* Conclusion */
+  .conclusion-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+  .kesimpulan-box{background:var(--navy);color:#fff;border-radius:10px;padding:14px 16px;display:flex;gap:12px;align-items:center;}
+  .kesimpulan-box .ic{width:44px;height:44px;border-radius:50%;background:var(--orange);flex:0 0 44px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+  .kesimpulan-box .ic .i{width:22px;height:22px;color:#fff;}
+  .kesimpulan-box p{font-size:10.5px;line-height:1.6;color:#dbe6f9;}
+  .kesimpulan-box b{color:#fff;font-size:11.5px;display:block;margin-bottom:4px;}
+  .quote-box{border:1px solid #e1e7f2;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
+  .quote-box .q{font-size:26px;color:var(--blue-light);font-weight:800;}
+  .quote-box p{font-size:11px;font-style:italic;color:var(--text-body);}
+  .quote-box span{display:block;font-size:9.5px;color:var(--blue);font-weight:700;margin-top:4px;font-style:normal;}
+
+  /* Footer */
+  .footer{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--navy);color:#fff;border-radius:10px;
+    padding:12px 18px;font-size:10px;font-weight:600;
+  }
+  .footer .brand-name{color:#fff;font-size:15px;}
+  .footer .brand-name span{color:var(--orange);}
+  .footer-items{display:flex;gap:22px;}
+  .footer-items div{display:flex;align-items:center;gap:6px;color:#cfdcf7;}
+
+  h4{font-size:10.5px;}
+</style>
+</head>
+<body>
+
+<!-- ICON LIBRARY (reused via <use>) -->
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+<defs>
+  <symbol id="ic-cap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12,3 22,8 12,13 2,8"/><path d="M6 10v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/><line x1="22" y1="8" x2="22" y2="15"/>
+  </symbol>
+  <symbol id="ic-bulb" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <path d="M12 2a7 7 0 0 0-4 12.7c.7.6 1.2 1.4 1.2 2.3h5.6c0-.9.5-1.7 1.2-2.3A7 7 0 0 0 12 2z"/>
+    <rect x="9.2" y="19" width="5.6" height="1.6" rx="0.8"/>
+    <rect x="10" y="21" width="4" height="1.4" rx="0.7"/>
+  </symbol>
+  <symbol id="ic-flame" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <path d="M12.5 2c1 2.5-1.5 3.8-1.5 6.3a2.3 2.3 0 0 0 4.6 0c0-.7-.1-1.2-.4-1.8 1.8 1.3 3.3 3.8 3.3 6.5a6.5 6.5 0 0 1-13 0C5.5 8.5 8.5 6 9.8 3.2c.5.8.4 1.7 2.7-1.2z"/>
+  </symbol>
+  <symbol id="ic-heart" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <path d="M12 21s-7-4.4-9.5-8.9C1 8.6 2.6 4.7 6.4 4.7c2 0 3.5 1.2 5.6 3.5 2.1-2.3 3.6-3.5 5.6-3.5 3.8 0 5.4 3.9 3.9 7.4C19 16.6 12 21 12 21z"/>
+  </symbol>
+  <symbol id="ic-handshake" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 11l4.5-3.5 3.5 2 4-2L18.5 10"/>
+    <path d="M2 11l3 5h3l2-2.2 2 2.2h3l3-5"/>
+  </symbol>
+  <symbol id="ic-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </symbol>
+  <symbol id="ic-palette" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <path d="M12 3a9 9 0 1 0 3 17.5c1-.3 1.5-1.1 1.2-2-.2-.6-.7-1-1.4-1h-.6c-1 0-1.8-.8-1.8-1.8 0-.5.2-.9.5-1.2.5-.5 1.3-.6 2-.4H16a4 4 0 0 0 4-4c0-3.9-3.6-7.1-8-7.1z"/>
+    <circle cx="7.5" cy="10.5" r="1.4" fill="#fff"/><circle cx="8.5" cy="15" r="1.4" fill="#fff"/><circle cx="12" cy="7.5" r="1.4" fill="#fff"/>
+  </symbol>
+  <symbol id="ic-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/>
+  </symbol>
+  <symbol id="ic-briefcase" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="7" width="20" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="2" y1="12" x2="22" y2="12"/>
+  </symbol>
+  <symbol id="ic-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.2 3-5.3 7-5.3s7 2.1 7 5.3"/><circle cx="17.5" cy="9" r="2.3"/><path d="M16.3 14.3c2.4.2 4.7 1.7 5.7 4"/>
+  </symbol>
+  <symbol id="ic-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="4" width="14" height="17" rx="2"/><rect x="9" y="2" width="6" height="4" rx="1"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/>
+  </symbol>
+  <symbol id="ic-brain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.5 3a3 3 0 0 0-3 3 3 3 0 0 0-1.5 5.5A3 3 0 0 0 6.5 17a3 3 0 0 0 3 3V3z"/>
+    <path d="M14.5 3a3 3 0 0 1 3 3 3 3 0 0 1 1.5 5.5A3 3 0 0 1 17.5 17a3 3 0 0 1-3 3V3z"/>
+  </symbol>
+  <symbol id="ic-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+    <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.2"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="ic-rocket" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <path d="M12 2c3 2.2 5 6.3 5 10.3 0 2-1 3.7-2 4.7l-3 3-3-3c-1-1-2-2.7-2-4.7C7 8.3 9 4.2 12 2z"/>
+    <circle cx="12" cy="10.5" r="1.6" fill="#fff"/>
+    <path d="M8.2 16.5l-2.7 2.7M15.8 16.5l2.7 2.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ic-scale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="3" x2="12" y2="21"/><line x1="4" y1="7" x2="20" y2="7"/><path d="M4 7l-3 6a3 3 0 0 0 6 0z"/><path d="M20 7l-3 6a3 3 0 0 0 6 0z"/>
+  </symbol>
+  <symbol id="ic-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>
+  </symbol>
+  <symbol id="ic-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 4h16v12H9l-4 4z"/>
+  </symbol>
+  <symbol id="ic-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 5c3-1.4 6-1.4 9 0v14c-3-1.4-6-1.4-9 0z"/><path d="M21 5c-3-1.4-6-1.4-9 0v14c3-1.4 6-1.4 9 0z"/>
+  </symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9"/><polyline points="8,12 11,15 16,9"/>
+  </symbol>
+  <symbol id="ic-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 16,14"/>
+  </symbol>
+  <symbol id="ic-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 12a8 8 0 0 1 14-5.3"/><path d="M20 12a8 8 0 0 1-14 5.3"/><polyline points="18,3 18,7 14,7"/><polyline points="6,21 6,17 10,17"/>
+  </symbol>
+  <symbol id="ic-star" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <polygon points="12,2 15,9 22,9.5 16.5,14 18.5,21 12,17 5.5,21 7.5,14 2,9.5 9,9"/>
+  </symbol>
+  <symbol id="ic-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 2h9l5 5v15H6z"/><line x1="9" y1="12" x2="17" y2="12"/><line x1="9" y1="16" x2="17" y2="16"/>
+  </symbol>
+  <symbol id="ic-barchart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+    <line x1="5" y1="21" x2="5" y2="10"/><line x1="12" y1="21" x2="12" y2="4"/><line x1="19" y1="21" x2="19" y2="14"/>
+  </symbol>
+  <symbol id="ic-thumbsup" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <path d="M8 22V10.5l3.6-7.3a1.4 1.4 0 0 1 2.6.9l-.8 5h6.1a2 2 0 0 1 2 2.3l-1.6 8a2 2 0 0 1-2 1.6H8z"/>
+    <rect x="3" y="10.5" width="4" height="11.5" rx="1"/>
+  </symbol>
+</defs>
+</svg>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-mark">K</div>
+      <div>
+        <div class="brand-name">Kebun<span>Scholar</span></div>
+        <div class="brand-sub">EDUCATION &amp; CAREER GUIDANCE</div>
+      </div>
+    </div>
+    <div class="header-title">
+      <h1>EXECUTIVE <span>DASHBOARD</span></h1>
+      <h2>TALENT &amp; CAREER ASSESSMENT REPORT</h2>
+    </div>
+    <div class="report-meta">
+      <div><b>REPORT ID</b> : KS-2025-05-1867</div>
+      <div><b>TANGGAL TES</b> : 25 Mei 2025</div>
+      <div><b>METODE TES</b> : Online Assessment</div>
+    </div>
+  </div>
+
+  <!-- TOP GRID: PROFILE + SCORES -->
+  <div class="top-grid">
+    <div class="profile-card">
+      <div class="profile-photo"><svg class="i"><use href="#ic-user"/></svg></div>
+      <div class="profile-name">ANDREAS PROVICHIUS</div>
+      <div class="profile-class">SISWA KELAS XII IPA</div>
+      <div class="profile-details">
+        <div><b>Usia</b> : 17 Tahun</div>
+        <div><b>Sekolah</b> : SMA Negeri 1 Jakarta</div>
+        <div><b>Domisili</b> : Jakarta Selatan</div>
+        <div><b>Cita-cita</b> : Data Scientist / Entrepreneur</div>
+        <div><b>Tujuan Tes</b> : Tes Minat Bakat</div>
+      </div>
+      <div class="profile-quote">"The beautiful thing about learning is that no one can take it away from you."</div>
+    </div>
+
+    <div class="score-grid">
+      <div class="talent-index">
+        <div class="ti-left">
+          <div class="ti-label">TALENT INDEX</div>
+          <div class="ti-number">87<sub>/100</sub></div>
+          <div class="ti-stars">&#9733;&#9733;&#9733;&#9733;&#189;</div>
+          <div class="ti-badge">EXCELLENT</div>
+        </div>
+        <div class="ti-desc">Anda memiliki potensi yang sangat baik dan berada di atas rata-rata untuk sebagian besar aspek yang diukur.</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon"><svg class="i"><use href="#ic-cap"/></svg></div>
+        <div class="stat-label">ACADEMIC POTENTIAL</div>
+        <div class="stat-value">92<small>/100</small></div>
+        <div class="stat-tag">SANGAT TINGGI</div>
+        <div class="bar-track"><div class="bar-fill" style="width:92%"></div></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon"><svg class="i"><use href="#ic-bulb"/></svg></div>
+        <div class="stat-label">LEARNING AGILITY</div>
+        <div class="stat-value">89<small>/100</small></div>
+        <div class="stat-tag">SANGAT TINGGI</div>
+        <div class="bar-track"><div class="bar-fill" style="width:89%"></div></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon"><svg class="i"><use href="#ic-flame"/></svg></div>
+        <div class="stat-label">MOTIVATION LEVEL</div>
+        <div class="stat-value">93<small>/100</small></div>
+        <div class="stat-tag">SANGAT TINGGI</div>
+        <div class="bar-track"><div class="bar-fill" style="width:93%"></div></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon"><svg class="i"><use href="#ic-heart"/></svg></div>
+        <div class="stat-label">EMOTIONAL INTELLIGENCE</div>
+        <div class="stat-value">79<small>/100</small></div>
+        <div class="stat-tag">BAIK</div>
+        <div class="bar-track"><div class="bar-fill" style="width:79%"></div></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon"><svg class="i"><use href="#ic-handshake"/></svg></div>
+        <div class="stat-label">SOCIAL ADAPTABILITY</div>
+        <div class="stat-value">80<small>/100</small></div>
+        <div class="stat-tag">BAIK</div>
+        <div class="bar-track"><div class="bar-fill" style="width:80%"></div></div>
+      </div>
+
+      <div class="stat-card" style="visibility:hidden;"></div>
+    </div>
+  </div>
+
+  <!-- KOGNITIF / RIASEC / GAYA BELAJAR -->
+  <div class="three-col">
+    <div class="section-box">
+      <div class="section-title">KEMAMPUAN KOGNITIF (IQ PROFILE)</div>
+      <div class="kognitif-body">
+        <div class="radar-wrap">
+          <svg viewBox="0 0 200 200" width="190" height="190" style="position:absolute;left:0;top:0;">
+            <polygon points="100,20 165,60 165,140 100,180 35,140 35,60" fill="none" stroke="#e2e8f2" stroke-width="1"/>
+            <polygon points="100,45 145,72 145,128 100,155 55,128 55,72" fill="none" stroke="#e2e8f2" stroke-width="1"/>
+            <polygon points="100,70 125,85 125,115 100,130 75,115 75,85" fill="none" stroke="#e2e8f2" stroke-width="1"/>
+            <line x1="100" y1="100" x2="100" y2="20" stroke="#e2e8f2"/>
+            <line x1="100" y1="100" x2="165" y2="60" stroke="#e2e8f2"/>
+            <line x1="100" y1="100" x2="165" y2="140" stroke="#e2e8f2"/>
+            <line x1="100" y1="100" x2="100" y2="180" stroke="#e2e8f2"/>
+            <line x1="100" y1="100" x2="35" y2="140" stroke="#e2e8f2"/>
+            <line x1="100" y1="100" x2="35" y2="60" stroke="#e2e8f2"/>
+            <polygon points="100,32 152,66 148,127 103,163 48,120 45,68" fill="#3d7bf0" fill-opacity="0.35" stroke="#1e4fb8" stroke-width="2"/>
+          </svg>
+          <div class="radar-label" style="left:50%;top:-4px;transform:translate(-50%,-100%);text-align:center;">Verbal<small>118</small></div>
+          <div class="radar-label" style="left:100%;top:30%;transform:translate(-8%,-50%);text-align:left;">Numerical<small>132</small></div>
+          <div class="radar-label" style="left:100%;top:70%;transform:translate(-8%,-50%);text-align:left;">Spatial<small>125</small></div>
+          <div class="radar-label" style="left:50%;top:100%;transform:translate(-50%,20%);text-align:center;">Memory<small>114</small></div>
+          <div class="radar-label" style="left:0%;top:70%;transform:translate(-92%,-50%);text-align:right;">Processing<br>Speed<small>109</small></div>
+          <div class="radar-label" style="left:0%;top:30%;transform:translate(-92%,-50%);text-align:right;">Logical<br>Reasoning<small>128</small></div>
+        </div>
+        <div class="kog-list">
+          <div class="kog-row"><span class="kog-name">Verbal</span><span class="kog-line"><i style="width:80%"></i></span><span class="kog-val">118</span></div>
+          <div class="kog-row"><span class="kog-name">Numerical</span><span class="kog-line"><i style="width:90%"></i></span><span class="kog-val">132</span></div>
+          <div class="kog-row"><span class="kog-name">Logical Reasoning</span><span class="kog-line"><i style="width:87%"></i></span><span class="kog-val">128</span></div>
+          <div class="kog-row"><span class="kog-name">Spatial</span><span class="kog-line"><i style="width:85%"></i></span><span class="kog-val">125</span></div>
+          <div class="kog-row"><span class="kog-name">Memory</span><span class="kog-line"><i style="width:78%"></i></span><span class="kog-val">114</span></div>
+          <div class="kog-row"><span class="kog-name">Processing Speed</span><span class="kog-line"><i style="width:74%"></i></span><span class="kog-val">109</span></div>
+          <div class="iq-total">IQ TOTAL <span style="color:var(--blue);font-size:16px;">124</span> <span class="iq-badge">SUPERIOR</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-box">
+      <div class="section-title">MINAT KARIER (RIASEC)</div>
+      <div class="riasec-row"><span class="riasec-icon"><svg class="i"><use href="#ic-search"/></svg></span><span class="riasec-name">Investigative</span><span class="riasec-track"><span class="riasec-fill" style="width:92%"></span></span><span class="riasec-val">92</span></div>
+      <div class="riasec-row"><span class="riasec-icon"><svg class="i"><use href="#ic-palette"/></svg></span><span class="riasec-name">Artistic</span><span class="riasec-track"><span class="riasec-fill" style="width:85%"></span></span><span class="riasec-val">85</span></div>
+      <div class="riasec-row"><span class="riasec-icon"><svg class="i"><use href="#ic-gear"/></svg></span><span class="riasec-name">Realistic</span><span class="riasec-track"><span class="riasec-fill" style="width:80%"></span></span><span class="riasec-val">80</span></div>
+      <div class="riasec-row"><span class="riasec-icon"><svg class="i"><use href="#ic-briefcase"/></svg></span><span class="riasec-name">Enterprising</span><span class="riasec-track"><span class="riasec-fill" style="width:76%"></span></span><span class="riasec-val">76</span></div>
+      <div class="riasec-row"><span class="riasec-icon"><svg class="i"><use href="#ic-users"/></svg></span><span class="riasec-name">Social</span><span class="riasec-track"><span class="riasec-fill" style="width:65%"></span></span><span class="riasec-val">65</span></div>
+      <div class="riasec-row"><span class="riasec-icon"><svg class="i"><use href="#ic-clipboard"/></svg></span><span class="riasec-name">Conventional</span><span class="riasec-track"><span class="riasec-fill orange" style="width:48%"></span></span><span class="riasec-val">48</span></div>
+    </div>
+
+    <div class="section-box">
+      <div class="section-title">GAYA BELAJAR</div>
+      <div class="donut-wrap">
+        <div class="donut"><div class="donut-hole"><svg class="i"><use href="#ic-book"/></svg></div></div>
+        <div class="donut-legend">
+          <div><span><i class="dot" style="background:#0b2a5b"></i>Visual</span><b>40%</b></div>
+          <div><span><i class="dot" style="background:#3d7bf0"></i>Auditory</span><b>20%</b></div>
+          <div><span><i class="dot" style="background:#a9c6f5"></i>Reading/Writing</span><b>20%</b></div>
+          <div><span><i class="dot" style="background:#f5941f"></i>Kinesthetic</span><b>20%</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERSONALITY / EQ / SOFTSKILLS -->
+  <div class="three-col">
+    <div class="section-box">
+      <div class="section-title">KEPRIBADIAN (BIG FIVE)</div>
+      <div class="prog-row"><span class="prog-icon"><svg class="i"><use href="#ic-bulb"/></svg></span><span class="prog-name">Openness</span><span class="prog-track"><span class="prog-fill" style="width:86%"></span></span><span class="prog-val">86</span></div>
+      <div class="prog-row"><span class="prog-icon"><svg class="i"><use href="#ic-clipboard"/></svg></span><span class="prog-name">Conscientiousness</span><span class="prog-track"><span class="prog-fill" style="width:88%"></span></span><span class="prog-val">88</span></div>
+      <div class="prog-row"><span class="prog-icon"><svg class="i"><use href="#ic-chat"/></svg></span><span class="prog-name">Extraversion</span><span class="prog-track"><span class="prog-fill" style="width:72%"></span></span><span class="prog-val">72</span></div>
+      <div class="prog-row"><span class="prog-icon"><svg class="i"><use href="#ic-users"/></svg></span><span class="prog-name">Agreeableness</span><span class="prog-track"><span class="prog-fill" style="width:78%"></span></span><span class="prog-val">78</span></div>
+      <div class="prog-row"><span class="prog-icon"><svg class="i"><use href="#ic-scale"/></svg></span><span class="prog-name">Emotional Stability</span><span class="prog-track"><span class="prog-fill" style="width:83%"></span></span><span class="prog-val">83</span></div>
+    </div>
+
+    <div class="section-box">
+      <div class="section-title">EMOTIONAL INTELLIGENCE (EQ)</div>
+      <div class="prog-row"><span class="prog-icon"><svg class="i"><use href="#ic-target"/></svg></span><span class="prog-name">Self Awareness</span><span class="prog-track"><span class="prog-fill" style="width:82%"></span></span><span class="prog-val">82</span></div>
+      <div class="prog-row"><span class="prog-icon"><svg class="i"><use href="#ic-scale"/></svg></span><span class="prog-name">Self Regulation</span><span class="prog-track"><span class="prog-fill" style="width:79%"></span></span><span class="prog-val">79</span></div>
+      <div class="prog-row"><span class="prog-icon"><svg class="i"><use href="#ic-flame"/></svg></span><span class="prog-name">Motivation</span><span class="prog-track"><span class="prog-fill" style="width:88%"></span></span><span class="prog-val">88</span></div>
+      <div class="prog-row"><span class="prog-icon"><svg class="i"><use href="#ic-heart"/></svg></span><span class="prog-name">Empathy</span><span class="prog-track"><span class="prog-fill" style="width:76%"></span></span><span class="prog-val">76</span></div>
+      <div class="prog-row"><span class="prog-icon"><svg class="i"><use href="#ic-users"/></svg></span><span class="prog-name">Relationship Skills</span><span class="prog-track"><span class="prog-fill" style="width:80%"></span></span><span class="prog-val">80</span></div>
+    </div>
+
+    <div class="section-box">
+      <div class="section-title">SOFT SKILLS OVERVIEW</div>
+      <div class="softskill-grid">
+        <div>
+          <div class="ss-row"><span class="ss-name"><svg class="i"><use href="#ic-user"/></svg> Leadership</span><span class="ss-val">78</span></div>
+          <div class="ss-row"><span class="ss-name"><svg class="i"><use href="#ic-chat"/></svg> Communication</span><span class="ss-val">72</span></div>
+          <div class="ss-row"><span class="ss-name"><svg class="i"><use href="#ic-brain"/></svg> Critical Thinking</span><span class="ss-val">85</span></div>
+          <div class="ss-row"><span class="ss-name"><svg class="i"><use href="#ic-bulb"/></svg> Problem Solving</span><span class="ss-val">88</span></div>
+          <div class="ss-row"><span class="ss-name"><svg class="i"><use href="#ic-palette"/></svg> Creativity</span><span class="ss-val">82</span></div>
+        </div>
+        <div>
+          <div class="ss-row"><span class="ss-name"><svg class="i"><use href="#ic-users"/></svg> Teamwork</span><span class="ss-val">80</span></div>
+          <div class="ss-row"><span class="ss-name"><svg class="i"><use href="#ic-clock"/></svg> Time Management</span><span class="ss-val">76</span></div>
+          <div class="ss-row"><span class="ss-name"><svg class="i"><use href="#ic-refresh"/></svg> Adaptability</span><span class="ss-val">81</span></div>
+          <div class="ss-row"><span class="ss-name"><svg class="i"><use href="#ic-scale"/></svg> Decision Making</span><span class="ss-val">79</span></div>
+          <div class="ss-row"><span class="ss-name"><svg class="i"><use href="#ic-star"/></svg> Self Confidence</span><span class="ss-val">84</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP STRENGTHS / AREA TO DEVELOP -->
+  <div class="two-col">
+    <div>
+      <div class="strength-title"><svg class="i"><use href="#ic-thumbsup"/></svg> TOP STRENGTHS</div>
+      <div class="strength-body">
+        <div class="strength-icons">
+          <div><span class="ic"><svg class="i"><use href="#ic-brain"/></svg></span>Logical<br>Thinking</div>
+          <div><span class="ic"><svg class="i"><use href="#ic-search"/></svg></span>Analytical<br>Ability</div>
+          <div><span class="ic"><svg class="i"><use href="#ic-bulb"/></svg></span>Learning<br>Agility</div>
+          <div><span class="ic"><svg class="i"><use href="#ic-palette"/></svg></span>Creativity</div>
+          <div><span class="ic"><svg class="i"><use href="#ic-target"/></svg></span>Focus &amp;<br>Detail</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="strength-title orange"><svg class="i"><use href="#ic-flame"/></svg> AREA TO DEVELOP</div>
+      <div class="strength-body">
+        <div class="develop-item">
+          <span class="ic"><svg class="i"><use href="#ic-user"/></svg></span>
+          <div><b>Self Confidence</b><p>Tingkatkan keyakinan diri dalam mengungkapkan ide dan pendapat.</p></div>
+        </div>
+        <div class="develop-item">
+          <span class="ic"><svg class="i"><use href="#ic-rocket"/></svg></span>
+          <div><b>Persistence</b><p>Kembangkan konsistensi dalam menyelesaikan tugas hingga tuntas.</p></div>
+        </div>
+        <div class="develop-item">
+          <span class="ic"><svg class="i"><use href="#ic-scale"/></svg></span>
+          <div><b>Decision Making</b><p>Latih kemampuan mengambil keputusan secara mandiri.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REKOMENDASI + ACTION PLAN -->
+  <div class="two-col" style="grid-template-columns:1fr 1fr 1.1fr;">
+    <div class="section-box">
+      <div class="section-title">TOP REKOMENDASI JURUSAN</div>
+      <div class="rec-list">
+        <div class="rec-row"><span class="name"><b>1.</b>Teknik Informatika</span><span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#189;</span> <span class="rec-pct">95%</span></span></div>
+        <div class="rec-row"><span class="name"><b>2.</b>Data Science</span><span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span> <span class="rec-pct">93%</span></span></div>
+        <div class="rec-row"><span class="name"><b>3.</b>Teknik Industri</span><span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#189;</span> <span class="rec-pct">90%</span></span></div>
+        <div class="rec-row"><span class="name"><b>4.</b>Sistem Informasi</span><span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#189;</span> <span class="rec-pct">87%</span></span></div>
+        <div class="rec-row"><span class="name"><b>5.</b>Business Analytics</span><span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#189;</span> <span class="rec-pct">85%</span></span></div>
+      </div>
+    </div>
+
+    <div class="section-box">
+      <div class="section-title">REKOMENDASI KARIER</div>
+      <div class="rec-list">
+        <div class="rec-row"><span class="name"><svg class="i"><use href="#ic-barchart"/></svg>Data Scientist</span><span><span class="rec-pct">94%</span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span></span></div>
+        <div class="rec-row"><span class="name"><svg class="i"><use href="#ic-brain"/></svg>AI/ML Engineer</span><span><span class="rec-pct">91%</span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#189;</span></span></div>
+        <div class="rec-row"><span class="name"><svg class="i"><use href="#ic-doc"/></svg>Business Analyst</span><span><span class="rec-pct">88%</span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#189;</span></span></div>
+        <div class="rec-row"><span class="name"><svg class="i"><use href="#ic-search"/></svg>Research Analyst</span><span><span class="rec-pct">85%</span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#189;</span></span></div>
+        <div class="rec-row"><span class="name"><svg class="i"><use href="#ic-briefcase"/></svg>Product Manager</span><span><span class="rec-pct">82%</span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;</span></span></div>
+      </div>
+    </div>
+
+    <div class="action-box">
+      <div class="action-title"><svg class="i"><use href="#ic-target"/></svg> ACTION PLAN HIGHLIGHT</div>
+      <div class="action-cols">
+        <div>
+          <h4>0 &ndash; 6 BULAN</h4>
+          <ul><li>Tingkatkan Bahasa Inggris</li><li>Pelajari Python &amp; SQL</li><li>Ikut kompetisi data science</li></ul>
+        </div>
+        <div>
+          <h4>6 &ndash; 12 BULAN</h4>
+          <ul><li>Bangun portofolio project</li><li>Persiapan IELTS/TOEFL</li><li>Riset universitas target</li></ul>
+        </div>
+        <div>
+          <h4>12 &ndash; 24 BULAN</h4>
+          <ul><li>Pendaftaran universitas</li><li>Persiapan wawancara</li><li>Apply beasiswa</li></ul>
+        </div>
+      </div>
+      <div class="next-step">
+        <div class="qr-box">QR CODE</div>
+        <div>
+          <b>NEXT STEP</b>
+          Scan QR untuk mendapatkan konsultasi gratis dengan Education Advisor KebunScholar
+          <div class="link-btn">bit.ly/kebunscholar-consult</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KESIMPULAN -->
+  <div class="conclusion-row">
+    <div class="kesimpulan-box">
+      <span class="ic"><svg class="i"><use href="#ic-target"/></svg></span>
+      <p><b>KESIMPULAN</b>Anda memiliki potensi luar biasa di bidang teknologi, analisis data, dan pemecahan masalah kompleks. Dengan motivasi belajar yang tinggi dan kemampuan kognitif superior, Anda sangat siap untuk meraih prestasi lebih tinggi.</p>
+    </div>
+    <div class="quote-box">
+      <span class="q">&#8220;</span>
+      <p>Perkembangan terbaik terjadi ketika potensi bertemu dengan tindakan.<span>KebunScholar &ndash; Grow Today, Lead Tomorrow</span></p>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="brand-name">Kebun<span>Scholar</span></div>
+    <div class="footer-items">
+      <div><svg class="i"><use href="#ic-search"/></svg> Scientific Assessment</div>
+      <div><svg class="i"><use href="#ic-bulb"/></svg> Personalized Insight</div>
+      <div><svg class="i"><use href="#ic-check"/></svg> Actionable Recommendation</div>
+    </div>
+    <div>Grow Today, Lead Tomorrow</div>
+  </div>
+
+</div>
+</body>
+</html>

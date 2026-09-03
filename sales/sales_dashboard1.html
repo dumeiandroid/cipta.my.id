@@ -4,6 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Dashboard - Supervisor Psikologi</title>
+    <script>
+        // ==================== AUTH GUARD (Sales Tools Suite - SSO) ====================
+        // Halaman ini khusus SUPERVISOR (role x_03 = 'spv' di tabel users)
+        const AUTH_SESSION_KEY = 'lidan_sales_session';
+        const AUTH_LOGIN_PAGE = 'login.html';
+
+        function getAuthSession() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+        function clearAuthSession() { localStorage.removeItem(AUTH_SESSION_KEY); }
+        function isSupervisor(session) { return !!session && String(session.role || '').toLowerCase() === 'spv'; }
+        function logout() { clearAuthSession(); window.location.href = AUTH_LOGIN_PAGE; }
+
+        let CURRENT_USER = getAuthSession();
+        if (!CURRENT_USER || !CURRENT_USER.username) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.replace(AUTH_LOGIN_PAGE + '?return=' + returnUrl);
+        } else if (!isSupervisor(CURRENT_USER)) {
+            // Bukan supervisor -> tidak boleh akses dashboard ini
+            window.location.replace('index.html');
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === AUTH_SESSION_KEY && !e.newValue) {
+                window.location.href = AUTH_LOGIN_PAGE;
+            }
+        });
+    </script>
     <style>
         * {
             margin: 0;
@@ -64,6 +95,38 @@
             flex-wrap: wrap;
             align-items: center;
         }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #fff;
+        }
+        .user-badge .role-tag {
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .user-badge .role-tag.spv { background: #9f7aea; }
+        .user-badge .role-tag.sales { background: #4299e1; }
+        .btn-logout {
+            background: #fc8181;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-logout:hover { background: #f56565; }
 
         .header-actions .btn {
             padding: 10px 20px;
@@ -543,6 +606,12 @@
             <div class="header-actions">
                 <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
                 <span style="font-size:13px;color:#a0aec0;" id="lastUpdate">-</span>
+                <div class="user-badge" id="userBadge">
+                    <span id="userBadgeName">👤 -</span>
+                    <span class="role-tag" id="userBadgeRole">-</span>
+                    <a href="index.html" class="refresh-btn" style="text-decoration:none;display:inline-block;">🏠 Home</a>
+                    <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+                </div>
             </div>
         </header>
 
@@ -694,8 +763,19 @@
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', () => {
             console.log('📊 Sales Dashboard Started');
+            initUserBadge();
             refreshData();
         });
+
+        function initUserBadge() {
+            const nameEl = document.getElementById('userBadgeName');
+            const roleEl = document.getElementById('userBadgeRole');
+            if (nameEl) nameEl.textContent = '👤 ' + (CURRENT_USER.username || '-');
+            if (roleEl) {
+                roleEl.textContent = 'Supervisor';
+                roleEl.className = 'role-tag spv';
+            }
+        }
 
         // ==================== API HELPERS ====================
         function getHeaders() {

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Executive Dashboard - Talent & Career Assessment Report</title>
+<style>
+  :root{
+    --navy:#0b2a5b;
+    --blue:#1e4fb8;
+    --blue-light:#3d7bf0;
+    --orange:#f5941f;
+    --lightblue-bg:#eaf1fd;
+    --gray-track:#e2e8f2;
+    --text-dark:#0b2a5b;
+    --text-body:#3b4a63;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Arial,Helvetica,sans-serif;
+    background:#e9edf3;
+    color:var(--text-dark);
+  }
+  .page{
+    max-width:1080px;
+    margin:20px auto;
+    background:#fff;
+    padding:24px;
+    border:1px solid #d7deea;
+  }
+
+  /* ===== HEADER ===== */
+  .header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding-bottom:18px;
+    border-bottom:3px solid var(--navy);
+    margin-bottom:18px;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{
+    width:52px;height:52px;border-radius:10px;
+    background:linear-gradient(135deg,var(--blue-light),var(--navy));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:800;font-size:26px;
+  }
+  .brand-name{font-size:22px;font-weight:800;color:var(--navy);line-height:1.1;}
+  .brand-name span{color:var(--orange);}
+  .brand-sub{font-size:9px;letter-spacing:1.5px;color:var(--text-body);font-weight:600;}
+
+  .header-title{text-align:center;flex:1;}
+  .header-title h1{
+    font-size:34px;letter-spacing:1px;color:var(--navy);font-weight:800;
+  }
+  .header-title h1 span{color:var(--blue-light);}
+  .header-title h2{
+    font-size:13px;letter-spacing:3px;color:var(--text-body);font-weight:600;margin-top:2px;
+  }
+
+  .report-meta{
+    background:var(--navy);color:#fff;font-size:11px;
+    padding:10px 16px;border-radius:6px;line-height:1.9;min-width:230px;
+  }
+  .report-meta b{display:inline-block;width:90px;}
+
+  /* ===== TOP GRID ===== */
+  .top-grid{
+    display:grid;
+    grid-template-columns:230px 1fr;
+    gap:14px;
+    margin-bottom:14px;
+  }
+
+  .profile-card{
+    background:var(--navy);
+    color:#fff;
+    border-radius:10px;
+    padding:16px;
+    text-align:center;
+  }
+  .profile-photo{
+    width:130px;height:130px;border-radius:50%;
+    margin:0 auto 10px;overflow:hidden;border:3px solid var(--blue-light);
+    background:#fff;
+  }
+  .profile-photo img{width:100%;height:100%;object-fit:cover;}
+  .profile-name{font-size:16px;font-weight:800;}
+  .profile-class{color:var(--orange);font-size:11px;font-weight:700;margin-bottom:10px;}
+  .profile-details{
+    text-align:left;font-size:10.5px;line-height:2;
+    border-top:1px solid rgba(255,255,255,0.2);
+    padding-top:8px;margin-top:6px;
+  }
+  .profile-details div{display:flex;gap:6px;}
+  .profile-details b{min-width:62px;font-weight:600;color:#bcd0f7;}
+  .profile-quote{
+    margin-top:10px;font-size:9.5px;font-style:italic;color:#cfdcf7;
+    border-top:1px solid rgba(255,255,255,0.2);padding-top:8px;
+  }
+
+  .score-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr 1fr;
+    gap:10px;
+  }
+  .talent-index{
+    grid-column:span 4;
+    background:var(--lightblue-bg);
+    border-radius:10px;
+    padding:14px 18px;
+    display:flex;
+    align-items:center;
+    gap:20px;
+  }
+  .talent-index .ti-left{flex:0 0 140px;text-align:left;}
+  .ti-label{font-size:11px;font-weight:700;color:var(--text-body);letter-spacing:0.5px;}
+  .ti-number{font-size:52px;font-weight:800;color:var(--blue);line-height:1;}
+  .ti-number sub{font-size:16px;color:var(--text-body);font-weight:600;}
+  .ti-stars{color:var(--orange);font-size:16px;margin:4px 0;}
+  .ti-badge{font-size:15px;font-weight:800;color:var(--navy);letter-spacing:1px;}
+  .ti-desc{
+    flex:1;font-size:11.5px;color:var(--text-body);line-height:1.6;
+    border-left:1px solid #c9d6ef;padding-left:18px;
+  }
+
+  .stat-card{
+    background:var(--lightblue-bg);
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  .stat-icon{
+    width:30px;height:30px;border-radius:7px;
+    background:var(--blue);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;margin-bottom:6px;
+  }
+  .stat-label{font-size:10.5px;font-weight:700;color:var(--text-body);letter-spacing:0.3px;text-transform:uppercase;line-height:1.2;margin-bottom:4px;height:26px;}
+  .stat-value{font-size:26px;font-weight:800;color:var(--navy);}
+  .stat-value small{font-size:13px;color:var(--text-body);font-weight:600;}
+  .stat-tag{font-size:10px;font-weight:700;color:var(--blue);margin:4px 0 6px;}
+  .bar-track{height:6px;background:var(--gray-track);border-radius:4px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--blue);border-radius:4px;}
+
+  /* ===== SECTION HEADERS ===== */
+  .section-box{
+    background:#fff;border:1px solid #e1e7f2;border-radius:10px;
+    padding:14px 16px;margin-bottom:12px;
+  }
+  .section-title{
+    font-size:12px;font-weight:800;color:var(--navy);letter-spacing:0.5px;
+    margin-bottom:12px;
+  }
+
+  .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;}
+
+  /* Radar chart placeholder */
+  .kognitif-body{display:flex;gap:10px;align-items:center;}
+  .radar-wrap{flex:0 0 180px;}
+  .kog-list{flex:1;font-size:10.5px;}
+  .kog-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px dashed #eee;}
+  .kog-name{color:var(--text-body);}
+  .kog-line{flex:1;height:5px;background:var(--gray-track);border-radius:3px;margin:0 8px;position:relative;overflow:hidden;}
+  .kog-line i{position:absolute;left:0;top:0;bottom:0;background:var(--blue-light);border-radius:3px;}
+  .kog-val{font-weight:700;color:var(--navy);width:28px;text-align:right;}
+  .iq-total{margin-top:8px;font-size:12px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:8px;}
+  .iq-badge{background:var(--blue);color:#fff;font-size:10px;padding:3px 10px;border-radius:12px;letter-spacing:1px;}
+
+  /* RIASEC bars */
+  .riasec-row{display:flex;align-items:center;gap:8px;font-size:10.5px;margin-bottom:9px;}
+  .riasec-icon{width:20px;text-align:center;color:var(--blue);}
+  .riasec-name{width:76px;color:var(--text-body);}
+  .riasec-track{flex:1;height:9px;background:var(--gray-track);border-radius:5px;overflow:hidden;}
+  .riasec-fill{height:100%;background:var(--blue);}
+  .riasec-fill.orange{background:var(--orange);}
+  .riasec-val{width:26px;text-align:right;font-weight:700;color:var(--navy);}
+
+  /* Donut */
+  .donut-wrap{display:flex;flex-direction:column;align-items:center;}
+  .donut-legend{width:100%;font-size:10.5px;margin-top:10px;}
+  .donut-legend div{display:flex;align-items:center;justify-content:space-between;padding:3px 0;}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px;}
+
+  /* Personality/EQ/Softskill three col */
+  .prog-row{display:flex;align-items:center;gap:8px;font-size:10.5px;margin-bottom:10px;}
+  .prog-icon{width:18px;text-align:center;color:var(--blue);}
+  .prog-name{width:98px;color:var(--text-body);}
+  .prog-track{flex:1;height:7px;background:var(--gray-track);border-radius:4px;overflow:hidden;}
+  .prog-fill{height:100%;background:var(--blue);border-radius:4px;}
+  .prog-val{width:22px;text-align:right;font-weight:700;color:var(--navy);}
+
+  .softskill-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;}
+  .ss-row{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;padding:6px 0;border-bottom:1px solid #f0f2f7;}
+  .ss-name{display:flex;align-items:center;gap:6px;color:var(--text-body);}
+  .ss-val{font-weight:800;color:var(--navy);}
+
+  /* Strengths / develop */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .strength-title{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;color:#fff;background:var(--blue);padding:8px 12px;border-radius:8px 8px 0 0;}
+  .strength-title.orange{background:var(--orange);}
+  .strength-body{border:1px solid #e1e7f2;border-top:none;border-radius:0 0 8px 8px;padding:14px;}
+  .strength-icons{display:flex;justify-content:space-between;text-align:center;}
+  .strength-icons div{flex:1;font-size:9.5px;color:var(--text-body);font-weight:600;}
+  .strength-icons .ic{
+    width:38px;height:38px;border-radius:50%;background:var(--lightblue-bg);color:var(--blue);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:16px;
+  }
+  .develop-item{display:flex;gap:10px;margin-bottom:12px;}
+  .develop-item .ic{
+    width:34px;height:34px;flex:0 0 34px;border-radius:50%;background:#fff4e6;color:var(--orange);
+    display:flex;align-items:center;justify-content:center;font-size:15px;
+  }
+  .develop-item b{font-size:11px;color:var(--navy);display:block;}
+  .develop-item p{font-size:10px;color:var(--text-body);margin-top:2px;line-height:1.4;}
+
+  /* Recommendations */
+  .rec-list{font-size:11px;}
+  .rec-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0f2f7;}
+  .rec-row .name{color:var(--text-body);}
+  .rec-row .name b{color:var(--navy);margin-right:4px;}
+  .rec-stars{color:var(--orange);font-size:11px;}
+  .rec-pct{font-weight:800;color:var(--navy);margin-right:8px;}
+
+  /* Action plan */
+  .action-box{background:var(--navy);color:#fff;border-radius:10px;padding:14px 16px;}
+  .action-title{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;margin-bottom:12px;}
+  .action-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:10px;}
+  .action-cols h4{color:var(--orange);font-size:10.5px;margin-bottom:6px;}
+  .action-cols ul{padding-left:14px;line-height:1.7;color:#dbe6f9;}
+  .next-step{
+    background:rgba(255,255,255,0.08);
+    border-radius:8px;padding:10px 12px;margin-top:12px;
+    display:flex;align-items:center;gap:12px;font-size:10px;
+  }
+  .qr-box{width:56px;height:56px;background:#fff;border-radius:6px;flex:0 0 56px;
+    display:flex;align-items:center;justify-content:center;color:#0b2a5b;font-size:9px;font-weight:700;text-align:center;}
+  .next-step b{display:block;font-size:11px;margin-bottom:2px;}
+  .link-btn{display:inline-block;margin-top:6px;background:var(--orange);color:#fff;font-weight:700;padding:3px 10px;border-radius:5px;font-size:10px;}
+
+  /* Conclusion */
+  .conclusion-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+  .kesimpulan-box{background:var(--navy);color:#fff;border-radius:10px;padding:14px 16px;display:flex;gap:12px;align-items:center;}
+  .kesimpulan-box .ic{width:44px;height:44px;border-radius:50%;background:var(--orange);flex:0 0 44px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+  .kesimpulan-box p{font-size:10.5px;line-height:1.6;color:#dbe6f9;}
+  .kesimpulan-box b{color:#fff;font-size:11.5px;display:block;margin-bottom:4px;}
+  .quote-box{border:1px solid #e1e7f2;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
+  .quote-box .q{font-size:26px;color:var(--blue-light);font-weight:800;}
+  .quote-box p{font-size:11px;font-style:italic;color:var(--text-body);}
+  .quote-box span{display:block;font-size:9.5px;color:var(--blue);font-weight:700;margin-top:4px;font-style:normal;}
+
+  /* Footer */
+  .footer{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--navy);color:#fff;border-radius:10px;
+    padding:12px 18px;font-size:10px;font-weight:600;
+  }
+  .footer .brand-name{color:#fff;font-size:15px;}
+  .footer .brand-name span{color:var(--orange);}
+  .footer-items{display:flex;gap:22px;}
+  .footer-items div{display:flex;align-items:center;gap:6px;color:#cfdcf7;}
+
+  h4{font-size:10.5px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-mark">K</div>
+      <div>
+        <div class="brand-name">Kebun<span>Scholar</span></div>
+        <div class="brand-sub">EDUCATION &amp; CAREER GUIDANCE</div>
+      </div>
+    </div>
+    <div class="header-title">
+      <h1>EXECUTIVE <span>DASHBOARD</span></h1>
+      <h2>TALENT &amp; CAREER ASSESSMENT REPORT</h2>
+    </div>
+    <div class="report-meta">
+      <div><b>REPORT ID</b> : KS-2025-05-1867</div>
+      <div><b>TANGGAL TES</b> : 25 Mei 2025</div>
+      <div><b>METODE TES</b> : Online Assessment</div>
+    </div>
+  </div>
+
+  <!-- TOP GRID: PROFILE + SCORES -->
+  <div class="top-grid">
+    <div class="profile-card">
+      <div class="profile-photo">
+        <img src="/mnt/user-data/uploads/1786051893034_image.png" alt="Foto Peserta" onerror="this.style.display='none'">
+      </div>
+      <div class="profile-name">ANDREAS PROVICHIUS</div>
+      <div class="profile-class">SISWA KELAS XII IPA</div>
+      <div class="profile-details">
+        <div><b>Usia</b> : 17 Tahun</div>
+        <div><b>Sekolah</b> : SMA Negeri 1 Jakarta</div>
+        <div><b>Domisili</b> : Jakarta Selatan</div>
+        <div><b>Cita-cita</b> : Data Scientist / Entrepreneur</div>
+        <div><b>Tujuan Tes</b> : Tes Minat Bakat</div>
+      </div>
+      <div class="profile-quote">"The beautiful thing about learning is that no one can take it away from you."</div>
+    </div>
+
+    <div class="score-grid">
+      <div class="talent-index">
+        <div class="ti-left">
+          <div class="ti-label">TALENT INDEX</div>
+          <div class="ti-number">87<sub>/100</sub></div>
+          <div class="ti-stars">&#9733;&#9733;&#9733;&#9733;&#189;</div>
+          <div class="ti-badge">EXCELLENT</div>
+        </div>
+        <div class="ti-desc">Anda memiliki potensi yang sangat baik dan berada di atas rata-rata untuk sebagian besar aspek yang diukur.</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">&#127891;</div>
+        <div class="stat-label">ACADEMIC POTENTIAL</div>
+        <div class="stat-value">92<small>/100</small></div>
+        <div class="stat-tag">SANGAT TINGGI</div>
+        <div class="bar-track"><div class="bar-fill" style="width:92%"></div></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">&#128161;</div>
+        <div class="stat-label">LEARNING AGILITY</div>
+        <div class="stat-value">89<small>/100</small></div>
+        <div class="stat-tag">SANGAT TINGGI</div>
+        <div class="bar-track"><div class="bar-fill" style="width:89%"></div></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">&#128293;</div>
+        <div class="stat-label">MOTIVATION LEVEL</div>
+        <div class="stat-value">93<small>/100</small></div>
+        <div class="stat-tag">SANGAT TINGGI</div>
+        <div class="bar-track"><div class="bar-fill" style="width:93%"></div></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">&#10084;&#65039;</div>
+        <div class="stat-label">EMOTIONAL INTELLIGENCE</div>
+        <div class="stat-value">79<small>/100</small></div>
+        <div class="stat-tag">BAIK</div>
+        <div class="bar-track"><div class="bar-fill" style="width:79%"></div></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">&#129309;</div>
+        <div class="stat-label">SOCIAL ADAPTABILITY</div>
+        <div class="stat-value">80<small>/100</small></div>
+        <div class="stat-tag">BAIK</div>
+        <div class="bar-track"><div class="bar-fill" style="width:80%"></div></div>
+      </div>
+
+      <div class="stat-card" style="visibility:hidden;"></div>
+    </div>
+  </div>
+
+  <!-- KOGNITIF / RIASEC / GAYA BELAJAR -->
+  <div class="three-col">
+    <div class="section-box">
+      <div class="section-title">KEMAMPUAN KOGNITIF (IQ PROFILE)</div>
+      <div class="kognitif-body">
+        <div class="radar-wrap">
+          <svg viewBox="0 0 200 200" width="180" height="180">
+            <polygon points="100,20 165,60 165,140 100,180 35,140 35,60" fill="none" stroke="#e2e8f2" stroke-width="1"/>
+            <polygon points="100,45 145,72 145,128 100,155 55,128 55,72" fill="none" stroke="#e2e8f2" stroke-width="1"/>
+            <polygon points="100,70 125,85 125,115 100,130 75,115 75,85" fill="none" stroke="#e2e8f2" stroke-width="1"/>
+            <line x1="100" y1="100" x2="100" y2="20" stroke="#e2e8f2"/>
+            <line x1="100" y1="100" x2="165" y2="60" stroke="#e2e8f2"/>
+            <line x1="100" y1="100" x2="165" y2="140" stroke="#e2e8f2"/>
+            <line x1="100" y1="100" x2="100" y2="180" stroke="#e2e8f2"/>
+            <line x1="100" y1="100" x2="35" y2="140" stroke="#e2e8f2"/>
+            <line x1="100" y1="100" x2="35" y2="60" stroke="#e2e8f2"/>
+            <polygon points="100,32 152,66 148,127 103,163 48,120 45,68" fill="#3d7bf0" fill-opacity="0.35" stroke="#1e4fb8" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="kog-list">
+          <div class="kog-row"><span class="kog-name">Verbal</span><span class="kog-line"><i style="width:80%"></i></span><span class="kog-val">118</span></div>
+          <div class="kog-row"><span class="kog-name">Numerical</span><span class="kog-line"><i style="width:90%"></i></span><span class="kog-val">132</span></div>
+          <div class="kog-row"><span class="kog-name">Logical Reasoning</span><span class="kog-line"><i style="width:87%"></i></span><span class="kog-val">128</span></div>
+          <div class="kog-row"><span class="kog-name">Spatial</span><span class="kog-line"><i style="width:85%"></i></span><span class="kog-val">125</span></div>
+          <div class="kog-row"><span class="kog-name">Memory</span><span class="kog-line"><i style="width:78%"></i></span><span class="kog-val">114</span></div>
+          <div class="kog-row"><span class="kog-name">Processing Speed</span><span class="kog-line"><i style="width:74%"></i></span><span class="kog-val">109</span></div>
+          <div class="iq-total">IQ TOTAL <span style="color:var(--blue);font-size:16px;">124</span> <span class="iq-badge">SUPERIOR</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-box">
+      <div class="section-title">MINAT KARIER (RIASEC)</div>
+      <div class="riasec-row"><span class="riasec-icon">&#128269;</span><span class="riasec-name">Investigative</span><span class="riasec-track"><span class="riasec-fill" style="width:92%"></span></span><span class="riasec-val">92</span></div>
+      <div class="riasec-row"><span class="riasec-icon">&#127912;</span><span class="riasec-name">Artistic</span><span class="riasec-track"><span class="riasec-fill" style="width:85%"></span></span><span class="riasec-val">85</span></div>
+      <div class="riasec-row"><span class="riasec-icon">&#9881;&#65039;</span><span class="riasec-name">Realistic</span><span class="riasec-track"><span class="riasec-fill" style="width:80%"></span></span><span class="riasec-val">80</span></div>
+      <div class="riasec-row"><span class="riasec-icon">&#128188;</span><span class="riasec-name">Enterprising</span><span class="riasec-track"><span class="riasec-fill" style="width:76%"></span></span><span class="riasec-val">76</span></div>
+      <div class="riasec-row"><span class="riasec-icon">&#129309;</span><span class="riasec-name">Social</span><span class="riasec-track"><span class="riasec-fill" style="width:65%"></span></span><span class="riasec-val">65</span></div>
+      <div class="riasec-row"><span class="riasec-icon">&#128203;</span><span class="riasec-name">Conventional</span><span class="riasec-track"><span class="riasec-fill orange" style="width:48%"></span></span><span class="riasec-val">48</span></div>
+    </div>
+
+    <div class="section-box">
+      <div class="section-title">GAYA BELAJAR</div>
+      <div class="donut-wrap">
+        <svg viewBox="0 0 42 42" width="150" height="150">
+          <circle cx="21" cy="21" r="15.9" fill="#fff"/>
+          <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#0b2a5b" stroke-width="6" stroke-dasharray="40 60" stroke-dashoffset="25"/>
+          <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#3d7bf0" stroke-width="6" stroke-dasharray="20 80" stroke-dashoffset="-15"/>
+          <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#a9c6f5" stroke-width="6" stroke-dasharray="20 80" stroke-dashoffset="-35"/>
+          <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#f5941f" stroke-width="6" stroke-dasharray="20 80" stroke-dashoffset="-55"/>
+          <text x="21" y="24" text-anchor="middle" font-size="8" fill="#0b2a5b">&#128218;</text>
+        </svg>
+        <div class="donut-legend">
+          <div><span><i class="dot" style="background:#0b2a5b"></i>Visual</span><b>40%</b></div>
+          <div><span><i class="dot" style="background:#3d7bf0"></i>Auditory</span><b>20%</b></div>
+          <div><span><i class="dot" style="background:#a9c6f5"></i>Reading/Writing</span><b>20%</b></div>
+          <div><span><i class="dot" style="background:#f5941f"></i>Kinesthetic</span><b>20%</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERSONALITY / EQ / SOFTSKILLS -->
+  <div class="three-col">
+    <div class="section-box">
+      <div class="section-title">KEPRIBADIAN (BIG FIVE)</div>
+      <div class="prog-row"><span class="prog-icon">&#128161;</span><span class="prog-name">Openness</span><span class="prog-track"><span class="prog-fill" style="width:86%"></span></span><span class="prog-val">86</span></div>
+      <div class="prog-row"><span class="prog-icon">&#128203;</span><span class="prog-name">Conscientiousness</span><span class="prog-track"><span class="prog-fill" style="width:88%"></span></span><span class="prog-val">88</span></div>
+      <div class="prog-row"><span class="prog-icon">&#128483;</span><span class="prog-name">Extraversion</span><span class="prog-track"><span class="prog-fill" style="width:72%"></span></span><span class="prog-val">72</span></div>
+      <div class="prog-row"><span class="prog-icon">&#129309;</span><span class="prog-name">Agreeableness</span><span class="prog-track"><span class="prog-fill" style="width:78%"></span></span><span class="prog-val">78</span></div>
+      <div class="prog-row"><span class="prog-icon">&#9878;&#65039;</span><span class="prog-name">Emotional Stability</span><span class="prog-track"><span class="prog-fill" style="width:83%"></span></span><span class="prog-val">83</span></div>
+    </div>
+
+    <div class="section-box">
+      <div class="section-title">EMOTIONAL INTELLIGENCE (EQ)</div>
+      <div class="prog-row"><span class="prog-icon">&#128064;</span><span class="prog-name">Self Awareness</span><span class="prog-track"><span class="prog-fill" style="width:82%"></span></span><span class="prog-val">82</span></div>
+      <div class="prog-row"><span class="prog-icon">&#127939;</span><span class="prog-name">Self Regulation</span><span class="prog-track"><span class="prog-fill" style="width:79%"></span></span><span class="prog-val">79</span></div>
+      <div class="prog-row"><span class="prog-icon">&#128293;</span><span class="prog-name">Motivation</span><span class="prog-track"><span class="prog-fill" style="width:88%"></span></span><span class="prog-val">88</span></div>
+      <div class="prog-row"><span class="prog-icon">&#128153;</span><span class="prog-name">Empathy</span><span class="prog-track"><span class="prog-fill" style="width:76%"></span></span><span class="prog-val">76</span></div>
+      <div class="prog-row"><span class="prog-icon">&#129309;</span><span class="prog-name">Relationship Skills</span><span class="prog-track"><span class="prog-fill" style="width:80%"></span></span><span class="prog-val">80</span></div>
+    </div>
+
+    <div class="section-box">
+      <div class="section-title">SOFT SKILLS OVERVIEW</div>
+      <div class="softskill-grid">
+        <div>
+          <div class="ss-row"><span class="ss-name">&#128100; Leadership</span><span class="ss-val">78</span></div>
+          <div class="ss-row"><span class="ss-name">&#128172; Communication</span><span class="ss-val">72</span></div>
+          <div class="ss-row"><span class="ss-name">&#129504; Critical Thinking</span><span class="ss-val">85</span></div>
+          <div class="ss-row"><span class="ss-name">&#128161; Problem Solving</span><span class="ss-val">88</span></div>
+          <div class="ss-row"><span class="ss-name">&#127912; Creativity</span><span class="ss-val">82</span></div>
+        </div>
+        <div>
+          <div class="ss-row"><span class="ss-name">&#129309; Teamwork</span><span class="ss-val">80</span></div>
+          <div class="ss-row"><span class="ss-name">&#8986; Time Management</span><span class="ss-val">76</span></div>
+          <div class="ss-row"><span class="ss-name">&#128260; Adaptability</span><span class="ss-val">81</span></div>
+          <div class="ss-row"><span class="ss-name">&#9878;&#65039; Decision Making</span><span class="ss-val">79</span></div>
+          <div class="ss-row"><span class="ss-name">&#128170; Self Confidence</span><span class="ss-val">84</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP STRENGTHS / AREA TO DEVELOP -->
+  <div class="two-col">
+    <div>
+      <div class="strength-title">&#128077; TOP STRENGTHS</div>
+      <div class="strength-body">
+        <div class="strength-icons">
+          <div><span class="ic">&#129504;</span>Logical<br>Thinking</div>
+          <div><span class="ic">&#128269;</span>Analytical<br>Ability</div>
+          <div><span class="ic">&#128161;</span>Learning<br>Agility</div>
+          <div><span class="ic">&#127912;</span>Creativity</div>
+          <div><span class="ic">&#127919;</span>Focus &amp;<br>Detail</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="strength-title orange">&#128293; AREA TO DEVELOP</div>
+      <div class="strength-body">
+        <div class="develop-item">
+          <span class="ic">&#128100;</span>
+          <div><b>Self Confidence</b><p>Tingkatkan keyakinan diri dalam mengungkapkan ide dan pendapat.</p></div>
+        </div>
+        <div class="develop-item">
+          <span class="ic">&#128640;</span>
+          <div><b>Persistence</b><p>Kembangkan konsistensi dalam menyelesaikan tugas hingga tuntas.</p></div>
+        </div>
+        <div class="develop-item">
+          <span class="ic">&#9878;&#65039;</span>
+          <div><b>Decision Making</b><p>Latih kemampuan mengambil keputusan secara mandiri.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REKOMENDASI + ACTION PLAN -->
+  <div class="two-col" style="grid-template-columns:1fr 1fr 1.1fr;">
+    <div class="section-box">
+      <div class="section-title">TOP REKOMENDASI JURUSAN</div>
+      <div class="rec-list">
+        <div class="rec-row"><span class="name"><b>1.</b>Teknik Informatika</span><span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#189;</span> <span class="rec-pct">95%</span></span></div>
+        <div class="rec-row"><span class="name"><b>2.</b>Data Science</span><span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span> <span class="rec-pct">93%</span></span></div>
+        <div class="rec-row"><span class="name"><b>3.</b>Teknik Industri</span><span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#189;</span> <span class="rec-pct">90%</span></span></div>
+        <div class="rec-row"><span class="name"><b>4.</b>Sistem Informasi</span><span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#189;</span> <span class="rec-pct">87%</span></span></div>
+        <div class="rec-row"><span class="name"><b>5.</b>Business Analytics</span><span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#189;</span> <span class="rec-pct">85%</span></span></div>
+      </div>
+    </div>
+
+    <div class="section-box">
+      <div class="section-title">REKOMENDASI KARIER</div>
+      <div class="rec-list">
+        <div class="rec-row"><span class="name">&#128100; Data Scientist</span><span><span class="rec-pct">94%</span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span></span></div>
+        <div class="rec-row"><span class="name">&#129302; AI/ML Engineer</span><span><span class="rec-pct">91%</span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#189;</span></span></div>
+        <div class="rec-row"><span class="name">&#128202; Business Analyst</span><span><span class="rec-pct">88%</span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#189;</span></span></div>
+        <div class="rec-row"><span class="name">&#128300; Research Analyst</span><span><span class="rec-pct">85%</span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;&#189;</span></span></div>
+        <div class="rec-row"><span class="name">&#128188; Product Manager</span><span><span class="rec-pct">82%</span><span class="rec-stars">&#9733;&#9733;&#9733;&#9733;</span></span></div>
+      </div>
+    </div>
+
+    <div class="action-box">
+      <div class="action-title">&#128204; ACTION PLAN HIGHLIGHT</div>
+      <div class="action-cols">
+        <div>
+          <h4>0 &ndash; 6 BULAN</h4>
+          <ul><li>Tingkatkan Bahasa Inggris</li><li>Pelajari Python &amp; SQL</li><li>Ikut kompetisi data science</li></ul>
+        </div>
+        <div>
+          <h4>6 &ndash; 12 BULAN</h4>
+          <ul><li>Bangun portofolio project</li><li>Persiapan IELTS/TOEFL</li><li>Riset universitas target</li></ul>
+        </div>
+        <div>
+          <h4>12 &ndash; 24 BULAN</h4>
+          <ul><li>Pendaftaran universitas</li><li>Persiapan wawancara</li><li>Apply beasiswa</li></ul>
+        </div>
+      </div>
+      <div class="next-step">
+        <div class="qr-box">QR CODE</div>
+        <div>
+          <b>NEXT STEP</b>
+          Scan QR untuk mendapatkan konsultasi gratis dengan Education Advisor KebunScholar
+          <div class="link-btn">bit.ly/kebunscholar-consult</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KESIMPULAN -->
+  <div class="conclusion-row">
+    <div class="kesimpulan-box">
+      <span class="ic">&#127919;</span>
+      <p><b>KESIMPULAN</b>Anda memiliki potensi luar biasa di bidang teknologi, analisis data, dan pemecahan masalah kompleks. Dengan motivasi belajar yang tinggi dan kemampuan kognitif superior, Anda sangat siap untuk meraih prestasi lebih tinggi.</p>
+    </div>
+    <div class="quote-box">
+      <span class="q">&#8220;</span>
+      <p>Perkembangan terbaik terjadi ketika potensi bertemu dengan tindakan.<span>KebunScholar &ndash; Grow Today, Lead Tomorrow</span></p>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="brand-name">Kebun<span>Scholar</span></div>
+    <div class="footer-items">
+      <div>&#128300; Scientific Assessment</div>
+      <div>&#128161; Personalized Insight</div>
+      <div>&#9989; Actionable Recommendation</div>
+    </div>
+    <div>Grow Today, Lead Tomorrow</div>
+  </div>
+
+</div>
+</body>
+</html>

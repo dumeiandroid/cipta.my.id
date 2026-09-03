@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil WWQ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --dark:#1a1a2e; --mid:#2c2c54; --light:#f4f4f8; --white:#fff;
+            --radius:16px; --shadow:0 8px 32px rgba(0,0,0,.10);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'DM Sans',sans-serif; background:var(--light); min-height:100vh; }
+
+        #loadingScreen {
+            position:fixed; inset:0; background:var(--dark);
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            z-index:999; transition:opacity .5s;
+        }
+        .spinner { width:48px; height:48px; border:4px solid rgba(255,255,255,.15); border-top-color:#fff; border-radius:50%; animation:spin 1s linear infinite; margin-bottom:16px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        #loadingScreen p { color:rgba(255,255,255,.6); font-size:.9em; }
+
+        .page { max-width:720px; margin:0 auto; padding:32px 16px 60px; }
+
+        /* HERO */
+        .hero {
+            background:var(--dark); border-radius:var(--radius);
+            padding:40px; margin-bottom:20px; color:white; position:relative; overflow:hidden;
+        }
+        .hero::before {
+            content:'WWQ'; position:absolute; right:-10px; top:-10px;
+            font-family:'Playfair Display',serif; font-size:130px; font-weight:900;
+            color:rgba(255,255,255,.04); line-height:1; pointer-events:none;
+        }
+        .hero-label { font-size:.72em; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:rgba(255,255,255,.5); margin-bottom:8px; }
+        .hero h1 { font-family:'Playfair Display',serif; font-size:2em; margin-bottom:4px; }
+        .hero-sub { color:rgba(255,255,255,.55); font-size:.9em; }
+
+        /* PROFILE */
+        .profile-card {
+            background:var(--white); border-radius:var(--radius);
+            padding:24px 28px; margin-bottom:20px; box-shadow:var(--shadow);
+            display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px;
+        }
+        .profile-item .lbl { font-size:.7em; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#bbb; margin-bottom:3px; }
+        .profile-item .val { font-size:1em; font-weight:500; color:var(--dark); }
+
+        /* JAWABAN STRING */
+        .jawaban-card {
+            background:var(--white); border-radius:var(--radius);
+            padding:24px 28px; margin-bottom:20px; box-shadow:var(--shadow);
+        }
+        .jawaban-card h2 { font-weight:700; font-size:.85em; letter-spacing:.08em; text-transform:uppercase; color:#aaa; margin-bottom:10px; }
+        .jawaban-str {
+            font-family:monospace; font-size:.78em; color:#555;
+            word-break:break-all; line-height:1.8;
+            background:#f8f8f8; border-radius:8px; padding:12px 14px;
+        }
+
+        /* HASIL TABEL */
+        .hasil-card {
+            background:var(--white); border-radius:var(--radius);
+            padding:24px 28px; margin-bottom:20px; box-shadow:var(--shadow);
+        }
+        .hasil-card h2 { font-weight:700; font-size:.85em; letter-spacing:.08em; text-transform:uppercase; color:#aaa; margin-bottom:16px; }
+        .hasil-table { width:100%; border-collapse:collapse; }
+        .hasil-table tr { border-bottom:1px solid #f0f0f0; }
+        .hasil-table tr:last-child { border-bottom:none; }
+        .hasil-table td { padding:10px 4px; font-size:.95em; color:#333; }
+        .hasil-table td.lbl { color:#888; font-size:.8em; font-weight:600; letter-spacing:.06em; text-transform:uppercase; width:130px; }
+        .hasil-table td.sep { color:#ccc; width:20px; text-align:center; }
+        .hasil-table td.val { font-weight:700; color:var(--dark); text-align:right; font-size:1.05em; }
+
+        /* SKOR AKHIR ROW */
+        .skor-row { border-top:2px solid var(--dark) !important; }
+        .skor-row td { padding-top:14px !important; }
+        .skor-row td.lbl { color:var(--dark) !important; font-size:.85em !important; }
+        .skor-badge {
+            display:inline-block; padding:5px 20px; border-radius:99px;
+            font-size:1em; font-weight:700; background:var(--dark); color:white;
+        }
+
+        /* BUTTONS */
+        .btn-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:4px; }
+        .btn { padding:13px 20px; border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:.92em; font-weight:600; cursor:pointer; transition:.2s; }
+        .btn-dark { background:var(--dark); color:white; }
+        .btn-dark:hover { background:var(--mid); transform:translateY(-1px); }
+        .btn-outline { background:white; color:var(--dark); border:2px solid var(--dark); }
+        .btn-outline:hover { background:var(--dark); color:white; transform:translateY(-1px); }
+
+        /* ERROR */
+        .error-box { text-align:center; padding:60px 40px; background:white; border-radius:var(--radius); box-shadow:var(--shadow); }
+        .error-box h2 { font-family:'Playfair Display',serif; font-size:1.6em; color:#c0392b; margin-bottom:8px; }
+        .error-box p { color:#888; font-size:.9em; }
+
+        @media print { body{background:white;} .btn-row{display:none;} #loadingScreen{display:none;} }
+        @media(max-width:540px) { .hero{padding:28px 20px;} .hero h1{font-size:1.5em;} .btn-row{grid-template-columns:1fr;} }
+    </style>
+</head>
+<body>
+<div id="loadingScreen"><div class="spinner"></div><p>Memuat hasil WWQ...</p></div>
+<div class="page" id="app"></div>
+
+<script>
+// ── Scoring engine — port 1:1 dari 16.php ─────────────
+function hitungWWQ(jawabanStr) {
+    const w = jawabanStr.split(';').map(s => s.trim());
+    let satu=0,dua=0,tiga=0,empat=0,lima=0,enam=0,tujuh=0,delapan=0;
+
+    if(w[0] ==='A'){satu++;empat++;}
+    if(w[1] ==='A') satu++;
+    if(w[2] ==='A') dua++;
+    if(w[3] ==='A') dua++;
+    if(w[4] ==='A') dua++;
+    if(w[5] ==='A') dua++;
+    if(w[6] ==='A') dua++;
+    if(w[7] ==='A') satu++;
+    if(w[8] ==='A'){satu++;enam++;}
+    if(w[9] ==='A'){satu++;enam++;}
+    if(w[10]==='A') satu++;
+    if(w[11]==='A') satu++;
+    if(w[12]==='A') satu++;
+    if(w[13]==='B') tujuh++;
+    if(w[14]==='A') tujuh++;
+    if(w[15]==='A') tujuh++;
+    if(w[16]==='A') tujuh++;
+    if(w[17]==='B') tujuh++;
+    if(w[18]==='A'){satu++;lima++;}
+    if(w[19]==='B'){satu++;delapan++;}
+    if(w[20]==='B') satu++;
+    if(w[21]==='A') lima++;
+    if(w[22]==='A') lima++;
+    if(w[23]==='B') lima++;
+    if(w[24]==='A'){dua++;lima++;}
+    if(w[25]==='A'){dua++;lima++;}
+    if(w[26]==='A'){tiga++;lima++;}
+    if(w[27]==='A') lima++;
+    if(w[28]==='A') lima++;
+    if(w[29]==='A') lima++;
+    if(w[30]==='B'){lima++;enam++;}
+    if(w[31]==='B') dua++;
+    if(w[32]==='A') dua++;
+    if(w[33]==='A'){satu++;dua++;}
+    if(w[34]==='A'){tiga++;empat++;tujuh++;}
+    if(w[35]==='A') enam++;
+    if(w[36]==='A') lima++;
+    if(w[37]==='A') dua++;
+    if(w[38]==='A') dua++;
+    if(w[39]==='A'){satu++;dua++;}
+    if(w[40]==='A') dua++;
+    if(w[41]==='A') dua++;
+    if(w[42]==='B'){tiga++;empat++;}
+    if(w[43]==='A'){tiga++;empat++;}
+    if(w[44]==='B') empat++;
+    if(w[45]==='A'){tiga++;enam++;}
+    if(w[46]==='A') empat++;
+    if(w[47]==='B') tiga++;
+    if(w[48]==='A') tiga++;
+    if(w[49]==='A') tiga++;
+    if(w[50]==='A') tiga++;
+    if(w[51]==='A') tiga++;
+    if(w[52]==='A'){tiga++;empat++;}
+    if(w[53]==='A'){tiga++;lima++;}
+    if(w[54]==='B') empat++;
+    if(w[55]==='A') empat++;
+    if(w[56]==='B') empat++;
+    if(w[57]==='A') empat++;
+    if(w[58]==='A') empat++;
+    if(w[59]==='B') empat++;
+    if(w[60]==='B') empat++;
+    if(w[61]==='A') empat++;
+    if(w[62]==='A') empat++;
+    if(w[63]==='A'){empat++;enam++;}
+    if(w[64]==='A') enam++;
+    if(w[65]==='A') enam++;
+    if(w[66]==='A') enam++;
+    if(w[67]==='A') enam++;
+    if(w[68]==='A') enam++;
+    if(w[69]==='A') delapan++;
+    if(w[70]==='A') delapan++;
+    if(w[71]==='A') delapan++;
+    if(w[72]==='A') delapan++;
+    if(w[73]==='A') delapan++;
+    if(w[74]==='A') delapan++;
+
+    const skor_akhir = ((satu*28)+(dua*24)+(tiga*30)+(empat*20)+(lima*26)+(enam*36)+(tujuh*52)+(delapan*52))/8;
+    return {satu,dua,tiga,empat,lima,enam,tujuh,delapan,skor_akhir};
+}
+
+// ── Render ─────────────────────────────────────────────
+function renderResult(data) {
+    const bio    = JSON.parse(data.x_02 || '{}');
+    const x07    = JSON.parse(data.x_07 || '{}');
+    const wwqStr = x07['who_wwq'] || '';
+
+    if (!wwqStr || wwqStr.split(';').length < 75) {
+        document.getElementById('app').innerHTML =
+            `<div class="error-box"><h2>⚠️ Data Belum Tersedia</h2><p>Peserta belum menyelesaikan Tes WWQ atau data tidak lengkap.</p></div>`;
+        return;
+    }
+
+    const r = hitungWWQ(wwqStr);
+
+    const rows = [
+        ['satu',    r.satu],
+        ['dua',     r.dua],
+        ['tiga',    r.tiga],
+        ['empat',   r.empat],
+        ['lima',    r.lima],
+        ['enam',    r.enam],
+        ['tujuh',   r.tujuh],
+        ['delapan', r.delapan],
+    ];
+
+    document.getElementById('app').innerHTML = `
+    <div class="hero">
+        <div class="hero-label">Laporan Psikologi</div>
+        <h1>Hasil WWQ</h1>
+        <p class="hero-sub">Work &amp; Wellbeing Questionnaire</p>
+    </div>
+
+    <div class="profile-card">
+        <div class="profile-item"><div class="lbl">Nama</div><div class="val">${bio.nama||'—'}</div></div>
+        <div class="profile-item"><div class="lbl">Usia</div><div class="val">${bio.usia ? bio.usia+' Tahun' : '—'}</div></div>
+        <div class="profile-item"><div class="lbl">Pendidikan</div><div class="val">${bio.pendidikan||'—'}</div></div>
+        <div class="profile-item"><div class="lbl">Tanggal Tes</div><div class="val">${bio.tgl_tes||'—'}</div></div>
+    </div>
+
+    <div class="jawaban-card">
+        <h2>Jawaban</h2>
+        <div class="jawaban-str">${wwqStr}</div>
+    </div>
+
+    <div class="hasil-card">
+        <h2>Hasil Perhitungan</h2>
+        <table class="hasil-table">
+            <tbody>
+                ${rows.map(([k,v]) => `
+                <tr>
+                    <td class="lbl">${k}</td>
+                    <td class="sep">:</td>
+                    <td class="val">${v}</td>
+                </tr>`).join('')}
+                <tr class="skor-row">
+                    <td class="lbl">skor_akhir</td>
+                    <td class="sep">:</td>
+                    <td class="val"><span class="skor-badge">${r.skor_akhir}</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="btn-row">
+        <button class="btn btn-dark" onclick="downloadImg()">📥 Download JPG</button>
+        <button class="btn btn-outline" onclick="window.print()">🖨️ Cetak PDF</button>
+    </div>`;
+}
+
+// ── Load data ──────────────────────────────────────────
+async function loadData() {
+    const params = new URLSearchParams(window.location.search);
+    const token  = params.get('token') || params.get('x_01');
+    const app    = document.getElementById('app');
+
+    if (!token) {
+        hide();
+        app.innerHTML = `<div class="error-box"><h2>❌ Token Tidak Ditemukan</h2><p>Tambahkan <code>?token=xxx</code> pada URL.</p></div>`;
+        return;
+    }
+    try {
+        const res  = await fetch(
+            `https://lidan-co-id.pages.dev/api/contacts_filter_dinamis6?table=nilai1_json&x_01_eq=${token}`,
+            { headers:{'X-Custom-Auth':'admin'} }
+        );
+        const json = await res.json();
+        hide();
+        if (json.success && json.count > 0) {
+            renderResult(json.data[0]);
+        } else {
+            app.innerHTML = `<div class="error-box"><h2>❌ Data Tidak Ditemukan</h2><p>Token tidak valid atau data belum tersedia.</p></div>`;
+        }
+    } catch(e) {
+        hide();
+        app.innerHTML = `<div class="error-box"><h2>❌ Koneksi Gagal</h2><p>Tidak dapat terhubung ke server.</p></div>`;
+    }
+}
+
+function hide() {
+    const s = document.getElementById('loadingScreen');
+    s.style.opacity = '0';
+    setTimeout(() => s.style.display = 'none', 500);
+}
+
+async function downloadImg() {
+    const btn = event.target;
+    btn.disabled = true; btn.textContent = '⏳ Memproses...';
+    try {
+        const canvas = await html2canvas(document.getElementById('app'), {scale:2, backgroundColor:'#f4f4f8'});
+        const a = document.createElement('a');
+        a.download = `Hasil-WWQ-${Date.now()}.jpg`;
+        a.href = canvas.toDataURL('image/jpeg', 0.95);
+        a.click();
+        btn.textContent = '✅ Berhasil!';
+    } catch { btn.textContent = '❌ Gagal'; }
+    setTimeout(() => { btn.disabled=false; btn.textContent='📥 Download JPG'; }, 2000);
+}
+
+loadData();
+</script>
+</body>
+</html>

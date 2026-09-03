@@ -4,6 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lead Management - Sales Psikologi</title>
+    <script>
+        // ==================== AUTH GUARD (Sales Tools Suite - SSO) ====================
+        const AUTH_SESSION_KEY = 'lidan_sales_session';
+        const AUTH_LOGIN_PAGE = 'login.html';
+
+        function getAuthSession() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+        function clearAuthSession() { localStorage.removeItem(AUTH_SESSION_KEY); }
+        function isSupervisor(session) { return !!session && String(session.role || '').toLowerCase() === 'spv'; }
+        function logout() { clearAuthSession(); window.location.href = AUTH_LOGIN_PAGE; }
+
+        let CURRENT_USER = getAuthSession();
+        if (!CURRENT_USER || !CURRENT_USER.username) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.replace(AUTH_LOGIN_PAGE + '?return=' + returnUrl);
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === AUTH_SESSION_KEY && !e.newValue) {
+                window.location.href = AUTH_LOGIN_PAGE;
+            }
+        });
+    </script>
     <style>
         * {
             margin: 0;
@@ -58,6 +85,38 @@
             flex-wrap: wrap;
             align-items: center;
         }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #2d3748;
+        }
+        .user-badge .role-tag {
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .user-badge .role-tag.spv { background: #9f7aea; }
+        .user-badge .role-tag.sales { background: #4299e1; }
+        .btn-logout {
+            background: #fc8181;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-logout:hover { background: #f56565; }
 
         .search-box {
             display: flex;
@@ -565,6 +624,12 @@
                 </div>
                 <button class="btn btn-primary" onclick="openAddModal()">➕ Tambah Lead</button>
                 <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+                <div class="user-badge" id="userBadge">
+                    <span id="userBadgeName">👤 -</span>
+                    <span class="role-tag" id="userBadgeRole">-</span>
+                    <a href="index.html" class="btn btn-outline btn-sm" style="text-decoration:none;">🏠 Home</a>
+                    <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+                </div>
             </div>
         </div>
 
@@ -680,7 +745,8 @@
                     </div>
                     <div class="form-group">
                         <label>👤 Sales Assign</label>
-                        <input type="text" id="salesAssign" placeholder="Nama sales">
+                        <input type="text" id="salesAssign" placeholder="Nama sales" readonly style="background:#edf2f7;cursor:not-allowed;">
+                        <small style="color:#a0aec0;">Otomatis dari akun yang login</small>
                     </div>
                 </div>
 
@@ -737,8 +803,23 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('📋 Lead Management Started');
             console.log('📡 Table:', TABLE);
+            initUserBadge();
             refreshData();
         });
+
+        function initUserBadge() {
+            const nameEl = document.getElementById('userBadgeName');
+            const roleEl = document.getElementById('userBadgeRole');
+            if (nameEl) nameEl.textContent = '👤 ' + (CURRENT_USER.username || '-');
+            if (roleEl) {
+                roleEl.textContent = isSupervisor(CURRENT_USER) ? 'Supervisor' : 'Sales';
+                roleEl.className = 'role-tag ' + (isSupervisor(CURRENT_USER) ? 'spv' : 'sales');
+            }
+        }
+
+        function ownsItem(item) {
+            return isSupervisor(CURRENT_USER) || item.sales_assign === CURRENT_USER.username;
+        }
 
         // ==================== API HELPERS ====================
         function getHeaders() {
@@ -777,6 +858,9 @@
                 const result = await apiFetch('');
                 if (result.success && result.data) {
                     allData = result.data.map(row => parseRow(row));
+                    if (!isSupervisor(CURRENT_USER)) {
+                        allData = allData.filter(item => item.sales_assign === CURRENT_USER.username);
+                    }
                     return allData;
                 }
                 allData = [];
@@ -886,8 +970,10 @@
                     <div class="field"><span class="label">Prioritas:</span> <span class="badge-priority ${item.priority}">${priorityLabels[item.priority] || item.priority}</span></div>
                     <div class="field"><span class="label">Sales:</span> ${escapeHtml(item.sales_assign) || '-'}</div>
                     <div class="actions">
+                        ${ownsItem(item) ? `
                         <button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>
                         <button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>
+                        ` : `<span style="font-size:10px;color:#a0aec0;">🔒 milik lain</span>`}
                     </div>
                 </div>
             `).join('');
@@ -937,7 +1023,7 @@
             document.getElementById('status').value = 'hot';
             document.getElementById('priority').value = 'medium';
             document.getElementById('serviceInterest').value = 'Seminar';
-            document.getElementById('salesAssign').value = '';
+            document.getElementById('salesAssign').value = CURRENT_USER.username;
             document.getElementById('notes').value = '';
             document.getElementById('nextFollowup').value = '';
             document.getElementById('estimatedValue').value = '';
@@ -951,6 +1037,10 @@
             const item = allData.find(d => d.id_x === id);
             if (!item) {
                 showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+            if (!ownsItem(item)) {
+                showToast('❌ Anda tidak punya akses untuk mengedit data ini', 'error');
                 return;
             }
 
@@ -1039,6 +1129,10 @@
             console.log('🗑️ Confirm delete ID:', id);
             const item = allData.find(d => d.id_x === id);
             if (!item) return;
+            if (!ownsItem(item)) {
+                showToast('❌ Anda tidak punya akses untuk menghapus data ini', 'error');
+                return;
+            }
             if (!confirm(`Hapus lead "${item.contact_name}" (ID: ${id})?`)) return;
 
             try {
@@ -1056,6 +1150,11 @@
             const id = parseInt(document.getElementById('editId').value);
             console.log('🗑️ Delete lead from modal, ID:', id);
             if (!id) return;
+            const item = allData.find(d => d.id_x === id);
+            if (item && !ownsItem(item)) {
+                showToast('❌ Anda tidak punya akses untuk menghapus data ini', 'error');
+                return;
+            }
             if (!confirm('Hapus lead ini secara permanen?')) return;
 
             try {

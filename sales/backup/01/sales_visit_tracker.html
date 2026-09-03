@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Visit Tracker - Sales Psikologi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #1a2332;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 span {
+            background: #2d3748;
+            color: white;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #f7fafc;
+            padding: 0 15px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            transition: border 0.2s;
+        }
+
+        .search-box:focus-within {
+            border-color: #4299e1;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 14px;
+            outline: none;
+            width: 200px;
+            color: #2d3748;
+        }
+
+        .search-box .icon {
+            color: #a0aec0;
+            font-size: 18px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66,153,225,0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #fc8181;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #f56565;
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-outline:hover {
+            background: #f7fafc;
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-xs {
+            padding: 3px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+
+        .btn-purple {
+            background: #9f7aea;
+            color: white;
+        }
+        .btn-purple:hover {
+            background: #805ad5;
+        }
+
+        .list-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .list-header {
+            display: grid;
+            grid-template-columns: 60px 1.2fr 1fr 1fr 0.8fr 0.8fr 1fr 120px;
+            gap: 8px;
+            padding: 14px 20px;
+            background: #f7fafc;
+            font-weight: 700;
+            font-size: 12px;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .list-item {
+            display: grid;
+            grid-template-columns: 60px 1.2fr 1fr 1fr 0.8fr 0.8fr 1fr 120px;
+            gap: 8px;
+            padding: 14px 20px;
+            border-bottom: 1px solid #edf2f7;
+            align-items: center;
+            transition: background 0.15s;
+        }
+
+        .list-item:hover {
+            background: #f7fafc;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item .id {
+            font-weight: 700;
+            color: #4299e1;
+            font-size: 13px;
+        }
+
+        .list-item .field {
+            color: #2d3748;
+            font-size: 13px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .list-item .field .label {
+            display: none;
+            font-weight: 600;
+            color: #a0aec0;
+            font-size: 11px;
+        }
+
+        .list-item .actions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .badge-status {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-status.scheduled {
+            background: #bee3f8;
+            color: #2a69ac;
+        }
+        .badge-status.visited {
+            background: #c6f6d5;
+            color: #276749;
+        }
+        .badge-status.cancelled {
+            background: #fed7d7;
+            color: #9b2c2c;
+        }
+        .badge-status.rescheduled {
+            background: #fefcbf;
+            color: #975a16;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #a0aec0;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .empty-state h3 {
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 750px;
+            width: 100%;
+            max-height: 95vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-close {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: #fc8181;
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            background: #f56565;
+            transform: rotate(90deg);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a2332;
+            margin-bottom: 20px;
+            padding-right: 50px;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #edf2f7;
+            flex-wrap: wrap;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            max-width: 400px;
+        }
+
+        .toast.success {
+            background: #48bb78;
+        }
+        .toast.error {
+            background: #fc8181;
+        }
+        .toast.info {
+            background: #4299e1;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stats-summary .stat-card {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .stats-summary .stat-card .number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .stats-summary .stat-card .label {
+            font-size: 12px;
+            color: #a0aec0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stats-summary .stat-card.scheduled .number { color: #4299e1; }
+        .stats-summary .stat-card.visited .number { color: #48bb78; }
+        .stats-summary .stat-card.cancelled .number { color: #fc8181; }
+        .stats-summary .stat-card.total .number { color: #2d3748; }
+
+        @media (max-width: 992px) {
+            .list-header {
+                display: none;
+            }
+            .list-item {
+                grid-template-columns: 1fr;
+                gap: 4px;
+                padding: 16px;
+                border-bottom: 2px solid #edf2f7;
+            }
+            .list-item .id {
+                font-size: 12px;
+            }
+            .list-item .field .label {
+                display: inline;
+            }
+            .list-item .actions {
+                margin-top: 6px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box input {
+                width: 100%;
+            }
+            .modal {
+                padding: 20px;
+            }
+            .stats-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+            .stats-summary {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .modal::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal::-webkit-scrollbar-track {
+            background: #f7fafc;
+        }
+        .modal::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>
+                📅 Sales Visit Tracker
+                <span>Sales Psikologi</span>
+            </h1>
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Cari kunjungan..." oninput="renderList()">
+                </div>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ Tambah Kunjungan</button>
+                <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+            </div>
+        </div>
+
+        <!-- STATS SUMMARY -->
+        <div class="stats-summary" id="statsSummary">
+            <div class="stat-card total">
+                <div class="number" id="statTotal">0</div>
+                <div class="label">Total Kunjungan</div>
+            </div>
+            <div class="stat-card scheduled">
+                <div class="number" id="statScheduled">0</div>
+                <div class="label">📅 Terjadwal</div>
+            </div>
+            <div class="stat-card visited">
+                <div class="number" id="statVisited">0</div>
+                <div class="label">✅ Selesai</div>
+            </div>
+            <div class="stat-card cancelled">
+                <div class="number" id="statCancelled">0</div>
+                <div class="label">❌ Batal</div>
+            </div>
+        </div>
+
+        <!-- LIST -->
+        <div class="list-container">
+            <div class="list-header">
+                <span>ID</span>
+                <span>Perusahaan / Kontak</span>
+                <span>Sales</span>
+                <span>Tanggal</span>
+                <span>Tujuan</span>
+                <span>Status</span>
+                <span>Hasil</span>
+                <span>Aksi</span>
+            </div>
+            <div id="listBody">
+                <div class="empty-state">
+                    <div class="icon">📅</div>
+                    <h3>Belum ada kunjungan</h3>
+                    <p>Klik "Tambah Kunjungan" untuk mencatat kunjungan sales pertama Anda</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORM -->
+    <div class="modal-overlay" id="formModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('formModal')">✕</button>
+            <div class="modal-title" id="formModalTitle">📅 Tambah Kunjungan</div>
+            <div class="modal-body">
+                <input type="hidden" id="editId" value="">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>🏢 Nama Perusahaan/Instansi *</label>
+                        <input type="text" id="companyName" placeholder="Nama perusahaan" required>
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Nama Kontak</label>
+                        <input type="text" id="contactName" placeholder="Nama kontak">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📅 Tanggal Kunjungan *</label>
+                        <input type="datetime-local" id="visitDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Sales</label>
+                        <input type="text" id="salesName" placeholder="Nama sales">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📍 Lokasi</label>
+                        <input type="text" id="location" placeholder="Alamat lengkap">
+                    </div>
+                    <div class="form-group">
+                        <label>📂 Status</label>
+                        <select id="status">
+                            <option value="scheduled">📅 Terjadwal</option>
+                            <option value="visited">✅ Selesai</option>
+                            <option value="cancelled">❌ Batal</option>
+                            <option value="rescheduled">🔄 Dijadwalkan Ulang</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>🎯 Tujuan Kunjungan</label>
+                    <select id="visitPurpose">
+                        <option value="Presentasi">Presentasi Layanan</option>
+                        <option value="Penawaran">Penawaran Proposal</option>
+                        <option value="Follow Up">Follow Up</option>
+                        <option value="Closing">Closing Deal</option>
+                        <option value="Pelatihan">Pelaksanaan Pelatihan</option>
+                        <option value="Tes">Pelaksanaan Tes</option>
+                        <option value="Survey">Survey Kebutuhan</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Hasil Kunjungan / Catatan</label>
+                    <textarea id="notes" placeholder="Hasil kunjungan, kesepakatan, tindak lanjut..." rows="3"></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-danger" id="deleteBtn" onclick="deleteVisit()" style="display:none;">🗑️ Hapus</button>
+                    <button class="btn btn-outline" onclick="closeModal('formModal')">Batal</button>
+                    <button class="btn btn-primary" id="saveBtn" onclick="saveVisit()">💾 Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'sales_visit_tracker';
+        const SECRET = 'admin';
+
+        // ==================== STATE ====================
+        let allData = [];
+        let currentEditId = null;
+
+        const COLUMNS = {
+            company_name: 'x_01',
+            contact_name: 'x_02',
+            visit_date: 'x_03',
+            sales_name: 'x_04',
+            location: 'x_05',
+            status: 'x_06',
+            visit_purpose: 'x_07',
+            notes: 'x_08'
+        };
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('📅 Sales Visit Tracker Started');
+            console.log('📡 Table:', TABLE);
+            refreshData();
+        });
+
+        // ==================== API HELPERS ====================
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': TABLE,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        ...getHeaders(),
+                        ...(options.headers || {})
+                    }
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error || err.message || `HTTP ${response.status}`);
+                }
+                return await response.json();
+            } catch (e) {
+                console.error('❌ API Error:', e.message);
+                throw e;
+            }
+        }
+
+        // ==================== DATA CRUD ====================
+        async function fetchData() {
+            try {
+                const result = await apiFetch('');
+                if (result.success && result.data) {
+                    allData = result.data.map(row => parseRow(row));
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            return {
+                id_x: row.id_x,
+                company_name: row.x_01 || '',
+                contact_name: row.x_02 || '',
+                visit_date: row.x_03 || '',
+                sales_name: row.x_04 || '',
+                location: row.x_05 || '',
+                status: row.x_06 || 'scheduled',
+                visit_purpose: row.x_07 || '',
+                notes: row.x_08 || '',
+                _raw: row
+            };
+        }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                row[col] = data[key] || '';
+            }
+            return row;
+        }
+
+        async function createVisit(data) {
+            const row = buildRow(data);
+            return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function updateVisit(id, data) {
+            const row = buildRow(data);
+            return await apiFetch(`&id_x=${id}`, { method: 'PUT', body: JSON.stringify(row) });
+        }
+
+        async function deleteVisitApi(id) {
+            return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== RENDER ====================
+        function renderList() {
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = allData.filter(item =>
+                item.company_name.toLowerCase().includes(search) ||
+                item.contact_name.toLowerCase().includes(search) ||
+                item.sales_name.toLowerCase().includes(search) ||
+                item.location.toLowerCase().includes(search) ||
+                item.notes.toLowerCase().includes(search)
+            );
+
+            const body = document.getElementById('listBody');
+
+            // Update stats
+            updateStats();
+
+            if (filtered.length === 0) {
+                body.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">${allData.length === 0 ? '📅' : '🔍'}</div>
+                        <h3>${allData.length === 0 ? 'Belum ada kunjungan' : 'Tidak ditemukan'}</h3>
+                        <p>${allData.length === 0 ? 'Klik "Tambah Kunjungan" untuk mencatat kunjungan sales pertama Anda' : 'Coba dengan kata kunci lain'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const statusLabels = {
+                'scheduled': '📅 Terjadwal',
+                'visited': '✅ Selesai',
+                'cancelled': '❌ Batal',
+                'rescheduled': '🔄 Dijadwalkan Ulang'
+            };
+
+            body.innerHTML = filtered.map(item => {
+                const visitDate = item.visit_date ? new Date(item.visit_date).toLocaleString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : '-';
+
+                return `
+                    <div class="list-item">
+                        <div class="id">#${item.id_x}</div>
+                        <div class="field">
+                            <span class="label">Perusahaan:</span> ${escapeHtml(item.company_name) || '-'}
+                            ${item.contact_name ? `<br><span style="font-size:11px;color:#718096;">Kontak: ${escapeHtml(item.contact_name)}</span>` : ''}
+                        </div>
+                        <div class="field"><span class="label">Sales:</span> ${escapeHtml(item.sales_name) || '-'}</div>
+                        <div class="field"><span class="label">Tanggal:</span> ${visitDate}</div>
+                        <div class="field"><span class="label">Tujuan:</span> ${escapeHtml(item.visit_purpose) || '-'}</div>
+                        <div class="field"><span class="label">Status:</span> <span class="badge-status ${item.status}">${statusLabels[item.status] || item.status}</span></div>
+                        <div class="field"><span class="label">Hasil:</span> ${escapeHtml(item.notes) ? item.notes.substring(0, 30) + (item.notes.length > 30 ? '...' : '') : '-'}</div>
+                        <div class="actions">
+                            <button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>
+                            <button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateStats() {
+            const total = allData.length;
+            const scheduled = allData.filter(d => d.status === 'scheduled').length;
+            const visited = allData.filter(d => d.status === 'visited').length;
+            const cancelled = allData.filter(d => d.status === 'cancelled').length;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statScheduled').textContent = scheduled;
+            document.getElementById('statVisited').textContent = visited;
+            document.getElementById('statCancelled').textContent = cancelled;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function refreshData() {
+            showToast('🔄 Memuat data...', 'info');
+            await fetchData();
+            renderList();
+            showToast(`✅ ${allData.length} kunjungan dimuat`, 'success');
+        }
+
+        // ==================== MODAL FORM ====================
+        function openAddModal() {
+            console.log('📅 Opening Add Modal');
+            currentEditId = null;
+            document.getElementById('editId').value = '';
+            document.getElementById('formModalTitle').textContent = '📅 Tambah Kunjungan';
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.getElementById('saveBtn').textContent = '💾 Simpan';
+
+            // Set default date to now
+            const now = new Date();
+            const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+            const dateStr = localDate.toISOString().slice(0, 16);
+
+            document.getElementById('companyName').value = '';
+            document.getElementById('contactName').value = '';
+            document.getElementById('visitDate').value = dateStr;
+            document.getElementById('salesName').value = '';
+            document.getElementById('location').value = '';
+            document.getElementById('status').value = 'scheduled';
+            document.getElementById('visitPurpose').value = 'Presentasi';
+            document.getElementById('notes').value = '';
+
+            document.getElementById('formModal').classList.add('active');
+            console.log('✅ Add Modal opened');
+        }
+
+        async function openEditModal(id) {
+            console.log('✏️ Opening Edit Modal for ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+
+            currentEditId = id;
+            document.getElementById('editId').value = id;
+            document.getElementById('formModalTitle').textContent = `✏️ Edit Kunjungan: ${item.company_name}`;
+            document.getElementById('deleteBtn').style.display = 'inline-flex';
+            document.getElementById('saveBtn').textContent = '💾 Update';
+
+            // Format date for input
+            let visitDate = '';
+            if (item.visit_date) {
+                const d = new Date(item.visit_date);
+                visitDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            }
+
+            document.getElementById('companyName').value = item.company_name || '';
+            document.getElementById('contactName').value = item.contact_name || '';
+            document.getElementById('visitDate').value = visitDate;
+            document.getElementById('salesName').value = item.sales_name || '';
+            document.getElementById('location').value = item.location || '';
+            document.getElementById('status').value = item.status || 'scheduled';
+            document.getElementById('visitPurpose').value = item.visit_purpose || 'Presentasi';
+            document.getElementById('notes').value = item.notes || '';
+
+            document.getElementById('formModal').classList.add('active');
+            console.log('✅ Edit Modal opened');
+        }
+
+        function closeModal(id) {
+            console.log('🔒 Closing modal:', id);
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // ==================== SAVE ====================
+        async function saveVisit() {
+            console.log('💾 Saving visit...');
+            const companyName = document.getElementById('companyName').value.trim();
+            const visitDate = document.getElementById('visitDate').value;
+
+            if (!companyName) {
+                showToast('Nama Perusahaan wajib diisi', 'error');
+                document.getElementById('companyName').focus();
+                return;
+            }
+
+            if (!visitDate) {
+                showToast('Tanggal Kunjungan wajib diisi', 'error');
+                document.getElementById('visitDate').focus();
+                return;
+            }
+
+            const data = {
+                company_name: companyName,
+                contact_name: document.getElementById('contactName').value.trim(),
+                visit_date: visitDate,
+                sales_name: document.getElementById('salesName').value.trim(),
+                location: document.getElementById('location').value.trim(),
+                status: document.getElementById('status').value,
+                visit_purpose: document.getElementById('visitPurpose').value,
+                notes: document.getElementById('notes').value.trim()
+            };
+
+            console.log('📦 Data to save:', data);
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Menyimpan...';
+
+            try {
+                if (currentEditId) {
+                    console.log('🔄 Updating visit ID:', currentEditId);
+                    await updateVisit(currentEditId, data);
+                    showToast('✅ Kunjungan berhasil diupdate!', 'success');
+                } else {
+                    console.log('➕ Creating new visit');
+                    await createVisit(data);
+                    showToast('✅ Kunjungan berhasil dibuat!', 'success');
+                }
+                await refreshData();
+                closeModal('formModal');
+                console.log('✅ Save complete');
+            } catch (e) {
+                console.error('❌ Save failed:', e);
+                showToast('❌ Gagal menyimpan: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = currentEditId ? '💾 Update' : '💾 Simpan';
+            }
+        }
+
+        // ==================== DELETE ====================
+        async function confirmDelete(id) {
+            console.log('🗑️ Confirm delete ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            if (!confirm(`Hapus kunjungan ke "${item.company_name}" (ID: ${id})?`)) return;
+
+            try {
+                await deleteVisitApi(id);
+                showToast('✅ Kunjungan berhasil dihapus', 'success');
+                await refreshData();
+                console.log('✅ Deleted visit ID:', id);
+            } catch (e) {
+                console.error('❌ Delete failed:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteVisit() {
+            const id = parseInt(document.getElementById('editId').value);
+            console.log('🗑️ Delete visit from modal, ID:', id);
+            if (!id) return;
+            if (!confirm('Hapus kunjungan ini secara permanen?')) return;
+
+            try {
+                await deleteVisitApi(id);
+                showToast('✅ Kunjungan berhasil dihapus', 'success');
+                closeModal('formModal');
+                await refreshData();
+                console.log('✅ Deleted visit ID:', id);
+            } catch (e) {
+                console.error('❌ Delete failed:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'info') {
+            console.log(`📢 Toast: [${type}] ${message}`);
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ==================== KEYBOARD ====================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => {
+                    m.classList.remove('active');
+                });
+            }
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        // ==================== DEBUG ====================
+        window.debug = {
+            allData: () => allData,
+            refresh: refreshData,
+            openAdd: openAddModal,
+            TABLE: TABLE,
+            COLUMNS: COLUMNS
+        };
+
+        console.log('📅 Sales Visit Tracker Loaded!');
+        console.log('📡 Table:', TABLE);
+        console.log('📊 Type "debug" in console for helpers');
+        console.log('🔧 Debug commands:');
+        console.log('  - debug.allData()  : Lihat semua data');
+        console.log('  - debug.refresh()  : Refresh data');
+        console.log('  - debug.openAdd()  : Open add modal');
+    </script>
+</body>
+</html>

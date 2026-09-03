@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sales Tools Suite Psikologi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: #fff;
+            width: 100%;
+            max-width: 380px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+            padding: 36px 32px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .login-header .icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+
+        .login-header h1 {
+            font-size: 20px;
+            color: #1a202c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .login-header p {
+            color: #718096;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: #9f7aea;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 13px;
+            background: #9f7aea;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-login:hover {
+            background: #805ad5;
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .error-box {
+            background: #fff5f5;
+            border: 1px solid #feb2b2;
+            color: #c53030;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 18px;
+            display: none;
+        }
+
+        .error-box.active {
+            display: block;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 22px;
+            font-size: 12px;
+            color: #a0aec0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="login-header">
+            <div class="icon">🚀</div>
+            <h1>Sales Tools Suite <span style="background:#9f7aea;color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;">Psikologi</span></h1>
+            <p>Login untuk mengakses semua tools sales</p>
+        </div>
+
+        <div class="error-box" id="errorBox"></div>
+
+        <div class="form-group">
+            <label>👤 Username</label>
+            <input type="text" id="username" placeholder="Masukkan username" autocomplete="username">
+        </div>
+        <div class="form-group">
+            <label>🔒 Password</label>
+            <input type="password" id="password" placeholder="Masukkan password" autocomplete="current-password">
+        </div>
+
+        <button class="btn-login" id="loginBtn" onclick="doLogin()">🔓 Masuk</button>
+
+        <div class="login-footer">
+            Sales Tools Suite &middot; PT Lidan Indah Abadi
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'users';
+        const SECRET = 'admin';
+        const AUTH_SESSION_KEY = 'lidan_sales_session';
+
+        // Kalau sudah login, langsung lempar ke halaman tujuan
+        (function() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                const session = raw ? JSON.parse(raw) : null;
+                if (session && session.username) {
+                    window.location.replace(getReturnUrl());
+                }
+            } catch (e) {}
+        })();
+
+        function getReturnUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const ret = params.get('return');
+            if (ret) {
+                try {
+                    return decodeURIComponent(ret);
+                } catch (e) {
+                    return 'index.html';
+                }
+            }
+            return 'index.html';
+        }
+
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': TABLE,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function fetchUsers() {
+            const url = `${API_URL}?table=${TABLE}`;
+            const response = await fetch(url, { headers: getHeaders() });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const result = await response.json();
+            return result.success && result.data ? result.data : [];
+        }
+
+        function showError(message) {
+            const box = document.getElementById('errorBox');
+            box.textContent = message;
+            box.classList.add('active');
+        }
+
+        function hideError() {
+            document.getElementById('errorBox').classList.remove('active');
+        }
+
+        async function doLogin() {
+            hideError();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showError('Username dan password wajib diisi');
+                return;
+            }
+
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Memproses...';
+
+            try {
+                const users = await fetchUsers();
+                const match = users.find(u => (u.x_01 || '') === username && (u.x_02 || '') === password);
+
+                if (!match) {
+                    showError('❌ Username atau password salah');
+                    btn.disabled = false;
+                    btn.textContent = '🔓 Masuk';
+                    return;
+                }
+
+                const session = {
+                    id_x: match.id_x,
+                    username: match.x_01,
+                    role: match.x_03 || '',
+                    loginAt: new Date().toISOString()
+                };
+                localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+
+                window.location.href = getReturnUrl();
+            } catch (e) {
+                console.error('❌ Login error:', e);
+                showError('❌ Gagal menghubungi server: ' + e.message);
+                btn.disabled = false;
+                btn.textContent = '🔓 Masuk';
+            }
+        }
+
+        document.getElementById('password').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') doLogin();
+        });
+        document.getElementById('username').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') doLogin();
+        });
+    </script>
+</body>
+</html>
