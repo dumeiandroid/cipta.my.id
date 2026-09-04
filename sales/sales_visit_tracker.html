@@ -17,6 +17,7 @@
         }
         function clearAuthSession() { localStorage.removeItem(AUTH_SESSION_KEY); }
         function isSupervisor(session) { return !!session && String(session.role || '').toLowerCase() === 'spv'; }
+        function isAdmin(session) { return !!session && String(session.username || '').toLowerCase() === 'admin'; }
         function logout() { clearAuthSession(); window.location.href = AUTH_LOGIN_PAGE; }
 
         let CURRENT_USER = getAuthSession();
@@ -103,6 +104,7 @@
             font-size: 10px;
             font-weight: 700;
             color: #fff;
+            text-transform: capitalize;
         }
         .user-badge .role-tag.spv { background: #9f7aea; }
         .user-badge .role-tag.sales { background: #4299e1; }
@@ -598,6 +600,7 @@
                 </div>
                 <button class="btn btn-primary" onclick="openAddModal()">➕ Tambah Kunjungan</button>
                 <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('infoModal').classList.add('active')" title="Info & Panduan Visit Tracker">ℹ️ Info</button>
                 <div class="user-badge" id="userBadge">
                     <span id="userBadgeName">👤 -</span>
                     <span class="role-tag" id="userBadgeRole">-</span>
@@ -650,6 +653,49 @@
     </div>
 
     <!-- MODAL FORM -->
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
+            <div class="modal-title">📅 Panduan Sales Visit Tracker</div>
+            <div class="modal-body">
+                <p>Sales Visit Tracker dipakai untuk mencatat setiap kunjungan sales ke lapangan —
+                membantu sales mendokumentasikan aktivitas, dan membantu supervisor memverifikasi
+                kehadiran serta efektivitas kunjungan.</p>
+
+                <h4 style="margin:4px 0 2px;">🚦 Arti Status Kunjungan</h4>
+                <ul style="margin:0 0 8px 18px; line-height:1.9;">
+                    <li>📅 <b>Terjadwal</b> — kunjungan sudah direncanakan, belum dilaksanakan</li>
+                    <li>✅ <b>Selesai</b> — kunjungan sudah dilakukan</li>
+                    <li>❌ <b>Batal</b> — kunjungan dibatalkan</li>
+                    <li>🔄 <b>Dijadwalkan Ulang</b> — kunjungan digeser ke tanggal lain</li>
+                </ul>
+
+                <h4 style="margin:4px 0 2px;">🎯 Arti Tujuan Kunjungan</h4>
+                <ul style="margin:0 0 8px 18px; line-height:1.9;">
+                    <li><b>Presentasi</b> — memperkenalkan layanan ke calon klien</li>
+                    <li><b>Penawaran</b> — menyampaikan proposal/harga</li>
+                    <li><b>Follow Up</b> — menindaklanjuti komunikasi sebelumnya</li>
+                    <li><b>Closing</b> — proses penutupan deal</li>
+                    <li><b>Pelatihan / Tes</b> — kunjungan untuk melaksanakan layanan itu sendiri</li>
+                    <li><b>Survey</b> — menggali kebutuhan calon klien</li>
+                </ul>
+
+                <div style="background:#ebf8ff;border-left:4px solid #4299e1;border-radius:8px;padding:10px 14px;font-size:13px;">
+                    💡 <b>Tips:</b> Catat hasil kunjungan segera setelah selesai agar detail tidak
+                    terlewat. Supervisor bisa melihat semua kunjungan tim lewat Sales Dashboard.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('historyModal')">✕</button>
+            <div class="modal-title">🕘 Riwayat Perubahan</div>
+            <div class="modal-body" id="historyModalBody"></div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="formModal">
         <div class="modal">
             <button class="modal-close" onclick="closeModal('formModal')">✕</button>
@@ -745,6 +791,18 @@
             notes: 'x_08'
         };
 
+        const HISTORY_COL = 'x_25';
+        const FIELD_LABELS = {
+            company_name: '🏢 Nama Perusahaan/Instansi',
+            contact_name: '👤 Nama Kontak',
+            visit_date: '📅 Tanggal Kunjungan',
+            sales_name: '👤 Sales',
+            location: '📍 Lokasi',
+            status: '📂 Status',
+            visit_purpose: '🎯 Tujuan Kunjungan',
+            notes: '📝 Hasil Kunjungan / Catatan'
+        };
+
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', () => {
             console.log('📅 Sales Visit Tracker Started');
@@ -758,7 +816,7 @@
             const roleEl = document.getElementById('userBadgeRole');
             if (nameEl) nameEl.textContent = '👤 ' + (CURRENT_USER.username || '-');
             if (roleEl) {
-                roleEl.textContent = isSupervisor(CURRENT_USER) ? 'Supervisor' : 'Sales';
+                roleEl.textContent = CURRENT_USER.role || '-';
                 roleEl.className = 'role-tag ' + (isSupervisor(CURRENT_USER) ? 'spv' : 'sales');
             }
         }
@@ -804,7 +862,7 @@
                 const result = await apiFetch('');
                 if (result.success && result.data) {
                     allData = result.data.map(row => parseRow(row));
-                    if (!isSupervisor(CURRENT_USER)) {
+                    if (!isSupervisor(CURRENT_USER) && !isAdmin(CURRENT_USER)) {
                         allData = allData.filter(item => item.sales_name === CURRENT_USER.username);
                     }
                     return allData;
@@ -829,8 +887,84 @@
                 status: row.x_06 || 'scheduled',
                 visit_purpose: row.x_07 || '',
                 notes: row.x_08 || '',
+                history: parseHistory(row[HISTORY_COL]),
                 _raw: row
             };
+        }
+
+        // ==================== HISTORY TRACKING ====================
+        function parseHistory(raw) {
+            if (!raw) return [];
+            try {
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function diffFields(oldItem, newData) {
+            const changes = [];
+            for (const key of Object.keys(COLUMNS)) {
+                const oldVal = oldItem ? (oldItem[key] ?? '') : '';
+                const newVal = newData[key] ?? '';
+                if (String(oldVal) !== String(newVal)) {
+                    changes.push({ field: key, label: FIELD_LABELS[key] || key, from: oldVal, to: newVal });
+                }
+            }
+            return changes;
+        }
+
+        function buildHistory(oldItem, newData, action) {
+            const history = oldItem ? (oldItem.history || []) : [];
+            const entry = {
+                ts: new Date().toISOString(),
+                user: (CURRENT_USER && CURRENT_USER.username) || '-',
+                action: action
+            };
+            if (action === 'created') {
+                return [...history, entry];
+            }
+            const changes = diffFields(oldItem, newData);
+            if (changes.length === 0) return null;
+            entry.changes = changes;
+            return [...history, entry];
+        }
+
+        function showHistory(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            const history = item.history || [];
+            const body = document.getElementById('historyModalBody');
+            if (history.length === 0) {
+                body.innerHTML = '<p style="text-align:center;color:#a0aec0;padding:16px 0;">Belum ada riwayat perubahan.</p>';
+            } else {
+                body.innerHTML = history.slice().reverse().map(entry => {
+                    const dateStr = new Date(entry.ts).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+                    let changesHtml;
+                    if (entry.action === 'created') {
+                        changesHtml = '<div style="color:#38a169;font-size:12px;">✨ Data dibuat</div>';
+                    } else if (entry.changes && entry.changes.length) {
+                        changesHtml = entry.changes.map(c => `
+                            <div style="font-size:12px;margin-top:4px;">
+                                <strong>${escapeHtml(c.label)}:</strong>
+                                <span style="color:#e53e3e;text-decoration:line-through;">${escapeHtml(String(c.from ?? '') || '-')}</span>
+                                →
+                                <span style="color:#38a169;">${escapeHtml(String(c.to ?? '') || '-')}</span>
+                            </div>
+                        `).join('');
+                    } else {
+                        changesHtml = '';
+                    }
+                    return `
+                        <div style="border-bottom:1px solid #e2e8f0;padding:10px 0;">
+                            <div style="font-size:11px;color:#718096;">🕘 ${dateStr} — 👤 ${escapeHtml(entry.user)}</div>
+                            ${changesHtml}
+                        </div>
+                    `;
+                }).join('');
+            }
+            document.getElementById('historyModal').classList.add('active');
         }
 
         function buildRow(data) {
@@ -843,11 +977,15 @@
 
         async function createVisit(data) {
             const row = buildRow(data);
+            row[HISTORY_COL] = JSON.stringify(buildHistory(null, data, 'created'));
             return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
         }
 
         async function updateVisit(id, data) {
             const row = buildRow(data);
+            const oldItem = allData.find(d => d.id_x === id);
+            const newHistory = buildHistory(oldItem, data, 'updated');
+            row[HISTORY_COL] = JSON.stringify(newHistory || (oldItem ? oldItem.history : []) || []);
             return await apiFetch(`&id_x=${id}`, { method: 'PUT', body: JSON.stringify(row) });
         }
 
@@ -911,10 +1049,10 @@
                         <div class="field"><span class="label">Status:</span> <span class="badge-status ${item.status}">${statusLabels[item.status] || item.status}</span></div>
                         <div class="field"><span class="label">Hasil:</span> ${escapeHtml(item.notes) ? item.notes.substring(0, 30) + (item.notes.length > 30 ? '...' : '') : '-'}</div>
                         <div class="actions">
-                            ${ownsItem(item) ? `
-                            <button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>
-                            <button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>
-                            ` : `<span style="font-size:10px;color:#a0aec0;">🔒 milik lain</span>`}
+                            <button class="btn btn-outline btn-xs" onclick="showHistory(${item.id_x})" title="Riwayat perubahan">🕘${item.history && item.history.length ? ` <span style="font-size:9px;">${item.history.length}</span>` : ''}</button>
+                            ${ownsItem(item) ? `<button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>` : ''}
+                            ${isAdmin(CURRENT_USER) ? `<button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>` : ''}
+                            ${(!ownsItem(item) && !isAdmin(CURRENT_USER)) ? `<span style="font-size:10px;color:#a0aec0;">🔒 milik lain</span>` : ''}
                         </div>
                     </div>
                 `;
@@ -989,7 +1127,7 @@
             currentEditId = id;
             document.getElementById('editId').value = id;
             document.getElementById('formModalTitle').textContent = `✏️ Edit Kunjungan: ${item.company_name}`;
-            document.getElementById('deleteBtn').style.display = 'inline-flex';
+            document.getElementById('deleteBtn').style.display = isAdmin(CURRENT_USER) ? 'inline-flex' : 'none';
             document.getElementById('saveBtn').textContent = '💾 Update';
 
             // Format date for input
@@ -1079,8 +1217,8 @@
             console.log('🗑️ Confirm delete ID:', id);
             const item = allData.find(d => d.id_x === id);
             if (!item) return;
-            if (!ownsItem(item)) {
-                showToast('❌ Anda tidak punya akses untuk menghapus data ini', 'error');
+            if (!isAdmin(CURRENT_USER)) {
+                showToast('❌ Hanya admin yang bisa menghapus data', 'error');
                 return;
             }
             if (!confirm(`Hapus kunjungan ke "${item.company_name}" (ID: ${id})?`)) return;
@@ -1101,8 +1239,8 @@
             console.log('🗑️ Delete visit from modal, ID:', id);
             if (!id) return;
             const item = allData.find(d => d.id_x === id);
-            if (item && !ownsItem(item)) {
-                showToast('❌ Anda tidak punya akses untuk menghapus data ini', 'error');
+            if (!isAdmin(CURRENT_USER)) {
+                showToast('❌ Hanya admin yang bisa menghapus data', 'error');
                 return;
             }
             if (!confirm('Hapus kunjungan ini secara permanen?')) return;

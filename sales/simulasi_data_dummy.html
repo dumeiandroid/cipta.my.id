@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧪 Simulasi Data Dummy - Sales Tools Suite</title>
+<script>
+    // ==================== AUTH GUARD (Sales Tools Suite - SSO) ====================
+    const AUTH_SESSION_KEY = 'lidan_sales_session';
+    const AUTH_LOGIN_PAGE = 'login.html';
+    function getAuthSession() {
+        try { const raw = localStorage.getItem(AUTH_SESSION_KEY); return raw ? JSON.parse(raw) : null; }
+        catch (e) { return null; }
+    }
+    function isSupervisor(session) { return !!session && String(session.role || '').toLowerCase() === 'spv'; }
+    let CURRENT_USER = getAuthSession();
+    if (!CURRENT_USER || !CURRENT_USER.username) {
+        const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.replace(AUTH_LOGIN_PAGE + '?return=' + returnUrl);
+    }
+</script>
+<style>
+    :root{
+        --bg:#0f1420; --panel:#161d2e; --panel2:#1c2436; --border:#2a3450;
+        --text:#e8ecf5; --muted:#8b96b3; --accent:#6c8dff; --accent2:#9a6cff;
+        --good:#3ecf8e; --warn:#f5a623; --bad:#f5556c;
+        --radius:14px;
+    }
+    *{box-sizing:border-box;}
+    body{
+        margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+        background:radial-gradient(1200px 600px at 10% -10%, #1b2440 0%, var(--bg) 55%);
+        color:var(--text); padding:28px 18px 80px;
+    }
+    .wrap{max-width:980px;margin:0 auto;}
+    header{margin-bottom:22px;}
+    header h1{font-size:22px;margin:0 0 6px;display:flex;align-items:center;gap:10px;}
+    header p{color:var(--muted);margin:0;font-size:14px;line-height:1.6;}
+    .badge{
+        display:inline-flex;align-items:center;gap:6px;font-size:12px;
+        background:var(--panel2);border:1px solid var(--border);padding:4px 10px;
+        border-radius:999px;color:var(--muted);margin-top:10px;
+    }
+    .card{
+        background:linear-gradient(180deg,var(--panel),var(--panel2));
+        border:1px solid var(--border); border-radius:var(--radius);
+        padding:20px; margin-bottom:18px; box-shadow:0 10px 30px -18px rgba(0,0,0,.6);
+    }
+    .card h2{font-size:15px;margin:0 0 4px;display:flex;align-items:center;gap:8px;}
+    .card .sub{color:var(--muted);font-size:12.5px;margin:0 0 14px;line-height:1.6;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px;}
+    .field label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:5px;}
+    .field input[type=number],.field input[type=text]{
+        width:100%;background:#0d1322;border:1px solid var(--border);color:var(--text);
+        padding:9px 10px;border-radius:9px;font-size:13.5px;
+    }
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+    .btn{
+        border:none;border-radius:10px;padding:11px 18px;font-size:13.5px;font-weight:600;
+        cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:transform .12s, filter .12s;
+    }
+    .btn:active{transform:scale(.97);}
+    .btn:disabled{opacity:.5;cursor:not-allowed;}
+    .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+    .btn-primary:hover:not(:disabled){filter:brightness(1.08);}
+    .btn-danger{background:#3a1620;border:1px solid #5c2432;color:#ff9aa8;}
+    .btn-danger:hover:not(:disabled){background:#4a1a26;}
+    .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text);}
+    .btn-ghost:hover:not(:disabled){background:var(--panel2);}
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:6px;}
+    .stat{
+        background:#0d1322;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;
+    }
+    .stat b{display:block;font-size:20px;color:var(--accent);}
+    .stat span{font-size:11px;color:var(--muted);}
+    .log{
+        background:#090d17;border:1px solid var(--border);border-radius:10px;
+        padding:12px 14px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;
+        max-height:320px;overflow-y:auto;line-height:1.7;
+    }
+    .log .ok{color:var(--good);}
+    .log .err{color:var(--bad);}
+    .log .info{color:var(--muted);}
+    .log .head{color:#fff;font-weight:700;}
+    ol,ul{color:var(--text);font-size:13px;line-height:1.9;padding-left:20px;margin:6px 0;}
+    ol li b, ul li b{color:#fff;}
+    .warn-box{
+        background:#241a0d;border:1px solid #5c4321;color:#f5c26b;border-radius:10px;
+        padding:12px 14px;font-size:12.5px;line-height:1.7;margin-bottom:14px;
+    }
+    .creds{background:#0d1322;border:1px dashed var(--border);border-radius:10px;padding:12px 14px;font-size:12.5px;margin-top:10px;}
+    .creds code{background:#161d2e;padding:2px 6px;border-radius:5px;color:var(--accent);}
+    .pill{display:inline-block;background:#1c2436;border:1px solid var(--border);padding:3px 9px;border-radius:999px;font-size:11px;color:var(--muted);margin:2px 4px 2px 0;}
+    footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:30px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+    <header>
+        <h1>🧪 Simulasi Data Dummy — Sales Tools Suite</h1>
+        <p>Isi otomatis 5 tabel (<code>users</code>, <code>lead_management</code>, <code>sales_visit_tracker</code>,
+        <code>client_company_profile</code>, <code>sales_pipeline</code>) dengan data dummy yang saling terhubung,
+        supaya semua menu di aplikasi bisa dicoba dengan skenario yang realistis. Semua data yang dibuat di sini
+        ditandai khusus sehingga bisa dihapus total kapan saja dengan satu klik.</p>
+        <div class="badge" id="userBadge">👤 -</div>
+    </header>
+
+    <div class="card" id="notSpvWarning" style="display:none;">
+        <div class="warn-box">
+            ⚠️ Kamu login sebagai <b>Sales</b>, bukan <b>Supervisor</b>. Generate/hapus data simulasi sebaiknya
+            dilakukan oleh akun Supervisor supaya bisa lihat &amp; kelola semua data (bukan cuma milik sendiri).
+            Kamu tetap bisa lanjut, tapi beberapa tabel mungkin kelihatan kosong karena aplikasi memfilter data
+            berdasarkan sales yang login.
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>⚙️ Konfigurasi</h2>
+        <p class="sub">Endpoint &amp; auth mengikuti persis konfigurasi yang dipakai aplikasi asli — tidak perlu diubah.</p>
+        <div class="row" style="margin-bottom:14px;">
+            <span class="pill">API: lidan-co-id.pages.dev/api/contacts_filter_dinamis7</span>
+            <span class="pill">Auth: X-Custom-Auth = admin</span>
+            <span class="pill">Marker: 🧪SIM</span>
+        </div>
+        <div class="grid">
+            <div class="field"><label>Jumlah Client (company_profile)</label><input type="number" id="cnt_client" value="18" min="0"></div>
+            <div class="field"><label>Jumlah Lead</label><input type="number" id="cnt_lead" value="30" min="0"></div>
+            <div class="field"><label>Jumlah Deal Pipeline</label><input type="number" id="cnt_pipeline" value="25" min="0"></div>
+            <div class="field"><label>Jumlah Kunjungan (visit)</label><input type="number" id="cnt_visit" value="22" min="0"></div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer;">
+            <input type="checkbox" id="makeUsers" checked style="width:16px;height:16px;">
+            Buat akun simulasi juga (2 Sales + 1 Supervisor) agar bisa login &amp; coba semua role
+        </label>
+    </div>
+
+    <div class="card">
+        <h2>🚀 Generate Data</h2>
+        <p class="sub">Urutannya otomatis: akun simulasi → client → lead → pipeline → kunjungan, supaya nama
+        perusahaan &amp; nama sales konsisten nyambung antar menu.</p>
+        <div class="row">
+            <button class="btn btn-primary" id="btnGenerate" onclick="runGenerate()">🚀 Generate &amp; Isi Semua Data Simulasi</button>
+            <button class="btn btn-ghost" id="btnStatus" onclick="checkStatus()">🔍 Cek Status Data Simulasi</button>
+        </div>
+        <div class="stat-grid" id="statGrid" style="display:none;"></div>
+        <div id="credsBox"></div>
+    </div>
+
+    <div class="card">
+        <h2>🗑️ Bersihkan Data Simulasi</h2>
+        <p class="sub">Menghapus <b>hanya</b> data bertanda 🧪SIM — data asli/real tidak akan tersentuh.
+        Proses ini menghapus berdasarkan ID yang tercatat di browser ini, <i>plus</i> pemindaian ulang ke server
+        (jaga-jaga kalau kamu generate dari device/browser lain).</p>
+        <div class="row">
+            <button class="btn btn-danger" id="btnClean" onclick="runCleanup()">🗑️ Hapus SEMUA Data Simulasi</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>📋 Log Proses</h2>
+        <div class="log" id="logBox"><div class="info">Belum ada aktivitas. Klik "Generate" untuk mulai.</div></div>
+    </div>
+
+    <div class="card">
+        <h2>📖 Cara Memakai Hasil Simulasi</h2>
+        <ol>
+            <li>Klik <b>Generate &amp; Isi Semua Data Simulasi</b>, tunggu sampai log selesai.</li>
+            <li>Login ulang (logout dulu) memakai akun simulasi yang muncul di kotak kredensial — coba login sebagai
+                <b>Sales</b> untuk lihat tampilan data yang difilter per-sales, lalu coba lagi sebagai <b>Supervisor</b>
+                untuk lihat semua data.</li>
+            <li>Buka menu <b>Client / Company Profile</b> → lihat daftar perusahaan dummy, coba edit &amp; filter status.</li>
+            <li>Buka <b>Lead Management</b> → coba ubah status lead (cold → hot → converted), assign ke sales lain.</li>
+            <li>Buka <b>Sales Pipeline</b> → geser deal antar stage, lihat perhitungan probability &amp; deal value.</li>
+            <li>Buka <b>Sales Visit Tracker</b> → tandai kunjungan selesai/batal, coba reschedule.</li>
+            <li>Buka <b>Dashboard</b> → cek apakah rekap angka (jumlah lead, pipeline value, dst) sudah sesuai jumlah data dummy.</li>
+            <li>Setelah puas belajar, kembali ke halaman ini dan klik <b>Hapus Semua Data Simulasi</b> untuk membersihkan.</li>
+        </ol>
+    </div>
+
+    <footer>Simulasi Data Dummy · Sales Tools Suite · PT Lidan Indah Abadi · alat internal, bukan bagian dari aplikasi utama</footer>
+</div>
+
+<script>
+// ==================== CONFIG (sama persis dengan aplikasi asli) ====================
+const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+const SECRET = 'admin';
+const MARKER = '🧪SIM';
+const TRACK_KEY = 'SIMULASI_TRACKED_IDS_v1';
+
+const TABLES = {
+    users: { columns: { username: 'x_01', password: 'x_02', role: 'x_03' } },
+    client_company_profile: { columns: { company_name:'x_01', company_type:'x_02', email:'x_03', phone:'x_04', pic_name:'x_05', pic_phone:'x_06', address:'x_07', status:'x_08', services_used:'x_09', sales_assign:'x_10', join_date:'x_11', notes:'x_12' } },
+    lead_management: { columns: { contact_name:'x_01', company_name:'x_02', email:'x_03', phone:'x_04', status:'x_05', priority:'x_06', service_interest:'x_07', sales_assign:'x_08', notes:'x_09', next_followup:'x_10', estimated_value:'x_11' } },
+    sales_pipeline: { columns: { deal_name:'x_01', company_name:'x_02', service_type:'x_03', sales_name:'x_04', stage:'x_05', priority:'x_06', deal_value:'x_07', probability:'x_08', close_date:'x_09', created_date:'x_10', notes:'x_11' } },
+    sales_visit_tracker: { columns: { company_name:'x_01', contact_name:'x_02', visit_date:'x_03', sales_name:'x_04', location:'x_05', status:'x_06', visit_purpose:'x_07', notes:'x_08' } }
+};
+
+// ==================== DATA POOLS ====================
+const COMPANIES = [
+    ['SMA Negeri 2 Medan','school'], ['SMK Telkom Medan','school'], ['Universitas Sumatera Utara','university'],
+    ['Politeknik Negeri Medan','university'], ['PT Bank Sumut','corporate'], ['PT Indofood CBP Sumatera','corporate'],
+    ['PT Pupuk Sriwidjaja','corporate'], ['Dinas Pendidikan Kota Medan','government'], ['BKPSDM Kabupaten Deli Serdang','government'],
+    ['SMA Sutomo 1 Medan','school'], ['Universitas Negeri Medan','university'], ['PT Mitra Adiperkasa Cabang Medan','corporate'],
+    ['SMK Negeri 1 Binjai','school'], ['PT Angkasa Pura II Kualanamu','corporate'], ['Universitas Katolik Santo Thomas','university'],
+    ['PT Perkebunan Nusantara III','corporate'], ['SMA Methodist 2 Medan','school'], ['Pemerintah Kota Binjai','government'],
+    ['PT Telkom Witel Sumut','corporate'], ['SMK Farmasi Yannas Husada','school'], ['Universitas Islam Sumatera Utara','university'],
+    ['PT Bank Rakyat Indonesia Cab. Medan','corporate'], ['Dinas Sosial Provinsi Sumut','government'], ['SMA Harapan 1 Medan','school'],
+    ['PT Nestle Indonesia Wilayah Sumatera','corporate'], ['Universitas Muhammadiyah Sumatera Utara','university'],
+    ['PT Pertamina Fuel Terminal Medan','corporate'], ['SMK Negeri 2 Kisaran','school'], ['BKD Kabupaten Langkat','government'],
+    ['PT Astra International Cab. Medan','corporate']
+];
+const PIC_NAMES = ['Siti Aminah','Budi Santoso','Rina Marpaung','Andi Wijaya','Dewi Kartika','Fajar Sitorus','Maya Simanjuntak',
+    'Rudi Hartono','Lestari Br. Ginting','Hendra Gunawan','Yulia Pane','Tono Saragih','Nurul Huda','Agus Salim','Wati Br. Tarigan',
+    'Iwan Setiawan','Rahmawati','Doni Pratama','Sari Br. Sembiring','Bambang Prasetyo'];
+const SALES_POOL = ['Sinta Dewi','Budi Prakoso','Rani Anggraini','Andi Saputra','Yusuf Ramadhan','Citra Ayu'];
+const SERVICES = ['Seminar','Pelatihan','Tes Minat Bakat','Tes Kesiapan Kerja','Assesment Psikologi','Konseling','Paket Lengkap','Lainnya'];
+const LEAD_STATUS = ['cold','warm','hot','converted','lost'];
+const PRIORITY = ['low','medium','high'];
+const PIPE_STAGE = ['prospecting','qualification','negotiation','proposal','closing','won','lost'];
+const CLIENT_STATUS = ['active','inactive','prospect'];
+const VISIT_STATUS = ['scheduled','visited','cancelled','rescheduled'];
+const VISIT_PURPOSE = ['Presentasi','Penawaran','Follow Up','Closing','Pelatihan','Tes','Survey','Lainnya'];
+const LOCATIONS = ['Medan Kota','Medan Baru','Medan Timur','Deli Serdang','Binjai','Medan Petisah','Medan Helvetia','Medan Selayang'];
+const CONTACT_FIRST = ['Ahmad','Sri','Dedi','Fitri','Hendra','Lina','Rizky','Melati','Fajar','Tania','Agus','Rina','Yudi','Nadia','Dani'];
+const CONTACT_LAST = ['Pratama','Wulandari','Nasution','Br. Ginting','Siregar','Harahap','Br. Simbolon','Purba','Br. Tampubolon','Lubis'];
+
+// ==================== STATE ====================
+let tracked = loadTracked();
+
+function loadTracked(){
+    try { const raw = localStorage.getItem(TRACK_KEY); return raw ? JSON.parse(raw) : freshTrack(); }
+    catch(e){ return freshTrack(); }
+}
+function freshTrack(){ return { users:[], client_company_profile:[], lead_management:[], sales_pipeline:[], sales_visit_tracker:[] }; }
+function saveTracked(){ localStorage.setItem(TRACK_KEY, JSON.stringify(tracked)); }
+
+// ==================== HELPERS ====================
+function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function pad(n){ return n.toString().padStart(2,'0'); }
+function randomDate(daysBack, daysFwd){
+    const d = new Date();
+    d.setDate(d.getDate() + randInt(-daysBack, daysFwd));
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+function log(msg, cls){
+    const box = document.getElementById('logBox');
+    if (box.querySelector('.info') && box.children.length === 1 && box.textContent.includes('Belum ada')) box.innerHTML = '';
+    const line = document.createElement('div');
+    line.className = cls || '';
+    line.textContent = msg;
+    box.appendChild(line);
+    box.scrollTop = box.scrollHeight;
+}
+function logHead(msg){ log('— ' + msg, 'head'); }
+
+async function apiCall(table, method, body, idX){
+    let url = `${API_URL}?table=${table}`;
+    if (idX) url += `&id_x=${idX}`;
+    const opts = {
+        method,
+        headers: { 'Content-Type':'application/json', 'X-Custom-Auth':SECRET, 'X-Table-Name':table, 'X-Role':'admin' }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(url, opts);
+    const data = await res.json().catch(()=>({}));
+    if (!res.ok || data.success === false) throw new Error(data.error || data.message || `HTTP ${res.status}`);
+    return data;
+}
+function buildRow(table, obj){
+    const cols = TABLES[table].columns;
+    const row = {};
+    for (const [key, col] of Object.entries(cols)) {
+        let v = obj[key];
+        if (Array.isArray(v)) v = JSON.stringify(v);
+        row[col] = (v === undefined || v === null) ? '' : v;
+    }
+    return row;
+}
+async function insertRow(table, obj){
+    const row = buildRow(table, obj);
+    const result = await apiCall(table, 'POST', row);
+    const idX = result.data && (result.data.id_x || result.id_x);
+    if (idX) { tracked[table].push(idX); saveTracked(); }
+    return idX;
+}
+function tag(text){ return `${MARKER} ${text}`; }
+
+// ==================== UI INIT ====================
+document.getElementById('userBadge').textContent = '👤 ' + (CURRENT_USER.username || '-') + ' (' + (isSupervisor(CURRENT_USER)?'Supervisor':'Sales') + ')';
+if (!isSupervisor(CURRENT_USER)) document.getElementById('notSpvWarning').style.display = 'block';
+
+// ==================== GENERATE ====================
+async function runGenerate(){
+    const btn = document.getElementById('btnGenerate');
+    btn.disabled = true; btn.textContent = '⏳ Sedang mengisi data...';
+    document.getElementById('logBox').innerHTML = '';
+    try {
+        const nClient = parseInt(document.getElementById('cnt_client').value)||0;
+        const nLead = parseInt(document.getElementById('cnt_lead').value)||0;
+        const nPipe = parseInt(document.getElementById('cnt_pipeline').value)||0;
+        const nVisit = parseInt(document.getElementById('cnt_visit').value)||0;
+        const makeUsers = document.getElementById('makeUsers').checked;
+
+        let salesPool = SALES_POOL.slice(0, 4);
+        let credsHtml = '';
+
+        if (makeUsers) {
+            logHead('Membuat akun simulasi (users)');
+            const suffix = Date.now().toString().slice(-4);
+            const simUsers = [
+                { username:`sim_sales1_${suffix}`, password:'simulasi123', role:'sales' },
+                { username:`sim_sales2_${suffix}`, password:'simulasi123', role:'sales' },
+                { username:`sim_spv1_${suffix}`, password:'simulasi123', role:'spv' }
+            ];
+            for (const u of simUsers) {
+                try {
+                    await insertRow('users', u);
+                    log(`✔ user dibuat: ${u.username} / ${u.password} (${u.role})`, 'ok');
+                } catch(e){ log(`✘ gagal buat user ${u.username}: ${e.message}`, 'err'); }
+            }
+            salesPool = [simUsers[0].username, simUsers[1].username];
+            credsHtml = `<div class="creds">
+                <b>🔑 Akun simulasi untuk login:</b><br>
+                Sales 1: <code>${simUsers[0].username}</code> / <code>simulasi123</code><br>
+                Sales 2: <code>${simUsers[1].username}</code> / <code>simulasi123</code><br>
+                Supervisor: <code>${simUsers[2].username}</code> / <code>simulasi123</code>
+            </div>`;
+            document.getElementById('credsBox').innerHTML = credsHtml;
+        } else {
+            log('Melewati pembuatan user, memakai nama sales default untuk data (tidak bisa dipakai login).', 'info');
+        }
+
+        // ---------- CLIENT COMPANY PROFILE ----------
+        const createdClients = [];
+        logHead(`Membuat ${nClient} client / company profile`);
+        for (let i=0;i<nClient;i++){
+            const [name, type] = rand(COMPANIES);
+            const pic = rand(PIC_NAMES);
+            const status = rand(CLIENT_STATUS);
+            const obj = {
+                company_name: tag(name + (i>=COMPANIES.length? ' '+(i+1):'')),
+                company_type: type,
+                email: `admin@${name.toLowerCase().replace(/[^a-z0-9]+/g,'')}.co.id`,
+                phone: `08${randInt(1,9)}${randInt(1000000,9999999)}`,
+                pic_name: pic,
+                pic_phone: `08${randInt(1,9)}${randInt(1000000,9999999)}`,
+                address: `Jl. ${rand(['Sisingamangaraja','Gatot Subroto','Kapten Muslim','Setia Budi','Jamin Ginting','Ringroad'])} No. ${randInt(1,200)}, Medan`,
+                status,
+                services_used: [rand(SERVICES), rand(SERVICES)].filter((v,idx,a)=>a.indexOf(v)===idx),
+                sales_assign: rand(salesPool),
+                join_date: randomDate(365, 0),
+                notes: tag('Data hasil simulasi — aman dihapus.')
+            };
+            try {
+                await insertRow('client_company_profile', obj);
+                createdClients.push({ company_name: name, pic_name: pic });
+                log(`✔ client: ${name} (${type}/${status})`, 'ok');
+            } catch(e){ log(`✘ gagal insert client: ${e.message}`, 'err'); }
+        }
+        if (createdClients.length === 0) createdClients.push(...COMPANIES.map(c=>({company_name:c[0], pic_name:rand(PIC_NAMES)})));
+
+        // ---------- LEAD MANAGEMENT ----------
+        logHead(`Membuat ${nLead} lead`);
+        for (let i=0;i<nLead;i++){
+            const c = rand(createdClients);
+            const status = rand(LEAD_STATUS);
+            const obj = {
+                contact_name: `${rand(CONTACT_FIRST)} ${rand(CONTACT_LAST)}`,
+                company_name: tag(c.company_name),
+                email: `lead${i+1}@contoh.co.id`,
+                phone: `08${randInt(1,9)}${randInt(1000000,9999999)}`,
+                status,
+                priority: rand(PRIORITY),
+                service_interest: rand(SERVICES),
+                sales_assign: rand(salesPool),
+                notes: tag('Lead simulasi — aman dihapus.'),
+                next_followup: randomDate(0, 30),
+                estimated_value: randInt(3, 80) * 1000000
+            };
+            try { await insertRow('lead_management', obj); log(`✔ lead: ${obj.contact_name} → ${c.company_name} (${status})`, 'ok'); }
+            catch(e){ log(`✘ gagal insert lead: ${e.message}`, 'err'); }
+        }
+
+        // ---------- SALES PIPELINE ----------
+        logHead(`Membuat ${nPipe} deal pipeline`);
+        for (let i=0;i<nPipe;i++){
+            const c = rand(createdClients);
+            const service = rand(SERVICES);
+            const stage = rand(PIPE_STAGE);
+            const obj = {
+                deal_name: tag(`${service} - ${c.company_name}`),
+                company_name: tag(c.company_name),
+                service_type: service,
+                sales_name: rand(salesPool),
+                stage,
+                priority: rand(PRIORITY),
+                deal_value: randInt(5, 150) * 1000000,
+                probability: stage==='won'?100: stage==='lost'?0: randInt(10,90),
+                close_date: randomDate(0, 60),
+                created_date: randomDate(90, 0),
+                notes: tag('Deal simulasi — aman dihapus.')
+            };
+            try { await insertRow('sales_pipeline', obj); log(`✔ deal: ${obj.deal_name} (${stage})`, 'ok'); }
+            catch(e){ log(`✘ gagal insert deal: ${e.message}`, 'err'); }
+        }
+
+        // ---------- SALES VISIT TRACKER ----------
+        logHead(`Membuat ${nVisit} kunjungan`);
+        for (let i=0;i<nVisit;i++){
+            const c = rand(createdClients);
+            const obj = {
+                company_name: tag(c.company_name),
+                contact_name: c.pic_name || rand(PIC_NAMES),
+                visit_date: randomDate(20, 20),
+                sales_name: rand(salesPool),
+                location: rand(LOCATIONS),
+                status: rand(VISIT_STATUS),
+                visit_purpose: rand(VISIT_PURPOSE),
+                notes: tag('Kunjungan simulasi — aman dihapus.')
+            };
+            try { await insertRow('sales_visit_tracker', obj); log(`✔ visit: ${obj.company_name} (${obj.status})`, 'ok'); }
+            catch(e){ log(`✘ gagal insert visit: ${e.message}`, 'err'); }
+        }
+
+        logHead('Selesai ✅');
+        log(`Total tersimpan di browser ini untuk pembersihan nanti: ` +
+            Object.entries(tracked).map(([k,v])=>`${k}=${v.length}`).join(', '), 'info');
+
+    } catch (e) {
+        log('✘ ERROR FATAL: ' + e.message, 'err');
+    } finally {
+        btn.disabled = false; btn.textContent = '🚀 Generate & Isi Semua Data Simulasi';
+    }
+}
+
+// ==================== STATUS CHECK ====================
+async function checkStatus(){
+    const btn = document.getElementById('btnStatus');
+    btn.disabled = true; btn.textContent = '⏳ Mengecek...';
+    document.getElementById('logBox').innerHTML = '';
+    const grid = document.getElementById('statGrid');
+    grid.style.display = 'grid'; grid.innerHTML = '';
+    try {
+        for (const table of Object.keys(TABLES)) {
+            logHead(`Mengecek tabel ${table}`);
+            try {
+                const result = await apiCall(table, 'GET');
+                const rows = result.data || [];
+                const marked = rows.filter(r => JSON.stringify(r).includes(MARKER) || (table==='users' && String(r.x_01||'').startsWith('sim_')));
+                log(`  total baris: ${rows.length}, bertanda simulasi: ${marked.length}`, 'info');
+                const st = document.createElement('div');
+                st.className = 'stat';
+                st.innerHTML = `<b>${marked.length}</b><span>${table}</span>`;
+                grid.appendChild(st);
+            } catch(e){ log(`✘ gagal cek ${table}: ${e.message}`, 'err'); }
+        }
+    } finally {
+        btn.disabled = false; btn.textContent = '🔍 Cek Status Data Simulasi';
+    }
+}
+
+// ==================== CLEANUP ====================
+async function runCleanup(){
+    if (!confirm('Yakin mau hapus SEMUA data simulasi (bertanda 🧪SIM) dari server? Data asli tidak akan disentuh.')) return;
+    const btn = document.getElementById('btnClean');
+    btn.disabled = true; btn.textContent = '⏳ Menghapus...';
+    document.getElementById('logBox').innerHTML = '';
+    let totalDeleted = 0;
+
+    try {
+        // Tahap 1: hapus berdasarkan ID yang tercatat di browser ini
+        for (const table of Object.keys(TABLES)) {
+            const ids = tracked[table] || [];
+            if (ids.length === 0) continue;
+            logHead(`Menghapus ${ids.length} data tercatat dari ${table}`);
+            for (const id of ids) {
+                try { await apiCall(table, 'DELETE', null, id); totalDeleted++; log(`✔ hapus ${table} #${id}`, 'ok'); }
+                catch(e){ log(`✘ gagal hapus ${table} #${id}: ${e.message}`, 'err'); }
+            }
+        }
+        tracked = freshTrack();
+        saveTracked();
+
+        // Tahap 2: sapu ulang ke server untuk cari sisa yang bertanda MARKER (misal dibuat dari browser lain)
+        logHead('Memindai server untuk sisa data bertanda simulasi...');
+        for (const table of Object.keys(TABLES)) {
+            try {
+                const result = await apiCall(table, 'GET');
+                const rows = result.data || [];
+                const leftover = rows.filter(r => JSON.stringify(r).includes(MARKER) || (table==='users' && String(r.x_01||'').startsWith('sim_')));
+                if (leftover.length === 0) continue;
+                log(`  ditemukan ${leftover.length} sisa di ${table}, menghapus...`, 'info');
+                for (const r of leftover) {
+                    try { await apiCall(table, 'DELETE', null, r.id_x); totalDeleted++; log(`✔ hapus ${table} #${r.id_x} (sisa)`, 'ok'); }
+                    catch(e){ log(`✘ gagal hapus ${table} #${r.id_x}: ${e.message}`, 'err'); }
+                }
+            } catch(e){ log(`✘ gagal memindai ${table}: ${e.message}`, 'err'); }
+        }
+
+        logHead('Selesai ✅');
+        log(`Total data simulasi terhapus: ${totalDeleted}`, 'ok');
+        document.getElementById('credsBox').innerHTML = '';
+        document.getElementById('statGrid').style.display = 'none';
+    } catch (e) {
+        log('✘ ERROR FATAL: ' + e.message, 'err');
+    } finally {
+        btn.disabled = false; btn.textContent = '🗑️ Hapus SEMUA Data Simulasi';
+    }
+}
+</script>
+</body>
+</html>
