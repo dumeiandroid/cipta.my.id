@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview Jawaban OJT - Admin</title>
+    <script>
+        // ==================== AUTH GUARD (SSO - sama dengan Sales Tools Suite) ====================
+        const AUTH_SESSION_KEY = 'lidan_sales_session';
+        const AUTH_LOGIN_PAGE = 'login.html';
+
+        function getAuthSession() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+        function clearAuthSession() { localStorage.removeItem(AUTH_SESSION_KEY); }
+        function logout() { clearAuthSession(); window.location.href = AUTH_LOGIN_PAGE; }
+
+        let CURRENT_USER = getAuthSession();
+        if (!CURRENT_USER || !CURRENT_USER.username) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.replace(AUTH_LOGIN_PAGE + '?return=' + returnUrl);
+        }
+
+        // Halaman ini KHUSUS user dengan username (x_01) = 'admin'
+        const IS_ADMIN_USER = !!CURRENT_USER && CURRENT_USER.username === 'admin';
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === AUTH_SESSION_KEY && !e.newValue) {
+                window.location.href = AUTH_LOGIN_PAGE;
+            }
+        });
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f7fafc;
+            min-height: 100vh;
+            padding: 24px 16px;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: #fff;
+            border-radius: 16px;
+            padding: 22px 26px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header h1 {
+            font-size: 19px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header p {
+            font-size: 12.5px;
+            color: #a0aec0;
+            margin-top: 4px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+        }
+        .btn-logout, .btn-refresh {
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-logout { background: #fc8181; color: #fff; }
+        .btn-logout:hover { background: #f56565; }
+        .btn-refresh { background: rgba(255,255,255,0.15); color: #fff; }
+        .btn-refresh:hover { background: rgba(255,255,255,0.25); }
+
+        .denied-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 60px 30px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        }
+        .denied-card .icon { font-size: 48px; margin-bottom: 12px; }
+        .denied-card h2 { color: #c53030; margin-bottom: 8px; }
+        .denied-card p { color: #718096; font-size: 14px; }
+
+        .summary-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 720px) {
+            .summary-bar { grid-template-columns: repeat(2, 1fr); }
+        }
+        .summary-box {
+            background: #fff;
+            border-radius: 14px;
+            padding: 16px 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .summary-box .num { font-size: 24px; font-weight: 800; color: #6b46c1; }
+        .summary-box .label { font-size: 12px; color: #a0aec0; margin-top: 2px; }
+
+        .search-box {
+            margin-bottom: 16px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+        }
+        .search-box input:focus { border-color: #9f7aea; }
+
+        .entry-card {
+            background: #fff;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        .entry-head {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .entry-head:hover { background: #f7fafc; }
+        .entry-head .name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+        .entry-head .meta {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-top: 2px;
+        }
+        .tag {
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .tag.ok { background: #c6f6d5; color: #276749; }
+        .tag.pending { background: #feebc8; color: #9c4221; }
+        .tag.no { background: #fed7d7; color: #c53030; }
+
+        .entry-body {
+            display: none;
+            padding: 4px 20px 20px;
+            border-top: 1px solid #edf2f7;
+        }
+        .entry-body.open { display: block; }
+
+        .review-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #f7fafc;
+        }
+        .review-item:last-child { border-bottom: none; }
+        .review-item .q {
+            font-size: 12px;
+            font-weight: 700;
+            color: #6b46c1;
+            margin-bottom: 3px;
+        }
+        .review-item .a {
+            font-size: 13.5px;
+            color: #2d3748;
+            white-space: pre-wrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #a0aec0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app" style="display:none;">
+        <div class="header">
+            <div>
+                <h1>🔐 Preview Jawaban Form Akhir OJT</h1>
+                <p>Khusus admin · Data dari tabel ojt_finishing</p>
+            </div>
+            <div class="header-right">
+                <div class="user-badge" id="userBadge">👤 -</div>
+                <button class="btn-refresh" onclick="loadData()">🔄 Refresh</button>
+                <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+            </div>
+        </div>
+
+        <div id="deniedBox" style="display:none;">
+            <div class="denied-card">
+                <div class="icon">🚫</div>
+                <h2>Akses Ditolak</h2>
+                <p>Halaman ini hanya bisa diakses oleh akun admin.</p>
+            </div>
+        </div>
+
+        <div id="contentBox" style="display:none;">
+            <div class="summary-bar" id="summaryBar"></div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Cari nama atau username..." oninput="renderList()">
+            </div>
+            <div id="listBox"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'ojt_finishing';
+        const SECRET = 'admin';
+
+        const COLUMNS = {
+            username: 'x_01',
+            nama: 'x_02',
+            tanggal: 'x_03',
+            total_kunjungan: 'x_04',
+            wilayah: 'x_05',
+            konversi_deal: 'x_06',
+            layanan_diminati: 'x_07',
+            kendala: 'x_08',
+            strategi: 'x_09',
+            pencapaian: 'x_10',
+            ide_produk: 'x_11',
+            saran_tim: 'x_12',
+            kesiapan_pimpin: 'x_13',
+            kesediaan_mitra: 'x_14',
+            gaji_harian: 'x_15',
+            catatan: 'x_16',
+            status: 'x_17',
+            submitted_at: 'x_18'
+        };
+
+        let allData = [];
+
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': TABLE,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            const response = await fetch(url, {
+                ...options,
+                headers: { ...getHeaders(), ...(options.headers || {}) }
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return await response.json();
+        }
+
+        function parseRow(row) {
+            const parsed = { id_x: row.id_x };
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                parsed[key] = row[col] || '';
+            }
+            return parsed;
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('app').style.display = 'block';
+            document.getElementById('userBadge').textContent = '👤 ' + CURRENT_USER.username;
+
+            if (!IS_ADMIN_USER) {
+                document.getElementById('deniedBox').style.display = 'block';
+                return;
+            }
+            document.getElementById('contentBox').style.display = 'block';
+            loadData();
+        });
+
+        async function loadData() {
+            document.getElementById('listBox').innerHTML = '<div class="empty-state">⏳ Memuat data...</div>';
+            try {
+                const result = await apiFetch('');
+                allData = (result.success && result.data) ? result.data.map(parseRow) : [];
+                renderSummary();
+                renderList();
+            } catch (e) {
+                document.getElementById('listBox').innerHTML = `<div class="empty-state">❌ Gagal memuat data: ${escapeHtml(e.message)}</div>`;
+            }
+        }
+
+        function renderSummary() {
+            const total = allData.length;
+            const ya = allData.filter(d => d.kesediaan_mitra === 'Ya, bersedia').length;
+            const pending = allData.filter(d => d.kesediaan_mitra === 'Perlu pertimbangan lebih lanjut').length;
+            const tidak = allData.filter(d => d.kesediaan_mitra === 'Tidak bersedia').length;
+
+            document.getElementById('summaryBar').innerHTML = `
+                <div class="summary-box"><div class="num">${total}</div><div class="label">Total Pengisi</div></div>
+                <div class="summary-box"><div class="num">${ya}</div><div class="label">Bersedia jadi Mitra</div></div>
+                <div class="summary-box"><div class="num">${pending}</div><div class="label">Perlu Pertimbangan</div></div>
+                <div class="summary-box"><div class="num">${tidak}</div><div class="label">Tidak Bersedia</div></div>
+            `;
+        }
+
+        function mitraTagClass(val) {
+            if (val === 'Ya, bersedia') return 'ok';
+            if (val === 'Tidak bersedia') return 'no';
+            return 'pending';
+        }
+
+        function renderList() {
+            const q = document.getElementById('searchInput').value.trim().toLowerCase();
+            const listBox = document.getElementById('listBox');
+
+            const filtered = allData.filter(d =>
+                !q || d.nama.toLowerCase().includes(q) || d.username.toLowerCase().includes(q)
+            );
+
+            if (filtered.length === 0) {
+                listBox.innerHTML = '<div class="empty-state">Belum ada data yang cocok.</div>';
+                return;
+            }
+
+            const items = (d) => [
+                ['Total kunjungan/canvas selama OJT', d.total_kunjungan],
+                ['Wilayah/area yang dikunjungi', d.wilayah],
+                ['Jumlah calon client yang closing/deal', d.konversi_deal],
+                ['Layanan yang paling diminati', d.layanan_diminati],
+                ['Kendala/tantangan terbesar', d.kendala],
+                ['Strategi/pendekatan paling efektif', d.strategi],
+                ['Pencapaian yang paling dibanggakan', d.pencapaian],
+                ['Ide produk/kemasan baru', d.ide_produk],
+                ['Saran untuk tim BDO', d.saran_tim || '-'],
+                ['Kesiapan memimpin tim BDO ke depan', d.kesiapan_pimpin],
+                ['Kesediaan lanjut sebagai mitra', d.kesediaan_mitra],
+                ['Permintaan gaji harian', d.gaji_harian ? ('Rp ' + Number(d.gaji_harian).toLocaleString('id-ID') + ' /hari') : '-'],
+                ['Catatan tambahan', d.catatan || '-']
+            ];
+
+            listBox.innerHTML = filtered.map((d, i) => `
+                <div class="entry-card">
+                    <div class="entry-head" onclick="toggleEntry(${i})">
+                        <div>
+                            <div class="name">${escapeHtml(d.nama || d.username)}</div>
+                            <div class="meta">@${escapeHtml(d.username)} · Diisi ${escapeHtml(d.tanggal)}</div>
+                        </div>
+                        <span class="tag ${mitraTagClass(d.kesediaan_mitra)}">${escapeHtml(d.kesediaan_mitra || '-')}</span>
+                    </div>
+                    <div class="entry-body" id="entry-${i}">
+                        ${items(d).map(([q2, a]) => `
+                            <div class="review-item">
+                                <div class="q">${escapeHtml(q2)}</div>
+                                <div class="a">${escapeHtml(String(a || '-'))}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleEntry(i) {
+            const el = document.getElementById('entry-' + i);
+            el.classList.toggle('open');
+        }
+    </script>
+</body>
+</html>
