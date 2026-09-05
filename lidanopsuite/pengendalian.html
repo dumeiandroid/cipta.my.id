@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengendalian - PDCA Internal</title>
+    <script>
+        // ==================== AUTH GUARD (Sales Tools Suite - SSO) ====================
+        const AUTH_SESSION_KEY = 'lidan_sales_session';
+        const AUTH_LOGIN_PAGE = 'login.html';
+
+        function getAuthSession() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+        function clearAuthSession() { localStorage.removeItem(AUTH_SESSION_KEY); }
+        function isSupervisor(session) { return !!session && String(session.role || '').toLowerCase() === 'spv'; }
+        function isAdmin(session) { return !!session && String(session.username || '').toLowerCase() === 'admin'; }
+        function logout() { clearAuthSession(); window.location.href = AUTH_LOGIN_PAGE; }
+
+        let CURRENT_USER = getAuthSession();
+        if (!CURRENT_USER || !CURRENT_USER.username) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.replace(AUTH_LOGIN_PAGE + '?return=' + returnUrl);
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === AUTH_SESSION_KEY && !e.newValue) {
+                window.location.href = AUTH_LOGIN_PAGE;
+            }
+        });
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #1a2332;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 .pdca-badge {
+            background: #fc8181;
+            color: white;
+            font-size: 11px;
+            padding: 2px 12px;
+            border-radius: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #2d3748;
+        }
+        .user-badge .role-tag {
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            text-transform: capitalize;
+        }
+        .user-badge .role-tag.spv { background: #9f7aea; }
+        .user-badge .role-tag.sales { background: #4299e1; }
+        .btn-logout {
+            background: #fc8181;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-logout:hover { background: #f56565; }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #f7fafc;
+            padding: 0 15px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            transition: border 0.2s;
+        }
+
+        .search-box:focus-within {
+            border-color: #4299e1;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 14px;
+            outline: none;
+            width: 200px;
+            color: #2d3748;
+        }
+
+        .search-box .icon {
+            color: #a0aec0;
+            font-size: 18px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66,153,225,0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #fc8181;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #f56565;
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-outline:hover {
+            background: #f7fafc;
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-xs {
+            padding: 3px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+
+        .btn-purple {
+            background: #9f7aea;
+            color: white;
+        }
+        .btn-purple:hover {
+            background: #805ad5;
+        }
+
+        .list-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .list-header {
+            display: grid;
+            grid-template-columns: 60px 1.2fr 0.8fr 1fr 0.8fr 0.8fr 160px;
+            gap: 8px;
+            padding: 14px 20px;
+            background: #f7fafc;
+            font-weight: 700;
+            font-size: 11px;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .list-item {
+            display: grid;
+            grid-template-columns: 60px 1.2fr 0.8fr 1fr 0.8fr 0.8fr 160px;
+            gap: 8px;
+            padding: 14px 20px;
+            border-bottom: 1px solid #edf2f7;
+            align-items: center;
+            transition: background 0.15s;
+        }
+
+        .list-item:hover {
+            background: #f7fafc;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item .id {
+            font-weight: 700;
+            color: #4299e1;
+            font-size: 13px;
+        }
+
+        .list-item .field {
+            color: #2d3748;
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .list-item .field .label {
+            display: none;
+            font-weight: 600;
+            color: #a0aec0;
+            font-size: 11px;
+        }
+
+        .list-item .actions {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .badge-status {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .badge-status.open {
+            background: #fefcbf;
+            color: #975a16;
+        }
+        .badge-status.in_progress {
+            background: #bee3f8;
+            color: #2a69ac;
+        }
+        .badge-status.resolved {
+            background: #c6f6d5;
+            color: #276749;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #a0aec0;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .empty-state h3 {
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 95vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-close {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: #fc8181;
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            background: #f56565;
+            transform: rotate(90deg);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a2332;
+            margin-bottom: 20px;
+            padding-right: 50px;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #edf2f7;
+            flex-wrap: wrap;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            max-width: 400px;
+        }
+
+        .toast.success {
+            background: #48bb78;
+        }
+        .toast.error {
+            background: #fc8181;
+        }
+        .toast.info {
+            background: #4299e1;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stats-summary .stat-card {
+            background: white;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .stats-summary .stat-card .number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .stats-summary .stat-card .label {
+            font-size: 10px;
+            color: #a0aec0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stats-summary .stat-card .number.open { color: #ed8936; }
+        .stats-summary .stat-card .number.in_progress { color: #4299e1; }
+        .stats-summary .stat-card .number.resolved { color: #48bb78; }
+
+        @media (max-width: 992px) {
+            .list-header {
+                display: none;
+            }
+            .list-item {
+                grid-template-columns: 1fr;
+                gap: 4px;
+                padding: 16px;
+                border-bottom: 2px solid #edf2f7;
+            }
+            .list-item .id {
+                font-size: 12px;
+            }
+            .list-item .field .label {
+                display: inline;
+            }
+            .list-item .actions {
+                margin-top: 6px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box input {
+                width: 100%;
+            }
+            .modal {
+                padding: 20px;
+            }
+            .stats-summary {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+            .stats-summary {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .modal::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal::-webkit-scrollbar-track {
+            background: #f7fafc;
+        }
+        .modal::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>
+                🎯 Pengendalian
+                <span class="pdca-badge">CHECK & ACT</span>
+            </h1>
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Cari pengendalian..." oninput="renderList()">
+                </div>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ Buat Pengendalian</button>
+                <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('infoModal').classList.add('active')" title="Info & Panduan">ℹ️ Info</button>
+                <div class="user-badge" id="userBadge">
+                    <span id="userBadgeName">👤 -</span>
+                    <span class="role-tag" id="userBadgeRole">-</span>
+                    <a href="index.html" class="btn btn-outline btn-sm" style="text-decoration:none;">🏠 Home</a>
+                    <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS SUMMARY -->
+        <div class="stats-summary" id="statsSummary">
+            <div class="stat-card">
+                <div class="number" id="statTotal">0</div>
+                <div class="label">Total Pengendalian</div>
+            </div>
+            <div class="stat-card">
+                <div class="number open" id="statOpen">0</div>
+                <div class="label">🔶 Open</div>
+            </div>
+            <div class="stat-card">
+                <div class="number in_progress" id="statInProgress">0</div>
+                <div class="label">🔄 In Progress</div>
+            </div>
+            <div class="stat-card">
+                <div class="number resolved" id="statResolved">0</div>
+                <div class="label">✅ Resolved</div>
+            </div>
+        </div>
+
+        <!-- LIST -->
+        <div class="list-container">
+            <div class="list-header">
+                <span>ID</span>
+                <span>Pekerjaan</span>
+                <span>Pelaksanaan Ref</span>
+                <span>Akar Masalah</span>
+                <span>Status</span>
+                <span>Tindakan</span>
+                <span>Aksi</span>
+            </div>
+            <div id="listBody">
+                <div class="empty-state">
+                    <div class="icon">🎯</div>
+                    <h3>Belum ada catatan pengendalian</h3>
+                    <p>Klik "Buat Pengendalian" untuk mencatat deviasi dan tindakan korektif</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL INFO -->
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
+            <div class="modal-title">🎯 Panduan Pengendalian (CHECK & ACT)</div>
+            <div class="modal-body">
+                <p><strong>Pengendalian</strong> adalah tahap keempat dalam siklus PDCA. Ini adalah
+                <strong>tahap kondisional</strong> — hanya muncul jika ada deviasi/masalah dalam
+                Pelaksanaan. Di sini kita identifikasi akar masalah, tentukan tindakan korektif,
+                dan tetapkan penanggung jawab untuk menindaklanjuti.</p>
+
+                <h4 style="margin:4px 0 2px;">📌 Field-field Pengendalian</h4>
+                <ul style="margin:0 0 8px 18px; line-height:1.9;">
+                    <li><b>Referensi Pelaksanaan</b> — ID dari pelaksanaan yang bermasalah</li>
+                    <li><b>Nama Pekerjaan</b> — judul/deskripsi pekerjaan</li>
+                    <li><b>Jenis Deviasi</b> — kategori masalah (telat, kualitas rendah, dll)</li>
+                    <li><b>Akar Masalah</b> — penyebab utama deviasi</li>
+                    <li><b>Tindakan Korektif</b> — apa yang akan dilakukan</li>
+                    <li><b>Penanggung Jawab</b> — siapa yang menindaklanjuti</li>
+                    <li><b>Status</b> — Open / In Progress / Resolved</li>
+                </ul>
+
+                <h4 style="margin:4px 0 2px;">🚦 Status Pengendalian</h4>
+                <ul style="margin:0 0 8px 18px; line-height:1.9;">
+                    <li>🔶 <b>Open</b> — masalah baru teridentifikasi, belum ditangani</li>
+                    <li>🔄 <b>In Progress</b> — sedang dalam penanganan</li>
+                    <li>✅ <b>Resolved</b> — masalah sudah selesai ditangani</li>
+                </ul>
+
+                <div style="background:#faf5ff;border-left:4px solid #9f7aea;border-radius:8px;padding:10px 14px;font-size:13px;">
+                    💡 <b>Tips:</b> Setelah pengendalian selesai (Resolved), hasilnya harus
+                    kembali ke Pelaksanaan untuk siklus berikutnya. Ini adalah bagian penting
+                    dari proses perbaikan berkelanjutan (Continuous Improvement).
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL HISTORY -->
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('historyModal')">✕</button>
+            <div class="modal-title">🕘 Riwayat Perubahan</div>
+            <div class="modal-body" id="historyModalBody"></div>
+        </div>
+    </div>
+
+    <!-- MODAL REFERENCE PICKER (Pelaksanaan) -->
+    <div class="modal-overlay" id="refPickerModal">
+        <div class="modal" style="max-width:700px;">
+            <button class="modal-close" onclick="closeModal('refPickerModal')">✕</button>
+            <div class="modal-title">⚙️ Pilih Referensi Pelaksanaan</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <input type="text" id="refSearchInput" placeholder="Cari pelaksanaan..." oninput="renderRefList()" style="padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;">
+                </div>
+                <div id="refListContainer" style="max-height:400px;overflow-y:auto;">
+                    <div class="empty-state" style="padding:20px;">
+                        <div class="icon">⚙️</div>
+                        <h3>Memuat data...</h3>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeModal('refPickerModal')">Batal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORM -->
+    <div class="modal-overlay" id="formModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('formModal')">✕</button>
+            <div class="modal-title" id="formModalTitle">🎯 Buat Pengendalian</div>
+            <div class="modal-body">
+                <input type="hidden" id="editId" value="">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>⚙️ Referensi Pelaksanaan</label>
+                        <div class="ref-selector" style="display:flex;gap:8px;align-items:center;">
+                            <input type="text" id="refExecutionId" placeholder="ID Pelaksanaan" style="flex:0 0 80px;">
+                            <input type="text" id="refExecutionName" placeholder="Nama pekerjaan dari pelaksanaan" readonly style="background:#edf2f7;flex:1;">
+                            <button class="btn btn-primary btn-sm" type="button" onclick="openRefPicker()">📂 Pilih</button>
+                            <button class="btn btn-outline btn-sm" type="button" onclick="clearRef()">✕</button>
+                        </div>
+                        <small style="color:#a0aec0;">Pilih dari Pelaksanaan yang bermasalah (status deviated)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>📌 Nama Pekerjaan *</label>
+                        <input type="text" id="jobName" placeholder="Nama pekerjaan" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📂 Jenis Deviasi</label>
+                        <select id="deviationType">
+                            <option value="telat">⏰ Telat dari Jadwal</option>
+                            <option value="kualitas_rendah">📉 Kualitas di Bawah Target</option>
+                            <option value="biaya_lebih">💰 Biaya Melebihi Anggaran</option>
+                            <option value="scope_berubah">📋 Scope Berubah</option>
+                            <option value="sumber_daya">🧰 Masalah Sumber Daya</option>
+                            <option value="komunikasi">💬 Masalah Komunikasi</option>
+                            <option value="lainnya">📌 Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>📂 Status</label>
+                        <select id="status">
+                            <option value="open" selected>🔶 Open</option>
+                            <option value="in_progress">🔄 In Progress</option>
+                            <option value="resolved">✅ Resolved</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>🔍 Akar Masalah</label>
+                    <textarea id="rootCause" placeholder="Jelaskan penyebab utama deviasi..." rows="2"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>🛠️ Tindakan Korektif</label>
+                    <textarea id="correctiveAction" placeholder="Apa yang akan dilakukan untuk memperbaiki?" rows="2"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>👤 Penanggung Jawab</label>
+                        <input type="text" id="responsiblePerson" placeholder="Nama penanggung jawab" required>
+                    </div>
+                    <div class="form-group">
+                        <label>📅 Target Selesai</label>
+                        <input type="date" id="targetResolveDate">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Keterangan / Catatan</label>
+                    <textarea id="notes" placeholder="Catatan tambahan..." rows="2"></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-danger" id="deleteBtn" onclick="deleteControl()" style="display:none;">🗑️ Hapus</button>
+                    <button class="btn btn-outline" onclick="closeModal('formModal')">Batal</button>
+                    <button class="btn btn-primary" id="saveBtn" onclick="saveControl()">💾 Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'pengendalian';
+        const EXEC_TABLE = 'pelaksanaan';
+        const SECRET = 'admin';
+
+        // ==================== STATE ====================
+        let allData = [];
+        let execData = [];
+        let currentEditId = null;
+        let selectedExecId = null;
+
+        const COLUMNS = {
+            ref_execution_id: 'x_01',
+            ref_execution_name: 'x_02',
+            job_name: 'x_03',
+            deviation_type: 'x_04',
+            root_cause: 'x_05',
+            corrective_action: 'x_06',
+            responsible_person: 'x_07',
+            status: 'x_08',
+            target_resolve_date: 'x_09',
+            notes: 'x_10'
+        };
+
+        const HISTORY_COL = 'x_25';
+        const FIELD_LABELS = {
+            ref_execution_id: '⚙️ Referensi Pelaksanaan ID',
+            ref_execution_name: '⚙️ Referensi Pelaksanaan Nama',
+            job_name: '📌 Nama Pekerjaan',
+            deviation_type: '📂 Jenis Deviasi',
+            root_cause: '🔍 Akar Masalah',
+            corrective_action: '🛠️ Tindakan Korektif',
+            responsible_person: '👤 Penanggung Jawab',
+            status: '📂 Status',
+            target_resolve_date: '📅 Target Selesai',
+            notes: '📝 Keterangan'
+        };
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🎯 Pengendalian Started');
+            console.log('📡 Table:', TABLE);
+            initUserBadge();
+            loadExecData();
+            refreshData();
+        });
+
+        function initUserBadge() {
+            const nameEl = document.getElementById('userBadgeName');
+            const roleEl = document.getElementById('userBadgeRole');
+            if (nameEl) nameEl.textContent = '👤 ' + (CURRENT_USER.username || '-');
+            if (roleEl) {
+                roleEl.textContent = CURRENT_USER.role || '-';
+                roleEl.className = 'role-tag ' + (isSupervisor(CURRENT_USER) ? 'spv' : 'sales');
+            }
+        }
+
+        function ownsItem(item) {
+            return isSupervisor(CURRENT_USER) || item.responsible_person === CURRENT_USER.username;
+        }
+
+        // ==================== API HELPERS ====================
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': TABLE,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function apiFetch(table, endpoint, options = {}) {
+            const url = `${API_URL}?table=${table}${endpoint}`;
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        ...getHeaders(),
+                        ...(options.headers || {})
+                    }
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error || err.message || `HTTP ${response.status}`);
+                }
+                return await response.json();
+            } catch (e) {
+                console.error('❌ API Error:', e.message);
+                throw e;
+            }
+        }
+
+        // ==================== EXEC DATA ====================
+        async function loadExecData() {
+            try {
+                const result = await apiFetch(EXEC_TABLE, '');
+                if (result.success && result.data) {
+                    execData = result.data.map(row => ({
+                        id_x: row.id_x,
+                        job_name: row.x_03 || '',
+                        executor: row.x_04 || '',
+                        status: row.x_05 || 'on_track'
+                    }));
+                }
+                console.log('📚 Loaded execution data:', execData.length);
+            } catch (e) {
+                console.error('❌ Failed to load execution data:', e);
+                execData = [];
+            }
+        }
+
+        function getExecName(id) {
+            const found = execData.find(r => r.id_x === id);
+            return found ? found.job_name : null;
+        }
+
+        // ==================== DATA CRUD ====================
+        async function fetchData() {
+            try {
+                const result = await apiFetch(TABLE, '');
+                if (result.success && result.data) {
+                    allData = result.data.map(row => parseRow(row));
+                    if (!isSupervisor(CURRENT_USER) && !isAdmin(CURRENT_USER)) {
+                        allData = allData.filter(item => item.responsible_person === CURRENT_USER.username);
+                    }
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            return {
+                id_x: row.id_x,
+                ref_execution_id: parseInt(row.x_01) || null,
+                ref_execution_name: row.x_02 || '',
+                job_name: row.x_03 || '',
+                deviation_type: row.x_04 || 'telat',
+                root_cause: row.x_05 || '',
+                corrective_action: row.x_06 || '',
+                responsible_person: row.x_07 || '',
+                status: row.x_08 || 'open',
+                target_resolve_date: row.x_09 || '',
+                notes: row.x_10 || '',
+                history: parseHistory(row[HISTORY_COL]),
+                _raw: row
+            };
+        }
+
+        // ==================== HISTORY TRACKING ====================
+        function parseHistory(raw) {
+            if (!raw) return [];
+            try {
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function diffFields(oldItem, newData) {
+            const changes = [];
+            for (const key of Object.keys(COLUMNS)) {
+                const oldVal = oldItem ? (oldItem[key] ?? '') : '';
+                const newVal = newData[key] ?? '';
+                if (String(oldVal) !== String(newVal)) {
+                    changes.push({ field: key, label: FIELD_LABELS[key] || key, from: oldVal, to: newVal });
+                }
+            }
+            return changes;
+        }
+
+        function buildHistory(oldItem, newData, action) {
+            const history = oldItem ? (oldItem.history || []) : [];
+            const entry = {
+                ts: new Date().toISOString(),
+                user: (CURRENT_USER && CURRENT_USER.username) || '-',
+                action: action
+            };
+            if (action === 'created') {
+                return [...history, entry];
+            }
+            const changes = diffFields(oldItem, newData);
+            if (changes.length === 0) return null;
+            entry.changes = changes;
+            return [...history, entry];
+        }
+
+        function showHistory(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            const history = item.history || [];
+            const body = document.getElementById('historyModalBody');
+            if (history.length === 0) {
+                body.innerHTML = '<p style="text-align:center;color:#a0aec0;padding:16px 0;">Belum ada riwayat perubahan.</p>';
+            } else {
+                body.innerHTML = history.slice().reverse().map(entry => {
+                    const dateStr = new Date(entry.ts).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+                    let changesHtml;
+                    if (entry.action === 'created') {
+                        changesHtml = '<div style="color:#38a169;font-size:12px;">✨ Data dibuat</div>';
+                    } else if (entry.changes && entry.changes.length) {
+                        changesHtml = entry.changes.map(c => `
+                            <div style="font-size:12px;margin-top:4px;">
+                                <strong>${escapeHtml(c.label)}:</strong>
+                                <span style="color:#e53e3e;text-decoration:line-through;">${escapeHtml(String(c.from ?? '') || '-')}</span>
+                                →
+                                <span style="color:#38a169;">${escapeHtml(String(c.to ?? '') || '-')}</span>
+                            </div>
+                        `).join('');
+                    } else {
+                        changesHtml = '';
+                    }
+                    return `
+                        <div style="border-bottom:1px solid #e2e8f0;padding:10px 0;">
+                            <div style="font-size:11px;color:#718096;">🕘 ${dateStr} — 👤 ${escapeHtml(entry.user)}</div>
+                            ${changesHtml}
+                        </div>
+                    `;
+                }).join('');
+            }
+            document.getElementById('historyModal').classList.add('active');
+        }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                row[col] = data[key] || '';
+            }
+            return row;
+        }
+
+        async function createControl(data) {
+            const row = buildRow(data);
+            row[HISTORY_COL] = JSON.stringify(buildHistory(null, data, 'created'));
+            return await apiFetch(TABLE, '', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function updateControl(id, data) {
+            const row = buildRow(data);
+            const oldItem = allData.find(d => d.id_x === id);
+            const newHistory = buildHistory(oldItem, data, 'updated');
+            row[HISTORY_COL] = JSON.stringify(newHistory || (oldItem ? oldItem.history : []) || []);
+            return await apiFetch(TABLE, `&id_x=${id}`, { method: 'PUT', body: JSON.stringify(row) });
+        }
+
+        async function deleteControlApi(id) {
+            return await apiFetch(TABLE, `&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== REFERENCE PICKER ====================
+        function openRefPicker() {
+            document.getElementById('refPickerModal').classList.add('active');
+            renderRefList();
+        }
+
+        function renderRefList() {
+            const search = document.getElementById('refSearchInput').value.toLowerCase().trim();
+            const container = document.getElementById('refListContainer');
+
+            // Hanya tampilkan yang statusnya deviated atau late (yang bermasalah)
+            const filtered = execData.filter(item =>
+                (item.status === 'deviated' || item.status === 'late') &&
+                (String(item.id_x).includes(search) ||
+                 item.job_name.toLowerCase().includes(search) ||
+                 item.executor.toLowerCase().includes(search))
+            );
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="padding:20px;">
+                        <div class="icon">⚙️</div>
+                        <h3>Tidak ada data</h3>
+                        <p>${execData.length === 0 ? 'Belum ada data di Pelaksanaan' : 'Tidak ada pelaksanaan dengan status deviated atau late'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => `
+                <div style="padding:12px 16px;border-bottom:1px solid #edf2f7;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background 0.15s;"
+                     onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background=''"
+                     onclick="selectRef(${item.id_x}, '${escapeHtml(item.job_name)}')">
+                    <div>
+                        <strong>#${item.id_x}</strong> - ${escapeHtml(item.job_name)}
+                        <br><span style="font-size:11px;color:#a0aec0;">Executor: ${escapeHtml(item.executor)} | Status: ${item.status === 'deviated' ? '❌ Menyimpang' : '⚠️ Telat'}</span>
+                    </div>
+                    <span class="badge-status ${item.status}">${item.status === 'deviated' ? '❌ Menyimpang' : '⚠️ Telat'}</span>
+                </div>
+            `).join('');
+        }
+
+        function selectRef(id, name) {
+            selectedExecId = id;
+            document.getElementById('refExecutionId').value = id;
+            document.getElementById('refExecutionName').value = name;
+            closeModal('refPickerModal');
+        }
+
+        function clearRef() {
+            selectedExecId = null;
+            document.getElementById('refExecutionId').value = '';
+            document.getElementById('refExecutionName').value = '';
+        }
+
+        // ==================== RENDER ====================
+        function renderList() {
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = allData.filter(item =>
+                item.job_name.toLowerCase().includes(search) ||
+                item.responsible_person.toLowerCase().includes(search) ||
+                item.root_cause.toLowerCase().includes(search) ||
+                item.corrective_action.toLowerCase().includes(search) ||
+                item.notes.toLowerCase().includes(search) ||
+                String(item.ref_execution_id).includes(search)
+            );
+
+            const body = document.getElementById('listBody');
+
+            // Update stats
+            updateStats();
+
+            if (filtered.length === 0) {
+                body.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">${allData.length === 0 ? '🎯' : '🔍'}</div>
+                        <h3>${allData.length === 0 ? 'Belum ada catatan pengendalian' : 'Tidak ditemukan'}</h3>
+                        <p>${allData.length === 0 ? 'Klik "Buat Pengendalian" untuk mencatat deviasi dan tindakan korektif' : 'Coba dengan kata kunci lain'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const statusLabels = {
+                'open': '🔶 Open',
+                'in_progress': '🔄 In Progress',
+                'resolved': '✅ Resolved'
+            };
+
+            const deviationLabels = {
+                'telat': '⏰ Telat dari Jadwal',
+                'kualitas_rendah': '📉 Kualitas Rendah',
+                'biaya_lebih': '💰 Biaya Melebihi Anggaran',
+                'scope_berubah': '📋 Scope Berubah',
+                'sumber_daya': '🧰 Masalah Sumber Daya',
+                'komunikasi': '💬 Masalah Komunikasi',
+                'lainnya': '📌 Lainnya'
+            };
+
+            body.innerHTML = filtered.map(item => {
+                const targetDate = item.target_resolve_date ? new Date(item.target_resolve_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+
+                return `
+                    <div class="list-item">
+                        <div class="id">#${item.id_x}</div>
+                        <div class="field">
+                            <span class="label">Pekerjaan:</span> ${escapeHtml(item.job_name) || '-'}
+                            ${item.ref_execution_id ? `<br><span style="font-size:10px;color:#718096;">Ref Pelaksanaan: #${item.ref_execution_id}</span>` : ''}
+                        </div>
+                        <div class="field"><span class="label">Ref Pelaksanaan:</span> ${item.ref_execution_id ? `#${item.ref_execution_id}` : '-'}</div>
+                        <div class="field"><span class="label">Akar Masalah:</span> ${escapeHtml(item.root_cause) ? item.root_cause.substring(0, 25) + (item.root_cause.length > 25 ? '...' : '') : '-'}</div>
+                        <div class="field"><span class="label">Status:</span> <span class="badge-status ${item.status}">${statusLabels[item.status] || item.status}</span></div>
+                        <div class="field">
+                            <span class="label">Tindakan:</span> ${escapeHtml(item.corrective_action) ? item.corrective_action.substring(0, 20) + (item.corrective_action.length > 20 ? '...' : '') : '-'}
+                            ${item.target_resolve_date ? `<br><span style="font-size:10px;color:#718096;">Target: ${targetDate}</span>` : ''}
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn-outline btn-xs" onclick="showHistory(${item.id_x})" title="Riwayat perubahan">🕘${item.history && item.history.length ? ` <span style="font-size:9px;">${item.history.length}</span>` : ''}</button>
+                            ${ownsItem(item) ? `<button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>` : ''}
+                            ${isAdmin(CURRENT_USER) ? `<button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>` : ''}
+                            ${(!ownsItem(item) && !isAdmin(CURRENT_USER)) ? `<span style="font-size:10px;color:#a0aec0;">🔒 milik lain</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateStats() {
+            const total = allData.length;
+            const open = allData.filter(d => d.status === 'open').length;
+            const inProgress = allData.filter(d => d.status === 'in_progress').length;
+            const resolved = allData.filter(d => d.status === 'resolved').length;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statOpen').textContent = open;
+            document.getElementById('statInProgress').textContent = inProgress;
+            document.getElementById('statResolved').textContent = resolved;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function refreshData() {
+            showToast('🔄 Memuat data...', 'info');
+            await loadExecData();
+            await fetchData();
+            renderList();
+            showToast(`✅ ${allData.length} pengendalian dimuat`, 'success');
+        }
+
+        // ==================== MODAL FORM ====================
+        function openAddModal() {
+            console.log('🎯 Opening Add Modal');
+            currentEditId = null;
+            selectedExecId = null;
+            document.getElementById('editId').value = '';
+            document.getElementById('formModalTitle').textContent = '🎯 Buat Pengendalian';
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.getElementById('saveBtn').textContent = '💾 Simpan';
+
+            const future = new Date();
+            future.setDate(future.getDate() + 7);
+            const futureStr = future.toISOString().split('T')[0];
+
+            clearRef();
+            document.getElementById('jobName').value = '';
+            document.getElementById('deviationType').value = 'telat';
+            document.getElementById('rootCause').value = '';
+            document.getElementById('correctiveAction').value = '';
+            document.getElementById('responsiblePerson').value = CURRENT_USER.username;
+            document.getElementById('status').value = 'open';
+            document.getElementById('targetResolveDate').value = futureStr;
+            document.getElementById('notes').value = '';
+
+            document.getElementById('formModal').classList.add('active');
+            console.log('✅ Add Modal opened');
+        }
+
+        async function openEditModal(id) {
+            console.log('✏️ Opening Edit Modal for ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+            if (!ownsItem(item)) {
+                showToast('❌ Anda tidak punya akses untuk mengedit data ini', 'error');
+                return;
+            }
+
+            currentEditId = id;
+            selectedExecId = item.ref_execution_id;
+            document.getElementById('editId').value = id;
+            document.getElementById('formModalTitle').textContent = `✏️ Edit Pengendalian: ${item.job_name}`;
+            document.getElementById('deleteBtn').style.display = isAdmin(CURRENT_USER) ? 'inline-flex' : 'none';
+            document.getElementById('saveBtn').textContent = '💾 Update';
+
+            document.getElementById('refExecutionId').value = item.ref_execution_id || '';
+            document.getElementById('refExecutionName').value = item.ref_execution_name || '';
+            document.getElementById('jobName').value = item.job_name || '';
+            document.getElementById('deviationType').value = item.deviation_type || 'telat';
+            document.getElementById('rootCause').value = item.root_cause || '';
+            document.getElementById('correctiveAction').value = item.corrective_action || '';
+            document.getElementById('responsiblePerson').value = item.responsible_person || '';
+            document.getElementById('status').value = item.status || 'open';
+            document.getElementById('targetResolveDate').value = item.target_resolve_date || '';
+            document.getElementById('notes').value = item.notes || '';
+
+            document.getElementById('formModal').classList.add('active');
+            console.log('✅ Edit Modal opened');
+        }
+
+        function closeModal(id) {
+            console.log('🔒 Closing modal:', id);
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // ==================== SAVE ====================
+        async function saveControl() {
+            console.log('💾 Saving control...');
+            const jobName = document.getElementById('jobName').value.trim();
+            const responsiblePerson = document.getElementById('responsiblePerson').value.trim();
+
+            if (!jobName) {
+                showToast('Nama Pekerjaan wajib diisi', 'error');
+                document.getElementById('jobName').focus();
+                return;
+            }
+
+            if (!responsiblePerson) {
+                showToast('Penanggung Jawab wajib diisi', 'error');
+                document.getElementById('responsiblePerson').focus();
+                return;
+            }
+
+            const data = {
+                ref_execution_id: parseInt(document.getElementById('refExecutionId').value) || null,
+                ref_execution_name: document.getElementById('refExecutionName').value.trim(),
+                job_name: jobName,
+                deviation_type: document.getElementById('deviationType').value,
+                root_cause: document.getElementById('rootCause').value.trim(),
+                corrective_action: document.getElementById('correctiveAction').value.trim(),
+                responsible_person: responsiblePerson,
+                status: document.getElementById('status').value,
+                target_resolve_date: document.getElementById('targetResolveDate').value,
+                notes: document.getElementById('notes').value.trim()
+            };
+
+            console.log('📦 Data to save:', data);
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Menyimpan...';
+
+            try {
+                if (currentEditId) {
+                    console.log('🔄 Updating control ID:', currentEditId);
+                    await updateControl(currentEditId, data);
+                    showToast('✅ Pengendalian berhasil diupdate!', 'success');
+                } else {
+                    console.log('➕ Creating new control');
+                    await createControl(data);
+                    showToast('✅ Pengendalian berhasil dibuat!', 'success');
+                }
+                await refreshData();
+                closeModal('formModal');
+                console.log('✅ Save complete');
+            } catch (e) {
+                console.error('❌ Save failed:', e);
+                showToast('❌ Gagal menyimpan: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = currentEditId ? '💾 Update' : '💾 Simpan';
+            }
+        }
+
+        // ==================== DELETE ====================
+        async function confirmDelete(id) {
+            console.log('🗑️ Confirm delete ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            if (!isAdmin(CURRENT_USER)) {
+                showToast('❌ Hanya admin yang bisa menghapus data', 'error');
+                return;
+            }
+            if (!confirm(`Hapus pengendalian "${item.job_name}" (ID: ${id})?`)) return;
+
+            try {
+                await deleteControlApi(id);
+                showToast('✅ Pengendalian berhasil dihapus', 'success');
+                await refreshData();
+                console.log('✅ Deleted control ID:', id);
+            } catch (e) {
+                console.error('❌ Delete failed:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteControl() {
+            const id = parseInt(document.getElementById('editId').value);
+            console.log('🗑️ Delete control from modal, ID:', id);
+            if (!id) return;
+            if (!isAdmin(CURRENT_USER)) {
+                showToast('❌ Hanya admin yang bisa menghapus data', 'error');
+                return;
+            }
+            if (!confirm('Hapus pengendalian ini secara permanen?')) return;
+
+            try {
+                await deleteControlApi(id);
+                showToast('✅ Pengendalian berhasil dihapus', 'success');
+                closeModal('formModal');
+                await refreshData();
+                console.log('✅ Deleted control ID:', id);
+            } catch (e) {
+                console.error('❌ Delete failed:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'info') {
+            console.log(`📢 Toast: [${type}] ${message}`);
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ==================== KEYBOARD ====================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => {
+                    m.classList.remove('active');
+                });
+            }
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        // ==================== DEBUG ====================
+        window.debug = {
+            allData: () => allData,
+            execData: () => execData,
+            refresh: refreshData,
+            openAdd: openAddModal,
+            TABLE: TABLE,
+            COLUMNS: COLUMNS
+        };
+
+        console.log('🎯 Pengendalian Loaded!');
+        console.log('📡 Table:', TABLE);
+        console.log('📊 Type "debug" in console for helpers');
+    </script>
+</body>
+</html>

@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perencanaan - PDCA Internal</title>
+    <script>
+        // ==================== AUTH GUARD (Sales Tools Suite - SSO) ====================
+        const AUTH_SESSION_KEY = 'lidan_sales_session';
+        const AUTH_LOGIN_PAGE = 'login.html';
+
+        function getAuthSession() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+        function clearAuthSession() { localStorage.removeItem(AUTH_SESSION_KEY); }
+        function isSupervisor(session) { return !!session && String(session.role || '').toLowerCase() === 'spv'; }
+        function isAdmin(session) { return !!session && String(session.username || '').toLowerCase() === 'admin'; }
+        function logout() { clearAuthSession(); window.location.href = AUTH_LOGIN_PAGE; }
+
+        let CURRENT_USER = getAuthSession();
+        if (!CURRENT_USER || !CURRENT_USER.username) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.replace(AUTH_LOGIN_PAGE + '?return=' + returnUrl);
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === AUTH_SESSION_KEY && !e.newValue) {
+                window.location.href = AUTH_LOGIN_PAGE;
+            }
+        });
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #1a2332;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 .pdca-badge {
+            background: #ed8936;
+            color: white;
+            font-size: 11px;
+            padding: 2px 12px;
+            border-radius: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #2d3748;
+        }
+        .user-badge .role-tag {
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            text-transform: capitalize;
+        }
+        .user-badge .role-tag.spv { background: #9f7aea; }
+        .user-badge .role-tag.sales { background: #4299e1; }
+        .btn-logout {
+            background: #fc8181;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-logout:hover { background: #f56565; }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #f7fafc;
+            padding: 0 15px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            transition: border 0.2s;
+        }
+
+        .search-box:focus-within {
+            border-color: #4299e1;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 14px;
+            outline: none;
+            width: 200px;
+            color: #2d3748;
+        }
+
+        .search-box .icon {
+            color: #a0aec0;
+            font-size: 18px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66,153,225,0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #fc8181;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #f56565;
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-outline:hover {
+            background: #f7fafc;
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-xs {
+            padding: 3px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+
+        .btn-purple {
+            background: #9f7aea;
+            color: white;
+        }
+        .btn-purple:hover {
+            background: #805ad5;
+        }
+
+        .list-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .list-header {
+            display: grid;
+            grid-template-columns: 60px 1.2fr 1fr 0.8fr 1fr 0.8fr 0.8fr 160px;
+            gap: 8px;
+            padding: 14px 20px;
+            background: #f7fafc;
+            font-weight: 700;
+            font-size: 11px;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .list-item {
+            display: grid;
+            grid-template-columns: 60px 1.2fr 1fr 0.8fr 1fr 0.8fr 0.8fr 160px;
+            gap: 8px;
+            padding: 14px 20px;
+            border-bottom: 1px solid #edf2f7;
+            align-items: center;
+            transition: background 0.15s;
+        }
+
+        .list-item:hover {
+            background: #f7fafc;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item .id {
+            font-weight: 700;
+            color: #4299e1;
+            font-size: 13px;
+        }
+
+        .list-item .field {
+            color: #2d3748;
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .list-item .field .label {
+            display: none;
+            font-weight: 600;
+            color: #a0aec0;
+            font-size: 11px;
+        }
+
+        .list-item .actions {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .badge-status {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .badge-status.draft {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        .badge-status.active {
+            background: #bee3f8;
+            color: #2a69ac;
+        }
+        .badge-status.completed {
+            background: #c6f6d5;
+            color: #276749;
+        }
+        .badge-status.deviated {
+            background: #fefcbf;
+            color: #975a16;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #a0aec0;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .empty-state h3 {
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 95vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-close {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: #fc8181;
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            background: #f56565;
+            transform: rotate(90deg);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a2332;
+            margin-bottom: 20px;
+            padding-right: 50px;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #edf2f7;
+            flex-wrap: wrap;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            max-width: 400px;
+        }
+
+        .toast.success {
+            background: #48bb78;
+        }
+        .toast.error {
+            background: #fc8181;
+        }
+        .toast.info {
+            background: #4299e1;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stats-summary .stat-card {
+            background: white;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .stats-summary .stat-card .number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .stats-summary .stat-card .label {
+            font-size: 10px;
+            color: #a0aec0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stats-summary .stat-card .number.active { color: #4299e1; }
+        .stats-summary .stat-card .number.completed { color: #48bb78; }
+        .stats-summary .stat-card .number.deviated { color: #ed8936; }
+
+        @media (max-width: 992px) {
+            .list-header {
+                display: none;
+            }
+            .list-item {
+                grid-template-columns: 1fr;
+                gap: 4px;
+                padding: 16px;
+                border-bottom: 2px solid #edf2f7;
+            }
+            .list-item .id {
+                font-size: 12px;
+            }
+            .list-item .field .label {
+                display: inline;
+            }
+            .list-item .actions {
+                margin-top: 6px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box input {
+                width: 100%;
+            }
+            .modal {
+                padding: 20px;
+            }
+            .stats-summary {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+            .stats-summary {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .modal::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal::-webkit-scrollbar-track {
+            background: #f7fafc;
+        }
+        .modal::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Reference selector styling */
+        .ref-selector {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .ref-selector input {
+            flex: 1;
+        }
+        .ref-selector .btn-sm {
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>
+                📋 Perencanaan
+                <span class="pdca-badge">PLAN</span>
+            </h1>
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Cari rencana..." oninput="renderList()">
+                </div>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ Buat Rencana</button>
+                <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('infoModal').classList.add('active')" title="Info & Panduan">ℹ️ Info</button>
+                <div class="user-badge" id="userBadge">
+                    <span id="userBadgeName">👤 -</span>
+                    <span class="role-tag" id="userBadgeRole">-</span>
+                    <a href="index.html" class="btn btn-outline btn-sm" style="text-decoration:none;">🏠 Home</a>
+                    <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS SUMMARY -->
+        <div class="stats-summary" id="statsSummary">
+            <div class="stat-card">
+                <div class="number" id="statTotal">0</div>
+                <div class="label">Total Rencana</div>
+            </div>
+            <div class="stat-card">
+                <div class="number active" id="statActive">0</div>
+                <div class="label">🔄 Aktif</div>
+            </div>
+            <div class="stat-card">
+                <div class="number completed" id="statCompleted">0</div>
+                <div class="label">✅ Selesai</div>
+            </div>
+            <div class="stat-card">
+                <div class="number deviated" id="statDeviated">0</div>
+                <div class="label">⚠️ Menyimpang</div>
+            </div>
+        </div>
+
+        <!-- LIST -->
+        <div class="list-container">
+            <div class="list-header">
+                <span>ID</span>
+                <span>Pekerjaan / Target</span>
+                <span>Assignee</span>
+                <span>Mulai</span>
+                <span>Target Selesai</span>
+                <span>Status</span>
+                <span>Progress</span>
+                <span>Aksi</span>
+            </div>
+            <div id="listBody">
+                <div class="empty-state">
+                    <div class="icon">📋</div>
+                    <h3>Belum ada rencana</h3>
+                    <p>Klik "Buat Rencana" untuk mulai merencanakan pekerjaan</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL INFO -->
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
+            <div class="modal-title">📋 Panduan Perencanaan (PLAN)</div>
+            <div class="modal-body">
+                <p><strong>Perencanaan</strong> adalah tahap kedua dalam siklus PDCA. Di sini kita
+                mengambil satu item dari <strong>Analisa Pekerjaan</strong> (SOP/cara kerja),
+                lalu menetapkan siapa yang akan mengerjakan, kapan mulai, target selesai,
+                dan target/goal yang diharapkan.</p>
+
+                <h4 style="margin:4px 0 2px;">📌 Field-field Perencanaan</h4>
+                <ul style="margin:0 0 8px 18px; line-height:1.9;">
+                    <li><b>Referensi Analisa</b> — ID dari analisa_pekerjaan yang menjadi acuan SOP</li>
+                    <li><b>Nama Pekerjaan</b> — judul/deskripsi pekerjaan (bisa sama dengan analisa)</li>
+                    <li><b>Assignee</b> — orang yang ditugaskan mengerjakan</li>
+                    <li><b>Tanggal Mulai</b> — kapan pekerjaan mulai dikerjakan</li>
+                    <li><b>Target Selesai</b> — deadline yang diharapkan</li>
+                    <li><b>Target / Goal</b> — hasil yang diharapkan (angka, kualitas, atau output)</li>
+                    <li><b>Keterangan</b> — catatan tambahan</li>
+                </ul>
+
+                <h4 style="margin:4px 0 2px;">🚦 Status Rencana</h4>
+                <ul style="margin:0 0 8px 18px; line-height:1.9;">
+                    <li>📝 <b>Draft</b> — masih disusun, belum aktif</li>
+                    <li>🔄 <b>Aktif</b> — sedang berjalan</li>
+                    <li>✅ <b>Selesai</b> — sudah selesai dikerjakan</li>
+                    <li>⚠️ <b>Menyimpang</b> — ada deviasi dari rencana (trigger pengendalian)</li>
+                </ul>
+
+                <div style="background:#fefcbf;border-left:4px solid #ed8936;border-radius:8px;padding:10px 14px;font-size:13px;">
+                    💡 <b>Tips:</b> Rencana yang "Menyimpang" akan otomatis memicu pembuatan
+                    catatan Pengendalian. Pastikan target/goal ditulis jelas agar mudah dievaluasi
+                    nanti di Pelaksanaan &amp; Pengendalian.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL HISTORY -->
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('historyModal')">✕</button>
+            <div class="modal-title">🕘 Riwayat Perubahan</div>
+            <div class="modal-body" id="historyModalBody"></div>
+        </div>
+    </div>
+
+    <!-- MODAL REFERENCE PICKER -->
+    <div class="modal-overlay" id="refPickerModal">
+        <div class="modal" style="max-width:700px;">
+            <button class="modal-close" onclick="closeModal('refPickerModal')">✕</button>
+            <div class="modal-title">🗂️ Pilih Referensi Analisa Pekerjaan</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <input type="text" id="refSearchInput" placeholder="Cari analisa..." oninput="renderRefList()" style="padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;">
+                </div>
+                <div id="refListContainer" style="max-height:400px;overflow-y:auto;">
+                    <div class="empty-state" style="padding:20px;">
+                        <div class="icon">🗂️</div>
+                        <h3>Memuat data...</h3>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeModal('refPickerModal')">Batal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORM -->
+    <div class="modal-overlay" id="formModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('formModal')">✕</button>
+            <div class="modal-title" id="formModalTitle">📋 Buat Rencana</div>
+            <div class="modal-body">
+                <input type="hidden" id="editId" value="">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📌 Referensi Analisa Pekerjaan</label>
+                        <div class="ref-selector">
+                            <input type="text" id="refAnalisaId" placeholder="ID Analisa (contoh: 1)" style="flex:0 0 80px;">
+                            <input type="text" id="refAnalisaName" placeholder="Nama pekerjaan dari analisa" readonly style="background:#edf2f7;flex:1;">
+                            <button class="btn btn-primary btn-sm" type="button" onclick="openRefPicker()">📂 Pilih</button>
+                            <button class="btn btn-outline btn-sm" type="button" onclick="clearRef()">✕</button>
+                        </div>
+                        <small style="color:#a0aec0;">Pilih dari Analisa Pekerjaan sebagai acuan SOP</small>
+                    </div>
+                    <div class="form-group">
+                        <label>📌 Nama Pekerjaan *</label>
+                        <input type="text" id="jobName" placeholder="Nama pekerjaan" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>👤 Assignee *</label>
+                        <input type="text" id="assignee" placeholder="Nama penanggung jawab" required>
+                    </div>
+                    <div class="form-group">
+                        <label>📂 Status</label>
+                        <select id="status">
+                            <option value="draft">📝 Draft</option>
+                            <option value="active" selected>🔄 Aktif</option>
+                            <option value="completed">✅ Selesai</option>
+                            <option value="deviated">⚠️ Menyimpang</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📅 Tanggal Mulai *</label>
+                        <input type="date" id="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>📅 Target Selesai *</label>
+                        <input type="date" id="targetDate" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>🎯 Target / Goal</label>
+                    <textarea id="targetGoal" placeholder="Target yang diharapkan (angka, kualitas, atau output)..." rows="2"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Keterangan / Catatan</label>
+                    <textarea id="notes" placeholder="Catatan tambahan..." rows="2"></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-danger" id="deleteBtn" onclick="deletePlan()" style="display:none;">🗑️ Hapus</button>
+                    <button class="btn btn-outline" onclick="closeModal('formModal')">Batal</button>
+                    <button class="btn btn-primary" id="saveBtn" onclick="savePlan()">💾 Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'perencanaan';
+        const REF_TABLE = 'analisa_pekerjaan';
+        const SECRET = 'admin';
+
+        // ==================== STATE ====================
+        let allData = [];
+        let refData = [];
+        let currentEditId = null;
+        let selectedRefId = null;
+
+        const COLUMNS = {
+            ref_analisa_id: 'x_01',
+            ref_analisa_name: 'x_02',
+            job_name: 'x_03',
+            assignee: 'x_04',
+            status: 'x_05',
+            start_date: 'x_06',
+            target_date: 'x_07',
+            target_goal: 'x_08',
+            notes: 'x_09'
+        };
+
+        const HISTORY_COL = 'x_25';
+        const FIELD_LABELS = {
+            ref_analisa_id: '📌 Referensi Analisa ID',
+            ref_analisa_name: '📌 Referensi Analisa Nama',
+            job_name: '📌 Nama Pekerjaan',
+            assignee: '👤 Assignee',
+            status: '📂 Status',
+            start_date: '📅 Tanggal Mulai',
+            target_date: '📅 Target Selesai',
+            target_goal: '🎯 Target / Goal',
+            notes: '📝 Keterangan'
+        };
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('📋 Perencanaan Started');
+            console.log('📡 Table:', TABLE);
+            initUserBadge();
+            loadRefData();
+            refreshData();
+        });
+
+        function initUserBadge() {
+            const nameEl = document.getElementById('userBadgeName');
+            const roleEl = document.getElementById('userBadgeRole');
+            if (nameEl) nameEl.textContent = '👤 ' + (CURRENT_USER.username || '-');
+            if (roleEl) {
+                roleEl.textContent = CURRENT_USER.role || '-';
+                roleEl.className = 'role-tag ' + (isSupervisor(CURRENT_USER) ? 'spv' : 'sales');
+            }
+        }
+
+        function ownsItem(item) {
+            return isSupervisor(CURRENT_USER) || item.assignee === CURRENT_USER.username;
+        }
+
+        // ==================== API HELPERS ====================
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': TABLE,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function apiFetch(table, endpoint, options = {}) {
+            const url = `${API_URL}?table=${table}${endpoint}`;
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        ...getHeaders(),
+                        ...(options.headers || {})
+                    }
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error || err.message || `HTTP ${response.status}`);
+                }
+                return await response.json();
+            } catch (e) {
+                console.error('❌ API Error:', e.message);
+                throw e;
+            }
+        }
+
+        // ==================== REF DATA ====================
+        async function loadRefData() {
+            try {
+                const result = await apiFetch(REF_TABLE, '');
+                if (result.success && result.data) {
+                    refData = result.data.map(row => ({
+                        id_x: row.id_x,
+                        job_name: row.x_01 || '',
+                        category: row.x_02 || '',
+                        difficulty: row.x_03 || '',
+                        status: row.x_09 || 'draft'
+                    }));
+                }
+                console.log('📚 Loaded ref data:', refData.length);
+            } catch (e) {
+                console.error('❌ Failed to load ref data:', e);
+                refData = [];
+            }
+        }
+
+        function getRefName(id) {
+            const found = refData.find(r => r.id_x === id);
+            return found ? found.job_name : null;
+        }
+
+        // ==================== DATA CRUD ====================
+        async function fetchData() {
+            try {
+                const result = await apiFetch(TABLE, '');
+                if (result.success && result.data) {
+                    allData = result.data.map(row => parseRow(row));
+                    if (!isSupervisor(CURRENT_USER) && !isAdmin(CURRENT_USER)) {
+                        allData = allData.filter(item => item.assignee === CURRENT_USER.username);
+                    }
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            return {
+                id_x: row.id_x,
+                ref_analisa_id: parseInt(row.x_01) || null,
+                ref_analisa_name: row.x_02 || '',
+                job_name: row.x_03 || '',
+                assignee: row.x_04 || '',
+                status: row.x_05 || 'draft',
+                start_date: row.x_06 || '',
+                target_date: row.x_07 || '',
+                target_goal: row.x_08 || '',
+                notes: row.x_09 || '',
+                history: parseHistory(row[HISTORY_COL]),
+                _raw: row
+            };
+        }
+
+        // ==================== HISTORY TRACKING ====================
+        function parseHistory(raw) {
+            if (!raw) return [];
+            try {
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function diffFields(oldItem, newData) {
+            const changes = [];
+            for (const key of Object.keys(COLUMNS)) {
+                const oldVal = oldItem ? (oldItem[key] ?? '') : '';
+                const newVal = newData[key] ?? '';
+                if (String(oldVal) !== String(newVal)) {
+                    changes.push({ field: key, label: FIELD_LABELS[key] || key, from: oldVal, to: newVal });
+                }
+            }
+            return changes;
+        }
+
+        function buildHistory(oldItem, newData, action) {
+            const history = oldItem ? (oldItem.history || []) : [];
+            const entry = {
+                ts: new Date().toISOString(),
+                user: (CURRENT_USER && CURRENT_USER.username) || '-',
+                action: action
+            };
+            if (action === 'created') {
+                return [...history, entry];
+            }
+            const changes = diffFields(oldItem, newData);
+            if (changes.length === 0) return null;
+            entry.changes = changes;
+            return [...history, entry];
+        }
+
+        function showHistory(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            const history = item.history || [];
+            const body = document.getElementById('historyModalBody');
+            if (history.length === 0) {
+                body.innerHTML = '<p style="text-align:center;color:#a0aec0;padding:16px 0;">Belum ada riwayat perubahan.</p>';
+            } else {
+                body.innerHTML = history.slice().reverse().map(entry => {
+                    const dateStr = new Date(entry.ts).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+                    let changesHtml;
+                    if (entry.action === 'created') {
+                        changesHtml = '<div style="color:#38a169;font-size:12px;">✨ Data dibuat</div>';
+                    } else if (entry.changes && entry.changes.length) {
+                        changesHtml = entry.changes.map(c => `
+                            <div style="font-size:12px;margin-top:4px;">
+                                <strong>${escapeHtml(c.label)}:</strong>
+                                <span style="color:#e53e3e;text-decoration:line-through;">${escapeHtml(String(c.from ?? '') || '-')}</span>
+                                →
+                                <span style="color:#38a169;">${escapeHtml(String(c.to ?? '') || '-')}</span>
+                            </div>
+                        `).join('');
+                    } else {
+                        changesHtml = '';
+                    }
+                    return `
+                        <div style="border-bottom:1px solid #e2e8f0;padding:10px 0;">
+                            <div style="font-size:11px;color:#718096;">🕘 ${dateStr} — 👤 ${escapeHtml(entry.user)}</div>
+                            ${changesHtml}
+                        </div>
+                    `;
+                }).join('');
+            }
+            document.getElementById('historyModal').classList.add('active');
+        }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                row[col] = data[key] || '';
+            }
+            return row;
+        }
+
+        async function createPlan(data) {
+            const row = buildRow(data);
+            row[HISTORY_COL] = JSON.stringify(buildHistory(null, data, 'created'));
+            return await apiFetch(TABLE, '', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function updatePlan(id, data) {
+            const row = buildRow(data);
+            const oldItem = allData.find(d => d.id_x === id);
+            const newHistory = buildHistory(oldItem, data, 'updated');
+            row[HISTORY_COL] = JSON.stringify(newHistory || (oldItem ? oldItem.history : []) || []);
+            return await apiFetch(TABLE, `&id_x=${id}`, { method: 'PUT', body: JSON.stringify(row) });
+        }
+
+        async function deletePlanApi(id) {
+            return await apiFetch(TABLE, `&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== REFERENCE PICKER ====================
+        function openRefPicker() {
+            document.getElementById('refPickerModal').classList.add('active');
+            renderRefList();
+        }
+
+        function renderRefList() {
+            const search = document.getElementById('refSearchInput').value.toLowerCase().trim();
+            const container = document.getElementById('refListContainer');
+
+            const filtered = refData.filter(item =>
+                String(item.id_x).includes(search) ||
+                item.job_name.toLowerCase().includes(search) ||
+                item.category.toLowerCase().includes(search)
+            );
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="padding:20px;">
+                        <div class="icon">🗂️</div>
+                        <h3>Tidak ada data</h3>
+                        <p>${refData.length === 0 ? 'Belum ada data di Analisa Pekerjaan' : 'Coba dengan kata kunci lain'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => `
+                <div style="padding:12px 16px;border-bottom:1px solid #edf2f7;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background 0.15s;"
+                     onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background=''"
+                     onclick="selectRef(${item.id_x}, '${escapeHtml(item.job_name)}')">
+                    <div>
+                        <strong>#${item.id_x}</strong> - ${escapeHtml(item.job_name)}
+                        <br><span style="font-size:11px;color:#a0aec0;">${escapeHtml(item.category)} | Level: ${escapeHtml(item.difficulty)}</span>
+                    </div>
+                    <span class="badge-status ${item.status}">${item.status === 'siap' ? '✅ Siap' : item.status === 'draft' ? '📝 Draft' : '🔄 Revisi'}</span>
+                </div>
+            `).join('');
+        }
+
+        function selectRef(id, name) {
+            selectedRefId = id;
+            document.getElementById('refAnalisaId').value = id;
+            document.getElementById('refAnalisaName').value = name;
+            closeModal('refPickerModal');
+        }
+
+        function clearRef() {
+            selectedRefId = null;
+            document.getElementById('refAnalisaId').value = '';
+            document.getElementById('refAnalisaName').value = '';
+        }
+
+        // ==================== RENDER ====================
+        function renderList() {
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = allData.filter(item =>
+                item.job_name.toLowerCase().includes(search) ||
+                item.assignee.toLowerCase().includes(search) ||
+                item.target_goal.toLowerCase().includes(search) ||
+                item.notes.toLowerCase().includes(search) ||
+                String(item.ref_analisa_id).includes(search)
+            );
+
+            const body = document.getElementById('listBody');
+
+            // Update stats
+            updateStats();
+
+            if (filtered.length === 0) {
+                body.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">${allData.length === 0 ? '📋' : '🔍'}</div>
+                        <h3>${allData.length === 0 ? 'Belum ada rencana' : 'Tidak ditemukan'}</h3>
+                        <p>${allData.length === 0 ? 'Klik "Buat Rencana" untuk mulai merencanakan pekerjaan' : 'Coba dengan kata kunci lain'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const statusLabels = {
+                'draft': '📝 Draft',
+                'active': '🔄 Aktif',
+                'completed': '✅ Selesai',
+                'deviated': '⚠️ Menyimpang'
+            };
+
+            body.innerHTML = filtered.map(item => {
+                const startDate = item.start_date ? new Date(item.start_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+                const targetDate = item.target_date ? new Date(item.target_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+
+                // Progress indicator (based on dates)
+                let progress = 0;
+                if (item.start_date && item.target_date) {
+                    const start = new Date(item.start_date);
+                    const target = new Date(item.target_date);
+                    const now = new Date();
+                    if (now < start) progress = 0;
+                    else if (now > target) progress = 100;
+                    else {
+                        const total = target - start;
+                        const elapsed = now - start;
+                        progress = Math.min(100, Math.round((elapsed / total) * 100));
+                    }
+                }
+                if (item.status === 'completed') progress = 100;
+                if (item.status === 'deviated') progress = Math.min(progress, 80);
+
+                const progressColor = progress >= 100 ? '#48bb78' : progress >= 70 ? '#48bb78' : progress >= 40 ? '#ed8936' : '#fc8181';
+
+                return `
+                    <div class="list-item">
+                        <div class="id">#${item.id_x}</div>
+                        <div class="field">
+                            <span class="label">Pekerjaan:</span> ${escapeHtml(item.job_name) || '-'}
+                            ${item.ref_analisa_id ? `<br><span style="font-size:10px;color:#718096;">Ref: #${item.ref_analisa_id} ${escapeHtml(item.ref_analisa_name) || ''}</span>` : ''}
+                        </div>
+                        <div class="field"><span class="label">Assignee:</span> ${escapeHtml(item.assignee) || '-'}</div>
+                        <div class="field"><span class="label">Mulai:</span> ${startDate}</div>
+                        <div class="field"><span class="label">Target:</span> ${targetDate}</div>
+                        <div class="field"><span class="label">Status:</span> <span class="badge-status ${item.status}">${statusLabels[item.status] || item.status}</span></div>
+                        <div class="field">
+                            <span class="label">Progress:</span>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <div style="flex:1;height:6px;background:#edf2f7;border-radius:4px;overflow:hidden;min-width:40px;">
+                                    <div style="width:${progress}%;height:100%;background:${progressColor};border-radius:4px;transition:width 0.3s;"></div>
+                                </div>
+                                <span style="font-size:10px;font-weight:600;color:#4a5568;">${progress}%</span>
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn-outline btn-xs" onclick="showHistory(${item.id_x})" title="Riwayat perubahan">🕘${item.history && item.history.length ? ` <span style="font-size:9px;">${item.history.length}</span>` : ''}</button>
+                            ${ownsItem(item) ? `<button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>` : ''}
+                            ${isAdmin(CURRENT_USER) ? `<button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>` : ''}
+                            ${(!ownsItem(item) && !isAdmin(CURRENT_USER)) ? `<span style="font-size:10px;color:#a0aec0;">🔒 milik lain</span>` : ''}
+                            ${item.status === 'deviated' ? `<span style="font-size:10px;color:#ed8936;">⚠️</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateStats() {
+            const total = allData.length;
+            const active = allData.filter(d => d.status === 'active').length;
+            const completed = allData.filter(d => d.status === 'completed').length;
+            const deviated = allData.filter(d => d.status === 'deviated').length;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statActive').textContent = active;
+            document.getElementById('statCompleted').textContent = completed;
+            document.getElementById('statDeviated').textContent = deviated;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function refreshData() {
+            showToast('🔄 Memuat data...', 'info');
+            await loadRefData();
+            await fetchData();
+            renderList();
+            showToast(`✅ ${allData.length} rencana dimuat`, 'success');
+        }
+
+        // ==================== MODAL FORM ====================
+        function openAddModal() {
+            console.log('📋 Opening Add Modal');
+            currentEditId = null;
+            selectedRefId = null;
+            document.getElementById('editId').value = '';
+            document.getElementById('formModalTitle').textContent = '📋 Buat Rencana';
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.getElementById('saveBtn').textContent = '💾 Simpan';
+
+            const now = new Date().toISOString().split('T')[0];
+            const future = new Date();
+            future.setDate(future.getDate() + 7);
+            const futureStr = future.toISOString().split('T')[0];
+
+            clearRef();
+            document.getElementById('jobName').value = '';
+            document.getElementById('assignee').value = CURRENT_USER.username;
+            document.getElementById('status').value = 'draft';
+            document.getElementById('startDate').value = now;
+            document.getElementById('targetDate').value = futureStr;
+            document.getElementById('targetGoal').value = '';
+            document.getElementById('notes').value = '';
+
+            document.getElementById('formModal').classList.add('active');
+            console.log('✅ Add Modal opened');
+        }
+
+        async function openEditModal(id) {
+            console.log('✏️ Opening Edit Modal for ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+            if (!ownsItem(item)) {
+                showToast('❌ Anda tidak punya akses untuk mengedit data ini', 'error');
+                return;
+            }
+
+            currentEditId = id;
+            selectedRefId = item.ref_analisa_id;
+            document.getElementById('editId').value = id;
+            document.getElementById('formModalTitle').textContent = `✏️ Edit Rencana: ${item.job_name}`;
+            document.getElementById('deleteBtn').style.display = isAdmin(CURRENT_USER) ? 'inline-flex' : 'none';
+            document.getElementById('saveBtn').textContent = '💾 Update';
+
+            document.getElementById('refAnalisaId').value = item.ref_analisa_id || '';
+            document.getElementById('refAnalisaName').value = item.ref_analisa_name || '';
+            document.getElementById('jobName').value = item.job_name || '';
+            document.getElementById('assignee').value = item.assignee || '';
+            document.getElementById('status').value = item.status || 'draft';
+            document.getElementById('startDate').value = item.start_date || '';
+            document.getElementById('targetDate').value = item.target_date || '';
+            document.getElementById('targetGoal').value = item.target_goal || '';
+            document.getElementById('notes').value = item.notes || '';
+
+            document.getElementById('formModal').classList.add('active');
+            console.log('✅ Edit Modal opened');
+        }
+
+        function closeModal(id) {
+            console.log('🔒 Closing modal:', id);
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // ==================== SAVE ====================
+        async function savePlan() {
+            console.log('💾 Saving plan...');
+            const jobName = document.getElementById('jobName').value.trim();
+            const assignee = document.getElementById('assignee').value.trim();
+            const startDate = document.getElementById('startDate').value;
+            const targetDate = document.getElementById('targetDate').value;
+
+            if (!jobName) {
+                showToast('Nama Pekerjaan wajib diisi', 'error');
+                document.getElementById('jobName').focus();
+                return;
+            }
+
+            if (!assignee) {
+                showToast('Assignee wajib diisi', 'error');
+                document.getElementById('assignee').focus();
+                return;
+            }
+
+            if (!startDate) {
+                showToast('Tanggal Mulai wajib diisi', 'error');
+                document.getElementById('startDate').focus();
+                return;
+            }
+
+            if (!targetDate) {
+                showToast('Target Selesai wajib diisi', 'error');
+                document.getElementById('targetDate').focus();
+                return;
+            }
+
+            // Validate date logic
+            if (startDate && targetDate && new Date(targetDate) < new Date(startDate)) {
+                showToast('Target Selesai harus setelah Tanggal Mulai', 'error');
+                document.getElementById('targetDate').focus();
+                return;
+            }
+
+            const data = {
+                ref_analisa_id: parseInt(document.getElementById('refAnalisaId').value) || null,
+                ref_analisa_name: document.getElementById('refAnalisaName').value.trim(),
+                job_name: jobName,
+                assignee: assignee,
+                status: document.getElementById('status').value,
+                start_date: startDate,
+                target_date: targetDate,
+                target_goal: document.getElementById('targetGoal').value.trim(),
+                notes: document.getElementById('notes').value.trim()
+            };
+
+            console.log('📦 Data to save:', data);
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Menyimpan...';
+
+            try {
+                if (currentEditId) {
+                    console.log('🔄 Updating plan ID:', currentEditId);
+                    await updatePlan(currentEditId, data);
+                    showToast('✅ Rencana berhasil diupdate!', 'success');
+                } else {
+                    console.log('➕ Creating new plan');
+                    await createPlan(data);
+                    showToast('✅ Rencana berhasil dibuat!', 'success');
+                }
+                await refreshData();
+                closeModal('formModal');
+                console.log('✅ Save complete');
+            } catch (e) {
+                console.error('❌ Save failed:', e);
+                showToast('❌ Gagal menyimpan: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = currentEditId ? '💾 Update' : '💾 Simpan';
+            }
+        }
+
+        // ==================== DELETE ====================
+        async function confirmDelete(id) {
+            console.log('🗑️ Confirm delete ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            if (!isAdmin(CURRENT_USER)) {
+                showToast('❌ Hanya admin yang bisa menghapus data', 'error');
+                return;
+            }
+            if (!confirm(`Hapus rencana "${item.job_name}" (ID: ${id})?`)) return;
+
+            try {
+                await deletePlanApi(id);
+                showToast('✅ Rencana berhasil dihapus', 'success');
+                await refreshData();
+                console.log('✅ Deleted plan ID:', id);
+            } catch (e) {
+                console.error('❌ Delete failed:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        async function deletePlan() {
+            const id = parseInt(document.getElementById('editId').value);
+            console.log('🗑️ Delete plan from modal, ID:', id);
+            if (!id) return;
+            if (!isAdmin(CURRENT_USER)) {
+                showToast('❌ Hanya admin yang bisa menghapus data', 'error');
+                return;
+            }
+            if (!confirm('Hapus rencana ini secara permanen?')) return;
+
+            try {
+                await deletePlanApi(id);
+                showToast('✅ Rencana berhasil dihapus', 'success');
+                closeModal('formModal');
+                await refreshData();
+                console.log('✅ Deleted plan ID:', id);
+            } catch (e) {
+                console.error('❌ Delete failed:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'info') {
+            console.log(`📢 Toast: [${type}] ${message}`);
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ==================== KEYBOARD ====================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => {
+                    m.classList.remove('active');
+                });
+            }
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        // ==================== DEBUG ====================
+        window.debug = {
+            allData: () => allData,
+            refData: () => refData,
+            refresh: refreshData,
+            openAdd: openAddModal,
+            TABLE: TABLE,
+            COLUMNS: COLUMNS
+        };
+
+        console.log('📋 Perencanaan Loaded!');
+        console.log('📡 Table:', TABLE);
+        console.log('📊 Type "debug" in console for helpers');
+    </script>
+</body>
+</html>

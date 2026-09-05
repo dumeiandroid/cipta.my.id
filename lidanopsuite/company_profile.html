@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Profile - Internal</title>
+    <script>
+        // ==================== AUTH GUARD (Sales Tools Suite - SSO) ====================
+        const AUTH_SESSION_KEY = 'lidan_sales_session';
+        const AUTH_LOGIN_PAGE = 'login.html';
+
+        function getAuthSession() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+        function clearAuthSession() { localStorage.removeItem(AUTH_SESSION_KEY); }
+        function isSupervisor(session) { return !!session && String(session.role || '').toLowerCase() === 'spv'; }
+        function isAdmin(session) { return !!session && String(session.username || '').toLowerCase() === 'admin'; }
+        function logout() { clearAuthSession(); window.location.href = AUTH_LOGIN_PAGE; }
+
+        let CURRENT_USER = getAuthSession();
+        if (!CURRENT_USER || !CURRENT_USER.username) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.replace(AUTH_LOGIN_PAGE + '?return=' + returnUrl);
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === AUTH_SESSION_KEY && !e.newValue) {
+                window.location.href = AUTH_LOGIN_PAGE;
+            }
+        });
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #1a2332;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 span {
+            background: #2d3748;
+            color: white;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #2d3748;
+        }
+        .user-badge .role-tag {
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            text-transform: capitalize;
+        }
+        .user-badge .role-tag.spv { background: #9f7aea; }
+        .user-badge .role-tag.sales { background: #4299e1; }
+        .btn-logout {
+            background: #fc8181;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-logout:hover { background: #f56565; }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #f7fafc;
+            padding: 0 15px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            transition: border 0.2s;
+        }
+
+        .search-box:focus-within {
+            border-color: #4299e1;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 14px;
+            outline: none;
+            width: 200px;
+            color: #2d3748;
+        }
+
+        .search-box .icon {
+            color: #a0aec0;
+            font-size: 18px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66,153,225,0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #fc8181;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #f56565;
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-outline:hover {
+            background: #f7fafc;
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-xs {
+            padding: 3px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+
+        .list-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .list-header {
+            display: grid;
+            grid-template-columns: 60px 1.5fr 1fr 0.8fr 0.8fr 0.8fr 1fr 120px;
+            gap: 8px;
+            padding: 14px 20px;
+            background: #f7fafc;
+            font-weight: 700;
+            font-size: 12px;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .list-item {
+            display: grid;
+            grid-template-columns: 60px 1.5fr 1fr 0.8fr 0.8fr 0.8fr 1fr 120px;
+            gap: 8px;
+            padding: 14px 20px;
+            border-bottom: 1px solid #edf2f7;
+            align-items: center;
+            transition: background 0.15s;
+        }
+
+        .list-item:hover {
+            background: #f7fafc;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item .id {
+            font-weight: 700;
+            color: #4299e1;
+            font-size: 13px;
+        }
+
+        .list-item .field {
+            color: #2d3748;
+            font-size: 13px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .list-item .field .label {
+            display: none;
+            font-weight: 600;
+            color: #a0aec0;
+            font-size: 11px;
+        }
+
+        .list-item .actions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .badge-type {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-type.corporate {
+            background: #bee3f8;
+            color: #2a69ac;
+        }
+        .badge-type.school {
+            background: #c6f6d5;
+            color: #276749;
+        }
+        .badge-type.university {
+            background: #e9d8fd;
+            color: #6b46c1;
+        }
+        .badge-type.government {
+            background: #fefcbf;
+            color: #975a16;
+        }
+        .badge-type.other {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .badge-status {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-status.active {
+            background: #c6f6d5;
+            color: #276749;
+        }
+        .badge-status.inactive {
+            background: #fed7d7;
+            color: #9b2c2c;
+        }
+        .badge-status.prospect {
+            background: #fefcbf;
+            color: #975a16;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #a0aec0;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .empty-state h3 {
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 750px;
+            width: 100%;
+            max-height: 95vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-close {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: #fc8181;
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            background: #f56565;
+            transform: rotate(90deg);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a2332;
+            margin-bottom: 20px;
+            padding-right: 50px;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #edf2f7;
+            flex-wrap: wrap;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            max-width: 400px;
+        }
+
+        .toast.success {
+            background: #48bb78;
+        }
+        .toast.error {
+            background: #fc8181;
+        }
+        .toast.info {
+            background: #4299e1;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stats-summary .stat-card {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .stats-summary .stat-card .number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .stats-summary .stat-card .label {
+            font-size: 12px;
+            color: #a0aec0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stats-summary .stat-card.total .number { color: #2d3748; }
+        .stats-summary .stat-card.active .number { color: #48bb78; }
+        .stats-summary .stat-card.prospect .number { color: #ed8936; }
+
+        @media (max-width: 992px) {
+            .list-header {
+                display: none;
+            }
+            .list-item {
+                grid-template-columns: 1fr;
+                gap: 4px;
+                padding: 16px;
+                border-bottom: 2px solid #edf2f7;
+            }
+            .list-item .id {
+                font-size: 12px;
+            }
+            .list-item .field .label {
+                display: inline;
+            }
+            .list-item .actions {
+                margin-top: 6px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box input {
+                width: 100%;
+            }
+            .modal {
+                padding: 20px;
+            }
+            .stats-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+            .stats-summary {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .modal::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal::-webkit-scrollbar-track {
+            background: #f7fafc;
+        }
+        .modal::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .services-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #edf2f7;
+            border-radius: 4px;
+            font-size: 10px;
+            margin: 1px 2px;
+            color: #4a5568;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>
+                🏢 Company Profile
+                <span>Internal</span>
+            </h1>
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Cari perusahaan..." oninput="renderList()">
+                </div>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ Tambah Perusahaan</button>
+                <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('infoModal').classList.add('active')" title="Info & Panduan Company Profile">ℹ️ Info</button>
+                <div class="user-badge" id="userBadge">
+                    <span id="userBadgeName">👤 -</span>
+                    <span class="role-tag" id="userBadgeRole">-</span>
+                    <a href="index.html" class="btn btn-outline btn-sm" style="text-decoration:none;">🏠 Home</a>
+                    <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS SUMMARY -->
+        <div class="stats-summary" id="statsSummary">
+            <div class="stat-card total">
+                <div class="number" id="statTotal">0</div>
+                <div class="label">Total Perusahaan</div>
+            </div>
+            <div class="stat-card active">
+                <div class="number" id="statActive">0</div>
+                <div class="label">✅ Aktif</div>
+            </div>
+            <div class="stat-card prospect">
+                <div class="number" id="statProspect">0</div>
+                <div class="label">🔶 Prospek</div>
+            </div>
+        </div>
+
+        <!-- LIST -->
+        <div class="list-container">
+            <div class="list-header">
+                <span>ID</span>
+                <span>Nama Perusahaan</span>
+                <span>Kontak</span>
+                <span>Tipe</span>
+                <span>Status</span>
+                <span>Layanan</span>
+                <span>Sales</span>
+                <span>Aksi</span>
+            </div>
+            <div id="listBody">
+                <div class="empty-state">
+                    <div class="icon">🏢</div>
+                    <h3>Belum ada perusahaan</h3>
+                    <p>Klik "Tambah Perusahaan" untuk menambahkan data perusahaan klien</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORM -->
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
+            <div class="modal-title">🏢 Panduan Company Profile</div>
+            <div class="modal-body">
+                <p>Company Profile adalah database perusahaan/klien yang menjadi target atau
+                sudah menjadi pelanggan layanan psikologi — dipakai untuk memahami profil klien agar
+                strategi penjualan lebih tepat sasaran.</p>
+
+                <h4 style="margin:4px 0 2px;">🏷️ Arti Tipe Perusahaan</h4>
+                <ul style="margin:0 0 8px 18px; line-height:1.9;">
+                    <li>🏢 <b>Corporate</b> — perusahaan swasta</li>
+                    <li>🏫 <b>Sekolah</b> — SD/SMP/SMA/SMK</li>
+                    <li>🎓 <b>Universitas</b> — perguruan tinggi</li>
+                    <li>🏛️ <b>Government</b> — instansi pemerintah</li>
+                    <li>📌 <b>Lainnya</b> — di luar kategori di atas</li>
+                </ul>
+
+                <h4 style="margin:4px 0 2px;">🚦 Arti Status</h4>
+                <ul style="margin:0 0 8px 18px; line-height:1.9;">
+                    <li>✅ <b>Aktif</b> — masih menjadi klien yang aktif memakai layanan</li>
+                    <li>❌ <b>Inaktif</b> — pernah jadi klien, saat ini tidak aktif</li>
+                    <li>🔶 <b>Prospek</b> — belum resmi jadi klien, masih tahap pendekatan</li>
+                </ul>
+
+                <h4 style="margin:4px 0 2px;">📝 Field Lainnya</h4>
+                <ul style="margin:0 0 8px 18px; line-height:1.9;">
+                    <li><b>PIC</b> — nama &amp; telepon kontak utama di perusahaan tsb</li>
+                    <li><b>Layanan yang Digunakan</b> — bisa pilih lebih dari satu layanan</li>
+                    <li><b>Sales Assign</b> — sales yang menangani klien ini</li>
+                    <li><b>Tanggal Bergabung</b> — sejak kapan jadi klien</li>
+                </ul>
+
+                <div style="background:#faf5ff;border-left:4px solid #9f7aea;border-radius:8px;padding:10px 14px;font-size:13px;">
+                    💡 <b>Tips:</b> Gunakan data "Layanan yang Digunakan" untuk menawarkan layanan lain
+                    yang relevan — klien yang sudah pakai satu layanan lebih mudah menerima layanan tambahan.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('historyModal')">✕</button>
+            <div class="modal-title">🕘 Riwayat Perubahan</div>
+            <div class="modal-body" id="historyModalBody"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="formModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('formModal')">✕</button>
+            <div class="modal-title" id="formModalTitle">🏢 Tambah Perusahaan</div>
+            <div class="modal-body">
+                <input type="hidden" id="editId" value="">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>🏢 Nama Perusahaan *</label>
+                        <input type="text" id="companyName" placeholder="Nama perusahaan/instansi" required>
+                    </div>
+                    <div class="form-group">
+                        <label>📂 Tipe Perusahaan</label>
+                        <select id="companyType">
+                            <option value="corporate">🏢 Corporate</option>
+                            <option value="school">🏫 Sekolah</option>
+                            <option value="university">🎓 Universitas</option>
+                            <option value="government">🏛️ Government</option>
+                            <option value="other">📌 Lainnya</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📧 Email</label>
+                        <input type="email" id="email" placeholder="email@domain.com">
+                    </div>
+                    <div class="form-group">
+                        <label>📱 Telepon</label>
+                        <input type="text" id="phone" placeholder="021-1234-5678">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>👤 PIC / Kontak Utama</label>
+                        <input type="text" id="picName" placeholder="Nama PIC">
+                    </div>
+                    <div class="form-group">
+                        <label>📱 PIC Telepon</label>
+                        <input type="text" id="picPhone" placeholder="0812-3456-7890">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📍 Alamat</label>
+                        <input type="text" id="address" placeholder="Alamat lengkap">
+                    </div>
+                    <div class="form-group">
+                        <label>📂 Status</label>
+                        <select id="status">
+                            <option value="active">✅ Aktif</option>
+                            <option value="inactive">❌ Inaktif</option>
+                            <option value="prospect">🔶 Prospek</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📋 Layanan yang Telah Digunakan</label>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0;">
+                        <label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" value="Seminar" class="service-check"> Seminar
+                        </label>
+                        <label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" value="Pelatihan" class="service-check"> Pelatihan
+                        </label>
+                        <label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" value="Tes Minat Bakat" class="service-check"> Tes Minat Bakat
+                        </label>
+                        <label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" value="Tes Kesiapan Kerja" class="service-check"> Tes Kesiapan Kerja
+                        </label>
+                        <label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" value="Assesment Psikologi" class="service-check"> Assesment Psikologi
+                        </label>
+                        <label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" value="Konseling" class="service-check"> Konseling
+                        </label>
+                        <label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" value="Lainnya" class="service-check"> Lainnya
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>👤 Sales Assign</label>
+                        <input type="text" id="salesAssign" placeholder="Nama sales" readonly style="background:#edf2f7;cursor:not-allowed;">
+                        <small style="color:#a0aec0;">Otomatis dari akun yang login</small>
+                    </div>
+                    <div class="form-group">
+                        <label>📅 Join Since</label>
+                        <input type="date" id="joinDate">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Catatan</label>
+                    <textarea id="notes" placeholder="Catatan tentang perusahaan..." rows="2"></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-danger" id="deleteBtn" onclick="deleteCompany()" style="display:none;">🗑️ Hapus</button>
+                    <button class="btn btn-outline" onclick="closeModal('formModal')">Batal</button>
+                    <button class="btn btn-primary" id="saveBtn" onclick="saveCompany()">💾 Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'company_profile';
+        const SECRET = 'admin';
+
+        // ==================== STATE ====================
+        let allData = [];
+        let currentEditId = null;
+
+        const COLUMNS = {
+            company_name: 'x_01',
+            company_type: 'x_02',
+            email: 'x_03',
+            phone: 'x_04',
+            pic_name: 'x_05',
+            pic_phone: 'x_06',
+            address: 'x_07',
+            status: 'x_08',
+            services_used: 'x_09',
+            sales_assign: 'x_10',
+            join_date: 'x_11',
+            notes: 'x_12'
+        };
+
+        const HISTORY_COL = 'x_25';
+        const FIELD_LABELS = {
+            company_name: '🏢 Nama Perusahaan',
+            company_type: '📂 Tipe Perusahaan',
+            email: '📧 Email',
+            phone: '📱 Telepon',
+            pic_name: '👤 PIC / Kontak Utama',
+            pic_phone: '📱 PIC Telepon',
+            address: '📍 Alamat',
+            status: '📂 Status',
+            services_used: '📋 Layanan yang Telah Digunakan',
+            sales_assign: '👤 Sales Assign',
+            join_date: '📅 Join Since',
+            notes: '📝 Catatan'
+        };
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🏢 Company Profile Started');
+            console.log('📡 Table:', TABLE);
+            initUserBadge();
+            refreshData();
+        });
+
+        function initUserBadge() {
+            const nameEl = document.getElementById('userBadgeName');
+            const roleEl = document.getElementById('userBadgeRole');
+            if (nameEl) nameEl.textContent = '👤 ' + (CURRENT_USER.username || '-');
+            if (roleEl) {
+                roleEl.textContent = CURRENT_USER.role || '-';
+                roleEl.className = 'role-tag ' + (isSupervisor(CURRENT_USER) ? 'spv' : 'sales');
+            }
+        }
+
+        function ownsItem(item) {
+            return isSupervisor(CURRENT_USER) || item.sales_assign === CURRENT_USER.username;
+        }
+
+        // ==================== API HELPERS ====================
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': TABLE,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        ...getHeaders(),
+                        ...(options.headers || {})
+                    }
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error || err.message || `HTTP ${response.status}`);
+                }
+                return await response.json();
+            } catch (e) {
+                console.error('❌ API Error:', e.message);
+                throw e;
+            }
+        }
+
+        // ==================== DATA CRUD ====================
+        async function fetchData() {
+            try {
+                const result = await apiFetch('');
+                if (result.success && result.data) {
+                    allData = result.data.map(row => parseRow(row));
+                    if (!isSupervisor(CURRENT_USER) && !isAdmin(CURRENT_USER)) {
+                        allData = allData.filter(item => item.sales_assign === CURRENT_USER.username);
+                    }
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            return {
+                id_x: row.id_x,
+                company_name: row.x_01 || '',
+                company_type: row.x_02 || 'corporate',
+                email: row.x_03 || '',
+                phone: row.x_04 || '',
+                pic_name: row.x_05 || '',
+                pic_phone: row.x_06 || '',
+                address: row.x_07 || '',
+                status: row.x_08 || 'active',
+                services_used: safeParseJSON(row.x_09),
+                sales_assign: row.x_10 || '',
+                join_date: row.x_11 || '',
+                notes: row.x_12 || '',
+                history: parseHistory(row[HISTORY_COL]),
+                _raw: row
+            };
+        }
+
+        // ==================== HISTORY TRACKING ====================
+        function parseHistory(raw) {
+            if (!raw) return [];
+            try {
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function fieldToStr(key, val) {
+            if (key === 'services_used') return (val || []).join(', ');
+            return String(val ?? '');
+        }
+
+        function diffFields(oldItem, newData) {
+            const changes = [];
+            for (const key of Object.keys(COLUMNS)) {
+                const oldVal = fieldToStr(key, oldItem ? oldItem[key] : '');
+                const newVal = fieldToStr(key, newData[key]);
+                if (oldVal !== newVal) {
+                    changes.push({ field: key, label: FIELD_LABELS[key] || key, from: oldVal, to: newVal });
+                }
+            }
+            return changes;
+        }
+
+        function buildHistory(oldItem, newData, action) {
+            const history = oldItem ? (oldItem.history || []) : [];
+            const entry = {
+                ts: new Date().toISOString(),
+                user: (CURRENT_USER && CURRENT_USER.username) || '-',
+                action: action
+            };
+            if (action === 'created') {
+                return [...history, entry];
+            }
+            const changes = diffFields(oldItem, newData);
+            if (changes.length === 0) return null;
+            entry.changes = changes;
+            return [...history, entry];
+        }
+
+        function showHistory(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            const history = item.history || [];
+            const body = document.getElementById('historyModalBody');
+            if (history.length === 0) {
+                body.innerHTML = '<p style="text-align:center;color:#a0aec0;padding:16px 0;">Belum ada riwayat perubahan.</p>';
+            } else {
+                body.innerHTML = history.slice().reverse().map(entry => {
+                    const dateStr = new Date(entry.ts).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+                    let changesHtml;
+                    if (entry.action === 'created') {
+                        changesHtml = '<div style="color:#38a169;font-size:12px;">✨ Data dibuat</div>';
+                    } else if (entry.changes && entry.changes.length) {
+                        changesHtml = entry.changes.map(c => `
+                            <div style="font-size:12px;margin-top:4px;">
+                                <strong>${escapeHtml(c.label)}:</strong>
+                                <span style="color:#e53e3e;text-decoration:line-through;">${escapeHtml(c.from || '-')}</span>
+                                →
+                                <span style="color:#38a169;">${escapeHtml(c.to || '-')}</span>
+                            </div>
+                        `).join('');
+                    } else {
+                        changesHtml = '';
+                    }
+                    return `
+                        <div style="border-bottom:1px solid #e2e8f0;padding:10px 0;">
+                            <div style="font-size:11px;color:#718096;">🕘 ${dateStr} — 👤 ${escapeHtml(entry.user)}</div>
+                            ${changesHtml}
+                        </div>
+                    `;
+                }).join('');
+            }
+            document.getElementById('historyModal').classList.add('active');
+        }
+
+        function safeParseJSON(str) {
+            if (!str) return [];
+            try {
+                const parsed = JSON.parse(str);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                if (key === 'services_used') {
+                    row[col] = JSON.stringify(data[key] || []);
+                } else {
+                    row[col] = data[key] || '';
+                }
+            }
+            return row;
+        }
+
+        async function createCompany(data) {
+            const row = buildRow(data);
+            row[HISTORY_COL] = JSON.stringify(buildHistory(null, data, 'created'));
+            return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function updateCompany(id, data) {
+            const row = buildRow(data);
+            const oldItem = allData.find(d => d.id_x === id);
+            const newHistory = buildHistory(oldItem, data, 'updated');
+            row[HISTORY_COL] = JSON.stringify(newHistory || (oldItem ? oldItem.history : []) || []);
+            return await apiFetch(`&id_x=${id}`, { method: 'PUT', body: JSON.stringify(row) });
+        }
+
+        async function deleteCompanyApi(id) {
+            return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== RENDER ====================
+        function renderList() {
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = allData.filter(item =>
+                item.company_name.toLowerCase().includes(search) ||
+                item.pic_name.toLowerCase().includes(search) ||
+                item.email.toLowerCase().includes(search) ||
+                item.phone.includes(search) ||
+                item.sales_assign.toLowerCase().includes(search) ||
+                item.address.toLowerCase().includes(search)
+            );
+
+            const body = document.getElementById('listBody');
+
+            // Update stats
+            updateStats();
+
+            if (filtered.length === 0) {
+                body.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">${allData.length === 0 ? '🏢' : '🔍'}</div>
+                        <h3>${allData.length === 0 ? 'Belum ada perusahaan' : 'Tidak ditemukan'}</h3>
+                        <p>${allData.length === 0 ? 'Klik "Tambah Perusahaan" untuk menambahkan data perusahaan klien' : 'Coba dengan kata kunci lain'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const typeLabels = {
+                'corporate': '🏢 Corporate',
+                'school': '🏫 Sekolah',
+                'university': '🎓 Universitas',
+                'government': '🏛️ Government',
+                'other': '📌 Lainnya'
+            };
+
+            const statusLabels = {
+                'active': '✅ Aktif',
+                'inactive': '❌ Inaktif',
+                'prospect': '🔶 Prospek'
+            };
+
+            body.innerHTML = filtered.map(item => {
+                const services = item.services_used || [];
+                const servicesHtml = services.length > 0 ?
+                    services.map(s => `<span class="services-tag">${escapeHtml(s)}</span>`).join('') :
+                    '-';
+
+                return `
+                    <div class="list-item">
+                        <div class="id">#${item.id_x}</div>
+                        <div class="field">
+                            <span class="label">Perusahaan:</span> ${escapeHtml(item.company_name) || '-'}
+                            ${item.address ? `<br><span style="font-size:10px;color:#a0aec0;">${escapeHtml(item.address)}</span>` : ''}
+                        </div>
+                        <div class="field">
+                            <span class="label">Kontak:</span>
+                            ${item.pic_name ? escapeHtml(item.pic_name) : '-'}
+                            ${item.pic_phone ? `<br><span style="font-size:11px;color:#718096;">${escapeHtml(item.pic_phone)}</span>` : ''}
+                        </div>
+                        <div class="field"><span class="label">Tipe:</span> <span class="badge-type ${item.company_type}">${typeLabels[item.company_type] || item.company_type}</span></div>
+                        <div class="field"><span class="label">Status:</span> <span class="badge-status ${item.status}">${statusLabels[item.status] || item.status}</span></div>
+                        <div class="field"><span class="label">Layanan:</span> ${servicesHtml}</div>
+                        <div class="field"><span class="label">Sales:</span> ${escapeHtml(item.sales_assign) || '-'}</div>
+                        <div class="actions">
+                            <button class="btn btn-outline btn-xs" onclick="showHistory(${item.id_x})" title="Riwayat perubahan">🕘${item.history && item.history.length ? ` <span style="font-size:9px;">${item.history.length}</span>` : ''}</button>
+                            ${ownsItem(item) ? `<button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>` : ''}
+                            ${isAdmin(CURRENT_USER) ? `<button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>` : ''}
+                            ${(!ownsItem(item) && !isAdmin(CURRENT_USER)) ? `<span style="font-size:10px;color:#a0aec0;">🔒 milik lain</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateStats() {
+            const total = allData.length;
+            const active = allData.filter(d => d.status === 'active').length;
+            const prospect = allData.filter(d => d.status === 'prospect').length;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statActive').textContent = active;
+            document.getElementById('statProspect').textContent = prospect;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function refreshData() {
+            showToast('🔄 Memuat data...', 'info');
+            await fetchData();
+            renderList();
+            showToast(`✅ ${allData.length} perusahaan dimuat`, 'success');
+        }
+
+        // ==================== MODAL FORM ====================
+        function openAddModal() {
+            console.log('🏢 Opening Add Modal');
+            currentEditId = null;
+            document.getElementById('editId').value = '';
+            document.getElementById('formModalTitle').textContent = '🏢 Tambah Perusahaan';
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.getElementById('saveBtn').textContent = '💾 Simpan';
+
+            document.getElementById('companyName').value = '';
+            document.getElementById('companyType').value = 'corporate';
+            document.getElementById('email').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('picName').value = '';
+            document.getElementById('picPhone').value = '';
+            document.getElementById('address').value = '';
+            document.getElementById('status').value = 'active';
+            document.querySelectorAll('.service-check').forEach(cb => cb.checked = false);
+            document.getElementById('salesAssign').value = CURRENT_USER.username;
+            document.getElementById('joinDate').value = '';
+            document.getElementById('notes').value = '';
+
+            document.getElementById('formModal').classList.add('active');
+            console.log('✅ Add Modal opened');
+        }
+
+        async function openEditModal(id) {
+            console.log('✏️ Opening Edit Modal for ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) {
+                showToast('Data tidak ditemukan', 'error');
+                return;
+            }
+            if (!ownsItem(item)) {
+                showToast('❌ Anda tidak punya akses untuk mengedit data ini', 'error');
+                return;
+            }
+
+            currentEditId = id;
+            document.getElementById('editId').value = id;
+            document.getElementById('formModalTitle').textContent = `✏️ Edit: ${item.company_name}`;
+            document.getElementById('deleteBtn').style.display = isAdmin(CURRENT_USER) ? 'inline-flex' : 'none';
+            document.getElementById('saveBtn').textContent = '💾 Update';
+
+            document.getElementById('companyName').value = item.company_name || '';
+            document.getElementById('companyType').value = item.company_type || 'corporate';
+            document.getElementById('email').value = item.email || '';
+            document.getElementById('phone').value = item.phone || '';
+            document.getElementById('picName').value = item.pic_name || '';
+            document.getElementById('picPhone').value = item.pic_phone || '';
+            document.getElementById('address').value = item.address || '';
+            document.getElementById('status').value = item.status || 'active';
+            document.getElementById('salesAssign').value = item.sales_assign || '';
+            document.getElementById('joinDate').value = item.join_date || '';
+            document.getElementById('notes').value = item.notes || '';
+
+            // Check services
+            const services = item.services_used || [];
+            document.querySelectorAll('.service-check').forEach(cb => {
+                cb.checked = services.includes(cb.value);
+            });
+
+            document.getElementById('formModal').classList.add('active');
+            console.log('✅ Edit Modal opened');
+        }
+
+        function closeModal(id) {
+            console.log('🔒 Closing modal:', id);
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // ==================== SAVE ====================
+        async function saveCompany() {
+            console.log('💾 Saving company...');
+            const companyName = document.getElementById('companyName').value.trim();
+
+            if (!companyName) {
+                showToast('Nama Perusahaan wajib diisi', 'error');
+                document.getElementById('companyName').focus();
+                return;
+            }
+
+            // Get selected services
+            const services = [];
+            document.querySelectorAll('.service-check:checked').forEach(cb => {
+                services.push(cb.value);
+            });
+
+            const data = {
+                company_name: companyName,
+                company_type: document.getElementById('companyType').value,
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                pic_name: document.getElementById('picName').value.trim(),
+                pic_phone: document.getElementById('picPhone').value.trim(),
+                address: document.getElementById('address').value.trim(),
+                status: document.getElementById('status').value,
+                services_used: services,
+                sales_assign: document.getElementById('salesAssign').value.trim(),
+                join_date: document.getElementById('joinDate').value,
+                notes: document.getElementById('notes').value.trim()
+            };
+
+            console.log('📦 Data to save:', data);
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Menyimpan...';
+
+            try {
+                if (currentEditId) {
+                    console.log('🔄 Updating company ID:', currentEditId);
+                    await updateCompany(currentEditId, data);
+                    showToast('✅ Perusahaan berhasil diupdate!', 'success');
+                } else {
+                    console.log('➕ Creating new company');
+                    await createCompany(data);
+                    showToast('✅ Perusahaan berhasil dibuat!', 'success');
+                }
+                await refreshData();
+                closeModal('formModal');
+                console.log('✅ Save complete');
+            } catch (e) {
+                console.error('❌ Save failed:', e);
+                showToast('❌ Gagal menyimpan: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = currentEditId ? '💾 Update' : '💾 Simpan';
+            }
+        }
+
+        // ==================== DELETE ====================
+        async function confirmDelete(id) {
+            console.log('🗑️ Confirm delete ID:', id);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            if (!isAdmin(CURRENT_USER)) {
+                showToast('❌ Hanya admin yang bisa menghapus data', 'error');
+                return;
+            }
+            if (!confirm(`Hapus perusahaan "${item.company_name}" (ID: ${id})?`)) return;
+
+            try {
+                await deleteCompanyApi(id);
+                showToast('✅ Perusahaan berhasil dihapus', 'success');
+                await refreshData();
+                console.log('✅ Deleted company ID:', id);
+            } catch (e) {
+                console.error('❌ Delete failed:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteCompany() {
+            const id = parseInt(document.getElementById('editId').value);
+            console.log('🗑️ Delete company from modal, ID:', id);
+            if (!id) return;
+            const item = allData.find(d => d.id_x === id);
+            if (!isAdmin(CURRENT_USER)) {
+                showToast('❌ Hanya admin yang bisa menghapus data', 'error');
+                return;
+            }
+            if (!confirm('Hapus perusahaan ini secara permanen?')) return;
+
+            try {
+                await deleteCompanyApi(id);
+                showToast('✅ Perusahaan berhasil dihapus', 'success');
+                closeModal('formModal');
+                await refreshData();
+                console.log('✅ Deleted company ID:', id);
+            } catch (e) {
+                console.error('❌ Delete failed:', e);
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'info') {
+            console.log(`📢 Toast: [${type}] ${message}`);
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ==================== KEYBOARD ====================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => {
+                    m.classList.remove('active');
+                });
+            }
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        // ==================== DEBUG ====================
+        window.debug = {
+            allData: () => allData,
+            refresh: refreshData,
+            openAdd: openAddModal,
+            TABLE: TABLE,
+            COLUMNS: COLUMNS
+        };
+
+        console.log('🏢 Company Profile Loaded!');
+        console.log('📡 Table:', TABLE);
+        console.log('📊 Type "debug" in console for helpers');
+        console.log('🔧 Debug commands:');
+        console.log('  - debug.allData()  : Lihat semua data');
+        console.log('  - debug.refresh()  : Refresh data');
+        console.log('  - debug.openAdd()  : Open add modal');
+    </script>
+</body>
+</html>

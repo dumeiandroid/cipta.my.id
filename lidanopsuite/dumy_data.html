@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Dummy Generator - PDCA Tools</title>
+    <script>
+        // ==================== AUTH GUARD ====================
+        const AUTH_SESSION_KEY = 'lidan_sales_session';
+        const AUTH_LOGIN_PAGE = 'login.html';
+
+        function getAuthSession() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+        function clearAuthSession() { localStorage.removeItem(AUTH_SESSION_KEY); }
+        function isSupervisor(session) { return !!session && String(session.role || '').toLowerCase() === 'spv'; }
+        function isAdmin(session) { return !!session && String(session.username || '').toLowerCase() === 'admin'; }
+        function logout() { clearAuthSession(); window.location.href = AUTH_LOGIN_PAGE; }
+
+        let CURRENT_USER = getAuthSession();
+        if (!CURRENT_USER || !CURRENT_USER.username) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.replace(AUTH_LOGIN_PAGE + '?return=' + returnUrl);
+        }
+
+        // Hanya admin yang boleh mengakses halaman ini
+        if (!isAdmin(CURRENT_USER)) {
+            alert('⛔ Hanya admin yang boleh mengakses halaman Data Dummy ini!');
+            window.location.href = 'index.html';
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === AUTH_SESSION_KEY && !e.newValue) {
+                window.location.href = AUTH_LOGIN_PAGE;
+            }
+        });
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: white;
+            padding: 30px 35px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 span {
+            background: #fc8181;
+            font-size: 12px;
+            padding: 2px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .header .subtitle {
+            color: #a0aec0;
+            font-size: 14px;
+            margin-top: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #fff;
+        }
+        .user-badge .role-tag {
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            text-transform: capitalize;
+            background: #fc8181;
+        }
+        .btn-logout {
+            background: #fc8181;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-logout:hover { background: #f56565; }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66,153,225,0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72,187,120,0.4);
+        }
+
+        .btn-danger {
+            background: #fc8181;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #f56565;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(252,129,129,0.4);
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #dd6b20;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(237,137,54,0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-outline:hover {
+            background: #f7fafc;
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            font-size: 20px;
+            color: #1a2332;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card .card-desc {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .card .divider {
+            height: 2px;
+            background: #edf2f7;
+            margin: 16px 0;
+        }
+
+        .table-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .table-card {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+
+        .table-card:hover {
+            border-color: #9f7aea;
+            box-shadow: 0 4px 12px rgba(159,122,234,0.1);
+        }
+
+        .table-card .table-name {
+            font-weight: 700;
+            font-size: 15px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-card .table-name .badge-count {
+            background: #4299e1;
+            color: white;
+            font-size: 11px;
+            padding: 1px 10px;
+            border-radius: 10px;
+        }
+
+        .table-card .table-name .badge-dummy {
+            background: #ed8936;
+            color: white;
+            font-size: 9px;
+            padding: 1px 8px;
+            border-radius: 10px;
+        }
+
+        .table-card .table-desc {
+            font-size: 13px;
+            color: #718096;
+            margin: 4px 0 8px;
+        }
+
+        .table-card .table-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .table-card .table-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .table-card .table-status .dot.empty { background: #a0aec0; }
+        .table-card .table-status .dot.has-data { background: #48bb78; }
+        .table-card .table-status .dot.dummy-only { background: #ed8936; }
+
+        .progress-container {
+            margin: 16px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 24px;
+            background: #edf2f7;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            border-radius: 12px;
+            background: linear-gradient(90deg, #9f7aea, #4299e1);
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .progress-bar .label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .log-container {
+            background: #1a202c;
+            border-radius: 12px;
+            padding: 16px 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #e2e8f0;
+            margin-top: 12px;
+        }
+
+        .log-container .log-entry {
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .log-container .log-entry .time {
+            color: #a0aec0;
+        }
+
+        .log-container .log-entry .success { color: #48bb78; }
+        .log-container .log-entry .error { color: #fc8181; }
+        .log-container .log-entry .info { color: #63b3ed; }
+        .log-container .log-entry .warning { color: #ed8936; }
+
+        .log-container::-webkit-scrollbar {
+            width: 5px;
+        }
+        .log-container::-webkit-scrollbar-track {
+            background: #2d3748;
+        }
+        .log-container::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 10px;
+        }
+
+        .empty-log {
+            color: #718096;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            max-width: 400px;
+        }
+
+        .toast.success {
+            background: #48bb78;
+        }
+        .toast.error {
+            background: #fc8181;
+        }
+        .toast.info {
+            background: #4299e1;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .modal .modal-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .modal .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a2332;
+        }
+
+        .modal .modal-desc {
+            color: #718096;
+            font-size: 14px;
+            margin: 8px 0 20px;
+        }
+
+        .modal .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .safety-badge {
+            display: inline-block;
+            background: #fefcbf;
+            color: #975a16;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid #f6c23e;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 20px;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+            .table-grid {
+                grid-template-columns: 1fr;
+            }
+            .card {
+                padding: 20px;
+            }
+            .modal {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+            .header-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div>
+                <h1>
+                    🧪 Data Dummy Generator
+                    <span>ADMIN</span>
+                </h1>
+                <div class="subtitle">Generate atau bersihkan data dummy untuk semua tabel PDCA</div>
+            </div>
+            <div class="header-actions">
+                <div class="user-badge" id="userBadge">
+                    <span id="userBadgeName">👤 -</span>
+                    <span class="role-tag" id="userBadgeRole">-</span>
+                    <a href="index.html" class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);text-decoration:none;">🏠 Home</a>
+                    <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CARD -->
+        <div class="card">
+            <h2>
+                📊 Kelola Data Dummy
+                <span class="safety-badge">🛡️ AMAN - Hanya Data Dummy</span>
+            </h2>
+            <p class="card-desc">
+                Generate data dummy untuk semua tabel sekaligus agar Anda bisa langsung mencoba
+                semua fitur di Sales Tools Suite. Data yang dihasilkan akan terlihat <strong>seolah-olah</strong>
+                sudah banyak digunakan.
+                <br><br>
+                <strong style="color:#ed8936;">⚠️ Pembersihan hanya akan menghapus data dummy (yang memiliki flag khusus), data asli Anda AMAN!</strong>
+            </p>
+
+            <div class="divider"></div>
+
+            <!-- Table Status -->
+            <div class="table-grid" id="tableStatus">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Action Buttons -->
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                <button class="btn btn-success" id="btnGenerate" onclick="generateAllData()">
+                    🚀 Generate Semua Data Dummy
+                </button>
+                <button class="btn btn-danger" id="btnClear" onclick="confirmClearAll()">
+                    🗑️ Hapus Data Dummy Saja
+                </button>
+                <button class="btn btn-outline" onclick="checkAllTables()">
+                    🔄 Cek Status
+                </button>
+            </div>
+
+            <!-- Progress -->
+            <div class="progress-container" id="progressContainer" style="display:none;">
+                <div class="progress-bar">
+                    <div class="fill" id="progressFill"></div>
+                    <div class="label" id="progressLabel">0%</div>
+                </div>
+                <div style="text-align:center;font-size:13px;color:#718096;margin-top:4px;" id="progressStatus">Memulai...</div>
+            </div>
+
+            <!-- Log -->
+            <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <strong style="color:#2d3748;">📋 Log Aktivitas</strong>
+                <button class="btn btn-sm btn-outline" onclick="clearLog()">✕ Clear Log</button>
+            </div>
+            <div class="log-container" id="logContainer">
+                <div class="empty-log">Belum ada aktivitas. Klik tombol di atas untuk mulai.</div>
+            </div>
+        </div>
+
+        <!-- ===== CONFIRM MODAL ===== -->
+        <div class="modal-overlay" id="confirmModal">
+            <div class="modal">
+                <div class="modal-icon">⚠️</div>
+                <div class="modal-title">Konfirmasi Hapus Data Dummy</div>
+                <div class="modal-desc" id="confirmDesc">
+                    Apakah Anda yakin ingin menghapus SEMUA data dummy dari semua tabel?
+                    <br><br>
+                    <strong style="color:#48bb78;">✅ Data asli Anda akan tetap AMAN!</strong>
+                    <br>
+                    <span style="font-size:13px;color:#718096;">Hanya data dengan flag dummy yang akan dihapus.</span>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-danger" id="confirmDeleteBtn" onclick="executeClearAll()">
+                        🗑️ Ya, Hapus Data Dummy
+                    </button>
+                    <button class="btn btn-outline" onclick="closeConfirmModal()">
+                        Batal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const SECRET = 'admin';
+
+        // FLAG DUMMY: disimpan di kolom x_20 dengan nilai "__DUMMY_DATA__"
+        // Ini digunakan untuk menandai data yang dibuat oleh generator
+        const DUMMY_FLAG_KEY = 'x_20';
+        const DUMMY_FLAG_VALUE = '__DUMMY_DATA__';
+
+        // Daftar semua tabel yang akan di-generate
+        const TABLES = {
+            analisa_pekerjaan: {
+                label: 'Analisa Pekerjaan',
+                icon: '🗂️',
+                desc: 'Gudang SOP dan cara kerja',
+                columns: ['x_01', 'x_02', 'x_03', 'x_04', 'x_05', 'x_06', 'x_07', 'x_08', 'x_09', 'x_10']
+            },
+            perencanaan: {
+                label: 'Perencanaan (PLAN)',
+                icon: '📋',
+                desc: 'Rencana pekerjaan dari Analisa',
+                columns: ['x_01', 'x_02', 'x_03', 'x_04', 'x_05', 'x_06', 'x_07', 'x_08', 'x_09']
+            },
+            pelaksanaan: {
+                label: 'Pelaksanaan (DO)',
+                icon: '⚙️',
+                desc: 'Eksekusi aktual pekerjaan',
+                columns: ['x_01', 'x_02', 'x_03', 'x_04', 'x_05', 'x_06', 'x_07', 'x_08']
+            },
+            pengendalian: {
+                label: 'Pengendalian (CHECK)',
+                icon: '🎯',
+                desc: 'Tindakan korektif jika deviasi',
+                columns: ['x_01', 'x_02', 'x_03', 'x_04', 'x_05', 'x_06', 'x_07', 'x_08', 'x_09', 'x_10']
+            },
+            visit_tracker: {
+                label: 'Visit Tracker',
+                icon: '📅',
+                desc: 'Tracking kunjungan sales',
+                columns: ['x_01', 'x_02', 'x_03', 'x_04', 'x_05', 'x_06', 'x_07', 'x_08']
+            },
+            company_profile: {
+                label: 'Company Profile',
+                icon: '🏢',
+                desc: 'Database perusahaan klien',
+                columns: ['x_01', 'x_02', 'x_03', 'x_04', 'x_05', 'x_06', 'x_07', 'x_08', 'x_09', 'x_10', 'x_11', 'x_12']
+            },
+            deal_pipeline: {
+                label: 'Deal Pipeline',
+                icon: '📊',
+                desc: 'Pipeline penjualan',
+                columns: ['x_01', 'x_02', 'x_03', 'x_04', 'x_05', 'x_06', 'x_07', 'x_08', 'x_09', 'x_10', 'x_11']
+            }
+        };
+
+        const HISTORY_COL = 'x_25';
+
+        // ==================== STATE ====================
+        let isGenerating = false;
+        let isClearing = false;
+        let tableCounts = {};
+        let dummyCounts = {};
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            initUserBadge();
+            checkAllTables();
+            addLog('info', '📋 Data Dummy Generator siap digunakan');
+            addLog('info', '🛡️ Mode AMAN: hanya data dummy yang akan dihapus (data asli tetap utuh)');
+        });
+
+        function initUserBadge() {
+            const nameEl = document.getElementById('userBadgeName');
+            const roleEl = document.getElementById('userBadgeRole');
+            if (nameEl) nameEl.textContent = '👤 ' + (CURRENT_USER.username || '-');
+            if (roleEl) {
+                roleEl.textContent = CURRENT_USER.role || 'Admin';
+                roleEl.className = 'role-tag';
+            }
+        }
+
+        // ==================== API HELPERS ====================
+        function getHeaders(table) {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': table,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function apiFetch(table, endpoint = '', options = {}) {
+            const url = `${API_URL}?table=${table}${endpoint}`;
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        ...getHeaders(table),
+                        ...(options.headers || {})
+                    }
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error || err.message || `HTTP ${response.status}`);
+                }
+                return await response.json();
+            } catch (e) {
+                console.error(`❌ API Error [${table}]:`, e.message);
+                throw e;
+            }
+        }
+
+        async function getTableData(table) {
+            try {
+                const result = await apiFetch(table, '');
+                return result.success && result.data ? result.data : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function isDummy(row) {
+            return row && row[DUMMY_FLAG_KEY] === DUMMY_FLAG_VALUE;
+        }
+
+        async function deleteDummyData(table) {
+            try {
+                const data = await getTableData(table);
+                let deleted = 0;
+                for (const row of data) {
+                    if (isDummy(row)) {
+                        await apiFetch(table, `&id_x=${row.id_x}`, { method: 'DELETE' });
+                        deleted++;
+                    }
+                }
+                return deleted;
+            } catch (e) {
+                console.error(`❌ Error deleting dummy from ${table}:`, e);
+                return 0;
+            }
+        }
+
+        async function createRecord(table, data) {
+            try {
+                // Tambahkan flag dummy ke setiap data yang dibuat
+                data[DUMMY_FLAG_KEY] = DUMMY_FLAG_VALUE;
+                const result = await apiFetch(table, '', { method: 'POST', body: JSON.stringify(data) });
+                return result.success;
+            } catch (e) {
+                console.error(`❌ Error creating in ${table}:`, e);
+                return false;
+            }
+        }
+
+        // ==================== DUMMY DATA GENERATORS ====================
+
+        function randomDate(start, end) {
+            const d = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+            return d.toISOString().split('T')[0];
+        }
+
+        function randomDateTime(start, end) {
+            const d = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+            return d.toISOString().slice(0, 16);
+        }
+
+        function randomItem(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function randomText(words) {
+            const count = randomInt(3, words.length);
+            const shuffled = [...words].sort(() => Math.random() - 0.5);
+            return shuffled.slice(0, count).join(' ');
+        }
+
+        function randomPhone() {
+            const prefixes = ['0812', '0813', '0814', '0815', '0816', '0817', '0818', '0819', '0821', '0822', '0823'];
+            return randomItem(prefixes) + randomInt(10000000, 99999999);
+        }
+
+        function randomRupiah() {
+            const values = [5000000, 10000000, 15000000, 20000000, 25000000, 30000000, 50000000, 75000000, 100000000];
+            const val = randomItem(values);
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val);
+        }
+
+        function randomEmail(name) {
+            const domains = ['gmail.com', 'yahoo.com', 'company.co.id', 'sch.id', 'ac.id', 'go.id'];
+            return name.toLowerCase().replace(/\s/g, '.') + '@' + randomItem(domains);
+        }
+
+        // ==================== GENERATE DUMMY DATA ====================
+
+        function generateAnalisaPekerjaan(index) {
+            const jobNames = [
+                'Input Data Klien ke CRM', 'Buat Proposal Penawaran', 'Follow Up via Telepon',
+                'Presentasi Layanan', 'Analisis Data Survey', 'Buat Laporan Bulanan',
+                'Koordinasi Tim Sales', 'Update Database Klien', 'Buat Kontrak Kerjasama',
+                'Evaluasi Kinerja Sales', 'Penyusunan Materi Training', 'Survey Kepuasan Klien',
+                'Buat Dashboard Penjualan', 'Analisis Kompetitor', 'Penyusunan Strategi Marketing',
+                'Pembuatan Brosur', 'Pengelolaan Sosial Media', 'Penjadwalan Meeting',
+                'Pembuatan Invoice', 'Rekonsiliasi Data'
+            ];
+            const categories = ['Administrasi', 'Penjualan', 'Marketing', 'SDM', 'Keuangan', 'IT', 'Operasional'];
+            const difficulties = ['pemula', 'menengah', 'mahir'];
+            const statuses = ['siap', 'draft', 'revisi'];
+            const tools = ['Laptop', 'HP', 'Akses CRM', 'Google Workspace', 'Microsoft Office', 'Canva', 'Zoom', 'WhatsApp'];
+
+            const name = jobNames[index % jobNames.length];
+            const category = randomItem(categories);
+            const difficulty = randomItem(difficulties);
+            const status = randomItem(statuses);
+
+            const steps = [
+                `1. Persiapan: ${randomItem(['Buka aplikasi', 'Siapkan dokumen', 'Login ke sistem', 'Siapkan alat'])}`,
+                `2. Eksekusi: ${randomItem(['Lakukan sesuai SOP', 'Ikuti panduan', 'Kerjakan dengan teliti'])}`,
+                `3. Verifikasi: ${randomItem(['Cek hasil', 'Validasi data', 'Pastikan sesuai target'])}`,
+                `4. Dokumentasi: ${randomItem(['Simpan hasil', 'Catat di log', 'Update status'])}`
+            ].join('\n');
+
+            const resources = randomItem(tools) + ', ' + randomItem(tools) + (Math.random() > 0.5 ? ', ' + randomItem(tools) : '');
+            const timeEstimates = ['15 menit/item', '30 menit/dokumen', '1 jam/sesi', '2 jam', '1 hari', '3 hari', '1 minggu'];
+
+            return {
+                x_01: name,
+                x_02: category,
+                x_03: difficulty,
+                x_04: randomItem(timeEstimates),
+                x_05: `Pekerjaan ini bertujuan untuk ${randomText(['menyelesaikan', 'mengelola', 'menganalisis', 'membuat', 'mengkoordinasikan'])} ${name.toLowerCase()}`,
+                x_06: steps,
+                x_07: resources,
+                x_08: `Tips: ${randomText(['perhatikan detail', 'cek ulang sebelum kirim', 'koordinasi dengan tim', 'gunakan template yang tersedia'])}`,
+                x_09: status,
+                x_10: randomItem(['admin', 'sales1', 'sales2', 'sales3', 'spv1'])
+            };
+        }
+
+        function generatePerencanaan(index, refAnalisaIds) {
+            const assignees = ['admin', 'sales1', 'sales2', 'sales3', 'spv1'];
+            const statuses = ['draft', 'active', 'completed', 'deviated'];
+            const now = new Date();
+            const start = new Date(now);
+            start.setMonth(start.getMonth() - 2);
+            const end = new Date(now);
+            end.setMonth(end.getMonth() + 2);
+
+            const refId = randomItem(refAnalisaIds);
+            const assignee = randomItem(assignees);
+            const status = randomItem(statuses);
+            const startDate = randomDate(start, now);
+            const targetDate = randomDate(new Date(startDate), end);
+            const goals = ['Selesai 100%', 'Target tercapai', 'Kualitas baik', 'Tepat waktu', 'Memenuhi standar'];
+
+            return {
+                x_01: String(refId),
+                x_02: `Analisa #${refId}`,
+                x_03: `Pekerjaan #${index} - ${randomText(['Data', 'Laporan', 'Proposal', 'Kunjungan', 'Meeting', 'Training'])}`,
+                x_04: assignee,
+                x_05: status,
+                x_06: startDate,
+                x_07: targetDate,
+                x_08: randomItem(goals) + (Math.random() > 0.5 ? ` - ${randomText(['dengan kualitas', 'sesuai standar', 'tanpa revisi'])}` : ''),
+                x_09: `Catatan: ${randomText(['prioritas tinggi', 'butuh koordinasi', 'sedang diproses', 'sudah disetujui'])}`
+            };
+        }
+
+        function generatePelaksanaan(index, refPlanIds) {
+            const executors = ['admin', 'sales1', 'sales2', 'sales3', 'spv1'];
+            const statuses = ['on_track', 'late', 'deviated'];
+            const now = new Date();
+            const start = new Date(now);
+            start.setMonth(start.getMonth() - 1);
+
+            const refId = randomItem(refPlanIds);
+            const executor = randomItem(executors);
+            const status = randomItem(statuses);
+            const actualDate = randomDate(start, now);
+            const results = [
+                'Selesai 100% sesuai target',
+                'Selesai 80% - perlu perbaikan',
+                'Selesai tepat waktu',
+                'Selesai dengan kualitas baik',
+                'Terlambat 2 hari',
+                'Hasil di bawah target',
+                'Perlu revisi'
+            ];
+
+            return {
+                x_01: String(refId),
+                x_02: `Rencana #${refId}`,
+                x_03: `Pelaksanaan #${index} - ${randomText(['Input Data', 'Buat Laporan', 'Follow Up', 'Presentasi', 'Survey'])}`,
+                x_04: executor,
+                x_05: status,
+                x_06: actualDate,
+                x_07: randomItem(results) + (status === 'deviated' ? ' - MENYIMPANG dari target' : ''),
+                x_08: `Catatan: ${randomText(['sudah selesai', 'proses berjalan', 'ada kendala', 'butuh bantuan'])}`
+            };
+        }
+
+        function generatePengendalian(index, refExecIds) {
+            const persons = ['admin', 'sales1', 'sales2', 'spv1'];
+            const statuses = ['open', 'in_progress', 'resolved'];
+            const devTypes = ['telat', 'kualitas_rendah', 'biaya_lebih', 'scope_berubah', 'sumber_daya', 'komunikasi', 'lainnya'];
+            const now = new Date();
+            const future = new Date(now);
+            future.setDate(future.getDate() + 14);
+
+            const refId = randomItem(refExecIds);
+
+            return {
+                x_01: String(refId),
+                x_02: `Pelaksanaan #${refId}`,
+                x_03: `Pengendalian #${index} - ${randomText(['Perbaikan', 'Evaluasi', 'Tindakan Korektif'])}`,
+                x_04: randomItem(devTypes),
+                x_05: `Akar masalah: ${randomText(['kurang koordinasi', 'sumber daya terbatas', 'perubahan scope', 'komunikasi kurang'])}`,
+                x_06: `Tindakan: ${randomText(['perbaiki proses', 'tambah SDM', 'revisi jadwal', 'koordinasi ulang'])}`,
+                x_07: randomItem(persons),
+                x_08: randomItem(statuses),
+                x_09: randomDate(now, future),
+                x_10: `Catatan: ${randomText(['sedang diproses', 'butuh persetujuan', 'sudah selesai', 'dalam monitoring'])}`
+            };
+        }
+
+        function generateVisitTracker(index) {
+            const companies = ['PT Maju Jaya', 'CV Sentosa', 'PT Berkah Abadi', 'SMA Negeri 1', 'Universitas Indonesia', 'PT Sejahtera', 'CV Karya Mandiri', 'SMK Bina Bangsa', 'PT Global Teknologi', 'Kantor Dinas Pendidikan'];
+            const contacts = ['Budi Santoso', 'Siti Rahayu', 'Ahmad Fauzi', 'Dewi Lestari', 'Rizky Ramadhan', 'Indah Permatasari', 'Bayu Pratama', 'Nurul Hikmah'];
+            const sales = ['sales1', 'sales2', 'sales3'];
+            const statuses = ['scheduled', 'visited', 'cancelled', 'rescheduled'];
+            const purposes = ['Presentasi Layanan', 'Penawaran Proposal', 'Follow Up', 'Closing Deal', 'Pelaksanaan Pelatihan', 'Pelaksanaan Tes', 'Survey Kebutuhan'];
+            const now = new Date();
+            const start = new Date(now);
+            start.setMonth(start.getMonth() - 1);
+            const end = new Date(now);
+            end.setDate(end.getDate() + 14);
+
+            return {
+                x_01: randomItem(companies),
+                x_02: randomItem(contacts),
+                x_03: randomDateTime(start, end),
+                x_04: randomItem(sales),
+                x_05: `Jl. ${randomText(['Sudirman', 'Thamrin', 'Gatot Subroto', 'M.H. Thamrin', 'Kebon Sirih'])} No. ${randomInt(1, 100)}`,
+                x_06: randomItem(statuses),
+                x_07: randomItem(purposes),
+                x_08: `Hasil: ${randomText(['positif', 'negatif', 'tindak lanjut', 'deal', 'prospek'])} - ${randomText(['perlu follow up', 'lanjut proposal', 'target tercapai'])}`
+            };
+        }
+
+        function generateCompanyProfile(index) {
+            const names = ['PT Maju Jaya', 'CV Sentosa', 'PT Berkah Abadi', 'SMA Negeri 1 Jakarta', 'Universitas Indonesia', 'PT Sejahtera Makmur', 'CV Karya Mandiri', 'SMK Bina Bangsa', 'PT Global Teknologi', 'Kantor Dinas Pendidikan', 'PT Sukses Bersama', 'CV Gemilang', 'PT Nusantara Sehat'];
+            const types = ['corporate', 'school', 'university', 'government', 'other'];
+            const statuses = ['active', 'inactive', 'prospect'];
+            const services = ['Seminar', 'Pelatihan', 'Tes Minat Bakat', 'Tes Kesiapan Kerja', 'Assesment Psikologi', 'Konseling', 'Paket Lengkap'];
+            const sales = ['sales1', 'sales2', 'sales3'];
+            const picNames = ['Budi Santoso', 'Siti Rahayu', 'Ahmad Fauzi', 'Dewi Lestari', 'Rizky Ramadhan', 'Indah Permatasari'];
+
+            const name = names[index % names.length];
+            const type = randomItem(types);
+            const status = randomItem(statuses);
+            const selectedServices = [];
+            const numServices = randomInt(1, 4);
+            const shuffled = [...services].sort(() => Math.random() - 0.5);
+            for (let i = 0; i < Math.min(numServices, shuffled.length); i++) {
+                selectedServices.push(shuffled[i]);
+            }
+            const pic = randomItem(picNames);
+            const now = new Date();
+            const joinDate = randomDate(new Date(now.getFullYear() - 3, 0, 1), now);
+
+            return {
+                x_01: name,
+                x_02: type,
+                x_03: randomEmail(pic),
+                x_04: randomPhone(),
+                x_05: pic,
+                x_06: randomPhone(),
+                x_07: `Jl. ${randomText(['Sudirman', 'Thamrin', 'Gatot Subroto', 'M.H. Thamrin', 'Kebon Sirih'])} No. ${randomInt(1, 100)}`,
+                x_08: status,
+                x_09: JSON.stringify(selectedServices),
+                x_10: randomItem(sales),
+                x_11: joinDate,
+                x_12: `Catatan: ${randomText(['klien potensial', 'sedang negosiasi', 'sudah berlangganan', 'perlu follow up'])}`
+            };
+        }
+
+        function generateDealPipeline(index) {
+            const dealNames = ['Proyek Pelatihan HR', 'Tes Kesiapan Kerja Batch 1', 'Seminar Motivasi 2025', 'Konseling Karyawan', 'Assesment Psikologi', 'Paket Lengkap Psikotes', 'Tes Minat Bakat SMA', 'Pelatihan Leadership', 'Survey Organisasi'];
+            const companies = ['PT Maju Jaya', 'CV Sentosa', 'PT Berkah Abadi', 'SMA Negeri 1', 'Universitas Indonesia', 'PT Sejahtera', 'CV Karya Mandiri', 'SMK Bina Bangsa'];
+            const services = ['Seminar', 'Pelatihan', 'Tes Minat Bakat', 'Tes Kesiapan Kerja', 'Assesment Psikologi', 'Konseling', 'Paket Lengkap'];
+            const sales = ['sales1', 'sales2', 'sales3'];
+            const stages = ['prospecting', 'qualification', 'negotiation', 'proposal', 'closing', 'won', 'lost'];
+            const priorities = ['low', 'medium', 'high'];
+            const now = new Date();
+            const start = new Date(now);
+            start.setMonth(start.getMonth() - 3);
+            const end = new Date(now);
+            end.setMonth(end.getMonth() + 3);
+
+            const stage = randomItem(stages);
+            const isWon = stage === 'won';
+            const isLost = stage === 'lost';
+
+            return {
+                x_01: dealNames[index % dealNames.length] + ' #' + (index + 1),
+                x_02: randomItem(companies),
+                x_03: randomItem(services),
+                x_04: randomItem(sales),
+                x_05: stage,
+                x_06: randomItem(priorities),
+                x_07: randomRupiah(),
+                x_08: String(randomInt(10, 100)),
+                x_09: isWon || isLost ? randomDate(new Date(now.getFullYear(), 0, 1), now) : randomDate(now, end),
+                x_10: randomDate(start, now),
+                x_11: `Catatan: ${randomText(['prospek bagus', 'negosiasi harga', 'butuh approval', 'deal besar'])}`
+            };
+        }
+
+        // ==================== MAIN FUNCTIONS ====================
+
+        async function checkAllTables() {
+            addLog('info', '🔄 Mengecek status semua tabel...');
+            const total = Object.keys(TABLES).length;
+            let loaded = 0;
+
+            for (const [key, config] of Object.entries(TABLES)) {
+                try {
+                    const data = await getTableData(key);
+                    const totalCount = data.length;
+                    const dummyCount = data.filter(row => isDummy(row)).length;
+                    tableCounts[key] = totalCount;
+                    dummyCounts[key] = dummyCount;
+                    loaded++;
+                } catch (e) {
+                    tableCounts[key] = 0;
+                    dummyCounts[key] = 0;
+                    loaded++;
+                }
+            }
+
+            renderTableStatus();
+            addLog('success', `✅ Status ${loaded}/${total} tabel berhasil dicek`);
+        }
+
+        function renderTableStatus() {
+            const container = document.getElementById('tableStatus');
+            let html = '';
+
+            for (const [key, config] of Object.entries(TABLES)) {
+                const total = tableCounts[key] || 0;
+                const dummy = dummyCounts[key] || 0;
+                const real = total - dummy;
+                const hasDummy = dummy > 0;
+                const hasReal = real > 0;
+
+                html += `
+                    <div class="table-card">
+                        <div class="table-name">
+                            ${config.icon} ${config.label}
+                            <span class="badge-count">${total}</span>
+                            ${hasDummy ? `<span class="badge-dummy">${dummy} dummy</span>` : ''}
+                            ${hasReal ? `<span class="badge-dummy" style="background:#48bb78;">${real} real</span>` : ''}
+                        </div>
+                        <div class="table-desc">${config.desc}</div>
+                        <div class="table-status">
+                            <span class="dot ${hasDummy ? 'dummy-only' : hasReal ? 'has-data' : 'empty'}"></span>
+                            ${hasDummy ? `🟡 ${dummy} data dummy` : ''}
+                            ${hasDummy && hasReal ? ' | ' : ''}
+                            ${hasReal ? `✅ ${real} data asli` : ''}
+                            ${!hasDummy && !hasReal ? '⬜ Kosong' : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        async function generateAllData() {
+            if (isGenerating) return;
+            if (isClearing) {
+                addLog('warning', '⏳ Sedang dalam proses pembersihan, tunggu sebentar...');
+                return;
+            }
+
+            isGenerating = true;
+            const btn = document.getElementById('btnGenerate');
+            const clearBtn = document.getElementById('btnClear');
+            btn.disabled = true;
+            clearBtn.disabled = true;
+
+            // Show progress
+            const progressContainer = document.getElementById('progressContainer');
+            progressContainer.style.display = 'block';
+            updateProgress(0, 'Memulai generate data...');
+
+            addLog('info', '🚀 Memulai generate data dummy untuk semua tabel...');
+            addLog('info', '🏷️ Setiap data akan ditandai dengan flag khusus (x_20 = "__DUMMY_DATA__")');
+
+            try {
+                // STEP 1: Generate Analisa Pekerjaan
+                const analisaIds = [];
+                const ANALISA_COUNT = 15;
+                updateProgress(5, `Generate ${ANALISA_COUNT} Analisa Pekerjaan...`);
+                addLog('info', `📝 Generate ${ANALISA_COUNT} data Analisa Pekerjaan...`);
+
+                for (let i = 0; i < ANALISA_COUNT; i++) {
+                    const data = generateAnalisaPekerjaan(i);
+                    const success = await createRecord('analisa_pekerjaan', data);
+                    if (success) {
+                        analisaIds.push(i + 1);
+                    }
+                    if (i % 3 === 0) {
+                        const pct = 5 + Math.round((i / ANALISA_COUNT) * 15);
+                        updateProgress(pct, `Generate Analisa Pekerjaan ${i+1}/${ANALISA_COUNT}...`);
+                    }
+                }
+                addLog('success', `✅ ${ANALISA_COUNT} Analisa Pekerjaan berhasil dibuat (dengan flag dummy)`);
+
+                // STEP 2: Generate Perencanaan
+                const planIds = [];
+                const PLAN_COUNT = 20;
+                updateProgress(25, `Generate ${PLAN_COUNT} Perencanaan...`);
+                addLog('info', `📝 Generate ${PLAN_COUNT} data Perencanaan...`);
+
+                for (let i = 0; i < PLAN_COUNT; i++) {
+                    const data = generatePerencanaan(i, analisaIds);
+                    const success = await createRecord('perencanaan', data);
+                    if (success) {
+                        planIds.push(i + 1);
+                    }
+                    if (i % 4 === 0) {
+                        const pct = 25 + Math.round((i / PLAN_COUNT) * 20);
+                        updateProgress(pct, `Generate Perencanaan ${i+1}/${PLAN_COUNT}...`);
+                    }
+                }
+                addLog('success', `✅ ${PLAN_COUNT} Perencanaan berhasil dibuat (dengan flag dummy)`);
+
+                // STEP 3: Generate Pelaksanaan
+                const execIds = [];
+                const EXEC_COUNT = 25;
+                updateProgress(50, `Generate ${EXEC_COUNT} Pelaksanaan...`);
+                addLog('info', `📝 Generate ${EXEC_COUNT} data Pelaksanaan...`);
+
+                for (let i = 0; i < EXEC_COUNT; i++) {
+                    const data = generatePelaksanaan(i, planIds);
+                    const success = await createRecord('pelaksanaan', data);
+                    if (success) {
+                        execIds.push(i + 1);
+                    }
+                    if (i % 5 === 0) {
+                        const pct = 50 + Math.round((i / EXEC_COUNT) * 20);
+                        updateProgress(pct, `Generate Pelaksanaan ${i+1}/${EXEC_COUNT}...`);
+                    }
+                }
+                addLog('success', `✅ ${EXEC_COUNT} Pelaksanaan berhasil dibuat (dengan flag dummy)`);
+
+                // STEP 4: Generate Pengendalian
+                if (execIds.length > 0) {
+                    const CONTROL_COUNT = Math.min(8, execIds.length);
+                    updateProgress(72, `Generate ${CONTROL_COUNT} Pengendalian...`);
+                    addLog('info', `📝 Generate ${CONTROL_COUNT} data Pengendalian...`);
+
+                    for (let i = 0; i < CONTROL_COUNT; i++) {
+                        const data = generatePengendalian(i, execIds);
+                        await createRecord('pengendalian', data);
+                        const pct = 72 + Math.round((i / CONTROL_COUNT) * 8);
+                        updateProgress(pct, `Generate Pengendalian ${i+1}/${CONTROL_COUNT}...`);
+                    }
+                    addLog('success', `✅ ${CONTROL_COUNT} Pengendalian berhasil dibuat (dengan flag dummy)`);
+                }
+
+                // STEP 5: Generate Visit Tracker
+                const VISIT_COUNT = 20;
+                updateProgress(82, `Generate ${VISIT_COUNT} Visit Tracker...`);
+                addLog('info', `📝 Generate ${VISIT_COUNT} data Visit Tracker...`);
+
+                for (let i = 0; i < VISIT_COUNT; i++) {
+                    const data = generateVisitTracker(i);
+                    await createRecord('visit_tracker', data);
+                    if (i % 4 === 0) {
+                        const pct = 82 + Math.round((i / VISIT_COUNT) * 6);
+                        updateProgress(pct, `Generate Visit Tracker ${i+1}/${VISIT_COUNT}...`);
+                    }
+                }
+                addLog('success', `✅ ${VISIT_COUNT} Visit Tracker berhasil dibuat (dengan flag dummy)`);
+
+                // STEP 6: Generate Company Profile
+                const COMPANY_COUNT = 15;
+                updateProgress(90, `Generate ${COMPANY_COUNT} Company Profile...`);
+                addLog('info', `📝 Generate ${COMPANY_COUNT} data Company Profile...`);
+
+                for (let i = 0; i < COMPANY_COUNT; i++) {
+                    const data = generateCompanyProfile(i);
+                    await createRecord('company_profile', data);
+                    if (i % 3 === 0) {
+                        const pct = 90 + Math.round((i / COMPANY_COUNT) * 5);
+                        updateProgress(pct, `Generate Company Profile ${i+1}/${COMPANY_COUNT}...`);
+                    }
+                }
+                addLog('success', `✅ ${COMPANY_COUNT} Company Profile berhasil dibuat (dengan flag dummy)`);
+
+                // STEP 7: Generate Deal Pipeline
+                const DEAL_COUNT = 18;
+                updateProgress(96, `Generate ${DEAL_COUNT} Deal Pipeline...`);
+                addLog('info', `📝 Generate ${DEAL_COUNT} data Deal Pipeline...`);
+
+                for (let i = 0; i < DEAL_COUNT; i++) {
+                    const data = generateDealPipeline(i);
+                    await createRecord('deal_pipeline', data);
+                    if (i % 3 === 0) {
+                        const pct = 96 + Math.round((i / DEAL_COUNT) * 4);
+                        updateProgress(pct, `Generate Deal Pipeline ${i+1}/${DEAL_COUNT}...`);
+                    }
+                }
+                addLog('success', `✅ ${DEAL_COUNT} Deal Pipeline berhasil dibuat (dengan flag dummy)`);
+
+                // FINISH
+                updateProgress(100, '✅ Selesai!');
+                addLog('success', '🎉 SEMUA DATA DUMMY BERHASIL DIGENERATE!');
+                addLog('info', '🏷️ Semua data dummy memiliki flag x_20 = "__DUMMY_DATA__"');
+
+                // Refresh status
+                await checkAllTables();
+
+                showToast('🎉 Semua data dummy berhasil digenerate! Data asli Anda aman!', 'success');
+
+            } catch (e) {
+                addLog('error', `❌ Error: ${e.message}`);
+                showToast('❌ Gagal generate data: ' + e.message, 'error');
+            } finally {
+                isGenerating = false;
+                btn.disabled = false;
+                clearBtn.disabled = false;
+                setTimeout(() => {
+                    document.getElementById('progressContainer').style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        function updateProgress(pct, status) {
+            const fill = document.getElementById('progressFill');
+            const label = document.getElementById('progressLabel');
+            const statusEl = document.getElementById('progressStatus');
+            fill.style.width = pct + '%';
+            label.textContent = pct + '%';
+            statusEl.textContent = status;
+        }
+
+        // ==================== CLEAR DATA (ONLY DUMMY) ====================
+
+        function confirmClearAll() {
+            if (isClearing || isGenerating) {
+                showToast('⏳ Sedang ada proses berjalan, tunggu sebentar...', 'info');
+                return;
+            }
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+        }
+
+        async function executeClearAll() {
+            closeConfirmModal();
+
+            if (isClearing || isGenerating) return;
+            isClearing = true;
+
+            const btn = document.getElementById('btnClear');
+            const genBtn = document.getElementById('btnGenerate');
+            btn.disabled = true;
+            genBtn.disabled = true;
+
+            addLog('warning', '⚠️ Memulai penghapusan data dummy (data asli AMAN)...');
+
+            try {
+                let totalDeleted = 0;
+                const tables = Object.keys(TABLES);
+
+                for (let i = 0; i < tables.length; i++) {
+                    const table = tables[i];
+                    const config = TABLES[table];
+                    addLog('info', `🗑️ Menghapus data dummy dari ${config.icon} ${config.label}...`);
+
+                    const deleted = await deleteDummyData(table);
+                    if (deleted > 0) {
+                        totalDeleted += deleted;
+                        addLog('success', `✅ ${deleted} data dummy dari ${config.label} berhasil dihapus`);
+                    } else {
+                        addLog('info', `⬜ Tidak ada data dummy di ${config.label}`);
+                    }
+                }
+
+                addLog('success', `🧹 ${totalDeleted} total data dummy berhasil dibersihkan!`);
+                addLog('info', '🛡️ Data asli Anda tetap utuh dan tidak terhapus');
+
+                // Refresh status
+                await checkAllTables();
+
+                showToast(`🧹 ${totalDeleted} data dummy berhasil dibersihkan! Data asli aman.`, 'success');
+
+            } catch (e) {
+                addLog('error', `❌ Error saat membersihkan: ${e.message}`);
+                showToast('❌ Gagal membersihkan data: ' + e.message, 'error');
+            } finally {
+                isClearing = false;
+                btn.disabled = false;
+                genBtn.disabled = false;
+            }
+        }
+
+        // ==================== LOG ====================
+
+        function addLog(type, message) {
+            const container = document.getElementById('logContainer');
+            const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            const empty = container.querySelector('.empty-log');
+            if (empty) empty.remove();
+
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `
+                <span class="time">[${time}]</span>
+                <span class="${type}">${message}</span>
+            `;
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function clearLog() {
+            const container = document.getElementById('logContainer');
+            container.innerHTML = `<div class="empty-log">Log telah dibersihkan.</div>`;
+        }
+
+        // ==================== TOAST ====================
+
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ==================== KEYBOARD ====================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeConfirmModal();
+            }
+        });
+
+        // ==================== CONSOLE ====================
+        console.log('%c🧪 Data Dummy Generator (Safe Mode)', 'font-size:20px;font-weight:bold;color:#9f7aea;');
+        console.log('%c🛡️ Mode AMAN: Hanya data dummy yang dihapus', 'font-size:14px;color:#48bb78;');
+        console.log('%c📋 Tabel yang didukung:', 'font-size:14px;color:#718096;');
+        console.log(Object.keys(TABLES).join(', '));
+        console.log('%c🏷️ Flag dummy: x_20 = "__DUMMY_DATA__"', 'font-size:13px;color:#ed8936;');
+    </script>
+</body>
+</html>

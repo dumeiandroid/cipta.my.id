@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Tools Suite - Psikologi</title>
+    <script>
+        // ==================== AUTH GUARD (Sales Tools Suite - SSO) ====================
+        const AUTH_SESSION_KEY = 'lidan_sales_session';
+        const AUTH_LOGIN_PAGE = 'login.html';
+
+        function getAuthSession() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+        function clearAuthSession() { localStorage.removeItem(AUTH_SESSION_KEY); }
+        function isSupervisor(session) { return !!session && String(session.role || '').toLowerCase() === 'spv'; }
+        function isAdmin(session) { return !!session && String(session.username || '').toLowerCase() === 'admin'; }
+        function logout() { clearAuthSession(); window.location.href = AUTH_LOGIN_PAGE; }
+
+        let CURRENT_USER = getAuthSession();
+        if (!CURRENT_USER || !CURRENT_USER.username) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.replace(AUTH_LOGIN_PAGE + '?return=' + returnUrl);
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === AUTH_SESSION_KEY && !e.newValue) {
+                window.location.href = AUTH_LOGIN_PAGE;
+            }
+        });
+    </script>
+    <style>
+        /* ======================================== */
+        /* RESET & BASE */
+        /* ======================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ======================================== */
+        /* HEADER */
+        /* ======================================== */
+        .header {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: white;
+            padding: 40px 0 30px;
+            margin-bottom: 30px;
+            border-bottom: 4px solid #9f7aea;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 span {
+            background: #9f7aea;
+            font-size: 14px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .header p {
+            color: #a0aec0;
+            font-size: 16px;
+            margin-top: 4px;
+        }
+
+        .header-badge {
+            background: rgba(159, 122, 234, 0.2);
+            padding: 8px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(159, 122, 234, 0.3);
+            font-size: 14px;
+            color: #e9d8fd;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #fff;
+        }
+        .user-badge .role-tag {
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            text-transform: capitalize;
+        }
+        .user-badge .role-tag.spv { background: #9f7aea; }
+        .user-badge .role-tag.sales { background: #4299e1; }
+        .btn-logout {
+            background: #fc8181;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-logout:hover { background: #f56565; }
+
+        /* ======================================== */
+        /* NAVIGATION - TOOLS GRID */
+        /* ======================================== */
+        .tools-nav {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 24px 30px;
+            margin-bottom: 30px;
+        }
+
+        .tools-nav h2 {
+            font-size: 18px;
+            color: #1a202c;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tools-nav h2 .count {
+            background: #9f7aea;
+            color: white;
+            font-size: 13px;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .tool-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: #f7fafc;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+
+        .tool-link:hover {
+            background: #edf2f7;
+            border-color: #9f7aea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(159,122,234,0.2);
+        }
+
+        .tool-link .icon {
+            font-size: 20px;
+        }
+
+        .tool-link .badge-new {
+            background: #48bb78;
+            color: white;
+            font-size: 9px;
+            padding: 1px 8px;
+            border-radius: 10px;
+            margin-left: auto;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .tool-link .badge-pdca {
+            background: #ed8936;
+            color: white;
+            font-size: 8px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: auto;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .tool-link .badge-info {
+            background: #9f7aea;
+            color: white;
+            font-size: 8px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            margin-left: auto;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+        }
+
+        .tool-link .badge-info:hover {
+            background: #7c5cd6;
+            transform: scale(1.08);
+        }
+
+        /* ======================================== */
+        /* ARTICLE SECTION */
+        /* ======================================== */
+        .article-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .article-section h2 {
+            font-size: 28px;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .article-section .subtitle {
+            color: #718096;
+            font-size: 16px;
+            margin-bottom: 24px;
+        }
+
+        .article-section .divider {
+            height: 3px;
+            background: linear-gradient(to right, #9f7aea, #4299e1);
+            border-radius: 4px;
+            margin-bottom: 30px;
+            width: 80px;
+        }
+
+        .article-content h3 {
+            font-size: 20px;
+            color: #2d3748;
+            margin-top: 28px;
+            margin-bottom: 12px;
+        }
+
+        .article-content h3:first-of-type {
+            margin-top: 0;
+        }
+
+        .article-content p {
+            color: #4a5568;
+            margin-bottom: 14px;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            padding-left: 24px;
+            margin-bottom: 16px;
+            color: #4a5568;
+        }
+
+        .article-content ul li,
+        .article-content ol li {
+            margin-bottom: 6px;
+        }
+
+        .article-content .highlight-box {
+            background: #f7fafc;
+            border-left: 4px solid #9f7aea;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+
+        .article-content .highlight-box strong {
+            color: #2d3748;
+        }
+
+        .article-content .highlight-box.purple {
+            border-left-color: #9f7aea;
+            background: #faf5ff;
+        }
+
+        .article-content .highlight-box.blue {
+            border-left-color: #4299e1;
+            background: #ebf8ff;
+        }
+
+        .article-content .highlight-box.green {
+            border-left-color: #48bb78;
+            background: #f0fff4;
+        }
+
+        .article-content .highlight-box.orange {
+            border-left-color: #ed8936;
+            background: #fffbeb;
+        }
+
+        .article-content .highlight-box.red {
+            border-left-color: #fc8181;
+            background: #fff5f5;
+        }
+
+        /* ======================================== */
+        /* TOOL CARDS IN ARTICLE */
+        /* ======================================== */
+        .tool-card-article {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .tool-card-article .tool-item {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 18px 20px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .tool-card-article .tool-item:hover {
+            border-color: #9f7aea;
+            box-shadow: 0 4px 12px rgba(159,122,234,0.12);
+            transform: translateY(-2px);
+        }
+
+        .tool-card-article .tool-item .tool-icon {
+            font-size: 28px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .tool-card-article .tool-item .tool-name {
+            font-weight: 700;
+            font-size: 15px;
+            color: #2d3748;
+        }
+
+        .tool-card-article .tool-item .tool-desc {
+            font-size: 13px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .tool-card-article .tool-item .tool-link-small {
+            display: inline-block;
+            margin-top: 8px;
+            color: #9f7aea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .tool-card-article .tool-item .tool-link-small:hover {
+            text-decoration: underline;
+        }
+
+        .tool-card-article .tool-item .pdca-tag {
+            display: inline-block;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 8px;
+            border-radius: 10px;
+            color: #fff;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .tool-card-article .tool-item .pdca-tag.plan { background: #ed8936; }
+        .tool-card-article .tool-item .pdca-tag.do { background: #4299e1; }
+        .tool-card-article .tool-item .pdca-tag.check { background: #fc8181; }
+        .tool-card-article .tool-item .pdca-tag.analisa { background: #9f7aea; }
+        .tool-card-article .tool-item .pdca-tag.support { background: #718096; }
+
+        /* ======================================== */
+        /* PDCA FLOW CHART */
+        /* ======================================== */
+        .pdca-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 2px dashed #e2e8f0;
+        }
+
+        .pdca-flow .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 10px;
+            min-width: 80px;
+            background: white;
+            border: 2px solid #e2e8f0;
+        }
+
+        .pdca-flow .step .step-icon {
+            font-size: 24px;
+        }
+        .pdca-flow .step .step-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #4a5568;
+            margin-top: 2px;
+        }
+        .pdca-flow .step .step-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .pdca-flow .step.analisa { border-color: #9f7aea; background: #faf5ff; }
+        .pdca-flow .step.plan { border-color: #ed8936; background: #fffbeb; }
+        .pdca-flow .step.do { border-color: #4299e1; background: #ebf8ff; }
+        .pdca-flow .step.check { border-color: #fc8181; background: #fff5f5; }
+
+        .pdca-flow .arrow {
+            font-size: 20px;
+            color: #a0aec0;
+        }
+
+        .pdca-flow .arrow.conditional {
+            color: #ed8936;
+            font-size: 14px;
+        }
+
+        .pdca-flow .step .badge-conditional {
+            font-size: 8px;
+            background: #ed8936;
+            color: #fff;
+            padding: 1px 6px;
+            border-radius: 8px;
+            margin-top: 2px;
+        }
+
+        /* ======================================== */
+        /* MODAL / POPUP */
+        /* ======================================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 850px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 35px 40px;
+            position: relative;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-close {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: #fc8181;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 22px;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .modal-close:hover {
+            background: #f56565;
+            transform: rotate(90deg);
+        }
+
+        .modal .modal-icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .modal .modal-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .modal .modal-subtitle {
+            color: #718096;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .modal .modal-divider {
+            height: 3px;
+            background: linear-gradient(to right, #9f7aea, #4299e1);
+            border-radius: 4px;
+            margin-bottom: 24px;
+            width: 60px;
+        }
+
+        .modal .modal-body h4 {
+            font-size: 18px;
+            color: #2d3748;
+            margin-top: 20px;
+            margin-bottom: 8px;
+        }
+
+        .modal .modal-body h4:first-of-type {
+            margin-top: 0;
+        }
+
+        .modal .modal-body p {
+            color: #4a5568;
+            margin-bottom: 12px;
+            line-height: 1.7;
+        }
+
+        .modal .modal-body ul,
+        .modal .modal-body ol {
+            padding-left: 24px;
+            margin-bottom: 14px;
+            color: #4a5568;
+        }
+
+        .modal .modal-body ul li,
+        .modal .modal-body ol li {
+            margin-bottom: 4px;
+        }
+
+        .modal .modal-body .highlight-box {
+            background: #f7fafc;
+            border-left: 4px solid #9f7aea;
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+
+        .modal .modal-body .highlight-box strong {
+            color: #2d3748;
+        }
+
+        .modal .modal-footer {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 2px solid #edf2f7;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .modal .modal-footer .btn-open-tool {
+            background: #9f7aea;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal .modal-footer .btn-open-tool:hover {
+            background: #805ad5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(159, 122, 234, 0.4);
+        }
+
+        .modal .modal-footer .btn-close-modal {
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal .modal-footer .btn-close-modal:hover {
+            background: #cbd5e0;
+        }
+
+        .modal::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal::-webkit-scrollbar-track {
+            background: #f7fafc;
+            border-radius: 10px;
+        }
+        .modal::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        /* ======================================== */
+        /* TABLE OF CONTENTS */
+        /* ======================================== */
+        .toc {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 16px 0 24px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .toc h4 {
+            font-size: 15px;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .toc ul {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 20px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .toc ul li {
+            margin: 0;
+            padding: 0;
+        }
+
+        .toc ul li a {
+            color: #9f7aea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .toc ul li a:hover {
+            text-decoration: underline;
+        }
+
+        /* ======================================== */
+        /* FOOTER */
+        /* ======================================== */
+        .footer {
+            background: #1a202c;
+            color: #a0aec0;
+            padding: 30px 0;
+            border-top: 4px solid #9f7aea;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #e9d8fd;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ======================================== */
+        /* SCROLL TO TOP */
+        /* ======================================== */
+        .scroll-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #9f7aea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(159, 122, 234, 0.4);
+            transition: all 0.3s;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            z-index: 9999;
+        }
+
+        .scroll-top.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .scroll-top:hover {
+            background: #805ad5;
+            transform: scale(1.05);
+        }
+
+        /* ======================================== */
+        /* RESPONSIVE */
+        /* ======================================== */
+        @media (max-width: 992px) {
+            .header h1 {
+                font-size: 26px;
+            }
+            .article-section {
+                padding: 30px 20px;
+            }
+            .tool-card-article {
+                grid-template-columns: 1fr 1fr;
+            }
+            .tools-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            }
+            .modal {
+                padding: 30px 24px;
+            }
+            .toc ul {
+                grid-template-columns: 1fr;
+            }
+            .pdca-flow {
+                flex-direction: column;
+                padding: 16px;
+            }
+            .pdca-flow .arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 20px;
+                flex-wrap: wrap;
+            }
+            .header h1 span {
+                font-size: 11px;
+                padding: 2px 10px;
+            }
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .tools-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+            .tool-link {
+                font-size: 12px;
+                padding: 10px 12px;
+            }
+            .article-section {
+                padding: 20px 16px;
+            }
+            .article-section h2 {
+                font-size: 22px;
+            }
+            .article-content h3 {
+                font-size: 17px;
+            }
+            .tool-card-article {
+                grid-template-columns: 1fr;
+            }
+            .modal {
+                padding: 20px 16px;
+            }
+            .modal .modal-title {
+                font-size: 22px;
+            }
+            .modal .modal-footer {
+                flex-direction: column;
+            }
+            .modal .modal-footer .btn-open-tool,
+            .modal .modal-footer .btn-close-modal {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ======================================== -->
+    <!-- HEADER -->
+    <!-- ======================================== -->
+    <header class="header">
+        <div class="container header-content">
+            <div>
+                <h1>
+                    🚀 Sales Tools Suite
+                    <span>Psikologi</span>
+                </h1>
+                <p>Tools untuk tim sales layanan psikologi - dari lead hingga closing</p>
+            </div>
+            <div class="header-right">
+                <div class="header-badge">
+                    📊 8 Tools Siap Pakai
+                </div>
+                <div class="user-badge" id="userBadge">
+                    <span id="userBadgeName">👤 -</span>
+                    <span class="role-tag" id="userBadgeRole">-</span>
+                    <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ======================================== -->
+    <!-- MAIN CONTENT -->
+    <!-- ======================================== -->
+    <main class="container">
+
+        <!-- ======================================== -->
+        <!-- TOOLS NAVIGATION -->
+        <!-- ======================================== -->
+        <nav class="tools-nav">
+            <h2>
+                🚀 Akses Cepat Tools
+                <span class="count">8 Tools</span>
+            </h2>
+            <div class="tools-grid">
+                <!-- Existing Tools -->
+                <a href="analisa_pekerjaan.html" class="tool-link">
+                    <span class="icon">🗂️</span> Analisa Pekerjaan
+                    <span class="badge-info" onclick="event.preventDefault();event.stopPropagation();openModal('analisa_pekerjaan')" title="Lihat info tentang Analisa Pekerjaan">ℹ️ info</span>
+                </a>
+                <a href="visit_tracker.html" class="tool-link">
+                    <span class="icon">📅</span> Visit Tracker
+                    <span class="badge-info" onclick="event.preventDefault();event.stopPropagation();openModal('visit_tracker')" title="Lihat info tentang Visit Tracker">ℹ️ info</span>
+                </a>
+                <a href="company_profile.html" class="tool-link">
+                    <span class="icon">🏢</span> Company Profile
+                    <span class="badge-info" onclick="event.preventDefault();event.stopPropagation();openModal('company_profile')" title="Lihat info tentang Company Profile">ℹ️ info</span>
+                </a>
+                <a href="deal_pipeline.html" class="tool-link">
+                    <span class="icon">📊</span> Deal Pipeline
+                    <span class="badge-info" onclick="event.preventDefault();event.stopPropagation();openModal('deal_pipeline')" title="Lihat info tentang Deal Pipeline">ℹ️ info</span>
+                </a>
+                <a href="dashboard.html" class="tool-link spv-only">
+                    <span class="icon">📈</span> Dashboard
+                    <span class="badge-info" onclick="event.preventDefault();event.stopPropagation();openModal('dashboard')" title="Lihat info tentang Dashboard">ℹ️ info</span>
+                </a>
+
+                <!-- NEW PDCA Tools -->
+                <a href="perencanaan.html" class="tool-link">
+                    <span class="icon">📋</span> Perencanaan
+                    <span class="badge-pdca">PLAN</span>
+                    <span class="badge-info" onclick="event.preventDefault();event.stopPropagation();openModal('perencanaan')" title="Lihat info tentang Perencanaan">ℹ️ info</span>
+                </a>
+                <a href="pelaksanaan.html" class="tool-link">
+                    <span class="icon">⚙️</span> Pelaksanaan
+                    <span class="badge-pdca">DO</span>
+                    <span class="badge-info" onclick="event.preventDefault();event.stopPropagation();openModal('pelaksanaan')" title="Lihat info tentang Pelaksanaan">ℹ️ info</span>
+                </a>
+                <a href="pengendalian.html" class="tool-link">
+                    <span class="icon">🎯</span> Pengendalian
+                    <span class="badge-pdca">CHECK</span>
+                    <span class="badge-info" onclick="event.preventDefault();event.stopPropagation();openModal('pengendalian')" title="Lihat info tentang Pengendalian">ℹ️ info</span>
+                </a>
+
+                <a href="index.html" class="tool-link" style="background:#faf5ff;border-color:#9f7aea;">
+                    <span class="icon">🏠</span> Home
+                    <span class="badge-new">You are here</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- ======================================== -->
+        <!-- ARTICLE SECTION -->
+        <!-- ======================================== -->
+        <article class="article-section">
+            <h2>📖 Panduan Sales Tools untuk Layanan Psikologi</h2>
+            <p class="subtitle">Mengelola prospek, kunjungan, dan pipeline penjualan layanan psikologi secara efektif</p>
+            <div class="divider"></div>
+
+            <!-- Table of Contents -->
+            <div class="toc">
+                <h4>📑 Daftar Isi</h4>
+                <ul>
+                    <li><a href="#apa-itu">Apa Itu Sales Tools Suite?</a></li>
+                    <li><a href="#pdca">Siklus PDCA</a></li>
+                    <li><a href="#analisa-pekerjaan">Analisa Pekerjaan</a></li>
+                    <li><a href="#perencanaan">Perencanaan (PLAN)</a></li>
+                    <li><a href="#pelaksanaan">Pelaksanaan (DO)</a></li>
+                    <li><a href="#pengendalian">Pengendalian (CHECK & ACT)</a></li>
+                    <li><a href="#visit-tracker">Visit Tracker</a></li>
+                    <li><a href="#client-profile">Company Profile</a></li>
+                    <li><a href="#deal-pipeline">Deal Pipeline</a></li>
+                    <li class="spv-only"><a href="#dashboard">Dashboard</a></li>
+                    <li><a href="#integrasi">Integrasi Tools</a></li>
+                    <li><a href="#kesimpulan">Kesimpulan</a></li>
+                </ul>
+            </div>
+
+            <!-- ======================================== -->
+            <!-- SECTION: APA ITU -->
+            <!-- ======================================== -->
+            <div class="article-content">
+                <h3 id="apa-itu">🚀 Apa Itu Sales Tools Suite?</h3>
+                <p>
+                    <strong>Sales Tools Suite</strong> adalah kumpulan aplikasi yang dirancang khusus untuk
+                    tim sales di bidang <strong>jasa layanan psikologi</strong> seperti seminar, pelatihan,
+                    tes minat bakat, tes kesiapan kerja, dan assesment psikologi.
+                </p>
+                <p>
+                    Tools ini membantu sales di lapangan untuk mencatat prospek, melacak kunjungan,
+                    mengelola data perusahaan klien, dan memantau pipeline penjualan. Sementara itu,
+                    supervisor dapat memonitor kinerja tim secara real-time melalui dashboard terintegrasi.
+                </p>
+
+                <div class="highlight-box purple">
+                    <p><strong>🎯 Tujuan Utama:</strong></p>
+                    <ul>
+                        <li>Membantu sales mencatat dan mengelola prospek dengan lebih terstruktur</li>
+                        <li>Memudahkan supervisor memantau aktivitas dan kinerja tim</li>
+                        <li>Meningkatkan konversi lead menjadi pelanggan</li>
+                        <li>Memberikan visibilitas penuh atas pipeline penjualan</li>
+                        <li>Menerapkan siklus PDCA untuk perbaikan berkelanjutan</li>
+                    </ul>
+                </div>
+
+                <!-- ======================================== -->
+                <!-- SECTION: PDCA FLOW -->
+                <!-- ======================================== -->
+                <h3 id="pdca">🔄 Siklus PDCA - Perbaikan Berkelanjutan</h3>
+
+                <div class="pdca-flow">
+                    <div class="step analisa">
+                        <span class="step-icon">🗂️</span>
+                        <span class="step-label">STEP 0</span>
+                        <span class="step-name">Analisa</span>
+                        <span style="font-size:8px;color:#718096;">(SOP/Referensi)</span>
+                    </div>
+                    <span class="arrow">→</span>
+                    <div class="step plan">
+                        <span class="step-icon">📋</span>
+                        <span class="step-label">STEP 1</span>
+                        <span class="step-name">Perencanaan</span>
+                        <span style="font-size:8px;color:#718096;">(PLAN)</span>
+                    </div>
+                    <span class="arrow">→</span>
+                    <div class="step do">
+                        <span class="step-icon">⚙️</span>
+                        <span class="step-label">STEP 2</span>
+                        <span class="step-name">Pelaksanaan</span>
+                        <span style="font-size:8px;color:#718096;">(DO)</span>
+                    </div>
+                    <span class="arrow conditional">⇢</span>
+                    <div class="step check">
+                        <span class="step-icon">🎯</span>
+                        <span class="step-label">STEP 3</span>
+                        <span class="step-name">Pengendalian</span>
+                        <span style="font-size:8px;color:#718096;">(CHECK & ACT)</span>
+                        <span class="badge-conditional">Hanya jika deviasi</span>
+                    </div>
+                </div>
+
+                <div class="highlight-box orange">
+                    <p><strong>📌 Konsep PDCA di Sini:</strong></p>
+                    <ul>
+                        <li><strong>Analisa</strong> — Basis pengetahuan: cara kerja standar (SOP), level kesulitan, alat/akses, estimasi waktu</li>
+                        <li><strong>Perencanaan (PLAN)</strong> — Ambil item dari Analisa, assign ke orang + jadwal + target</li>
+                        <li><strong>Pelaksanaan (DO)</strong> — Eksekusi aktual, harus mengikuti SOP dan jadwal</li>
+                        <li><strong>Pengendalian (CHECK & ACT)</strong> — Hanya muncul kalau Pelaksanaan menyimpang (telat/kualitas di bawah target)</li>
+                    </ul>
+                    <p style="margin-top:8px;font-size:13px;">
+                        <em>💡 Pengendalian sifatnya <strong>kondisional</strong> — tidak semua pelaksanaan membutuhkannya.</em>
+                    </p>
+                </div>
+
+                <!-- ======================================== -->
+                <!-- SECTION: ANALISA PEKERJAAN -->
+                <!-- ======================================== -->
+                <h3 id="analisa-pekerjaan">🗂️ 1. Analisa Pekerjaan</h3>
+                <div class="tool-card-article">
+                    <div class="tool-item" onclick="openModal('analisa_pekerjaan')">
+                        <span class="tool-icon">🗂️</span>
+                        <div class="tool-name">Analisa Pekerjaan</div>
+                        <span class="pdca-tag analisa">REFERENSI</span>
+                        <div class="tool-desc">
+                            Gudang referensi jenis pekerjaan lengkap dengan cara mengerjakannya (SOP).
+                            <br><strong>Fitur:</strong> Kategori, Level Kesulitan, Estimasi Waktu, Langkah Pengerjaan, Alat/Bahan
+                        </div>
+                        <button class="tool-link-small" onclick="event.stopPropagation();openModal('analisa_pekerjaan')">📖 Baca Selengkapnya →</button>
+                    </div>
+                </div>
+
+                <!-- ======================================== -->
+                <!-- SECTION: PERENCANAAN -->
+                <!-- ======================================== -->
+                <h3 id="perencanaan">📋 2. Perencanaan (PLAN)</h3>
+                <div class="tool-card-article">
+                    <div class="tool-item" onclick="openModal('perencanaan')">
+                        <span class="tool-icon">📋</span>
+                        <div class="tool-name">Perencanaan</div>
+                        <span class="pdca-tag plan">PLAN</span>
+                        <div class="tool-desc">
+                            Mengambil item dari Analisa Pekerjaan, lalu menetapkan siapa, kapan, dan target.
+                            <br><strong>Fitur:</strong> Assignee, Jadwal Mulai &amp; Target, Goal/Target, Status
+                        </div>
+                        <button class="tool-link-small" onclick="event.stopPropagation();openModal('perencanaan')">📖 Baca Selengkapnya →</button>
+                    </div>
+                </div>
+
+                <!-- ======================================== -->
+                <!-- SECTION: PELAKSANAAN -->
+                <!-- ======================================== -->
+                <h3 id="pelaksanaan">⚙️ 3. Pelaksanaan (DO)</h3>
+                <div class="tool-card-article">
+                    <div class="tool-item" onclick="openModal('pelaksanaan')">
+                        <span class="tool-icon">⚙️</span>
+                        <div class="tool-name">Pelaksanaan</div>
+                        <span class="pdca-tag do">DO</span>
+                        <div class="tool-desc">
+                            Mencatat eksekusi aktual dari pekerjaan yang sudah direncanakan.
+                            <br><strong>Fitur:</strong> Tanggal Aktual, Hasil Aktual, Status (On Track/Telat/Menyimpang)
+                        </div>
+                        <button class="tool-link-small" onclick="event.stopPropagation();openModal('pelaksanaan')">📖 Baca Selengkapnya →</button>
+                    </div>
+                </div>
+
+                <!-- ======================================== -->
+                <!-- SECTION: PENGENDALIAN -->
+                <!-- ======================================== -->
+                <h3 id="pengendalian">🎯 4. Pengendalian (CHECK & ACT)</h3>
+                <div class="tool-card-article">
+                    <div class="tool-item" onclick="openModal('pengendalian')">
+                        <span class="tool-icon">🎯</span>
+                        <div class="tool-name">Pengendalian</div>
+                        <span class="pdca-tag check">CHECK</span>
+                        <div class="tool-desc">
+                            <strong>Kondisional</strong> — hanya muncul jika Pelaksanaan menyimpang.
+                            Identifikasi akar masalah, tindakan korektif, dan penanggung jawab.
+                            <br><strong>Fitur:</strong> Jenis Deviasi, Akar Masalah, Tindakan Korektif, Status
+                        </div>
+                        <button class="tool-link-small" onclick="event.stopPropagation();openModal('pengendalian')">📖 Baca Selengkapnya →</button>
+                    </div>
+                </div>
+
+                <!-- ======================================== -->
+                <!-- SECTION: VISIT TRACKER -->
+                <!-- ======================================== -->
+                <h3 id="visit-tracker">📅 5. Visit Tracker</h3>
+                <div class="tool-card-article">
+                    <div class="tool-item" onclick="openModal('visit_tracker')">
+                        <span class="tool-icon">📅</span>
+                        <div class="tool-name">Visit Tracker</div>
+                        <span class="pdca-tag support">SUPPORT</span>
+                        <div class="tool-desc">
+                            Mencatat aktivitas kunjungan sales ke lapangan.
+                            <br><strong>Fitur:</strong> Jadwal kunjungan, Check-in lokasi, Hasil kunjungan, Bukti aktivitas
+                        </div>
+                        <button class="tool-link-small" onclick="event.stopPropagation();openModal('visit_tracker')">📖 Baca Selengkapnya →</button>
+                    </div>
+                </div>
+
+                <!-- ======================================== -->
+                <!-- SECTION: CLIENT PROFILE -->
+                <!-- ======================================== -->
+                <h3 id="client-profile">🏢 6. Company Profile</h3>
+                <div class="tool-card-article">
+                    <div class="tool-item" onclick="openModal('company_profile')">
+                        <span class="tool-icon">🏢</span>
+                        <div class="tool-name">Company Profile</div>
+                        <span class="pdca-tag support">SUPPORT</span>
+                        <div class="tool-desc">
+                            Database perusahaan klien yang sudah atau akan dilayani.
+                            <br><strong>Fitur:</strong> Tipe perusahaan, PIC, Layanan yang digunakan, Status klien
+                        </div>
+                        <button class="tool-link-small" onclick="event.stopPropagation();openModal('company_profile')">📖 Baca Selengkapnya →</button>
+                    </div>
+                </div>
+
+                <!-- ======================================== -->
+                <!-- SECTION: DEAL PIPELINE -->
+                <!-- ======================================== -->
+                <h3 id="deal-pipeline">📊 7. Deal Pipeline</h3>
+                <div class="tool-card-article">
+                    <div class="tool-item" onclick="openModal('deal_pipeline')">
+                        <span class="tool-icon">📊</span>
+                        <div class="tool-name">Deal Pipeline</div>
+                        <span class="pdca-tag support">SUPPORT</span>
+                        <div class="tool-desc">
+                            Tracking setiap deal dari awal hingga closing.
+                            <br><strong>Fitur:</strong> Stage (Prospecting → Won/Lost), Probabilitas, Nilai Deal, Expected Close Date
+                        </div>
+                        <button class="tool-link-small" onclick="event.stopPropagation();openModal('deal_pipeline')">📖 Baca Selengkapnya →</button>
+                    </div>
+                </div>
+
+                <!-- ======================================== -->
+                <!-- SECTION: DASHBOARD -->
+                <!-- ======================================== -->
+                <div class="spv-only">
+                    <h3 id="dashboard">📈 8. Dashboard</h3>
+                    <div class="tool-card-article">
+                        <div class="tool-item" onclick="openModal('dashboard')">
+                            <span class="tool-icon">📈</span>
+                            <div class="tool-name">Dashboard</div>
+                            <span class="pdca-tag support">SUPPORT</span>
+                            <div class="tool-desc">
+                                Dashboard untuk supervisor memonitor tim sales.
+                                <br><strong>Fitur:</strong> Statistik real-time, Pipeline chart, Ranking sales, Alert & notifikasi
+                            </div>
+                            <button class="tool-link-small" onclick="event.stopPropagation();openModal('dashboard')">📖 Baca Selengkapnya →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ======================================== -->
+                <!-- SECTION: INTEGRASI -->
+                <!-- ======================================== -->
+                <h3 id="integrasi">🔄 Integrasi Tools - PDCA Workflow</h3>
+
+                <div class="highlight-box purple">
+                    <p><strong>📋 Recommended Workflow dengan PDCA:</strong></p>
+                    <ol>
+                        <li><strong>🗂️ Analisa Pekerjaan</strong> → Basis SOP/cara kerja (bisa dicek kapan saja)</li>
+                        <li><strong>📋 Perencanaan (PLAN)</strong> → Ambil SOP, tentukan pelaksana, jadwal, dan target</li>
+                        <li><strong>⚙️ Pelaksanaan (DO)</strong> → Catat eksekusi aktual</li>
+                        <li><strong>🎯 Pengendalian (CHECK & ACT)</strong> → <em>Hanya jika</em> ada deviasi (telat/kualitas di bawah target)</li>
+                        <li><strong>📈 Dashboard</strong> → Supervisor pantau semua aktivitas</li>
+                    </ol>
+                    <p style="margin-top:8px;font-size:13px;">
+                        <em>💡 Tools pendukung: Visit Tracker, Company Profile, dan Deal Pipeline berjalan paralel
+                        untuk mendukung aktivitas sales sehari-hari.</em>
+                    </p>
+                </div>
+
+                <div class="highlight-box blue">
+                    <p><strong>🔗 Relasi Antar Tools PDCA:</strong></p>
+                    <ul>
+                        <li><strong>Analisa Pekerjaan</strong> → (1) bisa dipakai di banyak <strong>Perencanaan</strong></li>
+                        <li><strong>Perencanaan</strong> → (1) bisa punya banyak catatan <strong>Pelaksanaan</strong></li>
+                        <li><strong>Pelaksanaan</strong> → (0..1) <strong>Pengendalian</strong> (hanya jika menyimpang)</li>
+                    </ul>
+                    <p style="margin-top:8px;font-size:13px;color:#718096;">
+                        Semua data terintegrasi dengan API yang sama dan menggunakan kolom generik (x_01 sd x_20).
+                    </p>
+                </div>
+
+                <!-- ======================================== -->
+                <!-- SECTION: KESIMPULAN -->
+                <!-- ======================================== -->
+                <h3 id="kesimpulan">🎯 Kesimpulan</h3>
+                <p>
+                    Dengan 8 tools ini, tim sales layanan psikologi dapat bekerja lebih terstruktur dan efektif:
+                </p>
+                <ul>
+                    <li><strong>Sales</strong> → Dapat mencatat prospek, kunjungan, deal, dan menjalankan siklus PDCA</li>
+                    <li><strong>Supervisor</strong> → Dapat memantau kinerja tim secara real-time</li>
+                    <li><strong>Bisnis</strong> → Meningkatkan konversi dan pertumbuhan pendapatan</li>
+                </ul>
+
+                <div class="highlight-box green">
+                    <p style="margin-bottom:0;">
+                        <strong>🚀 Siap Memulai?</strong><br>
+                        Pilih salah satu tool di atas dan mulailah mengelola sales Anda hari ini!
+                    </p>
+                </div>
+            </div>
+        </article>
+
+        <!-- ======================================== -->
+        <!-- TOOLS NAVIGATION BOTTOM -->
+        <!-- ======================================== -->
+        <nav class="tools-nav" style="margin-bottom:0;">
+            <h2>
+                🚀 Akses Cepat Tools
+                <span class="count">8 Tools</span>
+            </h2>
+            <div class="tools-grid">
+                <!-- Existing Tools -->
+                <a href="analisa_pekerjaan.html" class="tool-link">
+                    <span class="icon">🗂️</span> Analisa Pekerjaan
+                    <span class="badge-info" onclick="event.preventDefault();event.stopPropagation();openModal('analisa_pekerjaan')" title="Lihat info tentang Analisa Pekerjaan">ℹ️ info</span>
+                </a>
+                <a href="visit_tracker.html" class="tool-link">
+                    <span class="icon">📅</span> Visit Tracker
+                    <span class="badge-info" onclick="event.preventDefault();event.stopPropagation();openModal('visit_tracker')" title="Lihat info tentang Visit Tracker">ℹ️ info</span>
+                </a>
+                <a href="company_profile.html" class="tool-link">
+                    <span class="icon">🏢</span> Company Profile
+                    <span class="badge-info" onclick="event.preventDefault();event.stopPropagation();openModal('company_profile')" title="Lihat info tentang Company Profile">ℹ️ info</span>
+                </a>
+                <a href="deal_pipeline.html" class="tool-link">
+                    <span class="icon">📊</span> Deal Pipeline
+                    <span class="badge-info" onclick="event.preventDefault();event.stopPropagation();openModal('deal_pipeline')" title="Lihat info tentang Deal Pipeline">ℹ️ info</span>
+                </a>
+                <a href="dashboard.html" class="tool-link spv-only">
+                    <span class="icon">📈</span> Dashboard
+                    <span class="badge-info" onclick="event.preventDefault();event.stopPropagation();openModal('dashboard')" title="Lihat info tentang Dashboard">ℹ️ info</span>
+                </a>
+
+                <!-- NEW PDCA Tools -->
+                <a href="perencanaan.html" class="tool-link">
+                    <span class="icon">📋</span> Perencanaan
+                    <span class="badge-pdca">PLAN</span>
+                    <span class="badge-info" onclick="event.preventDefault();event.stopPropagation();openModal('perencanaan')" title="Lihat info tentang Perencanaan">ℹ️ info</span>
+                </a>
+                <a href="pelaksanaan.html" class="tool-link">
+                    <span class="icon">⚙️</span> Pelaksanaan
+                    <span class="badge-pdca">DO</span>
+                    <span class="badge-info" onclick="event.preventDefault();event.stopPropagation();openModal('pelaksanaan')" title="Lihat info tentang Pelaksanaan">ℹ️ info</span>
+                </a>
+                <a href="pengendalian.html" class="tool-link">
+                    <span class="icon">🎯</span> Pengendalian
+                    <span class="badge-pdca">CHECK</span>
+                    <span class="badge-info" onclick="event.preventDefault();event.stopPropagation();openModal('pengendalian')" title="Lihat info tentang Pengendalian">ℹ️ info</span>
+                </a>
+
+                <a href="index.html" class="tool-link" style="background:#faf5ff;border-color:#9f7aea;">
+                    <span class="icon">🏠</span> Home
+                    <span class="badge-new">You are here</span>
+                </a>
+            </div>
+        </nav>
+
+    </main>
+
+    <!-- ======================================== -->
+    <!-- FOOTER -->
+    <!-- ======================================== -->
+    <footer class="footer">
+        <div class="container">
+            <p>
+                🚀 Sales Tools Suite &copy; 2026 - Sales Tools untuk Layanan Psikologi
+            </p>
+            <p style="font-size:13px;margin-top:4px;">
+                Dibuat dengan ❤️ untuk membantu tim sales berkembang
+            </p>
+        </div>
+    </footer>
+
+    <!-- ======================================== -->
+    <!-- SCROLL TO TOP BUTTON -->
+    <!-- ======================================== -->
+    <button class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        ↑
+    </button>
+
+    <!-- ======================================== -->
+    <!-- MODAL / POPUP -->
+    <!-- ======================================== -->
+    <div class="modal-overlay" id="toolModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <div id="modalContent">
+                <!-- Content will be inserted by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================== -->
+    <!-- SCRIPT -->
+    <!-- ======================================== -->
+    <script>
+        // ========================================
+        // TOOL DATA - Updated with all 8 tools
+        // ========================================
+        const TOOL_DATA = {
+            analisa_pekerjaan: {
+                icon: '🗂️',
+                title: 'Analisa Pekerjaan',
+                subtitle: 'Gudang referensi SOP & cara kerja untuk semua jenis pekerjaan',
+                file: 'analisa_pekerjaan.html',
+                pdca: 'Referensi',
+                content: `
+                    <h4>📌 Apa itu Analisa Pekerjaan?</h4>
+                    <p>
+                        <strong>Analisa Pekerjaan</strong> adalah gudang referensi berisi jenis-jenis pekerjaan
+                        lengkap dengan cara mengerjakannya (SOP). Sangat berguna saat menentukan tugas untuk
+                        anak magang atau karyawan baru — tinggal cari berdasarkan kategori dan level kesulitan.
+                    </p>
+                    <p>Ini adalah <strong>basis pengetahuan</strong> yang menjadi acuan untuk Perencanaan.</p>
+
+                    <h4>🧩 Fitur Analisa Pekerjaan</h4>
+                    <ul>
+                        <li><strong>Level Kesulitan</strong> - 🟢 Pemula, 🟠 Menengah, 🔴 Mahir</li>
+                        <li><strong>Status</strong> - 📝 Draft, ✅ Siap Dipakai, 🔄 Perlu Direvisi</li>
+                        <li><strong>Kategori/Bidang</strong> - dikelompokkan sesuai bidang kerja</li>
+                        <li><strong>Langkah Pengerjaan (SOP)</strong> - panduan langkah demi langkah</li>
+                        <li><strong>Alat/Bahan/Akses</strong> - kebutuhan untuk mengerjakan</li>
+                        <li><strong>Estimasi Waktu</strong> - perkiraan lama pengerjaan</li>
+                    </ul>
+
+                    <div class="highlight-box">
+                        <p><strong>🎯 Tips Terbaik:</strong> Ini gudang bersama — semua orang yang login boleh menambah entri baru. Setiap orang bisa lihat semua entri, tapi hanya pembuatnya (dan supervisor) yang bisa mengedit.</p>
+                    </div>
+                `
+            },
+            perencanaan: {
+                icon: '📋',
+                title: 'Perencanaan (PLAN)',
+                subtitle: 'Ambil dari Analisa, tentukan pelaksana, jadwal, dan target',
+                file: 'perencanaan.html',
+                pdca: 'PLAN',
+                content: `
+                    <h4>📌 Apa itu Perencanaan?</h4>
+                    <p>
+                        <strong>Perencanaan</strong> adalah tahap kedua dalam siklus PDCA. Di sini kita
+                        mengambil satu item dari <strong>Analisa Pekerjaan</strong> (SOP/cara kerja),
+                        lalu menetapkan siapa yang akan mengerjakan, kapan mulai, target selesai,
+                        dan target/goal yang diharapkan.
+                    </p>
+
+                    <h4>🧩 Fitur Perencanaan</h4>
+                    <ul>
+                        <li><strong>Referensi Analisa</strong> — ID dari analisa_pekerjaan yang menjadi acuan SOP</li>
+                        <li><strong>Assignee</strong> — orang yang ditugaskan mengerjakan</li>
+                        <li><strong>Tanggal Mulai &amp; Target Selesai</strong> — jadwal pengerjaan</li>
+                        <li><strong>Target / Goal</strong> — hasil yang diharapkan (angka, kualitas, atau output)</li>
+                        <li><strong>Status</strong> — Draft, Aktif, Selesai, Menyimpang</li>
+                    </ul>
+
+                    <h4>💡 Kapan Menggunakan Perencanaan?</h4>
+                    <ul>
+                        <li>Menugaskan pekerjaan ke anggota tim</li>
+                        <li>Membuat jadwal pengerjaan yang terstruktur</li>
+                        <li>Menetapkan target yang jelas untuk setiap pekerjaan</li>
+                    </ul>
+
+                    <div class="highlight-box">
+                        <p><strong>🎯 Tips Terbaik:</strong> Rencana yang "Menyimpang" akan otomatis memicu pembuatan catatan Pengendalian. Pastikan target/goal ditulis jelas agar mudah dievaluasi nanti.</p>
+                    </div>
+                `
+            },
+            pelaksanaan: {
+                icon: '⚙️',
+                title: 'Pelaksanaan (DO)',
+                subtitle: 'Eksekusi aktual dari pekerjaan yang sudah direncanakan',
+                file: 'pelaksanaan.html',
+                pdca: 'DO',
+                content: `
+                    <h4>📌 Apa itu Pelaksanaan?</h4>
+                    <p>
+                        <strong>Pelaksanaan</strong> adalah tahap ketiga dalam siklus PDCA. Di sini kita
+                        mencatat eksekusi aktual dari pekerjaan yang sudah direncanakan. Setiap rencana bisa
+                        memiliki satu atau lebih catatan pelaksanaan.
+                    </p>
+
+                    <h4>🧩 Fitur Pelaksanaan</h4>
+                    <ul>
+                        <li><strong>Referensi Rencana</strong> — ID dari perencanaan yang menjadi acuan</li>
+                        <li><strong>Pelaksana</strong> — orang yang mengerjakan</li>
+                        <li><strong>Tanggal Aktual</strong> — kapan pekerjaan dikerjakan</li>
+                        <li><strong>Hasil Aktual</strong> — hasil yang dicapai (dibanding target)</li>
+                        <li><strong>Status</strong> — ✅ On Track, ⚠️ Telat, ❌ Menyimpang</li>
+                    </ul>
+
+                    <h4>💡 Kapan Menggunakan Pelaksanaan?</h4>
+                    <ul>
+                        <li>Setelah mengerjakan suatu pekerjaan</li>
+                        <li>Melaporkan hasil eksekusi</li>
+                        <li>Mendokumentasikan capaian aktual</li>
+                    </ul>
+
+                    <div class="highlight-box">
+                        <p><strong>🎯 Tips Terbaik:</strong> Jika status "Menyimpang", sistem akan merekomendasikan untuk membuat catatan Pengendalian. Catat hasil aktual sejelas mungkin agar evaluasi di Pengendalian lebih akurat.</p>
+                    </div>
+                `
+            },
+            pengendalian: {
+                icon: '🎯',
+                title: 'Pengendalian (CHECK & ACT)',
+                subtitle: 'Kondisional — hanya jika Pelaksanaan menyimpang',
+                file: 'pengendalian.html',
+                pdca: 'CHECK',
+                content: `
+                    <h4>📌 Apa itu Pengendalian?</h4>
+                    <p>
+                        <strong>Pengendalian</strong> adalah tahap keempat dalam siklus PDCA. Ini adalah
+                        <strong>tahap kondisional</strong> — hanya muncul jika ada deviasi/masalah dalam
+                        Pelaksanaan. Di sini kita identifikasi akar masalah, tentukan tindakan korektif,
+                        dan tetapkan penanggung jawab untuk menindaklanjuti.
+                    </p>
+
+                    <h4>🧩 Fitur Pengendalian</h4>
+                    <ul>
+                        <li><strong>Referensi Pelaksanaan</strong> — ID dari pelaksanaan yang bermasalah</li>
+                        <li><strong>Jenis Deviasi</strong> — telat, kualitas rendah, biaya lebih, dll</li>
+                        <li><strong>Akar Masalah</strong> — penyebab utama deviasi</li>
+                        <li><strong>Tindakan Korektif</strong> — apa yang akan dilakukan</li>
+                        <li><strong>Status</strong> — 🔶 Open, 🔄 In Progress, ✅ Resolved</li>
+                    </ul>
+
+                    <h4>💡 Kapan Menggunakan Pengendalian?</h4>
+                    <ul>
+                        <li>Pelaksanaan menunjukkan deviasi (telat/kualitas di bawah target)</li>
+                        <li>Membutuhkan tindakan perbaikan</li>
+                        <li>Proses perbaikan berkelanjutan (Continuous Improvement)</li>
+                    </ul>
+
+                    <div class="highlight-box">
+                        <p><strong>🎯 Tips Terbaik:</strong> Setelah pengendalian selesai (Resolved), hasilnya harus kembali ke Pelaksanaan untuk siklus berikutnya.</p>
+                    </div>
+                `
+            },
+            visit_tracker: {
+                icon: '📅',
+                title: 'Visit Tracker',
+                subtitle: 'Mencatat aktivitas kunjungan sales ke lapangan',
+                file: 'visit_tracker.html',
+                pdca: 'Support',
+                content: `
+                    <h4>📌 Apa itu Visit Tracker?</h4>
+                    <p>
+                        <strong>Visit Tracker</strong> adalah alat untuk mencatat setiap kunjungan
+                        sales ke lapangan. Ini membantu sales mendokumentasikan aktivitas dan membantu
+                        supervisor memverifikasi kehadiran serta efektivitas kunjungan.
+                    </p>
+
+                    <h4>🧩 Fitur Visit Tracker</h4>
+                    <ul>
+                        <li><strong>Status Kunjungan</strong> - 📅 Terjadwal, ✅ Selesai, ❌ Batal, 🔄 Dijadwalkan Ulang</li>
+                        <li><strong>Tujuan Kunjungan</strong> - Presentasi, Penawaran, Follow Up, Closing, Pelatihan, Tes, Survey</li>
+                        <li><strong>Informasi Lengkap</strong> - Perusahaan, Kontak, Sales, Tanggal, Lokasi</li>
+                        <li><strong>Hasil Kunjungan</strong> - Catatan hasil dan tindak lanjut</li>
+                    </ul>
+
+                    <div class="highlight-box">
+                        <p><strong>🎯 Tips Terbaik:</strong> Catat hasil kunjungan segera setelah selesai agar detail tidak terlewat. Supervisor dapat melihat semua kunjungan di dashboard.</p>
+                    </div>
+                `
+            },
+            company_profile: {
+                icon: '🏢',
+                title: 'Company Profile',
+                subtitle: 'Database perusahaan klien yang sudah atau akan dilayani',
+                file: 'company_profile.html',
+                pdca: 'Support',
+                content: `
+                    <h4>📌 Apa itu Company Profile?</h4>
+                    <p>
+                        <strong>Company Profile</strong> adalah database perusahaan/klien yang
+                        menjadi target atau sudah menjadi pelanggan layanan psikologi. Ini membantu
+                        sales dan tim memahami profil klien untuk strategi penjualan yang lebih tepat.
+                    </p>
+
+                    <h4>🧩 Fitur Company Profile</h4>
+                    <ul>
+                        <li><strong>Tipe Perusahaan</strong> - 🏢 Corporate, 🏫 Sekolah, 🎓 Universitas, 🏛️ Government</li>
+                        <li><strong>Status</strong> - ✅ Aktif, ❌ Inaktif, 🔶 Prospek</li>
+                        <li><strong>PIC / Kontak Utama</strong> - Nama dan telepon PIC</li>
+                        <li><strong>Layanan yang Digunakan</strong> - Multi-select checkbox</li>
+                        <li><strong>Sales Assign</strong> - Penugasan sales</li>
+                    </ul>
+
+                    <div class="highlight-box">
+                        <p><strong>🎯 Tips Terbaik:</strong> Gunakan data layanan yang digunakan untuk menawarkan layanan lain yang relevan.</p>
+                    </div>
+                `
+            },
+            deal_pipeline: {
+                icon: '📊',
+                title: 'Deal Pipeline',
+                subtitle: 'Tracking setiap deal dari awal hingga closing',
+                file: 'deal_pipeline.html',
+                pdca: 'Support',
+                content: `
+                    <h4>📌 Apa itu Deal Pipeline?</h4>
+                    <p>
+                        <strong>Deal Pipeline</strong> adalah alat untuk melacak setiap deal penjualan
+                        dari awal (prospecting) hingga akhir (won/lost). Ini membantu sales dan supervisor
+                        memahami status setiap deal dan memprediksi pendapatan.
+                    </p>
+
+                    <h4>🧩 Stage Pipeline</h4>
+                    <ul>
+                        <li><strong>🔍 Prospecting</strong> - Identifikasi prospek</li>
+                        <li><strong>📋 Qualification</strong> - Kualifikasi prospek</li>
+                        <li><strong>🤝 Negotiation</strong> - Negosiasi harga dan ketentuan</li>
+                        <li><strong>📄 Proposal</strong> - Pengiriman proposal</li>
+                        <li><strong>🎯 Closing</strong> - Proses akhir deal</li>
+                        <li><strong>✅ Won</strong> - Deal berhasil</li>
+                        <li><strong>❌ Lost</strong> - Deal gagal</li>
+                    </ul>
+
+                    <div class="highlight-box">
+                        <p><strong>🎯 Tips Terbaik:</strong> Update stage dan probability secara berkala. Deal yang stuck di stage yang sama terlalu lama akan muncul di alert dashboard supervisor.</p>
+                    </div>
+                `
+            },
+            dashboard: {
+                icon: '📈',
+                title: 'Dashboard',
+                subtitle: 'Dashboard untuk supervisor memonitor tim sales',
+                file: 'dashboard.html',
+                pdca: 'Support',
+                content: `
+                    <h4>📌 Apa itu Dashboard?</h4>
+                    <p>
+                        <strong>Dashboard</strong> adalah alat untuk supervisor memantau kinerja
+                        tim sales secara real-time. Dashboard ini mengintegrasikan data dari 3 tools lainnya
+                        (Visit Tracker, Company Profile, dan Deal Pipeline).
+                    </p>
+
+                    <h4>🧩 Fitur Dashboard</h4>
+                    <ul>
+                        <li><strong>Statistik Utama</strong> - Total Deals, Won, Lost, Pipeline Value, Kunjungan</li>
+                        <li><strong>Pipeline Chart</strong> - Visualisasi jumlah deal per stage</li>
+                        <li><strong>Sales Performance</strong> - Ranking sales berdasarkan deal dan nilai</li>
+                        <li><strong>Activity Feed</strong> - Aktivitas terbaru (kunjungan, pipeline update)</li>
+                        <li><strong>Alerts & Notifications</strong> - Peringatan deal stuck, deal menang bernilai tinggi</li>
+                    </ul>
+
+                    <div class="highlight-box">
+                        <p><strong>🎯 Tips Terbaik:</strong> Gunakan dashboard setiap hari untuk memantau aktivitas tim. Alert yang muncul adalah prioritas yang harus segera ditangani.</p>
+                    </div>
+                `
+            }
+        };
+
+        // ========================================
+        // MODAL FUNCTIONS
+        // ========================================
+        function openModal(toolKey) {
+            const data = TOOL_DATA[toolKey];
+            if (!data) {
+                console.error('Tool not found:', toolKey);
+                return;
+            }
+
+            const modal = document.getElementById('toolModal');
+            const content = document.getElementById('modalContent');
+
+            const pdcaTag = data.pdca ? `
+                <span style="display:inline-block;background:${data.pdca === 'PLAN' ? '#ed8936' : data.pdca === 'DO' ? '#4299e1' : data.pdca === 'CHECK' ? '#fc8181' : data.pdca === 'Referensi' ? '#9f7aea' : '#718096'};color:#fff;font-size:10px;font-weight:700;padding:2px 12px;border-radius:10px;text-transform:uppercase;margin-left:8px;">${data.pdca}</span>
+            ` : '';
+
+            content.innerHTML = `
+                <span class="modal-icon">${data.icon}</span>
+                <h2 class="modal-title">${data.title} ${pdcaTag}</h2>
+                <p class="modal-subtitle">${data.subtitle}</p>
+                <div class="modal-divider"></div>
+                <div class="modal-body">
+                    ${data.content}
+                </div>
+                <div class="modal-footer">
+                    <a href="${data.file}" class="btn-open-tool">
+                        🚀 Buka Tool ${data.icon}
+                    </a>
+                    <button class="btn-close-modal" onclick="closeModal()">Tutup</button>
+                </div>
+            `;
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('toolModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close modal on outside click
+        document.getElementById('toolModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // ========================================
+        // SCROLL TO TOP BUTTON
+        // ========================================
+        const scrollBtn = document.getElementById('scrollTopBtn');
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 400) {
+                scrollBtn.classList.add('visible');
+            } else {
+                scrollBtn.classList.remove('visible');
+            }
+        });
+
+        // ========================================
+        // SMOOTH SCROLL FOR TOC LINKS
+        // ========================================
+        document.querySelectorAll('.toc a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // ========================================
+        // USER BADGE & ROLE-BASED VISIBILITY
+        // ========================================
+        function initUserBadge() {
+            const nameEl = document.getElementById('userBadgeName');
+            const roleEl = document.getElementById('userBadgeRole');
+            if (nameEl) nameEl.textContent = '👤 ' + (CURRENT_USER.username || '-');
+            if (roleEl) {
+                roleEl.textContent = CURRENT_USER.role || '-';
+                roleEl.className = 'role-tag ' + (isSupervisor(CURRENT_USER) ? 'spv' : 'sales');
+            }
+
+            // Sembunyikan menu/section Dashboard untuk yang bukan supervisor & bukan admin
+            if (!isSupervisor(CURRENT_USER) && !isAdmin(CURRENT_USER)) {
+                document.querySelectorAll('.spv-only').forEach(el => el.style.display = 'none');
+            }
+        }
+        initUserBadge();
+
+        // ========================================
+        // CONSOLE WELCOME
+        // ========================================
+        console.log('%c🚀 Sales Tools Suite - Psikologi', 'font-size:24px;font-weight:bold;color:#9f7aea;');
+        console.log('%c📊 8 Sales Tools Siap Pakai (5 Existing + 3 PDCA)', 'font-size:14px;color:#718096;');
+        console.log('%c📋 Tools: Analisa Pekerjaan, Perencanaan (PLAN), Pelaksanaan (DO), Pengendalian (CHECK), Visit Tracker, Company Profile, Deal Pipeline, Dashboard', 'font-size:13px;color:#a0aec0;');
+        console.log('%c💡 Klik tombol "info" atau card tool untuk detail setiap tool.', 'font-size:13px;color:#a0aec0;');
+        console.log('%c🔄 PDCA Flow: Analisa → PLAN → DO → CHECK (kondisional)', 'font-size:13px;color:#ed8936;');
+    </script>
+</body>
+</html>
