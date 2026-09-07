@@ -889,11 +889,56 @@
             notes: '📝 Catatan'
         };
 
+        // ==================== FEATURE CONFIG (kontrol_admin) ====================
+        const CONTROL_TABLE = 'kontrol_admin';
+        const CONTROL_ROW_ID = 7;
+        const THIS_TOOL_KEY = 'sales_pipeline';
+        const DEFAULT_FEATURE_CONFIG = {
+            spv: { edit: true, delete: true, riwayat: true, tambah: true },
+            non_spv: { edit: true, delete: false, riwayat: true, tambah: true }
+        };
+        let FEATURE_CONFIG = null;
+
+        async function loadFeatureConfig() {
+            try {
+                const res = await fetch(`${API_URL}?table=${CONTROL_TABLE}`, {
+                    headers: { 'X-Custom-Auth': SECRET, 'X-Table-Name': CONTROL_TABLE, 'X-Role': 'admin' }
+                });
+                const result = await res.json();
+                const row = (result.data || []).find(r => Number(r.id_x) === CONTROL_ROW_ID);
+                if (row && row.x_01) {
+                    const parsed = JSON.parse(row.x_01);
+                    if (parsed && parsed[THIS_TOOL_KEY]) {
+                        FEATURE_CONFIG = parsed[THIS_TOOL_KEY];
+                        console.log('⚙️ Kontrol admin dimuat:', FEATURE_CONFIG);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn('⚠️ Gagal memuat kontrol_admin, pakai default:', e.message);
+            }
+            FEATURE_CONFIG = DEFAULT_FEATURE_CONFIG;
+        }
+
+        function canUse(feature) {
+            if (isAdmin(CURRENT_USER)) return true;
+            const roleKey = isSupervisor(CURRENT_USER) ? 'spv' : 'non_spv';
+            const cfg = (FEATURE_CONFIG && FEATURE_CONFIG[roleKey]) || DEFAULT_FEATURE_CONFIG[roleKey];
+            return !!(cfg && cfg[feature]);
+        }
+
+        function applyFeatureUI() {
+            const addBtn = document.querySelector('button[onclick="openAddModal()"]');
+            if (addBtn) addBtn.style.display = canUse('tambah') ? '' : 'none';
+        }
+
         // ==================== INIT ====================
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             console.log('📊 Sales Pipeline Started');
             console.log('📡 Table:', TABLE);
             initUserBadge();
+            await loadFeatureConfig();
+            applyFeatureUI();
             refreshData();
         });
 
@@ -1143,10 +1188,10 @@
                         <div class="field"><span class="label">Nilai:</span> <span class="pipeline-value ${stageClass}">${item.deal_value || '-'}</span></div>
                         <div class="field"><span class="label">Prob:</span> ${item.probability || 0}%</div>
                         <div class="actions">
-                            <button class="btn btn-outline btn-xs" onclick="showHistory(${item.id_x})" title="Riwayat perubahan">🕘${item.history && item.history.length ? ` <span style="font-size:9px;">${item.history.length}</span>` : ''}</button>
-                            ${ownsItem(item) ? `<button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>` : ''}
-                            ${isAdmin(CURRENT_USER) ? `<button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>` : ''}
-                            ${(!ownsItem(item) && !isAdmin(CURRENT_USER)) ? `<span style="font-size:10px;color:#a0aec0;">🔒 milik lain</span>` : ''}
+                            ${canUse('riwayat') ? `<button class="btn btn-outline btn-xs" onclick="showHistory(${item.id_x})" title="Riwayat perubahan">🕘${item.history && item.history.length ? ` <span style="font-size:9px;">${item.history.length}</span>` : ''}</button>` : ''}
+                            ${canUse('edit') ? `<button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>` : ''}
+                            ${canUse('delete') ? `<button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>` : ''}
+                            ${(!canUse('edit') && !canUse('delete')) ? `<span style="font-size:10px;color:#a0aec0;">🔒 Tidak ada izin</span>` : ''}
                         </div>
                     </div>
                 `;
@@ -1225,7 +1270,7 @@
                 showToast('Data tidak ditemukan', 'error');
                 return;
             }
-            if (!ownsItem(item)) {
+            if (!canUse('edit')) {
                 showToast('❌ Anda tidak punya akses untuk mengedit data ini', 'error');
                 return;
             }
@@ -1233,7 +1278,7 @@
             currentEditId = id;
             document.getElementById('editId').value = id;
             document.getElementById('formModalTitle').textContent = `✏️ Edit Deal: ${item.deal_name}`;
-            document.getElementById('deleteBtn').style.display = isAdmin(CURRENT_USER) ? 'inline-flex' : 'none';
+            document.getElementById('deleteBtn').style.display = canUse('delete') ? 'inline-flex' : 'none';
             document.getElementById('saveBtn').textContent = '💾 Update';
 
             document.getElementById('dealName').value = item.deal_name || '';
@@ -1315,8 +1360,8 @@
             console.log('🗑️ Confirm delete ID:', id);
             const item = allData.find(d => d.id_x === id);
             if (!item) return;
-            if (!isAdmin(CURRENT_USER)) {
-                showToast('❌ Hanya admin yang bisa menghapus data', 'error');
+            if (!canUse('delete')) {
+                showToast('❌ Anda tidak punya izin menghapus data', 'error');
                 return;
             }
             if (!confirm(`Hapus deal "${item.deal_name}" (ID: ${id})?`)) return;
@@ -1337,8 +1382,8 @@
             console.log('🗑️ Delete deal from modal, ID:', id);
             if (!id) return;
             const item = allData.find(d => d.id_x === id);
-            if (!isAdmin(CURRENT_USER)) {
-                showToast('❌ Hanya admin yang bisa menghapus data', 'error');
+            if (!canUse('delete')) {
+                showToast('❌ Anda tidak punya izin menghapus data', 'error');
                 return;
             }
             if (!confirm('Hapus deal ini secara permanen?')) return;

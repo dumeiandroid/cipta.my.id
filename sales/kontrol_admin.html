@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kontrol Admin - Sales Tools Suite</title>
+    <script>
+        // ==================== AUTH GUARD (Sales Tools Suite - SSO) ====================
+        const AUTH_SESSION_KEY = 'lidan_sales_session';
+        const AUTH_LOGIN_PAGE = 'login.html';
+
+        function getAuthSession() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+        function clearAuthSession() { localStorage.removeItem(AUTH_SESSION_KEY); }
+        function isSupervisor(session) { return !!session && String(session.role || '').toLowerCase() === 'spv'; }
+        function isAdmin(session) { return !!session && String(session.username || '').toLowerCase() === 'admin'; }
+        function logout() { clearAuthSession(); window.location.href = AUTH_LOGIN_PAGE; }
+
+        let CURRENT_USER = getAuthSession();
+        if (!CURRENT_USER || !CURRENT_USER.username) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.replace(AUTH_LOGIN_PAGE + '?return=' + returnUrl);
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === AUTH_SESSION_KEY && !e.newValue) {
+                window.location.href = AUTH_LOGIN_PAGE;
+            }
+        });
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px 60px; }
+
+        .header {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: white;
+            padding: 40px 0 30px;
+            margin-bottom: 30px;
+            border-bottom: 4px solid #9f7aea;
+        }
+        .header .container { padding: 0 20px; }
+        .header-content {
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 20px;
+        }
+        .header h1 { font-size: 28px; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+        .header h1 span {
+            background: #9f7aea; font-size: 14px; padding: 4px 14px; border-radius: 20px; font-weight: 600;
+        }
+        .header p { color: #a0aec0; font-size: 15px; margin-top: 4px; }
+        .user-badge { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .user-badge .role-tag {
+            font-size: 12px; padding: 3px 10px; border-radius: 10px; font-weight: 600;
+            background: #9f7aea; color: white;
+        }
+        .btn {
+            border: none; border-radius: 8px; padding: 9px 16px; font-size: 14px;
+            font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+            transition: 0.15s;
+        }
+        .btn-outline { background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.25); }
+        .btn-outline:hover { background: rgba(255,255,255,0.18); }
+        .btn-primary { background: #9f7aea; color: white; }
+        .btn-primary:hover { background: #805ad5; }
+        .btn-logout { background: rgba(245,101,101,0.2); color: #feb2b2; border: 1px solid rgba(245,101,101,0.4); }
+        .btn-logout:hover { background: rgba(245,101,101,0.35); }
+
+        .blocked {
+            max-width: 480px; margin: 100px auto; text-align: center;
+            background: white; border-radius: 16px; padding: 50px 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .blocked .icon { font-size: 48px; margin-bottom: 16px; }
+        .blocked h2 { font-size: 20px; margin-bottom: 10px; color: #c53030; }
+        .blocked p { color: #718096; margin-bottom: 20px; }
+
+        .info-banner {
+            background: #edf2ff; border: 1px solid #c3dafe; color: #3c4b8f;
+            border-radius: 10px; padding: 14px 18px; font-size: 14px; margin-bottom: 24px;
+        }
+
+        .tool-card {
+            background: white; border-radius: 14px; padding: 22px 24px; margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .tool-card h3 {
+            font-size: 17px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+            color: #2d3748;
+        }
+        .role-block { margin-bottom: 14px; }
+        .role-block:last-child { margin-bottom: 0; }
+        .role-block .role-title {
+            font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+            color: #718096; margin-bottom: 8px;
+        }
+        .toggle-row { display: flex; flex-wrap: wrap; gap: 10px; }
+        .toggle-chip {
+            display: flex; align-items: center; gap: 8px; background: #f7fafc;
+            border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 14px; font-size: 13px;
+            font-weight: 500; color: #4a5568;
+        }
+        .switch { position: relative; width: 38px; height: 20px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; inset: 0; background-color: #cbd5e0;
+            transition: 0.2s; border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px;
+            background-color: white; transition: 0.2s; border-radius: 50%;
+        }
+        .switch input:checked + .slider { background-color: #48bb78; }
+        .switch input:checked + .slider:before { transform: translateX(18px); }
+
+        .save-bar {
+            position: sticky; bottom: 0; background: white; border-top: 1px solid #e2e8f0;
+            padding: 16px 24px; display: flex; justify-content: flex-end; gap: 10px;
+            border-radius: 14px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); margin-top: 10px;
+        }
+        .toast {
+            position: fixed; top: 20px; right: 20px; background: #2d3748; color: white;
+            padding: 12px 20px; border-radius: 10px; font-size: 14px; z-index: 999;
+            opacity: 0; transform: translateY(-10px); transition: 0.25s; pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { background: #c53030; }
+        .toast.success { background: #2f855a; }
+        .loading { text-align: center; padding: 60px; color: #a0aec0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container header-content">
+            <div>
+                <h1>🛡️ Kontrol Admin <span>Sales Tools Suite</span></h1>
+                <p>Aktifkan / nonaktifkan fitur per role, khusus untuk admin</p>
+            </div>
+            <div class="user-badge" id="userBadge">
+                <span id="userBadgeName">👤 -</span>
+                <span class="role-tag" id="userBadgeRole">-</span>
+                <a href="index.html" class="btn btn-outline" style="text-decoration:none;">🏠 Home</a>
+                <button class="btn btn-logout" onclick="logout()">🚪 Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="app">
+        <!-- content diisi oleh JS: blocked view atau panel -->
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const CONTROL_TABLE = 'kontrol_admin';
+        const CONTROL_ROW_ID = 7;
+        const SECRET = 'admin';
+
+        const TOOLS = [
+            { key: 'lead_management', label: '📋 Lead Management' },
+            { key: 'client_company_profile', label: '🏢 Client Company Profile' },
+            { key: 'sales_pipeline', label: '📊 Sales Pipeline' },
+            { key: 'sales_visit_tracker', label: '📅 Sales Visit Tracker' }
+        ];
+        const FEATURES = [
+            { key: 'edit', label: '✏️ Edit' },
+            { key: 'delete', label: '🗑️ Hapus' },
+            { key: 'riwayat', label: '🕘 Riwayat' },
+            { key: 'tambah', label: '➕ Tambah Data' }
+        ];
+        const DEFAULT_TOOL_CONFIG = {
+            spv: { edit: true, delete: true, riwayat: true, tambah: true },
+            non_spv: { edit: true, delete: false, riwayat: true, tambah: true }
+        };
+
+        let currentConfig = {};
+        let rowExists = false;
+
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': CONTROL_TABLE,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${CONTROL_TABLE}${endpoint}`;
+            const response = await fetch(url, {
+                ...options,
+                headers: { ...getHeaders(), ...(options.headers || {}) }
+            });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || err.message || `HTTP ${response.status}`);
+            }
+            return await response.json();
+        }
+
+        function showToast(msg, type = 'info') {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.className = 'toast show' + (type !== 'info' ? ' ' + type : '');
+            setTimeout(() => el.classList.remove('show'), 2500);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const nameEl = document.getElementById('userBadgeName');
+            const roleEl = document.getElementById('userBadgeRole');
+            if (nameEl) nameEl.textContent = '👤 ' + (CURRENT_USER.username || '-');
+            if (roleEl) roleEl.textContent = CURRENT_USER.role || '-';
+
+            if (!isAdmin(CURRENT_USER)) {
+                renderBlocked();
+                return;
+            }
+            renderPanel();
+        });
+
+        function renderBlocked() {
+            document.getElementById('app').innerHTML = `
+                <div class="blocked">
+                    <div class="icon">🚫</div>
+                    <h2>Anda tidak memiliki otoritas untuk halaman ini</h2>
+                    <p>Halaman kontrol admin hanya bisa diakses oleh akun admin.</p>
+                    <a href="index.html" class="btn btn-primary" style="text-decoration:none;">🏠 Kembali ke Home</a>
+                </div>
+            `;
+        }
+
+        async function renderPanel() {
+            const app = document.getElementById('app');
+            app.innerHTML = `<div class="loading">⏳ Memuat pengaturan...</div>`;
+
+            await loadConfig();
+
+            app.innerHTML = `
+                <div class="info-banner">
+                    ℹ️ Atur di sini tombol/fitur apa saja yang boleh dipakai oleh <b>SPV</b> dan <b>Sales (non-SPV)</b> di setiap tools.
+                    Akun <b>admin</b> selalu punya akses penuh di semua tools, tidak dipengaruhi pengaturan ini.
+                </div>
+                <div id="toolCards"></div>
+                <div class="save-bar">
+                    <button class="btn btn-outline" style="color:#4a5568;border-color:#cbd5e0;" onclick="renderPanel()">↺ Muat Ulang</button>
+                    <button class="btn btn-primary" onclick="saveConfig()">💾 Simpan Pengaturan</button>
+                </div>
+            `;
+
+            const cardsEl = document.getElementById('toolCards');
+            cardsEl.innerHTML = TOOLS.map(tool => {
+                const cfg = currentConfig[tool.key] || DEFAULT_TOOL_CONFIG;
+                return `
+                    <div class="tool-card">
+                        <h3>${tool.label}</h3>
+                        ${['spv', 'non_spv'].map(roleKey => `
+                            <div class="role-block">
+                                <div class="role-title">${roleKey === 'spv' ? 'SPV' : 'Sales (non-SPV)'}</div>
+                                <div class="toggle-row">
+                                    ${FEATURES.map(f => `
+                                        <label class="toggle-chip">
+                                            <span class="switch">
+                                                <input type="checkbox"
+                                                    data-tool="${tool.key}" data-role="${roleKey}" data-feature="${f.key}"
+                                                    ${(cfg[roleKey] && cfg[roleKey][f.key]) ? 'checked' : ''}>
+                                                <span class="slider"></span>
+                                            </span>
+                                            ${f.label}
+                                        </label>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function loadConfig() {
+            try {
+                const result = await apiFetch('');
+                const row = (result.data || []).find(r => Number(r.id_x) === CONTROL_ROW_ID);
+                if (row) {
+                    rowExists = true;
+                    try {
+                        currentConfig = row.x_01 ? JSON.parse(row.x_01) : {};
+                    } catch (e) {
+                        console.warn('⚠️ x_01 bukan JSON valid, mulai dari default');
+                        currentConfig = {};
+                    }
+                } else {
+                    rowExists = false;
+                    currentConfig = {};
+                }
+            } catch (e) {
+                console.error('❌ Gagal memuat kontrol_admin:', e.message);
+                showToast('Gagal memuat pengaturan: ' + e.message, 'error');
+                rowExists = false;
+                currentConfig = {};
+            }
+        }
+
+        async function saveConfig() {
+            const newConfig = {};
+            TOOLS.forEach(tool => {
+                newConfig[tool.key] = {
+                    spv: {}, non_spv: {}
+                };
+            });
+
+            document.querySelectorAll('#toolCards input[type="checkbox"]').forEach(input => {
+                const { tool, role, feature } = input.dataset;
+                newConfig[tool][role][feature] = input.checked;
+            });
+
+            const body = { x_01: JSON.stringify(newConfig) };
+
+            try {
+                if (rowExists) {
+                    await apiFetch(`&id_x=${CONTROL_ROW_ID}`, { method: 'PUT', body: JSON.stringify(body) });
+                } else {
+                    await apiFetch('', { method: 'POST', body: JSON.stringify({ id_x: CONTROL_ROW_ID, ...body }) });
+                }
+                currentConfig = newConfig;
+                rowExists = true;
+                showToast('✅ Pengaturan berhasil disimpan', 'success');
+            } catch (e) {
+                console.error('❌ Gagal menyimpan:', e.message);
+                showToast('❌ Gagal menyimpan: ' + e.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
