@@ -730,6 +730,7 @@
             <div class="modal-title" id="formModalTitle">🏢 Tambah Perusahaan</div>
             <div class="modal-body">
                 <input type="hidden" id="editId" value="">
+                <input type="hidden" id="lead_id" value="">
 
                 <div class="form-row">
                     <div class="form-group">
@@ -860,7 +861,8 @@
             services_used: 'x_09',
             sales_assign: 'x_10',
             join_date: 'x_11',
-            notes: 'x_12'
+            notes: 'x_12',
+            lead_id: 'x_13'
         };
 
         const HISTORY_COL = 'x_25';
@@ -922,6 +924,59 @@
             if (addBtn) addBtn.style.display = canUse('tambah') ? '' : 'none';
         }
 
+        // ==================== LEAD LINK (dari lead_management via ?lead_id=) ====================
+        function returnToLeadIfNeeded() {
+            const urlLeadId = new URLSearchParams(window.location.search).get('lead_id');
+            if (urlLeadId) {
+                showToast('↩️ Kembali ke Lead #' + urlLeadId + '...', 'success');
+                setTimeout(() => {
+                    window.location.href = `index.html?lead_id=${urlLeadId}`;
+                }, 900);
+            }
+        }
+
+        async function applyLeadIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const leadId = params.get('lead_id');
+            if (!leadId) return;
+
+            const existing = allData.find(d => String(d.lead_id) === String(leadId));
+            if (existing) {
+                if (!canUse('edit')) {
+                    showToast('❌ Anda tidak punya izin mengedit profil ini', 'error');
+                    return;
+                }
+                openEditModal(existing.id_x);
+                return;
+            }
+
+            if (!canUse('tambah')) {
+                showToast('❌ Anda tidak punya izin menambah profil klien', 'error');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}?table=lead_management`, {
+                    headers: { 'X-Custom-Auth': SECRET, 'X-Table-Name': 'lead_management', 'X-Role': 'admin' }
+                });
+                const result = await res.json();
+                const lead = (result.data || []).find(r => String(r.id_x) === String(leadId));
+                if (!lead) {
+                    showToast('⚠️ Lead #' + leadId + ' tidak ditemukan', 'error');
+                    return;
+                }
+                openAddModal();
+                document.getElementById('companyName').value = lead.x_02 || '';
+                document.getElementById('email').value = lead.x_03 || '';
+                document.getElementById('phone').value = lead.x_04 || '';
+                document.getElementById('picName').value = lead.x_01 || '';
+                document.getElementById('salesAssign').value = lead.x_08 || CURRENT_USER.username;
+                document.getElementById('lead_id').value = leadId;
+                document.getElementById('formModalTitle').textContent = `🏢 Tambah Perusahaan (dari Lead #${leadId})`;
+            } catch (e) {
+                console.warn('⚠️ Gagal ambil data lead untuk prefill:', e.message);
+            }
+        }
+
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('🏢 Client Company Profile Started');
@@ -929,7 +984,8 @@
             initUserBadge();
             await loadFeatureConfig();
             applyFeatureUI();
-            refreshData();
+            await refreshData();
+            applyLeadIdFromUrl();
         });
 
         function initUserBadge() {
@@ -1012,6 +1068,7 @@
                 sales_assign: row.x_10 || '',
                 join_date: row.x_11 || '',
                 notes: row.x_12 || '',
+                lead_id: row.x_13 || '',
                 history: parseHistory(row[HISTORY_COL]),
                 _raw: row
             };
@@ -1246,6 +1303,7 @@
             document.getElementById('saveBtn').textContent = '💾 Simpan';
 
             document.getElementById('companyName').value = '';
+            document.getElementById('lead_id').value = '';
             document.getElementById('companyType').value = 'corporate';
             document.getElementById('email').value = '';
             document.getElementById('phone').value = '';
@@ -1336,7 +1394,8 @@
                 services_used: services,
                 sales_assign: document.getElementById('salesAssign').value.trim(),
                 join_date: document.getElementById('joinDate').value,
-                notes: document.getElementById('notes').value.trim()
+                notes: document.getElementById('notes').value.trim(),
+                lead_id: document.getElementById('lead_id').value || ''
             };
 
             console.log('📦 Data to save:', data);
@@ -1358,6 +1417,7 @@
                 await refreshData();
                 closeModal('formModal');
                 console.log('✅ Save complete');
+                returnToLeadIfNeeded();
             } catch (e) {
                 console.error('❌ Save failed:', e);
                 showToast('❌ Gagal menyimpan: ' + e.message, 'error');

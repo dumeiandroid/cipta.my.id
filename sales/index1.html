@@ -521,12 +521,6 @@
             border-radius: 12px;
             border: 1px solid #e2e8f0;
             text-align: center;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-        .stats-summary .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
         }
 
         .stats-summary .stat-card .number {
@@ -645,30 +639,29 @@
                     <a href="sales_pipeline.html" class="btn btn-outline btn-sm" style="text-decoration:none;">📊 Pipeline</a>
                     <a href="sales_dashboard.html" class="btn btn-outline btn-sm spv-only" style="text-decoration:none;">📈 Dashboard</a>
                     <a href="kontrol_admin.html" class="btn btn-outline btn-sm admin-only" style="text-decoration:none;background:#fff5f5;border-color:#fc8181;">🛡️ Kontrol</a>
-                    <a href="about.html" class="btn btn-outline btn-sm" style="text-decoration:none;">ℹ️ About</a>
                 </div>
             </div>
         </div>
 
         <!-- STATS SUMMARY -->
         <div class="stats-summary" id="statsSummary">
-            <div class="stat-card total" onclick="openStatModal('total')" title="Lihat semua leads">
+            <div class="stat-card total">
                 <div class="number" id="statTotal">0</div>
                 <div class="label">Total Leads</div>
             </div>
-            <div class="stat-card hot" onclick="openStatModal('hot')" title="Lihat leads Hot">
+            <div class="stat-card hot">
                 <div class="number" id="statHot">0</div>
                 <div class="label">🔥 Hot</div>
             </div>
-            <div class="stat-card warm" onclick="openStatModal('warm')" title="Lihat leads Warm">
+            <div class="stat-card warm">
                 <div class="number" id="statWarm">0</div>
                 <div class="label">🟠 Warm</div>
             </div>
-            <div class="stat-card cold" onclick="openStatModal('cold')" title="Lihat leads Cold">
+            <div class="stat-card cold">
                 <div class="number" id="statCold">0</div>
                 <div class="label">🔵 Cold</div>
             </div>
-            <div class="stat-card converted" onclick="openStatModal('converted')" title="Lihat leads Converted">
+            <div class="stat-card converted">
                 <div class="number" id="statConverted">0</div>
                 <div class="label">✅ Converted</div>
             </div>
@@ -751,14 +744,6 @@
             <button class="modal-close" onclick="closeModal('leadLinkModal')">✕</button>
             <div class="modal-title" id="leadLinkModalTitle">🔗 Lanjutkan</div>
             <div class="modal-body" id="leadLinkModalBody"></div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="statListModal">
-        <div class="modal" style="max-width:520px;">
-            <button class="modal-close" onclick="closeModal('statListModal')">✕</button>
-            <div class="modal-title" id="statListModalTitle">📋 Leads</div>
-            <div class="modal-body" id="statListModalBody"></div>
         </div>
     </div>
 
@@ -963,26 +948,19 @@
                 fetchLinkedTable('client_company_profile'),
                 fetchLinkedTable('sales_pipeline')
             ]);
-            linkedVisits = visits.map(r => ({ id_x: r.id_x, lead_id: r.x_09 || '', status: r.x_06 || 'scheduled' }));
+            linkedVisits = visits.map(r => ({ id_x: r.id_x, lead_id: r.x_09 || '' }));
             linkedProfiles = profiles.map(r => ({ id_x: r.id_x, lead_id: r.x_13 || '' }));
             linkedDeals = deals.map(r => ({ id_x: r.id_x, lead_id: r.x_12 || '', stage: r.x_05 || 'prospecting' }));
             renderList();
         }
 
-        function isPendingVisitStatus(status) {
-            return status === 'scheduled' || status === 'rescheduled';
-        }
-
         function getLeadStats(leadId) {
             const visits = linkedVisits.filter(v => String(v.lead_id) === String(leadId));
-            const pendingVisits = visits.filter(v => isPendingVisitStatus(v.status));
             const profile = linkedProfiles.find(p => String(p.lead_id) === String(leadId));
             const deals = linkedDeals.filter(d => String(d.lead_id) === String(leadId));
             const activeDeals = deals.filter(d => !['won', 'lost'].includes(d.stage));
             return {
                 visitCount: visits.length,
-                visitDoneCount: visits.length - pendingVisits.length,
-                visitPendingCount: pendingVisits.length,
                 hasProfile: !!profile,
                 dealCount: deals.length,
                 activeDealCount: activeDeals.length
@@ -993,7 +971,7 @@
             const s = getLeadStats(leadId);
             if (!s.visitCount && !s.hasProfile && !s.dealCount) return '';
             const parts = [];
-            if (s.visitCount) parts.push(`📅 ${s.visitCount}${s.visitPendingCount ? ` (${s.visitPendingCount} rencana)` : ''}`);
+            if (s.visitCount) parts.push(`📅 ${s.visitCount}`);
             if (s.dealCount) parts.push(`💼 ${s.dealCount}${s.activeDealCount ? ` (${s.activeDealCount} aktif)` : ''}`);
             if (s.hasProfile) parts.push(`🏢 ✓`);
             return `<br><span style="font-size:10px;color:#4a5568;">${parts.join(' &middot; ')}</span>`;
@@ -1008,13 +986,11 @@
             document.getElementById('leadLinkModalBody').innerHTML = `
                 <p style="font-size:13px;color:#718096;margin-bottom:16px;">${escapeHtml(item.company_name || '-')} &middot; ${escapeHtml(item.service_interest || '-')}</p>
 
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid ${s.visitPendingCount ? '#fbd38d' : '#e2e8f0'};${s.visitPendingCount ? 'background:#fffaf0;' : ''}border-radius:8px;margin-bottom:8px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;">
                     <span style="font-size:14px;">📅 Visit Tracker</span>
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="font-size:12px;color:#a0aec0;">${s.visitDoneCount} selesai${s.visitPendingCount ? `, ${s.visitPendingCount} rencana` : ''}</span>
-                        <button class="btn ${s.visitPendingCount ? 'btn-warning' : 'btn-primary'} btn-xs" onclick="goToLinkedTool('sales_visit_tracker.html', ${leadId})">
-                            ${s.visitPendingCount ? '✏️ Update Rencana' : '+ Tambah Baru'}
-                        </button>
+                        <span style="font-size:12px;color:#a0aec0;">${s.visitCount} kunjungan</span>
+                        <button class="btn btn-primary btn-xs" onclick="goToLinkedTool('sales_visit_tracker.html', ${leadId})">+ Tambah Baru</button>
                     </div>
                 </div>
 
@@ -1037,55 +1013,6 @@
 
         function goToLinkedTool(page, leadId) {
             window.location.href = `${page}?lead_id=${leadId}`;
-        }
-
-        // ==================== STAT CARD → LIST POPUP ====================
-        function openStatModal(filterKey) {
-            const titles = {
-                total: '📋 Semua Leads',
-                hot: '🔥 Leads - Hot',
-                warm: '🟠 Leads - Warm',
-                cold: '🔵 Leads - Cold',
-                converted: '✅ Leads - Converted'
-            };
-            const items = filterKey === 'total' ? allData : allData.filter(d => d.status === filterKey);
-
-            const statusLabels = {
-                'cold': '🔵 Cold',
-                'warm': '🟠 Warm',
-                'hot': '🔥 Hot',
-                'converted': '✅ Converted',
-                'lost': '❌ Lost'
-            };
-            const priorityLabels = {
-                'low': '🟢 Low',
-                'medium': '🟠 Medium',
-                'high': '🔴 High'
-            };
-
-            document.getElementById('statListModalTitle').textContent = `${titles[filterKey] || 'Leads'} (${items.length})`;
-
-            const body = document.getElementById('statListModalBody');
-            if (items.length === 0) {
-                body.innerHTML = '<p style="text-align:center;color:#a0aec0;padding:20px 0;">Tidak ada lead di kategori ini.</p>';
-            } else {
-                body.innerHTML = items.map(item => `
-                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;">
-                        <div style="min-width:0;">
-                            <div style="font-weight:600;font-size:13px;color:#2d3748;">#${item.id_x} ${escapeHtml(item.contact_name) || '-'}
-                                ${filterKey === 'total' ? `<span class="badge-status ${item.status}" style="margin-left:6px;">${statusLabels[item.status] || item.status}</span>` : ''}
-                            </div>
-                            <div style="font-size:11px;color:#718096;">
-                                ${escapeHtml(item.company_name) || '-'} &middot; ${escapeHtml(item.service_interest) || '-'}
-                                &middot; ${priorityLabels[item.priority] || item.priority}
-                                &middot; Sales: ${escapeHtml(item.sales_assign) || '-'}
-                            </div>
-                        </div>
-                        <button class="btn btn-outline btn-xs" onclick="closeModal('statListModal'); openLeadLinkModal(${item.id_x})" title="Lanjutkan ke tools lain">🔗</button>
-                    </div>
-                `).join('');
-            }
-            document.getElementById('statListModal').classList.add('active');
         }
 
         // ==================== INIT ====================

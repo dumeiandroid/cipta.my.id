@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Dashboard - Supervisor Psikologi</title>
+    <script>
+        // ==================== AUTH GUARD (Sales Tools Suite - SSO) ====================
+        // Halaman ini khusus SUPERVISOR (role x_03 = 'spv' di tabel users)
+        const AUTH_SESSION_KEY = 'lidan_sales_session';
+        const AUTH_LOGIN_PAGE = 'login.html';
+
+        function getAuthSession() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+        function clearAuthSession() { localStorage.removeItem(AUTH_SESSION_KEY); }
+        function isSupervisor(session) { return !!session && String(session.role || '').toLowerCase() === 'spv'; }
+        function isAdmin(session) { return !!session && String(session.username || '').toLowerCase() === 'admin'; }
+        function logout() { clearAuthSession(); window.location.href = AUTH_LOGIN_PAGE; }
+
+        let CURRENT_USER = getAuthSession();
+        if (!CURRENT_USER || !CURRENT_USER.username) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.replace(AUTH_LOGIN_PAGE + '?return=' + returnUrl);
+        } else if (!isSupervisor(CURRENT_USER) && !isAdmin(CURRENT_USER)) {
+            // Bukan supervisor & bukan admin -> tidak boleh akses dashboard ini
+            window.location.replace('index.html');
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === AUTH_SESSION_KEY && !e.newValue) {
+                window.location.href = AUTH_LOGIN_PAGE;
+            }
+        });
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 span {
+            background: #4299e1;
+            font-size: 12px;
+            padding: 2px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .header .subtitle {
+            color: #a0aec0;
+            font-size: 14px;
+            margin-top: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #fff;
+        }
+        .user-badge .role-tag {
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            text-transform: capitalize;
+        }
+        .user-badge .role-tag.spv { background: #9f7aea; }
+        .user-badge .role-tag.sales { background: #4299e1; }
+        .btn-logout {
+            background: #fc8181;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-logout:hover { background: #f56565; }
+
+        .header-actions .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .header-actions .btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .header-actions .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+        .header-actions .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-outline:hover {
+            background: #f7fafc;
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-xs {
+            padding: 3px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px 24px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .stat-card .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .stat-card .stat-label {
+            font-size: 13px;
+            color: #a0aec0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .stat-change {
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .stat-card .stat-change.up { color: #48bb78; }
+        .stat-card .stat-change.down { color: #fc8181; }
+
+        .stat-card.primary .stat-number { color: #4299e1; }
+        .stat-card.success .stat-number { color: #48bb78; }
+        .stat-card.warning .stat-number { color: #ed8936; }
+        .stat-card.danger .stat-number { color: #fc8181; }
+        .stat-card.purple .stat-number { color: #9f7aea; }
+
+        /* Dashboard Sections */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .dashboard-card .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dashboard-card .card-title .badge {
+            background: #edf2f7;
+            font-size: 11px;
+            padding: 1px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        /* Pipeline Chart */
+        .pipeline-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .pipeline-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pipeline-bar .stage-label {
+            width: 120px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+            flex-shrink: 0;
+        }
+
+        .pipeline-bar .bar-track {
+            flex: 1;
+            height: 24px;
+            background: #edf2f7;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .pipeline-bar .bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.6s ease;
+        }
+
+        .pipeline-bar .bar-fill.stage-prospecting { background: #bee3f8; }
+        .pipeline-bar .bar-fill.stage-qualification { background: #fefcbf; }
+        .pipeline-bar .bar-fill.stage-negotiation { background: #e9d8fd; }
+        .pipeline-bar .bar-fill.stage-proposal { background: #fbd38d; }
+        .pipeline-bar .bar-fill.stage-closing { background: #fc8181; }
+        .pipeline-bar .bar-fill.stage-won { background: #48bb78; }
+        .pipeline-bar .bar-fill.stage-lost { background: #fc8181; }
+
+        .pipeline-bar .bar-value {
+            font-size: 12px;
+            font-weight: 700;
+            color: #2d3748;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        /* Sales Performance Table */
+        .performance-table {
+            width: 100%;
+            font-size: 13px;
+            border-collapse: collapse;
+        }
+
+        .performance-table th {
+            text-align: left;
+            padding: 8px 6px;
+            font-weight: 700;
+            color: #4a5568;
+            border-bottom: 2px solid #edf2f7;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .performance-table td {
+            padding: 8px 6px;
+            border-bottom: 1px solid #edf2f7;
+            color: #2d3748;
+        }
+
+        .performance-table tr:hover td {
+            background: #f7fafc;
+        }
+
+        .performance-table .rank {
+            font-weight: 700;
+            color: #a0aec0;
+        }
+
+        .performance-table .rank.gold { color: #d69e2e; }
+        .performance-table .rank.silver { color: #a0aec0; }
+        .performance-table .rank.bronze { color: #dd6b20; }
+
+        .progress-mini {
+            display: inline-block;
+            width: 60px;
+            height: 6px;
+            background: #edf2f7;
+            border-radius: 4px;
+            overflow: hidden;
+            vertical-align: middle;
+        }
+
+        .progress-mini .fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        .progress-mini .fill.high { background: #48bb78; }
+        .progress-mini .fill.medium { background: #ed8936; }
+        .progress-mini .fill.low { background: #fc8181; }
+
+        /* Activity Feed */
+        .activity-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 12px;
+            padding: 10px 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border-left: 3px solid #4299e1;
+        }
+
+        .activity-item .activity-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .activity-item .activity-content {
+            flex: 1;
+        }
+
+        .activity-item .activity-text {
+            font-size: 13px;
+            color: #2d3748;
+        }
+
+        .activity-item .activity-text strong {
+            color: #1a202c;
+        }
+
+        .activity-item .activity-time {
+            font-size: 11px;
+            color: #a0aec0;
+        }
+
+        /* Alerts */
+        .alert-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .alert-item {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-item.warning {
+            background: #fffff0;
+            border: 1px solid #fefcbf;
+            color: #975a16;
+        }
+
+        .alert-item.danger {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            color: #9b2c2c;
+        }
+
+        .alert-item.success {
+            background: #f0fff4;
+            border: 1px solid #c6f6d5;
+            color: #276749;
+        }
+
+        .alert-item.info {
+            background: #ebf8ff;
+            border: 1px solid #bee3f8;
+            color: #2a69ac;
+        }
+
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: #a0aec0;
+        }
+        .empty-state .icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        .empty-state h3 {
+            color: #4a5568;
+            margin-bottom: 4px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            max-width: 400px;
+        }
+
+        .toast.success {
+            background: #48bb78;
+        }
+        .toast.error {
+            background: #fc8181;
+        }
+        .toast.info {
+            background: #4299e1;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .refresh-btn {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        @media (max-width: 992px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .pipeline-bar .stage-label {
+                width: 80px;
+                font-size: 10px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .header h1 {
+                font-size: 18px;
+            }
+            .header .subtitle {
+                font-size: 12px;
+            }
+            .pipeline-bar {
+                flex-wrap: wrap;
+            }
+            .pipeline-bar .stage-label {
+                width: 100%;
+            }
+            .stat-card .stat-number {
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            body {
+                padding: 10px;
+            }
+        }
+
+        .scroll-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(66,153,225,0.4);
+            transition: all 0.3s;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            z-index: 9999;
+        }
+
+        .scroll-top.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .scroll-top:hover {
+            background: #3182ce;
+            transform: scale(1.05);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 95vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            color: #1a2332;
+        }
+        .modal-close {
+            position: sticky; top: 0; float: right;
+            background: #fc8181; border: none; color: white;
+            width: 36px; height: 36px; border-radius: 50%;
+            font-size: 20px; cursor: pointer; z-index: 10;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-close:hover { background: #f56565; }
+        .modal-title { font-size: 22px; font-weight: 700; color: #1a2332; margin-bottom: 16px; padding-right: 50px; }
+        .modal-body { display: flex; flex-direction: column; gap: 10px; font-size: 14px; line-height: 1.7; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <!-- HEADER -->
+        <header class="header">
+            <div>
+                <h1>
+                    📊 Sales Dashboard
+                    <span>Supervisor</span>
+                </h1>
+                <div class="subtitle">Monitoring kinerja tim sales layanan psikologi</div>
+            </div>
+            <div class="header-actions">
+                <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
+                <button class="refresh-btn" onclick="document.getElementById('infoModal').classList.add('active')" title="Info & Panduan Dashboard">ℹ️ Info</button>
+                <span style="font-size:13px;color:#a0aec0;" id="lastUpdate">-</span>
+                <div class="user-badge" id="userBadge">
+                    <span id="userBadgeName">👤 -</span>
+                    <span class="role-tag" id="userBadgeRole">-</span>
+                    <a href="index.html" class="refresh-btn" style="text-decoration:none;display:inline-block;">🏠 Home</a>
+                    <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- STATS GRID -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card primary">
+                <div class="stat-number" id="statTotalDeals">0</div>
+                <div class="stat-label">Total Deals</div>
+                <div class="stat-change up" id="statActiveDeals">🔄 0 Active</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-number" id="statWonDeals">0</div>
+                <div class="stat-label">✅ Won</div>
+                <div class="stat-change" id="statWinRate">0% Win Rate</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-number" id="statPipelineValue">Rp 0</div>
+                <div class="stat-label">💰 Pipeline Value</div>
+                <div class="stat-change" id="statAvgDeal">Avg: Rp 0</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-number" id="statTotalVisits">0</div>
+                <div class="stat-label">📅 Total Kunjungan</div>
+                <div class="stat-change" id="statVisitsThisMonth">Bulan ini: 0</div>
+            </div>
+            <div class="stat-card danger">
+                <div class="stat-number" id="statLostDeals">0</div>
+                <div class="stat-label">❌ Lost</div>
+                <div class="stat-change" id="statLostRate">0% Lost Rate</div>
+            </div>
+            <div class="stat-card primary">
+                <div class="stat-number" id="statTotalLeads">0</div>
+                <div class="stat-label">📋 Total Leads</div>
+                <div class="stat-change" id="statHotLeads">🔥 0 Hot</div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD GRID -->
+        <div class="dashboard-grid">
+            <!-- Pipeline Chart -->
+            <div class="dashboard-card">
+                <div class="card-title">
+                    📊 Pipeline by Stage
+                    <span class="badge" id="pipelineCount">0 deals</span>
+                </div>
+                <div class="pipeline-bars" id="pipelineBars">
+                    <div class="empty-state" style="padding:20px;">
+                        <div class="icon">📊</div>
+                        <h3>Belum ada data pipeline</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Performance -->
+            <div class="dashboard-card">
+                <div class="card-title">
+                    🏆 Sales Performance
+                    <span class="badge" id="salesCount">0 sales</span>
+                </div>
+                <div style="max-height:400px;overflow-y:auto;">
+                    <table class="performance-table" id="performanceTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Sales</th>
+                                <th>Deals</th>
+                                <th>Won</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="performanceBody">
+                            <tr>
+                                <td colspan="5" style="text-align:center;color:#a0aec0;padding:20px;">
+                                    Belum ada data sales
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECOND ROW -->
+        <div class="dashboard-grid">
+            <!-- Activity Feed -->
+            <div class="dashboard-card">
+                <div class="card-title">
+                    📋 Recent Activities
+                    <span class="badge" id="activityCount">0 activities</span>
+                </div>
+                <div class="activity-feed" id="activityFeed">
+                    <div class="empty-state" style="padding:20px;">
+                        <div class="icon">📋</div>
+                        <h3>Belum ada aktivitas</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts & Notifications -->
+            <div class="dashboard-card">
+                <div class="card-title">
+                    🔔 Alerts & Notifications
+                    <span class="badge" id="alertCount">0 alerts</span>
+                </div>
+                <div class="alert-list" id="alertList">
+                    <div class="empty-state" style="padding:20px;">
+                        <div class="icon">✅</div>
+                        <h3>Semua dalam kondisi baik</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div style="text-align:center;padding:20px 0;color:#a0aec0;font-size:13px;border-top:1px solid #e2e8f0;margin-top:10px;">
+            📊 Sales Dashboard v1.0 | Data terintegrasi dari Lead Management, Visit Tracker, dan Sales Pipeline
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast" style="display:none;"></div>
+
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
+            <div class="modal-title">📈 Panduan Sales Dashboard</div>
+            <div class="modal-body">
+                <p>Sales Dashboard dipakai supervisor untuk memantau kinerja tim sales secara
+                real-time. Dashboard ini merangkum data dari 4 tools lain: Lead Management,
+                Visit Tracker, Client Profile, dan Sales Pipeline.</p>
+
+                <h4 style="margin:4px 0 2px;">🧩 Arti Bagian-bagian Dashboard</h4>
+                <ul style="margin:0 0 8px 18px; line-height:1.9;">
+                    <li><b>Statistik Utama</b> — Total Deals, Won, Lost, Pipeline Value, Kunjungan, Leads</li>
+                    <li><b>Pipeline Chart</b> — jumlah deal di tiap stage (prospecting → won/lost)</li>
+                    <li><b>Sales Performance</b> — ranking sales berdasarkan jumlah &amp; nilai deal</li>
+                    <li><b>Activity Feed</b> — aktivitas terbaru (lead baru, kunjungan, update pipeline)</li>
+                    <li><b>Alerts</b> — peringatan follow-up terlambat, deal macet, atau hot lead yang belum di-assign</li>
+                </ul>
+
+                <div style="background:#ebf8ff;border-left:4px solid #4299e1;border-radius:8px;padding:10px 14px;font-size:13px;">
+                    💡 <b>Tips:</b> Cek dashboard tiap hari untuk memantau aktivitas tim. Alert yang
+                    muncul adalah prioritas yang perlu segera ditangani.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCROLL TO TOP -->
+    <button class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+    <script>
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const SECRET = 'admin';
+
+        // Semua tabel yang digunakan
+        const TABLES = {
+            leads: 'lead_management',
+            visits: 'sales_visit_tracker',
+            pipeline: 'sales_pipeline',
+            companies: 'client_company_profile'
+        };
+
+        // ==================== STATE ====================
+        let allData = {
+            leads: [],
+            visits: [],
+            pipeline: [],
+            companies: []
+        };
+
+        let isLoading = false;
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('📊 Sales Dashboard Started');
+            initUserBadge();
+            refreshData();
+        });
+
+        function initUserBadge() {
+            const nameEl = document.getElementById('userBadgeName');
+            const roleEl = document.getElementById('userBadgeRole');
+            if (nameEl) nameEl.textContent = '👤 ' + (CURRENT_USER.username || '-');
+            if (roleEl) {
+                roleEl.textContent = CURRENT_USER.role || 'Supervisor';
+                roleEl.className = 'role-tag spv';
+            }
+        }
+
+        // ==================== MODAL HELPERS ====================
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('active');
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('active');
+            });
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+            }
+        });
+
+        // ==================== API HELPERS ====================
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function fetchTableData(table) {
+            try {
+                const url = `${API_URL}?table=${table}`;
+                const response = await fetch(url, {
+                    headers: getHeaders()
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const result = await response.json();
+                return result.success && result.data ? result.data : [];
+            } catch (e) {
+                console.error(`❌ Error fetching ${table}:`, e.message);
+                return [];
+            }
+        }
+
+        async function fetchAllData() {
+            isLoading = true;
+            try {
+                const [leads, visits, pipeline, companies] = await Promise.all([
+                    fetchTableData(TABLES.leads),
+                    fetchTableData(TABLES.visits),
+                    fetchTableData(TABLES.pipeline),
+                    fetchTableData(TABLES.companies)
+                ]);
+
+                allData.leads = leads;
+                allData.visits = visits;
+                allData.pipeline = pipeline;
+                allData.companies = companies;
+
+                console.log('✅ All data loaded:', {
+                    leads: leads.length,
+                    visits: visits.length,
+                    pipeline: pipeline.length,
+                    companies: companies.length
+                });
+
+                return true;
+            } catch (e) {
+                console.error('❌ Error loading data:', e);
+                return false;
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        function parseLeads(rows) {
+            return rows.map(row => ({
+                id_x: row.id_x,
+                contact_name: row.x_01 || '',
+                company_name: row.x_02 || '',
+                status: row.x_05 || 'cold',
+                priority: row.x_06 || 'medium',
+                service_interest: row.x_07 || '',
+                sales_assign: row.x_08 || '',
+                notes: row.x_09 || '',
+                next_followup: row.x_10 || '',
+                estimated_value: row.x_11 || '',
+                _raw: row
+            }));
+        }
+
+        function parseVisits(rows) {
+            return rows.map(row => ({
+                id_x: row.id_x,
+                company_name: row.x_01 || '',
+                contact_name: row.x_02 || '',
+                visit_date: row.x_03 || '',
+                sales_name: row.x_04 || '',
+                location: row.x_05 || '',
+                status: row.x_06 || 'scheduled',
+                visit_purpose: row.x_07 || '',
+                notes: row.x_08 || '',
+                _raw: row
+            }));
+        }
+
+        function parsePipeline(rows) {
+            return rows.map(row => ({
+                id_x: row.id_x,
+                deal_name: row.x_01 || '',
+                company_name: row.x_02 || '',
+                service_type: row.x_03 || '',
+                sales_name: row.x_04 || '',
+                stage: row.x_05 || 'prospecting',
+                priority: row.x_06 || 'medium',
+                deal_value: row.x_07 || '',
+                probability: parseInt(row.x_08) || 50,
+                close_date: row.x_09 || '',
+                created_date: row.x_10 || '',
+                notes: row.x_11 || '',
+                _raw: row
+            }));
+        }
+
+        function parseCompanies(rows) {
+            return rows.map(row => ({
+                id_x: row.id_x,
+                company_name: row.x_01 || '',
+                company_type: row.x_02 || 'corporate',
+                email: row.x_03 || '',
+                phone: row.x_04 || '',
+                pic_name: row.x_05 || '',
+                pic_phone: row.x_06 || '',
+                address: row.x_07 || '',
+                status: row.x_08 || 'active',
+                services_used: safeParseJSON(row.x_09),
+                sales_assign: row.x_10 || '',
+                join_date: row.x_11 || '',
+                notes: row.x_12 || '',
+                _raw: row
+            }));
+        }
+
+        function safeParseJSON(str) {
+            if (!str) return [];
+            try {
+                const parsed = JSON.parse(str);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        // ==================== RENDER DASHBOARD ====================
+        function renderDashboard() {
+            const leads = parseLeads(allData.leads);
+            const visits = parseVisits(allData.visits);
+            const pipeline = parsePipeline(allData.pipeline);
+            const companies = parseCompanies(allData.companies);
+
+            // ---- STATS ----
+            const totalDeals = pipeline.length;
+            const wonDeals = pipeline.filter(d => d.stage === 'won').length;
+            const lostDeals = pipeline.filter(d => d.stage === 'lost').length;
+            const activeDeals = pipeline.filter(d => !['won', 'lost'].includes(d.stage)).length;
+            const winRate = totalDeals > 0 ? Math.round((wonDeals / totalDeals) * 100) : 0;
+
+            // Pipeline value
+            let totalValue = 0;
+            let valueCount = 0;
+            pipeline.forEach(d => {
+                if (d.deal_value) {
+                    const num = parseFloat(d.deal_value.replace(/[^0-9.]/g, ''));
+                    if (!isNaN(num)) {
+                        totalValue += num;
+                        valueCount++;
+                    }
+                }
+            });
+            const avgDeal = valueCount > 0 ? totalValue / valueCount : 0;
+
+            // Visits
+            const totalVisits = visits.length;
+            const now = new Date();
+            const thisMonth = visits.filter(v => {
+                if (!v.visit_date) return false;
+                const d = new Date(v.visit_date);
+                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            }).length;
+
+            // Hot leads
+            const hotLeads = leads.filter(l => l.status === 'hot').length;
+
+            // Update stats
+            document.getElementById('statTotalDeals').textContent = totalDeals;
+            document.getElementById('statActiveDeals').textContent = `🔄 ${activeDeals} Active`;
+            document.getElementById('statWonDeals').textContent = wonDeals;
+            document.getElementById('statWinRate').textContent = `${winRate}% Win Rate`;
+            document.getElementById('statPipelineValue').textContent = totalValue > 0 ?
+                new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(totalValue) :
+                'Rp 0';
+            document.getElementById('statAvgDeal').textContent = avgDeal > 0 ?
+                `Avg: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(avgDeal)}` :
+                'Avg: Rp 0';
+            document.getElementById('statTotalVisits').textContent = totalVisits;
+            document.getElementById('statVisitsThisMonth').textContent = `Bulan ini: ${thisMonth}`;
+            document.getElementById('statLostDeals').textContent = lostDeals;
+            document.getElementById('statLostRate').textContent = totalDeals > 0 ? `${Math.round((lostDeals/totalDeals)*100)}% Lost Rate` : '0% Lost Rate';
+            document.getElementById('statTotalLeads').textContent = leads.length;
+            document.getElementById('statHotLeads').textContent = `🔥 ${hotLeads} Hot`;
+
+            // ---- PIPELINE BARS ----
+            const stageOrder = ['prospecting', 'qualification', 'negotiation', 'proposal', 'closing', 'won', 'lost'];
+            const stageLabels = {
+                'prospecting': '🔍 Prospecting',
+                'qualification': '📋 Qualification',
+                'negotiation': '🤝 Negotiation',
+                'proposal': '📄 Proposal',
+                'closing': '🎯 Closing',
+                'won': '✅ Won',
+                'lost': '❌ Lost'
+            };
+
+            const stageCounts = {};
+            stageOrder.forEach(s => stageCounts[s] = 0);
+            pipeline.forEach(d => {
+                if (stageCounts.hasOwnProperty(d.stage)) stageCounts[d.stage]++;
+            });
+
+            const maxCount = Math.max(...Object.values(stageCounts), 1);
+
+            document.getElementById('pipelineCount').textContent = `${totalDeals} deals`;
+
+            const pipelineContainer = document.getElementById('pipelineBars');
+            if (totalDeals === 0) {
+                pipelineContainer.innerHTML = `
+                    <div class="empty-state" style="padding:20px;">
+                        <div class="icon">📊</div>
+                        <h3>Belum ada data pipeline</h3>
+                    </div>
+                `;
+            } else {
+                pipelineContainer.innerHTML = stageOrder.map(stage => {
+                    const count = stageCounts[stage] || 0;
+                    const percent = maxCount > 0 ? (count / maxCount) * 100 : 0;
+                    return `
+                        <div class="pipeline-bar">
+                            <span class="stage-label">${stageLabels[stage] || stage}</span>
+                            <div class="bar-track">
+                                <div class="bar-fill stage-${stage}" style="width: ${percent}%;"></div>
+                            </div>
+                            <span class="bar-value">${count}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // ---- SALES PERFORMANCE ----
+            const salesData = {};
+            pipeline.forEach(d => {
+                const name = d.sales_name || 'Unassigned';
+                if (!salesData[name]) {
+                    salesData[name] = { deals: 0, won: 0, value: 0 };
+                }
+                salesData[name].deals++;
+                if (d.stage === 'won') salesData[name].won++;
+                if (d.deal_value) {
+                    const num = parseFloat(d.deal_value.replace(/[^0-9.]/g, ''));
+                    if (!isNaN(num)) salesData[name].value += num;
+                }
+            });
+
+            const salesArray = Object.entries(salesData)
+                .map(([name, data]) => ({ name, ...data }))
+                .sort((a, b) => b.value - a.value);
+
+            document.getElementById('salesCount').textContent = `${salesArray.length} sales`;
+
+            const performanceBody = document.getElementById('performanceBody');
+            if (salesArray.length === 0) {
+                performanceBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align:center;color:#a0aec0;padding:20px;">
+                            Belum ada data sales
+                        </td>
+                    </tr>
+                `;
+            } else {
+                const rankEmojis = ['🥇', '🥈', '🥉'];
+                performanceBody.innerHTML = salesArray.slice(0, 10).map((s, i) => {
+                    const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+                    const progress = s.deals > 0 ? Math.round((s.won / s.deals) * 100) : 0;
+                    const progressClass = progress >= 70 ? 'high' : progress >= 40 ? 'medium' : 'low';
+                    return `
+                        <tr>
+                            <td class="rank ${rankClass}">${i < 3 ? rankEmojis[i] : `#${i+1}`}</td>
+                            <td><strong>${escapeHtml(s.name)}</strong></td>
+                            <td>${s.deals}</td>
+                            <td>${s.won} <span class="progress-mini"><span class="fill ${progressClass}" style="width:${progress}%;"></span></span></td>
+                            <td>${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(s.value)}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // ---- ACTIVITY FEED ----
+            const activities = [];
+
+            // Recent leads
+            leads.slice(0, 5).forEach(l => {
+                if (l.contact_name) {
+                    activities.push({
+                        time: l._raw?.created_at || l._raw?.updated_at || new Date().toISOString(),
+                        icon: '📋',
+                        text: `<strong>${escapeHtml(l.contact_name)}</strong> ditambahkan sebagai lead (${escapeHtml(l.status || 'cold')})`,
+                        type: 'lead'
+                    });
+                }
+            });
+
+            // Recent visits
+            visits.slice(0, 5).forEach(v => {
+                if (v.company_name) {
+                    const statusLabel = v.status === 'visited' ? 'Selesai' :
+                        v.status === 'cancelled' ? 'Dibatalkan' :
+                        v.status === 'rescheduled' ? 'Dijadwalkan Ulang' : 'Terjadwal';
+                    activities.push({
+                        time: v.visit_date || v._raw?.created_at || new Date().toISOString(),
+                        icon: '📅',
+                        text: `<strong>${escapeHtml(v.company_name)}</strong> - Kunjungan ${statusLabel} oleh ${escapeHtml(v.sales_name || 'sales')}`,
+                        type: 'visit'
+                    });
+                }
+            });
+
+            // Recent pipeline changes
+            pipeline.slice(0, 5).forEach(d => {
+                if (d.deal_name) {
+                    const stageLabel = stageLabels[d.stage] || d.stage;
+                    activities.push({
+                        time: d._raw?.updated_at || d._raw?.created_at || new Date().toISOString(),
+                        icon: '📊',
+                        text: `<strong>${escapeHtml(d.deal_name)}</strong> - Stage: ${stageLabel} (${escapeHtml(d.sales_name || 'unassigned')})`,
+                        type: 'pipeline'
+                    });
+                }
+            });
+
+            // Sort by time (newest first)
+            activities.sort((a, b) => new Date(b.time) - new Date(a.time));
+            const recentActivities = activities.slice(0, 15);
+
+            document.getElementById('activityCount').textContent = `${recentActivities.length} activities`;
+
+            const activityFeed = document.getElementById('activityFeed');
+            if (recentActivities.length === 0) {
+                activityFeed.innerHTML = `
+                    <div class="empty-state" style="padding:20px;">
+                        <div class="icon">📋</div>
+                        <h3>Belum ada aktivitas</h3>
+                    </div>
+                `;
+            } else {
+                activityFeed.innerHTML = recentActivities.map(a => {
+                    const time = a.time ? new Date(a.time).toLocaleDateString('id-ID', {
+                        day: '2-digit',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }) : '-';
+                    return `
+                        <div class="activity-item">
+                            <span class="activity-icon">${a.icon}</span>
+                            <div class="activity-content">
+                                <div class="activity-text">${a.text}</div>
+                                <div class="activity-time">${time}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // ---- ALERTS ----
+            const alerts = [];
+
+            // Check leads without follow-up > 7 days
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            leads.forEach(l => {
+                if (l.next_followup && l.status !== 'converted' && l.status !== 'lost') {
+                    const followupDate = new Date(l.next_followup);
+                    if (followupDate < sevenDaysAgo) {
+                        alerts.push({
+                            type: 'warning',
+                            icon: '⚠️',
+                            text: `Lead <strong>${escapeHtml(l.contact_name)}</strong> belum di-follow-up sejak ${new Date(l.next_followup).toLocaleDateString('id-ID')}`
+                        });
+                    }
+                }
+            });
+
+            // Check deals stuck in stage > 30 days
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            pipeline.forEach(d => {
+                if (!['won', 'lost'].includes(d.stage)) {
+                    const created = d.created_date ? new Date(d.created_date) : new Date(d._raw?.created_at);
+                    if (created < thirtyDaysAgo) {
+                        alerts.push({
+                            type: 'danger',
+                            icon: '🔴',
+                            text: `Deal <strong>${escapeHtml(d.deal_name)}</strong> stuck di stage ${stageLabels[d.stage] || d.stage} lebih dari 30 hari`
+                        });
+                    }
+                }
+            });
+
+            // Check hot leads without sales assign
+            leads.filter(l => l.status === 'hot' && !l.sales_assign).forEach(l => {
+                alerts.push({
+                    type: 'warning',
+                    icon: '🔥',
+                    text: `Hot lead <strong>${escapeHtml(l.contact_name)}</strong> belum di-assign ke sales`
+                });
+            });
+
+            // Check won deals with high value
+            pipeline.filter(d => d.stage === 'won').forEach(d => {
+                if (d.deal_value) {
+                    const num = parseFloat(d.deal_value.replace(/[^0-9.]/g, ''));
+                    if (!isNaN(num) && num > 50000000) {
+                        alerts.push({
+                            type: 'success',
+                            icon: '🏆',
+                            text: `Deal besar berhasil! <strong>${escapeHtml(d.deal_name)}</strong> - ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num)}`
+                        });
+                    }
+                }
+            });
+
+            document.getElementById('alertCount').textContent = `${alerts.length} alerts`;
+
+            const alertList = document.getElementById('alertList');
+            if (alerts.length === 0) {
+                alertList.innerHTML = `
+                    <div class="empty-state" style="padding:20px;">
+                        <div class="icon">✅</div>
+                        <h3>Semua dalam kondisi baik</h3>
+                    </div>
+                `;
+            } else {
+                alertList.innerHTML = alerts.slice(0, 10).map(a => `
+                    <div class="alert-item ${a.type}">
+                        <span>${a.icon}</span>
+                        <span>${a.text}</span>
+                    </div>
+                `).join('');
+            }
+
+            // ---- LAST UPDATE ----
+            const nowStr = new Date().toLocaleString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('lastUpdate').textContent = `Last update: ${nowStr}`;
+
+            // Show toast
+            showToast('✅ Dashboard berhasil diperbarui', 'success');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ==================== REFRESH ====================
+        async function refreshData() {
+            if (isLoading) return;
+
+            showToast('🔄 Memuat data...', 'info');
+
+            const success = await fetchAllData();
+            if (success) {
+                renderDashboard();
+            } else {
+                showToast('❌ Gagal memuat data', 'error');
+            }
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
+
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // ==================== SCROLL TOP ====================
+        const scrollBtn = document.getElementById('scrollTopBtn');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 400) {
+                scrollBtn.classList.add('visible');
+            } else {
+                scrollBtn.classList.remove('visible');
+            }
+        });
+
+        // ==================== AUTO REFRESH ====================
+        // Refresh every 60 seconds
+        setInterval(() => {
+            if (!isLoading) {
+                fetchAllData().then(success => {
+                    if (success) renderDashboard();
+                });
+            }
+        }, 60000);
+
+        // ==================== DEBUG ====================
+        window.debug = {
+            allData: () => allData,
+            refresh: refreshData,
+            TABLES: TABLES,
+            parseLeads: parseLeads,
+            parseVisits: parseVisits,
+            parsePipeline: parsePipeline,
+            parseCompanies: parseCompanies
+        };
+
+        console.log('📊 Sales Dashboard Loaded!');
+        console.log('📡 Tables:', TABLES);
+        console.log('📊 Type "debug" in console for helpers');
+        console.log('🔧 Debug commands:');
+        console.log('  - debug.allData()  : Lihat semua data mentah');
+        console.log('  - debug.refresh()  : Refresh data');
+        console.log('  - debug.TABLES     : Lihat nama tabel');
+    </script>
+</body>
+</html>

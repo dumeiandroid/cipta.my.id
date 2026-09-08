@@ -582,6 +582,62 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
+
+        .section-block {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .section-block.rencana {
+            border-color: #bee3f8;
+            background: #f0f9ff;
+        }
+        .section-block.hasil {
+            border-color: #c6f6d5;
+            background: #f0fff4;
+        }
+        .section-block .section-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .section-block.hidden {
+            display: none;
+        }
+        .pending-warning {
+            background: #fffaf0;
+            border-left: 4px solid #ed8936;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #7b341e;
+        }
+        .lead-tag {
+            display: inline-block;
+            background: #edf2f7;
+            color: #4a5568;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 8px;
+            border-radius: 10px;
+            margin-left: 6px;
+        }
+        .pending-tag {
+            display: inline-block;
+            background: #feebc8;
+            color: #9c4221;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 8px;
+            border-radius: 10px;
+            margin-left: 6px;
+        }
     </style>
 </head>
 <body>
@@ -702,6 +758,7 @@
             <div class="modal-title" id="formModalTitle">📅 Tambah Kunjungan</div>
             <div class="modal-body">
                 <input type="hidden" id="editId" value="">
+                <input type="hidden" id="lead_id" value="">
 
                 <div class="form-row">
                     <div class="form-group">
@@ -726,20 +783,9 @@
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>📍 Lokasi</label>
-                        <input type="text" id="location" placeholder="Alamat lengkap">
-                    </div>
-                    <div class="form-group">
-                        <label>📂 Status</label>
-                        <select id="status">
-                            <option value="scheduled">📅 Terjadwal</option>
-                            <option value="visited">✅ Selesai</option>
-                            <option value="cancelled">❌ Batal</option>
-                            <option value="rescheduled">🔄 Dijadwalkan Ulang</option>
-                        </select>
-                    </div>
+                <div class="form-group">
+                    <label>📍 Lokasi</label>
+                    <input type="text" id="location" placeholder="Alamat lengkap">
                 </div>
 
                 <div class="form-group">
@@ -756,9 +802,47 @@
                     </select>
                 </div>
 
+                <div id="pendingWarning" class="pending-warning" style="display:none;">
+                    ⚠️ Kunjungan ini masih berupa <b>rencana</b> yang belum ada hasilnya. Lengkapi bagian
+                    "Hasil Kunjungan" di bawah (biasanya bersamaan dengan mengubah Status menjadi Selesai/Batal)
+                    sebelum rencana kunjungan baru bisa dibuat untuk lead ini.
+                </div>
+
+                <div class="section-block rencana">
+                    <div class="section-title">📋 Rencana Kunjungan</div>
+                    <div class="form-group">
+                        <label>Catatan Rencana</label>
+                        <textarea id="rencanaCatatan" placeholder="Tujuan/agenda kunjungan, hal yang ingin dibahas atau disampaikan..." rows="2"></textarea>
+                    </div>
+                </div>
+
+                <div class="section-block hasil hidden" id="hasilSection">
+                    <div class="section-title">✅ Hasil Kunjungan</div>
+                    <div class="form-group">
+                        <label>Catatan Hasil *</label>
+                        <textarea id="hasilCatatan" placeholder="Apa yang terjadi/dibahas saat kunjungan, kesepakatan yang dicapai..." rows="3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>📅 Tanggal Kunjungan Aktual</label>
+                            <input type="date" id="hasilTanggalAktual">
+                            <small style="color:#a0aec0;">Isi jika berbeda dari tanggal rencana</small>
+                        </div>
+                        <div class="form-group">
+                            <label>➡️ Rencana Tindak Lanjut</label>
+                            <input type="text" id="hasilTindakLanjut" placeholder="Follow up berikutnya, kapan/apa">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label>📝 Hasil Kunjungan / Catatan</label>
-                    <textarea id="notes" placeholder="Hasil kunjungan, kesepakatan, tindak lanjut..." rows="3"></textarea>
+                    <label>📂 Status</label>
+                    <select id="status" onchange="toggleHasilSection()">
+                        <option value="scheduled">📅 Terjadwal</option>
+                        <option value="visited">✅ Selesai</option>
+                        <option value="cancelled">❌ Batal</option>
+                        <option value="rescheduled">🔄 Dijadwalkan Ulang</option>
+                    </select>
                 </div>
 
                 <div class="modal-footer">
@@ -788,7 +872,8 @@
             location: 'x_05',
             status: 'x_06',
             visit_purpose: 'x_07',
-            notes: 'x_08'
+            notes: 'x_08',
+            lead_id: 'x_09'
         };
 
         const HISTORY_COL = 'x_25';
@@ -800,8 +885,49 @@
             location: '📍 Lokasi',
             status: '📂 Status',
             visit_purpose: '🎯 Tujuan Kunjungan',
-            notes: '📝 Hasil Kunjungan / Catatan'
+            notes: '📝 Rencana / Hasil Kunjungan'
         };
+
+        // notes (x_08) disimpan sebagai JSON: {"rencana":{"catatan":""},"hasil":{"catatan":"","tanggal_aktual":"","tindak_lanjut":""}}
+        // Data lama (plain text) diperlakukan sebagai catatan hasil, karena dulu field ini memang untuk hasil kunjungan.
+        function parseNotesJson(raw) {
+            if (!raw) return { rencana: { catatan: '' }, hasil: null };
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object' && (parsed.rencana || parsed.hasil)) {
+                    return {
+                        rencana: parsed.rencana || { catatan: '' },
+                        hasil: parsed.hasil || null
+                    };
+                }
+            } catch (e) { /* not JSON, fall through to legacy handling */ }
+            return { rencana: { catatan: '' }, hasil: { catatan: String(raw), tanggal_aktual: '', tindak_lanjut: '' } };
+        }
+
+        function buildNotesJson(rencanaCatatan, hasil) {
+            const obj = { rencana: { catatan: rencanaCatatan || '' } };
+            if (hasil) obj.hasil = hasil;
+            return JSON.stringify(obj);
+        }
+
+        function isPendingStatus(status) {
+            return status === 'scheduled' || status === 'rescheduled';
+        }
+
+        function findPendingForLead(leadId, excludeId) {
+            if (!leadId) return null;
+            return allData.find(d => String(d.lead_id) === String(leadId) && isPendingStatus(d.status) && d.id_x !== excludeId);
+        }
+
+        function toggleHasilSection() {
+            const status = document.getElementById('status').value;
+            const section = document.getElementById('hasilSection');
+            if (isPendingStatus(status)) {
+                section.classList.add('hidden');
+            } else {
+                section.classList.remove('hidden');
+            }
+        }
 
         // ==================== FEATURE CONFIG (kontrol_admin) ====================
         const CONTROL_TABLE = 'kontrol_admin';
@@ -846,6 +972,54 @@
             if (addBtn) addBtn.style.display = canUse('tambah') ? '' : 'none';
         }
 
+        // ==================== LEAD LINK (dari lead_management via ?lead_id=) ====================
+        function returnToLeadIfNeeded() {
+            const urlLeadId = new URLSearchParams(window.location.search).get('lead_id');
+            if (urlLeadId) {
+                showToast('↩️ Kembali ke Lead #' + urlLeadId + '...', 'success');
+                setTimeout(() => {
+                    window.location.href = `index.html?lead_id=${urlLeadId}`;
+                }, 900);
+            }
+        }
+
+        async function applyLeadIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const leadId = params.get('lead_id');
+            if (!leadId) return;
+            if (!canUse('tambah')) {
+                showToast('❌ Anda tidak punya izin menambah kunjungan', 'error');
+                return;
+            }
+
+            const pending = findPendingForLead(leadId, null);
+            if (pending) {
+                showToast('⚠️ Lead #' + leadId + ' masih punya rencana kunjungan yang belum diisi hasilnya. Lengkapi dulu.', 'info');
+                openEditModal(pending.id_x, { focusHasil: true });
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}?table=lead_management`, {
+                    headers: { 'X-Custom-Auth': SECRET, 'X-Table-Name': 'lead_management', 'X-Role': 'admin' }
+                });
+                const result = await res.json();
+                const lead = (result.data || []).find(r => String(r.id_x) === String(leadId));
+                if (!lead) {
+                    showToast('⚠️ Lead #' + leadId + ' tidak ditemukan', 'error');
+                    return;
+                }
+                openAddModal();
+                document.getElementById('companyName').value = lead.x_02 || '';
+                document.getElementById('contactName').value = lead.x_01 || '';
+                document.getElementById('salesName').value = lead.x_08 || CURRENT_USER.username;
+                document.getElementById('lead_id').value = leadId;
+                document.getElementById('formModalTitle').textContent = `📅 Tambah Kunjungan (dari Lead #${leadId})`;
+            } catch (e) {
+                console.warn('⚠️ Gagal ambil data lead untuk prefill:', e.message);
+            }
+        }
+
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('📅 Sales Visit Tracker Started');
@@ -853,7 +1027,8 @@
             initUserBadge();
             await loadFeatureConfig();
             applyFeatureUI();
-            refreshData();
+            await refreshData();
+            applyLeadIdFromUrl();
         });
 
         function initUserBadge() {
@@ -922,6 +1097,7 @@
         }
 
         function parseRow(row) {
+            const notesObj = parseNotesJson(row.x_08);
             return {
                 id_x: row.id_x,
                 company_name: row.x_01 || '',
@@ -932,6 +1108,9 @@
                 status: row.x_06 || 'scheduled',
                 visit_purpose: row.x_07 || '',
                 notes: row.x_08 || '',
+                notesObj: notesObj,
+                searchNotes: [notesObj.rencana && notesObj.rencana.catatan, notesObj.hasil && notesObj.hasil.catatan, notesObj.hasil && notesObj.hasil.tindak_lanjut].filter(Boolean).join(' '),
+                lead_id: row.x_09 || '',
                 history: parseHistory(row[HISTORY_COL]),
                 _raw: row
             };
@@ -1046,7 +1225,7 @@
                 item.contact_name.toLowerCase().includes(search) ||
                 item.sales_name.toLowerCase().includes(search) ||
                 item.location.toLowerCase().includes(search) ||
-                item.notes.toLowerCase().includes(search)
+                item.searchNotes.toLowerCase().includes(search)
             );
 
             const body = document.getElementById('listBody');
@@ -1081,18 +1260,31 @@
                     minute: '2-digit'
                 }) : '-';
 
+                let notesPreview = '-';
+                const n = item.notesObj;
+                if (n.hasil && n.hasil.catatan) {
+                    notesPreview = n.hasil.catatan;
+                } else if (n.rencana && n.rencana.catatan) {
+                    notesPreview = 'Rencana: ' + n.rencana.catatan;
+                }
+                if (notesPreview.length > 30) notesPreview = notesPreview.substring(0, 30) + '...';
+
+                const pending = isPendingStatus(item.status);
+
                 return `
                     <div class="list-item">
                         <div class="id">#${item.id_x}</div>
                         <div class="field">
                             <span class="label">Perusahaan:</span> ${escapeHtml(item.company_name) || '-'}
+                            ${item.lead_id ? `<span class="lead-tag">Lead #${escapeHtml(item.lead_id)}</span>` : ''}
+                            ${pending ? `<span class="pending-tag">⏳ Rencana</span>` : ''}
                             ${item.contact_name ? `<br><span style="font-size:11px;color:#718096;">Kontak: ${escapeHtml(item.contact_name)}</span>` : ''}
                         </div>
                         <div class="field"><span class="label">Sales:</span> ${escapeHtml(item.sales_name) || '-'}</div>
                         <div class="field"><span class="label">Tanggal:</span> ${visitDate}</div>
                         <div class="field"><span class="label">Tujuan:</span> ${escapeHtml(item.visit_purpose) || '-'}</div>
                         <div class="field"><span class="label">Status:</span> <span class="badge-status ${item.status}">${statusLabels[item.status] || item.status}</span></div>
-                        <div class="field"><span class="label">Hasil:</span> ${escapeHtml(item.notes) ? item.notes.substring(0, 30) + (item.notes.length > 30 ? '...' : '') : '-'}</div>
+                        <div class="field"><span class="label">Hasil:</span> ${escapeHtml(notesPreview)}</div>
                         <div class="actions">
                             ${canUse('riwayat') ? `<button class="btn btn-outline btn-xs" onclick="showHistory(${item.id_x})" title="Riwayat perubahan">🕘${item.history && item.history.length ? ` <span style="font-size:9px;">${item.history.length}</span>` : ''}</button>` : ''}
                             ${canUse('edit') ? `<button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>` : ''}
@@ -1146,18 +1338,25 @@
 
             document.getElementById('companyName').value = '';
             document.getElementById('contactName').value = '';
+            document.getElementById('lead_id').value = '';
             document.getElementById('visitDate').value = dateStr;
             document.getElementById('salesName').value = CURRENT_USER.username;
             document.getElementById('location').value = '';
             document.getElementById('status').value = 'scheduled';
             document.getElementById('visitPurpose').value = 'Presentasi';
-            document.getElementById('notes').value = '';
+            document.getElementById('rencanaCatatan').value = '';
+            document.getElementById('hasilCatatan').value = '';
+            document.getElementById('hasilTanggalAktual').value = '';
+            document.getElementById('hasilTindakLanjut').value = '';
+            document.getElementById('pendingWarning').style.display = 'none';
+            toggleHasilSection();
 
             document.getElementById('formModal').classList.add('active');
             console.log('✅ Add Modal opened');
         }
 
-        async function openEditModal(id) {
+        async function openEditModal(id, opts) {
+            opts = opts || {};
             console.log('✏️ Opening Edit Modal for ID:', id);
             const item = allData.find(d => d.id_x === id);
             if (!item) {
@@ -1171,6 +1370,7 @@
 
             currentEditId = id;
             document.getElementById('editId').value = id;
+            document.getElementById('lead_id').value = item.lead_id || '';
             document.getElementById('formModalTitle').textContent = `✏️ Edit Kunjungan: ${item.company_name}`;
             document.getElementById('deleteBtn').style.display = canUse('delete') ? 'inline-flex' : 'none';
             document.getElementById('saveBtn').textContent = '💾 Update';
@@ -1187,11 +1387,29 @@
             document.getElementById('visitDate').value = visitDate;
             document.getElementById('salesName').value = item.sales_name || '';
             document.getElementById('location').value = item.location || '';
-            document.getElementById('status').value = item.status || 'scheduled';
             document.getElementById('visitPurpose').value = item.visit_purpose || 'Presentasi';
-            document.getElementById('notes').value = item.notes || '';
+
+            // Saat dibuka karena rencana lama harus diupdate, defaultkan Status ke "Selesai"
+            // supaya bagian Hasil Kunjungan langsung siap diisi (bisa diubah manual ke Batal kalau perlu).
+            const defaultStatus = opts.focusHasil ? 'visited' : (item.status || 'scheduled');
+            document.getElementById('status').value = defaultStatus;
+
+            const n = item.notesObj || parseNotesJson(item.notes);
+            document.getElementById('rencanaCatatan').value = (n.rencana && n.rencana.catatan) || '';
+            document.getElementById('hasilCatatan').value = (n.hasil && n.hasil.catatan) || '';
+            document.getElementById('hasilTanggalAktual').value = (n.hasil && n.hasil.tanggal_aktual) || '';
+            document.getElementById('hasilTindakLanjut').value = (n.hasil && n.hasil.tindak_lanjut) || '';
+
+            document.getElementById('pendingWarning').style.display = opts.focusHasil ? 'block' : 'none';
+            toggleHasilSection();
+            if (opts.focusHasil) {
+                document.getElementById('hasilSection').classList.remove('hidden');
+            }
 
             document.getElementById('formModal').classList.add('active');
+            if (opts.focusHasil) {
+                setTimeout(() => document.getElementById('hasilCatatan').focus(), 150);
+            }
             console.log('✅ Edit Modal opened');
         }
 
@@ -1218,15 +1436,46 @@
                 return;
             }
 
+            const status = document.getElementById('status').value;
+            const leadId = document.getElementById('lead_id').value || '';
+
+            // Kalau ini kunjungan baru (bukan sedang edit) untuk sebuah lead yang masih punya
+            // rencana kunjungan menggantung, tolak — rencana lama harus diisi hasilnya dulu.
+            if (!currentEditId && leadId) {
+                const pending = findPendingForLead(leadId, null);
+                if (pending) {
+                    showToast('❌ Lead #' + leadId + ' masih punya rencana kunjungan (#' + pending.id_x + ') yang belum diisi hasilnya. Lengkapi dulu sebelum membuat rencana baru.', 'error');
+                    return;
+                }
+            }
+
+            const rencanaCatatan = document.getElementById('rencanaCatatan').value.trim();
+            const hasilCatatan = document.getElementById('hasilCatatan').value.trim();
+            const hasilTanggalAktual = document.getElementById('hasilTanggalAktual').value;
+            const hasilTindakLanjut = document.getElementById('hasilTindakLanjut').value.trim();
+
+            if (!isPendingStatus(status) && !hasilCatatan) {
+                showToast('Catatan Hasil Kunjungan wajib diisi untuk status Selesai/Batal', 'error');
+                document.getElementById('hasilSection').classList.remove('hidden');
+                document.getElementById('hasilCatatan').focus();
+                return;
+            }
+
+            let hasil = null;
+            if (hasilCatatan || hasilTanggalAktual || hasilTindakLanjut) {
+                hasil = { catatan: hasilCatatan, tanggal_aktual: hasilTanggalAktual, tindak_lanjut: hasilTindakLanjut };
+            }
+
             const data = {
                 company_name: companyName,
                 contact_name: document.getElementById('contactName').value.trim(),
                 visit_date: visitDate,
                 sales_name: document.getElementById('salesName').value.trim(),
                 location: document.getElementById('location').value.trim(),
-                status: document.getElementById('status').value,
+                status: status,
                 visit_purpose: document.getElementById('visitPurpose').value,
-                notes: document.getElementById('notes').value.trim()
+                notes: buildNotesJson(rencanaCatatan, hasil),
+                lead_id: leadId
             };
 
             console.log('📦 Data to save:', data);
@@ -1248,6 +1497,7 @@
                 await refreshData();
                 closeModal('formModal');
                 console.log('✅ Save complete');
+                returnToLeadIfNeeded();
             } catch (e) {
                 console.error('❌ Save failed:', e);
                 showToast('❌ Gagal menyimpan: ' + e.message, 'error');

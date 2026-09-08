@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Akhir OJT - BDO (Business Development Office)</title>
+    <script>
+        // ==================== AUTH GUARD (SSO - sama dengan Sales Tools Suite) ====================
+        const AUTH_SESSION_KEY = 'lidan_sales_session';
+        const AUTH_LOGIN_PAGE = 'login.html';
+
+        function getAuthSession() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+        function clearAuthSession() { localStorage.removeItem(AUTH_SESSION_KEY); }
+        function isSupervisor(session) { return !!session && String(session.role || '').toLowerCase() === 'spv'; }
+        function logout() { clearAuthSession(); window.location.href = AUTH_LOGIN_PAGE; }
+
+        let CURRENT_USER = getAuthSession();
+        if (!CURRENT_USER || !CURRENT_USER.username) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.replace(AUTH_LOGIN_PAGE + '?return=' + returnUrl);
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === AUTH_SESSION_KEY && !e.newValue) {
+                window.location.href = AUTH_LOGIN_PAGE;
+            }
+        });
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            min-height: 100vh;
+            padding: 24px 16px;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6b46c1 0%, #9f7aea 100%);
+            color: #fff;
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header p {
+            font-size: 13px;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.15);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+        }
+        .role-tag {
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(255,255,255,0.25);
+        }
+        .btn-logout {
+            background: #fc8181;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-logout:hover { background: #f56565; }
+
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
+        .card h2 {
+            font-size: 16px;
+            color: #1a202c;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card .card-desc {
+            font-size: 12.5px;
+            color: #a0aec0;
+            margin-bottom: 18px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 6px;
+        }
+
+        .form-group .hint {
+            font-size: 11.5px;
+            color: #a0aec0;
+            margin-top: 4px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 11px 13px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #9f7aea;
+        }
+
+        .form-group input[readonly] {
+            background: #edf2f7;
+            cursor: not-allowed;
+            color: #718096;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        @media (max-width: 560px) {
+            .row-2 { grid-template-columns: 1fr; }
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: #6b46c1;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-submit:hover { background: #553c9a; }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .locked-banner {
+            background: #f0fff4;
+            border: 2px solid #9ae6b4;
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-bottom: 20px;
+            color: #276749;
+        }
+        .locked-banner strong { display: block; margin-bottom: 4px; font-size: 15px; }
+        .locked-banner span { font-size: 13px; }
+
+        .review-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #edf2f7;
+        }
+        .review-item:last-child { border-bottom: none; }
+        .review-item .q {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #6b46c1;
+            margin-bottom: 4px;
+        }
+        .review-item .a {
+            font-size: 14px;
+            color: #2d3748;
+            white-space: pre-wrap;
+        }
+
+        .loading-box {
+            text-align: center;
+            padding: 60px 20px;
+            color: #a0aec0;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #2d3748;
+            color: #fff;
+            padding: 12px 22px;
+            border-radius: 10px;
+            font-size: 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+            transition: transform 0.3s;
+            z-index: 999;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.error { background: #c53030; }
+        .toast.success { background: #2f855a; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app" style="display:none;">
+        <div class="header">
+            <div>
+                <h1>📝 Form Hari Terakhir OJT — BDO</h1>
+                <p>Business Development Office · Evaluasi akhir & rencana kerja lanjutan</p>
+            </div>
+            <div class="header-right">
+                <div class="user-badge">
+                    <span id="userBadgeName">👤 -</span>
+                    <span class="role-tag" id="userBadgeRole">-</span>
+                </div>
+                <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+            </div>
+        </div>
+
+        <div id="loadingBox" class="card loading-box">⏳ Memuat data...</div>
+
+        <div id="lockedView" style="display:none;"></div>
+
+        <form id="ojtForm" style="display:none;" onsubmit="return false;">
+            <div class="card">
+                <h2>👤 Data Diri</h2>
+                <div class="card-desc">Diisi otomatis dari akun yang login.</div>
+                <div class="row-2">
+                    <div class="form-group">
+                        <label>Username (login)</label>
+                        <input type="text" id="f_username" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Lengkap *</label>
+                        <input type="text" id="f_nama" placeholder="Nama lengkap Anda">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Tanggal Pengisian</label>
+                    <input type="text" id="f_tanggal" readonly>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🚶 Evaluasi Kerja: Visit & Canvas ke Calon Client</h2>
+                <div class="card-desc">Rangkuman pekerjaan Anda selama masa OJT sebagai BDO.</div>
+
+                <div class="row-2">
+                    <div class="form-group">
+                        <label>Total kunjungan/canvas ke calon client selama OJT *</label>
+                        <input type="number" id="f_total_kunjungan" min="0" placeholder="contoh: 45">
+                    </div>
+                    <div class="form-group">
+                        <label>Jumlah calon client yang berhasil closing/deal *</label>
+                        <input type="number" id="f_konversi_deal" min="0" placeholder="contoh: 6">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Wilayah/area yang sudah dikunjungi *</label>
+                    <input type="text" id="f_wilayah" placeholder="contoh: Medan Kota, Deli Serdang, Binjai">
+                </div>
+
+                <div class="form-group">
+                    <label>Layanan psikologi yang paling diminati calon client saat kunjungan *</label>
+                    <input type="text" id="f_layanan_diminati" placeholder="contoh: psikotes rekrutmen, seminar sekolah, dll">
+                </div>
+
+                <div class="form-group">
+                    <label>Kendala/tantangan terbesar selama proses visit & canvas *</label>
+                    <textarea id="f_kendala" placeholder="Ceritakan kendala yang paling sering dihadapi..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Strategi/pendekatan yang paling efektif Anda temukan *</label>
+                    <textarea id="f_strategi" placeholder="Cara/pendekatan yang terbukti berhasil..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Pencapaian yang paling Anda banggakan selama OJT *</label>
+                    <textarea id="f_pencapaian" placeholder="Pencapaian, penghargaan, atau progres yang membanggakan..."></textarea>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>💡 Ide Pengembangan Produk</h2>
+                <div class="card-desc">Berdasarkan pengalaman Anda berhadapan langsung dengan calon client di lapangan.</div>
+                <div class="form-group">
+                    <label>Bagaimana ide Anda membuat produk atau kemasan (packaging) layanan baru agar lebih mudah diserap pasar? *</label>
+                    <textarea id="f_ide_produk" placeholder="contoh: paket bundling, cara penawaran, kemasan harga, format layanan baru, dsb"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Saran untuk pengembangan tim BDO ke depan (opsional)</label>
+                    <textarea id="f_saran_tim" placeholder="Masukan untuk tim/manajemen..."></textarea>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🤝 Kesediaan Kerja Sebagai Mitra</h2>
+                <div class="card-desc">Rencana ke depan: posisi ini berpotensi membawahi tim sales, magang, volunteer, dan telesales yang akan dibentuk bertahap.</div>
+
+                <div class="form-group">
+                    <label>Kesiapan memimpin tim BDO (sales, magang, volunteer, telesales) jika dipercayakan ke depan *</label>
+                    <select id="f_kesiapan_pimpin">
+                        <option value="">-- Pilih --</option>
+                        <option value="Siap">Siap</option>
+                        <option value="Perlu waktu adaptasi">Perlu waktu adaptasi</option>
+                        <option value="Belum siap">Belum siap</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Apakah Anda bersedia melanjutkan kontrak kerja sebagai MITRA, dengan sistem dihitung harian dan dibayarkan per bulan? *</label>
+                    <select id="f_kesediaan_mitra" onchange="toggleGajiField()">
+                        <option value="">-- Pilih --</option>
+                        <option value="Ya, bersedia">Ya, bersedia</option>
+                        <option value="Perlu pertimbangan lebih lanjut">Perlu pertimbangan lebih lanjut</option>
+                        <option value="Tidak bersedia">Tidak bersedia</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="gajiWrapper">
+                    <label>Jika bersedia, berapa permintaan gaji harian Anda? (Rp/hari)</label>
+                    <input type="number" id="f_gaji_harian" min="0" placeholder="contoh: 100000">
+                    <div class="hint">Kosongkan jika belum ada angka pasti atau memilih "Tidak bersedia".</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Catatan tambahan (opsional)</label>
+                    <textarea id="f_catatan" placeholder="Hal lain yang ingin disampaikan..."></textarea>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="hint" style="margin-bottom:14px;">⚠️ Form ini hanya bisa diisi <strong>satu kali</strong>. Setelah dikirim, jawaban akan terkunci dan tidak bisa diedit lagi. Pastikan semua jawaban sudah benar sebelum mengirim.</div>
+                <button class="btn-submit" id="submitBtn" onclick="submitForm()">✅ Kirim Jawaban (Final)</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'ojt_finishing';
+        const SECRET = 'admin';
+
+        const COLUMNS = {
+            username: 'x_01',
+            nama: 'x_02',
+            tanggal: 'x_03',
+            total_kunjungan: 'x_04',
+            wilayah: 'x_05',
+            konversi_deal: 'x_06',
+            layanan_diminati: 'x_07',
+            kendala: 'x_08',
+            strategi: 'x_09',
+            pencapaian: 'x_10',
+            ide_produk: 'x_11',
+            saran_tim: 'x_12',
+            kesiapan_pimpin: 'x_13',
+            kesediaan_mitra: 'x_14',
+            gaji_harian: 'x_15',
+            catatan: 'x_16',
+            status: 'x_17',
+            submitted_at: 'x_18'
+        };
+
+        let existingSubmission = null;
+
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': TABLE,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: { ...getHeaders(), ...(options.headers || {}) }
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.error || err.message || `HTTP ${response.status}`);
+                }
+                return await response.json();
+            } catch (e) {
+                console.error('❌ API Error:', e.message);
+                throw e;
+            }
+        }
+
+        function parseRow(row) {
+            const parsed = { id_x: row.id_x };
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                parsed[key] = row[col] || '';
+            }
+            return parsed;
+        }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                row[col] = data[key] !== undefined && data[key] !== null ? String(data[key]) : '';
+            }
+            return row;
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show' + (type !== 'info' ? ' ' + type : '');
+            setTimeout(() => { toast.className = 'toast'; }, 3500);
+        }
+
+        function toggleGajiField() {
+            const val = document.getElementById('f_kesediaan_mitra').value;
+            document.getElementById('gajiWrapper').style.display = (val === 'Tidak bersedia') ? 'none' : 'block';
+        }
+
+        function todayStr() {
+            const d = new Date();
+            return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+        }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', async () => {
+            initUserBadge();
+            document.getElementById('app').style.display = 'block';
+            await checkExisting();
+        });
+
+        function initUserBadge() {
+            document.getElementById('userBadgeName').textContent = '👤 ' + (CURRENT_USER.username || '-');
+            const roleEl = document.getElementById('userBadgeRole');
+            roleEl.textContent = isSupervisor(CURRENT_USER) ? 'Supervisor' : 'BDO';
+        }
+
+        async function checkExisting() {
+            const loadingBox = document.getElementById('loadingBox');
+            try {
+                const result = await apiFetch('');
+                const rows = (result.success && result.data) ? result.data.map(parseRow) : [];
+                existingSubmission = rows.find(r => r.username === CURRENT_USER.username) || null;
+
+                loadingBox.style.display = 'none';
+
+                if (existingSubmission) {
+                    renderLockedView(existingSubmission);
+                } else {
+                    document.getElementById('f_username').value = CURRENT_USER.username;
+                    document.getElementById('f_tanggal').value = todayStr();
+                    document.getElementById('ojtForm').style.display = 'block';
+                }
+            } catch (e) {
+                loadingBox.innerHTML = '❌ Gagal memuat data: ' + e.message;
+            }
+        }
+
+        function renderLockedView(data) {
+            const wrap = document.getElementById('lockedView');
+            const items = [
+                ['Nama Lengkap', data.nama],
+                ['Tanggal Pengisian', data.tanggal],
+                ['Total kunjungan/canvas selama OJT', data.total_kunjungan],
+                ['Wilayah/area yang dikunjungi', data.wilayah],
+                ['Jumlah calon client yang closing/deal', data.konversi_deal],
+                ['Layanan yang paling diminati', data.layanan_diminati],
+                ['Kendala/tantangan terbesar', data.kendala],
+                ['Strategi/pendekatan paling efektif', data.strategi],
+                ['Pencapaian yang paling dibanggakan', data.pencapaian],
+                ['Ide produk/kemasan baru', data.ide_produk],
+                ['Saran untuk tim BDO', data.saran_tim || '-'],
+                ['Kesiapan memimpin tim BDO ke depan', data.kesiapan_pimpin],
+                ['Kesediaan lanjut sebagai mitra (harian, dibayar bulanan)', data.kesediaan_mitra],
+                ['Permintaan gaji harian', data.gaji_harian ? ('Rp ' + Number(data.gaji_harian).toLocaleString('id-ID') + ' /hari') : '-'],
+                ['Catatan tambahan', data.catatan || '-']
+            ];
+
+            wrap.innerHTML = `
+                <div class="locked-banner">
+                    <strong>🔒 Form sudah dikirim & terkunci</strong>
+                    <span>Anda sudah mengisi form ini pada ${escapeHtml(data.tanggal)}. Jawaban tidak bisa diubah lagi. Terima kasih atas kerja keras selama masa OJT!</span>
+                </div>
+                <div class="card">
+                    <h2>📋 Ringkasan Jawaban Anda</h2>
+                    ${items.map(([q, a]) => `
+                        <div class="review-item">
+                            <div class="q">${escapeHtml(q)}</div>
+                            <div class="a">${escapeHtml(String(a || '-'))}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            wrap.style.display = 'block';
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        async function submitForm() {
+            const nama = document.getElementById('f_nama').value.trim();
+            const total_kunjungan = document.getElementById('f_total_kunjungan').value;
+            const wilayah = document.getElementById('f_wilayah').value.trim();
+            const konversi_deal = document.getElementById('f_konversi_deal').value;
+            const layanan_diminati = document.getElementById('f_layanan_diminati').value.trim();
+            const kendala = document.getElementById('f_kendala').value.trim();
+            const strategi = document.getElementById('f_strategi').value.trim();
+            const pencapaian = document.getElementById('f_pencapaian').value.trim();
+            const ide_produk = document.getElementById('f_ide_produk').value.trim();
+            const saran_tim = document.getElementById('f_saran_tim').value.trim();
+            const kesiapan_pimpin = document.getElementById('f_kesiapan_pimpin').value;
+            const kesediaan_mitra = document.getElementById('f_kesediaan_mitra').value;
+            const gaji_harian = document.getElementById('f_gaji_harian').value;
+            const catatan = document.getElementById('f_catatan').value.trim();
+
+            const required = { nama, total_kunjungan, wilayah, konversi_deal, layanan_diminati, kendala, strategi, pencapaian, ide_produk, kesiapan_pimpin, kesediaan_mitra };
+            for (const [key, val] of Object.entries(required)) {
+                if (val === '' || val === null || val === undefined) {
+                    showToast('⚠️ Mohon lengkapi semua field bertanda (*)', 'error');
+                    return;
+                }
+            }
+            if (kesediaan_mitra !== 'Tidak bersedia' && !gaji_harian) {
+                if (!confirm('Anda belum mengisi permintaan gaji harian. Lanjutkan tanpa mengisi angka ini?')) return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Mengirim...';
+
+            try {
+                const payload = {
+                    username: CURRENT_USER.username,
+                    nama, total_kunjungan, wilayah, konversi_deal, layanan_diminati,
+                    kendala, strategi, pencapaian, ide_produk, saran_tim,
+                    kesiapan_pimpin, kesediaan_mitra, gaji_harian, catatan,
+                    tanggal: todayStr(),
+                    status: 'final',
+                    submitted_at: new Date().toISOString()
+                };
+                const row = buildRow(payload);
+                await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+
+                showToast('✅ Jawaban berhasil dikirim!', 'success');
+                document.getElementById('ojtForm').style.display = 'none';
+                renderLockedView(payload);
+            } catch (e) {
+                showToast('❌ Gagal mengirim: ' + e.message, 'error');
+                btn.disabled = false;
+                btn.textContent = '✅ Kirim Jawaban (Final)';
+            }
+        }
+    </script>
+</body>
+</html>

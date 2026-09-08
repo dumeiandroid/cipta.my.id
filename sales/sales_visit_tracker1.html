@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lead Management (Home) - Sales Psikologi</title>
+    <title>Sales Visit Tracker - Sales Psikologi</title>
     <script>
         // ==================== AUTH GUARD (Sales Tools Suite - SSO) ====================
         const AUTH_SESSION_KEY = 'lidan_sales_session';
@@ -235,7 +235,7 @@
 
         .list-header {
             display: grid;
-            grid-template-columns: 60px 1.5fr 1.2fr 0.8fr 0.8fr 0.8fr 0.8fr 120px;
+            grid-template-columns: 60px 1.2fr 1fr 1fr 0.8fr 0.8fr 1fr 120px;
             gap: 8px;
             padding: 14px 20px;
             background: #f7fafc;
@@ -247,7 +247,7 @@
 
         .list-item {
             display: grid;
-            grid-template-columns: 60px 1.5fr 1.2fr 0.8fr 0.8fr 0.8fr 0.8fr 120px;
+            grid-template-columns: 60px 1.2fr 1fr 1fr 0.8fr 0.8fr 1fr 120px;
             gap: 8px;
             padding: 14px 20px;
             border-bottom: 1px solid #edf2f7;
@@ -298,46 +298,21 @@
             font-weight: 600;
         }
 
-        .badge-status.hot {
-            background: #fc8181;
-            color: white;
-        }
-        .badge-status.warm {
-            background: #fefcbf;
-            color: #975a16;
-        }
-        .badge-status.cold {
+        .badge-status.scheduled {
             background: #bee3f8;
             color: #2a69ac;
         }
-        .badge-status.converted {
+        .badge-status.visited {
             background: #c6f6d5;
             color: #276749;
         }
-        .badge-status.lost {
+        .badge-status.cancelled {
             background: #fed7d7;
             color: #9b2c2c;
         }
-
-        .badge-priority {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 700;
-        }
-
-        .badge-priority.high {
-            background: #fc8181;
-            color: white;
-        }
-        .badge-priority.medium {
+        .badge-status.rescheduled {
             background: #fefcbf;
             color: #975a16;
-        }
-        .badge-priority.low {
-            background: #c6f6d5;
-            color: #276749;
         }
 
         .empty-state {
@@ -382,7 +357,7 @@
         .modal {
             background: white;
             border-radius: 20px;
-            max-width: 700px;
+            max-width: 750px;
             width: 100%;
             max-height: 95vh;
             overflow-y: auto;
@@ -521,12 +496,6 @@
             border-radius: 12px;
             border: 1px solid #e2e8f0;
             text-align: center;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-        .stats-summary .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
         }
 
         .stats-summary .stat-card .number {
@@ -543,10 +512,9 @@
             letter-spacing: 0.5px;
         }
 
-        .stats-summary .stat-card.hot .number { color: #fc8181; }
-        .stats-summary .stat-card.warm .number { color: #ed8936; }
-        .stats-summary .stat-card.cold .number { color: #4299e1; }
-        .stats-summary .stat-card.converted .number { color: #48bb78; }
+        .stats-summary .stat-card.scheduled .number { color: #4299e1; }
+        .stats-summary .stat-card.visited .number { color: #48bb78; }
+        .stats-summary .stat-card.cancelled .number { color: #fc8181; }
         .stats-summary .stat-card.total .number { color: #2d3748; }
 
         @media (max-width: 992px) {
@@ -582,7 +550,7 @@
                 padding: 20px;
             }
             .stats-summary {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
@@ -622,55 +590,43 @@
         <!-- HEADER -->
         <div class="header">
             <h1>
-                📋 Lead Management
+                📅 Sales Visit Tracker
                 <span>Sales Psikologi</span>
             </h1>
             <div class="header-actions">
                 <div class="search-box">
                     <span class="icon">🔍</span>
-                    <input type="text" id="searchInput" placeholder="Cari lead..." oninput="renderList()">
+                    <input type="text" id="searchInput" placeholder="Cari kunjungan..." oninput="renderList()">
                 </div>
-                <button class="btn btn-primary" onclick="openAddModal()">➕ Tambah Lead</button>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ Tambah Kunjungan</button>
                 <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
-                <button class="btn btn-outline btn-sm" onclick="document.getElementById('infoModal').classList.add('active')" title="Info & Panduan Lead Management">ℹ️ Info</button>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('infoModal').classList.add('active')" title="Info & Panduan Visit Tracker">ℹ️ Info</button>
                 <div class="user-badge" id="userBadge">
                     <span id="userBadgeName">👤 -</span>
                     <span class="role-tag" id="userBadgeRole">-</span>
-                    <a href="about.html" class="btn btn-outline btn-sm" style="text-decoration:none;">ℹ️ Tentang</a>
+                    <a href="index.html" class="btn btn-outline btn-sm" style="text-decoration:none;">🏠 Home</a>
                     <button class="btn-logout" onclick="logout()">🚪 Logout</button>
-                </div>
-                <div class="user-badge" id="toolsNav">
-                    <a href="sales_visit_tracker.html" class="btn btn-outline btn-sm" style="text-decoration:none;">📅 Kunjungan</a>
-                    <a href="client_company_profile.html" class="btn btn-outline btn-sm" style="text-decoration:none;">🏢 Client</a>
-                    <a href="sales_pipeline.html" class="btn btn-outline btn-sm" style="text-decoration:none;">📊 Pipeline</a>
-                    <a href="sales_dashboard.html" class="btn btn-outline btn-sm spv-only" style="text-decoration:none;">📈 Dashboard</a>
-                    <a href="kontrol_admin.html" class="btn btn-outline btn-sm admin-only" style="text-decoration:none;background:#fff5f5;border-color:#fc8181;">🛡️ Kontrol</a>
-                    <a href="about.html" class="btn btn-outline btn-sm" style="text-decoration:none;">ℹ️ About</a>
                 </div>
             </div>
         </div>
 
         <!-- STATS SUMMARY -->
         <div class="stats-summary" id="statsSummary">
-            <div class="stat-card total" onclick="openStatModal('total')" title="Lihat semua leads">
+            <div class="stat-card total">
                 <div class="number" id="statTotal">0</div>
-                <div class="label">Total Leads</div>
+                <div class="label">Total Kunjungan</div>
             </div>
-            <div class="stat-card hot" onclick="openStatModal('hot')" title="Lihat leads Hot">
-                <div class="number" id="statHot">0</div>
-                <div class="label">🔥 Hot</div>
+            <div class="stat-card scheduled">
+                <div class="number" id="statScheduled">0</div>
+                <div class="label">📅 Terjadwal</div>
             </div>
-            <div class="stat-card warm" onclick="openStatModal('warm')" title="Lihat leads Warm">
-                <div class="number" id="statWarm">0</div>
-                <div class="label">🟠 Warm</div>
+            <div class="stat-card visited">
+                <div class="number" id="statVisited">0</div>
+                <div class="label">✅ Selesai</div>
             </div>
-            <div class="stat-card cold" onclick="openStatModal('cold')" title="Lihat leads Cold">
-                <div class="number" id="statCold">0</div>
-                <div class="label">🔵 Cold</div>
-            </div>
-            <div class="stat-card converted" onclick="openStatModal('converted')" title="Lihat leads Converted">
-                <div class="number" id="statConverted">0</div>
-                <div class="label">✅ Converted</div>
+            <div class="stat-card cancelled">
+                <div class="number" id="statCancelled">0</div>
+                <div class="label">❌ Batal</div>
             </div>
         </div>
 
@@ -678,19 +634,19 @@
         <div class="list-container">
             <div class="list-header">
                 <span>ID</span>
-                <span>Nama / Perusahaan</span>
-                <span>Kontak</span>
-                <span>Layanan</span>
-                <span>Status</span>
-                <span>Prioritas</span>
+                <span>Perusahaan / Kontak</span>
                 <span>Sales</span>
+                <span>Tanggal</span>
+                <span>Tujuan</span>
+                <span>Status</span>
+                <span>Hasil</span>
                 <span>Aksi</span>
             </div>
             <div id="listBody">
                 <div class="empty-state">
-                    <div class="icon">📋</div>
-                    <h3>Belum ada lead</h3>
-                    <p>Klik "Tambah Lead" untuk menambahkan prospek pertama Anda</p>
+                    <div class="icon">📅</div>
+                    <h3>Belum ada kunjungan</h3>
+                    <p>Klik "Tambah Kunjungan" untuk mencatat kunjungan sales pertama Anda</p>
                 </div>
             </div>
         </div>
@@ -700,39 +656,33 @@
     <div class="modal-overlay" id="infoModal">
         <div class="modal">
             <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
-            <div class="modal-title">📋 Panduan Lead Management</div>
+            <div class="modal-title">📅 Panduan Sales Visit Tracker</div>
             <div class="modal-body">
-                <p>Lead Management dipakai untuk mengelola prospek (calon pelanggan) dari awal
-                dikenal sampai jadi klien. Prospek bisa berupa perusahaan, sekolah, universitas,
-                atau instansi pemerintah yang butuh layanan psikologi.</p>
+                <p>Sales Visit Tracker dipakai untuk mencatat setiap kunjungan sales ke lapangan —
+                membantu sales mendokumentasikan aktivitas, dan membantu supervisor memverifikasi
+                kehadiran serta efektivitas kunjungan.</p>
 
-                <h4 style="margin:4px 0 2px;">🚦 Arti Status Lead</h4>
+                <h4 style="margin:4px 0 2px;">🚦 Arti Status Kunjungan</h4>
                 <ul style="margin:0 0 8px 18px; line-height:1.9;">
-                    <li>🔵 <b>Cold</b> — baru dapat kontak, belum ada respons/minat jelas</li>
-                    <li>🟠 <b>Warm</b> — sudah ada komunikasi &amp; menunjukkan minat</li>
-                    <li>🔥 <b>Hot</b> — sangat berminat, siap didorong ke closing</li>
-                    <li>✅ <b>Converted</b> — sudah jadi klien (biasanya dipindah ke Client Profile)</li>
-                    <li>❌ <b>Lost</b> — prospek tidak jadi lanjut / menolak</li>
+                    <li>📅 <b>Terjadwal</b> — kunjungan sudah direncanakan, belum dilaksanakan</li>
+                    <li>✅ <b>Selesai</b> — kunjungan sudah dilakukan</li>
+                    <li>❌ <b>Batal</b> — kunjungan dibatalkan</li>
+                    <li>🔄 <b>Dijadwalkan Ulang</b> — kunjungan digeser ke tanggal lain</li>
                 </ul>
 
-                <h4 style="margin:4px 0 2px;">🎯 Arti Prioritas</h4>
+                <h4 style="margin:4px 0 2px;">🎯 Arti Tujuan Kunjungan</h4>
                 <ul style="margin:0 0 8px 18px; line-height:1.9;">
-                    <li>🟢 <b>Low</b> — bisa ditindaklanjuti belakangan</li>
-                    <li>🟠 <b>Medium</b> — perlu ditindaklanjuti dalam waktu wajar</li>
-                    <li>🔴 <b>High</b> — perlu ditindaklanjuti segera</li>
+                    <li><b>Presentasi</b> — memperkenalkan layanan ke calon klien</li>
+                    <li><b>Penawaran</b> — menyampaikan proposal/harga</li>
+                    <li><b>Follow Up</b> — menindaklanjuti komunikasi sebelumnya</li>
+                    <li><b>Closing</b> — proses penutupan deal</li>
+                    <li><b>Pelatihan / Tes</b> — kunjungan untuk melaksanakan layanan itu sendiri</li>
+                    <li><b>Survey</b> — menggali kebutuhan calon klien</li>
                 </ul>
 
-                <h4 style="margin:4px 0 2px;">📝 Field Lainnya</h4>
-                <ul style="margin:0 0 8px 18px; line-height:1.9;">
-                    <li><b>Layanan yang Diminati</b> — layanan psikologi yang dicari prospek</li>
-                    <li><b>Assign Sales</b> — sales yang bertanggung jawab atas lead ini</li>
-                    <li><b>Next Follow-up</b> — tanggal rencana follow-up berikutnya</li>
-                    <li><b>Estimasi Nilai</b> — perkiraan nilai deal kalau lead ini closing</li>
-                </ul>
-
-                <div style="background:#f0fff4;border-left:4px solid #48bb78;border-radius:8px;padding:10px 14px;font-size:13px;">
-                    💡 <b>Tips:</b> Update status lead secara berkala. Lead yang lama tidak di-follow-up
-                    akan muncul sebagai alert di Sales Dashboard supervisor.
+                <div style="background:#ebf8ff;border-left:4px solid #4299e1;border-radius:8px;padding:10px 14px;font-size:13px;">
+                    💡 <b>Tips:</b> Catat hasil kunjungan segera setelah selesai agar detail tidak
+                    terlewat. Supervisor bisa melihat semua kunjungan tim lewat Sales Dashboard.
                 </div>
             </div>
         </div>
@@ -746,112 +696,76 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="leadLinkModal">
-        <div class="modal" style="max-width:420px;">
-            <button class="modal-close" onclick="closeModal('leadLinkModal')">✕</button>
-            <div class="modal-title" id="leadLinkModalTitle">🔗 Lanjutkan</div>
-            <div class="modal-body" id="leadLinkModalBody"></div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="statListModal">
-        <div class="modal" style="max-width:520px;">
-            <button class="modal-close" onclick="closeModal('statListModal')">✕</button>
-            <div class="modal-title" id="statListModalTitle">📋 Leads</div>
-            <div class="modal-body" id="statListModalBody"></div>
-        </div>
-    </div>
-
     <div class="modal-overlay" id="formModal">
         <div class="modal">
             <button class="modal-close" onclick="closeModal('formModal')">✕</button>
-            <div class="modal-title" id="formModalTitle">📋 Tambah Lead</div>
+            <div class="modal-title" id="formModalTitle">📅 Tambah Kunjungan</div>
             <div class="modal-body">
                 <input type="hidden" id="editId" value="">
+                <input type="hidden" id="lead_id" value="">
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>👤 Nama Kontak *</label>
-                        <input type="text" id="contactName" placeholder="Nama lengkap" required>
+                        <label>🏢 Nama Perusahaan/Instansi *</label>
+                        <input type="text" id="companyName" placeholder="Nama perusahaan" required>
                     </div>
                     <div class="form-group">
-                        <label>🏢 Nama Perusahaan/Instansi</label>
-                        <input type="text" id="companyName" placeholder="Nama perusahaan/sekolah">
+                        <label>👤 Nama Kontak</label>
+                        <input type="text" id="contactName" placeholder="Nama kontak">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>📧 Email</label>
-                        <input type="email" id="email" placeholder="email@domain.com">
+                        <label>📅 Tanggal Kunjungan *</label>
+                        <input type="datetime-local" id="visitDate" required>
                     </div>
                     <div class="form-group">
-                        <label>📱 Telepon</label>
-                        <input type="text" id="phone" placeholder="0812-3456-7890">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>📂 Status Lead</label>
-                        <select id="status">
-                            <option value="cold">🔵 Cold</option>
-                            <option value="warm">🟠 Warm</option>
-                            <option value="hot" selected>🔥 Hot</option>
-                            <option value="converted">✅ Converted</option>
-                            <option value="lost">❌ Lost</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>🎯 Prioritas</label>
-                        <select id="priority">
-                            <option value="low">🟢 Low</option>
-                            <option value="medium" selected>🟠 Medium</option>
-                            <option value="high">🔴 High</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>📌 Layanan yang Diminati</label>
-                        <select id="serviceInterest">
-                            <option value="Seminar">Seminar</option>
-                            <option value="Pelatihan">Pelatihan</option>
-                            <option value="Tes Minat Bakat">Tes Minat Bakat</option>
-                            <option value="Tes Kesiapan Kerja">Tes Kesiapan Kerja</option>
-                            <option value="Assesment Psikologi">Assesment Psikologi</option>
-                            <option value="Konseling">Konseling</option>
-                            <option value="Lainnya">Lainnya</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>👤 Sales Assign</label>
-                        <input type="text" id="salesAssign" placeholder="Nama sales" readonly style="background:#edf2f7;cursor:not-allowed;">
+                        <label>👤 Sales</label>
+                        <input type="text" id="salesName" placeholder="Nama sales" readonly style="background:#edf2f7;cursor:not-allowed;">
                         <small style="color:#a0aec0;">Otomatis dari akun yang login</small>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>📝 Catatan</label>
-                    <textarea id="notes" placeholder="Catatan tentang lead..." rows="2"></textarea>
-                </div>
-
                 <div class="form-row">
                     <div class="form-group">
-                        <label>📅 Next Follow-up</label>
-                        <input type="date" id="nextFollowup">
+                        <label>📍 Lokasi</label>
+                        <input type="text" id="location" placeholder="Alamat lengkap">
                     </div>
                     <div class="form-group">
-                        <label>💰 Estimasi Nilai</label>
-                        <input type="text" id="estimatedValue" placeholder="Rp 10.000.000">
+                        <label>📂 Status</label>
+                        <select id="status">
+                            <option value="scheduled">📅 Terjadwal</option>
+                            <option value="visited">✅ Selesai</option>
+                            <option value="cancelled">❌ Batal</option>
+                            <option value="rescheduled">🔄 Dijadwalkan Ulang</option>
+                        </select>
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label>🎯 Tujuan Kunjungan</label>
+                    <select id="visitPurpose">
+                        <option value="Presentasi">Presentasi Layanan</option>
+                        <option value="Penawaran">Penawaran Proposal</option>
+                        <option value="Follow Up">Follow Up</option>
+                        <option value="Closing">Closing Deal</option>
+                        <option value="Pelatihan">Pelaksanaan Pelatihan</option>
+                        <option value="Tes">Pelaksanaan Tes</option>
+                        <option value="Survey">Survey Kebutuhan</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Hasil Kunjungan / Catatan</label>
+                    <textarea id="notes" placeholder="Hasil kunjungan, kesepakatan, tindak lanjut..." rows="3"></textarea>
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-danger" id="deleteBtn" onclick="deleteLead()" style="display:none;">🗑️ Hapus</button>
+                    <button class="btn btn-danger" id="deleteBtn" onclick="deleteVisit()" style="display:none;">🗑️ Hapus</button>
                     <button class="btn btn-outline" onclick="closeModal('formModal')">Batal</button>
-                    <button class="btn btn-primary" id="saveBtn" onclick="saveLead()">💾 Simpan</button>
+                    <button class="btn btn-primary" id="saveBtn" onclick="saveVisit()">💾 Simpan</button>
                 </div>
             </div>
         </div>
@@ -860,7 +774,7 @@
     <script>
         // ==================== CONFIG ====================
         const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
-        const TABLE = 'lead_management';
+        const TABLE = 'sales_visit_tracker';
         const SECRET = 'admin';
 
         // ==================== STATE ====================
@@ -868,38 +782,33 @@
         let currentEditId = null;
 
         const COLUMNS = {
-            contact_name: 'x_01',
-            company_name: 'x_02',
-            email: 'x_03',
-            phone: 'x_04',
-            status: 'x_05',
-            priority: 'x_06',
-            service_interest: 'x_07',
-            sales_assign: 'x_08',
-            notes: 'x_09',
-            next_followup: 'x_10',
-            estimated_value: 'x_11'
+            company_name: 'x_01',
+            contact_name: 'x_02',
+            visit_date: 'x_03',
+            sales_name: 'x_04',
+            location: 'x_05',
+            status: 'x_06',
+            visit_purpose: 'x_07',
+            notes: 'x_08',
+            lead_id: 'x_09'
         };
 
         const HISTORY_COL = 'x_25';
         const FIELD_LABELS = {
-            contact_name: '👤 Nama Kontak',
             company_name: '🏢 Nama Perusahaan/Instansi',
-            email: '📧 Email',
-            phone: '📱 Telepon',
-            status: '📂 Status Lead',
-            priority: '🎯 Prioritas',
-            service_interest: '📌 Layanan yang Diminati',
-            sales_assign: '👤 Sales Assign',
-            notes: '📝 Catatan',
-            next_followup: '📅 Next Follow-up',
-            estimated_value: '💰 Estimasi Nilai'
+            contact_name: '👤 Nama Kontak',
+            visit_date: '📅 Tanggal Kunjungan',
+            sales_name: '👤 Sales',
+            location: '📍 Lokasi',
+            status: '📂 Status',
+            visit_purpose: '🎯 Tujuan Kunjungan',
+            notes: '📝 Hasil Kunjungan / Catatan'
         };
 
         // ==================== FEATURE CONFIG (kontrol_admin) ====================
         const CONTROL_TABLE = 'kontrol_admin';
         const CONTROL_ROW_ID = 7;
-        const THIS_TOOL_KEY = 'lead_management';
+        const THIS_TOOL_KEY = 'sales_visit_tracker';
         const DEFAULT_FEATURE_CONFIG = {
             spv: { edit: true, delete: true, riwayat: true, tambah: true },
             non_spv: { edit: true, delete: false, riwayat: true, tambah: true }
@@ -939,174 +848,55 @@
             if (addBtn) addBtn.style.display = canUse('tambah') ? '' : 'none';
         }
 
-        // ==================== LEAD LINK (data terhubung: visit, profile, deal) ====================
-        let linkedVisits = [];
-        let linkedProfiles = [];
-        let linkedDeals = [];
+        // ==================== LEAD LINK (dari lead_management via ?lead_id=) ====================
+        function returnToLeadIfNeeded() {
+            const urlLeadId = new URLSearchParams(window.location.search).get('lead_id');
+            if (urlLeadId) {
+                showToast('↩️ Kembali ke Lead #' + urlLeadId + '...', 'success');
+                setTimeout(() => {
+                    window.location.href = `index.html?lead_id=${urlLeadId}`;
+                }, 900);
+            }
+        }
 
-        async function fetchLinkedTable(tableName) {
+        async function applyLeadIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const leadId = params.get('lead_id');
+            if (!leadId) return;
+            if (!canUse('tambah')) {
+                showToast('❌ Anda tidak punya izin menambah kunjungan', 'error');
+                return;
+            }
             try {
-                const res = await fetch(`${API_URL}?table=${tableName}`, {
-                    headers: { 'X-Custom-Auth': SECRET, 'X-Table-Name': tableName, 'X-Role': 'admin' }
+                const res = await fetch(`${API_URL}?table=lead_management`, {
+                    headers: { 'X-Custom-Auth': SECRET, 'X-Table-Name': 'lead_management', 'X-Role': 'admin' }
                 });
                 const result = await res.json();
-                return result.data || [];
+                const lead = (result.data || []).find(r => String(r.id_x) === String(leadId));
+                if (!lead) {
+                    showToast('⚠️ Lead #' + leadId + ' tidak ditemukan', 'error');
+                    return;
+                }
+                openAddModal();
+                document.getElementById('companyName').value = lead.x_02 || '';
+                document.getElementById('contactName').value = lead.x_01 || '';
+                document.getElementById('salesName').value = lead.x_08 || CURRENT_USER.username;
+                document.getElementById('lead_id').value = leadId;
+                document.getElementById('formModalTitle').textContent = `📅 Tambah Kunjungan (dari Lead #${leadId})`;
             } catch (e) {
-                console.warn(`⚠️ Gagal memuat ${tableName} untuk lead-link:`, e.message);
-                return [];
+                console.warn('⚠️ Gagal ambil data lead untuk prefill:', e.message);
             }
-        }
-
-        async function loadLinkedData() {
-            const [visits, profiles, deals] = await Promise.all([
-                fetchLinkedTable('sales_visit_tracker'),
-                fetchLinkedTable('client_company_profile'),
-                fetchLinkedTable('sales_pipeline')
-            ]);
-            linkedVisits = visits.map(r => ({ id_x: r.id_x, lead_id: r.x_09 || '', status: r.x_06 || 'scheduled' }));
-            linkedProfiles = profiles.map(r => ({ id_x: r.id_x, lead_id: r.x_13 || '' }));
-            linkedDeals = deals.map(r => ({ id_x: r.id_x, lead_id: r.x_12 || '', stage: r.x_05 || 'prospecting' }));
-            renderList();
-        }
-
-        function isPendingVisitStatus(status) {
-            return status === 'scheduled' || status === 'rescheduled';
-        }
-
-        function getLeadStats(leadId) {
-            const visits = linkedVisits.filter(v => String(v.lead_id) === String(leadId));
-            const pendingVisits = visits.filter(v => isPendingVisitStatus(v.status));
-            const profile = linkedProfiles.find(p => String(p.lead_id) === String(leadId));
-            const deals = linkedDeals.filter(d => String(d.lead_id) === String(leadId));
-            const activeDeals = deals.filter(d => !['won', 'lost'].includes(d.stage));
-            return {
-                visitCount: visits.length,
-                visitDoneCount: visits.length - pendingVisits.length,
-                visitPendingCount: pendingVisits.length,
-                hasProfile: !!profile,
-                dealCount: deals.length,
-                activeDealCount: activeDeals.length
-            };
-        }
-
-        function renderLinkBadges(leadId) {
-            const s = getLeadStats(leadId);
-            if (!s.visitCount && !s.hasProfile && !s.dealCount) return '';
-            const parts = [];
-            if (s.visitCount) parts.push(`📅 ${s.visitCount}${s.visitPendingCount ? ` (${s.visitPendingCount} rencana)` : ''}`);
-            if (s.dealCount) parts.push(`💼 ${s.dealCount}${s.activeDealCount ? ` (${s.activeDealCount} aktif)` : ''}`);
-            if (s.hasProfile) parts.push(`🏢 ✓`);
-            return `<br><span style="font-size:10px;color:#4a5568;">${parts.join(' &middot; ')}</span>`;
-        }
-
-        function openLeadLinkModal(leadId) {
-            const item = allData.find(d => d.id_x === leadId);
-            if (!item) return;
-            const s = getLeadStats(leadId);
-
-            document.getElementById('leadLinkModalTitle').textContent = `🔗 Lead #${leadId} — ${item.contact_name || ''}`;
-            document.getElementById('leadLinkModalBody').innerHTML = `
-                <p style="font-size:13px;color:#718096;margin-bottom:16px;">${escapeHtml(item.company_name || '-')} &middot; ${escapeHtml(item.service_interest || '-')}</p>
-
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid ${s.visitPendingCount ? '#fbd38d' : '#e2e8f0'};${s.visitPendingCount ? 'background:#fffaf0;' : ''}border-radius:8px;margin-bottom:8px;">
-                    <span style="font-size:14px;">📅 Visit Tracker</span>
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="font-size:12px;color:#a0aec0;">${s.visitDoneCount} selesai${s.visitPendingCount ? `, ${s.visitPendingCount} rencana` : ''}</span>
-                        <button class="btn ${s.visitPendingCount ? 'btn-warning' : 'btn-primary'} btn-xs" onclick="goToLinkedTool('sales_visit_tracker.html', ${leadId})">
-                            ${s.visitPendingCount ? '✏️ Update Rencana' : '+ Tambah Baru'}
-                        </button>
-                    </div>
-                </div>
-
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;">
-                    <span style="font-size:14px;">🏢 Client Profile</span>
-                    <button class="btn ${s.hasProfile ? 'btn-outline' : 'btn-primary'} btn-xs" onclick="goToLinkedTool('client_company_profile.html', ${leadId})">
-                        ${s.hasProfile ? 'Sudah ada · Update' : 'Belum ada · Buat'}
-                    </button>
-                </div>
-
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;">
-                    <span style="font-size:14px;">💼 Sales Pipeline</span>
-                    <button class="btn ${s.activeDealCount ? 'btn-outline' : 'btn-primary'} btn-xs" onclick="goToLinkedTool('sales_pipeline.html', ${leadId})">
-                        ${s.dealCount ? `${s.dealCount} deal (${s.activeDealCount} aktif)` : 'Buat Deal'}
-                    </button>
-                </div>
-            `;
-            document.getElementById('leadLinkModal').classList.add('active');
-        }
-
-        function goToLinkedTool(page, leadId) {
-            window.location.href = `${page}?lead_id=${leadId}`;
-        }
-
-        // ==================== STAT CARD → LIST POPUP ====================
-        function openStatModal(filterKey) {
-            const titles = {
-                total: '📋 Semua Leads',
-                hot: '🔥 Leads - Hot',
-                warm: '🟠 Leads - Warm',
-                cold: '🔵 Leads - Cold',
-                converted: '✅ Leads - Converted'
-            };
-            const items = filterKey === 'total' ? allData : allData.filter(d => d.status === filterKey);
-
-            const statusLabels = {
-                'cold': '🔵 Cold',
-                'warm': '🟠 Warm',
-                'hot': '🔥 Hot',
-                'converted': '✅ Converted',
-                'lost': '❌ Lost'
-            };
-            const priorityLabels = {
-                'low': '🟢 Low',
-                'medium': '🟠 Medium',
-                'high': '🔴 High'
-            };
-
-            document.getElementById('statListModalTitle').textContent = `${titles[filterKey] || 'Leads'} (${items.length})`;
-
-            const body = document.getElementById('statListModalBody');
-            if (items.length === 0) {
-                body.innerHTML = '<p style="text-align:center;color:#a0aec0;padding:20px 0;">Tidak ada lead di kategori ini.</p>';
-            } else {
-                body.innerHTML = items.map(item => `
-                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;">
-                        <div style="min-width:0;">
-                            <div style="font-weight:600;font-size:13px;color:#2d3748;">#${item.id_x} ${escapeHtml(item.contact_name) || '-'}
-                                ${filterKey === 'total' ? `<span class="badge-status ${item.status}" style="margin-left:6px;">${statusLabels[item.status] || item.status}</span>` : ''}
-                            </div>
-                            <div style="font-size:11px;color:#718096;">
-                                ${escapeHtml(item.company_name) || '-'} &middot; ${escapeHtml(item.service_interest) || '-'}
-                                &middot; ${priorityLabels[item.priority] || item.priority}
-                                &middot; Sales: ${escapeHtml(item.sales_assign) || '-'}
-                            </div>
-                        </div>
-                        <button class="btn btn-outline btn-xs" onclick="closeModal('statListModal'); openLeadLinkModal(${item.id_x})" title="Lanjutkan ke tools lain">🔗</button>
-                    </div>
-                `).join('');
-            }
-            document.getElementById('statListModal').classList.add('active');
         }
 
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log('📋 Lead Management Started');
+            console.log('📅 Sales Visit Tracker Started');
             console.log('📡 Table:', TABLE);
             initUserBadge();
             await loadFeatureConfig();
             applyFeatureUI();
             await refreshData();
-            await loadLinkedData();
-
-            const params = new URLSearchParams(window.location.search);
-            const openLeadId = params.get('lead_id');
-            if (openLeadId) {
-                const leadIdNum = parseInt(openLeadId);
-                if (allData.find(d => d.id_x === leadIdNum)) {
-                    openLeadLinkModal(leadIdNum);
-                }
-                window.history.replaceState({}, '', 'index.html');
-            }
+            applyLeadIdFromUrl();
         });
 
         function initUserBadge() {
@@ -1117,16 +907,10 @@
                 roleEl.textContent = CURRENT_USER.role || '-';
                 roleEl.className = 'role-tag ' + (isSupervisor(CURRENT_USER) ? 'spv' : 'sales');
             }
-            if (!isSupervisor(CURRENT_USER) && !isAdmin(CURRENT_USER)) {
-                document.querySelectorAll('.spv-only').forEach(el => el.style.display = 'none');
-            }
-            if (!isAdmin(CURRENT_USER)) {
-                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
-            }
         }
 
         function ownsItem(item) {
-            return isSupervisor(CURRENT_USER) || isAdmin(CURRENT_USER) || item.sales_assign === CURRENT_USER.username;
+            return isSupervisor(CURRENT_USER) || isAdmin(CURRENT_USER) || item.sales_name === CURRENT_USER.username;
         }
 
         // ==================== API HELPERS ====================
@@ -1167,7 +951,7 @@
                 if (result.success && result.data) {
                     allData = result.data.map(row => parseRow(row));
                     if (!isSupervisor(CURRENT_USER) && !isAdmin(CURRENT_USER)) {
-                        allData = allData.filter(item => item.sales_assign === CURRENT_USER.username);
+                        allData = allData.filter(item => item.sales_name === CURRENT_USER.username);
                     }
                     return allData;
                 }
@@ -1183,17 +967,15 @@
         function parseRow(row) {
             return {
                 id_x: row.id_x,
-                contact_name: row.x_01 || '',
-                company_name: row.x_02 || '',
-                email: row.x_03 || '',
-                phone: row.x_04 || '',
-                status: row.x_05 || 'cold',
-                priority: row.x_06 || 'medium',
-                service_interest: row.x_07 || '',
-                sales_assign: row.x_08 || '',
-                notes: row.x_09 || '',
-                next_followup: row.x_10 || '',
-                estimated_value: row.x_11 || '',
+                company_name: row.x_01 || '',
+                contact_name: row.x_02 || '',
+                visit_date: row.x_03 || '',
+                sales_name: row.x_04 || '',
+                location: row.x_05 || '',
+                status: row.x_06 || 'scheduled',
+                visit_purpose: row.x_07 || '',
+                notes: row.x_08 || '',
+                lead_id: row.x_09 || '',
                 history: parseHistory(row[HISTORY_COL]),
                 _raw: row
             };
@@ -1282,13 +1064,13 @@
             return row;
         }
 
-        async function createLead(data) {
+        async function createVisit(data) {
             const row = buildRow(data);
             row[HISTORY_COL] = JSON.stringify(buildHistory(null, data, 'created'));
             return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
         }
 
-        async function updateLead(id, data) {
+        async function updateVisit(id, data) {
             const row = buildRow(data);
             const oldItem = allData.find(d => d.id_x === id);
             const newHistory = buildHistory(oldItem, data, 'updated');
@@ -1296,7 +1078,7 @@
             return await apiFetch(`&id_x=${id}`, { method: 'PUT', body: JSON.stringify(row) });
         }
 
-        async function deleteLeadApi(id) {
+        async function deleteVisitApi(id) {
             return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
         }
 
@@ -1304,11 +1086,11 @@
         function renderList() {
             const search = document.getElementById('searchInput').value.toLowerCase().trim();
             const filtered = allData.filter(item =>
-                item.contact_name.toLowerCase().includes(search) ||
                 item.company_name.toLowerCase().includes(search) ||
-                item.email.toLowerCase().includes(search) ||
-                item.phone.includes(search) ||
-                item.sales_assign.toLowerCase().includes(search)
+                item.contact_name.toLowerCase().includes(search) ||
+                item.sales_name.toLowerCase().includes(search) ||
+                item.location.toLowerCase().includes(search) ||
+                item.notes.toLowerCase().includes(search)
             );
 
             const body = document.getElementById('listBody');
@@ -1319,68 +1101,63 @@
             if (filtered.length === 0) {
                 body.innerHTML = `
                     <div class="empty-state">
-                        <div class="icon">${allData.length === 0 ? '📋' : '🔍'}</div>
-                        <h3>${allData.length === 0 ? 'Belum ada lead' : 'Tidak ditemukan'}</h3>
-                        <p>${allData.length === 0 ? 'Klik "Tambah Lead" untuk menambahkan prospek pertama Anda' : 'Coba dengan kata kunci lain'}</p>
+                        <div class="icon">${allData.length === 0 ? '📅' : '🔍'}</div>
+                        <h3>${allData.length === 0 ? 'Belum ada kunjungan' : 'Tidak ditemukan'}</h3>
+                        <p>${allData.length === 0 ? 'Klik "Tambah Kunjungan" untuk mencatat kunjungan sales pertama Anda' : 'Coba dengan kata kunci lain'}</p>
                     </div>
                 `;
                 return;
             }
 
             const statusLabels = {
-                'cold': '🔵 Cold',
-                'warm': '🟠 Warm',
-                'hot': '🔥 Hot',
-                'converted': '✅ Converted',
-                'lost': '❌ Lost'
+                'scheduled': '📅 Terjadwal',
+                'visited': '✅ Selesai',
+                'cancelled': '❌ Batal',
+                'rescheduled': '🔄 Dijadwalkan Ulang'
             };
 
-            const priorityLabels = {
-                'low': '🟢 Low',
-                'medium': '🟠 Medium',
-                'high': '🔴 High'
-            };
+            body.innerHTML = filtered.map(item => {
+                const visitDate = item.visit_date ? new Date(item.visit_date).toLocaleString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : '-';
 
-            body.innerHTML = filtered.map(item => `
-                <div class="list-item">
-                    <div class="id">#${item.id_x}</div>
-                    <div class="field">
-                        <span class="label">Nama:</span> ${escapeHtml(item.contact_name) || '-'}
-                        ${item.company_name ? `<br><span style="font-size:11px;color:#718096;">${escapeHtml(item.company_name)}</span>` : ''}
-                        ${renderLinkBadges(item.id_x)}
+                return `
+                    <div class="list-item">
+                        <div class="id">#${item.id_x}</div>
+                        <div class="field">
+                            <span class="label">Perusahaan:</span> ${escapeHtml(item.company_name) || '-'}
+                            ${item.contact_name ? `<br><span style="font-size:11px;color:#718096;">Kontak: ${escapeHtml(item.contact_name)}</span>` : ''}
+                        </div>
+                        <div class="field"><span class="label">Sales:</span> ${escapeHtml(item.sales_name) || '-'}</div>
+                        <div class="field"><span class="label">Tanggal:</span> ${visitDate}</div>
+                        <div class="field"><span class="label">Tujuan:</span> ${escapeHtml(item.visit_purpose) || '-'}</div>
+                        <div class="field"><span class="label">Status:</span> <span class="badge-status ${item.status}">${statusLabels[item.status] || item.status}</span></div>
+                        <div class="field"><span class="label">Hasil:</span> ${escapeHtml(item.notes) ? item.notes.substring(0, 30) + (item.notes.length > 30 ? '...' : '') : '-'}</div>
+                        <div class="actions">
+                            ${canUse('riwayat') ? `<button class="btn btn-outline btn-xs" onclick="showHistory(${item.id_x})" title="Riwayat perubahan">🕘${item.history && item.history.length ? ` <span style="font-size:9px;">${item.history.length}</span>` : ''}</button>` : ''}
+                            ${canUse('edit') ? `<button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>` : ''}
+                            ${canUse('delete') ? `<button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>` : ''}
+                            ${(!canUse('edit') && !canUse('delete')) ? `<span style="font-size:10px;color:#a0aec0;">🔒 Tidak ada izin</span>` : ''}
+                        </div>
                     </div>
-                    <div class="field">
-                        <span class="label">Kontak:</span>
-                        ${item.phone ? `${escapeHtml(item.phone)}` : '-'}
-                        ${item.email ? `<br><span style="font-size:11px;color:#718096;">${escapeHtml(item.email)}</span>` : ''}
-                    </div>
-                    <div class="field"><span class="label">Layanan:</span> ${escapeHtml(item.service_interest) || '-'}</div>
-                    <div class="field"><span class="label">Status:</span> <span class="badge-status ${item.status}">${statusLabels[item.status] || item.status}</span></div>
-                    <div class="field"><span class="label">Prioritas:</span> <span class="badge-priority ${item.priority}">${priorityLabels[item.priority] || item.priority}</span></div>
-                    <div class="field"><span class="label">Sales:</span> ${escapeHtml(item.sales_assign) || '-'}</div>
-                    <div class="actions">
-                        <button class="btn btn-outline btn-xs" onclick="openLeadLinkModal(${item.id_x})" title="Lanjutkan ke tools lain">🔗</button>
-                        ${canUse('riwayat') ? `<button class="btn btn-outline btn-xs" onclick="showHistory(${item.id_x})" title="Riwayat perubahan">🕘${item.history && item.history.length ? ` <span style="font-size:9px;">${item.history.length}</span>` : ''}</button>` : ''}
-                        ${canUse('edit') ? `<button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>` : ''}
-                        ${canUse('delete') ? `<button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>` : ''}
-                        ${(!canUse('edit') && !canUse('delete')) ? `<span style="font-size:10px;color:#a0aec0;">🔒 Tidak ada izin</span>` : ''}
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function updateStats() {
             const total = allData.length;
-            const hot = allData.filter(d => d.status === 'hot').length;
-            const warm = allData.filter(d => d.status === 'warm').length;
-            const cold = allData.filter(d => d.status === 'cold').length;
-            const converted = allData.filter(d => d.status === 'converted').length;
+            const scheduled = allData.filter(d => d.status === 'scheduled').length;
+            const visited = allData.filter(d => d.status === 'visited').length;
+            const cancelled = allData.filter(d => d.status === 'cancelled').length;
 
             document.getElementById('statTotal').textContent = total;
-            document.getElementById('statHot').textContent = hot;
-            document.getElementById('statWarm').textContent = warm;
-            document.getElementById('statCold').textContent = cold;
-            document.getElementById('statConverted').textContent = converted;
+            document.getElementById('statScheduled').textContent = scheduled;
+            document.getElementById('statVisited').textContent = visited;
+            document.getElementById('statCancelled').textContent = cancelled;
         }
 
         function escapeHtml(text) {
@@ -1394,29 +1171,32 @@
             showToast('🔄 Memuat data...', 'info');
             await fetchData();
             renderList();
-            showToast(`✅ ${allData.length} lead dimuat`, 'success');
+            showToast(`✅ ${allData.length} kunjungan dimuat`, 'success');
         }
 
         // ==================== MODAL FORM ====================
         function openAddModal() {
-            console.log('📋 Opening Add Modal');
+            console.log('📅 Opening Add Modal');
             currentEditId = null;
             document.getElementById('editId').value = '';
-            document.getElementById('formModalTitle').textContent = '📋 Tambah Lead';
+            document.getElementById('formModalTitle').textContent = '📅 Tambah Kunjungan';
             document.getElementById('deleteBtn').style.display = 'none';
             document.getElementById('saveBtn').textContent = '💾 Simpan';
 
-            document.getElementById('contactName').value = '';
+            // Set default date to now
+            const now = new Date();
+            const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+            const dateStr = localDate.toISOString().slice(0, 16);
+
             document.getElementById('companyName').value = '';
-            document.getElementById('email').value = '';
-            document.getElementById('phone').value = '';
-            document.getElementById('status').value = 'hot';
-            document.getElementById('priority').value = 'medium';
-            document.getElementById('serviceInterest').value = 'Seminar';
-            document.getElementById('salesAssign').value = CURRENT_USER.username;
+            document.getElementById('contactName').value = '';
+            document.getElementById('lead_id').value = '';
+            document.getElementById('visitDate').value = dateStr;
+            document.getElementById('salesName').value = CURRENT_USER.username;
+            document.getElementById('location').value = '';
+            document.getElementById('status').value = 'scheduled';
+            document.getElementById('visitPurpose').value = 'Presentasi';
             document.getElementById('notes').value = '';
-            document.getElementById('nextFollowup').value = '';
-            document.getElementById('estimatedValue').value = '';
 
             document.getElementById('formModal').classList.add('active');
             console.log('✅ Add Modal opened');
@@ -1436,21 +1216,25 @@
 
             currentEditId = id;
             document.getElementById('editId').value = id;
-            document.getElementById('formModalTitle').textContent = `✏️ Edit Lead: ${item.contact_name}`;
+            document.getElementById('formModalTitle').textContent = `✏️ Edit Kunjungan: ${item.company_name}`;
             document.getElementById('deleteBtn').style.display = canUse('delete') ? 'inline-flex' : 'none';
             document.getElementById('saveBtn').textContent = '💾 Update';
 
-            document.getElementById('contactName').value = item.contact_name || '';
+            // Format date for input
+            let visitDate = '';
+            if (item.visit_date) {
+                const d = new Date(item.visit_date);
+                visitDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            }
+
             document.getElementById('companyName').value = item.company_name || '';
-            document.getElementById('email').value = item.email || '';
-            document.getElementById('phone').value = item.phone || '';
-            document.getElementById('status').value = item.status || 'cold';
-            document.getElementById('priority').value = item.priority || 'medium';
-            document.getElementById('serviceInterest').value = item.service_interest || 'Seminar';
-            document.getElementById('salesAssign').value = item.sales_assign || '';
+            document.getElementById('contactName').value = item.contact_name || '';
+            document.getElementById('visitDate').value = visitDate;
+            document.getElementById('salesName').value = item.sales_name || '';
+            document.getElementById('location').value = item.location || '';
+            document.getElementById('status').value = item.status || 'scheduled';
+            document.getElementById('visitPurpose').value = item.visit_purpose || 'Presentasi';
             document.getElementById('notes').value = item.notes || '';
-            document.getElementById('nextFollowup').value = item.next_followup || '';
-            document.getElementById('estimatedValue').value = item.estimated_value || '';
 
             document.getElementById('formModal').classList.add('active');
             console.log('✅ Edit Modal opened');
@@ -1462,28 +1246,33 @@
         }
 
         // ==================== SAVE ====================
-        async function saveLead() {
-            console.log('💾 Saving lead...');
-            const contactName = document.getElementById('contactName').value.trim();
+        async function saveVisit() {
+            console.log('💾 Saving visit...');
+            const companyName = document.getElementById('companyName').value.trim();
+            const visitDate = document.getElementById('visitDate').value;
 
-            if (!contactName) {
-                showToast('Nama Kontak wajib diisi', 'error');
-                document.getElementById('contactName').focus();
+            if (!companyName) {
+                showToast('Nama Perusahaan wajib diisi', 'error');
+                document.getElementById('companyName').focus();
+                return;
+            }
+
+            if (!visitDate) {
+                showToast('Tanggal Kunjungan wajib diisi', 'error');
+                document.getElementById('visitDate').focus();
                 return;
             }
 
             const data = {
-                contact_name: contactName,
-                company_name: document.getElementById('companyName').value.trim(),
-                email: document.getElementById('email').value.trim(),
-                phone: document.getElementById('phone').value.trim(),
+                company_name: companyName,
+                contact_name: document.getElementById('contactName').value.trim(),
+                visit_date: visitDate,
+                sales_name: document.getElementById('salesName').value.trim(),
+                location: document.getElementById('location').value.trim(),
                 status: document.getElementById('status').value,
-                priority: document.getElementById('priority').value,
-                service_interest: document.getElementById('serviceInterest').value,
-                sales_assign: document.getElementById('salesAssign').value.trim(),
+                visit_purpose: document.getElementById('visitPurpose').value,
                 notes: document.getElementById('notes').value.trim(),
-                next_followup: document.getElementById('nextFollowup').value,
-                estimated_value: document.getElementById('estimatedValue').value.trim()
+                lead_id: document.getElementById('lead_id').value || ''
             };
 
             console.log('📦 Data to save:', data);
@@ -1494,17 +1283,18 @@
 
             try {
                 if (currentEditId) {
-                    console.log('🔄 Updating lead ID:', currentEditId);
-                    await updateLead(currentEditId, data);
-                    showToast('✅ Lead berhasil diupdate!', 'success');
+                    console.log('🔄 Updating visit ID:', currentEditId);
+                    await updateVisit(currentEditId, data);
+                    showToast('✅ Kunjungan berhasil diupdate!', 'success');
                 } else {
-                    console.log('➕ Creating new lead');
-                    await createLead(data);
-                    showToast('✅ Lead berhasil dibuat!', 'success');
+                    console.log('➕ Creating new visit');
+                    await createVisit(data);
+                    showToast('✅ Kunjungan berhasil dibuat!', 'success');
                 }
                 await refreshData();
                 closeModal('formModal');
                 console.log('✅ Save complete');
+                returnToLeadIfNeeded();
             } catch (e) {
                 console.error('❌ Save failed:', e);
                 showToast('❌ Gagal menyimpan: ' + e.message, 'error');
@@ -1523,36 +1313,36 @@
                 showToast('❌ Anda tidak punya izin menghapus data', 'error');
                 return;
             }
-            if (!confirm(`Hapus lead "${item.contact_name}" (ID: ${id})?`)) return;
+            if (!confirm(`Hapus kunjungan ke "${item.company_name}" (ID: ${id})?`)) return;
 
             try {
-                await deleteLeadApi(id);
-                showToast('✅ Lead berhasil dihapus', 'success');
+                await deleteVisitApi(id);
+                showToast('✅ Kunjungan berhasil dihapus', 'success');
                 await refreshData();
-                console.log('✅ Deleted lead ID:', id);
+                console.log('✅ Deleted visit ID:', id);
             } catch (e) {
                 console.error('❌ Delete failed:', e);
                 showToast('❌ Gagal hapus: ' + e.message, 'error');
             }
         }
 
-        async function deleteLead() {
+        async function deleteVisit() {
             const id = parseInt(document.getElementById('editId').value);
-            console.log('🗑️ Delete lead from modal, ID:', id);
+            console.log('🗑️ Delete visit from modal, ID:', id);
             if (!id) return;
             const item = allData.find(d => d.id_x === id);
             if (!canUse('delete')) {
                 showToast('❌ Anda tidak punya izin menghapus data', 'error');
                 return;
             }
-            if (!confirm('Hapus lead ini secara permanen?')) return;
+            if (!confirm('Hapus kunjungan ini secara permanen?')) return;
 
             try {
-                await deleteLeadApi(id);
-                showToast('✅ Lead berhasil dihapus', 'success');
+                await deleteVisitApi(id);
+                showToast('✅ Kunjungan berhasil dihapus', 'success');
                 closeModal('formModal');
                 await refreshData();
-                console.log('✅ Deleted lead ID:', id);
+                console.log('✅ Deleted visit ID:', id);
             } catch (e) {
                 console.error('❌ Delete failed:', e);
                 showToast('❌ Gagal hapus: ' + e.message, 'error');
@@ -1604,7 +1394,7 @@
             COLUMNS: COLUMNS
         };
 
-        console.log('📋 Lead Management Loaded!');
+        console.log('📅 Sales Visit Tracker Loaded!');
         console.log('📡 Table:', TABLE);
         console.log('📊 Type "debug" in console for helpers');
         console.log('🔧 Debug commands:');
