@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reminder CRM - Sales Psikologi</title>
+    <script>
+        // ==================== AUTH GUARD (Sales Tools Suite - SSO) ====================
+        const AUTH_SESSION_KEY = 'lidan_sales_session';
+        const AUTH_LOGIN_PAGE = 'login.html';
+
+        function getAuthSession() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+        function clearAuthSession() { localStorage.removeItem(AUTH_SESSION_KEY); }
+        function isSupervisor(session) { return !!session && String(session.role || '').toLowerCase() === 'spv'; }
+        function isAdmin(session) { return !!session && String(session.username || '').toLowerCase() === 'admin'; }
+        function logout() { clearAuthSession(); window.location.href = AUTH_LOGIN_PAGE; }
+
+        let CURRENT_USER = getAuthSession();
+        if (!CURRENT_USER || !CURRENT_USER.username) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.replace(AUTH_LOGIN_PAGE + '?return=' + returnUrl);
+        } else if (!isAdmin(CURRENT_USER)) {
+            // Halaman ini khusus admin
+            window.location.replace('index.html');
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === AUTH_SESSION_KEY && !e.newValue) {
+                window.location.href = AUTH_LOGIN_PAGE;
+            }
+        });
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .header h1 {
+            font-size: 24px;
+            color: #1a2332;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header h1 span {
+            background: #ed8936;
+            color: white;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+        .header-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+        .user-badge {
+            display: flex; align-items: center; gap: 8px;
+            background: #f7fafc; border: 2px solid #e2e8f0;
+            padding: 6px 12px; border-radius: 10px; font-size: 13px; color: #2d3748;
+        }
+        .user-badge .role-tag {
+            padding: 1px 8px; border-radius: 10px; font-size: 10px;
+            font-weight: 700; color: #fff; text-transform: capitalize;
+        }
+        .user-badge .role-tag.spv { background: #9f7aea; }
+        .user-badge .role-tag.sales { background: #4299e1; }
+        .btn-logout {
+            background: #fc8181; color: #fff; border: none;
+            padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+        }
+        .btn-logout:hover { background: #f56565; }
+
+        .btn {
+            padding: 10px 20px; border: none; border-radius: 10px;
+            font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary { background: #4299e1; color: white; }
+        .btn-primary:hover { background: #3182ce; }
+        .btn-outline { background: transparent; color: #4a5568; border: 2px solid #e2e8f0; }
+        .btn-outline:hover { background: #f7fafc; }
+        .btn-outline.active { background: #4299e1; color: #fff; border-color: #4299e1; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
+        .btn-xs { padding: 3px 10px; font-size: 11px; border-radius: 4px; }
+
+        .tabs {
+            display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: white; border: 2px solid #e2e8f0; color: #4a5568;
+            padding: 12px 22px; border-radius: 12px; font-weight: 700; font-size: 14px;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .tab-btn:hover { border-color: #cbd5e0; }
+        .tab-btn.active { background: #2d3748; color: #fff; border-color: #2d3748; }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+
+        .card-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .entry-card {
+            background: white; border-radius: 14px; padding: 14px 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+        }
+        .entry-card .name { font-weight: 700; font-size: 15px; color: #1a2332; }
+        .entry-card .meta { font-size: 12px; color: #718096; margin-top: 2px; }
+        .entry-card .date-badge {
+            background: #ebf8ff; color: #2b6cb0; font-weight: 700; font-size: 13px;
+            padding: 6px 14px; border-radius: 10px; white-space: nowrap;
+        }
+        .entry-card .date-badge.today { background: #c6f6d5; color: #276749; }
+        .entry-card .date-badge.soon { background: #fefcbf; color: #975a16; }
+        .entry-card .date-badge.past { background: #edf2f7; color: #a0aec0; }
+
+        .section-title {
+            font-size: 16px; font-weight: 700; color: #2d3748; margin: 22px 0 10px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .section-title:first-child { margin-top: 0; }
+
+        .religion-group {
+            background: white; border-radius: 14px; padding: 16px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 12px;
+        }
+        .religion-group .title { font-weight: 700; font-size: 15px; color: #1a2332; margin-bottom: 8px; }
+        .religion-group .name-tag {
+            display: inline-block; background: #f7fafc; border: 1px solid #e2e8f0;
+            font-size: 12px; color: #4a5568; padding: 3px 10px; border-radius: 10px; margin: 3px 4px 0 0;
+        }
+
+        .holiday-row {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            padding: 10px 14px; border-bottom: 1px solid #edf2f7; font-size: 13px;
+        }
+        .holiday-row:last-child { border-bottom: none; }
+        .holiday-row .tag {
+            font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px;
+            background: #edf2f7; color: #4a5568; margin-left: 6px;
+        }
+        .holiday-row.past { opacity: 0.45; }
+        .holiday-row.soon { background: #fffaf0; }
+
+        .empty-state { padding: 50px 20px; text-align: center; color: #a0aec0; }
+        .empty-state .icon { font-size: 44px; margin-bottom: 12px; }
+
+        .note-box {
+            background: #ebf8ff; border-left: 4px solid #4299e1; border-radius: 8px;
+            padding: 10px 14px; font-size: 12px; color: #2c5282; margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <div class="header">
+            <h1>🎉 Reminder CRM <span>Admin Only</span></h1>
+            <div class="header-actions">
+                <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+                <div class="user-badge" id="userBadge">
+                    <span id="userBadgeName">👤 -</span>
+                    <span class="role-tag" id="userBadgeRole">-</span>
+                    <a href="index.html" class="btn btn-outline btn-sm" style="text-decoration:none;">🏠 Home</a>
+                    <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" id="tabBtn-ultah" onclick="switchTab('ultah')">🎂 Ulang Tahun</button>
+            <button class="tab-btn" id="tabBtn-agama" onclick="switchTab('agama')">🙏 Agama</button>
+            <button class="tab-btn" id="tabBtn-nikah" onclick="switchTab('nikah')">💍 Pernikahan</button>
+        </div>
+
+        <!-- TAB: ULANG TAHUN -->
+        <div class="tab-panel active" id="tabPanel-ultah">
+            <div class="filter-bar">
+                <button class="btn btn-outline btn-sm active" id="ultahFilter-week" onclick="setBirthdayFilter('week')">📅 Minggu Ini</button>
+                <button class="btn btn-outline btn-sm" id="ultahFilter-month" onclick="setBirthdayFilter('month')">🗓️ Bulan Ini</button>
+            </div>
+            <div class="card-list" id="ultahList"></div>
+        </div>
+
+        <!-- TAB: AGAMA -->
+        <div class="tab-panel" id="tabPanel-agama">
+            <div class="note-box">
+                💡 Kalender hari besar keagamaan berdasarkan SKB 3 Menteri Nomor 1497/2025 untuk tahun 2026.
+                Tanggal Hijriah/Saka/lunar bergeser tiap tahun — perlu diperbarui manual setiap pergantian tahun.
+            </div>
+            <div class="section-title">📅 Kalender Hari Besar Keagamaan 2026</div>
+            <div class="religion-group" id="holidayCalendar"></div>
+
+            <div class="section-title">🙏 Lead per Agama</div>
+            <div id="religionGroups"></div>
+        </div>
+
+        <!-- TAB: PERNIKAHAN -->
+        <div class="tab-panel" id="tabPanel-nikah">
+            <div class="filter-bar">
+                <button class="btn btn-outline btn-sm active" id="nikahFilter-week" onclick="setMarriageFilter('week')">📅 Minggu Ini</button>
+                <button class="btn btn-outline btn-sm" id="nikahFilter-month" onclick="setMarriageFilter('month')">🗓️ Bulan Ini</button>
+            </div>
+            <div class="card-list" id="nikahList"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const SECRET = 'admin';
+        const LEAD_TABLE = 'lead_management';
+
+        // Sumber: SKB 3 Menteri (Menag, Menaker, MenPANRB) Nomor 1497/2025, 2/2025, 5/2025
+        // tentang Hari Libur Nasional & Cuti Bersama 2026. Tanggal Hijriah/Saka/Imlek/Waisak
+        // bergeser tiap tahun mengikuti kalender lunar masing-masing — perlu update manual per tahun.
+        const RELIGIOUS_HOLIDAYS_2026 = [
+            { tanggal: '2026-01-01', nama: 'Tahun Baru Masehi', agama: ['Umum'] },
+            { tanggal: '2026-01-16', nama: 'Isra Mikraj Nabi Muhammad SAW', agama: ['Islam'] },
+            { tanggal: '2026-02-17', nama: 'Tahun Baru Imlek 2577 Kongzili', agama: ['Konghucu'] },
+            { tanggal: '2026-03-19', nama: 'Hari Suci Nyepi (Tahun Baru Saka 1948)', agama: ['Hindu'] },
+            { tanggal: '2026-03-21', nama: 'Hari Raya Idul Fitri 1447 H (hari 1)', agama: ['Islam'] },
+            { tanggal: '2026-03-22', nama: 'Hari Raya Idul Fitri 1447 H (hari 2)', agama: ['Islam'] },
+            { tanggal: '2026-04-03', nama: 'Wafat Yesus Kristus (Jumat Agung)', agama: ['Kristen Protestan', 'Katolik'] },
+            { tanggal: '2026-04-05', nama: 'Kebangkitan Yesus Kristus (Paskah)', agama: ['Kristen Protestan', 'Katolik'] },
+            { tanggal: '2026-05-14', nama: 'Kenaikan Yesus Kristus', agama: ['Kristen Protestan', 'Katolik'] },
+            { tanggal: '2026-05-27', nama: 'Hari Raya Idul Adha 1447 H', agama: ['Islam'] },
+            { tanggal: '2026-05-31', nama: 'Hari Raya Waisak 2570', agama: ['Buddha'] },
+            { tanggal: '2026-06-16', nama: 'Tahun Baru Islam 1448 H', agama: ['Islam'] },
+            { tanggal: '2026-08-25', nama: 'Maulid Nabi Muhammad SAW', agama: ['Islam'] },
+            { tanggal: '2026-12-25', nama: 'Hari Raya Natal', agama: ['Kristen Protestan', 'Katolik'] }
+        ];
+
+        let allLeads = [];
+        let birthdayEntries = [];
+        let marriageEntries = [];
+        let religionGroupsData = {};
+        let birthdayFilter = 'week';
+        let marriageFilter = 'week';
+
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': LEAD_TABLE,
+                'X-Role': 'admin'
+            };
+        }
+
+        function safeParseJSON(str, fallback) {
+            if (!str) return fallback;
+            try {
+                const parsed = JSON.parse(str);
+                return parsed;
+            } catch (e) {
+                return fallback;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>"']/g, m => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[m]));
+        }
+
+        async function fetchLeads() {
+            try {
+                const res = await fetch(`${API_URL}?table=${LEAD_TABLE}`, { headers: getHeaders() });
+                const result = await res.json();
+                if (result.success && result.data) {
+                    return result.data.map(row => ({
+                        id_x: row.id_x,
+                        contact_name: row.x_01 || '',
+                        company_name: row.x_02 || '',
+                        religion: row.x_12 || '',
+                        birth_date: row.x_13 || '',
+                        marital_status: row.x_14 || 'lajang',
+                        anniversary_date: row.x_15 || '',
+                        dependents: safeParseJSON(row.x_17, [])
+                    }));
+                }
+                return [];
+            } catch (e) {
+                console.error('❌ Gagal mengambil data lead:', e.message);
+                return [];
+            }
+        }
+
+        // Hitung kemunculan berikutnya dari tanggal berulang tiap tahun (ulang tahun/pernikahan)
+        function nextOccurrence(dateStr) {
+            if (!dateStr) return null;
+            const parts = dateStr.split('-');
+            if (parts.length < 3) return null;
+            const month = parseInt(parts[1], 10) - 1;
+            const day = parseInt(parts[2], 10);
+            if (isNaN(month) || isNaN(day)) return null;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let next = new Date(today.getFullYear(), month, day);
+            if (next < today) {
+                next = new Date(next.getFullYear() + 1, month, day);
+            }
+            const diffDays = Math.round((next - today) / 86400000);
+            return { next, diffDays, month, day };
+        }
+
+        function formatTanggalPendek(month, day) {
+            const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            return `${day} ${bulan[month]}`;
+        }
+
+        function buildEntries() {
+            birthdayEntries = [];
+            marriageEntries = [];
+            religionGroupsData = {};
+
+            allLeads.forEach(lead => {
+                if (lead.birth_date) {
+                    birthdayEntries.push({
+                        leadId: lead.id_x,
+                        name: lead.contact_name,
+                        company: lead.company_name,
+                        source: 'Lead',
+                        tanggal: lead.birth_date
+                    });
+                }
+                (lead.dependents || []).forEach(dep => {
+                    if (dep.tanggal_lahir) {
+                        birthdayEntries.push({
+                            leadId: lead.id_x,
+                            name: dep.nama,
+                            company: lead.company_name,
+                            source: `${dep.hubungan === 'anak' ? 'Anak' : (dep.hubungan || 'Keluarga')} dari ${lead.contact_name}`,
+                            tanggal: dep.tanggal_lahir
+                        });
+                    }
+                });
+
+                if (lead.marital_status === 'menikah' && lead.anniversary_date) {
+                    marriageEntries.push({
+                        leadId: lead.id_x,
+                        name: lead.contact_name,
+                        company: lead.company_name,
+                        tanggal: lead.anniversary_date
+                    });
+                }
+
+                if (lead.religion) {
+                    if (!religionGroupsData[lead.religion]) religionGroupsData[lead.religion] = [];
+                    religionGroupsData[lead.religion].push(lead);
+                }
+            });
+        }
+
+        function filterAndSort(entries, filter) {
+            const withOccurrence = entries
+                .map(e => ({ ...e, occ: nextOccurrence(e.tanggal) }))
+                .filter(e => e.occ);
+
+            let filtered;
+            if (filter === 'week') {
+                filtered = withOccurrence.filter(e => e.occ.diffDays <= 6);
+                filtered.sort((a, b) => a.occ.diffDays - b.occ.diffDays);
+            } else {
+                const currentMonth = new Date().getMonth();
+                filtered = withOccurrence.filter(e => e.occ.month === currentMonth);
+                filtered.sort((a, b) => a.occ.day - b.occ.day);
+            }
+            return filtered;
+        }
+
+        function renderEntryCard(e) {
+            const dateLabel = formatTanggalPendek(e.occ.month, e.occ.day);
+            let badgeClass = '';
+            let badgeText = `${e.occ.diffDays} hari lagi`;
+            if (e.occ.diffDays === 0) {
+                badgeClass = 'today';
+                badgeText = '🎉 Hari ini!';
+            } else if (e.occ.diffDays <= 6) {
+                badgeClass = 'soon';
+            }
+            return `
+                <div class="entry-card">
+                    <div>
+                        <div class="name">${escapeHtml(e.name) || '-'}</div>
+                        <div class="meta">${escapeHtml(e.source || '')}${e.company ? ` &middot; ${escapeHtml(e.company)}` : ''} &middot; 🗓️ ${dateLabel}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span class="date-badge ${badgeClass}">${badgeText}</span>
+                        <a class="btn btn-outline btn-xs" style="text-decoration:none;" href="index.html?lead_id=${e.leadId}">🔗 Lihat Lead</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderList(containerId, entries, emptyLabel) {
+            const container = document.getElementById(containerId);
+            if (entries.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>${emptyLabel}</p>
+                    </div>
+                `;
+                return;
+            }
+            container.innerHTML = entries.map(renderEntryCard).join('');
+        }
+
+        function setBirthdayFilter(filter) {
+            birthdayFilter = filter;
+            document.getElementById('ultahFilter-week').classList.toggle('active', filter === 'week');
+            document.getElementById('ultahFilter-month').classList.toggle('active', filter === 'month');
+            renderBirthdayTab();
+        }
+
+        function setMarriageFilter(filter) {
+            marriageFilter = filter;
+            document.getElementById('nikahFilter-week').classList.toggle('active', filter === 'week');
+            document.getElementById('nikahFilter-month').classList.toggle('active', filter === 'month');
+            renderMarriageTab();
+        }
+
+        function renderBirthdayTab() {
+            const filtered = filterAndSort(birthdayEntries, birthdayFilter);
+            const label = birthdayFilter === 'week'
+                ? 'Tidak ada yang berulang tahun dalam 7 hari ke depan.'
+                : 'Tidak ada yang berulang tahun bulan ini.';
+            renderList('ultahList', filtered, label);
+        }
+
+        function renderMarriageTab() {
+            const filtered = filterAndSort(marriageEntries, marriageFilter);
+            const label = marriageFilter === 'week'
+                ? 'Tidak ada anniversary pernikahan dalam 7 hari ke depan.'
+                : 'Tidak ada anniversary pernikahan bulan ini.';
+            renderList('nikahList', filtered, label);
+        }
+
+        function renderHolidayCalendar() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const withDiff = RELIGIOUS_HOLIDAYS_2026.map(h => {
+                const d = new Date(h.tanggal);
+                const diffDays = Math.round((d - today) / 86400000);
+                return { ...h, diffDays };
+            });
+            withDiff.sort((a, b) => a.diffDays - b.diffDays);
+
+            const container = document.getElementById('holidayCalendar');
+            container.innerHTML = withDiff.map(h => {
+                const isPast = h.diffDays < 0;
+                const isSoon = !isPast && h.diffDays <= 30;
+                const d = new Date(h.tanggal);
+                const tanggalLabel = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+                return `
+                    <div class="holiday-row ${isPast ? 'past' : ''} ${isSoon ? 'soon' : ''}">
+                        <span>${escapeHtml(h.nama)}${h.agama.map(a => `<span class="tag">${escapeHtml(a)}</span>`).join('')}</span>
+                        <span>${tanggalLabel}${isPast ? ' (sudah lewat)' : (isSoon ? ' · segera' : '')}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderReligionGroups() {
+            const container = document.getElementById('religionGroups');
+            const religions = Object.keys(religionGroupsData);
+            if (religions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🙏</div>
+                        <p>Belum ada data agama pada lead.</p>
+                    </div>
+                `;
+                return;
+            }
+            container.innerHTML = religions.map(religion => {
+                const leads = religionGroupsData[religion];
+                return `
+                    <div class="religion-group">
+                        <div class="title">${escapeHtml(religion)} <span style="font-weight:400;color:#a0aec0;font-size:12px;">(${leads.length} lead)</span></div>
+                        <div>
+                            ${leads.map(l => `<span class="name-tag">${escapeHtml(l.contact_name)}${l.company_name ? ' · ' + escapeHtml(l.company_name) : ''}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function switchTab(tab) {
+            ['ultah', 'agama', 'nikah'].forEach(t => {
+                document.getElementById(`tabBtn-${t}`).classList.toggle('active', t === tab);
+                document.getElementById(`tabPanel-${t}`).classList.toggle('active', t === tab);
+            });
+        }
+
+        function initUserBadge() {
+            const nameEl = document.getElementById('userBadgeName');
+            const roleEl = document.getElementById('userBadgeRole');
+            if (nameEl) nameEl.textContent = '👤 ' + (CURRENT_USER.username || '-');
+            if (roleEl) {
+                roleEl.textContent = CURRENT_USER.role || '-';
+                roleEl.className = 'role-tag ' + (isSupervisor(CURRENT_USER) ? 'spv' : 'sales');
+            }
+        }
+
+        async function refreshData() {
+            allLeads = await fetchLeads();
+            buildEntries();
+            renderBirthdayTab();
+            renderMarriageTab();
+            renderHolidayCalendar();
+            renderReligionGroups();
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            initUserBadge();
+            await refreshData();
+        });
+    </script>
+</body>
+</html>

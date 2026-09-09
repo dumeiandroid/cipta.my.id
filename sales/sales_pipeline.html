@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Pipeline - Sales Psikologi</title>
+    <title>Deal Pipeline - Sales Psikologi</title>
     <script>
         // ==================== AUTH GUARD (Sales Tools Suite - SSO) ====================
         const AUTH_SESSION_KEY = 'lidan_sales_session';
@@ -631,7 +631,7 @@
         <!-- HEADER -->
         <div class="header">
             <h1>
-                📊 Sales Pipeline
+                📊 Deal Pipeline
                 <span>Sales Psikologi</span>
             </h1>
             <div class="header-actions">
@@ -639,9 +639,15 @@
                     <span class="icon">🔍</span>
                     <input type="text" id="searchInput" placeholder="Cari deal..." oninput="renderList()">
                 </div>
+                <div class="stage-filter-tabs" id="stageFilterTabs" style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <button class="btn btn-primary btn-sm filter-tab" data-filter="active" onclick="setStageFilter('active')">🔄 Aktif</button>
+                    <button class="btn btn-outline btn-sm filter-tab" data-filter="won" onclick="setStageFilter('won')">✅ Selesai</button>
+                    <button class="btn btn-outline btn-sm filter-tab" data-filter="lost" onclick="setStageFilter('lost')">❌ Batal</button>
+                    <button class="btn btn-outline btn-sm filter-tab" data-filter="all" onclick="setStageFilter('all')">📋 Semua</button>
+                </div>
                 <button class="btn btn-primary" onclick="openAddModal()">➕ Tambah Deal</button>
                 <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
-                <button class="btn btn-outline btn-sm" onclick="document.getElementById('infoModal').classList.add('active')" title="Info & Panduan Sales Pipeline">ℹ️ Info</button>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('infoModal').classList.add('active')" title="Info & Panduan Deal Pipeline">ℹ️ Info</button>
                 <div class="user-badge" id="userBadge">
                     <span id="userBadgeName">👤 -</span>
                     <span class="role-tag" id="userBadgeRole">-</span>
@@ -702,17 +708,22 @@
     <div class="modal-overlay" id="infoModal">
         <div class="modal">
             <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
-            <div class="modal-title">📊 Panduan Sales Pipeline</div>
+            <div class="modal-title">📊 Panduan Deal Pipeline</div>
             <div class="modal-body">
-                <p>Sales Pipeline dipakai untuk melacak setiap deal penjualan dari awal (prospecting)
-                sampai akhir (won/lost) — membantu sales &amp; supervisor memahami status tiap deal dan
-                memprediksi pendapatan.</p>
+                <p>Deal Pipeline khusus untuk deal yang <b>sudah pasti dan sudah punya jadwal pelaksanaan
+                kegiatan</b> — bukan untuk tahap pendekatan awal. Selama masih tahap pendekatan (visit/call/WA/email)
+                dan belum ada jadwal pasti, catat dulu di <b>Activity Tracker</b>. Begitu klien deal dan jadwal
+                kegiatan sudah ditentukan, baru buat entri di sini dengan mengisi Tanggal Pelaksanaan.</p>
+
+                <p style="margin-top:6px;">Dengan begitu, tab "🔄 Aktif" di Deal Pipeline hanya berisi kegiatan
+                yang sudah pasti terjadwal — cukup lihat di sini kalau mau tahu kegiatan apa saja yang sudah fix
+                akan berjalan, meskipun tetap ada kemungkinan kecil berubah (reschedule/batal).</p>
 
                 <h4 style="margin:4px 0 2px;">🧩 Arti Stage Pipeline</h4>
                 <ul style="margin:0 0 8px 18px; line-height:1.9;">
                     <li>🔍 <b>Prospecting</b> — identifikasi/menemukan prospek</li>
                     <li>📋 <b>Qualification</b> — memastikan prospek layak dilanjutkan</li>
-                    <li>🤝 <b>Negotiation</b> — negosiasi harga &amp; ketentuan</li>
+                    <li>🤝 <b>Negotiation</b> — negosiasi harga &amp; ketentuan (jadwal sudah disepakati, detail masih dirapikan)</li>
                     <li>📄 <b>Proposal</b> — proposal sudah dikirim</li>
                     <li>🎯 <b>Closing</b> — proses akhir sebelum deal selesai</li>
                     <li>✅ <b>Won</b> — deal berhasil</li>
@@ -725,9 +736,19 @@
                     <li><b>Probability</b> — perkiraan persentase kemungkinan deal ini closing (won)</li>
                 </ul>
 
+                <h4 style="margin:4px 0 2px;">⚡ Aksi Cepat</h4>
+                <ul style="margin:0 0 8px 18px; line-height:1.9;">
+                    <li>✅ <b>Selesai</b> — deal terealisasi, otomatis menambah Riwayat Konversi di Client Profile</li>
+                    <li>🔁 <b>Reschedule</b> — ubah Tanggal Pelaksanaan tanpa mengubah stage, alasan tercatat di Catatan</li>
+                    <li>❌ <b>Batal</b> — deal gagal/batal (stage jadi Lost), alasan bisa diisi</li>
+                    <li>🗒️ <b>Aktivitas</b> — buka Activity Tracker untuk lead terkait (catat kunjungan/call/WA lanjutan)</li>
+                </ul>
+
                 <div style="background:#fff5f5;border-left:4px solid #fc8181;border-radius:8px;padding:10px 14px;font-size:13px;">
                     💡 <b>Tips:</b> Update stage &amp; probability secara berkala. Deal yang stuck lama
-                    di stage yang sama akan muncul sebagai alert di Sales Dashboard supervisor.
+                    di stage yang sama akan muncul sebagai alert di Sales Dashboard supervisor. Tab
+                    "🔄 Aktif" hanya menampilkan deal yang masih berjalan — deal Selesai/Batal tidak hilang,
+                    hanya disembunyikan dari tampilan default (buka tab ✅/❌/📋 untuk melihatnya).
                 </div>
             </div>
         </div>
@@ -738,6 +759,28 @@
             <button class="modal-close" onclick="closeModal('historyModal')">✕</button>
             <div class="modal-title">🕘 Riwayat Perubahan</div>
             <div class="modal-body" id="historyModalBody"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="rescheduleModal">
+        <div class="modal" style="max-width:420px;">
+            <button class="modal-close" onclick="closeModal('rescheduleModal')">✕</button>
+            <div class="modal-title">🔁 Reschedule Deal</div>
+            <div class="modal-body">
+                <input type="hidden" id="rescheduleId" value="">
+                <div class="form-group">
+                    <label>📅 Tanggal Pelaksanaan Baru *</label>
+                    <input type="date" id="rescheduleDate">
+                </div>
+                <div class="form-group">
+                    <label>📝 Alasan Reschedule</label>
+                    <textarea id="rescheduleReason" placeholder="Contoh: klien minta ditunda 2 minggu" rows="2"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeModal('rescheduleModal')">Batal</button>
+                    <button class="btn btn-primary" onclick="saveReschedule()">💾 Simpan Reschedule</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -828,8 +871,9 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>📅 Expected Close Date</label>
-                        <input type="date" id="closeDate">
+                        <label>📅 Tanggal Pelaksanaan *</label>
+                        <input type="date" id="closeDate" required>
+                        <small style="color:#a0aec0;">Wajib diisi — Deal Pipeline khusus untuk deal yang sudah punya jadwal kegiatan pasti</small>
                     </div>
                     <div class="form-group">
                         <label>📅 Created Date</label>
@@ -860,6 +904,7 @@
         // ==================== STATE ====================
         let allData = [];
         let currentEditId = null;
+        let currentStageFilter = 'active';
 
         const COLUMNS = {
             deal_name: 'x_01',
@@ -886,7 +931,7 @@
             priority: '🎯 Prioritas',
             deal_value: '💰 Nilai Deal',
             probability: '📊 Probabilitas',
-            close_date: '📅 Expected Close Date',
+            close_date: '📅 Tanggal Pelaksanaan',
             created_date: '📅 Created Date',
             notes: '📝 Catatan'
         };
@@ -989,7 +1034,7 @@
 
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log('📊 Sales Pipeline Started');
+            console.log('📊 Deal Pipeline Started');
             console.log('📡 Table:', TABLE);
             initUserBadge();
             await loadFeatureConfig();
@@ -1184,10 +1229,31 @@
             return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
         }
 
+        // ==================== FILTER TAB ====================
+        function setStageFilter(f) {
+            currentStageFilter = f;
+            document.querySelectorAll('.filter-tab').forEach(btn => {
+                const isActive = btn.dataset.filter === f;
+                btn.classList.toggle('btn-primary', isActive);
+                btn.classList.toggle('btn-outline', !isActive);
+            });
+            renderList();
+        }
+
         // ==================== RENDER ====================
         function renderList() {
             const search = document.getElementById('searchInput').value.toLowerCase().trim();
-            const filtered = allData.filter(item =>
+
+            let stageFiltered = allData;
+            if (currentStageFilter === 'active') {
+                stageFiltered = allData.filter(d => !['won', 'lost'].includes(d.stage));
+            } else if (currentStageFilter === 'won') {
+                stageFiltered = allData.filter(d => d.stage === 'won');
+            } else if (currentStageFilter === 'lost') {
+                stageFiltered = allData.filter(d => d.stage === 'lost');
+            }
+
+            const filtered = stageFiltered.filter(item =>
                 item.deal_name.toLowerCase().includes(search) ||
                 item.company_name.toLowerCase().includes(search) ||
                 item.sales_name.toLowerCase().includes(search) ||
@@ -1197,15 +1263,17 @@
 
             const body = document.getElementById('listBody');
 
-            // Update stats
+            // Update stats (selalu dari semua data, bukan hasil filter tab)
             updateStats();
 
             if (filtered.length === 0) {
+                const noDataAtAll = allData.length === 0;
+                const noDataInTab = !noDataAtAll && stageFiltered.length === 0;
                 body.innerHTML = `
                     <div class="empty-state">
-                        <div class="icon">${allData.length === 0 ? '📊' : '🔍'}</div>
-                        <h3>${allData.length === 0 ? 'Belum ada deal' : 'Tidak ditemukan'}</h3>
-                        <p>${allData.length === 0 ? 'Klik "Tambah Deal" untuk menambahkan deal ke pipeline' : 'Coba dengan kata kunci lain'}</p>
+                        <div class="icon">${noDataAtAll ? '📊' : '🔍'}</div>
+                        <h3>${noDataAtAll ? 'Belum ada deal' : (noDataInTab ? 'Tidak ada deal di tab ini' : 'Tidak ditemukan')}</h3>
+                        <p>${noDataAtAll ? 'Klik "Tambah Deal" untuk menambahkan deal ke pipeline' : (noDataInTab ? 'Coba pilih tab filter lain di atas' : 'Coba dengan kata kunci lain')}</p>
                     </div>
                 `;
                 return;
@@ -1237,6 +1305,7 @@
                         <div class="field">
                             <span class="label">Deal:</span> ${escapeHtml(item.deal_name) || '-'}
                             ${item.company_name ? `<br><span style="font-size:10px;color:#718096;">${escapeHtml(item.company_name)}</span>` : ''}
+                            ${item.close_date ? `<br><span style="font-size:10px;color:#4299e1;font-weight:600;">📅 ${new Date(item.close_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>` : ''}
                         </div>
                         <div class="field"><span class="label">Layanan:</span> ${escapeHtml(item.service_type) || '-'}</div>
                         <div class="field"><span class="label">Sales:</span> ${escapeHtml(item.sales_name) || '-'}</div>
@@ -1245,9 +1314,15 @@
                         <div class="field"><span class="label">Nilai:</span> <span class="pipeline-value ${stageClass}">${item.deal_value || '-'}</span></div>
                         <div class="field"><span class="label">Prob:</span> ${item.probability || 0}%</div>
                         <div class="actions">
+                            ${(!['won', 'lost'].includes(item.stage) && canUse('edit')) ? `
+                                <button class="btn btn-success btn-xs" onclick="markAsDone(${item.id_x})" title="Tandai Selesai (Won) — otomatis masuk ke Client Profile">✅</button>
+                                <button class="btn btn-purple btn-xs" onclick="openRescheduleModal(${item.id_x})" title="Reschedule jadwal">🔁</button>
+                                <button class="btn btn-danger btn-xs" onclick="markAsLost(${item.id_x})" title="Tandai Batal/Gagal (Lost)">❌</button>
+                            ` : ''}
+                            ${item.lead_id ? `<a class="btn btn-outline btn-xs" href="sales_visit_tracker.html?lead_id=${item.lead_id}" title="Lihat/Tambah Aktivitas untuk Lead ini" style="text-decoration:none;">🗒️</a>` : ''}
                             ${canUse('riwayat') ? `<button class="btn btn-outline btn-xs" onclick="showHistory(${item.id_x})" title="Riwayat perubahan">🕘${item.history && item.history.length ? ` <span style="font-size:9px;">${item.history.length}</span>` : ''}</button>` : ''}
-                            ${canUse('edit') ? `<button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>` : ''}
-                            ${canUse('delete') ? `<button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>` : ''}
+                            ${canUse('edit') ? `<button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})" title="Edit">✏️</button>` : ''}
+                            ${canUse('delete') ? `<button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})" title="Hapus permanen">🗑️</button>` : ''}
                             ${(!canUse('edit') && !canUse('delete')) ? `<span style="font-size:10px;color:#a0aec0;">🔒 Tidak ada izin</span>` : ''}
                         </div>
                     </div>
@@ -1335,6 +1410,7 @@
 
             currentEditId = id;
             document.getElementById('editId').value = id;
+            document.getElementById('lead_id').value = item.lead_id || '';
             document.getElementById('formModalTitle').textContent = `✏️ Edit Deal: ${item.deal_name}`;
             document.getElementById('deleteBtn').style.display = canUse('delete') ? 'inline-flex' : 'none';
             document.getElementById('saveBtn').textContent = '💾 Update';
@@ -1371,6 +1447,13 @@
                 return;
             }
 
+            const closeDateVal = document.getElementById('closeDate').value;
+            if (!closeDateVal) {
+                showToast('📅 Tanggal Pelaksanaan wajib diisi — Deal Pipeline khusus deal yang sudah punya jadwal pasti', 'error');
+                document.getElementById('closeDate').focus();
+                return;
+            }
+
             const data = {
                 deal_name: dealName,
                 company_name: document.getElementById('companyName').value.trim(),
@@ -1393,6 +1476,9 @@
             btn.textContent = '⏳ Menyimpan...';
 
             try {
+                const oldItem = currentEditId ? allData.find(d => d.id_x === currentEditId) : null;
+                const oldStage = oldItem ? oldItem.stage : null;
+
                 if (currentEditId) {
                     console.log('🔄 Updating deal ID:', currentEditId);
                     await updateDeal(currentEditId, data);
@@ -1402,6 +1488,13 @@
                     await createDeal(data);
                     showToast('✅ Deal berhasil dibuat!', 'success');
                 }
+
+                // Kalau stage baru saja berubah jadi "won" (lewat form edit manual), sync otomatis ke Client Profile
+                if (data.stage === 'won' && oldStage !== 'won') {
+                    const dealForSync = { ...(oldItem || {}), ...data, id_x: currentEditId };
+                    await syncToClientProfile(dealForSync, data.close_date || new Date().toISOString().split('T')[0]);
+                }
+
                 await refreshData();
                 closeModal('formModal');
                 console.log('✅ Save complete');
@@ -1460,6 +1553,207 @@
             }
         }
 
+        // ==================== QUICK ACTIONS: DONE / LOST / RESCHEDULE ====================
+        function cloneDealData(item, overrides = {}) {
+            return {
+                deal_name: item.deal_name,
+                company_name: item.company_name,
+                service_type: item.service_type,
+                sales_name: item.sales_name,
+                stage: item.stage,
+                priority: item.priority,
+                deal_value: item.deal_value,
+                probability: item.probability,
+                close_date: item.close_date,
+                created_date: item.created_date,
+                notes: item.notes,
+                lead_id: item.lead_id,
+                ...overrides
+            };
+        }
+
+        async function markAsDone(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            if (!canUse('edit')) {
+                showToast('❌ Anda tidak punya akses untuk mengubah data ini', 'error');
+                return;
+            }
+            if (!confirm(`Tandai deal "${item.deal_name}" sebagai SELESAI (Won)?\n\nData akan otomatis ditambahkan ke Riwayat Konversi di Client Profile.`)) return;
+
+            const today = new Date().toISOString().split('T')[0];
+            const closeDate = item.close_date || today;
+            const data = cloneDealData(item, { stage: 'won', probability: 100, close_date: closeDate });
+
+            try {
+                await updateDeal(id, data);
+                showToast('✅ Deal ditandai Selesai (Won)', 'success');
+                await syncToClientProfile({ ...item, ...data }, closeDate);
+                await refreshData();
+            } catch (e) {
+                console.error('❌ Gagal menandai selesai:', e);
+                showToast('❌ Gagal update: ' + e.message, 'error');
+            }
+        }
+
+        async function markAsLost(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            if (!canUse('edit')) {
+                showToast('❌ Anda tidak punya akses untuk mengubah data ini', 'error');
+                return;
+            }
+            if (!confirm(`Tandai deal "${item.deal_name}" sebagai BATAL/GAGAL (Lost)?`)) return;
+            const reason = (prompt('Alasan batal/gagal (opsional):', '') || '').trim();
+
+            const logLine = `❌ [Batal ${new Date().toLocaleDateString('id-ID')}]${reason ? ' ' + reason : ''}`;
+            const newNotes = item.notes ? `${item.notes}\n${logLine}` : logLine;
+            const data = cloneDealData(item, { stage: 'lost', probability: 0, notes: newNotes });
+
+            try {
+                await updateDeal(id, data);
+                showToast('❌ Deal ditandai Batal/Gagal', 'success');
+                await refreshData();
+            } catch (e) {
+                console.error('❌ Gagal menandai batal:', e);
+                showToast('❌ Gagal update: ' + e.message, 'error');
+            }
+        }
+
+        function openRescheduleModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            if (!canUse('edit')) {
+                showToast('❌ Anda tidak punya akses untuk mengubah data ini', 'error');
+                return;
+            }
+            document.getElementById('rescheduleId').value = id;
+            document.getElementById('rescheduleDate').value = item.close_date || '';
+            document.getElementById('rescheduleReason').value = '';
+            document.getElementById('rescheduleModal').classList.add('active');
+        }
+
+        async function saveReschedule() {
+            const id = parseInt(document.getElementById('rescheduleId').value);
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+
+            const newDate = document.getElementById('rescheduleDate').value;
+            const reason = document.getElementById('rescheduleReason').value.trim();
+            if (!newDate) {
+                showToast('Tanggal baru wajib diisi', 'error');
+                return;
+            }
+
+            const oldDateStr = item.close_date ? new Date(item.close_date).toLocaleDateString('id-ID') : '-';
+            const newDateStr = new Date(newDate).toLocaleDateString('id-ID');
+            const logLine = `🔁 [Reschedule ${new Date().toLocaleDateString('id-ID')}] ${oldDateStr} → ${newDateStr}${reason ? ' — ' + reason : ''}`;
+            const newNotes = item.notes ? `${item.notes}\n${logLine}` : logLine;
+
+            const data = cloneDealData(item, { close_date: newDate, notes: newNotes });
+
+            try {
+                await updateDeal(id, data);
+                showToast('✅ Deal berhasil di-reschedule', 'success');
+                closeModal('rescheduleModal');
+                await refreshData();
+            } catch (e) {
+                console.error('❌ Gagal reschedule:', e);
+                showToast('❌ Gagal reschedule: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== SYNC KE CLIENT PROFILE (saat deal jadi Won) ====================
+        async function syncToClientProfile(dealItem, tanggal) {
+            if (!dealItem.lead_id) {
+                showToast('ℹ️ Deal ini tidak terhubung ke Lead, jadi belum otomatis masuk ke Client Profile. Silakan hubungkan/update manual di sana.', 'info');
+                return;
+            }
+            const cpHeaders = {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': 'client_company_profile',
+                'X-Role': 'admin'
+            };
+            try {
+                const res = await fetch(`${API_URL}?table=client_company_profile`, { headers: cpHeaders });
+                const result = await res.json();
+                const rows = result.data || [];
+                const existing = rows.find(r => String(r.x_13 || '') === String(dealItem.lead_id));
+
+                const newConv = {
+                    tanggal: tanggal,
+                    produk: dealItem.service_type || 'Lainnya',
+                    nilai: dealItem.deal_value || '',
+                    catatan: `Otomatis dari Deal Pipeline: ${dealItem.deal_name}`
+                };
+
+                if (existing) {
+                    // Bangun ulang SELURUH kolom dari data existing supaya kolom lain (termasuk lead_id) tidak ikut tertimpa kosong
+                    let convHistory = [];
+                    try { convHistory = JSON.parse(existing.x_14 || '[]'); } catch (e) { convHistory = []; }
+                    convHistory.push(newConv);
+
+                    let servicesUsed = [];
+                    try { servicesUsed = JSON.parse(existing.x_09 || '[]'); } catch (e) { servicesUsed = []; }
+                    if (dealItem.service_type && !servicesUsed.includes(dealItem.service_type)) {
+                        servicesUsed.push(dealItem.service_type);
+                    }
+
+                    const fullRow = { ...existing };
+                    delete fullRow.id_x;
+                    fullRow.x_09 = JSON.stringify(servicesUsed);
+                    fullRow.x_14 = JSON.stringify(convHistory);
+
+                    await fetch(`${API_URL}?table=client_company_profile&id_x=${existing.id_x}`, {
+                        method: 'PUT',
+                        headers: cpHeaders,
+                        body: JSON.stringify(fullRow)
+                    });
+                    showToast('✅ Riwayat konversi otomatis ditambahkan ke Client Profile', 'success');
+                } else {
+                    // Belum ada profile untuk lead ini — buat baru minimal, dilengkapi dari data lead kalau ada
+                    let lead = null;
+                    try {
+                        const leadRes = await fetch(`${API_URL}?table=lead_management`, {
+                            headers: { 'X-Custom-Auth': SECRET, 'X-Table-Name': 'lead_management', 'X-Role': 'admin' }
+                        });
+                        const leadResult = await leadRes.json();
+                        lead = (leadResult.data || []).find(r => String(r.id_x) === String(dealItem.lead_id)) || null;
+                    } catch (e) {
+                        console.warn('⚠️ Gagal ambil data lead untuk prefill Client Profile:', e.message);
+                    }
+
+                    const newRow = {
+                        x_01: (lead && lead.x_02) || dealItem.company_name || '',
+                        x_02: 'corporate',
+                        x_03: (lead && lead.x_03) || '',
+                        x_04: (lead && lead.x_04) || '',
+                        x_05: (lead && lead.x_01) || '',
+                        x_06: '',
+                        x_07: '',
+                        x_08: 'active',
+                        x_09: JSON.stringify(dealItem.service_type ? [dealItem.service_type] : []),
+                        x_10: dealItem.sales_name || (CURRENT_USER && CURRENT_USER.username) || '',
+                        x_11: tanggal,
+                        x_12: '',
+                        x_13: String(dealItem.lead_id),
+                        x_14: JSON.stringify([newConv])
+                    };
+
+                    await fetch(`${API_URL}?table=client_company_profile`, {
+                        method: 'POST',
+                        headers: cpHeaders,
+                        body: JSON.stringify(newRow)
+                    });
+                    showToast('✅ Client Profile baru otomatis dibuat dari deal ini', 'success');
+                }
+            } catch (e) {
+                console.error('❌ Gagal sync ke Client Profile:', e);
+                showToast('⚠️ Deal ditandai selesai, tapi gagal auto-update Client Profile: ' + e.message, 'error');
+            }
+        }
+
         // ==================== TOAST ====================
         function showToast(message, type = 'info') {
             console.log(`📢 Toast: [${type}] ${message}`);
@@ -1505,7 +1799,7 @@
             COLUMNS: COLUMNS
         };
 
-        console.log('📊 Sales Pipeline Loaded!');
+        console.log('📊 Deal Pipeline Loaded!');
         console.log('📡 Table:', TABLE);
         console.log('📊 Type "debug" in console for helpers');
         console.log('🔧 Debug commands:');

@@ -813,6 +813,51 @@
                     </div>
                 </div>
 
+                <div style="border:2px solid #e2e8f0;border-radius:12px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                        <div style="font-weight:700;font-size:14px;color:#2d3748;">📈 Riwayat Konversi</div>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="openConversionEditor(null)">+ Tambah Riwayat</button>
+                    </div>
+                    <div id="conversionTotalInfo" style="font-size:11px;color:#718096;margin-top:6px;"></div>
+                    <div id="conversionList" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;"></div>
+
+                    <div id="conversionEditor" style="display:none;margin-top:12px;border-top:1px dashed #cbd5e0;padding-top:12px;">
+                        <input type="hidden" id="convEditIndex" value="">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tanggal *</label>
+                                <input type="date" id="convTanggal">
+                            </div>
+                            <div class="form-group">
+                                <label>Produk/Layanan *</label>
+                                <select id="convProduk">
+                                    <option value="Seminar">Seminar</option>
+                                    <option value="Pelatihan">Pelatihan</option>
+                                    <option value="Tes Minat Bakat">Tes Minat Bakat</option>
+                                    <option value="Tes Kesiapan Kerja">Tes Kesiapan Kerja</option>
+                                    <option value="Assesment Psikologi">Assesment Psikologi</option>
+                                    <option value="Konseling">Konseling</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nilai (opsional)</label>
+                                <input type="text" id="convNilai" placeholder="Rp 5.000.000">
+                            </div>
+                            <div class="form-group">
+                                <label>Catatan</label>
+                                <input type="text" id="convCatatan" placeholder="Catatan opsional">
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:6px;">
+                            <button type="button" class="btn btn-primary btn-xs" onclick="saveConversionEditor()">💾 Simpan</button>
+                            <button type="button" class="btn btn-outline btn-xs" onclick="closeConversionEditor()">Batal</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label>👤 Sales Assign</label>
@@ -848,6 +893,7 @@
         // ==================== STATE ====================
         let allData = [];
         let currentEditId = null;
+        let currentConversions = [];
 
         const COLUMNS = {
             company_name: 'x_01',
@@ -862,7 +908,8 @@
             sales_assign: 'x_10',
             join_date: 'x_11',
             notes: 'x_12',
-            lead_id: 'x_13'
+            lead_id: 'x_13',
+            conversion_history: 'x_14'
         };
 
         const HISTORY_COL = 'x_25';
@@ -878,7 +925,8 @@
             services_used: '📋 Layanan yang Telah Digunakan',
             sales_assign: '👤 Sales Assign',
             join_date: '📅 Join Since',
-            notes: '📝 Catatan'
+            notes: '📝 Catatan',
+            conversion_history: '📈 Riwayat Konversi'
         };
 
         // ==================== FEATURE CONFIG (kontrol_admin) ====================
@@ -1069,6 +1117,7 @@
                 join_date: row.x_11 || '',
                 notes: row.x_12 || '',
                 lead_id: row.x_13 || '',
+                conversion_history: safeParseJSON(row.x_14),
                 history: parseHistory(row[HISTORY_COL]),
                 _raw: row
             };
@@ -1087,6 +1136,7 @@
 
         function fieldToStr(key, val) {
             if (key === 'services_used') return (val || []).join(', ');
+            if (key === 'conversion_history') return JSON.stringify(val || []);
             return String(val ?? '');
         }
 
@@ -1167,7 +1217,7 @@
         function buildRow(data) {
             const row = {};
             for (const [key, col] of Object.entries(COLUMNS)) {
-                if (key === 'services_used') {
+                if (key === 'services_used' || key === 'conversion_history') {
                     row[col] = JSON.stringify(data[key] || []);
                 } else {
                     row[col] = data[key] || '';
@@ -1294,6 +1344,86 @@
         }
 
         // ==================== MODAL FORM ====================
+        // ---- Riwayat Konversi ----
+        function renderConversionList() {
+            const total = currentConversions.length;
+            const byProduk = {};
+            currentConversions.forEach(c => {
+                byProduk[c.produk] = (byProduk[c.produk] || 0) + 1;
+            });
+            const breakdown = Object.entries(byProduk).map(([p, n]) => `${p}: ${n}`).join(', ');
+            document.getElementById('conversionTotalInfo').textContent = total
+                ? `📈 ${total} total konversi${breakdown ? ' (' + breakdown + ')' : ''}`
+                : 'Belum ada riwayat konversi.';
+
+            const sorted = currentConversions.map((c, i) => ({ ...c, _i: i })).sort((a, b) => (b.tanggal || '').localeCompare(a.tanggal || ''));
+            const list = document.getElementById('conversionList');
+            list.innerHTML = sorted.map(c => `
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;">
+                    <div style="min-width:0;">
+                        <div style="font-weight:600;font-size:13px;color:#2d3748;">${escapeHtml(c.produk) || '-'} ${c.nilai ? `<span style="font-size:11px;font-weight:400;color:#718096;">· ${escapeHtml(c.nilai)}</span>` : ''}</div>
+                        <div style="font-size:11px;color:#718096;">🗓️ ${c.tanggal || '-'}${c.catatan ? ` &middot; ${escapeHtml(c.catatan)}` : ''}</div>
+                    </div>
+                    <div style="display:flex;gap:4px;flex-shrink:0;">
+                        <button type="button" class="btn btn-outline btn-xs" onclick="openConversionEditor(${c._i})">✏️</button>
+                        <button type="button" class="btn btn-danger btn-xs" onclick="deleteConversion(${c._i})">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openConversionEditor(index) {
+            document.getElementById('convEditIndex').value = index === null ? '' : index;
+            if (index === null) {
+                document.getElementById('convTanggal').value = new Date().toISOString().slice(0, 10);
+                document.getElementById('convProduk').value = 'Seminar';
+                document.getElementById('convNilai').value = '';
+                document.getElementById('convCatatan').value = '';
+            } else {
+                const c = currentConversions[index];
+                document.getElementById('convTanggal').value = c.tanggal || '';
+                document.getElementById('convProduk').value = c.produk || 'Seminar';
+                document.getElementById('convNilai').value = c.nilai || '';
+                document.getElementById('convCatatan').value = c.catatan || '';
+            }
+            document.getElementById('conversionEditor').style.display = 'block';
+        }
+
+        function closeConversionEditor() {
+            document.getElementById('conversionEditor').style.display = 'none';
+            document.getElementById('convEditIndex').value = '';
+        }
+
+        function saveConversionEditor() {
+            const tanggal = document.getElementById('convTanggal').value;
+            const produk = document.getElementById('convProduk').value;
+            if (!tanggal) {
+                showToast('Tanggal konversi wajib diisi', 'error');
+                document.getElementById('convTanggal').focus();
+                return;
+            }
+            const entry = {
+                tanggal: tanggal,
+                produk: produk,
+                nilai: document.getElementById('convNilai').value.trim(),
+                catatan: document.getElementById('convCatatan').value.trim()
+            };
+            const indexRaw = document.getElementById('convEditIndex').value;
+            if (indexRaw !== '') {
+                currentConversions[parseInt(indexRaw)] = entry;
+            } else {
+                currentConversions.push(entry);
+            }
+            renderConversionList();
+            closeConversionEditor();
+        }
+
+        function deleteConversion(index) {
+            if (!confirm(`Hapus riwayat konversi "${currentConversions[index].produk}" (${currentConversions[index].tanggal})?`)) return;
+            currentConversions.splice(index, 1);
+            renderConversionList();
+        }
+
         function openAddModal() {
             console.log('🏢 Opening Add Modal');
             currentEditId = null;
@@ -1315,6 +1445,9 @@
             document.getElementById('salesAssign').value = CURRENT_USER.username;
             document.getElementById('joinDate').value = '';
             document.getElementById('notes').value = '';
+            currentConversions = [];
+            renderConversionList();
+            closeConversionEditor();
 
             document.getElementById('formModal').classList.add('active');
             console.log('✅ Add Modal opened');
@@ -1334,6 +1467,7 @@
 
             currentEditId = id;
             document.getElementById('editId').value = id;
+            document.getElementById('lead_id').value = item.lead_id || '';
             document.getElementById('formModalTitle').textContent = `✏️ Edit: ${item.company_name}`;
             document.getElementById('deleteBtn').style.display = canUse('delete') ? 'inline-flex' : 'none';
             document.getElementById('saveBtn').textContent = '💾 Update';
@@ -1355,6 +1489,10 @@
             document.querySelectorAll('.service-check').forEach(cb => {
                 cb.checked = services.includes(cb.value);
             });
+
+            currentConversions = JSON.parse(JSON.stringify(item.conversion_history || []));
+            renderConversionList();
+            closeConversionEditor();
 
             document.getElementById('formModal').classList.add('active');
             console.log('✅ Edit Modal opened');
@@ -1395,7 +1533,8 @@
                 sales_assign: document.getElementById('salesAssign').value.trim(),
                 join_date: document.getElementById('joinDate').value,
                 notes: document.getElementById('notes').value.trim(),
-                lead_id: document.getElementById('lead_id').value || ''
+                lead_id: document.getElementById('lead_id').value || '',
+                conversion_history: currentConversions
             };
 
             console.log('📦 Data to save:', data);
