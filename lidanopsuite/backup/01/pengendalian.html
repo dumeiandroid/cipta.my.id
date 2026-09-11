@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perencanaan - PDCA Internal</title>
+    <title>Pengendalian - PDCA Internal</title>
     <script>
         // ==================== AUTH GUARD (Sales Tools Suite - SSO) ====================
         const AUTH_SESSION_KEY = 'lidan_sales_session';
@@ -73,7 +73,7 @@
         }
 
         .header h1 .pdca-badge {
-            background: #ed8936;
+            background: #fc8181;
             color: white;
             font-size: 11px;
             padding: 2px 12px;
@@ -235,7 +235,7 @@
 
         .list-header {
             display: grid;
-            grid-template-columns: 60px 1.2fr 1fr 0.8fr 1fr 0.8fr 0.8fr 160px;
+            grid-template-columns: 60px 1.2fr 0.8fr 1fr 0.8fr 0.8fr 160px;
             gap: 8px;
             padding: 14px 20px;
             background: #f7fafc;
@@ -247,7 +247,7 @@
 
         .list-item {
             display: grid;
-            grid-template-columns: 60px 1.2fr 1fr 0.8fr 1fr 0.8fr 0.8fr 160px;
+            grid-template-columns: 60px 1.2fr 0.8fr 1fr 0.8fr 0.8fr 160px;
             gap: 8px;
             padding: 14px 20px;
             border-bottom: 1px solid #edf2f7;
@@ -298,21 +298,17 @@
             font-weight: 600;
         }
 
-        .badge-status.draft {
-            background: #e2e8f0;
-            color: #4a5568;
+        .badge-status.open {
+            background: #fefcbf;
+            color: #975a16;
         }
-        .badge-status.active {
+        .badge-status.in_progress {
             background: #bee3f8;
             color: #2a69ac;
         }
-        .badge-status.completed {
+        .badge-status.resolved {
             background: #c6f6d5;
             color: #276749;
-        }
-        .badge-status.deviated {
-            background: #fefcbf;
-            color: #975a16;
         }
 
         .empty-state {
@@ -512,9 +508,9 @@
             letter-spacing: 0.5px;
         }
 
-        .stats-summary .stat-card .number.active { color: #4299e1; }
-        .stats-summary .stat-card .number.completed { color: #48bb78; }
-        .stats-summary .stat-card .number.deviated { color: #ed8936; }
+        .stats-summary .stat-card .number.open { color: #ed8936; }
+        .stats-summary .stat-card .number.in_progress { color: #4299e1; }
+        .stats-summary .stat-card .number.resolved { color: #48bb78; }
 
         @media (max-width: 992px) {
             .list-header {
@@ -581,45 +577,6 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
-
-        /* Reference selector styling */
-        .ref-selector {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .ref-selector input {
-            flex: 1;
-        }
-        .ref-selector .btn-sm {
-            flex-shrink: 0;
-        }
-
-        .stage-chip {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            user-select: none;
-            border: 1px solid transparent;
-            transition: transform 0.1s;
-        }
-        .stage-chip:hover { transform: scale(1.12); }
-        .stage-chip.chip-pending {
-            background: #feebc8;
-            color: #9c4221;
-            border-color: #fbd38d;
-        }
-        .stage-chip.chip-done {
-            background: #c6f6d5;
-            color: #22543d;
-            border-color: #9ae6b4;
-        }
     </style>
 </head>
 <body>
@@ -628,15 +585,15 @@
         <!-- HEADER -->
         <div class="header">
             <h1>
-                📋 Perencanaan
-                <span class="pdca-badge">PLAN</span>
+                🎯 Pengendalian
+                <span class="pdca-badge">CHECK & ACT</span>
             </h1>
             <div class="header-actions">
                 <div class="search-box">
                     <span class="icon">🔍</span>
-                    <input type="text" id="searchInput" placeholder="Cari rencana..." oninput="renderList()">
+                    <input type="text" id="searchInput" placeholder="Cari pengendalian..." oninput="renderList()">
                 </div>
-                <button class="btn btn-primary" onclick="openAddModal()">➕ Buat Rencana</button>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ Buat Pengendalian</button>
                 <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
                 <button class="btn btn-outline btn-sm" onclick="document.getElementById('infoModal').classList.add('active')" title="Info & Panduan">ℹ️ Info</button>
                 <div class="user-badge" id="userBadge">
@@ -652,19 +609,19 @@
         <div class="stats-summary" id="statsSummary">
             <div class="stat-card">
                 <div class="number" id="statTotal">0</div>
-                <div class="label">Total Rencana</div>
+                <div class="label">Total Pengendalian</div>
             </div>
             <div class="stat-card">
-                <div class="number active" id="statActive">0</div>
-                <div class="label">🔄 Aktif</div>
+                <div class="number open" id="statOpen">0</div>
+                <div class="label">🔶 Open</div>
             </div>
             <div class="stat-card">
-                <div class="number completed" id="statCompleted">0</div>
-                <div class="label">✅ Selesai</div>
+                <div class="number in_progress" id="statInProgress">0</div>
+                <div class="label">🔄 In Progress</div>
             </div>
             <div class="stat-card">
-                <div class="number deviated" id="statDeviated">0</div>
-                <div class="label">⚠️ Menyimpang</div>
+                <div class="number resolved" id="statResolved">0</div>
+                <div class="label">✅ Resolved</div>
             </div>
         </div>
 
@@ -672,19 +629,18 @@
         <div class="list-container">
             <div class="list-header">
                 <span>ID</span>
-                <span>Pekerjaan / Target</span>
-                <span>Assignee</span>
-                <span>Mulai</span>
-                <span>Target Selesai</span>
+                <span>Pekerjaan</span>
+                <span>Pelaksanaan Ref</span>
+                <span>Akar Masalah</span>
                 <span>Status</span>
-                <span>Progress</span>
+                <span>Tindakan</span>
                 <span>Aksi</span>
             </div>
             <div id="listBody">
                 <div class="empty-state">
-                    <div class="icon">📋</div>
-                    <h3>Belum ada rencana</h3>
-                    <p>Klik "Buat Rencana" untuk mulai merencanakan pekerjaan</p>
+                    <div class="icon">🎯</div>
+                    <h3>Belum ada catatan pengendalian</h3>
+                    <p>Klik "Buat Pengendalian" untuk mencatat deviasi dan tindakan korektif</p>
                 </div>
             </div>
         </div>
@@ -694,36 +650,35 @@
     <div class="modal-overlay" id="infoModal">
         <div class="modal">
             <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
-            <div class="modal-title">📋 Panduan Perencanaan (PLAN)</div>
+            <div class="modal-title">🎯 Panduan Pengendalian (CHECK & ACT)</div>
             <div class="modal-body">
-                <p><strong>Perencanaan</strong> adalah tahap kedua dalam siklus PDCA. Di sini kita
-                mengambil satu item dari <strong>Analisa Pekerjaan</strong> (SOP/cara kerja),
-                lalu menetapkan siapa yang akan mengerjakan, kapan mulai, target selesai,
-                dan target/goal yang diharapkan.</p>
+                <p><strong>Pengendalian</strong> adalah tahap keempat dalam siklus PDCA. Ini adalah
+                <strong>tahap kondisional</strong> — hanya muncul jika ada deviasi/masalah dalam
+                Pelaksanaan. Di sini kita identifikasi akar masalah, tentukan tindakan korektif,
+                dan tetapkan penanggung jawab untuk menindaklanjuti.</p>
 
-                <h4 style="margin:4px 0 2px;">📌 Field-field Perencanaan</h4>
+                <h4 style="margin:4px 0 2px;">📌 Field-field Pengendalian</h4>
                 <ul style="margin:0 0 8px 18px; line-height:1.9;">
-                    <li><b>Referensi Analisa</b> — ID dari analisa_pekerjaan yang menjadi acuan SOP</li>
-                    <li><b>Nama Pekerjaan</b> — judul/deskripsi pekerjaan (bisa sama dengan analisa)</li>
-                    <li><b>Assignee</b> — orang yang ditugaskan mengerjakan</li>
-                    <li><b>Tanggal Mulai</b> — kapan pekerjaan mulai dikerjakan</li>
-                    <li><b>Target Selesai</b> — deadline yang diharapkan</li>
-                    <li><b>Target / Goal</b> — hasil yang diharapkan (angka, kualitas, atau output)</li>
-                    <li><b>Keterangan</b> — catatan tambahan</li>
+                    <li><b>Referensi Pelaksanaan</b> — ID dari pelaksanaan yang bermasalah</li>
+                    <li><b>Nama Pekerjaan</b> — judul/deskripsi pekerjaan</li>
+                    <li><b>Jenis Deviasi</b> — kategori masalah (telat, kualitas rendah, dll)</li>
+                    <li><b>Akar Masalah</b> — penyebab utama deviasi</li>
+                    <li><b>Tindakan Korektif</b> — apa yang akan dilakukan</li>
+                    <li><b>Penanggung Jawab</b> — siapa yang menindaklanjuti</li>
+                    <li><b>Status</b> — Open / In Progress / Resolved</li>
                 </ul>
 
-                <h4 style="margin:4px 0 2px;">🚦 Status Rencana</h4>
+                <h4 style="margin:4px 0 2px;">🚦 Status Pengendalian</h4>
                 <ul style="margin:0 0 8px 18px; line-height:1.9;">
-                    <li>📝 <b>Draft</b> — masih disusun, belum aktif</li>
-                    <li>🔄 <b>Aktif</b> — sedang berjalan</li>
-                    <li>✅ <b>Selesai</b> — sudah selesai dikerjakan</li>
-                    <li>⚠️ <b>Menyimpang</b> — ada deviasi dari rencana (trigger pengendalian)</li>
+                    <li>🔶 <b>Open</b> — masalah baru teridentifikasi, belum ditangani</li>
+                    <li>🔄 <b>In Progress</b> — sedang dalam penanganan</li>
+                    <li>✅ <b>Resolved</b> — masalah sudah selesai ditangani</li>
                 </ul>
 
-                <div style="background:#fefcbf;border-left:4px solid #ed8936;border-radius:8px;padding:10px 14px;font-size:13px;">
-                    💡 <b>Tips:</b> Rencana yang "Menyimpang" akan otomatis memicu pembuatan
-                    catatan Pengendalian. Pastikan target/goal ditulis jelas agar mudah dievaluasi
-                    nanti di Pelaksanaan &amp; Pengendalian.
+                <div style="background:#faf5ff;border-left:4px solid #9f7aea;border-radius:8px;padding:10px 14px;font-size:13px;">
+                    💡 <b>Tips:</b> Setelah pengendalian selesai (Resolved), hasilnya harus
+                    kembali ke Pelaksanaan untuk siklus berikutnya. Ini adalah bagian penting
+                    dari proses perbaikan berkelanjutan (Continuous Improvement).
                 </div>
             </div>
         </div>
@@ -738,18 +693,18 @@
         </div>
     </div>
 
-    <!-- MODAL REFERENCE PICKER -->
+    <!-- MODAL REFERENCE PICKER (Pelaksanaan) -->
     <div class="modal-overlay" id="refPickerModal">
         <div class="modal" style="max-width:700px;">
             <button class="modal-close" onclick="closeModal('refPickerModal')">✕</button>
-            <div class="modal-title">🗂️ Pilih Referensi Analisa Pekerjaan</div>
+            <div class="modal-title">⚙️ Pilih Referensi Pelaksanaan</div>
             <div class="modal-body">
                 <div class="form-group">
-                    <input type="text" id="refSearchInput" placeholder="Cari analisa..." oninput="renderRefList()" style="padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;">
+                    <input type="text" id="refSearchInput" placeholder="Cari pelaksanaan..." oninput="renderRefList()" style="padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;">
                 </div>
                 <div id="refListContainer" style="max-height:400px;overflow-y:auto;">
                     <div class="empty-state" style="padding:20px;">
-                        <div class="icon">🗂️</div>
+                        <div class="icon">⚙️</div>
                         <h3>Memuat data...</h3>
                     </div>
                 </div>
@@ -763,21 +718,21 @@
     <!-- MODAL FORM -->
     <div class="modal-overlay" id="formModal">
         <div class="modal">
-            <button class="modal-close" onclick="cancelFormModal()">✕</button>
-            <div class="modal-title" id="formModalTitle">📋 Buat Rencana</div>
+            <button class="modal-close" onclick="closeModal('formModal')">✕</button>
+            <div class="modal-title" id="formModalTitle">🎯 Buat Pengendalian</div>
             <div class="modal-body">
                 <input type="hidden" id="editId" value="">
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>📌 Referensi Analisa Pekerjaan</label>
-                        <div class="ref-selector">
-                            <input type="text" id="refAnalisaId" placeholder="ID Analisa (contoh: 1)" style="flex:0 0 80px;">
-                            <input type="text" id="refAnalisaName" placeholder="Nama pekerjaan dari analisa" readonly style="background:#edf2f7;flex:1;">
+                        <label>⚙️ Referensi Pelaksanaan</label>
+                        <div class="ref-selector" style="display:flex;gap:8px;align-items:center;">
+                            <input type="text" id="refExecutionId" placeholder="ID Pelaksanaan" style="flex:0 0 80px;">
+                            <input type="text" id="refExecutionName" placeholder="Nama pekerjaan dari pelaksanaan" readonly style="background:#edf2f7;flex:1;">
                             <button class="btn btn-primary btn-sm" type="button" onclick="openRefPicker()">📂 Pilih</button>
                             <button class="btn btn-outline btn-sm" type="button" onclick="clearRef()">✕</button>
                         </div>
-                        <small style="color:#a0aec0;">Pilih dari Analisa Pekerjaan sebagai acuan SOP</small>
+                        <small style="color:#a0aec0;">Pilih dari Pelaksanaan yang bermasalah (status deviated)</small>
                     </div>
                     <div class="form-group">
                         <label>📌 Nama Pekerjaan *</label>
@@ -787,34 +742,46 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>👤 Assignee *</label>
-                        <input type="text" id="assignee" placeholder="Nama penanggung jawab" required>
+                        <label>📂 Jenis Deviasi</label>
+                        <select id="deviationType">
+                            <option value="telat">⏰ Telat dari Jadwal</option>
+                            <option value="kualitas_rendah">📉 Kualitas di Bawah Target</option>
+                            <option value="biaya_lebih">💰 Biaya Melebihi Anggaran</option>
+                            <option value="scope_berubah">📋 Scope Berubah</option>
+                            <option value="sumber_daya">🧰 Masalah Sumber Daya</option>
+                            <option value="komunikasi">💬 Masalah Komunikasi</option>
+                            <option value="lainnya">📌 Lainnya</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>📂 Status</label>
                         <select id="status">
-                            <option value="draft">📝 Draft</option>
-                            <option value="active" selected>🔄 Aktif</option>
-                            <option value="completed">✅ Selesai</option>
-                            <option value="deviated">⚠️ Menyimpang</option>
+                            <option value="open" selected>🔶 Open</option>
+                            <option value="in_progress">🔄 In Progress</option>
+                            <option value="resolved">✅ Resolved</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>📅 Tanggal Mulai *</label>
-                        <input type="date" id="startDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label>📅 Target Selesai *</label>
-                        <input type="date" id="targetDate" required>
-                    </div>
+                <div class="form-group">
+                    <label>🔍 Akar Masalah</label>
+                    <textarea id="rootCause" placeholder="Jelaskan penyebab utama deviasi..." rows="2"></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label>🎯 Target / Goal</label>
-                    <textarea id="targetGoal" placeholder="Target yang diharapkan (angka, kualitas, atau output)..." rows="2"></textarea>
+                    <label>🛠️ Tindakan Korektif</label>
+                    <textarea id="correctiveAction" placeholder="Apa yang akan dilakukan untuk memperbaiki?" rows="2"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>👤 Penanggung Jawab</label>
+                        <input type="text" id="responsiblePerson" placeholder="Nama penanggung jawab" required>
+                    </div>
+                    <div class="form-group">
+                        <label>📅 Target Selesai</label>
+                        <input type="date" id="targetResolveDate">
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -823,9 +790,9 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-danger" id="deleteBtn" onclick="deletePlan()" style="display:none;">🗑️ Hapus</button>
-                    <button class="btn btn-outline" onclick="cancelFormModal()">Batal</button>
-                    <button class="btn btn-primary" id="saveBtn" onclick="savePlan()">💾 Simpan</button>
+                    <button class="btn btn-danger" id="deleteBtn" onclick="deleteControl()" style="display:none;">🗑️ Hapus</button>
+                    <button class="btn btn-outline" onclick="closeModal('formModal')">Batal</button>
+                    <button class="btn btn-primary" id="saveBtn" onclick="saveControl()">💾 Simpan</button>
                 </div>
             </div>
         </div>
@@ -834,50 +801,50 @@
     <script>
         // ==================== CONFIG ====================
         const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
-        const TABLE = 'perencanaan';
-        const REF_TABLE = 'analisa_pekerjaan';
+        const TABLE = 'pengendalian';
+        const EXEC_TABLE = 'pelaksanaan';
         const SECRET = 'admin';
 
         // ==================== STATE ====================
         let allData = [];
-        let refData = [];
+        let execData = [];
         let currentEditId = null;
-        let selectedRefId = null;
+        let selectedExecId = null;
 
         const COLUMNS = {
-            ref_analisa_id: 'x_01',
-            ref_analisa_name: 'x_02',
+            ref_execution_id: 'x_01',
+            ref_execution_name: 'x_02',
             job_name: 'x_03',
-            assignee: 'x_04',
-            status: 'x_05',
-            start_date: 'x_06',
-            target_date: 'x_07',
-            target_goal: 'x_08',
-            notes: 'x_09'
+            deviation_type: 'x_04',
+            root_cause: 'x_05',
+            corrective_action: 'x_06',
+            responsible_person: 'x_07',
+            status: 'x_08',
+            target_resolve_date: 'x_09',
+            notes: 'x_10'
         };
 
         const HISTORY_COL = 'x_25';
         const FIELD_LABELS = {
-            ref_analisa_id: '📌 Referensi Analisa ID',
-            ref_analisa_name: '📌 Referensi Analisa Nama',
+            ref_execution_id: '⚙️ Referensi Pelaksanaan ID',
+            ref_execution_name: '⚙️ Referensi Pelaksanaan Nama',
             job_name: '📌 Nama Pekerjaan',
-            assignee: '👤 Assignee',
+            deviation_type: '📂 Jenis Deviasi',
+            root_cause: '🔍 Akar Masalah',
+            corrective_action: '🛠️ Tindakan Korektif',
+            responsible_person: '👤 Penanggung Jawab',
             status: '📂 Status',
-            start_date: '📅 Tanggal Mulai',
-            target_date: '📅 Target Selesai',
-            target_goal: '🎯 Target / Goal',
+            target_resolve_date: '📅 Target Selesai',
             notes: '📝 Keterangan'
         };
 
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('📋 Perencanaan Started');
+            console.log('🎯 Pengendalian Started');
             console.log('📡 Table:', TABLE);
             initUserBadge();
-            Promise.all([loadRefData(), loadExecSummary()]).then(() => {
-                refreshData();
-                handleUrlParams();
-            });
+            loadExecData();
+            refreshData();
         });
 
         function initUserBadge() {
@@ -891,7 +858,7 @@
         }
 
         function ownsItem(item) {
-            return isSupervisor(CURRENT_USER) || item.assignee === CURRENT_USER.username;
+            return isSupervisor(CURRENT_USER) || item.responsible_person === CURRENT_USER.username;
         }
 
         // ==================== API HELPERS ====================
@@ -925,89 +892,28 @@
             }
         }
 
-        // ==================== REF DATA ====================
-        async function loadRefData() {
+        // ==================== EXEC DATA ====================
+        async function loadExecData() {
             try {
-                const result = await apiFetch(REF_TABLE, '');
+                const result = await apiFetch(EXEC_TABLE, '');
                 if (result.success && result.data) {
-                    refData = result.data.map(row => ({
+                    execData = result.data.map(row => ({
                         id_x: row.id_x,
-                        job_name: row.x_01 || '',
-                        category: row.x_02 || '',
-                        difficulty: row.x_03 || '',
-                        status: row.x_09 || 'draft'
+                        job_name: row.x_03 || '',
+                        executor: row.x_04 || '',
+                        status: row.x_05 || 'on_track'
                     }));
                 }
-                console.log('📚 Loaded ref data:', refData.length);
+                console.log('📚 Loaded execution data:', execData.length);
             } catch (e) {
-                console.error('❌ Failed to load ref data:', e);
-                refData = [];
+                console.error('❌ Failed to load execution data:', e);
+                execData = [];
             }
         }
 
-        function getRefName(id) {
-            const found = refData.find(r => r.id_x === id);
+        function getExecName(id) {
+            const found = execData.find(r => r.id_x === id);
             return found ? found.job_name : null;
-        }
-
-        function renderExecChip(planId) {
-            const found = execSummaryData.find(e => e.ref_plan_id === planId);
-            if (!found) return '';
-            const cls = found.status === 'terlaksana' ? 'chip-done' : 'chip-pending';
-            const title = `Pelaksanaan #${found.id_x}: ${found.status === 'terlaksana' ? 'Terlaksana' : 'Perlu Pengendalian'}`;
-            return `<br><span style="display:inline-flex;gap:4px;margin-top:4px;"><span class="stage-chip ${cls}" title="${escapeHtml(title)}" onclick="event.stopPropagation(); window.location.href='pelaksanaan.html?ref_plan_id=${planId}'">3</span></span>`;
-        }
-
-        // ==================== EXEC SUMMARY (untuk chip status Pelaksanaan) ====================
-        let execSummaryData = [];
-        async function loadExecSummary() {
-            try {
-                const result = await apiFetch('pelaksanaan', '');
-                if (result.success && result.data) {
-                    execSummaryData = result.data.map(row => ({
-                        id_x: row.id_x,
-                        ref_plan_id: parseInt(row.x_01) || null,
-                        status: row.x_05 || 'terlaksana'
-                    }));
-                }
-                console.log('📚 Loaded exec summary:', execSummaryData.length);
-            } catch (e) {
-                console.error('❌ Failed to load exec summary:', e);
-                execSummaryData = [];
-            }
-        }
-
-        // ==================== DEEP LINK (dari analisa_pekerjaan.html atau pengendalian.html) ====================
-        function handleUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            const editPlanId = params.get('edit_plan_id');
-            const refAnalisaId = params.get('ref_analisa_id');
-            if (editPlanId) {
-                setTimeout(() => {
-                    openEditModal(parseInt(editPlanId));
-                }, 300);
-            } else if (refAnalisaId) {
-                setTimeout(() => {
-                    openAddModal();
-                    const ref = refData.find(r => String(r.id_x) === String(refAnalisaId));
-                    document.getElementById('refAnalisaId').value = refAnalisaId;
-                    document.getElementById('refAnalisaName').value = ref ? ref.job_name : (params.get('ref_analisa_name') || '');
-                    document.getElementById('jobName').value = ref ? ref.job_name : (params.get('ref_analisa_name') || '');
-                }, 300);
-            }
-        }
-
-        function cancelFormModal() {
-            closeModal('formModal');
-            const params = new URLSearchParams(window.location.search);
-            const refAnalisaId = params.get('ref_analisa_id');
-            if (refAnalisaId) {
-                showToast('↩️ Kembali ke Analisa Pekerjaan...', 'success');
-                setTimeout(() => {
-                    window.location.href = `analisa_pekerjaan.html?ref_id=${refAnalisaId}`;
-                }, 900);
-            }
-            // edit_plan_id (dari pengendalian) tidak dipaksa balik otomatis — cukup tutup modal
         }
 
         // ==================== DATA CRUD ====================
@@ -1017,7 +923,7 @@
                 if (result.success && result.data) {
                     allData = result.data.map(row => parseRow(row));
                     if (!isSupervisor(CURRENT_USER) && !isAdmin(CURRENT_USER)) {
-                        allData = allData.filter(item => item.assignee === CURRENT_USER.username);
+                        allData = allData.filter(item => item.responsible_person === CURRENT_USER.username);
                     }
                     return allData;
                 }
@@ -1033,15 +939,16 @@
         function parseRow(row) {
             return {
                 id_x: row.id_x,
-                ref_analisa_id: parseInt(row.x_01) || null,
-                ref_analisa_name: row.x_02 || '',
+                ref_execution_id: parseInt(row.x_01) || null,
+                ref_execution_name: row.x_02 || '',
                 job_name: row.x_03 || '',
-                assignee: row.x_04 || '',
-                status: row.x_05 || 'draft',
-                start_date: row.x_06 || '',
-                target_date: row.x_07 || '',
-                target_goal: row.x_08 || '',
-                notes: row.x_09 || '',
+                deviation_type: row.x_04 || 'telat',
+                root_cause: row.x_05 || '',
+                corrective_action: row.x_06 || '',
+                responsible_person: row.x_07 || '',
+                status: row.x_08 || 'open',
+                target_resolve_date: row.x_09 || '',
+                notes: row.x_10 || '',
                 history: parseHistory(row[HISTORY_COL]),
                 _raw: row
             };
@@ -1130,13 +1037,13 @@
             return row;
         }
 
-        async function createPlan(data) {
+        async function createControl(data) {
             const row = buildRow(data);
             row[HISTORY_COL] = JSON.stringify(buildHistory(null, data, 'created'));
             return await apiFetch(TABLE, '', { method: 'POST', body: JSON.stringify(row) });
         }
 
-        async function updatePlan(id, data) {
+        async function updateControl(id, data) {
             const row = buildRow(data);
             const oldItem = allData.find(d => d.id_x === id);
             const newHistory = buildHistory(oldItem, data, 'updated');
@@ -1144,7 +1051,7 @@
             return await apiFetch(TABLE, `&id_x=${id}`, { method: 'PUT', body: JSON.stringify(row) });
         }
 
-        async function deletePlanApi(id) {
+        async function deleteControlApi(id) {
             return await apiFetch(TABLE, `&id_x=${id}`, { method: 'DELETE' });
         }
 
@@ -1158,18 +1065,20 @@
             const search = document.getElementById('refSearchInput').value.toLowerCase().trim();
             const container = document.getElementById('refListContainer');
 
-            const filtered = refData.filter(item =>
-                String(item.id_x).includes(search) ||
-                item.job_name.toLowerCase().includes(search) ||
-                item.category.toLowerCase().includes(search)
+            // Hanya tampilkan yang statusnya deviated atau late (yang bermasalah)
+            const filtered = execData.filter(item =>
+                (item.status === 'deviated' || item.status === 'late') &&
+                (String(item.id_x).includes(search) ||
+                 item.job_name.toLowerCase().includes(search) ||
+                 item.executor.toLowerCase().includes(search))
             );
 
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state" style="padding:20px;">
-                        <div class="icon">🗂️</div>
+                        <div class="icon">⚙️</div>
                         <h3>Tidak ada data</h3>
-                        <p>${refData.length === 0 ? 'Belum ada data di Analisa Pekerjaan' : 'Coba dengan kata kunci lain'}</p>
+                        <p>${execData.length === 0 ? 'Belum ada data di Pelaksanaan' : 'Tidak ada pelaksanaan dengan status deviated atau late'}</p>
                     </div>
                 `;
                 return;
@@ -1181,24 +1090,24 @@
                      onclick="selectRef(${item.id_x}, '${escapeHtml(item.job_name)}')">
                     <div>
                         <strong>#${item.id_x}</strong> - ${escapeHtml(item.job_name)}
-                        <br><span style="font-size:11px;color:#a0aec0;">${escapeHtml(item.category)} | Level: ${escapeHtml(item.difficulty)}</span>
+                        <br><span style="font-size:11px;color:#a0aec0;">Executor: ${escapeHtml(item.executor)} | Status: ${item.status === 'deviated' ? '❌ Menyimpang' : '⚠️ Telat'}</span>
                     </div>
-                    <span class="badge-status ${item.status}">${item.status === 'siap' ? '✅ Siap' : item.status === 'draft' ? '📝 Draft' : '🔄 Revisi'}</span>
+                    <span class="badge-status ${item.status}">${item.status === 'deviated' ? '❌ Menyimpang' : '⚠️ Telat'}</span>
                 </div>
             `).join('');
         }
 
         function selectRef(id, name) {
-            selectedRefId = id;
-            document.getElementById('refAnalisaId').value = id;
-            document.getElementById('refAnalisaName').value = name;
+            selectedExecId = id;
+            document.getElementById('refExecutionId').value = id;
+            document.getElementById('refExecutionName').value = name;
             closeModal('refPickerModal');
         }
 
         function clearRef() {
-            selectedRefId = null;
-            document.getElementById('refAnalisaId').value = '';
-            document.getElementById('refAnalisaName').value = '';
+            selectedExecId = null;
+            document.getElementById('refExecutionId').value = '';
+            document.getElementById('refExecutionName').value = '';
         }
 
         // ==================== RENDER ====================
@@ -1206,10 +1115,11 @@
             const search = document.getElementById('searchInput').value.toLowerCase().trim();
             const filtered = allData.filter(item =>
                 item.job_name.toLowerCase().includes(search) ||
-                item.assignee.toLowerCase().includes(search) ||
-                item.target_goal.toLowerCase().includes(search) ||
+                item.responsible_person.toLowerCase().includes(search) ||
+                item.root_cause.toLowerCase().includes(search) ||
+                item.corrective_action.toLowerCase().includes(search) ||
                 item.notes.toLowerCase().includes(search) ||
-                String(item.ref_analisa_id).includes(search)
+                String(item.ref_execution_id).includes(search)
             );
 
             const body = document.getElementById('listBody');
@@ -1220,71 +1130,52 @@
             if (filtered.length === 0) {
                 body.innerHTML = `
                     <div class="empty-state">
-                        <div class="icon">${allData.length === 0 ? '📋' : '🔍'}</div>
-                        <h3>${allData.length === 0 ? 'Belum ada rencana' : 'Tidak ditemukan'}</h3>
-                        <p>${allData.length === 0 ? 'Klik "Buat Rencana" untuk mulai merencanakan pekerjaan' : 'Coba dengan kata kunci lain'}</p>
+                        <div class="icon">${allData.length === 0 ? '🎯' : '🔍'}</div>
+                        <h3>${allData.length === 0 ? 'Belum ada catatan pengendalian' : 'Tidak ditemukan'}</h3>
+                        <p>${allData.length === 0 ? 'Klik "Buat Pengendalian" untuk mencatat deviasi dan tindakan korektif' : 'Coba dengan kata kunci lain'}</p>
                     </div>
                 `;
                 return;
             }
 
             const statusLabels = {
-                'draft': '📝 Draft',
-                'active': '🔄 Aktif',
-                'completed': '✅ Selesai',
-                'deviated': '⚠️ Menyimpang'
+                'open': '🔶 Open',
+                'in_progress': '🔄 In Progress',
+                'resolved': '✅ Resolved'
+            };
+
+            const deviationLabels = {
+                'telat': '⏰ Telat dari Jadwal',
+                'kualitas_rendah': '📉 Kualitas Rendah',
+                'biaya_lebih': '💰 Biaya Melebihi Anggaran',
+                'scope_berubah': '📋 Scope Berubah',
+                'sumber_daya': '🧰 Masalah Sumber Daya',
+                'komunikasi': '💬 Masalah Komunikasi',
+                'lainnya': '📌 Lainnya'
             };
 
             body.innerHTML = filtered.map(item => {
-                const startDate = item.start_date ? new Date(item.start_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
-                const targetDate = item.target_date ? new Date(item.target_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
-
-                // Progress indicator (based on dates)
-                let progress = 0;
-                if (item.start_date && item.target_date) {
-                    const start = new Date(item.start_date);
-                    const target = new Date(item.target_date);
-                    const now = new Date();
-                    if (now < start) progress = 0;
-                    else if (now > target) progress = 100;
-                    else {
-                        const total = target - start;
-                        const elapsed = now - start;
-                        progress = Math.min(100, Math.round((elapsed / total) * 100));
-                    }
-                }
-                if (item.status === 'completed') progress = 100;
-                if (item.status === 'deviated') progress = Math.min(progress, 80);
-
-                const progressColor = progress >= 100 ? '#48bb78' : progress >= 70 ? '#48bb78' : progress >= 40 ? '#ed8936' : '#fc8181';
+                const targetDate = item.target_resolve_date ? new Date(item.target_resolve_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
 
                 return `
                     <div class="list-item">
                         <div class="id">#${item.id_x}</div>
                         <div class="field">
                             <span class="label">Pekerjaan:</span> ${escapeHtml(item.job_name) || '-'}
-                            ${item.ref_analisa_id ? `<br><span style="font-size:10px;color:#718096;">Ref: #${item.ref_analisa_id} ${escapeHtml(item.ref_analisa_name) || ''}</span>` : ''}
-                            ${renderExecChip(item.id_x)}
+                            ${item.ref_execution_id ? `<br><span style="font-size:10px;color:#718096;">Ref Pelaksanaan: #${item.ref_execution_id}</span>` : ''}
                         </div>
-                        <div class="field"><span class="label">Assignee:</span> ${escapeHtml(item.assignee) || '-'}</div>
-                        <div class="field"><span class="label">Mulai:</span> ${startDate}</div>
-                        <div class="field"><span class="label">Target:</span> ${targetDate}</div>
+                        <div class="field"><span class="label">Ref Pelaksanaan:</span> ${item.ref_execution_id ? `#${item.ref_execution_id}` : '-'}</div>
+                        <div class="field"><span class="label">Akar Masalah:</span> ${escapeHtml(item.root_cause) ? item.root_cause.substring(0, 25) + (item.root_cause.length > 25 ? '...' : '') : '-'}</div>
                         <div class="field"><span class="label">Status:</span> <span class="badge-status ${item.status}">${statusLabels[item.status] || item.status}</span></div>
                         <div class="field">
-                            <span class="label">Progress:</span>
-                            <div style="display:flex;align-items:center;gap:6px;">
-                                <div style="flex:1;height:6px;background:#edf2f7;border-radius:4px;overflow:hidden;min-width:40px;">
-                                    <div style="width:${progress}%;height:100%;background:${progressColor};border-radius:4px;transition:width 0.3s;"></div>
-                                </div>
-                                <span style="font-size:10px;font-weight:600;color:#4a5568;">${progress}%</span>
-                            </div>
+                            <span class="label">Tindakan:</span> ${escapeHtml(item.corrective_action) ? item.corrective_action.substring(0, 20) + (item.corrective_action.length > 20 ? '...' : '') : '-'}
+                            ${item.target_resolve_date ? `<br><span style="font-size:10px;color:#718096;">Target: ${targetDate}</span>` : ''}
                         </div>
                         <div class="actions">
                             <button class="btn btn-outline btn-xs" onclick="showHistory(${item.id_x})" title="Riwayat perubahan">🕘${item.history && item.history.length ? ` <span style="font-size:9px;">${item.history.length}</span>` : ''}</button>
                             ${ownsItem(item) ? `<button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>` : ''}
                             ${isAdmin(CURRENT_USER) ? `<button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>` : ''}
                             ${(!ownsItem(item) && !isAdmin(CURRENT_USER)) ? `<span style="font-size:10px;color:#a0aec0;">🔒 milik lain</span>` : ''}
-                            ${item.status === 'deviated' ? `<span style="font-size:10px;color:#ed8936;">⚠️</span>` : ''}
                         </div>
                     </div>
                 `;
@@ -1293,14 +1184,14 @@
 
         function updateStats() {
             const total = allData.length;
-            const active = allData.filter(d => d.status === 'active').length;
-            const completed = allData.filter(d => d.status === 'completed').length;
-            const deviated = allData.filter(d => d.status === 'deviated').length;
+            const open = allData.filter(d => d.status === 'open').length;
+            const inProgress = allData.filter(d => d.status === 'in_progress').length;
+            const resolved = allData.filter(d => d.status === 'resolved').length;
 
             document.getElementById('statTotal').textContent = total;
-            document.getElementById('statActive').textContent = active;
-            document.getElementById('statCompleted').textContent = completed;
-            document.getElementById('statDeviated').textContent = deviated;
+            document.getElementById('statOpen').textContent = open;
+            document.getElementById('statInProgress').textContent = inProgress;
+            document.getElementById('statResolved').textContent = resolved;
         }
 
         function escapeHtml(text) {
@@ -1312,34 +1203,34 @@
 
         async function refreshData() {
             showToast('🔄 Memuat data...', 'info');
-            await loadRefData();
+            await loadExecData();
             await fetchData();
             renderList();
-            showToast(`✅ ${allData.length} rencana dimuat`, 'success');
+            showToast(`✅ ${allData.length} pengendalian dimuat`, 'success');
         }
 
         // ==================== MODAL FORM ====================
         function openAddModal() {
-            console.log('📋 Opening Add Modal');
+            console.log('🎯 Opening Add Modal');
             currentEditId = null;
-            selectedRefId = null;
+            selectedExecId = null;
             document.getElementById('editId').value = '';
-            document.getElementById('formModalTitle').textContent = '📋 Buat Rencana';
+            document.getElementById('formModalTitle').textContent = '🎯 Buat Pengendalian';
             document.getElementById('deleteBtn').style.display = 'none';
             document.getElementById('saveBtn').textContent = '💾 Simpan';
 
-            const now = new Date().toISOString().split('T')[0];
             const future = new Date();
             future.setDate(future.getDate() + 7);
             const futureStr = future.toISOString().split('T')[0];
 
             clearRef();
             document.getElementById('jobName').value = '';
-            document.getElementById('assignee').value = CURRENT_USER.username;
-            document.getElementById('status').value = 'draft';
-            document.getElementById('startDate').value = now;
-            document.getElementById('targetDate').value = futureStr;
-            document.getElementById('targetGoal').value = '';
+            document.getElementById('deviationType').value = 'telat';
+            document.getElementById('rootCause').value = '';
+            document.getElementById('correctiveAction').value = '';
+            document.getElementById('responsiblePerson').value = CURRENT_USER.username;
+            document.getElementById('status').value = 'open';
+            document.getElementById('targetResolveDate').value = futureStr;
             document.getElementById('notes').value = '';
 
             document.getElementById('formModal').classList.add('active');
@@ -1359,20 +1250,21 @@
             }
 
             currentEditId = id;
-            selectedRefId = item.ref_analisa_id;
+            selectedExecId = item.ref_execution_id;
             document.getElementById('editId').value = id;
-            document.getElementById('formModalTitle').textContent = `✏️ Edit Rencana: ${item.job_name}`;
+            document.getElementById('formModalTitle').textContent = `✏️ Edit Pengendalian: ${item.job_name}`;
             document.getElementById('deleteBtn').style.display = isAdmin(CURRENT_USER) ? 'inline-flex' : 'none';
             document.getElementById('saveBtn').textContent = '💾 Update';
 
-            document.getElementById('refAnalisaId').value = item.ref_analisa_id || '';
-            document.getElementById('refAnalisaName').value = item.ref_analisa_name || '';
+            document.getElementById('refExecutionId').value = item.ref_execution_id || '';
+            document.getElementById('refExecutionName').value = item.ref_execution_name || '';
             document.getElementById('jobName').value = item.job_name || '';
-            document.getElementById('assignee').value = item.assignee || '';
-            document.getElementById('status').value = item.status || 'draft';
-            document.getElementById('startDate').value = item.start_date || '';
-            document.getElementById('targetDate').value = item.target_date || '';
-            document.getElementById('targetGoal').value = item.target_goal || '';
+            document.getElementById('deviationType').value = item.deviation_type || 'telat';
+            document.getElementById('rootCause').value = item.root_cause || '';
+            document.getElementById('correctiveAction').value = item.corrective_action || '';
+            document.getElementById('responsiblePerson').value = item.responsible_person || '';
+            document.getElementById('status').value = item.status || 'open';
+            document.getElementById('targetResolveDate').value = item.target_resolve_date || '';
             document.getElementById('notes').value = item.notes || '';
 
             document.getElementById('formModal').classList.add('active');
@@ -1385,12 +1277,10 @@
         }
 
         // ==================== SAVE ====================
-        async function savePlan() {
-            console.log('💾 Saving plan...');
+        async function saveControl() {
+            console.log('💾 Saving control...');
             const jobName = document.getElementById('jobName').value.trim();
-            const assignee = document.getElementById('assignee').value.trim();
-            const startDate = document.getElementById('startDate').value;
-            const targetDate = document.getElementById('targetDate').value;
+            const responsiblePerson = document.getElementById('responsiblePerson').value.trim();
 
             if (!jobName) {
                 showToast('Nama Pekerjaan wajib diisi', 'error');
@@ -1398,40 +1288,22 @@
                 return;
             }
 
-            if (!assignee) {
-                showToast('Assignee wajib diisi', 'error');
-                document.getElementById('assignee').focus();
-                return;
-            }
-
-            if (!startDate) {
-                showToast('Tanggal Mulai wajib diisi', 'error');
-                document.getElementById('startDate').focus();
-                return;
-            }
-
-            if (!targetDate) {
-                showToast('Target Selesai wajib diisi', 'error');
-                document.getElementById('targetDate').focus();
-                return;
-            }
-
-            // Validate date logic
-            if (startDate && targetDate && new Date(targetDate) < new Date(startDate)) {
-                showToast('Target Selesai harus setelah Tanggal Mulai', 'error');
-                document.getElementById('targetDate').focus();
+            if (!responsiblePerson) {
+                showToast('Penanggung Jawab wajib diisi', 'error');
+                document.getElementById('responsiblePerson').focus();
                 return;
             }
 
             const data = {
-                ref_analisa_id: parseInt(document.getElementById('refAnalisaId').value) || null,
-                ref_analisa_name: document.getElementById('refAnalisaName').value.trim(),
+                ref_execution_id: parseInt(document.getElementById('refExecutionId').value) || null,
+                ref_execution_name: document.getElementById('refExecutionName').value.trim(),
                 job_name: jobName,
-                assignee: assignee,
+                deviation_type: document.getElementById('deviationType').value,
+                root_cause: document.getElementById('rootCause').value.trim(),
+                corrective_action: document.getElementById('correctiveAction').value.trim(),
+                responsible_person: responsiblePerson,
                 status: document.getElementById('status').value,
-                start_date: startDate,
-                target_date: targetDate,
-                target_goal: document.getElementById('targetGoal').value.trim(),
+                target_resolve_date: document.getElementById('targetResolveDate').value,
                 notes: document.getElementById('notes').value.trim()
             };
 
@@ -1443,13 +1315,13 @@
 
             try {
                 if (currentEditId) {
-                    console.log('🔄 Updating plan ID:', currentEditId);
-                    await updatePlan(currentEditId, data);
-                    showToast('✅ Rencana berhasil diupdate!', 'success');
+                    console.log('🔄 Updating control ID:', currentEditId);
+                    await updateControl(currentEditId, data);
+                    showToast('✅ Pengendalian berhasil diupdate!', 'success');
                 } else {
-                    console.log('➕ Creating new plan');
-                    await createPlan(data);
-                    showToast('✅ Rencana berhasil dibuat!', 'success');
+                    console.log('➕ Creating new control');
+                    await createControl(data);
+                    showToast('✅ Pengendalian berhasil dibuat!', 'success');
                 }
                 await refreshData();
                 closeModal('formModal');
@@ -1472,35 +1344,35 @@
                 showToast('❌ Hanya admin yang bisa menghapus data', 'error');
                 return;
             }
-            if (!confirm(`Hapus rencana "${item.job_name}" (ID: ${id})?`)) return;
+            if (!confirm(`Hapus pengendalian "${item.job_name}" (ID: ${id})?`)) return;
 
             try {
-                await deletePlanApi(id);
-                showToast('✅ Rencana berhasil dihapus', 'success');
+                await deleteControlApi(id);
+                showToast('✅ Pengendalian berhasil dihapus', 'success');
                 await refreshData();
-                console.log('✅ Deleted plan ID:', id);
+                console.log('✅ Deleted control ID:', id);
             } catch (e) {
                 console.error('❌ Delete failed:', e);
                 showToast('❌ Gagal hapus: ' + e.message, 'error');
             }
         }
 
-        async function deletePlan() {
+        async function deleteControl() {
             const id = parseInt(document.getElementById('editId').value);
-            console.log('🗑️ Delete plan from modal, ID:', id);
+            console.log('🗑️ Delete control from modal, ID:', id);
             if (!id) return;
             if (!isAdmin(CURRENT_USER)) {
                 showToast('❌ Hanya admin yang bisa menghapus data', 'error');
                 return;
             }
-            if (!confirm('Hapus rencana ini secara permanen?')) return;
+            if (!confirm('Hapus pengendalian ini secara permanen?')) return;
 
             try {
-                await deletePlanApi(id);
-                showToast('✅ Rencana berhasil dihapus', 'success');
+                await deleteControlApi(id);
+                showToast('✅ Pengendalian berhasil dihapus', 'success');
                 closeModal('formModal');
                 await refreshData();
-                console.log('✅ Deleted plan ID:', id);
+                console.log('✅ Deleted control ID:', id);
             } catch (e) {
                 console.error('❌ Delete failed:', e);
                 showToast('❌ Gagal hapus: ' + e.message, 'error');
@@ -1546,14 +1418,14 @@
         // ==================== DEBUG ====================
         window.debug = {
             allData: () => allData,
-            refData: () => refData,
+            execData: () => execData,
             refresh: refreshData,
             openAdd: openAddModal,
             TABLE: TABLE,
             COLUMNS: COLUMNS
         };
 
-        console.log('📋 Perencanaan Loaded!');
+        console.log('🎯 Pengendalian Loaded!');
         console.log('📡 Table:', TABLE);
         console.log('📊 Type "debug" in console for helpers');
     </script>

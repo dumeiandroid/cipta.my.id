@@ -614,6 +614,39 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
+
+        .stage-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            border: 1px solid transparent;
+            transition: transform 0.1s;
+        }
+        .stage-chip:hover {
+            transform: scale(1.12);
+        }
+        .stage-chip.chip-empty {
+            background: #edf2f7;
+            color: #a0aec0;
+            border-color: #e2e8f0;
+        }
+        .stage-chip.chip-pending {
+            background: #feebc8;
+            color: #9c4221;
+            border-color: #fbd38d;
+        }
+        .stage-chip.chip-done {
+            background: #c6f6d5;
+            color: #22543d;
+            border-color: #9ae6b4;
+        }
     </style>
 </head>
 <body>
@@ -1108,24 +1141,47 @@
             const profile = linkedProfiles.find(p => String(p.lead_id) === String(leadId));
             const deals = linkedDeals.filter(d => String(d.lead_id) === String(leadId));
             const activeDeals = deals.filter(d => !['won', 'lost'].includes(d.stage));
+            const wonDeals = deals.filter(d => d.stage === 'won');
+            const lostDeals = deals.filter(d => d.stage === 'lost');
             return {
                 visitCount: visits.length,
                 visitDoneCount: visits.length - pendingVisits.length,
                 visitPendingCount: pendingVisits.length,
                 hasProfile: !!profile,
                 dealCount: deals.length,
-                activeDealCount: activeDeals.length
+                activeDealCount: activeDeals.length,
+                wonDealCount: wonDeals.length,
+                lostDealCount: lostDeals.length
             };
         }
 
         function renderLinkBadges(leadId) {
             const s = getLeadStats(leadId);
-            if (!s.visitCount && !s.hasProfile && !s.dealCount) return '';
-            const parts = [];
-            if (s.visitCount) parts.push(`📅 ${s.visitCount}${s.visitPendingCount ? ` (${s.visitPendingCount} rencana)` : ''}`);
-            if (s.dealCount) parts.push(`💼 ${s.dealCount}${s.activeDealCount ? ` (${s.activeDealCount} aktif)` : ''}`);
-            if (s.hasProfile) parts.push(`🏢 ✓`);
-            return `<br><span style="font-size:10px;color:#4a5568;">${parts.join(' &middot; ')}</span>`;
+            const chips = [];
+
+            // Stage 2: Activity/Visit Tracker — hanya tampil kalau sudah ada datanya
+            if (s.visitCount) {
+                const cls = s.visitDoneCount > 0 ? 'chip-done' : 'chip-pending';
+                const title = `Activity Tracker: ${s.visitDoneCount} selesai${s.visitPendingCount ? `, ${s.visitPendingCount} rencana` : ''}`;
+                chips.push(`<span class="stage-chip ${cls}" title="${escapeHtml(title)}" onclick="event.stopPropagation(); goToLinkedTool('sales_visit_tracker.html', ${leadId})">2</span>`);
+            }
+
+            // Stage 3: Sales Pipeline — hanya tampil kalau sudah ada deal
+            if (s.dealCount) {
+                let cls = 'chip-pending';
+                if (s.wonDealCount > 0) cls = 'chip-done';
+                else if (s.activeDealCount === 0) cls = 'chip-pending'; // semua deal lost, tetap tandai pernah ada
+                const title = `Sales Pipeline: ${s.dealCount} deal (${s.activeDealCount} aktif, ${s.wonDealCount} won, ${s.lostDealCount} lost)`;
+                chips.push(`<span class="stage-chip ${cls}" title="${escapeHtml(title)}" onclick="event.stopPropagation(); goToLinkedTool('sales_pipeline.html', ${leadId})">3</span>`);
+            }
+
+            // Stage 4: Client Company Profile — hanya tampil kalau sudah dibuat
+            if (s.hasProfile) {
+                chips.push(`<span class="stage-chip chip-done" title="Client Profile: sudah ada" onclick="event.stopPropagation(); goToLinkedTool('client_company_profile.html', ${leadId})">4</span>`);
+            }
+
+            if (!chips.length) return '';
+            return `<br><span style="display:inline-flex;gap:4px;margin-top:4px;">${chips.join('')}</span>`;
         }
 
         function openLeadLinkModal(leadId) {

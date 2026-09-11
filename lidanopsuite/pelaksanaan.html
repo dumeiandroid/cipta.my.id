@@ -298,21 +298,13 @@
             font-weight: 600;
         }
 
-        .badge-status.on_track {
+        .badge-status.terlaksana {
             background: #c6f6d5;
             color: #276749;
         }
-        .badge-status.late {
-            background: #fefcbf;
-            color: #975a16;
-        }
-        .badge-status.completed {
-            background: #c6f6d5;
-            color: #276749;
-        }
-        .badge-status.deviated {
-            background: #fed7d7;
-            color: #9b2c2c;
+        .badge-status.perlu_pengendalian {
+            background: #feebc8;
+            color: #9c4221;
         }
 
         .empty-state {
@@ -512,9 +504,8 @@
             letter-spacing: 0.5px;
         }
 
-        .stats-summary .stat-card .number.on_track { color: #48bb78; }
-        .stats-summary .stat-card .number.late { color: #ed8936; }
-        .stats-summary .stat-card .number.deviated { color: #fc8181; }
+        .stats-summary .stat-card .number.terlaksana { color: #48bb78; }
+        .stats-summary .stat-card .number.perlu_pengendalian { color: #ed8936; }
 
         @media (max-width: 992px) {
             .list-header {
@@ -581,6 +572,32 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
+
+        .stage-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            border: 1px solid transparent;
+            transition: transform 0.1s;
+        }
+        .stage-chip:hover { transform: scale(1.12); }
+        .stage-chip.chip-pending {
+            background: #feebc8;
+            color: #9c4221;
+            border-color: #fbd38d;
+        }
+        .stage-chip.chip-done {
+            background: #c6f6d5;
+            color: #22543d;
+            border-color: #9ae6b4;
+        }
     </style>
 </head>
 <body>
@@ -616,16 +633,12 @@
                 <div class="label">Total Pelaksanaan</div>
             </div>
             <div class="stat-card">
-                <div class="number on_track" id="statOnTrack">0</div>
-                <div class="label">✅ On Track</div>
+                <div class="number terlaksana" id="statTerlaksana">0</div>
+                <div class="label">✅ Terlaksana</div>
             </div>
             <div class="stat-card">
-                <div class="number late" id="statLate">0</div>
-                <div class="label">⚠️ Telat</div>
-            </div>
-            <div class="stat-card">
-                <div class="number deviated" id="statDeviated">0</div>
-                <div class="label">❌ Menyimpang</div>
+                <div class="number perlu_pengendalian" id="statPerluPengendalian">0</div>
+                <div class="label">🔁 Perlu Pengendalian</div>
             </div>
         </div>
 
@@ -722,7 +735,7 @@
     <!-- MODAL FORM -->
     <div class="modal-overlay" id="formModal">
         <div class="modal">
-            <button class="modal-close" onclick="closeModal('formModal')">✕</button>
+            <button class="modal-close" onclick="cancelFormModal()">✕</button>
             <div class="modal-title" id="formModalTitle">⚙️ Catat Pelaksanaan</div>
             <div class="modal-body">
                 <input type="hidden" id="editId" value="">
@@ -752,9 +765,8 @@
                     <div class="form-group">
                         <label>📂 Status</label>
                         <select id="status">
-                            <option value="on_track">✅ On Track</option>
-                            <option value="late">⚠️ Telat</option>
-                            <option value="deviated">❌ Menyimpang</option>
+                            <option value="terlaksana">✅ Terlaksana (Sesuai Rencana)</option>
+                            <option value="perlu_pengendalian">🔁 Perlu Pengendalian</option>
                         </select>
                     </div>
                 </div>
@@ -776,7 +788,7 @@
 
                 <div class="modal-footer">
                     <button class="btn btn-danger" id="deleteBtn" onclick="deleteExecution()" style="display:none;">🗑️ Hapus</button>
-                    <button class="btn btn-outline" onclick="closeModal('formModal')">Batal</button>
+                    <button class="btn btn-outline" onclick="cancelFormModal()">Batal</button>
                     <button class="btn btn-primary" id="saveBtn" onclick="saveExecution()">💾 Simpan</button>
                 </div>
             </div>
@@ -825,7 +837,9 @@
             console.log('📡 Table:', TABLE);
             initUserBadge();
             loadPlanData();
+            loadPengendalianData();
             refreshData();
+            handleUrlParams();
         });
 
         function initUserBadge() {
@@ -892,9 +906,72 @@
             }
         }
 
+        // ==================== PENGENDALIAN DATA (untuk chip status) ====================
+        let pengendalianData = [];
+        async function loadPengendalianData() {
+            try {
+                const result = await apiFetch('pengendalian', '');
+                if (result.success && result.data) {
+                    pengendalianData = result.data.map(row => ({
+                        id_x: row.id_x,
+                        ref_execution_id: parseInt(row.x_01) || null,
+                        status: row.x_08 || 'open'
+                    }));
+                }
+                console.log('📚 Loaded pengendalian data:', pengendalianData.length);
+            } catch (e) {
+                console.error('❌ Failed to load pengendalian data:', e);
+                pengendalianData = [];
+            }
+        }
+
         function getPlanName(id) {
             const found = planData.find(r => r.id_x === id);
             return found ? found.job_name : null;
+        }
+
+        // ==================== DEEP LINK (dari perencanaan.html via ?ref_plan_id=) ====================
+        function handleUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const refPlanId = params.get('ref_plan_id');
+            const editExecId = params.get('edit_execution_id');
+            if (refPlanId) {
+                setTimeout(() => {
+                    openAddModal();
+                    const plan = planData.find(p => String(p.id_x) === String(refPlanId));
+                    document.getElementById('refPlanId').value = refPlanId;
+                    document.getElementById('refPlanName').value = plan ? plan.job_name : (params.get('ref_plan_name') || '');
+                    document.getElementById('jobName').value = plan ? plan.job_name : (params.get('ref_plan_name') || '');
+                    if (plan) document.getElementById('executor').value = plan.assignee || CURRENT_USER.username;
+                }, 300);
+            } else if (editExecId) {
+                setTimeout(() => {
+                    openEditModal(parseInt(editExecId));
+                }, 300);
+            }
+        }
+
+        // ==================== LANJUT KE PENGENDALIAN ====================
+        function returnToPlanIfNeeded() {
+            const params = new URLSearchParams(window.location.search);
+            const refPlanId = params.get('ref_plan_id');
+            const editExecId = params.get('edit_execution_id');
+            if (refPlanId) {
+                showToast('↩️ Kembali ke Rencana #' + refPlanId + '...', 'success');
+                setTimeout(() => {
+                    window.location.href = `perencanaan.html?edit_plan_id=${refPlanId}`;
+                }, 900);
+            } else if (editExecId) {
+                showToast('↩️ Kembali ke Pengendalian...', 'success');
+                setTimeout(() => {
+                    window.location.href = `pengendalian.html?ref_execution_id=${editExecId}`;
+                }, 900);
+            }
+        }
+
+        function cancelFormModal() {
+            closeModal('formModal');
+            returnToPlanIfNeeded();
         }
 
         // ==================== DATA CRUD ====================
@@ -924,7 +1001,7 @@
                 ref_plan_name: row.x_02 || '',
                 job_name: row.x_03 || '',
                 executor: row.x_04 || '',
-                status: row.x_05 || 'on_track',
+                status: row.x_05 || 'terlaksana',
                 actual_date: row.x_06 || '',
                 actual_result: row.x_07 || '',
                 notes: row.x_08 || '',
@@ -1115,9 +1192,8 @@
             }
 
             const statusLabels = {
-                'on_track': '✅ On Track',
-                'late': '⚠️ Telat',
-                'deviated': '❌ Menyimpang'
+                'terlaksana': '✅ Terlaksana',
+                'perlu_pengendalian': '🔁 Perlu Pengendalian'
             };
 
             body.innerHTML = filtered.map(item => {
@@ -1129,6 +1205,7 @@
                         <div class="field">
                             <span class="label">Pekerjaan:</span> ${escapeHtml(item.job_name) || '-'}
                             ${item.ref_plan_id ? `<br><span style="font-size:10px;color:#718096;">Ref: #${item.ref_plan_id} ${escapeHtml(item.ref_plan_name) || ''}</span>` : ''}
+                            ${renderPengendalianChip(item.id_x)}
                         </div>
                         <div class="field"><span class="label">Pelaksana:</span> ${escapeHtml(item.executor) || '-'}</div>
                         <div class="field"><span class="label">Tanggal:</span> ${actualDate}</div>
@@ -1140,23 +1217,29 @@
                             ${ownsItem(item) ? `<button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>` : ''}
                             ${isAdmin(CURRENT_USER) ? `<button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>` : ''}
                             ${(!ownsItem(item) && !isAdmin(CURRENT_USER)) ? `<span style="font-size:10px;color:#a0aec0;">🔒 milik lain</span>` : ''}
-                            ${item.status === 'deviated' ? `<span style="font-size:10px;color:#fc8181;">⚠️</span>` : ''}
+                            ${item.status === 'perlu_pengendalian' && !pengendalianData.some(p => p.ref_execution_id === item.id_x) ? `<button class="btn btn-warning btn-xs" onclick="event.stopPropagation(); window.location.href='pengendalian.html?ref_execution_id=${item.id_x}&ref_execution_name=${encodeURIComponent(item.job_name)}'" title="Lanjutkan ke Pengendalian">🔁</button>` : ''}
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
+        function renderPengendalianChip(execId) {
+            const found = pengendalianData.find(p => p.ref_execution_id === execId);
+            if (!found) return '';
+            const cls = found.status === 'resolved' ? 'chip-done' : 'chip-pending';
+            const title = `Pengendalian #${found.id_x}: ${found.status}`;
+            return `<br><span style="display:inline-flex;gap:4px;margin-top:4px;"><span class="stage-chip ${cls}" title="${escapeHtml(title)}" onclick="event.stopPropagation(); window.location.href='pengendalian.html?ref_execution_id=${execId}'">4</span></span>`;
+        }
+
         function updateStats() {
             const total = allData.length;
-            const onTrack = allData.filter(d => d.status === 'on_track').length;
-            const late = allData.filter(d => d.status === 'late').length;
-            const deviated = allData.filter(d => d.status === 'deviated').length;
+            const terlaksana = allData.filter(d => d.status === 'terlaksana').length;
+            const perluPengendalian = allData.filter(d => d.status === 'perlu_pengendalian').length;
 
             document.getElementById('statTotal').textContent = total;
-            document.getElementById('statOnTrack').textContent = onTrack;
-            document.getElementById('statLate').textContent = late;
-            document.getElementById('statDeviated').textContent = deviated;
+            document.getElementById('statTerlaksana').textContent = terlaksana;
+            document.getElementById('statPerluPengendalian').textContent = perluPengendalian;
         }
 
         function escapeHtml(text) {
@@ -1189,7 +1272,7 @@
             clearRef();
             document.getElementById('jobName').value = '';
             document.getElementById('executor').value = CURRENT_USER.username;
-            document.getElementById('status').value = 'on_track';
+            document.getElementById('status').value = 'terlaksana';
             document.getElementById('actualDate').value = now;
             document.getElementById('actualResult').value = '';
             document.getElementById('notes').value = '';
@@ -1221,7 +1304,7 @@
             document.getElementById('refPlanName').value = item.ref_plan_name || '';
             document.getElementById('jobName').value = item.job_name || '';
             document.getElementById('executor').value = item.executor || '';
-            document.getElementById('status').value = item.status || 'on_track';
+            document.getElementById('status').value = item.status || 'terlaksana';
             document.getElementById('actualDate').value = item.actual_date || '';
             document.getElementById('actualResult').value = item.actual_result || '';
             document.getElementById('notes').value = item.notes || '';
@@ -1278,6 +1361,7 @@
             btn.textContent = '⏳ Menyimpan...';
 
             try {
+                let savedId = currentEditId;
                 if (currentEditId) {
                     console.log('🔄 Updating execution ID:', currentEditId);
                     await updateExecution(currentEditId, data);
@@ -1288,7 +1372,21 @@
                     showToast('✅ Pelaksanaan berhasil dibuat!', 'success');
                 }
                 await refreshData();
+
+                if (!savedId) {
+                    const candidates = allData.filter(d => d.ref_plan_id === data.ref_plan_id && d.job_name === data.job_name && d.executor === data.executor && d.actual_date === data.actual_date);
+                    const created = candidates.sort((a, b) => b.id_x - a.id_x)[0];
+                    savedId = created ? created.id_x : null;
+                }
+
                 closeModal('formModal');
+
+                if (data.status === 'perlu_pengendalian' && savedId) {
+                    if (confirm('Pekerjaan ini memerlukan Pengendalian (ada penyimpangan dari rencana).\n\nLanjutkan ke halaman Pengendalian sekarang?')) {
+                        window.location.href = `pengendalian.html?ref_execution_id=${savedId}&ref_execution_name=${encodeURIComponent(jobName)}`;
+                        return;
+                    }
+                }
                 console.log('✅ Save complete');
             } catch (e) {
                 console.error('❌ Save failed:', e);

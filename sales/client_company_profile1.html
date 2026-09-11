@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Activity Tracker - Sales Psikologi</title>
+    <title>Client Company Profile - Sales Psikologi</title>
     <script>
         // ==================== AUTH GUARD (Sales Tools Suite - SSO) ====================
         const AUTH_SESSION_KEY = 'lidan_sales_session';
@@ -218,14 +218,6 @@
             border-radius: 4px;
         }
 
-        .btn-purple {
-            background: #9f7aea;
-            color: white;
-        }
-        .btn-purple:hover {
-            background: #805ad5;
-        }
-
         .list-container {
             background: white;
             border-radius: 16px;
@@ -235,7 +227,7 @@
 
         .list-header {
             display: grid;
-            grid-template-columns: 60px 1.2fr 1fr 1fr 0.8fr 0.8fr 1fr 120px;
+            grid-template-columns: 60px 1.5fr 1fr 0.8fr 0.8fr 0.8fr 1fr 120px;
             gap: 8px;
             padding: 14px 20px;
             background: #f7fafc;
@@ -247,7 +239,7 @@
 
         .list-item {
             display: grid;
-            grid-template-columns: 60px 1.2fr 1fr 1fr 0.8fr 0.8fr 1fr 120px;
+            grid-template-columns: 60px 1.5fr 1fr 0.8fr 0.8fr 0.8fr 1fr 120px;
             gap: 8px;
             padding: 14px 20px;
             border-bottom: 1px solid #edf2f7;
@@ -290,6 +282,35 @@
             flex-wrap: wrap;
         }
 
+        .badge-type {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-type.corporate {
+            background: #bee3f8;
+            color: #2a69ac;
+        }
+        .badge-type.school {
+            background: #c6f6d5;
+            color: #276749;
+        }
+        .badge-type.university {
+            background: #e9d8fd;
+            color: #6b46c1;
+        }
+        .badge-type.government {
+            background: #fefcbf;
+            color: #975a16;
+        }
+        .badge-type.other {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
         .badge-status {
             display: inline-block;
             padding: 2px 12px;
@@ -298,19 +319,15 @@
             font-weight: 600;
         }
 
-        .badge-status.scheduled {
-            background: #bee3f8;
-            color: #2a69ac;
-        }
-        .badge-status.visited {
+        .badge-status.active {
             background: #c6f6d5;
             color: #276749;
         }
-        .badge-status.cancelled {
+        .badge-status.inactive {
             background: #fed7d7;
             color: #9b2c2c;
         }
-        .badge-status.rescheduled {
+        .badge-status.prospect {
             background: #fefcbf;
             color: #975a16;
         }
@@ -512,10 +529,9 @@
             letter-spacing: 0.5px;
         }
 
-        .stats-summary .stat-card.scheduled .number { color: #4299e1; }
-        .stats-summary .stat-card.visited .number { color: #48bb78; }
-        .stats-summary .stat-card.cancelled .number { color: #fc8181; }
         .stats-summary .stat-card.total .number { color: #2d3748; }
+        .stats-summary .stat-card.active .number { color: #48bb78; }
+        .stats-summary .stat-card.prospect .number { color: #ed8936; }
 
         @media (max-width: 992px) {
             .list-header {
@@ -583,60 +599,14 @@
             cursor: not-allowed;
         }
 
-        .section-block {
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 14px 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .section-block.rencana {
-            border-color: #bee3f8;
-            background: #f0f9ff;
-        }
-        .section-block.hasil {
-            border-color: #c6f6d5;
-            background: #f0fff4;
-        }
-        .section-block .section-title {
-            font-weight: 700;
-            font-size: 14px;
-            color: #2d3748;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .section-block.hidden {
-            display: none;
-        }
-        .pending-warning {
-            background: #fffaf0;
-            border-left: 4px solid #ed8936;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 13px;
-            color: #7b341e;
-        }
-        .lead-tag {
+        .services-tag {
             display: inline-block;
+            padding: 2px 8px;
             background: #edf2f7;
+            border-radius: 4px;
+            font-size: 10px;
+            margin: 1px 2px;
             color: #4a5568;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 1px 8px;
-            border-radius: 10px;
-            margin-left: 6px;
-        }
-        .pending-tag {
-            display: inline-block;
-            background: #feebc8;
-            color: #9c4221;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 1px 8px;
-            border-radius: 10px;
-            margin-left: 6px;
         }
     </style>
 </head>
@@ -646,17 +616,17 @@
         <!-- HEADER -->
         <div class="header">
             <h1>
-                📅 Sales Activity Tracker
+                🏢 Client Company Profile
                 <span>Sales Psikologi</span>
             </h1>
             <div class="header-actions">
                 <div class="search-box">
                     <span class="icon">🔍</span>
-                    <input type="text" id="searchInput" placeholder="Cari interaksi..." oninput="renderList()">
+                    <input type="text" id="searchInput" placeholder="Cari perusahaan..." oninput="renderList()">
                 </div>
-                <button class="btn btn-primary" onclick="openAddModal()">➕ Tambah Interaksi</button>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ Tambah Perusahaan</button>
                 <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
-                <button class="btn btn-outline btn-sm" onclick="document.getElementById('infoModal').classList.add('active')" title="Info & Panduan Activity Tracker">ℹ️ Info</button>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('infoModal').classList.add('active')" title="Info & Panduan Client Profile">ℹ️ Info</button>
                 <div class="user-badge" id="userBadge">
                     <span id="userBadgeName">👤 -</span>
                     <span class="role-tag" id="userBadgeRole">-</span>
@@ -670,19 +640,15 @@
         <div class="stats-summary" id="statsSummary">
             <div class="stat-card total">
                 <div class="number" id="statTotal">0</div>
-                <div class="label">Total Interaksi</div>
+                <div class="label">Total Perusahaan</div>
             </div>
-            <div class="stat-card scheduled">
-                <div class="number" id="statScheduled">0</div>
-                <div class="label">📅 Terjadwal</div>
+            <div class="stat-card active">
+                <div class="number" id="statActive">0</div>
+                <div class="label">✅ Aktif</div>
             </div>
-            <div class="stat-card visited">
-                <div class="number" id="statVisited">0</div>
-                <div class="label">✅ Selesai</div>
-            </div>
-            <div class="stat-card cancelled">
-                <div class="number" id="statCancelled">0</div>
-                <div class="label">❌ Batal</div>
+            <div class="stat-card prospect">
+                <div class="number" id="statProspect">0</div>
+                <div class="label">🔶 Prospek</div>
             </div>
         </div>
 
@@ -690,19 +656,19 @@
         <div class="list-container">
             <div class="list-header">
                 <span>ID</span>
-                <span>Perusahaan / Kontak</span>
-                <span>Sales</span>
-                <span>Tanggal</span>
-                <span>Tujuan</span>
+                <span>Nama Perusahaan</span>
+                <span>Kontak</span>
+                <span>Tipe</span>
                 <span>Status</span>
-                <span>Hasil</span>
+                <span>Layanan</span>
+                <span>Sales</span>
                 <span>Aksi</span>
             </div>
             <div id="listBody">
                 <div class="empty-state">
-                    <div class="icon">📅</div>
-                    <h3>Belum ada interaksi</h3>
-                    <p>Klik "Tambah Interaksi" untuk mencatat interaksi sales pertama Anda</p>
+                    <div class="icon">🏢</div>
+                    <h3>Belum ada perusahaan</h3>
+                    <p>Klik "Tambah Perusahaan" untuk menambahkan data perusahaan klien</p>
                 </div>
             </div>
         </div>
@@ -712,33 +678,39 @@
     <div class="modal-overlay" id="infoModal">
         <div class="modal">
             <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
-            <div class="modal-title">📅 Panduan Sales Activity Tracker</div>
+            <div class="modal-title">🏢 Panduan Client Company Profile</div>
             <div class="modal-body">
-                <p>Sales Activity Tracker dipakai untuk mencatat setiap interaksi sales dengan lead —
-                baik berupa kunjungan langsung, telepon, WhatsApp, maupun email — membantu sales
-                mendokumentasikan aktivitas, dan membantu supervisor memverifikasi efektivitas interaksi.</p>
+                <p>Client Company Profile adalah database perusahaan/klien yang menjadi target atau
+                sudah menjadi pelanggan layanan psikologi — dipakai untuk memahami profil klien agar
+                strategi penjualan lebih tepat sasaran.</p>
 
-                <h4 style="margin:4px 0 2px;">🚦 Arti Status Interaksi</h4>
+                <h4 style="margin:4px 0 2px;">🏷️ Arti Tipe Perusahaan</h4>
                 <ul style="margin:0 0 8px 18px; line-height:1.9;">
-                    <li>📅 <b>Terjadwal</b> — interaksi sudah direncanakan, belum dilaksanakan</li>
-                    <li>✅ <b>Selesai</b> — interaksi sudah dilakukan</li>
-                    <li>❌ <b>Batal</b> — interaksi dibatalkan</li>
-                    <li>🔄 <b>Dijadwalkan Ulang</b> — interaksi digeser ke tanggal lain</li>
+                    <li>🏢 <b>Corporate</b> — perusahaan swasta</li>
+                    <li>🏫 <b>Sekolah</b> — SD/SMP/SMA/SMK</li>
+                    <li>🎓 <b>Universitas</b> — perguruan tinggi</li>
+                    <li>🏛️ <b>Government</b> — instansi pemerintah</li>
+                    <li>📌 <b>Lainnya</b> — di luar kategori di atas</li>
                 </ul>
 
-                <h4 style="margin:4px 0 2px;">🎯 Arti Tujuan Interaksi</h4>
+                <h4 style="margin:4px 0 2px;">🚦 Arti Status</h4>
                 <ul style="margin:0 0 8px 18px; line-height:1.9;">
-                    <li><b>Presentasi</b> — memperkenalkan layanan ke calon klien</li>
-                    <li><b>Penawaran</b> — menyampaikan proposal/harga</li>
-                    <li><b>Follow Up</b> — menindaklanjuti komunikasi sebelumnya</li>
-                    <li><b>Closing</b> — proses penutupan deal</li>
-                    <li><b>Pelatihan / Tes</b> — interaksi untuk melaksanakan layanan itu sendiri</li>
-                    <li><b>Survey</b> — menggali kebutuhan calon klien</li>
+                    <li>✅ <b>Aktif</b> — masih menjadi klien yang aktif memakai layanan</li>
+                    <li>❌ <b>Inaktif</b> — pernah jadi klien, saat ini tidak aktif</li>
+                    <li>🔶 <b>Prospek</b> — belum resmi jadi klien, masih tahap pendekatan</li>
                 </ul>
 
-                <div style="background:#ebf8ff;border-left:4px solid #4299e1;border-radius:8px;padding:10px 14px;font-size:13px;">
-                    💡 <b>Tips:</b> Catat hasil interaksi segera setelah selesai agar detail tidak
-                    terlewat. Supervisor bisa melihat semua interaksi tim lewat Sales Dashboard.
+                <h4 style="margin:4px 0 2px;">📝 Field Lainnya</h4>
+                <ul style="margin:0 0 8px 18px; line-height:1.9;">
+                    <li><b>PIC</b> — nama &amp; telepon kontak utama di perusahaan tsb</li>
+                    <li><b>Layanan yang Digunakan</b> — bisa pilih lebih dari satu layanan</li>
+                    <li><b>Sales Assign</b> — sales yang menangani klien ini</li>
+                    <li><b>Tanggal Bergabung</b> — sejak kapan jadi klien</li>
+                </ul>
+
+                <div style="background:#faf5ff;border-left:4px solid #9f7aea;border-radius:8px;padding:10px 14px;font-size:13px;">
+                    💡 <b>Tips:</b> Gunakan data "Layanan yang Digunakan" untuk menawarkan layanan lain
+                    yang relevan — klien yang sudah pakai satu layanan lebih mudah menerima layanan tambahan.
                 </div>
             </div>
         </div>
@@ -754,119 +726,159 @@
 
     <div class="modal-overlay" id="formModal">
         <div class="modal">
-            <button class="modal-close" onclick="cancelFormModal()">✕</button>
-            <div class="modal-title" id="formModalTitle">📅 Tambah Interaksi</div>
+            <button class="modal-close" onclick="closeModal('formModal')">✕</button>
+            <div class="modal-title" id="formModalTitle">🏢 Tambah Perusahaan</div>
             <div class="modal-body">
                 <input type="hidden" id="editId" value="">
                 <input type="hidden" id="lead_id" value="">
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>🏢 Nama Perusahaan/Instansi *</label>
-                        <input type="text" id="companyName" placeholder="Nama perusahaan" required>
+                        <label>🏢 Nama Perusahaan *</label>
+                        <input type="text" id="companyName" placeholder="Nama perusahaan/instansi" required>
                     </div>
                     <div class="form-group">
-                        <label>👤 Nama Kontak</label>
-                        <input type="text" id="contactName" placeholder="Nama kontak">
+                        <label>📂 Tipe Perusahaan</label>
+                        <select id="companyType">
+                            <option value="corporate">🏢 Corporate</option>
+                            <option value="school">🏫 Sekolah</option>
+                            <option value="university">🎓 Universitas</option>
+                            <option value="government">🏛️ Government</option>
+                            <option value="other">📌 Lainnya</option>
+                        </select>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>📅 Tanggal Interaksi *</label>
-                        <input type="datetime-local" id="visitDate" required>
+                        <label>📧 Email</label>
+                        <input type="email" id="email" placeholder="email@domain.com">
                     </div>
                     <div class="form-group">
-                        <label>👤 Sales</label>
-                        <input type="text" id="salesName" placeholder="Nama sales" readonly style="background:#edf2f7;cursor:not-allowed;">
+                        <label>📱 Telepon</label>
+                        <input type="text" id="phone" placeholder="021-1234-5678">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>👤 PIC / Kontak Utama</label>
+                        <input type="text" id="picName" placeholder="Nama PIC">
+                    </div>
+                    <div class="form-group">
+                        <label>📱 PIC Telepon</label>
+                        <input type="text" id="picPhone" placeholder="0812-3456-7890">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📍 Alamat</label>
+                        <input type="text" id="address" placeholder="Alamat lengkap">
+                    </div>
+                    <div class="form-group">
+                        <label>📂 Status</label>
+                        <select id="status">
+                            <option value="active">✅ Aktif</option>
+                            <option value="inactive">❌ Inaktif</option>
+                            <option value="prospect">🔶 Prospek</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📋 Layanan yang Telah Digunakan</label>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0;">
+                        <label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" value="Seminar" class="service-check"> Seminar
+                        </label>
+                        <label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" value="Pelatihan" class="service-check"> Pelatihan
+                        </label>
+                        <label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" value="Tes Minat Bakat" class="service-check"> Tes Minat Bakat
+                        </label>
+                        <label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" value="Tes Kesiapan Kerja" class="service-check"> Tes Kesiapan Kerja
+                        </label>
+                        <label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" value="Assesment Psikologi" class="service-check"> Assesment Psikologi
+                        </label>
+                        <label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" value="Konseling" class="service-check"> Konseling
+                        </label>
+                        <label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" value="Lainnya" class="service-check"> Lainnya
+                        </label>
+                    </div>
+                </div>
+
+                <div style="border:2px solid #e2e8f0;border-radius:12px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                        <div style="font-weight:700;font-size:14px;color:#2d3748;">📈 Riwayat Konversi</div>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="openConversionEditor(null)">+ Tambah Riwayat</button>
+                    </div>
+                    <div id="conversionTotalInfo" style="font-size:11px;color:#718096;margin-top:6px;"></div>
+                    <div id="conversionList" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;"></div>
+
+                    <div id="conversionEditor" style="display:none;margin-top:12px;border-top:1px dashed #cbd5e0;padding-top:12px;">
+                        <input type="hidden" id="convEditIndex" value="">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tanggal *</label>
+                                <input type="date" id="convTanggal">
+                            </div>
+                            <div class="form-group">
+                                <label>Produk/Layanan *</label>
+                                <select id="convProduk">
+                                    <option value="Seminar">Seminar</option>
+                                    <option value="Pelatihan">Pelatihan</option>
+                                    <option value="Tes Minat Bakat">Tes Minat Bakat</option>
+                                    <option value="Tes Kesiapan Kerja">Tes Kesiapan Kerja</option>
+                                    <option value="Assesment Psikologi">Assesment Psikologi</option>
+                                    <option value="Konseling">Konseling</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nilai (opsional)</label>
+                                <input type="text" id="convNilai" placeholder="Rp 5.000.000">
+                            </div>
+                            <div class="form-group">
+                                <label>Catatan</label>
+                                <input type="text" id="convCatatan" placeholder="Catatan opsional">
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:6px;">
+                            <button type="button" class="btn btn-primary btn-xs" onclick="saveConversionEditor()">💾 Simpan</button>
+                            <button type="button" class="btn btn-outline btn-xs" onclick="closeConversionEditor()">Batal</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>👤 Sales Assign</label>
+                        <input type="text" id="salesAssign" placeholder="Nama sales" readonly style="background:#edf2f7;cursor:not-allowed;">
                         <small style="color:#a0aec0;">Otomatis dari akun yang login</small>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label>📌 Jenis Interaksi</label>
-                    <div style="display:flex;gap:16px;flex-wrap:wrap;padding:4px 0;">
-                        <label style="display:flex;align-items:center;gap:6px;font-weight:500;font-size:13px;cursor:pointer;">
-                            <input type="radio" name="interactionType" value="visit" checked onchange="onInteractionTypeChange()"> 🚗 Visit
-                        </label>
-                        <label style="display:flex;align-items:center;gap:6px;font-weight:500;font-size:13px;cursor:pointer;">
-                            <input type="radio" name="interactionType" value="call" onchange="onInteractionTypeChange()"> ☎️ Call
-                        </label>
-                        <label style="display:flex;align-items:center;gap:6px;font-weight:500;font-size:13px;cursor:pointer;">
-                            <input type="radio" name="interactionType" value="whatsapp" onchange="onInteractionTypeChange()"> 💬 WhatsApp
-                        </label>
-                        <label style="display:flex;align-items:center;gap:6px;font-weight:500;font-size:13px;cursor:pointer;">
-                            <input type="radio" name="interactionType" value="email" onchange="onInteractionTypeChange()"> 📧 Email
-                        </label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label id="locationLabel">📍 Lokasi</label>
-                    <input type="text" id="location" placeholder="Alamat lengkap">
-                </div>
-
-                <div class="form-group">
-                    <label>🎯 Tujuan Interaksi</label>
-                    <select id="visitPurpose">
-                        <option value="Presentasi">Presentasi Layanan</option>
-                        <option value="Penawaran">Penawaran Proposal</option>
-                        <option value="Follow Up">Follow Up</option>
-                        <option value="Closing">Closing Deal</option>
-                        <option value="Pelatihan">Pelaksanaan Pelatihan</option>
-                        <option value="Tes">Pelaksanaan Tes</option>
-                        <option value="Survey">Survey Kebutuhan</option>
-                        <option value="Lainnya">Lainnya</option>
-                    </select>
-                </div>
-
-                <div id="pendingWarning" class="pending-warning" style="display:none;">
-                    ⚠️ Interaksi ini masih berupa <b>rencana</b> yang belum ada hasilnya. Lengkapi bagian
-                    "Hasil Interaksi" di bawah (biasanya bersamaan dengan mengubah Status menjadi Selesai/Batal)
-                    sebelum rencana interaksi baru bisa dibuat untuk lead ini.
-                </div>
-
-                <div class="section-block rencana">
-                    <div class="section-title">📋 Rencana Interaksi</div>
                     <div class="form-group">
-                        <label>Catatan Rencana</label>
-                        <textarea id="rencanaCatatan" placeholder="Tujuan/agenda interaksi, hal yang ingin dibahas atau disampaikan..." rows="2"></textarea>
-                    </div>
-                </div>
-
-                <div class="section-block hasil hidden" id="hasilSection">
-                    <div class="section-title">✅ Hasil Interaksi</div>
-                    <div class="form-group">
-                        <label>Catatan Hasil *</label>
-                        <textarea id="hasilCatatan" placeholder="Apa yang terjadi/dibahas saat interaksi, kesepakatan yang dicapai..." rows="3"></textarea>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>📅 Tanggal Interaksi Aktual</label>
-                            <input type="date" id="hasilTanggalAktual">
-                            <small style="color:#a0aec0;">Isi jika berbeda dari tanggal rencana</small>
-                        </div>
-                        <div class="form-group">
-                            <label>➡️ Rencana Tindak Lanjut</label>
-                            <input type="text" id="hasilTindakLanjut" placeholder="Follow up berikutnya, kapan/apa">
-                        </div>
+                        <label>📅 Join Since</label>
+                        <input type="date" id="joinDate">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>📂 Status</label>
-                    <select id="status" onchange="toggleHasilSection()">
-                        <option value="scheduled">📅 Terjadwal</option>
-                        <option value="visited">✅ Selesai</option>
-                        <option value="cancelled">❌ Batal</option>
-                        <option value="rescheduled">🔄 Dijadwalkan Ulang</option>
-                    </select>
+                    <label>📝 Catatan</label>
+                    <textarea id="notes" placeholder="Catatan tentang perusahaan..." rows="2"></textarea>
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-danger" id="deleteBtn" onclick="deleteVisit()" style="display:none;">🗑️ Hapus</button>
-                    <button class="btn btn-outline" onclick="cancelFormModal()">Batal</button>
-                    <button class="btn btn-primary" id="saveBtn" onclick="saveVisit()">💾 Simpan</button>
+                    <button class="btn btn-danger" id="deleteBtn" onclick="deleteCompany()" style="display:none;">🗑️ Hapus</button>
+                    <button class="btn btn-outline" onclick="closeModal('formModal')">Batal</button>
+                    <button class="btn btn-primary" id="saveBtn" onclick="saveCompany()">💾 Simpan</button>
                 </div>
             </div>
         </div>
@@ -875,111 +887,52 @@
     <script>
         // ==================== CONFIG ====================
         const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
-        const TABLE = 'sales_visit_tracker';
+        const TABLE = 'client_company_profile';
         const SECRET = 'admin';
 
         // ==================== STATE ====================
         let allData = [];
         let currentEditId = null;
+        let currentConversions = [];
 
         const COLUMNS = {
             company_name: 'x_01',
-            contact_name: 'x_02',
-            visit_date: 'x_03',
-            sales_name: 'x_04',
-            location: 'x_05',
-            status: 'x_06',
-            visit_purpose: 'x_07',
-            notes: 'x_08',
-            lead_id: 'x_09',
-            interaction_type: 'x_10'
+            company_type: 'x_02',
+            email: 'x_03',
+            phone: 'x_04',
+            pic_name: 'x_05',
+            pic_phone: 'x_06',
+            address: 'x_07',
+            status: 'x_08',
+            services_used: 'x_09',
+            sales_assign: 'x_10',
+            join_date: 'x_11',
+            notes: 'x_12',
+            lead_id: 'x_13',
+            conversion_history: 'x_14'
         };
 
         const HISTORY_COL = 'x_25';
         const FIELD_LABELS = {
-            company_name: '🏢 Nama Perusahaan/Instansi',
-            contact_name: '👤 Nama Kontak',
-            visit_date: '📅 Tanggal Interaksi',
-            sales_name: '👤 Sales',
-            location: '📍 Lokasi/Kontak yang Dihubungi',
+            company_name: '🏢 Nama Perusahaan',
+            company_type: '📂 Tipe Perusahaan',
+            email: '📧 Email',
+            phone: '📱 Telepon',
+            pic_name: '👤 PIC / Kontak Utama',
+            pic_phone: '📱 PIC Telepon',
+            address: '📍 Alamat',
             status: '📂 Status',
-            visit_purpose: '🎯 Tujuan Interaksi',
-            notes: '📝 Rencana / Hasil Interaksi',
-            interaction_type: '📌 Jenis Interaksi'
+            services_used: '📋 Layanan yang Telah Digunakan',
+            sales_assign: '👤 Sales Assign',
+            join_date: '📅 Join Since',
+            notes: '📝 Catatan',
+            conversion_history: '📈 Riwayat Konversi'
         };
-
-        // notes (x_08) disimpan sebagai JSON: {"rencana":{"catatan":""},"hasil":{"catatan":"","tanggal_aktual":"","tindak_lanjut":""}}
-        // Data lama (plain text) diperlakukan sebagai catatan hasil, karena dulu field ini memang untuk hasil kunjungan.
-        function parseNotesJson(raw) {
-            if (!raw) return { rencana: { catatan: '' }, hasil: null };
-            try {
-                const parsed = JSON.parse(raw);
-                if (parsed && typeof parsed === 'object' && (parsed.rencana || parsed.hasil)) {
-                    return {
-                        rencana: parsed.rencana || { catatan: '' },
-                        hasil: parsed.hasil || null
-                    };
-                }
-            } catch (e) { /* not JSON, fall through to legacy handling */ }
-            return { rencana: { catatan: '' }, hasil: { catatan: String(raw), tanggal_aktual: '', tindak_lanjut: '' } };
-        }
-
-        function buildNotesJson(rencanaCatatan, hasil) {
-            const obj = { rencana: { catatan: rencanaCatatan || '' } };
-            if (hasil) obj.hasil = hasil;
-            return JSON.stringify(obj);
-        }
-
-        function isPendingStatus(status) {
-            return status === 'scheduled' || status === 'rescheduled';
-        }
-
-        function findPendingForLead(leadId, excludeId) {
-            if (!leadId) return null;
-            return allData.find(d => String(d.lead_id) === String(leadId) && isPendingStatus(d.status) && d.id_x !== excludeId);
-        }
-
-        function toggleHasilSection() {
-            const status = document.getElementById('status').value;
-            const section = document.getElementById('hasilSection');
-            if (isPendingStatus(status)) {
-                section.classList.add('hidden');
-            } else {
-                section.classList.remove('hidden');
-            }
-        }
-
-        const INTERACTION_TYPE_CONFIG = {
-            visit: { icon: '🚗', label: 'Visit', locationLabel: '📍 Lokasi', placeholder: 'Alamat lengkap' },
-            call: { icon: '☎️', label: 'Call', locationLabel: '📞 Nomor yang Dihubungi', placeholder: '08xx-xxxx-xxxx' },
-            whatsapp: { icon: '💬', label: 'WhatsApp', locationLabel: '💬 Nomor WhatsApp', placeholder: '08xx-xxxx-xxxx' },
-            email: { icon: '📧', label: 'Email', locationLabel: '📧 Alamat Email', placeholder: 'email@domain.com' }
-        };
-
-        function onInteractionTypeChange() {
-            const checked = document.querySelector('input[name="interactionType"]:checked');
-            const type = checked ? checked.value : 'visit';
-            const cfg = INTERACTION_TYPE_CONFIG[type] || INTERACTION_TYPE_CONFIG.visit;
-            document.getElementById('locationLabel').textContent = cfg.locationLabel;
-            document.getElementById('location').placeholder = cfg.placeholder;
-        }
-
-        function setInteractionTypeValue(type) {
-            const value = INTERACTION_TYPE_CONFIG[type] ? type : 'visit';
-            const radio = document.querySelector(`input[name="interactionType"][value="${value}"]`);
-            if (radio) radio.checked = true;
-            onInteractionTypeChange();
-        }
-
-        function getInteractionTypeValue() {
-            const checked = document.querySelector('input[name="interactionType"]:checked');
-            return checked ? checked.value : 'visit';
-        }
 
         // ==================== FEATURE CONFIG (kontrol_admin) ====================
         const CONTROL_TABLE = 'kontrol_admin';
         const CONTROL_ROW_ID = 7;
-        const THIS_TOOL_KEY = 'sales_visit_tracker';
+        const THIS_TOOL_KEY = 'client_company_profile';
         const DEFAULT_FEATURE_CONFIG = {
             spv: { edit: true, delete: true, riwayat: true, tambah: true },
             non_spv: { edit: true, delete: false, riwayat: true, tambah: true }
@@ -1030,27 +983,25 @@
             }
         }
 
-        function cancelFormModal() {
-            closeModal('formModal');
-            returnToLeadIfNeeded();
-        }
-
         async function applyLeadIdFromUrl() {
             const params = new URLSearchParams(window.location.search);
             const leadId = params.get('lead_id');
             if (!leadId) return;
+
+            const existing = allData.find(d => String(d.lead_id) === String(leadId));
+            if (existing) {
+                if (!canUse('edit')) {
+                    showToast('❌ Anda tidak punya izin mengedit profil ini', 'error');
+                    return;
+                }
+                openEditModal(existing.id_x);
+                return;
+            }
+
             if (!canUse('tambah')) {
-                showToast('❌ Anda tidak punya izin menambah interaksi', 'error');
+                showToast('❌ Anda tidak punya izin menambah profil klien', 'error');
                 return;
             }
-
-            const pending = findPendingForLead(leadId, null);
-            if (pending) {
-                showToast('⚠️ Lead #' + leadId + ' masih punya rencana interaksi yang belum diisi hasilnya. Lengkapi dulu.', 'info');
-                openEditModal(pending.id_x, { focusHasil: true });
-                return;
-            }
-
             try {
                 const res = await fetch(`${API_URL}?table=lead_management`, {
                     headers: { 'X-Custom-Auth': SECRET, 'X-Table-Name': 'lead_management', 'X-Role': 'admin' }
@@ -1063,10 +1014,12 @@
                 }
                 openAddModal();
                 document.getElementById('companyName').value = lead.x_02 || '';
-                document.getElementById('contactName').value = lead.x_01 || '';
-                document.getElementById('salesName').value = lead.x_08 || CURRENT_USER.username;
+                document.getElementById('email').value = lead.x_03 || '';
+                document.getElementById('phone').value = lead.x_04 || '';
+                document.getElementById('picName').value = lead.x_01 || '';
+                document.getElementById('salesAssign').value = lead.x_08 || CURRENT_USER.username;
                 document.getElementById('lead_id').value = leadId;
-                document.getElementById('formModalTitle').textContent = `📅 Tambah Interaksi (dari Lead #${leadId})`;
+                document.getElementById('formModalTitle').textContent = `🏢 Tambah Perusahaan (dari Lead #${leadId})`;
             } catch (e) {
                 console.warn('⚠️ Gagal ambil data lead untuk prefill:', e.message);
             }
@@ -1074,7 +1027,7 @@
 
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log('📅 Sales Activity Tracker Started');
+            console.log('🏢 Client Company Profile Started');
             console.log('📡 Table:', TABLE);
             initUserBadge();
             await loadFeatureConfig();
@@ -1094,7 +1047,7 @@
         }
 
         function ownsItem(item) {
-            return isSupervisor(CURRENT_USER) || isAdmin(CURRENT_USER) || item.sales_name === CURRENT_USER.username;
+            return isSupervisor(CURRENT_USER) || isAdmin(CURRENT_USER) || item.sales_assign === CURRENT_USER.username;
         }
 
         // ==================== API HELPERS ====================
@@ -1135,7 +1088,7 @@
                 if (result.success && result.data) {
                     allData = result.data.map(row => parseRow(row));
                     if (!isSupervisor(CURRENT_USER) && !isAdmin(CURRENT_USER)) {
-                        allData = allData.filter(item => item.sales_name === CURRENT_USER.username);
+                        allData = allData.filter(item => item.sales_assign === CURRENT_USER.username);
                     }
                     return allData;
                 }
@@ -1149,21 +1102,22 @@
         }
 
         function parseRow(row) {
-            const notesObj = parseNotesJson(row.x_08);
             return {
                 id_x: row.id_x,
                 company_name: row.x_01 || '',
-                contact_name: row.x_02 || '',
-                visit_date: row.x_03 || '',
-                sales_name: row.x_04 || '',
-                location: row.x_05 || '',
-                status: row.x_06 || 'scheduled',
-                visit_purpose: row.x_07 || '',
-                notes: row.x_08 || '',
-                notesObj: notesObj,
-                searchNotes: [notesObj.rencana && notesObj.rencana.catatan, notesObj.hasil && notesObj.hasil.catatan, notesObj.hasil && notesObj.hasil.tindak_lanjut].filter(Boolean).join(' '),
-                lead_id: row.x_09 || '',
-                interaction_type: row.x_10 || 'visit',
+                company_type: row.x_02 || 'corporate',
+                email: row.x_03 || '',
+                phone: row.x_04 || '',
+                pic_name: row.x_05 || '',
+                pic_phone: row.x_06 || '',
+                address: row.x_07 || '',
+                status: row.x_08 || 'active',
+                services_used: safeParseJSON(row.x_09),
+                sales_assign: row.x_10 || '',
+                join_date: row.x_11 || '',
+                notes: row.x_12 || '',
+                lead_id: row.x_13 || '',
+                conversion_history: safeParseJSON(row.x_14),
                 history: parseHistory(row[HISTORY_COL]),
                 _raw: row
             };
@@ -1180,12 +1134,18 @@
             }
         }
 
+        function fieldToStr(key, val) {
+            if (key === 'services_used') return (val || []).join(', ');
+            if (key === 'conversion_history') return JSON.stringify(val || []);
+            return String(val ?? '');
+        }
+
         function diffFields(oldItem, newData) {
             const changes = [];
             for (const key of Object.keys(COLUMNS)) {
-                const oldVal = oldItem ? (oldItem[key] ?? '') : '';
-                const newVal = newData[key] ?? '';
-                if (String(oldVal) !== String(newVal)) {
+                const oldVal = fieldToStr(key, oldItem ? oldItem[key] : '');
+                const newVal = fieldToStr(key, newData[key]);
+                if (oldVal !== newVal) {
                     changes.push({ field: key, label: FIELD_LABELS[key] || key, from: oldVal, to: newVal });
                 }
             }
@@ -1225,9 +1185,9 @@
                         changesHtml = entry.changes.map(c => `
                             <div style="font-size:12px;margin-top:4px;">
                                 <strong>${escapeHtml(c.label)}:</strong>
-                                <span style="color:#e53e3e;text-decoration:line-through;">${escapeHtml(String(c.from ?? '') || '-')}</span>
+                                <span style="color:#e53e3e;text-decoration:line-through;">${escapeHtml(c.from || '-')}</span>
                                 →
-                                <span style="color:#38a169;">${escapeHtml(String(c.to ?? '') || '-')}</span>
+                                <span style="color:#38a169;">${escapeHtml(c.to || '-')}</span>
                             </div>
                         `).join('');
                     } else {
@@ -1244,21 +1204,35 @@
             document.getElementById('historyModal').classList.add('active');
         }
 
+        function safeParseJSON(str) {
+            if (!str) return [];
+            try {
+                const parsed = JSON.parse(str);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
         function buildRow(data) {
             const row = {};
             for (const [key, col] of Object.entries(COLUMNS)) {
-                row[col] = data[key] || '';
+                if (key === 'services_used' || key === 'conversion_history') {
+                    row[col] = JSON.stringify(data[key] || []);
+                } else {
+                    row[col] = data[key] || '';
+                }
             }
             return row;
         }
 
-        async function createVisit(data) {
+        async function createCompany(data) {
             const row = buildRow(data);
             row[HISTORY_COL] = JSON.stringify(buildHistory(null, data, 'created'));
             return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
         }
 
-        async function updateVisit(id, data) {
+        async function updateCompany(id, data) {
             const row = buildRow(data);
             const oldItem = allData.find(d => d.id_x === id);
             const newHistory = buildHistory(oldItem, data, 'updated');
@@ -1266,7 +1240,7 @@
             return await apiFetch(`&id_x=${id}`, { method: 'PUT', body: JSON.stringify(row) });
         }
 
-        async function deleteVisitApi(id) {
+        async function deleteCompanyApi(id) {
             return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
         }
 
@@ -1275,10 +1249,11 @@
             const search = document.getElementById('searchInput').value.toLowerCase().trim();
             const filtered = allData.filter(item =>
                 item.company_name.toLowerCase().includes(search) ||
-                item.contact_name.toLowerCase().includes(search) ||
-                item.sales_name.toLowerCase().includes(search) ||
-                item.location.toLowerCase().includes(search) ||
-                item.searchNotes.toLowerCase().includes(search)
+                item.pic_name.toLowerCase().includes(search) ||
+                item.email.toLowerCase().includes(search) ||
+                item.phone.includes(search) ||
+                item.sales_assign.toLowerCase().includes(search) ||
+                item.address.toLowerCase().includes(search)
             );
 
             const body = document.getElementById('listBody');
@@ -1289,56 +1264,50 @@
             if (filtered.length === 0) {
                 body.innerHTML = `
                     <div class="empty-state">
-                        <div class="icon">${allData.length === 0 ? '📅' : '🔍'}</div>
-                        <h3>${allData.length === 0 ? 'Belum ada interaksi' : 'Tidak ditemukan'}</h3>
-                        <p>${allData.length === 0 ? 'Klik "Tambah Interaksi" untuk mencatat interaksi sales pertama Anda' : 'Coba dengan kata kunci lain'}</p>
+                        <div class="icon">${allData.length === 0 ? '🏢' : '🔍'}</div>
+                        <h3>${allData.length === 0 ? 'Belum ada perusahaan' : 'Tidak ditemukan'}</h3>
+                        <p>${allData.length === 0 ? 'Klik "Tambah Perusahaan" untuk menambahkan data perusahaan klien' : 'Coba dengan kata kunci lain'}</p>
                     </div>
                 `;
                 return;
             }
 
+            const typeLabels = {
+                'corporate': '🏢 Corporate',
+                'school': '🏫 Sekolah',
+                'university': '🎓 Universitas',
+                'government': '🏛️ Government',
+                'other': '📌 Lainnya'
+            };
+
             const statusLabels = {
-                'scheduled': '📅 Terjadwal',
-                'visited': '✅ Selesai',
-                'cancelled': '❌ Batal',
-                'rescheduled': '🔄 Dijadwalkan Ulang'
+                'active': '✅ Aktif',
+                'inactive': '❌ Inaktif',
+                'prospect': '🔶 Prospek'
             };
 
             body.innerHTML = filtered.map(item => {
-                const visitDate = item.visit_date ? new Date(item.visit_date).toLocaleString('id-ID', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }) : '-';
-
-                let notesPreview = '-';
-                const n = item.notesObj;
-                if (n.hasil && n.hasil.catatan) {
-                    notesPreview = n.hasil.catatan;
-                } else if (n.rencana && n.rencana.catatan) {
-                    notesPreview = 'Rencana: ' + n.rencana.catatan;
-                }
-                if (notesPreview.length > 30) notesPreview = notesPreview.substring(0, 30) + '...';
-
-                const pending = isPendingStatus(item.status);
-                const typeCfg = INTERACTION_TYPE_CONFIG[item.interaction_type] || INTERACTION_TYPE_CONFIG.visit;
+                const services = item.services_used || [];
+                const servicesHtml = services.length > 0 ?
+                    services.map(s => `<span class="services-tag">${escapeHtml(s)}</span>`).join('') :
+                    '-';
 
                 return `
                     <div class="list-item">
                         <div class="id">#${item.id_x}</div>
                         <div class="field">
-                            <span class="label">Perusahaan:</span> ${typeCfg.icon} ${escapeHtml(item.company_name) || '-'}
-                            ${item.lead_id ? `<span class="lead-tag">Lead #${escapeHtml(item.lead_id)}</span>` : ''}
-                            ${pending ? `<span class="pending-tag">⏳ Rencana</span>` : ''}
-                            ${item.contact_name ? `<br><span style="font-size:11px;color:#718096;">Kontak: ${escapeHtml(item.contact_name)}</span>` : ''}
+                            <span class="label">Perusahaan:</span> ${escapeHtml(item.company_name) || '-'}
+                            ${item.address ? `<br><span style="font-size:10px;color:#a0aec0;">${escapeHtml(item.address)}</span>` : ''}
                         </div>
-                        <div class="field"><span class="label">Sales:</span> ${escapeHtml(item.sales_name) || '-'}</div>
-                        <div class="field"><span class="label">Tanggal:</span> ${visitDate}</div>
-                        <div class="field"><span class="label">Tujuan:</span> ${escapeHtml(item.visit_purpose) || '-'}</div>
+                        <div class="field">
+                            <span class="label">Kontak:</span>
+                            ${item.pic_name ? escapeHtml(item.pic_name) : '-'}
+                            ${item.pic_phone ? `<br><span style="font-size:11px;color:#718096;">${escapeHtml(item.pic_phone)}</span>` : ''}
+                        </div>
+                        <div class="field"><span class="label">Tipe:</span> <span class="badge-type ${item.company_type}">${typeLabels[item.company_type] || item.company_type}</span></div>
                         <div class="field"><span class="label">Status:</span> <span class="badge-status ${item.status}">${statusLabels[item.status] || item.status}</span></div>
-                        <div class="field"><span class="label">Hasil:</span> ${escapeHtml(notesPreview)}</div>
+                        <div class="field"><span class="label">Layanan:</span> ${servicesHtml}</div>
+                        <div class="field"><span class="label">Sales:</span> ${escapeHtml(item.sales_assign) || '-'}</div>
                         <div class="actions">
                             ${canUse('riwayat') ? `<button class="btn btn-outline btn-xs" onclick="showHistory(${item.id_x})" title="Riwayat perubahan">🕘${item.history && item.history.length ? ` <span style="font-size:9px;">${item.history.length}</span>` : ''}</button>` : ''}
                             ${canUse('edit') ? `<button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>` : ''}
@@ -1352,14 +1321,12 @@
 
         function updateStats() {
             const total = allData.length;
-            const scheduled = allData.filter(d => d.status === 'scheduled').length;
-            const visited = allData.filter(d => d.status === 'visited').length;
-            const cancelled = allData.filter(d => d.status === 'cancelled').length;
+            const active = allData.filter(d => d.status === 'active').length;
+            const prospect = allData.filter(d => d.status === 'prospect').length;
 
             document.getElementById('statTotal').textContent = total;
-            document.getElementById('statScheduled').textContent = scheduled;
-            document.getElementById('statVisited').textContent = visited;
-            document.getElementById('statCancelled').textContent = cancelled;
+            document.getElementById('statActive').textContent = active;
+            document.getElementById('statProspect').textContent = prospect;
         }
 
         function escapeHtml(text) {
@@ -1373,45 +1340,120 @@
             showToast('🔄 Memuat data...', 'info');
             await fetchData();
             renderList();
-            showToast(`✅ ${allData.length} interaksi dimuat`, 'success');
+            showToast(`✅ ${allData.length} perusahaan dimuat`, 'success');
         }
 
         // ==================== MODAL FORM ====================
+        // ---- Riwayat Konversi ----
+        function renderConversionList() {
+            const total = currentConversions.length;
+            const byProduk = {};
+            currentConversions.forEach(c => {
+                byProduk[c.produk] = (byProduk[c.produk] || 0) + 1;
+            });
+            const breakdown = Object.entries(byProduk).map(([p, n]) => `${p}: ${n}`).join(', ');
+            document.getElementById('conversionTotalInfo').textContent = total
+                ? `📈 ${total} total konversi${breakdown ? ' (' + breakdown + ')' : ''}`
+                : 'Belum ada riwayat konversi.';
+
+            const sorted = currentConversions.map((c, i) => ({ ...c, _i: i })).sort((a, b) => (b.tanggal || '').localeCompare(a.tanggal || ''));
+            const list = document.getElementById('conversionList');
+            list.innerHTML = sorted.map(c => `
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;">
+                    <div style="min-width:0;">
+                        <div style="font-weight:600;font-size:13px;color:#2d3748;">${escapeHtml(c.produk) || '-'} ${c.nilai ? `<span style="font-size:11px;font-weight:400;color:#718096;">· ${escapeHtml(c.nilai)}</span>` : ''}</div>
+                        <div style="font-size:11px;color:#718096;">🗓️ ${c.tanggal || '-'}${c.catatan ? ` &middot; ${escapeHtml(c.catatan)}` : ''}</div>
+                    </div>
+                    <div style="display:flex;gap:4px;flex-shrink:0;">
+                        <button type="button" class="btn btn-outline btn-xs" onclick="openConversionEditor(${c._i})">✏️</button>
+                        <button type="button" class="btn btn-danger btn-xs" onclick="deleteConversion(${c._i})">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openConversionEditor(index) {
+            document.getElementById('convEditIndex').value = index === null ? '' : index;
+            if (index === null) {
+                document.getElementById('convTanggal').value = new Date().toISOString().slice(0, 10);
+                document.getElementById('convProduk').value = 'Seminar';
+                document.getElementById('convNilai').value = '';
+                document.getElementById('convCatatan').value = '';
+            } else {
+                const c = currentConversions[index];
+                document.getElementById('convTanggal').value = c.tanggal || '';
+                document.getElementById('convProduk').value = c.produk || 'Seminar';
+                document.getElementById('convNilai').value = c.nilai || '';
+                document.getElementById('convCatatan').value = c.catatan || '';
+            }
+            document.getElementById('conversionEditor').style.display = 'block';
+        }
+
+        function closeConversionEditor() {
+            document.getElementById('conversionEditor').style.display = 'none';
+            document.getElementById('convEditIndex').value = '';
+        }
+
+        function saveConversionEditor() {
+            const tanggal = document.getElementById('convTanggal').value;
+            const produk = document.getElementById('convProduk').value;
+            if (!tanggal) {
+                showToast('Tanggal konversi wajib diisi', 'error');
+                document.getElementById('convTanggal').focus();
+                return;
+            }
+            const entry = {
+                tanggal: tanggal,
+                produk: produk,
+                nilai: document.getElementById('convNilai').value.trim(),
+                catatan: document.getElementById('convCatatan').value.trim()
+            };
+            const indexRaw = document.getElementById('convEditIndex').value;
+            if (indexRaw !== '') {
+                currentConversions[parseInt(indexRaw)] = entry;
+            } else {
+                currentConversions.push(entry);
+            }
+            renderConversionList();
+            closeConversionEditor();
+        }
+
+        function deleteConversion(index) {
+            if (!confirm(`Hapus riwayat konversi "${currentConversions[index].produk}" (${currentConversions[index].tanggal})?`)) return;
+            currentConversions.splice(index, 1);
+            renderConversionList();
+        }
+
         function openAddModal() {
-            console.log('📅 Opening Add Modal');
+            console.log('🏢 Opening Add Modal');
             currentEditId = null;
             document.getElementById('editId').value = '';
-            document.getElementById('formModalTitle').textContent = '📅 Tambah Interaksi';
+            document.getElementById('formModalTitle').textContent = '🏢 Tambah Perusahaan';
             document.getElementById('deleteBtn').style.display = 'none';
             document.getElementById('saveBtn').textContent = '💾 Simpan';
 
-            // Set default date to now
-            const now = new Date();
-            const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-            const dateStr = localDate.toISOString().slice(0, 16);
-
             document.getElementById('companyName').value = '';
-            document.getElementById('contactName').value = '';
             document.getElementById('lead_id').value = '';
-            document.getElementById('visitDate').value = dateStr;
-            document.getElementById('salesName').value = CURRENT_USER.username;
-            document.getElementById('location').value = '';
-            setInteractionTypeValue('visit');
-            document.getElementById('status').value = 'scheduled';
-            document.getElementById('visitPurpose').value = 'Presentasi';
-            document.getElementById('rencanaCatatan').value = '';
-            document.getElementById('hasilCatatan').value = '';
-            document.getElementById('hasilTanggalAktual').value = '';
-            document.getElementById('hasilTindakLanjut').value = '';
-            document.getElementById('pendingWarning').style.display = 'none';
-            toggleHasilSection();
+            document.getElementById('companyType').value = 'corporate';
+            document.getElementById('email').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('picName').value = '';
+            document.getElementById('picPhone').value = '';
+            document.getElementById('address').value = '';
+            document.getElementById('status').value = 'active';
+            document.querySelectorAll('.service-check').forEach(cb => cb.checked = false);
+            document.getElementById('salesAssign').value = CURRENT_USER.username;
+            document.getElementById('joinDate').value = '';
+            document.getElementById('notes').value = '';
+            currentConversions = [];
+            renderConversionList();
+            closeConversionEditor();
 
             document.getElementById('formModal').classList.add('active');
             console.log('✅ Add Modal opened');
         }
 
-        async function openEditModal(id, opts) {
-            opts = opts || {};
+        async function openEditModal(id) {
             console.log('✏️ Opening Edit Modal for ID:', id);
             const item = allData.find(d => d.id_x === id);
             if (!item) {
@@ -1426,46 +1468,33 @@
             currentEditId = id;
             document.getElementById('editId').value = id;
             document.getElementById('lead_id').value = item.lead_id || '';
-            document.getElementById('formModalTitle').textContent = `✏️ Edit Interaksi: ${item.company_name}`;
+            document.getElementById('formModalTitle').textContent = `✏️ Edit: ${item.company_name}`;
             document.getElementById('deleteBtn').style.display = canUse('delete') ? 'inline-flex' : 'none';
             document.getElementById('saveBtn').textContent = '💾 Update';
 
-            // Format date for input
-            let visitDate = '';
-            if (item.visit_date) {
-                const d = new Date(item.visit_date);
-                visitDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-            }
-
             document.getElementById('companyName').value = item.company_name || '';
-            document.getElementById('contactName').value = item.contact_name || '';
-            document.getElementById('visitDate').value = visitDate;
-            document.getElementById('salesName').value = item.sales_name || '';
-            document.getElementById('location').value = item.location || '';
-            setInteractionTypeValue(item.interaction_type || 'visit');
-            document.getElementById('visitPurpose').value = item.visit_purpose || 'Presentasi';
+            document.getElementById('companyType').value = item.company_type || 'corporate';
+            document.getElementById('email').value = item.email || '';
+            document.getElementById('phone').value = item.phone || '';
+            document.getElementById('picName').value = item.pic_name || '';
+            document.getElementById('picPhone').value = item.pic_phone || '';
+            document.getElementById('address').value = item.address || '';
+            document.getElementById('status').value = item.status || 'active';
+            document.getElementById('salesAssign').value = item.sales_assign || '';
+            document.getElementById('joinDate').value = item.join_date || '';
+            document.getElementById('notes').value = item.notes || '';
 
-            // Saat dibuka karena rencana lama harus diupdate, defaultkan Status ke "Selesai"
-            // supaya bagian Hasil Interaksi langsung siap diisi (bisa diubah manual ke Batal kalau perlu).
-            const defaultStatus = opts.focusHasil ? 'visited' : (item.status || 'scheduled');
-            document.getElementById('status').value = defaultStatus;
+            // Check services
+            const services = item.services_used || [];
+            document.querySelectorAll('.service-check').forEach(cb => {
+                cb.checked = services.includes(cb.value);
+            });
 
-            const n = item.notesObj || parseNotesJson(item.notes);
-            document.getElementById('rencanaCatatan').value = (n.rencana && n.rencana.catatan) || '';
-            document.getElementById('hasilCatatan').value = (n.hasil && n.hasil.catatan) || '';
-            document.getElementById('hasilTanggalAktual').value = (n.hasil && n.hasil.tanggal_aktual) || '';
-            document.getElementById('hasilTindakLanjut').value = (n.hasil && n.hasil.tindak_lanjut) || '';
-
-            document.getElementById('pendingWarning').style.display = opts.focusHasil ? 'block' : 'none';
-            toggleHasilSection();
-            if (opts.focusHasil) {
-                document.getElementById('hasilSection').classList.remove('hidden');
-            }
+            currentConversions = JSON.parse(JSON.stringify(item.conversion_history || []));
+            renderConversionList();
+            closeConversionEditor();
 
             document.getElementById('formModal').classList.add('active');
-            if (opts.focusHasil) {
-                setTimeout(() => document.getElementById('hasilCatatan').focus(), 150);
-            }
             console.log('✅ Edit Modal opened');
         }
 
@@ -1475,10 +1504,9 @@
         }
 
         // ==================== SAVE ====================
-        async function saveVisit() {
-            console.log('💾 Saving visit...');
+        async function saveCompany() {
+            console.log('💾 Saving company...');
             const companyName = document.getElementById('companyName').value.trim();
-            const visitDate = document.getElementById('visitDate').value;
 
             if (!companyName) {
                 showToast('Nama Perusahaan wajib diisi', 'error');
@@ -1486,53 +1514,27 @@
                 return;
             }
 
-            if (!visitDate) {
-                showToast('Tanggal Interaksi wajib diisi', 'error');
-                document.getElementById('visitDate').focus();
-                return;
-            }
-
-            const status = document.getElementById('status').value;
-            const leadId = document.getElementById('lead_id').value || '';
-
-            // Kalau ini interaksi baru (bukan sedang edit) untuk sebuah lead yang masih punya
-            // rencana interaksi menggantung, tolak — rencana lama harus diisi hasilnya dulu.
-            if (!currentEditId && leadId) {
-                const pending = findPendingForLead(leadId, null);
-                if (pending) {
-                    showToast('❌ Lead #' + leadId + ' masih punya rencana interaksi (#' + pending.id_x + ') yang belum diisi hasilnya. Lengkapi dulu sebelum membuat rencana baru.', 'error');
-                    return;
-                }
-            }
-
-            const rencanaCatatan = document.getElementById('rencanaCatatan').value.trim();
-            const hasilCatatan = document.getElementById('hasilCatatan').value.trim();
-            const hasilTanggalAktual = document.getElementById('hasilTanggalAktual').value;
-            const hasilTindakLanjut = document.getElementById('hasilTindakLanjut').value.trim();
-
-            if (!isPendingStatus(status) && !hasilCatatan) {
-                showToast('Catatan Hasil Interaksi wajib diisi untuk status Selesai/Batal', 'error');
-                document.getElementById('hasilSection').classList.remove('hidden');
-                document.getElementById('hasilCatatan').focus();
-                return;
-            }
-
-            let hasil = null;
-            if (hasilCatatan || hasilTanggalAktual || hasilTindakLanjut) {
-                hasil = { catatan: hasilCatatan, tanggal_aktual: hasilTanggalAktual, tindak_lanjut: hasilTindakLanjut };
-            }
+            // Get selected services
+            const services = [];
+            document.querySelectorAll('.service-check:checked').forEach(cb => {
+                services.push(cb.value);
+            });
 
             const data = {
                 company_name: companyName,
-                contact_name: document.getElementById('contactName').value.trim(),
-                visit_date: visitDate,
-                sales_name: document.getElementById('salesName').value.trim(),
-                location: document.getElementById('location').value.trim(),
-                status: status,
-                visit_purpose: document.getElementById('visitPurpose').value,
-                notes: buildNotesJson(rencanaCatatan, hasil),
-                lead_id: leadId,
-                interaction_type: getInteractionTypeValue()
+                company_type: document.getElementById('companyType').value,
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                pic_name: document.getElementById('picName').value.trim(),
+                pic_phone: document.getElementById('picPhone').value.trim(),
+                address: document.getElementById('address').value.trim(),
+                status: document.getElementById('status').value,
+                services_used: services,
+                sales_assign: document.getElementById('salesAssign').value.trim(),
+                join_date: document.getElementById('joinDate').value,
+                notes: document.getElementById('notes').value.trim(),
+                lead_id: document.getElementById('lead_id').value || '',
+                conversion_history: currentConversions
             };
 
             console.log('📦 Data to save:', data);
@@ -1543,13 +1545,13 @@
 
             try {
                 if (currentEditId) {
-                    console.log('🔄 Updating visit ID:', currentEditId);
-                    await updateVisit(currentEditId, data);
-                    showToast('✅ Interaksi berhasil diupdate!', 'success');
+                    console.log('🔄 Updating company ID:', currentEditId);
+                    await updateCompany(currentEditId, data);
+                    showToast('✅ Perusahaan berhasil diupdate!', 'success');
                 } else {
-                    console.log('➕ Creating new visit');
-                    await createVisit(data);
-                    showToast('✅ Interaksi berhasil dibuat!', 'success');
+                    console.log('➕ Creating new company');
+                    await createCompany(data);
+                    showToast('✅ Perusahaan berhasil dibuat!', 'success');
                 }
                 await refreshData();
                 closeModal('formModal');
@@ -1573,36 +1575,36 @@
                 showToast('❌ Anda tidak punya izin menghapus data', 'error');
                 return;
             }
-            if (!confirm(`Hapus interaksi ke "${item.company_name}" (ID: ${id})?`)) return;
+            if (!confirm(`Hapus perusahaan "${item.company_name}" (ID: ${id})?`)) return;
 
             try {
-                await deleteVisitApi(id);
-                showToast('✅ Interaksi berhasil dihapus', 'success');
+                await deleteCompanyApi(id);
+                showToast('✅ Perusahaan berhasil dihapus', 'success');
                 await refreshData();
-                console.log('✅ Deleted visit ID:', id);
+                console.log('✅ Deleted company ID:', id);
             } catch (e) {
                 console.error('❌ Delete failed:', e);
                 showToast('❌ Gagal hapus: ' + e.message, 'error');
             }
         }
 
-        async function deleteVisit() {
+        async function deleteCompany() {
             const id = parseInt(document.getElementById('editId').value);
-            console.log('🗑️ Delete visit from modal, ID:', id);
+            console.log('🗑️ Delete company from modal, ID:', id);
             if (!id) return;
             const item = allData.find(d => d.id_x === id);
             if (!canUse('delete')) {
                 showToast('❌ Anda tidak punya izin menghapus data', 'error');
                 return;
             }
-            if (!confirm('Hapus interaksi ini secara permanen?')) return;
+            if (!confirm('Hapus perusahaan ini secara permanen?')) return;
 
             try {
-                await deleteVisitApi(id);
-                showToast('✅ Interaksi berhasil dihapus', 'success');
+                await deleteCompanyApi(id);
+                showToast('✅ Perusahaan berhasil dihapus', 'success');
                 closeModal('formModal');
                 await refreshData();
-                console.log('✅ Deleted visit ID:', id);
+                console.log('✅ Deleted company ID:', id);
             } catch (e) {
                 console.error('❌ Delete failed:', e);
                 showToast('❌ Gagal hapus: ' + e.message, 'error');
@@ -1654,7 +1656,7 @@
             COLUMNS: COLUMNS
         };
 
-        console.log('📅 Sales Activity Tracker Loaded!');
+        console.log('🏢 Client Company Profile Loaded!');
         console.log('📡 Table:', TABLE);
         console.log('📊 Type "debug" in console for helpers');
         console.log('🔧 Debug commands:');

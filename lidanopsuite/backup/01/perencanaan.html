@@ -594,32 +594,6 @@
         .ref-selector .btn-sm {
             flex-shrink: 0;
         }
-
-        .stage-chip {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            user-select: none;
-            border: 1px solid transparent;
-            transition: transform 0.1s;
-        }
-        .stage-chip:hover { transform: scale(1.12); }
-        .stage-chip.chip-pending {
-            background: #feebc8;
-            color: #9c4221;
-            border-color: #fbd38d;
-        }
-        .stage-chip.chip-done {
-            background: #c6f6d5;
-            color: #22543d;
-            border-color: #9ae6b4;
-        }
     </style>
 </head>
 <body>
@@ -763,7 +737,7 @@
     <!-- MODAL FORM -->
     <div class="modal-overlay" id="formModal">
         <div class="modal">
-            <button class="modal-close" onclick="cancelFormModal()">✕</button>
+            <button class="modal-close" onclick="closeModal('formModal')">✕</button>
             <div class="modal-title" id="formModalTitle">📋 Buat Rencana</div>
             <div class="modal-body">
                 <input type="hidden" id="editId" value="">
@@ -824,7 +798,7 @@
 
                 <div class="modal-footer">
                     <button class="btn btn-danger" id="deleteBtn" onclick="deletePlan()" style="display:none;">🗑️ Hapus</button>
-                    <button class="btn btn-outline" onclick="cancelFormModal()">Batal</button>
+                    <button class="btn btn-outline" onclick="closeModal('formModal')">Batal</button>
                     <button class="btn btn-primary" id="saveBtn" onclick="savePlan()">💾 Simpan</button>
                 </div>
             </div>
@@ -874,10 +848,8 @@
             console.log('📋 Perencanaan Started');
             console.log('📡 Table:', TABLE);
             initUserBadge();
-            Promise.all([loadRefData(), loadExecSummary()]).then(() => {
-                refreshData();
-                handleUrlParams();
-            });
+            loadRefData();
+            refreshData();
         });
 
         function initUserBadge() {
@@ -948,66 +920,6 @@
         function getRefName(id) {
             const found = refData.find(r => r.id_x === id);
             return found ? found.job_name : null;
-        }
-
-        function renderExecChip(planId) {
-            const found = execSummaryData.find(e => e.ref_plan_id === planId);
-            if (!found) return '';
-            const cls = found.status === 'terlaksana' ? 'chip-done' : 'chip-pending';
-            const title = `Pelaksanaan #${found.id_x}: ${found.status === 'terlaksana' ? 'Terlaksana' : 'Perlu Pengendalian'}`;
-            return `<br><span style="display:inline-flex;gap:4px;margin-top:4px;"><span class="stage-chip ${cls}" title="${escapeHtml(title)}" onclick="event.stopPropagation(); window.location.href='pelaksanaan.html?ref_plan_id=${planId}'">3</span></span>`;
-        }
-
-        // ==================== EXEC SUMMARY (untuk chip status Pelaksanaan) ====================
-        let execSummaryData = [];
-        async function loadExecSummary() {
-            try {
-                const result = await apiFetch('pelaksanaan', '');
-                if (result.success && result.data) {
-                    execSummaryData = result.data.map(row => ({
-                        id_x: row.id_x,
-                        ref_plan_id: parseInt(row.x_01) || null,
-                        status: row.x_05 || 'terlaksana'
-                    }));
-                }
-                console.log('📚 Loaded exec summary:', execSummaryData.length);
-            } catch (e) {
-                console.error('❌ Failed to load exec summary:', e);
-                execSummaryData = [];
-            }
-        }
-
-        // ==================== DEEP LINK (dari analisa_pekerjaan.html atau pengendalian.html) ====================
-        function handleUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            const editPlanId = params.get('edit_plan_id');
-            const refAnalisaId = params.get('ref_analisa_id');
-            if (editPlanId) {
-                setTimeout(() => {
-                    openEditModal(parseInt(editPlanId));
-                }, 300);
-            } else if (refAnalisaId) {
-                setTimeout(() => {
-                    openAddModal();
-                    const ref = refData.find(r => String(r.id_x) === String(refAnalisaId));
-                    document.getElementById('refAnalisaId').value = refAnalisaId;
-                    document.getElementById('refAnalisaName').value = ref ? ref.job_name : (params.get('ref_analisa_name') || '');
-                    document.getElementById('jobName').value = ref ? ref.job_name : (params.get('ref_analisa_name') || '');
-                }, 300);
-            }
-        }
-
-        function cancelFormModal() {
-            closeModal('formModal');
-            const params = new URLSearchParams(window.location.search);
-            const refAnalisaId = params.get('ref_analisa_id');
-            if (refAnalisaId) {
-                showToast('↩️ Kembali ke Analisa Pekerjaan...', 'success');
-                setTimeout(() => {
-                    window.location.href = `analisa_pekerjaan.html?ref_id=${refAnalisaId}`;
-                }, 900);
-            }
-            // edit_plan_id (dari pengendalian) tidak dipaksa balik otomatis — cukup tutup modal
         }
 
         // ==================== DATA CRUD ====================
@@ -1264,7 +1176,6 @@
                         <div class="field">
                             <span class="label">Pekerjaan:</span> ${escapeHtml(item.job_name) || '-'}
                             ${item.ref_analisa_id ? `<br><span style="font-size:10px;color:#718096;">Ref: #${item.ref_analisa_id} ${escapeHtml(item.ref_analisa_name) || ''}</span>` : ''}
-                            ${renderExecChip(item.id_x)}
                         </div>
                         <div class="field"><span class="label">Assignee:</span> ${escapeHtml(item.assignee) || '-'}</div>
                         <div class="field"><span class="label">Mulai:</span> ${startDate}</div>

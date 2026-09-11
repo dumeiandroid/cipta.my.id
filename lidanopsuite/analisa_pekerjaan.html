@@ -632,6 +632,32 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
+
+        .stage-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            border: 1px solid transparent;
+            transition: transform 0.1s;
+        }
+        .stage-chip:hover { transform: scale(1.12); }
+        .stage-chip.chip-pending {
+            background: #feebc8;
+            color: #9c4221;
+            border-color: #fbd38d;
+        }
+        .stage-chip.chip-done {
+            background: #c6f6d5;
+            color: #22543d;
+            border-color: #9ae6b4;
+        }
     </style>
 </head>
 <body>
@@ -760,6 +786,11 @@
             <div class="modal-title" id="formModalTitle">🗂️ Tambah Pekerjaan</div>
             <div class="modal-body">
                 <input type="hidden" id="editId" value="">
+                <input type="hidden" id="revisedFromId" value="">
+                <input type="hidden" id="revisedFromName" value="">
+                <div id="revisionBanner" style="display:none;background:#fffaf0;border:1px solid #fbd38d;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:#9c4221;">
+                    🔁 Analisa ini adalah revisi dari: <span id="revisionBannerText"></span>
+                </div>
 
                 <div class="form-row">
                     <div class="form-group">
@@ -852,7 +883,9 @@
             resources: 'x_07',
             notes: 'x_08',
             status: 'x_09',
-            created_by: 'x_10'
+            created_by: 'x_10',
+            revised_from_id: 'x_11',
+            revised_from_name: 'x_12'
         };
 
         const HISTORY_COL = 'x_25';
@@ -866,7 +899,9 @@
             resources: '🧰 Alat/Bahan/Akses yang Dibutuhkan',
             notes: '💡 Catatan/Tips Tambahan',
             status: '🚦 Status',
-            created_by: '👤 Dibuat oleh'
+            created_by: '👤 Dibuat oleh',
+            revised_from_id: '🔁 Revisi dari Analisa ID',
+            revised_from_name: '🔁 Revisi dari Analisa Nama'
         };
 
         // ==================== INIT ====================
@@ -874,8 +909,59 @@
             console.log('🗂️ Analisa Pekerjaan Started');
             console.log('📡 Table:', TABLE);
             initUserBadge();
-            refreshData();
+            loadPlanSummary().then(() => {
+                refreshData();
+                handleUrlParams();
+            });
         });
+
+        // ==================== PLAN SUMMARY (untuk chip status Perencanaan) ====================
+        let planSummaryData = [];
+        async function loadPlanSummary() {
+            try {
+                const result = await apiFetch('perencanaan', '');
+                if (result.success && result.data) {
+                    planSummaryData = result.data.map(row => ({
+                        id_x: row.id_x,
+                        ref_analisa_id: parseInt(row.x_01) || null,
+                        status: row.x_05 || 'draft'
+                    }));
+                }
+                console.log('📚 Loaded plan summary:', planSummaryData.length);
+            } catch (e) {
+                console.error('❌ Failed to load plan summary:', e);
+                planSummaryData = [];
+            }
+        }
+
+        // ==================== DEEP LINK ====================
+        function handleUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const revisedFromId = params.get('revised_from_id');
+            const revisedFromName = params.get('revised_from_name');
+            const refId = params.get('ref_id');
+            if (revisedFromId) {
+                setTimeout(() => {
+                    openAddModal();
+                    document.getElementById('jobName').value = revisedFromName || '';
+                    document.getElementById('revisedFromId').value = revisedFromId;
+                    document.getElementById('revisedFromName').value = revisedFromName || '';
+                    document.getElementById('revisionBannerText').textContent = `#${revisedFromId} ${revisedFromName || ''}`;
+                    document.getElementById('revisionBanner').style.display = 'block';
+                    showToast('🆕 Buat analisa baru sebagai revisi dari analisa #' + revisedFromId, 'info');
+                }, 300);
+            } else if (refId) {
+                showToast('↩️ Kembali dari Perencanaan (Analisa #' + refId + ')', 'info');
+            }
+        }
+
+        function renderPlanChip(analisaId) {
+            const found = planSummaryData.find(p => p.ref_analisa_id === analisaId);
+            if (!found) return '';
+            const cls = (found.status === 'completed') ? 'chip-done' : 'chip-pending';
+            const title = `Perencanaan #${found.id_x}: ${found.status}`;
+            return `<br><span style="display:inline-flex;gap:4px;margin-top:4px;"><span class="stage-chip ${cls}" title="${escapeHtml(title)}" onclick="event.stopPropagation(); window.location.href='perencanaan.html?ref_analisa_id=${analisaId}'">2</span></span>`;
+        }
 
         function initUserBadge() {
             const nameEl = document.getElementById('userBadgeName');
@@ -953,6 +1039,8 @@
                 notes: row.x_08 || '',
                 status: row.x_09 || 'draft',
                 created_by: row.x_10 || '',
+                revised_from_id: parseInt(row.x_11) || null,
+                revised_from_name: row.x_12 || '',
                 history: parseHistory(row[HISTORY_COL]),
                 _raw: row
             };
@@ -1104,6 +1192,8 @@
                     <div class="field">
                         <span class="label">Pekerjaan:</span> ${escapeHtml(item.job_name) || '-'}
                         ${item.description ? `<br><span style="font-size:11px;color:#718096;">${escapeHtml(item.description).slice(0, 80)}${item.description.length > 80 ? '…' : ''}</span>` : ''}
+                        ${item.revised_from_id ? `<br><span style="font-size:10px;color:#9c4221;">🔁 Revisi dari #${item.revised_from_id} ${escapeHtml(item.revised_from_name) || ''}</span>` : ''}
+                        ${renderPlanChip(item.id_x)}
                     </div>
                     <div class="field"><span class="label">Kategori:</span> ${escapeHtml(item.category) || '-'}</div>
                     <div class="field"><span class="label">Level:</span> <span class="badge-priority ${item.difficulty}">${difficultyLabels[item.difficulty] || item.difficulty}</span></div>
@@ -1112,6 +1202,7 @@
                     <div class="field"><span class="label">Dibuat oleh:</span> ${escapeHtml(item.created_by) || '-'}</div>
                     <div class="actions">
                         <button class="btn btn-outline btn-xs" onclick="showHistory(${item.id_x})" title="Riwayat perubahan">🕘${item.history && item.history.length ? ` <span style="font-size:9px;">${item.history.length}</span>` : ''}</button>
+                        <button class="btn btn-primary btn-xs" onclick="event.stopPropagation(); window.location.href='perencanaan.html?ref_analisa_id=${item.id_x}&ref_analisa_name=${encodeURIComponent(item.job_name)}'" title="Buat Rencana dari analisa ini">➕ Rencana</button>
                         ${ownsItem(item) ? `<button class="btn btn-warning btn-xs" onclick="openEditModal(${item.id_x})">✏️</button>` : ''}
                         ${isAdmin(CURRENT_USER) ? `<button class="btn btn-danger btn-xs" onclick="confirmDelete(${item.id_x})">🗑️</button>` : ''}
                         ${(!ownsItem(item) && !isAdmin(CURRENT_USER)) ? `<span style="font-size:10px;color:#a0aec0;">🔒 milik lain</span>` : ''}
@@ -1167,6 +1258,9 @@
             document.getElementById('notes').value = '';
             document.getElementById('status').value = 'draft';
             document.getElementById('createdBy').value = CURRENT_USER.username;
+            document.getElementById('revisedFromId').value = '';
+            document.getElementById('revisedFromName').value = '';
+            document.getElementById('revisionBanner').style.display = 'none';
 
             document.getElementById('formModal').classList.add('active');
             console.log('✅ Add Modal opened');
@@ -1200,6 +1294,14 @@
             document.getElementById('notes').value = item.notes || '';
             document.getElementById('status').value = item.status || 'draft';
             document.getElementById('createdBy').value = item.created_by || '';
+            document.getElementById('revisedFromId').value = item.revised_from_id || '';
+            document.getElementById('revisedFromName').value = item.revised_from_name || '';
+            if (item.revised_from_id) {
+                document.getElementById('revisionBannerText').textContent = `#${item.revised_from_id} ${item.revised_from_name || ''}`;
+                document.getElementById('revisionBanner').style.display = 'block';
+            } else {
+                document.getElementById('revisionBanner').style.display = 'none';
+            }
 
             document.getElementById('formModal').classList.add('active');
             console.log('✅ Edit Modal opened');
@@ -1231,7 +1333,9 @@
                 resources: document.getElementById('resources').value.trim(),
                 notes: document.getElementById('notes').value.trim(),
                 status: document.getElementById('status').value,
-                created_by: document.getElementById('createdBy').value.trim()
+                created_by: document.getElementById('createdBy').value.trim(),
+                revised_from_id: parseInt(document.getElementById('revisedFromId').value) || null,
+                revised_from_name: document.getElementById('revisedFromName').value.trim()
             };
 
             console.log('📦 Data to save:', data);
