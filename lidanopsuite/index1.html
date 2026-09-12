@@ -658,6 +658,21 @@
             color: #22543d;
             border-color: #9ae6b4;
         }
+
+        .nav-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            margin-left: 6px;
+            border-radius: 9px;
+            background: #edf2f7;
+            color: #4a5568;
+            font-size: 11px;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
@@ -680,7 +695,9 @@
                 <div class="user-badge" id="userBadge">
                     <span id="userBadgeName">👤 -</span>
                     <span class="role-tag" id="userBadgeRole">-</span>
-                    <a href="index.html" class="btn btn-outline btn-sm" style="text-decoration:none;">🏠 Home</a>
+                    <a href="perencanaan.html" class="btn btn-outline btn-sm" style="text-decoration:none;position:relative;">📋 Perencanaan<span class="nav-count" id="navCountPlan">0</span></a>
+                    <a href="pelaksanaan.html" class="btn btn-outline btn-sm" style="text-decoration:none;position:relative;">⚙️ Pelaksanaan<span class="nav-count" id="navCountExec">0</span></a>
+                    <a href="pengendalian.html" class="btn btn-outline btn-sm" style="text-decoration:none;position:relative;">🎯 Pengendalian<span class="nav-count" id="navCountControl">0</span></a>
                     <button class="btn-logout" onclick="logout()">🚪 Logout</button>
                 </div>
             </div>
@@ -777,6 +794,14 @@
             <button class="modal-close" onclick="closeModal('historyModal')">✕</button>
             <div class="modal-title">🕘 Riwayat Perubahan</div>
             <div class="modal-body" id="historyModalBody"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+            <div class="modal-title" id="detailModalTitle">📄 Detail Pekerjaan</div>
+            <div class="modal-body" id="detailModalBody"></div>
         </div>
     </div>
 
@@ -909,6 +934,7 @@
             console.log('🗂️ Analisa Pekerjaan Started');
             console.log('📡 Table:', TABLE);
             initUserBadge();
+            loadStageCounts();
             loadPlanSummary().then(() => {
                 refreshData();
                 handleUrlParams();
@@ -924,13 +950,44 @@
                     planSummaryData = result.data.map(row => ({
                         id_x: row.id_x,
                         ref_analisa_id: parseInt(row.x_01) || null,
+                        assignee: row.x_04 || '',
                         status: row.x_05 || 'draft'
                     }));
                 }
                 console.log('📚 Loaded plan summary:', planSummaryData.length);
+                const myPlanCount = (isSupervisor(CURRENT_USER) || isAdmin(CURRENT_USER))
+                    ? planSummaryData.length
+                    : planSummaryData.filter(p => p.assignee === CURRENT_USER.username).length;
+                document.getElementById('navCountPlan').textContent = myPlanCount;
             } catch (e) {
                 console.error('❌ Failed to load plan summary:', e);
                 planSummaryData = [];
+            }
+        }
+
+        // ==================== STAGE COUNTS (untuk badge nav Pelaksanaan & Pengendalian) ====================
+        async function loadStageCounts() {
+            try {
+                const [execResult, controlResult] = await Promise.all([
+                    apiFetch('pelaksanaan', ''),
+                    apiFetch('pengendalian', '')
+                ]);
+                const isPrivileged = isSupervisor(CURRENT_USER) || isAdmin(CURRENT_USER);
+
+                const execRows = (execResult.success && execResult.data) ? execResult.data : [];
+                const execCount = isPrivileged
+                    ? execRows.length
+                    : execRows.filter(row => (row.x_04 || '') === CURRENT_USER.username).length;
+
+                const controlRows = (controlResult.success && controlResult.data) ? controlResult.data : [];
+                const controlCount = isPrivileged
+                    ? controlRows.length
+                    : controlRows.filter(row => (row.x_07 || '') === CURRENT_USER.username).length;
+
+                document.getElementById('navCountExec').textContent = execCount;
+                document.getElementById('navCountControl').textContent = controlCount;
+            } catch (e) {
+                console.error('❌ Failed to load stage counts:', e);
             }
         }
 
@@ -987,8 +1044,8 @@
             };
         }
 
-        async function apiFetch(endpoint, options = {}) {
-            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+        async function apiFetch(table, endpoint, options = {}) {
+            const url = `${API_URL}?table=${table}${endpoint}`;
             try {
                 const response = await fetch(url, {
                     ...options,
@@ -1011,7 +1068,7 @@
         // ==================== DATA CRUD ====================
         async function fetchData() {
             try {
-                const result = await apiFetch('');
+                const result = await apiFetch(TABLE, '');
                 if (result.success && result.data) {
                     // Analisa Pekerjaan adalah gudang bersama — semua user yang login melihat semua entri
                     allData = result.data.map(row => parseRow(row));
@@ -1132,7 +1189,7 @@
         async function createJob(data) {
             const row = buildRow(data);
             row[HISTORY_COL] = JSON.stringify(buildHistory(null, data, 'created'));
-            return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+            return await apiFetch(TABLE, '', { method: 'POST', body: JSON.stringify(row) });
         }
 
         async function updateJob(id, data) {
@@ -1140,14 +1197,65 @@
             const oldItem = allData.find(d => d.id_x === id);
             const newHistory = buildHistory(oldItem, data, 'updated');
             row[HISTORY_COL] = JSON.stringify(newHistory || (oldItem ? oldItem.history : []) || []);
-            return await apiFetch(`&id_x=${id}`, { method: 'PUT', body: JSON.stringify(row) });
+            return await apiFetch(TABLE, `&id_x=${id}`, { method: 'PUT', body: JSON.stringify(row) });
         }
 
         async function deleteJobApi(id) {
-            return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
+            return await apiFetch(TABLE, `&id_x=${id}`, { method: 'DELETE' });
         }
 
         // ==================== RENDER ====================
+        function showDetail(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+
+            const statusLabels = {
+                'draft': '📝 Draft',
+                'siap': '✅ Siap Dipakai',
+                'revisi': '🔄 Perlu Direvisi'
+            };
+            const difficultyLabels = {
+                'pemula': '🟢 Pemula',
+                'menengah': '🟠 Menengah',
+                'mahir': '🔴 Mahir'
+            };
+
+            document.getElementById('detailModalTitle').textContent = `📄 ${item.job_name}`;
+            document.getElementById('detailModalBody').innerHTML = `
+                <div style="display:flex;flex-direction:column;gap:14px;">
+                    ${item.revised_from_id ? `<div style="background:#fffaf0;border:1px solid #fbd38d;border-radius:8px;padding:8px 12px;font-size:12px;color:#9c4221;">🔁 Revisi dari analisa #${item.revised_from_id} — ${escapeHtml(item.revised_from_name) || ''}</div>` : ''}
+                    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                        <div><span style="font-size:11px;color:#a0aec0;font-weight:600;">KATEGORI</span><br>${escapeHtml(item.category) || '-'}</div>
+                        <div><span style="font-size:11px;color:#a0aec0;font-weight:600;">LEVEL</span><br><span class="badge-priority ${item.difficulty}">${difficultyLabels[item.difficulty] || item.difficulty}</span></div>
+                        <div><span style="font-size:11px;color:#a0aec0;font-weight:600;">ESTIMASI WAKTU</span><br>${escapeHtml(item.estimated_time) || '-'}</div>
+                        <div><span style="font-size:11px;color:#a0aec0;font-weight:600;">STATUS</span><br><span class="badge-status ${item.status}">${statusLabels[item.status] || item.status}</span></div>
+                    </div>
+                    <div>
+                        <div style="font-size:11px;color:#a0aec0;font-weight:600;margin-bottom:4px;">📝 DESKRIPSI/TUJUAN</div>
+                        <div style="white-space:pre-wrap;line-height:1.5;">${escapeHtml(item.description) || '-'}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:11px;color:#a0aec0;font-weight:600;margin-bottom:4px;">📋 LANGKAH PENGERJAAN (SOP)</div>
+                        <div style="white-space:pre-wrap;line-height:1.5;">${escapeHtml(item.steps) || '-'}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:11px;color:#a0aec0;font-weight:600;margin-bottom:4px;">🧰 ALAT/BAHAN/AKSES</div>
+                        <div style="white-space:pre-wrap;line-height:1.5;">${escapeHtml(item.resources) || '-'}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:11px;color:#a0aec0;font-weight:600;margin-bottom:4px;">💡 CATATAN/TIPS</div>
+                        <div style="white-space:pre-wrap;line-height:1.5;">${escapeHtml(item.notes) || '-'}</div>
+                    </div>
+                    <div style="font-size:11px;color:#a0aec0;border-top:1px solid #edf2f7;padding-top:8px;">👤 Dibuat oleh: ${escapeHtml(item.created_by) || '-'} &middot; ID #${item.id_x}</div>
+                    <div style="display:flex;gap:8px;">
+                        ${ownsItem(item) ? `<button class="btn btn-warning btn-sm" onclick="closeModal('detailModal'); openEditModal(${item.id_x})">✏️ Edit</button>` : ''}
+                        <button class="btn btn-primary btn-sm" onclick="closeModal('detailModal'); window.location.href='perencanaan.html?ref_analisa_id=${item.id_x}&ref_analisa_name=${encodeURIComponent(item.job_name)}'">➕ Buat Rencana</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailModal').classList.add('active');
+        }
+
         function renderList() {
             const search = document.getElementById('searchInput').value.toLowerCase().trim();
             const filtered = allData.filter(item =>
@@ -1190,8 +1298,8 @@
                 <div class="list-item">
                     <div class="id">#${item.id_x}</div>
                     <div class="field">
-                        <span class="label">Pekerjaan:</span> ${escapeHtml(item.job_name) || '-'}
-                        ${item.description ? `<br><span style="font-size:11px;color:#718096;">${escapeHtml(item.description).slice(0, 80)}${item.description.length > 80 ? '…' : ''}</span>` : ''}
+                        <span class="label">Pekerjaan:</span> <span style="cursor:pointer;color:#3182ce;font-weight:600;" onclick="showDetail(${item.id_x})" title="Klik untuk lihat detail">${escapeHtml(item.job_name) || '-'}</span>
+                        ${item.description ? `<br><span style="font-size:11px;color:#718096;cursor:pointer;" onclick="showDetail(${item.id_x})">${escapeHtml(item.description).slice(0, 80)}${item.description.length > 80 ? '…' : ''}</span>` : ''}
                         ${item.revised_from_id ? `<br><span style="font-size:10px;color:#9c4221;">🔁 Revisi dari #${item.revised_from_id} ${escapeHtml(item.revised_from_name) || ''}</span>` : ''}
                         ${renderPlanChip(item.id_x)}
                     </div>

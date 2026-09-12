@@ -746,10 +746,10 @@
                         <div class="ref-selector" style="display:flex;gap:8px;align-items:center;">
                             <input type="text" id="refPlanId" placeholder="ID Rencana" style="flex:0 0 80px;">
                             <input type="text" id="refPlanName" placeholder="Nama pekerjaan dari rencana" readonly style="background:#edf2f7;flex:1;">
-                            <button class="btn btn-primary btn-sm" type="button" onclick="openRefPicker()">📂 Pilih</button>
-                            <button class="btn btn-outline btn-sm" type="button" onclick="clearRef()">✕</button>
+                            <button class="btn btn-primary btn-sm" type="button" id="btnPilihRef" onclick="openRefPicker()">📂 Pilih</button>
+                            <button class="btn btn-outline btn-sm" type="button" id="btnClearRef" onclick="clearRef()">✕</button>
                         </div>
-                        <small style="color:#a0aec0;">Pilih dari Rencana yang sudah dibuat</small>
+                        <small style="color:#a0aec0;" id="refHelpText">Pilih dari Rencana yang sudah dibuat</small>
                     </div>
                     <div class="form-group">
                         <label>📌 Nama Pekerjaan *</label>
@@ -774,6 +774,10 @@
                 <div class="form-group">
                     <label>📅 Tanggal Aktual *</label>
                     <input type="date" id="actualDate" required>
+                </div>
+
+                <div id="editLockedNotice" style="display:none;background:#ebf8ff;border:1px solid #90cdf4;border-radius:8px;padding:8px 12px;font-size:12px;color:#2c5282;margin-bottom:4px;">
+                    🔒 Field di atas dikunci saat edit (data ini tersinkron dari Perencanaan). Yang bisa diubah cuma Hasil Aktual &amp; Keterangan.
                 </div>
 
                 <div class="form-group">
@@ -1258,6 +1262,24 @@
         }
 
         // ==================== MODAL FORM ====================
+        function setFieldsLocked(locked) {
+            const ids = ['refPlanId', 'jobName', 'executor', 'status', 'actualDate'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el.tagName === 'SELECT') {
+                    el.disabled = locked;
+                } else {
+                    el.readOnly = locked;
+                }
+                el.style.background = locked ? '#edf2f7' : '';
+                el.style.cursor = locked ? 'not-allowed' : '';
+            });
+            document.getElementById('btnPilihRef').style.display = locked ? 'none' : 'inline-flex';
+            document.getElementById('btnClearRef').style.display = locked ? 'none' : 'inline-flex';
+            document.getElementById('refHelpText').style.display = locked ? 'none' : 'block';
+            document.getElementById('editLockedNotice').style.display = locked ? 'block' : 'none';
+        }
+
         function openAddModal() {
             console.log('⚙️ Opening Add Modal');
             currentEditId = null;
@@ -1266,6 +1288,7 @@
             document.getElementById('formModalTitle').textContent = '⚙️ Catat Pelaksanaan';
             document.getElementById('deleteBtn').style.display = 'none';
             document.getElementById('saveBtn').textContent = '💾 Simpan';
+            setFieldsLocked(false);
 
             const now = new Date().toISOString().split('T')[0];
 
@@ -1299,6 +1322,7 @@
             document.getElementById('formModalTitle').textContent = `✏️ Edit Pelaksanaan: ${item.job_name}`;
             document.getElementById('deleteBtn').style.display = isAdmin(CURRENT_USER) ? 'inline-flex' : 'none';
             document.getElementById('saveBtn').textContent = '💾 Update';
+            setFieldsLocked(true);
 
             document.getElementById('refPlanId').value = item.ref_plan_id || '';
             document.getElementById('refPlanName').value = item.ref_plan_name || '';

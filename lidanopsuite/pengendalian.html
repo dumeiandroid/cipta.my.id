@@ -725,14 +725,15 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>⚙️ Referensi Pelaksanaan</label>
-                        <div class="ref-selector" style="display:flex;gap:8px;align-items:center;">
+                        <label id="refLabel">⚙️ Referensi Pelaksanaan</label>
+                        <div class="ref-selector" id="refSelectorRow" style="display:flex;gap:8px;align-items:center;">
                             <input type="text" id="refExecutionId" placeholder="ID Pelaksanaan" style="flex:0 0 80px;">
                             <input type="text" id="refExecutionName" placeholder="Nama pekerjaan dari pelaksanaan" readonly style="background:#edf2f7;flex:1;">
-                            <button class="btn btn-primary btn-sm" type="button" onclick="openRefPicker()">📂 Pilih</button>
-                            <button class="btn btn-outline btn-sm" type="button" onclick="clearRef()">✕</button>
+                            <button class="btn btn-primary btn-sm" type="button" id="refPickBtn" onclick="openRefPicker()">📂 Pilih</button>
+                            <button class="btn btn-outline btn-sm" type="button" id="refClearBtn" onclick="clearRef()">✕</button>
                         </div>
-                        <small style="color:#a0aec0;">Pilih dari Pelaksanaan yang bermasalah (status deviated)</small>
+                        <small style="color:#a0aec0;" id="refHint">Pilih dari Pelaksanaan yang bermasalah (status deviated)</small>
+                        <small style="color:#dd6b20;display:none;" id="refLockNote">🔒 Referensi otomatis dari Perencanaan (Menyimpang) — tidak bisa diubah dari sini.</small>
                     </div>
                     <div class="form-group">
                         <label>📌 Nama Pekerjaan *</label>
@@ -832,13 +833,14 @@
             status: 'x_08',
             target_resolve_date: 'x_09',
             notes: 'x_10',
-            follow_up_path: 'x_11'
+            follow_up_path: 'x_11',
+            ref_type: 'x_12'
         };
 
         const HISTORY_COL = 'x_25';
         const FIELD_LABELS = {
-            ref_execution_id: '⚙️ Referensi Pelaksanaan ID',
-            ref_execution_name: '⚙️ Referensi Pelaksanaan Nama',
+            ref_execution_id: '🔗 Referensi ID',
+            ref_execution_name: '🔗 Referensi Nama',
             job_name: '📌 Nama Pekerjaan',
             deviation_type: '📂 Jenis Deviasi',
             root_cause: '🔍 Akar Masalah',
@@ -847,8 +849,13 @@
             status: '📂 Status',
             target_resolve_date: '📅 Target Selesai',
             notes: '📝 Keterangan',
-            follow_up_path: '➡️ Tindak Lanjut'
+            follow_up_path: '➡️ Tindak Lanjut',
+            ref_type: '🔗 Jenis Referensi'
         };
+
+        // ref_type menentukan arti field ref_execution_id/ref_execution_name di atas:
+        // - 'plan'      → x_01/x_02 berisi ID & nama Perencanaan LANGSUNG (dari rencana Menyimpang, otomatis)
+        // - 'execution' → x_01/x_02 berisi ID & nama Pelaksanaan (alur manual/lama, tetap didukung)
 
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', () => {
@@ -984,11 +991,17 @@
             returnToExecutionIfNeeded();
         }
 
-        // ==================== BRIDGING: pengendalian -> pelaksanaan -> perencanaan -> analisa_pekerjaan ====================
+        // ==================== BRIDGING ====================
+        // ref_type === 'plan'      → pengendalian -> perencanaan (langsung) -> analisa_pekerjaan
+        // ref_type === 'execution' → pengendalian -> pelaksanaan -> perencanaan -> analisa_pekerjaan
         function resolveFollowUpTarget(item) {
-            const exec = execData.find(e => e.id_x === item.ref_execution_id);
-            if (!exec) return null;
-            const plan = planData.find(p => p.id_x === exec.ref_plan_id);
+            let plan = null;
+            if (item.ref_type === 'plan') {
+                plan = planData.find(p => p.id_x === item.ref_execution_id);
+            } else {
+                const exec = execData.find(e => e.id_x === item.ref_execution_id);
+                if (exec) plan = planData.find(p => p.id_x === exec.ref_plan_id);
+            }
             if (item.follow_up_path === 'revisi_rencana') {
                 if (!plan) return null;
                 return { url: `perencanaan.html?edit_plan_id=${plan.id_x}`, label: 'Perencanaan #' + plan.id_x };
@@ -996,7 +1009,7 @@
             if (item.follow_up_path === 'analisa_ulang') {
                 if (!plan) return null;
                 return {
-                    url: `analisa_pekerjaan.html?revised_from_id=${plan.ref_analisa_id || ''}&revised_from_name=${encodeURIComponent(plan.ref_analisa_name || '')}`,
+                    url: `index.html?revised_from_id=${plan.ref_analisa_id || ''}&revised_from_name=${encodeURIComponent(plan.ref_analisa_name || '')}`,
                     label: 'Analisa Pekerjaan baru'
                 };
             }
@@ -1040,6 +1053,7 @@
                 id_x: row.id_x,
                 ref_execution_id: parseInt(row.x_01) || null,
                 ref_execution_name: row.x_02 || '',
+                ref_type: row.x_12 || 'execution',
                 job_name: row.x_03 || '',
                 deviation_type: row.x_04 || 'telat',
                 root_cause: row.x_05 || '',
@@ -1257,14 +1271,15 @@
             body.innerHTML = filtered.map(item => {
                 const targetDate = item.target_resolve_date ? new Date(item.target_resolve_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
 
+                const refLabel = item.ref_type === 'plan' ? '📋 Ref Perencanaan' : '⚙️ Ref Pelaksanaan';
                 return `
                     <div class="list-item">
                         <div class="id">#${item.id_x}</div>
                         <div class="field">
                             <span class="label">Pekerjaan:</span> ${escapeHtml(item.job_name) || '-'}
-                            ${item.ref_execution_id ? `<br><span style="font-size:10px;color:#718096;">Ref Pelaksanaan: #${item.ref_execution_id}</span>` : ''}
+                            ${item.ref_execution_id ? `<br><span style="font-size:10px;color:#718096;">${refLabel}: #${item.ref_execution_id}</span>` : ''}
                         </div>
-                        <div class="field"><span class="label">Ref Pelaksanaan:</span> ${item.ref_execution_id ? `#${item.ref_execution_id}` : '-'}</div>
+                        <div class="field"><span class="label">${refLabel}:</span> ${item.ref_execution_id ? `#${item.ref_execution_id}` : '-'}</div>
                         <div class="field"><span class="label">Akar Masalah:</span> ${escapeHtml(item.root_cause) ? item.root_cause.substring(0, 25) + (item.root_cause.length > 25 ? '...' : '') : '-'}</div>
                         <div class="field"><span class="label">Status:</span> <span class="badge-status ${item.status}">${statusLabels[item.status] || item.status}</span></div>
                         <div class="field">
@@ -1310,6 +1325,23 @@
             showToast(`✅ ${allData.length} pengendalian dimuat`, 'success');
         }
 
+        // ==================== LOCK/UNLOCK REFERENSI ====================
+        // ref_type === 'plan' berarti entri ini dibuat otomatis dari Perencanaan yang Menyimpang —
+        // referensinya tidak boleh diubah manual dari sini.
+        let currentRefType = 'execution';
+        function setRefLockState(refType) {
+            currentRefType = refType || 'execution';
+            const isPlan = currentRefType === 'plan';
+            document.getElementById('refLabel').textContent = isPlan ? '📋 Referensi Perencanaan' : '⚙️ Referensi Pelaksanaan';
+            document.getElementById('refExecutionId').placeholder = isPlan ? 'ID Perencanaan' : 'ID Pelaksanaan';
+            document.getElementById('refExecutionName').placeholder = isPlan ? 'Nama pekerjaan dari perencanaan' : 'Nama pekerjaan dari pelaksanaan';
+            document.getElementById('refExecutionId').readOnly = isPlan;
+            document.getElementById('refPickBtn').style.display = isPlan ? 'none' : 'inline-flex';
+            document.getElementById('refClearBtn').style.display = isPlan ? 'none' : 'inline-flex';
+            document.getElementById('refHint').style.display = isPlan ? 'none' : 'block';
+            document.getElementById('refLockNote').style.display = isPlan ? 'block' : 'none';
+        }
+
         // ==================== MODAL FORM ====================
         function openAddModal() {
             console.log('🎯 Opening Add Modal');
@@ -1325,6 +1357,7 @@
             const futureStr = future.toISOString().split('T')[0];
 
             clearRef();
+            setRefLockState('execution');
             document.getElementById('jobName').value = '';
             document.getElementById('deviationType').value = 'telat';
             document.getElementById('rootCause').value = '';
@@ -1359,6 +1392,7 @@
             document.getElementById('deleteBtn').style.display = isAdmin(CURRENT_USER) ? 'inline-flex' : 'none';
             document.getElementById('saveBtn').textContent = '💾 Update';
 
+            setRefLockState(item.ref_type);
             document.getElementById('refExecutionId').value = item.ref_execution_id || '';
             document.getElementById('refExecutionName').value = item.ref_execution_name || '';
             document.getElementById('jobName').value = item.job_name || '';
@@ -1407,6 +1441,7 @@
             const data = {
                 ref_execution_id: parseInt(document.getElementById('refExecutionId').value) || null,
                 ref_execution_name: document.getElementById('refExecutionName').value.trim(),
+                ref_type: currentRefType,
                 job_name: jobName,
                 deviation_type: document.getElementById('deviationType').value,
                 root_cause: document.getElementById('rootCause').value.trim(),

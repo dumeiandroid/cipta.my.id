@@ -378,6 +378,52 @@
             margin-bottom: 8px;
         }
 
+        /* ===== LOADING STATE ===== */
+        .loading-state {
+            padding: 50px 20px;
+            text-align: center;
+            color: #a0aec0;
+        }
+        .spinner {
+            width: 34px;
+            height: 34px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #4299e1;
+            border-radius: 50%;
+            margin: 0 auto 14px;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-state p {
+            font-size: 14px;
+            font-weight: 600;
+            color: #718096;
+        }
+        .skeleton-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 18px 20px;
+            border-bottom: 1px solid #edf2f7;
+        }
+        .skeleton-bar {
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(90deg, #edf2f7 25%, #e2e8f0 37%, #edf2f7 63%);
+            background-size: 400% 100%;
+            animation: shimmer 1.4s ease infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 100% 50%; }
+            100% { background-position: 0 50%; }
+        }
+        .div-tab-count.is-loading {
+            color: transparent;
+            position: relative;
+        }
+
         .modal-overlay {
             display: none;
             position: fixed;
@@ -561,42 +607,67 @@
             letter-spacing: 0.5px;
         }
 
-        .stats-summary .stat-card.hot .number { color: #fc8181; }
-        .stats-summary .stat-card.warm .number { color: #ed8936; }
-        .stats-summary .stat-card.cold .number { color: #4299e1; }
-        .stats-summary .stat-card.converted .number { color: #48bb78; }
-        .stats-summary .stat-card.total .number { color: #2d3748; }
+        .stat-card.hot .number { color: #fc8181; }
+        .stat-card.warm .number { color: #ed8936; }
+        .stat-card.cold .number { color: #4299e1; }
+        .stat-card.converted .number { color: #48bb78; }
+        .stat-card.total .number { color: #2d3748; }
 
-        .stat-card.tab-card {
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .stat-card.tab-card:hover {
-            border-color: #a0aec0;
-            transform: translateY(-1px);
-        }
-        .stat-card.tab-card.tab-active {
-            border-color: #4299e1;
-            border-width: 2px;
-            box-shadow: 0 0 0 3px rgba(66,153,225,0.15);
-        }
-
-        .division-tabs {
+        /* ===== DIVISION TABS (bukan stat-card lagi, tab navigasi biasa) ===== */
+        .division-tabs-bar {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 16px;
+            gap: 6px;
+            background: white;
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 20px;
         }
-        .division-tabs .stat-card {
-            flex: 1 1 110px;
-            padding: 10px 12px;
-        }
-        .division-tabs .stat-card .number {
-            font-size: 20px;
-        }
-        .division-tabs .stat-card .label {
-            font-size: 11px;
+        .div-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 14px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #4a5568;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
             white-space: nowrap;
+            transition: background 0.15s, color 0.15s;
+        }
+        .div-tab:hover {
+            background: #f7fafc;
+            color: #2d3748;
+        }
+        .div-tab.tab-active {
+            background: #ebf8ff;
+            color: #2b6cb0;
+        }
+        .div-tab .div-tab-count {
+            background: #edf2f7;
+            color: #718096;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 1px 7px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+        .div-tab.tab-active .div-tab-count {
+            background: #bee3f8;
+            color: #2b6cb0;
+        }
+        @media (max-width: 600px) {
+            .division-tabs-bar {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
         }
 
         @media (max-width: 992px) {
@@ -741,39 +812,31 @@
         </div>
 
         <!-- DIVISION TABS -->
-        <div class="stats-summary division-tabs" id="divisionTabs">
-            <div class="stat-card total tab-card" id="divTabAll" onclick="switchDivision('all')">
-                <div class="number" id="statTotal">0</div>
-                <div class="label">🗂️ Semua</div>
-            </div>
-            <div class="stat-card tab-card" id="divTabPromosi" onclick="switchDivision('promosi')">
-                <div class="number" id="statPromosi">0</div>
-                <div class="label">📢 Promosi</div>
-            </div>
-            <div class="stat-card tab-card" id="divTabSales" onclick="switchDivision('sales')">
-                <div class="number" id="statSales">0</div>
-                <div class="label">💼 Sales & Kemitraan</div>
-            </div>
-            <div class="stat-card tab-card" id="divTabProduk" onclick="switchDivision('produk')">
-                <div class="number" id="statProduk">0</div>
-                <div class="label">🧠 Produk & Layanan</div>
-            </div>
-            <div class="stat-card tab-card" id="divTabKeuangan" onclick="switchDivision('keuangan')">
-                <div class="number" id="statKeuangan">0</div>
-                <div class="label">💰 Keuangan & Adm.</div>
-            </div>
-            <div class="stat-card tab-card" id="divTabIt" onclick="switchDivision('it')">
-                <div class="number" id="statIt">0</div>
-                <div class="label">🖥️ IT & Sistem</div>
-            </div>
-            <div class="stat-card tab-card" id="divTabHrd" onclick="switchDivision('hrd')">
-                <div class="number" id="statHrd">0</div>
-                <div class="label">👥 HRD & SDM</div>
-            </div>
-            <div class="stat-card tab-card" id="divTabLainnya" onclick="switchDivision('lainnya')">
-                <div class="number" id="statLainnya">0</div>
-                <div class="label">📌 Lainnya</div>
-            </div>
+        <div class="division-tabs-bar" id="divisionTabs">
+            <button type="button" class="div-tab" id="divTabAll" onclick="switchDivision('all')">
+                🗂️ Semua <span class="div-tab-count" id="statTotal">–</span>
+            </button>
+            <button type="button" class="div-tab tab-active" id="divTabPromosi" onclick="switchDivision('promosi')">
+                📢 Promosi <span class="div-tab-count" id="statPromosi">0</span>
+            </button>
+            <button type="button" class="div-tab" id="divTabSales" onclick="switchDivision('sales')">
+                💼 Sales & Kemitraan <span class="div-tab-count" id="statSales">–</span>
+            </button>
+            <button type="button" class="div-tab" id="divTabProduk" onclick="switchDivision('produk')">
+                🧠 Produk & Layanan <span class="div-tab-count" id="statProduk">–</span>
+            </button>
+            <button type="button" class="div-tab" id="divTabKeuangan" onclick="switchDivision('keuangan')">
+                💰 Keuangan & Adm. <span class="div-tab-count" id="statKeuangan">–</span>
+            </button>
+            <button type="button" class="div-tab" id="divTabIt" onclick="switchDivision('it')">
+                🖥️ IT & Sistem <span class="div-tab-count" id="statIt">–</span>
+            </button>
+            <button type="button" class="div-tab" id="divTabHrd" onclick="switchDivision('hrd')">
+                👥 HRD & SDM <span class="div-tab-count" id="statHrd">–</span>
+            </button>
+            <button type="button" class="div-tab" id="divTabLainnya" onclick="switchDivision('lainnya')">
+                📌 Lainnya <span class="div-tab-count" id="statLainnya">–</span>
+            </button>
         </div>
 
         <!-- STATS SUMMARY -->
@@ -809,10 +872,9 @@
                 <span>Aksi</span>
             </div>
             <div id="listBody">
-                <div class="empty-state">
-                    <div class="icon">🗂️</div>
-                    <h3>Belum ada analisa pekerjaan</h3>
-                    <p>Klik "Tambah Pekerjaan" untuk mulai mengisi gudang analisa pekerjaan</p>
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Memuat data pekerjaan...</p>
                 </div>
             </div>
         </div>
@@ -974,7 +1036,11 @@
         // ==================== STATE ====================
         let allData = [];
         let currentEditId = null;
-        let currentDivision = 'all';
+        let currentDivision = 'promosi';
+        // Divisi yang sudah pernah dibuka user — totalnya baru dihitung & ditampilkan
+        // setelah tab-nya dibuka minimal sekali. Yang belum dibuka cuma tampil garis "–".
+        // Promosi dibuka duluan karena itu tab aktif default.
+        const openedDivisions = new Set(['promosi']);
 
         // Divisi Lidan Psikologi — nilai (value) ini yang disimpan di kolom category (x_02).
         // Entri lama yang kategorinya tidak cocok dengan salah satu value di bawah akan
@@ -1034,9 +1100,16 @@
             console.log('🗂️ Analisa Pekerjaan Started');
             console.log('📡 Table:', TABLE);
             initUserBadge();
+            // Sebelumnya: loadPlanSummary() ditunggu (await) dulu baru fetchData() jalan —
+            // artinya list utama baru mulai diambil SETELAH request perencanaan selesai,
+            // jadi dua request berjalan berurutan (bukan bersamaan) dan list terasa lambat
+            // muncul di awal. Sekarang keduanya (+ stage counts) dijalankan PARALEL,
+            // list langsung dirender begitu datanya sendiri sudah siap.
             loadStageCounts();
-            loadPlanSummary().then(() => {
-                refreshData();
+            const planPromise = loadPlanSummary();
+            const dataPromise = refreshData(true);
+            Promise.all([planPromise, dataPromise]).then(() => {
+                renderList(); // render ulang sekali lagi agar chip Perencanaan ikut update
                 handleUrlParams();
             });
         });
@@ -1388,6 +1461,7 @@
 
         function switchDivision(div) {
             currentDivision = div;
+            openedDivisions.add(div);
             renderList();
         }
 
@@ -1462,18 +1536,26 @@
             const mahir = allData.filter(d => d.difficulty === 'mahir').length;
             const siap = allData.filter(d => d.status === 'siap').length;
 
-            document.getElementById('statTotal').textContent = total;
             document.getElementById('statPemula').textContent = pemula;
             document.getElementById('statMenengah').textContent = menengah;
             document.getElementById('statMahir').textContent = mahir;
             document.getElementById('statSiap').textContent = siap;
 
+            // Total di tab "Semua" & tiap divisi hanya dihitung/ditampilkan kalau tab-nya
+            // sudah pernah dibuka. Belum dibuka → tetap tampil "–" (garis).
+            document.getElementById('statTotal').textContent = openedDivisions.has('all') ? total : '–';
+            document.getElementById('divTabAll').classList.toggle('tab-active', currentDivision === 'all');
+
             Object.keys(DIVISIONS).forEach(key => {
-                const count = allData.filter(d => divisionKeyOf(d) === key).length;
-                document.getElementById(DIVISIONS[key].stat).textContent = count;
+                const el = document.getElementById(DIVISIONS[key].stat);
+                if (openedDivisions.has(key)) {
+                    const count = allData.filter(d => divisionKeyOf(d) === key).length;
+                    el.textContent = count;
+                } else {
+                    el.textContent = '–';
+                }
                 document.getElementById(DIVISIONS[key].tab).classList.toggle('tab-active', currentDivision === key);
             });
-            document.getElementById('divTabAll').classList.toggle('tab-active', currentDivision === 'all');
         }
 
         function escapeHtml(text) {
@@ -1483,11 +1565,13 @@
             return div.innerHTML;
         }
 
-        async function refreshData() {
-            showToast('🔄 Memuat data...', 'info');
+        async function refreshData(silent = false) {
+            // Saat load pertama halaman, spinner di listBody sudah cukup jadi indikator —
+            // toast di sini hanya dipakai untuk refresh manual/setelah simpan supaya tidak dobel.
+            if (!silent) showToast('🔄 Memuat data...', 'info');
             await fetchData();
             renderList();
-            showToast(`✅ ${allData.length} pekerjaan dimuat`, 'success');
+            if (!silent) showToast(`✅ ${allData.length} pekerjaan dimuat`, 'success');
         }
 
         // ==================== MODAL FORM ====================
