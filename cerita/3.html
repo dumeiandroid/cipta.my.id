@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>100 Cerita Ilustrasi — Seri 3</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+  }
+
+  .container { max-width: 1200px; margin: 0 auto; }
+
+  header { text-align: center; color: white; margin-bottom: 30px; }
+  header h1 { font-size: 2.2rem; margin-bottom: 10px; text-shadow: 2px 2px 6px rgba(0,0,0,0.3); }
+  header p { font-size: 1rem; opacity: 0.95; }
+  header .seri-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.25);
+    padding: 5px 16px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.4);
+  }
+
+  .search-box { position: relative; max-width: 600px; margin: 0 auto 20px; }
+  .search-box input {
+    width: 100%;
+    padding: 15px 50px 15px 20px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 50px;
+    outline: none;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    transition: 0.3s;
+  }
+  .search-box input:focus { box-shadow: 0 8px 28px rgba(0,0,0,0.3); transform: translateY(-2px); }
+  .search-box::after {
+    content: '🔍';
+    position: absolute;
+    right: 20px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    pointer-events: none;
+  }
+
+  .stats { text-align: center; color: white; margin-bottom: 20px; font-size: 0.95rem; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 16px;
+    padding: 22px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+    border-left: 5px solid #11998e;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #11998e, #38ef7d);
+    transform: scaleX(0);
+    transition: transform 0.3s;
+  }
+  .card:hover { transform: translateY(-5px); box-shadow: 0 12px 28px rgba(0,0,0,0.2); }
+  .card:hover::before { transform: scaleX(1); }
+
+  .card .number {
+    display: inline-block;
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+  }
+
+  .card h3 { font-size: 1.1rem; color: #2d3748; margin-bottom: 8px; }
+  .card .pelajaran { font-size: 0.9rem; color: #718096; font-style: italic; line-height: 1.5; }
+
+  .no-result {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: white;
+    padding: 60px 20px;
+    font-size: 1.1rem;
+    background: rgba(255,255,255,0.1);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+  }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    animation: fadeIn 0.3s;
+  }
+  .modal-overlay.active { display: flex; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .modal {
+    background: white;
+    border-radius: 20px;
+    max-width: 720px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 35px;
+    position: relative;
+    animation: slideUp 0.4s;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 15px; right: 15px;
+    background: #f1f5f9;
+    border: none;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: 0.2s;
+    color: #64748b;
+  }
+  .modal-close:hover { background: #e2e8f0; transform: rotate(90deg); }
+
+  .modal .badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    color: white;
+    font-size: 0.8rem;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 15px;
+  }
+
+  .modal h2 { font-size: 1.6rem; color: #1a202c; margin-bottom: 20px; }
+
+  .modal .section { margin-bottom: 22px; }
+  .modal .section h4 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #11998e;
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+  .modal .section p { font-size: 1rem; line-height: 1.75; color: #4a5568; }
+
+  .modal .section.pelajaran-box {
+    background: #f0fdf9;
+    border-left: 4px solid #11998e;
+    padding: 18px 20px;
+    border-radius: 0 12px 12px 0;
+  }
+
+  .modal ul { list-style: none; padding: 0; }
+  .modal ul li {
+    position: relative;
+    padding-left: 28px;
+    margin-bottom: 12px;
+    font-size: 0.98rem;
+    line-height: 1.7;
+    color: #4a5568;
+  }
+  .modal ul li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #11998e;
+    font-weight: bold;
+  }
+  .modal ul li strong { color: #2d3748; }
+
+  .modal::-webkit-scrollbar { width: 8px; }
+  .modal::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 4px; }
+
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.6rem; }
+    .modal { padding: 25px 20px; }
+    .modal h2 { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <span class="seri-badge">🌿 Seri 3</span>
+    <h1>📚 100 Cerita Ilustrasi</h1>
+    <p>Klik kartu untuk membaca ringkasan & pelajaran hidupnya</p>
+  </header>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Cari cerita atau pelajaran...">
+  </div>
+
+  <div class="stats" id="stats">Menampilkan 100 cerita</div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+/* =========================================================
+   SERI 3 — 100 CERITA BARU (berbeda dari Seri 1 & 2)
+   ========================================================= */
+const ceritaData = [
+{
+  id: 1,
+  judul: "Lampu yang Tidak Pernah Padam",
+  ringkasan: "Di sebuah desa terpencil, ada sebuah rumah kecil yang lampunya selalu menyala sepanjang malam. Warga penasaran, sebab pemiliknya hanya seorang nenek tua yang hidup sendiri. Suatu hari, seorang anak datang bertanya, 'Nek, kenapa lampunya tidak pernah dimatikan?' Nenek itu menjawab, 'Supaya siapa pun yang tersesat di malam hari bisa menemukan arah pulang. Aku tidak bisa memberi banyak, tapi aku bisa memberi cahaya.' Anak itu tertegun, karena selama ini banyak orang melewati rumah itu tanpa pernah menyadari bahwa ada seseorang yang telah menuntun mereka pulang.",
+  pelajaran: "Kebaikan kecil yang konsisten bisa menjadi penyelamat bagi banyak orang.",
+  pelajaranTambahan: [
+    "<strong>Kebaikan tidak harus besar</strong> — satu lampu cukup untuk menuntun arah.",
+    "<strong>Konsistensi lebih berharga dari intensitas</strong> — lampu yang menyala setiap malam lebih berarti.",
+    "<strong>Berbuat baik tanpa mengharap balasan</strong> — itulah kebaikan sejati.",
+    "<strong>Kita mungkin tidak tahu siapa yang tertolong</strong> — tapi dampaknya nyata."
+  ]
+},
+{
+  id: 2,
+  judul: "Gelas yang Diisi Terlalu Cepat",
+  ringkasan: "Seorang anak diminta gurunya menuang air ke dalam gelas. Ia menuang dengan sangat cepat hingga air meluap ke mana-mana. Gurunya berkata, 'Coba pelan-pelan, perhatikan permukaan air.' Ketika anak itu menuang dengan sabar, gelas itu penuh tanpa tumpah. Guru berkata, 'Belajar itu seperti menuang air. Kalau terburu-buru, banyak yang terbuang. Kalau perlahan, semua terserap.'",
+  pelajaran: "Belajar dengan sabar menyerap lebih banyak daripada terburu-buru.",
+  pelajaranTambahan: [
+    "<strong>Kualitas lebih penting dari kecepatan</strong> — bukan seberapa cepat, tapi seberapa paham.",
+    "<strong>Pelan tapi penuh</strong> — lebih baik dari cepat tapi tumpah.",
+    "<strong>Kesabaran adalah guru terbaik</strong> — dalam proses belajar.",
+    "<strong>Nikmati setiap langkah</strong> — bukan hanya hasilnya."
+  ]
+},
+{
+  id: 3,
+  judul: "Pelaut dan Bintang Utara",
+  ringkasan: "Seorang pelaut muda tersesat di tengah laut saat awan menutupi seluruh langit. Ia panik dan hampir menyerah. Tiba-tiba, awan terbuka sedikit dan bintang utara tampak. Kapten tua berkata, 'Bintang itu tidak berubah posisinya. Kalau kau selalu mengingat arahnya, kau tidak akan tersesat. Hidupmu juga butuh bintang utara — prinsip yang tidak berubah.'",
+  pelajaran: "Prinsip hidup yang kokoh adalah kompas yang menyelamatkan kita di saat gelap.",
+  pelajaranTambahan: [
+    "<strong>Punya prinsip yang jelas</strong> — agar tidak goyah saat badai.",
+    "<strong>Nilai yang tidak berubah</strong> — jangkar di tengah ketidakpastian.",
+    "<strong>Bintang tidak selalu terlihat</strong> — tapi selalu ada.",
+    "<strong>Kembali pada prinsip</strong> — saat merasa tersesat."
+  ]
+},
+{
+  id: 4,
+  judul: "Anak yang Menanyakan Hujan",
+  ringkasan: "Seorang anak bertanya pada ibunya, 'Bu, kenapa hujan turun dari langit?' Ibunya menjawab, 'Karena langit ingin berbagi.' Anak itu bertanya lagi, 'Kenapa kadang deras, kadang gerimis?' Ibunya tersenyum, 'Karena langit tahu, tidak semua tanah butuh air yang sama banyak.' Anak itu pun belajar bahwa pemberian harus disesuaikan dengan kebutuhan penerimanya.",
+  pelajaran: "Memberi harus disesuaikan dengan kebutuhan, bukan keinginan kita.",
+  pelajaranTambahan: [
+    "<strong>Empati dalam memberi</strong> — pahami dulu apa yang dibutuhkan.",
+    "<strong>Setiap orang berbeda</strong> — tidak bisa diperlakukan sama.",
+    "<strong>Alam mengajarkan kebijaksanaan</strong> — hujan saja tahu caranya.",
+    "<strong>Kesederhanaan pertanyaan anak</strong> — bisa membuka wawasan besar."
+  ]
+},
+{
+  id: 5,
+  judul: "Kakek dan Cangkir Kopi",
+  ringkasan: "Seorang kakek selalu memakai cangkir kopi yang gagangnya sudah patah. Cucunya membelikan cangkir baru yang bagus. Kakek itu berterima kasih, tapi tetap memakai cangkir lamanya. Cucunya bingung. Kakek berkata, 'Cangkir ini hadiah dari istrimu — nenekmu — sebelum ia meninggal. Gagangnya patah karena sering kami pakai bersama. Yang rusak itu bukan masalah, yang penting kenangannya.'",
+  pelajaran: "Kenangan lebih berharga dari kesempurnaan benda.",
+  pelajaranTambahan: [
+    "<strong>Nilai bukan dari bentuk</strong> — tapi dari ceritanya.",
+    "<strong>Yang rusak bisa jadi paling berharga</strong> — karena maknanya.",
+    "<strong>Hargai warisan kenangan</strong> — bukan hanya warisan materi.",
+    "<strong>Benda bisa menyimpan cinta</strong> — melampaui wujud fisiknya."
+  ]
+},
+{
+  id: 6,
+  judul: "Guru dan Anak yang Sulit Fokus",
+  ringkasan: "Seorang murid selalu gagal fokus di kelas. Ia sering melamun dan tidak mengerjakan tugas. Guru-guru lain menganggapnya malas. Namun, seorang guru baru memperhatikan bahwa anak itu selalu menggambar di buku catatannya. Ia ternyata sangat berbakat menggambar. Guru itu mengajaknya berbicara dan memberi ruang untuk mengembangkan bakatnya. Beberapa tahun kemudian, anak itu menjadi ilustrator terkenal dan berkata, 'Guru itu adalah orang pertama yang melihat saya sebagai manusia, bukan masalah.'",
+  pelajaran: "Setiap anak punya bakatnya sendiri; tugas guru adalah menemukannya, bukan menyeragamkan.",
+  pelajaranTambahan: [
+    "<strong>Jangan cap seseorang dari kelemahannya</strong> — lihat kelebihannya juga.",
+    "<strong>Bakat bisa tersembunyi di balik perilaku</strong> — yang tampak 'salah'.",
+    "<strong>Perhatian tulus mengubah hidup</strong> — lebih dari hukuman.",
+    "<strong>Setiap anak unik</strong> — bukan masalah, tapi potensi."
+  ]
+},
+{
+  id: 7,
+  judul: "Pemuda dan Peta yang Robek",
+  ringkasan: "Seorang pemuda menemukan peta tua yang sudah robek di loteng rumah kakeknya. Ia ingin membuangnya, tapi penasaran dengan satu bagian yang masih utuh. Ia mengikuti petunjuk di bagian itu dan menemukan sebuah kotak berisi surat-surat kakeknya semasa muda. Di dalamnya, ia menemukan cerita keluarga yang tidak pernah ia dengar. Ia berkata, 'Peta robek ini justru membuka jalan ke masa lalu yang berharga.'",
+  pelajaran: "Yang tampak rusak bisa menyimpan cerita berharga; jangan buru-buru membuangnya.",
+  pelajaranTambahan: [
+    "<strong>Jangan menilai dari tampilan</strong> — banyak hal berharga tersembunyi.",
+    "<strong>Rasa penasaran itu baik</strong> — bisa membuka harta tersembunyi.",
+    "<strong>Sejarah keluarga berharga</strong> — lebih dari yang kita kira.",
+    "<strong>Kenangan masa lalu</strong> — pondasi masa depan."
+  ]
+},
+{
+  id: 8,
+  judul: "Petani dan Bambu yang Tinggi",
+  ringkasan: "Seorang petani menanam bambu di pinggir sawahnya. Selama tiga tahun, bambu itu tidak menunjukkan pertumbuhan yang berarti. Tetangganya menyarankan mencabutnya. Namun, pada tahun keempat, bambu itu tumbuh sangat cepat hingga menjulang tinggi. Ternyata selama tiga tahun pertama, akarnya tumbuh sangat dalam dan kuat. Petani itu berkata, 'Yang tidak terlihat, kadang yang paling penting.'",
+  pelajaran: "Pertumbuhan yang tidak terlihat seringkali yang paling menentukan hasil akhir.",
+  pelajaranTambahan: [
+    "<strong>Jangan menilai dari hasil permukaan</strong> — akar yang menentukan.",
+    "<strong>Proses panjang butuh kesabaran</strong> — bukan menyerah.",
+    "<strong>Yang tidak terlihat itu penting</strong> — termasuk usaha dan doa.",
+    "<strong>Keberhasilan bukan kebetulan</strong> — ada persiapan tersembunyi."
+  ]
+},
+{
+  id: 9,
+  judul: "Ibu dan Anak yang Menangis Malam",
+  ringkasan: "Seorang anak sering menangis di malam hari tanpa alasan yang jelas. Ibunya tidak memarahinya, tapi selalu datang dan memeluknya. Suatu hari, anak itu berkata, 'Bu, aku takut kehilangan Ibu.' Ibunya menjawab, 'Sayang, kehilangan itu pasti akan datang. Tapi cinta Ibu tidak akan pernah hilang. Selama kamu mengingatku, Ibu selalu ada.' Anak itu pun belajar tentang cinta yang melampaui kehadiran fisik.",
+  pelajaran: "Cinta sejati tidak hilang, meski kehadiran fisik tidak lagi ada.",
+  pelajaranTambahan: [
+    "<strong>Kehilangan bagian dari hidup</strong> — tapi cinta melampauinya.",
+    "<strong>Hadapi ketakutan dengan kasih</strong> — bukan diabaikan.",
+    "<strong>Peluk anak yang takut</strong> — bukan dimarahi.",
+    "<strong>Kenangan cinta itu abadi</strong> — tidak bisa dihapus."
+  ]
+},
+{
+  id: 10,
+  judul: "Tukang Roti dan Adonan yang Gagal",
+  ringkasan: "Seorang tukang roti membuat adonan yang gagal mengembang. Ia sangat kecewa dan hampir membuangnya. Tapi kemudian ia berpikir untuk memanggangnya saja. Ternyata adonan yang gagal mengembang itu menjadi biskuit yang renyah dan lezat. Ia berkata, 'Kegagalan tidak selalu berarti akhir. Kadang hanya bentuk lain dari keberhasilan.'",
+  pelajaran: "Kegagalan bisa menjadi bentuk keberhasilan yang berbeda.",
+  pelajaranTambahan: [
+    "<strong>Jangan buru-buru membuang kegagalan</strong> — mungkin bentuk lain dari hasil.",
+    "<strong>Fleksibilitas dalam tujuan</strong> — bisa mengubah hasil jadi lebih baik.",
+    "<strong>Kreativitas dari keterbatasan</strong> — sering muncul.",
+    "<strong>Yang gagal bisa jadi lebih baik</strong> — dengan cara berbeda."
+  ]
+},
+{
+  id: 11,
+  judul: "Guru dan Murid yang Salah Menjawab",
+  ringkasan: "Seorang murid salah menjawab pertanyaan di depan kelas. Teman-temannya tertawa. Guru itu berkata dengan tenang, 'Terima kasih sudah berani mencoba. Jawaban salah itu mengajarkan kita semua sesuatu.' Kelas pun terdiam. Murid itu tidak merasa dipermalukan, tapi justru termotivasi untuk belajar lebih giat. Ia berkata, 'Guru itu membuatku merasa aman untuk salah.'",
+  pelajaran: "Ruang aman untuk salah adalah kunci pembelajaran yang berani.",
+  pelajaranTambahan: [
+    "<strong>Jangan tertawakan kesalahan</strong> — itu menghancurkan keberanian.",
+    "<strong>Mencoba lebih penting dari benar</strong> — pada awalnya.",
+    "<strong>Kesalahan adalah guru</strong> — bagi seluruh kelas.",
+    "<strong>Guru yang baik melindungi</strong> — bukan mempermalukan."
+  ]
+},
+{
+  id: 12,
+  judul: "Petani dan Kerbau yang Hilang",
+  ringkasan: "Seorang petani kehilangan kerbaunya di hutan. Ia mencari berhari-hari tanpa hasil. Ketika hampir menyerah, ia menemukan kerbau itu terjebak di semak-semak, tetapi di dekatnya ada sebuah mata air yang belum pernah ia temukan. Ia menyadari bahwa pencariannya tidak sia-sia. Ia berkata, 'Saat mencari yang hilang, kadang kita menemukan yang lebih berharga.'",
+  pelajaran: "Pencarian sering menemukan sesuatu yang lebih berharga dari yang dicari.",
+  pelajaranTambahan: [
+    "<strong>Jangan menyerah saat mencari</strong> — hasilnya bisa lebih baik.",
+    "<strong>Yang hilang mengantar ke penemuan</strong> — hikmah tak terduga.",
+    "<strong>Perjalanan mengajarkan</strong> — bukan hanya tujuan.",
+    "<strong>Kehilangan bisa jadi berkah</strong> — dengan cara tak terduga."
+  ]
+},
+{
+  id: 13,
+  judul: "Anak dan Sepatu yang Sering Diganti",
+  ringkasan: "Seorang anak selalu minta sepatu baru setiap kali ada model baru. Ibunya mengabulkan karena sayang. Suatu hari, ia melihat anak jalanan yang tidak bersepatu, tapi tetap tersenyum. Anak itu terdiam. Ia sadar bahwa sepatunya yang lama masih bagus, dan banyak yang tidak punya. Ia memutuskan memakai sepatunya sampai rusak.",
+  pelajaran: "Kesadaran sosial tumbuh saat kita melihat kenyataan orang lain.",
+  pelajaranTambahan: [
+    "<strong>Jangan mengikuti keinginan tanpa berpikir</strong> — lihat sekeliling.",
+    "<strong>Bersyukur pada yang ada</strong> — sebelum meminta lebih.",
+    "<strong>Berbagi dengan yang membutuhkan</strong> — lebih baik dari menumpuk.",
+    "<strong>Anak-anak mudah tersentuh</strong> — jika diberi contoh nyata."
+  ]
+},
+{
+  id: 14,
+  judul: "Kakek dan Pisau yang Tumpul",
+  ringkasan: "Seorang kakek menggunakan pisau yang sudah sangat tumpul untuk memotong sayur. Cucunya menyarankan membeli yang baru. Kakek itu berkata, 'Pisau ini yang kupakai saat ibumu masih kecil. Ia mengiris sayur untuk keluarganya selama puluhan tahun. Aku hanya perlu mengasahnya, bukan menggantinya.' Ia pun mengasah pisau itu dan kembali tajam.",
+  pelajaran: "Yang lama sering hanya butuh diasah, bukan diganti.",
+  pelajaranTambahan: [
+    "<strong>Jangan buru-buru ganti yang tua</strong> — rawat dulu.",
+    "<strong>Perbaikan lebih baik dari penggantian</strong> — jika bisa.",
+    "<strong>Pisau tumpul bisa tajam kembali</strong> — seperti semangat.",
+    "<strong>Yang lama punya cerita</strong> — yang baru belum tentu punya."
+  ]
+},
+{
+  id: 15,
+  judul: "Guru dan Murid yang Takut Bertanya",
+  ringkasan: "Seorang murid tidak pernah bertanya meskipun tidak paham. Ia takut dianggap bodoh. Guru itu memperhatikan dan berkata, 'Kalau kamu tidak bertanya, aku tidak tahu kamu tidak paham. Bertanya bukan tanda bodoh, tapi tanda berani.' Murid itu pun mulai bertanya, dan nilainya meningkat pesat.",
+  pelajaran: "Bertanya adalah tanda keberanian, bukan kebodohan.",
+  pelajaranTambahan: [
+    "<strong>Bertanya bukan memalukan</strong> — itu pintu ilmu.",
+    "<strong>Diam tidak menyelesaikan masalah</strong> — hanya menundanya.",
+    "<strong>Guru tidak bisa membaca pikiran</strong> — komunikasikan.",
+    "<strong>Keberanian bertanya</strong> — langkah awal memahami."
+  ]
+},
+{
+  id: 16,
+  judul: "Pemuda dan Tas yang Berat di Punggung",
+  ringkasan: "Seorang pemuda mendaki gunung dengan tas yang sangat berat. Ia membawa semua yang ia anggap perlu — bahkan banyak yang tidak terpakai. Di tengah jalan, ia kelelahan dan hampir menyerah. Seorang pendaki tua berkata, 'Kurangi bebanmu. Kamu tidak perlu membawa seluruh rumah.' Pemuda itu pun membuang hal-hal yang tidak perlu dan mendaki dengan lebih ringan.",
+  pelajaran: "Beban hidup bisa diringankan dengan membuang yang tidak perlu.",
+  pelajaranTambahan: [
+    "<strong>Sederhanakan hidup</strong> — bukan berarti miskin.",
+    "<strong>Bawa yang penting saja</strong> — baik fisik maupun mental.",
+    "<strong>Kelelahan sering karena beban tak perlu</strong> — bukan karena jalan.",
+    "<strong>Belajar melepas</strong> — untuk bisa melangkah lebih jauh."
+  ]
+},
+{
+  id: 17,
+  judul: "Nenek dan Bunga di Pot Kecil",
+  ringkasan: "Seorang nenek menanam bunga di pot yang sangat kecil. Banyak yang bertanya mengapa tidak menanam di pot besar. Nenek itu menjawab, 'Bunga ini tumbuh sesuai potnya. Kalau potnya besar, ia akan tumbuh lebih besar. Tapi pot ini yang aku punya, dan aku bersyukur bunganya tetap berbunga indah.' Ia berkata, 'Kebahagiaan bukan dari yang besar, tapi dari yang kita rawat dengan baik.'",
+  pelajaran: "Kebahagiaan datang dari merawat apa yang ada, bukan dari memiliki lebih.",
+  pelajaranTambahan: [
+    "<strong>Syukur mengubah yang kecil jadi cukup</strong> — bukan kekurangan.",
+    "<strong>Rawat yang ada</strong> — bukan mengeluh pada yang tidak ada.",
+    "<strong>Ukuran bukan penentu kebahagiaan</strong> — tapi perawatan.",
+    "<strong>Pot kecil bisa berbunga indah</strong> — seperti hidup sederhana."
+  ]
+},
+{
+  id: 18,
+  judul: "Anak dan Air yang Mengalir",
+  ringkasan: "Seorang anak memperhatikan air di sungai yang terus mengalir. Ia bertanya pada ayahnya, 'Kenapa airnya tidak berhenti, Yah?' Ayahnya menjawab, 'Karena air tahu, kalau ia berhenti, ia akan menjadi kotor. Air yang mengalir selalu jernih. Hidup juga harus terus mengalir, jangan berhenti pada satu titik terlalu lama.'",
+  pelajaran: "Hidup yang terus bergerak lebih sehat daripada yang stagnan.",
+  pelajaranTambahan: [
+    "<strong>Jangan berhenti belajar</strong> — meski sudah dewasa.",
+    "<strong>Perubahan itu sehat</strong> — bukan ancaman.",
+    "<strong>Air yang mengalir jernih</strong> — seperti pikiran yang aktif.",
+    "<strong>Terus bergerak</strong> — tanda hidup yang sehat."
+  ]
+},
+{
+  id: 19,
+  judul: "Guru dan Murid yang Terlambat Terus",
+  ringkasan: "Seorang murid selalu datang terlambat ke sekolah. Guru-guru lain sudah menyerah. Suatu hari, guru barunya mengikutinya diam-diam. Ternyata murid itu harus mengantar ibunya ke pasar setiap pagi untuk membantu keluarga. Guru itu tidak memarahinya, tapi membantunya menyusun jadwal. Murid itu pun mulai datang tepat waktu dengan bantuan gurunya.",
+  pelajaran: "Jangan menghukum sebelum tahu alasan di balik perilaku.",
+  pelajaranTambahan: [
+    "<strong>Cari tahu dulu</strong> — jangan langsung menilai.",
+    "<strong>Setiap perilaku punya alasan</strong> — bahkan yang salah.",
+    "<strong>Solusi butuh pemahaman</strong> — bukan hukuman.",
+    "<strong>Guru yang baik mengamati</strong> — bukan hanya mengajar."
+  ]
+},
+{
+  id: 20,
+  judul: "Petani dan Tanah yang Berbeda",
+  ringkasan: "Seorang petani memiliki dua ladang dengan tanah berbeda. Satu tanahnya gembur, satu lagi berbatu. Ia menanam benih yang sama di keduanya. Ladang yang gembur tumbuh cepat, ladang berbatu tumbuh lambat. Tapi tanaman di ladang berbatu justru berakar lebih kuat dan tahan terhadap cuaca ekstrem. Petani itu berkata, 'Tanah sulit menghasilkan tanaman yang lebih kuat.'",
+  pelajaran: "Kesulitan bisa menghasilkan kekuatan yang tidak dimiliki oleh kemudahan.",
+  pelajaranTambahan: [
+    "<strong>Kesulitan menguatkan</strong> — bukan melemahkan.",
+    "<strong>Jangan iri pada yang mudah</strong> — mereka belum tentu lebih kuat.",
+    "<strong>Akar kuat dari tanah berbatu</strong> — seperti karakter dari tantangan.",
+    "<strong>Setiap kondisi punya pelajarannya</strong> — jangan menolak yang sulit."
+  ]
+},
+{
+  id: 21,
+  judul: "Anak dan Pensil Warna",
+  ringkasan: "Seorang anak memiliki sekotak pensil warna. Ia ingin menggambar pelangi, tapi merasa tidak punya cukup warna. Ibunya berkata, 'Kamu punya tujuh warna. Pelangi hanya tujuh warna. Coba susun dan lihat.' Anak itu pun menggambar pelangi indah dengan tujuh warna yang ia punya. Ia belajar bahwa yang ia miliki cukup, jika tahu cara menggunakannya.",
+  pelajaran: "Yang kita miliki sudah cukup, jika tahu cara menggunakannya.",
+  pelajaranTambahan: [
+    "<strong>Syukuri yang ada</strong> — jangan fokus pada yang kurang.",
+    "<strong>Kreativitas mengubah keterbatasan</strong> — menjadi keindahan.",
+    "<strong>Tujuh warna cukup untuk pelangi</strong> — bukan soal jumlah.",
+    "<strong>Potensi tersembunyi di yang sederhana</strong> — jika jeli."
+  ]
+},
+{
+  id: 22,
+  judul: "Kakek dan Kursi Goyang",
+  ringkasan: "Seorang kakek memiliki kursi goyang tua yang berderit setiap kali digoyang. Cucunya menawarkan membelikan kursi baru. Kakek itu menjawab, 'Kursi ini sudah menemaniku duduk di teras selama 30 tahun. Setiap deritannya mengingatkanku pada istriku yang suka duduk di sini bersamaku. Aku tidak ingin menggantinya.' Cucunya terdiam dan mengerti.",
+  pelajaran: "Kenangan lebih berharga dari kenyamanan baru.",
+  pelajaranTambahan: [
+    "<strong>Nostalgia itu berharga</strong> — bukan sekadar barang.",
+    "<strong>Jangan buru-buru mengganti</strong> — kenangan bisa jadi alasan.",
+    "<strong>Yang berderit bisa paling berharga</strong> — karena ceritanya.",
+    "<strong>Hargai pilihan orang tua</strong> — meski tidak praktis."
+  ]
+},
+{
+  id: 23,
+  judul: "Guru dan Murid yang Suka Membantu",
+  ringkasan: "Seorang murid selalu membantu temannya yang kesulitan belajar. Nilainya sendiri biasa-biasa saja, tapi ia selalu mengulang pelajaran agar bisa mengajari temannya. Suatu hari, gurunya bertanya, 'Kamu tidak lelah?' Murid itu menjawab, 'Justru aku jadi lebih paham karena mengajari.' Ternyata mengajar adalah cara belajar yang paling dalam.",
+  pelajaran: "Mengajarkan orang lain adalah cara terbaik untuk belajar.",
+  pelajaranTambahan: [
+    "<strong>Mengajar sama dengan belajar dua kali</strong> — bagi pengajar dan pelajar.",
+    "<strong>Kebaikan berbalik pada pemberi</strong> — dalam bentuk pemahaman.",
+    "<strong>Belajar bukan untuk diri sendiri</strong> — tapi untuk berbagi.",
+    "<strong>Kedalaman dari pengulangan</strong> — bukan dari kecepatan."
+  ]
+},
+{
+  id: 24,
+  judul: "Petani dan Angin yang Membawa Biji",
+  ringkasan: "Seorang petani menanam bunga di satu petak. Setahun kemudian, bunganya menyebar ke seluruh ladang karena angin membawa bijinya. Ia awalnya kesal karena ladangnya jadi 'berantakan'. Tapi kemudian, ladangnya dipenuhi bunga indah yang menarik banyak kupu-kupu. Ia berkata, 'Yang tampak mengganggu, kadang membawa keindahan yang tidak kita duga.'",
+  pelajaran: "Gangguan kecil bisa membawa berkah yang tidak terduga.",
+  pelajaranTambahan: [
+    "<strong>Jangan terlalu kaku dengan rencana</strong> — biarkan kejutan datang.",
+    "<strong>Keindahan dari ketidakteraturan</strong> — bukan hanya dari keteraturan.",
+    "<strong>Lihat sisi baik dari perubahan</strong> — bukan hanya gangguan.",
+    "<strong>Alam bekerja dengan caranya</strong> — percayalah."
+  ]
+},
+{
+  id: 25,
+  judul: "Anak dan Ketapel Kayu",
+  ringkasan: "Seorang anak membuat ketapel dari kayu dan karet. Ia berlatih menembak buah di pohon. Awalnya selalu meleset. Setelah berlatih berhari-hari, ia mulai tepat sasaran. Ayahnya berkata, 'Ketapel ini sederhana, tapi ketepatanmu datang dari latihan, bukan dari alatnya.' Anak itu pun mengerti bahwa keterampilan lebih penting dari alat.",
+  pelajaran: "Keterampilan lebih penting dari alat; latihan mengalahkan perlengkapan.",
+  pelajaranTambahan: [
+    "<strong>Alat bagus butuh tangan terampil</strong> — bukan sebaliknya.",
+    "<strong>Latihan berulang menghasilkan ketepatan</strong> — bukan keberuntungan.",
+    "<strong>Kesederhanaan + keterampilan</strong> — kombinasi kuat.",
+    "<strong>Jangan salahkan alat</strong> — lihat cara pakainya."
+  ]
+},
+{
+  id: 26,
+  judul: "Ibu dan Anak yang Merajuk",
+  ringkasan: "Seorang anak merajuk karena keinginannya tidak dituruti. Ia mengurung diri di kamar. Ibunya tidak memaksa, tapi meletakkan sepiring makanan di depan pintu. Beberapa jam kemudian, anak itu keluar dengan mata bengkak dan langsung memeluk ibunya. Ibunya berkata, 'Ibu tidak marah. Ibu hanya ingin kamu belajar bahwa tidak semua keinginan harus dituruti.'",
+  pelajaran: "Cinta orang tua tetap ada meski keinginan tidak selalu dituruti.",
+  pelajaranTambahan: [
+    "<strong>Menolak bukan berarti tidak sayang</strong> — kadang justru tanda sayang.",
+    "<strong>Anak perlu belajar menerima 'tidak'</strong> — bagian dari kedewasaan.",
+    "<strong>Cinta tetap ada di balik batasan</strong> — bukan hilang.",
+    "<strong>Beri ruang untuk merenung</strong> — bukan selalu memaksa."
+  ]
+},
+{
+  id: 27,
+  judul: "Guru dan Papan Tulis yang Retak",
+  ringkasan: "Seorang guru menemukan papan tulis di kelasnya retak. Ia tidak meminta ganti, tapi menempelkan kertas di bagian yang retak dan tetap mengajar. Muridnya bertanya, 'Kenapa tidak minta ganti, Guru?' Guru itu menjawab, 'Papan tulis retak masih bisa dipakai untuk mengajar. Yang penting bukan sempurnanya papan, tapi ilmu yang ditulis di atasnya.'",
+  pelajaran: "Fungsi lebih penting dari penampilan; kekurangan tidak menghalangi manfaat.",
+  pelajaranTambahan: [
+    "<strong>Jangan terpaku pada kesempurnaan</strong> — lihat fungsinya.",
+    "<strong>Yang retak tetap bisa berguna</strong> — jangan buru-buru dibuang.",
+    "<strong>Fokus pada inti</strong> — bukan pada tampilan.",
+    "<strong>Contoh guru mengajarkan banyak</strong> — tanpa perlu kata-kata."
+  ]
+},
+{
+  id: 28,
+  judul: "Anak dan Kelereng di Sumur",
+  ringkasan: "Seorang anak menjatuhkan kelereng kesayangannya ke dalam sumur. Ia menangis karena tidak bisa mengambilnya. Kakeknya berkata, 'Kelereng itu mungkin masih ada di dasar sumur. Tapi yang lebih penting, kamu belajar untuk lebih hati-hati. Kehilangan satu kelereng tidak sebanding dengan pelajaran yang kamu dapat.' Anak itu pun berhenti menangis dan belajar dari kejadian itu.",
+  pelajaran: "Pelajaran dari kehilangan lebih berharga dari yang hilang itu sendiri.",
+  pelajaranTambahan: [
+    "<strong>Kehilangan adalah guru</strong> — bukan hanya kerugian.",
+    "<strong>Hati-hati lebih baik dari menyesal</strong> — pelajaran klasik.",
+    "<strong>Jangan fokus pada yang hilang</strong> — lihat pelajarannya.",
+    "<strong>Hikmah dari kesalahan kecil</strong> — mencegah kesalahan besar."
+  ]
+},
+{
+  id: 29,
+  judul: "Petani dan Pohon yang Berbuah di Musim Lain",
+  ringkasan: "Seorang petani memiliki pohon yang biasanya berbuah di musim panas. Suatu tahun, pohon itu berbuah di musim hujan. Petani itu bingung dan hampir menebangnya. Ternyata, buah itu justru lebih manis dan lebih besar dari biasanya. Ia berkata, 'Kadang yang tidak sesuai jadwal, justru yang terbaik.' Ia belajar untuk tidak terlalu kaku dengan rencana.",
+  pelajaran: "Sesuatu yang tidak sesuai jadwal bisa jadi lebih baik dari yang direncanakan.",
+  pelajaranTambahan: [
+    "<strong>Fleksibel dengan jadwal</strong> — jangan terlalu kaku.",
+    "<strong>Kejutan bisa menyenangkan</strong> — jika kita terbuka.",
+    "<strong>Rencana Tuhan lebih baik</strong> — meski berbeda dari kita.",
+    "<strong>Jangan buru-buru memutuskan</strong> — beri waktu untuk kejutan."
+  ]
+},
+{
+  id: 30,
+  judul: "Anak dan Buku yang Basah",
+  ringkasan: "Seorang anak tidak sengaja menumpahkan air ke bukunya. Halaman-halamannya basah dan mengerut. Ia sedih karena buku itu kesayangannya. Ibunya berkata, 'Coba keringkan dengan hati-hati. Mungkin tidak kembali seperti semula, tapi isinya masih bisa dibaca.' Anak itu mengeringkannya dan tetap bisa membaca cerita kesukaannya. Ia belajar bahwa kerusakan tidak selalu menghilangkan nilai.",
+  pelajaran: "Kerusakan tidak selalu menghilangkan nilai atau fungsi.",
+  pelajaranTambahan: [
+    "<strong>Jangan buang yang rusak</strong> — masih bisa berguna.",
+    "<strong>Fungsi lebih penting dari penampilan</strong> — selalu.",
+    "<strong>Perbaiki dengan sabar</strong> — hasilnya lebih baik dari menyerah.",
+    "<strong>Isi lebih berharga dari bentuk</strong> — seperti buku basah."
+  ]
+},
+{
+  id: 31,
+  judul: "Guru dan Murid yang Menyontek",
+  ringkasan: "Seorang murid tertangkap menyontek saat ujian. Guru itu tidak langsung marah, tapi mengajaknya bicara setelah kelas. Ia bertanya, 'Kenapa kamu menyontek?' Murid itu menjawab, 'Karena aku takut gagal.' Guru berkata, 'Nilai bagus dari menyontek tidak akan membuatmu pintar. Nilai jelek dari usaha sendiri akan mengajarimu lebih banyak.' Murid itu pun menyadari kesalahannya.",
+  pelajaran: "Kejujuran dalam kegagalan lebih berharga dari kesuksesan yang palsu.",
+  pelajaranTambahan: [
+    "<strong>Nilai bukan tujuan akhir</strong> — pemahaman lebih penting.",
+    "<strong>Kegagalan jujur itu terhormat</strong> — bukan memalukan.",
+    "<strong>Kesuksesan curang itu kosong</strong> — tidak bertahan lama.",
+    "<strong>Bicarakan, jangan hukum</strong> — pemahaman mengubah perilaku."
+  ]
+},
+{
+  id: 32,
+  judul: "Petani dan Cangkul yang Berkarat",
+  ringkasan: "Seorang petani menemukan cangkul lamanya berkarat karena lama tidak dipakai. Ia hampir membuangnya, tapi memutuskan membersihkannya. Setelah diasah dan dirawat, cangkul itu kembali tajam dan kuat. Ia berkata, 'Bahkan alat yang berkarat bisa kembali berguna, jika kita mau merawatnya.'",
+  pelajaran: "Yang lama tak terpakai bisa kembali berguna dengan perawatan.",
+  pelajaranTambahan: [
+    "<strong>Jangan buang yang lama</strong> — rawat dulu.",
+    "<strong>Perawatan mengembalikan fungsi</strong> — bukan hanya untuk benda.",
+    "<strong>Bahkan yang berkarat bisa tajam kembali</strong> — seperti semangat.",
+    "<strong>Kesempatan kedua itu nyata</strong> — bagi yang mau merawat."
+  ]
+},
+{
+  id: 33,
+  judul: "Anak dan Bayangan di Dinding",
+  ringkasan: "Seorang anak takut pada bayangan besar di dinding kamarnya. Ia membayangkan itu monster. Ibunya masuk dan menyalakan lampu. Ternyata bayangan itu berasal dari boneka beruang yang menumpuk. Ibunya berkata, 'Ketakutanmu berasal dari bayangan, bukan dari kenyataan. Nyalakan lampu — cahaya kebenaran — dan ketakutan itu akan hilang.'",
+  pelajaran: "Ketakutan sering berasal dari bayangan, bukan dari kenyataan.",
+  pelajaranTambahan: [
+    "<strong>Cari tahu kebenarannya</strong> — jangan biarkan imajinasi menakut-nakuti.",
+    "<strong>Cahaya mengusir bayangan</strong> — pengetahuan mengalahkan ketakutan.",
+    "<strong>Hadapi, jangan hindari</strong> — ketakutan mengecil saat dihadapi.",
+    "<strong>Berpikir jernih mengalahkan panik</strong> — selalu."
+  ]
+},
+{
+  id: 34,
+  judul: "Guru dan Murid yang Berbeda Kemampuan",
+  ringkasan: "Di kelas yang sama, ada murid cepat paham dan ada yang butuh waktu lebih. Guru itu tidak membandingkan mereka. Ia memberi tugas yang sama tapi waktu yang berbeda. Murid yang lambat akhirnya bisa menyelesaikan dengan baik. Ia berkata, 'Kecepatan bukan ukuran kecerdasan. Yang penting adalah sampai ke tujuan.'",
+  pelajaran: "Setiap orang punya tempo belajarnya sendiri; jangan bandingkan.",
+  pelajaranTambahan: [
+    "<strong>Kecepatan bukan ukuran kualitas</strong> — yang penting sampai.",
+    "<strong>Beri waktu yang cukup</strong> — jangan paksa semua sama.",
+    "<strong>Setiap orang unik</strong> — termasuk dalam belajar.",
+    "<strong>Fokus pada kemajuan</strong> — bukan perbandingan."
+  ]
+},
+{
+  id: 35,
+  judul: "Petani dan Ayam yang Sakit",
+  ringkasan: "Seorang petani memiliki ayam yang tiba-tiba sakit. Ayam itu tidak mau makan dan terlihat lemah. Petani itu memisahkannya dari ayam lain, memberinya air bersih, dan merawatnya setiap hari. Setelah seminggu, ayam itu sembuh dan kembali sehat. Petani itu berkata, 'Perhatian kecil setiap hari bisa menyembuhkan yang sakit.'",
+  pelajaran: "Perhatian kecil yang konsisten bisa menyembuhkan.",
+  pelajaranTambahan: [
+    "<strong>Rawat yang sakit</strong> — jangan biarkan sendiri.",
+    "<strong>Konsistensi merawat</strong> — lebih penting dari tindakan besar.",
+    "<strong>Perhatian itu obat</strong> — bukan hanya untuk manusia.",
+    "<strong>Jangan abaikan yang lemah</strong> — mereka butuh lebih banyak kasih."
+  ]
+},
+{
+  id: 36,
+  judul: "Anak dan Pelangi Setelah Badai",
+  ringkasan: "Seorang anak bersembunyi di bawah meja saat badai besar melanda. Ia menangis ketakutan. Ibunya duduk di sampingnya dan berkata, 'Badai ini akan berhenti. Setelah itu, biasanya ada pelangi.' Setelah badai reda, mereka keluar dan benar saja, pelangi indah membentang di langit. Anak itu berkata, 'Ternyata setelah takut, ada keindahan.'",
+  pelajaran: "Setelah badai kehidupan, selalu ada keindahan yang menanti.",
+  pelajaranTambahan: [
+    "<strong>Badai itu sementara</strong> — tidak ada yang abadi.",
+    "<strong>Pegang tangan saat takut</strong> — kehadiran menenangkan.",
+    "<strong>Keindahan setelah sulit</strong> — lebih terasa berharga.",
+    "<strong>Harapan itu penting</strong> — untuk melewati badai."
+  ]
+},
+{
+  id: 37,
+  judul: "Guru dan Murid yang Suka Menunda",
+  ringkasan: "Seorang murid selalu menunda tugas sampai menit terakhir. Suatu hari, ia tidak bisa menyelesaikan tugas dan mendapat nilai jelek. Guru itu berkata, 'Menunda itu seperti meminjam waktu dari masa depan. Bunganya adalah stres dan penyesalan.' Murid itu pun berjanji untuk mengerjakan tugas lebih awal.",
+  pelajaran: "Menunda adalah meminjam masalah dari masa depan.",
+  pelajaranTambahan: [
+    "<strong>Kerjakan sekarang</strong> — jangan tunda.",
+    "<strong>Waktu tidak bisa dipinjam</strong> — hanya bisa digunakan atau hilang.",
+    "<strong>Stres datang dari penundaan</strong> — bukan dari tugas itu sendiri.",
+    "<strong>Mulai lebih awal</strong> — tidur lebih tenang."
+  ]
+},
+{
+  id: 38,
+  judul: "Petani dan Bakau di Pesisir",
+  ringkasan: "Seorang petani ikan menanam bakau di pinggir tambaknya. Tetangganya menganggapnya buang-buang waktu. Namun, ketika gelombang besar datang, tambak yang dilindungi bakau selamat, sementara tambak lain hancur. Petani itu berkata, 'Bakau mungkin tidak terlihat penting sekarang, tapi ia melindungi kita saat badai datang.'",
+  pelajaran: "Investasi pada perlindungan jangka panjang lebih baik dari keuntungan sesaat.",
+  pelajaranTambahan: [
+    "<strong>Persiapan menghadapi badai</strong> — bukan hanya menikmati hari cerah.",
+    "<strong>Jangan remehkan investasi kecil</strong> — bisa menyelamatkan.",
+    "<strong>Pikirkan jangka panjang</strong> — bukan hanya hari ini.",
+    "<strong>Alam melindungi yang merawatnya</strong> — timbal balik nyata."
+  ]
+},
+{
+  id: 39,
+  judul: "Anak dan Sepatu yang Terlalu Ketat",
+  ringkasan: "Seorang anak memaksakan memakai sepatu yang terlalu ketat karena modelnya bagus. Kakinya lecet dan ia tidak bisa berjalan. Ibunya berkata, 'Sepatu yang bagus adalah yang pas di kaki, bukan yang hanya terlihat bagus.' Anak itu pun menyadari bahwa kenyamanan lebih penting dari penampilan.",
+  pelajaran: "Kenyamanan lebih penting dari penampilan yang memukau.",
+  pelajaranTambahan: [
+    "<strong>Jangan korbankan kenyamanan</strong> — demi penampilan.",
+    "<strong>Yang pas lebih baik</strong> — dari yang tampak bagus.",
+    "<strong>Pilih yang cocok</strong> — bukan yang mengikuti tren.",
+    "<strong>Kaki yang lecet</strong> — akibat dari salah pilih."
+  ]
+},
+{
+  id: 40,
+  judul: "Guru dan Murid yang Berkata Kasar",
+  ringkasan: "Seorang murid berkata kasar pada temannya. Guru itu tidak memarahi di depan kelas, tapi memanggilnya ke ruang guru. Ia bertanya, 'Apa yang membuatmu berkata seperti itu?' Murid itu mengaku sedang kesal. Guru berkata, 'Kemarahan itu wajar, tapi melampiaskannya pada orang lain tidak. Belajar mengelola emosi itu bagian dari kedewasaan.'",
+  pelajaran: "Mengelola emosi adalah bagian penting dari kedewasaan.",
+  pelajaranTambahan: [
+    "<strong>Kemarahan itu manusiawi</strong> — yang salah adalah melampiaskannya.",
+    "<strong>Kata-kata melukai</strong> — tidak bisa ditarik kembali.",
+    "<strong>Bicarakan akar masalah</strong> — bukan melampiaskan.",
+    "<strong>Belajar dari kesalahan emosi</strong> — bukan diulang."
+  ]
+},
+{
+  id: 41,
+  judul: "Petani dan Cacing Tanah",
+  ringkasan: "Seorang petani menemukan banyak cacing tanah di ladangnya. Ia hampir menyemprot pestisida untuk membunuhnya. Tapi seorang tetua berkata, 'Cacing itu menyuburkan tanahmu. Jangan bunuh yang membantumu, meski tidak kamu sadari.' Petani itu pun membiarkan cacing itu hidup, dan ladangnya menjadi lebih subur.",
+  pelajaran: "Jangan membunuh yang membantu, hanya karena kita tidak menyadarinya.",
+  pelajaranTambahan: [
+    "<strong>Kebaikan sering tidak terlihat</strong> — bukan berarti tidak ada.",
+    "<strong>Bekerja sama dengan alam</strong> — bukan melawannya.",
+    "<strong>Kesadaran ekologis itu penting</strong> — untuk jangka panjang.",
+    "<strong>Bahkan yang kecil punya peran</strong> — jika kita jeli melihat."
+  ]
+},
+{
+  id: 42,
+  judul: "Anak dan Cermin yang Terlalu Kecil",
+  ringkasan: "Seorang anak mengeluh karena cerminnya terlalu kecil. Ia hanya bisa melihat sebagian wajahnya. Ibunya berkata, 'Kalau cerminnya kecil, kamu bisa melihat sebagian. Kalau kamu ingin melihat seluruh dirimu, lihatlah pada cara orang lain memperlakukanmu, dan pada hatimu sendiri.' Anak itu pun belajar bahwa cermin bukan satu-satunya cara mengenal diri.",
+  pelajaran: "Mengenal diri bisa dari banyak sumber, bukan hanya cermin.",
+  pelajaranTambahan: [
+    "<strong>Refleksi dari orang lain</strong> — bisa jadi cermin hidup.",
+    "<strong>Hati nurani adalah cermin</strong> — yang paling jujur.",
+    "<strong>Jangan hanya bergantung pada satu cara</strong> — untuk mengenal diri.",
+    "<strong>Kesadaran diri dari banyak sumber</strong> — lebih utuh."
+  ]
+},
+{
+  id: 43,
+  judul: "Petani dan Kambing yang Suka Melompat",
+  ringkasan: "Seorang petani memiliki kambing yang suka melompati pagar. Ia meninggikan pagar, tapi kambing itu tetap bisa melompat. Akhirnya, ia membiarkan kambing itu bebas di padang rumput yang luas dengan pengawasan. Kambing itu bahagia dan tidak lagi kabur. Petani itu berkata, 'Kadang kita perlu memberi ruang, bukan menahan.'",
+  pelajaran: "Memberi ruang kadang lebih efektif daripada membatasi.",
+  pelajaranTambahan: [
+    "<strong>Kebebasan butuh kepercayaan</strong> — bukan pengekangan.",
+    "<strong>Jangan menahan yang butuh ruang</strong> — bisa merusaknya.",
+    "<strong>Pengawasan lebih baik dari pengekangan</strong> — dalam banyak hal.",
+    "<strong>Setiap makhluk butuh kebebasan</strong> — sesuai kodratnya."
+  ]
+},
+{
+  id: 44,
+  judul: "Anak dan Balon yang Meletus",
+  ringkasan: "Seorang anak memegang balon yang ia tiup terlalu besar. Balon itu meletus dan mengejutkannya. Ibunya berkata, 'Balon meletus karena terlalu banyak udara. Begitu juga hidup — kalau terlalu banyak hal yang dijejalkan, kita bisa meletus. Beri ruang untuk bernapas.'",
+  pelajaran: "Terlalu penuh hidup bisa membuat kita 'meletus'; perlu ruang untuk bernapas.",
+  pelajaranTambahan: [
+    "<strong>Jangan terlalu banyak mengisi hidup</strong> — sediakan ruang kosong.",
+    "<strong>Keseimbangan itu penting</strong> — bukan hanya produktif.",
+    "<strong>Istirahat bukan kemalasan</strong> — bagian dari produktivitas.",
+    "<strong>Ruang kosong menciptakan kreativitas</strong> — bukan sebaliknya."
+  ]
+},
+{
+  id: 45,
+  judul: "Guru dan Murid yang Suka Berbohong Kecil",
+  ringkasan: "Seorang murid sering berbohong kecil — misalnya bilang sudah mengerjakan PR padahal belum. Guru itu tidak langsung menuduhnya, tapi bertanya, 'Apa yang membuatmu merasa perlu berbohong?' Murid itu mengaku takut dimarahi. Guru berkata, 'Kejujuran akan membuatmu bebas dari ketakutan itu.'",
+  pelajaran: "Kebohongan kecil tumbuh dari ketakutan, dan kejujuran membebaskan.",
+  pelajaranTambahan: [
+    "<strong>Jangan menakut-nakuti anak</strong> — itu memicu kebohongan.",
+    "<strong>Ruang aman untuk jujur</strong> — penting untuk kejujuran.",
+    "<strong>Bohong kecil bisa jadi besar</strong> — jika dibiarkan.",
+    "<strong>Kejujuran dimulai dari rumah</strong> — bukan hanya dari sekolah."
+  ]
+},
+{
+  id: 46,
+  judul: "Petani dan Bunga yang Dipetik Terlalu Cepat",
+  ringkasan: "Seorang petani menanam bunga dari biji. Setiap hari ia memeriksa apakah bunganya sudah mekar. Karena tidak sabar, ia memetik kuncupnya untuk mempercepat. Kuncup itu tidak pernah mekar. Ia belajar bahwa beberapa hal tidak bisa dipercepat tanpa merusaknya.",
+  pelajaran: "Kesabaran adalah bagian penting dari proses; tidak semua bisa dipercepat.",
+  pelajaranTambahan: [
+    "<strong>Jangan paksa proses</strong> — bisa merusak hasil.",
+    "<strong>Waktu adalah bagian dari hasil</strong> — bukan hanya hiasan.",
+    "<strong>Kesabaran menghargai proses</strong> — bukan hanya hasil.",
+    "<strong>Setiap hal punya waktunya</strong> — termasuk kesuksesan."
+  ]
+},
+{
+  id: 47,
+  judul: "Anak dan Kupu-kupu yang Hinggap di Tangan",
+  ringkasan: "Seorang anak melihat kupu-kupu hinggap di tangannya. Ia ingin menangkapnya, tapi tahu itu akan membuat kupu-kupu itu pergi atau mati. Ia memilih berdiam diri dan membiarkan kupu-kupu itu pergi dengan sendirinya. Ia belajar bahwa kadang yang terbaik adalah tidak melakukan apa-apa.",
+  pelajaran: "Terkadang tindakan terbaik adalah tidak bertindak.",
+  pelajaranTambahan: [
+    "<strong>Menahan diri itu bijaksana</strong> — bukan kelemahan.",
+    "<strong>Biarkan yang indah tetap bebas</strong> — bukan ditangkap.",
+    "<strong>Respek pada alam</strong> — termasuk kupu-kupu kecil.",
+    "<strong>Keindahan sejati tidak dimiliki</strong> — hanya disaksikan."
+  ]
+},
+{
+  id: 48,
+  judul: "Guru dan Murid yang Sulit Mengerti",
+  ringkasan: "Seorang murid tidak bisa memahami satu konsep meski sudah diajari berulang kali. Guru itu tidak menyerah. Ia mencoba menjelaskan dengan cara berbeda — gambar, cerita, dan perumpamaan. Akhirnya murid itu paham. Guru itu berkata, 'Kalau satu cara gagal, coba cara lain. Setiap orang punya pintu masuknya sendiri.'",
+  pelajaran: "Jika satu cara gagal, coba cara lain; setiap orang punya pintunya sendiri.",
+  pelajaranTambahan: [
+    "<strong>Jangan menyerah pada satu metode</strong> — cari yang cocok.",
+    "<strong>Setiap orang belajar dengan caranya</strong> — bukan seragam.",
+    "<strong>Kreativitas guru sangat penting</strong> — bukan hanya pengetahuan.",
+    "<strong>Pintu masuk bisa berbeda</strong> — tapi tujuannya sama."
+  ]
+},
+{
+  id: 49,
+  judul: "Petani dan Tanah yang Dibiarkan Kosong",
+  ringkasan: "Seorang petani memiliki satu petak tanah yang ia biarkan kosong karena tidak tahu mau ditanami apa. Setelah setahun, tanah itu penuh rumput liar dan menjadi keras. Ia menyadari bahwa tanah yang dibiarkan kosong akan merosot kualitasnya. Sejak itu, ia selalu menanam apa pun di tanahnya, walau hanya sayuran kecil.",
+  pelajaran: "Yang dibiarkan kosong akan merosot; isi hidupmu dengan hal bermanfaat.",
+  pelajaranTambahan: [
+    "<strong>Jangan biarkan waktu kosong</strong> — isi dengan yang bermanfaat.",
+    "<strong>Kosong bukan berarti netral</strong> — bisa merosot.",
+    "<strong>Mulai dari yang sederhana</strong> — bukan menunggu yang sempurna.",
+    "<strong>Apa pun lebih baik dari tidak ada</strong> — untuk menjaga kualitas."
+  ]
+},
+{
+  id: 50,
+  judul: "Anak dan Bintang di Langit Kota",
+  ringkasan: "Seorang anak yang tinggal di kota jarang melihat bintang karena polusi cahaya. Suatu hari, ia diajak ke desa dan melihat langit penuh bintang. Ia terpesona dan bertanya, 'Kenapa di kota tidak ada bintang?' Ayahnya menjawab, 'Bintangnya tetap ada, tapi cahaya kota menutupinya. Begitu pula kebaikan — selalu ada, tapi kadang tertutup oleh kesibukan kita.'",
+  pelajaran: "Kebaikan selalu ada; kita hanya perlu berhenti dan melihatnya.",
+  pelajaranTambahan: [
+    "<strong>Kesibukan menutupi kebaikan</strong> — bukan menghilangkannya.",
+    "<strong>Berhenti dan lihat sekitar</strong> — banyak hal indah terlewat.",
+    "<strong>Kesederhanaan mengungkap keindahan</strong> — bukan kemewahan.",
+    "<strong>Anak-anak mengingatkan kita</strong> — untuk terpesona lagi."
+  ]
+},
+{
+  id: 51,
+  judul: "Guru dan Murid yang Berbakat Musik",
+  ringkasan: "Seorang murid sangat berbakat musik, tapi keluarganya miskin dan tidak bisa membelikan alat musik. Guru itu meminjamkan alat musik sekolah dan mengajarinya gratis. Bertahun-tahun kemudian, murid itu menjadi musisi terkenal dan membangun sekolah musik gratis untuk anak-anak miskin. Ia berkata, 'Guru itu mengajarkanku bahwa bakat tidak boleh dihalangi oleh kemiskinan.'",
+  pelajaran: "Bakat tidak boleh dihalangi oleh keadaan; kebaikan guru bisa mengubah hidup.",
+  pelajaranTambahan: [
+    "<strong>Bakat ada di mana saja</strong> — termasuk di keluarga miskin.",
+    "<strong>Bantu yang berbakat</strong> — hasilnya bisa luar biasa.",
+    "<strong>Kebaikan berantai</strong> — murid yang ditolong menolong orang lain.",
+    "<strong>Investasi pada manusia</strong> — lebih berharga dari apa pun."
+  ]
+},
+{
+  id: 52,
+  judul: "Petani dan Cermin di Sawah",
+  ringkasan: "Seorang petani meletakkan cermin di pinggir sawahnya untuk mengusir burung. Suatu hari, ia melihat pantulan dirinya di cermin itu. Ia tersenyum dan menyadari bahwa ia sudah bekerja sangat keras. Cermin itu tidak hanya mengusir burung, tapi juga mengingatkannya untuk menghargai diri sendiri.",
+  pelajaran: "Sesekali lihat dirimu di cermin dan hargai kerja kerasmu.",
+  pelajaranTambahan: [
+    "<strong>Hargai dirimu sendiri</strong> — bukan hanya orang lain.",
+    "<strong>Refleksi diri itu penting</strong> — termasuk mengakui usaha sendiri.",
+    "<strong>Self-love bukan egois</strong> — itu sehat.",
+    "<strong>Jangan lupa bersyukur pada diri</strong> — atas perjuangan sendiri."
+  ]
+},
+{
+  id: 53,
+  judul: "Anak dan Sepatu yang Diwarisi",
+  ringkasan: "Seorang anak mendapat sepatu warisan dari kakaknya. Sepatunya sudah agak lusuh, tapi masih bagus. Temannya mengejek, tapi anak itu berkata, 'Sepatu ini tidak hanya untuk kakiku, tapi juga membawa cerita kakakku. Aku bangga memakainya.' Temannya pun terdiam dan menghargainya.",
+  pelajaran: "Barang warisan membawa cerita; bangga memakainya adalah bentuk penghormatan.",
+  pelajaranTambahan: [
+    "<strong>Warisan itu berharga</strong> — bukan hanya materi.",
+    "<strong>Jangan malu pada yang sederhana</strong> — yang penting fungsinya.",
+    "<strong>Cerita di balik benda</strong> — membuatnya lebih bernilai.",
+    "<strong>Kesederhanaan itu mulia</strong> — bukan memalukan."
+  ]
+},
+{
+  id: 54,
+  judul: "Guru dan Murid yang Selalu Terlambat Mengumpulkan",
+  ringkasan: "Seorang murid selalu terlambat mengumpulkan tugas. Setiap kali ia beralasan. Guru itu akhirnya berkata, 'Aku tidak masalah dengan keterlambatanmu, tapi aku khawatir kamu tidak belajar disiplin. Disiplin itu bukan untuk gurumu, tapi untuk masa depanmu.' Murid itu pun mulai berubah.",
+  pelajaran: "Disiplin bukan untuk orang lain, tapi untuk masa depanmu sendiri.",
+  pelajaranTambahan: [
+    "<strong>Disiplin itu investasi</strong> — bukan beban.",
+    "<strong>Alasan tidak mengubah hasil</strong> — hanya menunda.",
+    "<strong>Kebiasaan kecil menentukan masa depan</strong> — termasuk ketepatan waktu.",
+    "<strong>Guru peduli pada masa depanmu</strong> — bukan hanya tugas."
+  ]
+},
+{
+  id: 55,
+  judul: "Petani dan Rumput yang Dicabut",
+  ringkasan: "Seorang petani mencabut rumput liar di ladangnya. Ia melakukannya setiap hari tanpa mengeluh. Tetangganya berkata, 'Rumputnya akan tumbuh lagi besok.' Petani itu menjawab, 'Aku tahu. Tapi kalau aku berhenti mencabut, rumputnya akan menutupi tanamananku. Merawat itu pekerjaan terus-menerus.'",
+  pelajaran: "Merawat sesuatu membutuhkan usaha terus-menerus; bukan sekali selesai.",
+  pelajaranTambahan: [
+    "<strong>Konsistensi merawat</strong> — lebih penting dari usaha besar sesaat.",
+    "<strong>Masalah akan datang lagi</strong> — hadapi terus.",
+    "<strong>Jangan malas merawat</strong> — hasilnya terlihat jangka panjang.",
+    "<strong>Pekerjaan rumah tangga hidup</strong> — memang tak pernah selesai."
+  ]
+},
+{
+  id: 56,
+  judul: "Anak dan Kucing yang Menjatuhkan Vas",
+  ringkasan: "Seorang anak memiliki kucing yang tidak sengaja menjatuhkan vas bunga kesayangan ibunya. Vas itu pecah. Anak itu takut ibunya akan marah pada kucingnya. Tapi ibunya justru berkata, 'Vas bisa diganti, kucing tidak. Yang penting tidak ada yang terluka.' Anak itu belajar bahwa keselamatan lebih penting dari benda.",
+  pelajaran: "Keselamatan dan kasih lebih penting dari benda, sekalipun berharga.",
+  pelajaranTambahan: [
+    "<strong>Benda bisa diganti</strong> — makhluk hidup tidak.",
+    "<strong>Jangan marah berlebihan</strong> — karena barang.",
+    "<strong>Nilai manusia dan hewan</strong> — di atas materi.",
+    "<strong>Reaksi orang tua mengajarkan</strong> — prioritas hidup anak."
+  ]
+},
+{
+  id: 57,
+  judul: "Guru dan Murid yang Pemalu di Depan Kelas",
+  ringkasan: "Seorang murid sangat pemalu dan tidak berani presentasi. Guru itu tidak memaksanya di depan kelas. Ia memberi kesempatan presentasi berdua dulu, lalu bertiga, hingga akhirnya murid itu berani sendiri. Guru berkata, 'Keberanian dibangun bertahap, bukan dipaksa.'",
+  pelajaran: "Keberanian dibangun bertahap, bukan dengan paksaan.",
+  pelajaranTambahan: [
+    "<strong>Hormati batas setiap orang</strong> — jangan paksa.",
+    "<strong>Langkah kecil menuju besar</strong> — lebih efektif.",
+    "<strong>Dukungan lebih baik dari tekanan</strong> — dalam membangun keberanian.",
+    "<strong>Setiap orang punya tempo</strong> — termasuk dalam keberanian."
+  ]
+},
+{
+  id: 58,
+  judul: "Petani dan Anak yang Bertanya Tentang Hujan",
+  ringkasan: "Seorang anak petani bertanya, 'Ayah, kenapa kita tidak bisa mengatur kapan hujan turun?' Ayahnya menjawab, 'Karena kita bukan penguasa alam. Tugas kita adalah menanam dan merawat. Hujan adalah urusan Yang Di Atas.' Anak itu belajar tentang tawakal — usaha maksimal, hasil diserahkan pada Tuhan.",
+  pelajaran: "Berusaha maksimal, hasil diserahkan pada Tuhan — itulah tawakal.",
+  pelajaranTambahan: [
+    "<strong>Kita hanya bisa berusaha</strong> — hasil di tangan Tuhan.",
+    "<strong>Tawakal bukan pasif</strong> — justru setelah usaha maksimal.",
+    "<strong>Kesombongan ingin mengatur semuanya</strong> — tidak realistis.",
+    "<strong>Hidup lebih tenang dengan tawakal</strong> — setelah usaha."
+  ]
+},
+{
+  id: 59,
+  judul: "Anak dan Layang-layang di Angin Kencang",
+  ringkasan: "Seorang anak menerbangkan layang-layang di angin kencang. Layang-layangnya naik sangat tinggi, lebih tinggi dari biasanya. Ayahnya berkata, 'Angin kencang yang tadinya kamu takutkan, justru yang membuat layang-layangmu terbang lebih tinggi. Begitu juga tantangan hidup — bisa mengangkatmu lebih tinggi.'",
+  pelajaran: "Tantangan bisa menjadi pendorong untuk terbang lebih tinggi.",
+  pelajaranTambahan: [
+    "<strong>Kesulitan bisa jadi berkah</strong> — jika dihadapi dengan benar.",
+    "<strong>Jangan takut pada tantangan</strong> — itu yang mengangkat.",
+    "<strong>Angin kencang menguji layang-layang</strong> — seperti hidup menguji kita.",
+    "<strong>Yang bertahan akan naik lebih tinggi</strong> — bukan yang menghindar."
+  ]
+},
+{
+  id: 60,
+  judul: "Guru dan Murid yang Suka Mengeluh",
+  ringkasan: "Seorang murid selalu mengeluh tentang tugas, cuaca, dan temannya. Guru itu berkata, 'Mengeluh itu tidak salah, tapi kalau terus-menerus, kamu akan kehilangan energi untuk berubah. Coba ganti keluhanmu dengan tindakan kecil.' Murid itu pun mulai mengubah kebiasaannya.",
+  pelajaran: "Mengeluh menghabiskan energi; tindakan mengubah keadaan.",
+  pelajaranTambahan: [
+    "<strong>Keluhan itu wajar</strong> — tapi jangan berlebihan.",
+    "<strong>Energi terbuang untuk mengeluh</strong> — bukan untuk solusi.",
+    "<strong>Tindakan kecil mengalahkan keluhan besar</strong> — selalu.",
+    "<strong>Ubah cara pandang</strong> — bukan hanya keadaan."
+  ]
+},
+{
+  id: 61,
+  judul: "Petani dan Anak yang Ingin Cepat Kaya",
+  ringkasan: "Seorang anak petani ingin cepat kaya. Ia bertanya pada ayahnya, 'Bagaimana caranya dapat uang banyak dengan cepat?' Ayahnya menjawab sambil menanam benih, 'Menanam satu pohon butuh bertahun-tahun untuk berbuah. Cepat kaya biasanya cepat habis. Kaya dari usaha bertahap lebih bertahan.' Anak itu pun belajar tentang kesabaran finansial.",
+  pelajaran: "Kekayaan sejati dibangun bertahap, bukan diraih dengan cara instan.",
+  pelajaranTambahan: [
+    "<strong>Uang cepat biasanya cepat habis</strong> — tidak stabil.",
+    "<strong>Investasi bertahap lebih aman</strong> — dari hasil instan.",
+    "<strong>Kesabaran finansial</strong> — kunci kekayaan sejati.",
+    "<strong>Jangan iri pada yang cepat kaya</strong> — cerita akhirnya beda."
+  ]
+},
+{
+  id: 62,
+  judul: "Anak dan Buku yang Dibaca Ulang",
+  ringkasan: "Seorang anak membaca buku yang sama untuk kelima kalinya. Ibunya bertanya, 'Kenapa tidak baca buku baru?' Anak itu menjawab, 'Setiap kali aku baca, aku menemukan hal baru yang sebelumnya tidak aku sadari.' Ibunya tersenyum dan berkata, 'Begitulah ilmu — semakin didalami, semakin dalam pemahamannya.'",
+  pelajaran: "Membaca ulang bisa mengungkap hal-hal baru yang sebelumnya terlewat.",
+  pelajaranTambahan: [
+    "<strong>Kedalaman dari pengulangan</strong> — bukan hanya dari kebaruan.",
+    "<strong>Setiap kali baca, paham baru</strong> — karena kita berubah.",
+    "<strong>Jangan cepat bosan</strong> — pada yang sudah dikenal.",
+    "<strong>Hikmah dari yang sama</strong> — bisa berbeda pada waktu berbeda."
+  ]
+},
+{
+  id: 63,
+  judul: "Guru dan Murid yang Mencontek Jawaban",
+  ringkasan: "Seorang murid mencontek jawaban temannya. Saat guru mengetahuinya, ia tidak marah, tapi bertanya, 'Apa yang kamu cari dari nilai itu?' Murid itu menjawab, 'Supaya tidak dimarahi orang tua.' Guru berkata, 'Nilai bagus dari mencontek tidak akan membuatmu pintar. Kejujuran akan membuatmu dihormati seumur hidup.'",
+  pelajaran: "Kejujuran lebih berharga dari nilai bagus yang didapat dengan cara curang.",
+  pelajaranTambahan: [
+    "<strong>Nilai bukan segalanya</strong> — kejujuran lebih penting.",
+    "<strong>Tekanan orang tua bisa memicu kecurangan</strong> — komunikasi penting.",
+    "<strong>Kesuksesan curang itu kosong</strong> — tidak membanggakan.",
+    "<strong>Belajar dari kesalahan</strong> — bukan mengulanginya."
+  ]
+},
+{
+  id: 64,
+  judul: "Petani dan Anak yang Takut Kotor",
+  ringkasan: "Seorang anak petani takut kotor dan tidak mau membantu ayahnya di sawah. Suatu hari, ayahnya mengajaknya menanam padi. Anak itu awalnya jijik, tapi setelah melihat padi tumbuh dari tangannya sendiri, ia merasa bangga. Ayahnya berkata, 'Kotor itu sementara, hasilnya bertahan lama.'",
+  pelajaran: "Kotor dan susah itu sementara; hasil dari kerja keras bertahan lama.",
+  pelajaranTambahan: [
+    "<strong>Jangan takut kotor</strong> — untuk kebaikan yang nyata.",
+    "<strong>Kerja nyata butuh tangan kotor</strong> — bukan hanya teori.",
+    "<strong>Kebanggaan dari hasil sendiri</strong> — tidak bisa dibeli.",
+    "<strong>Anak perlu pengalaman nyata</strong> — bukan hanya kenyamanan."
+  ]
+},
+{
+  id: 65,
+  judul: "Anak dan Sepeda yang Digunakan Bersama",
+  ringkasan: "Seorang anak memiliki sepeda yang ia gunakan bersama adiknya. Adiknya sering menggunakannya tanpa izin. Anak itu kesal. Ibunya berkata, 'Kalau kamu berbagi dengan ikhlas, kamu tidak akan merasa kehilangan. Sebaliknya, kamu akan merasa lebih kaya karena bisa membuat orang lain bahagia.' Anak itu pun belajar berbagi dengan lebih ikhlas.",
+  pelajaran: "Berbagi dengan ikhlas membuat kita tidak merasa kehilangan.",
+  pelajaranTambahan: [
+    "<strong>Berbagi itu kekayaan</strong> — bukan kemiskinan.",
+    "<strong>Kebahagiaan orang lain</strong> — bagian dari kebahagiaan kita.",
+    "<strong>Ikhlas mengubah perasaan</strong> — dari kehilangan jadi memberi.",
+    "<strong>Ajarkan berbagi sejak kecil</strong> — investasi karakter."
+  ]
+},
+{
+  id: 66,
+  judul: "Guru dan Murid yang Membuat Kesalahan Sama",
+  ringkasan: "Seorang murid mengulangi kesalahan yang sama berulang kali. Guru itu tidak marah, tapi bertanya, 'Apa yang membuatmu mengulanginya?' Murid itu menjawab, 'Aku lupa.' Guru berkata, 'Kalau lupa, berarti perlu cara baru untuk mengingat.' Ia pun membantu murid itu membuat catatan khusus agar tidak mengulangi kesalahan yang sama.",
+  pelajaran: "Jika terus mengulang kesalahan, ubah caranya, bukan hanya menyesalinya.",
+  pelajaranTambahan: [
+    "<strong>Kesalahan berulang butuh strategi baru</strong> — bukan hanya niat.",
+    "<strong>Jangan salahkan diri terus-menerus</strong> — cari solusinya.",
+    "<strong>Alat bantu mengingat itu penting</strong> — untuk perubahan.",
+    "<strong>Guru yang baik mencari akar masalah</strong> — bukan hanya menghukum."
+  ]
+},
+{
+  id: 67,
+  judul: "Petani dan Bunga yang Selalu Dipetik",
+  ringkasan: "Seorang anak selalu memetik bunga di kebun tetangganya. Suatu hari, tetangganya berkata, 'Kalau kamu terus memetik bunganya, tidak akan ada bunga lagi untuk dinikmati bersama.' Anak itu belajar bahwa mengambil tanpa memberi akan menghabiskan sumber kebahagiaan.",
+  pelajaran: "Mengambil terus-menerus tanpa memberi akan menghabiskan sumber kebahagiaan.",
+  pelajaranTambahan: [
+    "<strong>Jaga sumber kebahagiaan</strong> — bukan hanya menikmatinya.",
+    "<strong>Beri kesempatan pada yang lain</strong> — untuk menikmati juga.",
+    "<strong>Keserakahan merusak</strong> — termasuk untuk diri sendiri.",
+    "<strong>Rawat apa yang kita nikmati</strong> — agar tetap ada."
+  ]
+},
+{
+  id: 68,
+  judul: "Anak dan Cermin yang Berembun",
+  ringkasan: "Seorang anak melihat cermin kamar mandi berembun setelah mandi air panas. Ia tidak bisa melihat wajahnya. Ia mengusap cermin itu, dan wajahnya kembali terlihat. Ibunya berkata, 'Kadang hati kita juga berembun karena emosi. Usaplah dengan ketenangan, agar bisa melihat dengan jelas.'",
+  pelajaran: "Emosi bisa mengaburkan pandangan; ketenangan menjernihkannya.",
+  pelajaranTambahan: [
+    "<strong>Jangan mengambil keputusan saat emosi</strong> — tunggu jernih.",
+    "<strong>Ketenangan menjernihkan pikiran</strong> — seperti mengusap cermin.",
+    "<strong>Emosi itu kabut sementara</strong> — bukan kenyataan.",
+    "<strong>Istirahat dulu</strong> — sebelum memutuskan hal penting."
+  ]
+},
+{
+  id: 69,
+  judul: "Guru dan Murid yang Suka Menyendiri",
+  ringkasan: "Seorang murid selalu menyendiri di jam istirahat. Guru itu tidak memaksanya bergaul, tapi memastikan ia tidak merasa terasing. Suatu hari, guru itu duduk di sampingnya dan hanya diam. Murid itu akhirnya mulai berbicara. Guru itu berkata, 'Kadang yang dibutuhkan bukan ajakan, tapi kehadiran yang tidak memaksa.'",
+  pelajaran: "Kehadiran yang tidak memaksa lebih menenangkan daripada ajakan yang mendesak.",
+  pelajaranTambahan: [
+    "<strong>Hormati ruang pribadi orang</strong> — jangan paksa bergaul.",
+    "<strong>Diam bersama itu menyembuhkan</strong> — lebih dari kata-kata.",
+    "<strong>Kehadiran yang tulus</strong> — lebih berharga dari ajakan.",
+    "<strong>Setiap orang butuh waktu</strong> — untuk membuka diri."
+  ]
+},
+{
+  id: 70,
+  judul: "Petani dan Kebun yang Berbeda Tanaman",
+  ringkasan: "Seorang petani menanam berbagai tanaman di kebunnya — sayur, buah, dan bunga. Tetangganya bertanya, 'Kenapa tidak satu jenis saja, lebih mudah?' Petani itu menjawab, 'Kebun yang beragam lebih tahan terhadap hama dan cuaca. Keberagaman itu kekuatan.'",
+  pelajaran: "Keberagaman adalah kekuatan, bukan kelemahan.",
+  pelajaranTambahan: [
+    "<strong>Monokultur rentan</strong> — keberagaman lebih tahan.",
+    "<strong>Perbedaan memperkuat</strong> — bukan memperlemah.",
+    "<strong>Belajar dari alam</strong> — keberagaman itu sehat.",
+    "<strong>Jangan seragamkan segalanya</strong> — biarkan beragam."
+  ]
+},
+{
+  id: 71,
+  judul: "Anak dan Sepatu yang Digunakan untuk Berlari",
+  ringkasan: "Seorang anak memakai sepatu yang terlalu ketat untuk lomba lari. Ia ingin menang, tapi kakinya sakit. Ia tidak bisa berlari cepat. Ayahnya berkata, 'Sepatu yang salah bisa menggagalkan usaha sebaik apapun. Pilih yang tepat sebelum berlomba.' Anak itu pun belajar memilih dengan bijak.",
+  pelajaran: "Persiapan yang tepat menentukan keberhasilan, bukan hanya usaha keras.",
+  pelajaranTambahan: [
+    "<strong>Alat yang tepat penting</strong> — bukan hanya semangat.",
+    "<strong>Persiapan lebih baik dari penyesalan</strong> — selalu.",
+    "<strong>Jangan abaikan detail kecil</strong> — bisa berpengaruh besar.",
+    "<strong>Pilih dengan bijak</strong> — bukan hanya karena terburu-buru."
+  ]
+},
+{
+  id: 72,
+  judul: "Guru dan Murid yang Tidak Suka Membaca",
+  ringkasan: "Seorang murid tidak suka membaca. Guru itu tidak memaksanya membaca buku tebal, tapi memberinya komik dan cerita pendek. Perlahan, murid itu mulai suka membaca dan akhirnya membaca buku-buku tebal. Guru itu berkata, 'Jangan paksa orang masuk pintu besar; tunjukkan pintu kecil dulu.'",
+  pelajaran: "Mulailah dari hal kecil yang menyenangkan; pintu besar akan terbuka sendiri.",
+  pelajaranTambahan: [
+    "<strong>Jangan paksa dengan keras</strong> — pendekatan lembut lebih efektif.",
+    "<strong>Mulai dari yang mudah</strong> — untuk membangun kebiasaan.",
+    "<strong>Kesabaran guru sangat penting</strong> — bukan hanya target.",
+    "<strong>Pintu kecil menuju pintu besar</strong> — strategi bijak."
+  ]
+},
+{
+  id: 73,
+  judul: "Petani dan Kerbau yang Dipuji",
+  ringkasan: "Seorang petani memuji kerbaunya setiap hari setelah bekerja. Tetangganya bertanya, 'Kenapa kamu memuji kerbau? Ia tidak mengerti.' Petani itu menjawab, 'Mungkin ia tidak mengerti kata-kata, tapi ia merasakan kasih sayang. Dan kerbau yang dicintai bekerja lebih rajin.'",
+  pelajaran: "Kasih sayang membuat siapa pun bekerja lebih baik, bahkan hewan.",
+  pelajaranTambahan: [
+    "<strong>Pujian itu penting</strong> — bukan hanya untuk manusia.",
+    "<strong>Kasih sayang meningkatkan performa</strong> — bukan hanya tekanan.",
+    "<strong>Perlakuan baik berbuah loyalitas</strong> — bukan hanya ketaatan.",
+    "<strong>Hargai yang bekerja untukmu</strong> — sekecil apa pun."
+  ]
+},
+{
+  id: 74,
+  judul: "Anak dan Buku yang Diwarisi dari Kakek",
+  ringkasan: "Seorang anak menemukan buku catatan kakeknya di loteng. Buku itu penuh catatan kehidupan — kegagalan, keberhasilan, dan doa. Anak itu membacanya dan merasa seperti berbicara langsung dengan kakeknya. Ia berkata, 'Buku ini bukan sekadar catatan, tapi warisan jiwa.'",
+  pelajaran: "Warisan jiwa bisa lebih berharga dari warisan materi.",
+  pelajaranTambahan: [
+    "<strong>Catatan kehidupan itu berharga</strong> — bagi generasi berikutnya.",
+    "<strong>Menulis itu mewariskan</strong> — bukan hanya untuk diri sendiri.",
+    "<strong>Cerita leluhur menginspirasi</strong> — lebih dari teori.",
+    "<strong>Kenangan tertulis abadi</strong> — tidak bisa dihapus."
+  ]
+},
+{
+  id: 75,
+  judul: "Guru dan Murid yang Selalu Bertanya 'Kenapa'",
+  ringkasan: "Seorang murid selalu bertanya 'kenapa' pada setiap pelajaran. Guru itu tidak bosan, justru senang. Ia berkata, 'Pertanyaanmu menunjukkan kamu berpikir. Murid yang bertanya lebih berkembang dari yang hanya menerima.' Murid itu tumbuh menjadi pemikir kritis.",
+  pelajaran: "Bertanya 'kenapa' adalah tanda pikiran yang aktif dan berkembang.",
+  pelajaranTambahan: [
+    "<strong>Rasa ingin tahu itu berharga</strong> — bukan mengganggu.",
+    "<strong>Jangan puas dengan jawaban dangkal</strong> — gali lebih dalam.",
+    "<strong>Pemikir kritis dimulai dari pertanyaan</strong> — bukan hafalan.",
+    "<strong>Guru yang baik menyambut pertanyaan</strong> — bukan menghindarinya."
+  ]
+},
+{
+  id: 76,
+  judul: "Petani dan Tanaman yang Tidak Berbuah",
+  ringkasan: "Seorang petani memiliki pohon yang tidak berbuah selama tiga tahun. Ia hampir menebangnya. Tapi tahun keempat, pohon itu berbuah sangat lebat. Ia berkata, 'Kesabaran tiga tahun terbayar dengan panen yang melimpah. Kadang hasil terbaik butuh waktu lebih lama.'",
+  pelajaran: "Beberapa hasil terbaik butuh waktu lebih lama dari yang kita harapkan.",
+  pelajaranTambahan: [
+    "<strong>Jangan menebang sebelum berbuah</strong> — kesabaran menentukan.",
+    "<strong>Waktu adalah bagian dari hasil</strong> — bukan hanya proses.",
+    "<strong>Hasil bisa lebih baik dari yang dibayangkan</strong> — jika sabar.",
+    "<strong>Jangan bandingkan dengan pohon lain</strong> — setiap pohon beda."
+  ]
+},
+{
+  id: 77,
+  judul: "Anak dan Uang Koin yang Ditemukan",
+  ringkasan: "Seorang anak menemukan uang koin di jalan. Ia sangat senang, tapi kemudian melihat seorang tunawisma yang kelaparan. Ia memberikan uang itu pada tunawisma tersebut. Ibunya bertanya, 'Kenapa tidak kamu simpan?' Anak itu menjawab, 'Rasanya lebih berharga saat diberikan, Bu.'",
+  pelajaran: "Memberi membuat kita lebih bahagia daripada menyimpan untuk diri sendiri.",
+  pelajaranTambahan: [
+    "<strong>Kebahagiaan memberi lebih besar</strong> — dari menyimpan.",
+    "<strong>Empati muncul dari kesadaran</strong> — melihat sekitar.",
+    "<strong>Anak-anak belajar dari contoh</strong> — bukan hanya nasihat.",
+    "<strong>Kebaikan itu sederhana</strong> — cukup peka dan bertindak."
+  ]
+},
+{
+  id: 78,
+  judul: "Guru dan Murid yang Terlambat Berbicara",
+  ringkasan: "Seorang murid tidak berbicara sampai usia 8 tahun. Banyak yang mengira ia tidak bisa bicara. Guru itu tidak menyerah. Ia terus mengajaknya berbicara dengan sabar, setiap hari. Suatu hari, murid itu tiba-tiba berbicara dengan lancar dan ternyata sangat cerdas. Guru itu berkata, 'Kadang kemampuan tersembunyi hanya butuh waktu untuk muncul.'",
+  pelajaran: "Kemampuan setiap orang bisa muncul pada waktunya; jangan menyerah sebelum mencoba.",
+  pelajaranTambahan: [
+    "<strong>Kesabaran mengungkap keajaiban</strong> — bukan instan.",
+    "<strong>Jangan menilai dari kondisi saat ini</strong> — potensi bisa tersembunyi.",
+    "<strong>Setiap orang punya waktunya</strong> — termasuk yang lambat.",
+    "<strong>Guru yang sabar mengubah hidup</strong> — lebih dari yang kita tahu."
+  ]
+},
+{
+  id: 79,
+  judul: "Petani dan Anak yang Ingin Cepat Panen",
+  ringkasan: "Seorang anak petani ingin panen lebih cepat. Ia menyiram tanamannya dengan air lebih banyak setiap hari. Ternyata tanamannya justru busuk. Ayahnya berkata, 'Terlalu banyak air sama buruknya dengan tidak ada air. Keseimbangan adalah kuncinya.' Anak itu belajar tentang pentingnya takaran.",
+  pelajaran: "Keseimbangan lebih penting dari berlebihan, bahkan dalam hal baik.",
+  pelajaranTambahan: [
+    "<strong>Terlalu banyak itu merusak</strong> — seperti terlalu sedikit.",
+    "<strong>Takaran itu penting</strong> — dalam semua hal.",
+    "<strong>Kesabaran mengalahkan percepatan</strong> — dalam banyak kasus.",
+    "<strong>Belajar dari alam</strong> — keseimbangan adalah hukum."
+  ]
+},
+{
+  id: 80,
+  judul: "Anak dan Cermin Retak yang Diganti",
+  ringkasan: "Seorang anak memiliki cermin yang retak. Ia ingin menggantinya. Ibunya berkata, 'Cermin ini retak, tapi masih bisa bercermin. Daripada menggantinya, coba lihat apakah retak itu benar-benar mengganggu, atau hanya kelihatan buruk.' Ternyata cermin itu masih berfungsi dengan baik. Anak itu belajar bahwa tidak semua kerusakan perlu segera diperbaiki.",
+  pelajaran: "Tidak semua kerusakan perlu segera diperbaiki; lihat dampaknya dulu.",
+  pelajaranTambahan: [
+    "<strong>Jangan panik pada kerusakan kecil</strong> — lihat dampaknya.",
+    "<strong>Fungsi lebih penting dari estetika</strong> — dalam banyak kasus.",
+    "<strong>Perbaikan bisa ditunda</strong> — jika tidak mengganggu.",
+    "<strong>Bersyukur pada yang masih berfungsi</strong> — meski tidak sempurna."
+  ]
+},
+{
+  id: 81,
+  judul: "Guru dan Murid yang Membenci Matematika",
+  ringkasan: "Seorang murid sangat membenci matematika dan selalu mengeluh. Guru itu tidak memaksanya mencintai matematika. Ia hanya berkata, 'Kamu tidak perlu suka. Kamu hanya perlu cukup paham untuk lulus dan menjalani hidup. Kadang kita harus melakukan yang tidak kita suka, dan itu bagian dari kedewasaan.'",
+  pelajaran: "Tidak semua yang harus dilakukan harus disukai; kedewasaan menerima itu.",
+  pelajaranTambahan: [
+    "<strong>Jangan bergantung pada mood</strong> — untuk melakukan kewajiban.",
+    "<strong>Kedewasaan menerima yang tidak menyenangkan</strong> — dan tetap melakukannya.",
+    "<strong>Kesuksesan butuh melakukan hal yang tidak disukai</strong> — kadang.",
+    "<strong>Fokus pada tujuan</strong> — bukan pada rasa suka."
+  ]
+},
+{
+  id: 82,
+  judul: "Petani dan Bunga yang Tidak Berbau",
+  ringkasan: "Seorang petani menanam bunga yang indah tapi tidak berbau. Tetangganya bertanya, 'Kenapa kamu tanam bunga yang tidak berbau?' Petani itu menjawab, 'Keindahannya cukup. Tidak semua harus memberi lebih dari satu hal.' Bunga itu menjadi favorit anak-anak karena warnanya cerah.",
+  pelajaran: "Keindahan tidak harus disertai hal lain untuk berharga.",
+  pelajaranTambahan: [
+    "<strong>Setiap orang punya kelebihannya</strong> — tidak harus semua.",
+    "<strong>Jangan menuntut kesempurnaan</strong> — dari siapa pun.",
+    "<strong>Keindahan sederhana itu cukup</strong> — tidak perlu bumbu.",
+    "<strong>Terima dengan apa adanya</strong> — lebih damai."
+  ]
+},
+{
+  id: 83,
+  judul: "Anak dan Buku yang Dipinjam Teman",
+  ringkasan: "Seorang anak meminjamkan buku kesayangannya pada temannya. Buku itu dikembalikan dalam kondisi rusak. Anak itu sangat kecewa. Ibunya berkata, 'Buku bisa dibeli lagi, tapi kepercayaan yang rusak lebih sulit diperbaiki. Bicarakan dengan temanmu dengan tenang, jangan langsung memutuskan hubungan.'",
+  pelajaran: "Kepercayaan lebih berharga dari benda; jaga komunikasi daripada memutuskan hubungan.",
+  pelajaranTambahan: [
+    "<strong>Bicarakan dulu</strong> — sebelum menyimpulkan.",
+    "<strong>Kepercayaan lebih berharga</strong> — dari harta.",
+    "<strong>Maaf menguatkan hubungan</strong> — bukan melemahkan.",
+    "<strong>Anak belajar dari reaksi orang tua</strong> — jadi teladan."
+  ]
+},
+{
+  id: 84,
+  judul: "Guru dan Murid yang Berbeda Pendapat Soal Sejarah",
+  ringkasan: "Seorang murid berdebat dengan gurunya tentang interpretasi sejarah. Guru itu tidak marah. Ia berkata, 'Bagus kamu punya pandangan sendiri. Sejarah itu bisa dilihat dari banyak sudut. Yang penting adalah mencari kebenaran dengan jujur, bukan memenangkan debat.' Murid itu pun belajar tentang kerendahan hati intelektual.",
+  pelajaran: "Mencari kebenaran lebih penting dari memenangkan perdebatan.",
+  pelajaranTambahan: [
+    "<strong>Debat sehat itu baik</strong> — jika mencari kebenaran.",
+    "<strong>Hormati pandangan yang berbeda</strong> — bukan memaksakan.",
+    "<strong>Kerendahan hati intelektual</strong> — tanda kecerdasan sejati.",
+    "<strong>Sejarah itu multi-tafsir</strong> — bukan hitam-putih."
+  ]
+},
+{
+  id: 85,
+  judul: "Petani dan Kambing yang Suka Mengunyah",
+  ringkasan: "Seorang petani memiliki kambing yang suka mengunyah apa saja — termasuk pakaian yang dijemur. Ia kesal dan hampir menjualnya. Tapi anaknya berkata, 'Kambing itu hanya lapar. Coba beri makan lebih banyak.' Setelah diberi makan cukup, kambing itu berhenti mengunyah barang-barang. Petani itu berkata, 'Kadang perilaku buruk berasal dari kebutuhan yang tidak terpenuhi.'",
+  pelajaran: "Perilaku buruk sering berasal dari kebutuhan yang tidak terpenuhi.",
+  pelajaranTambahan: [
+    "<strong>Cari akar perilaku</strong> — bukan hanya menghukum.",
+    "<strong>Kebutuhan yang tidak terpenuhi</strong> — memicu perilaku menyimpang.",
+    "<strong>Solusi sederhana bisa dari pemahaman</strong> — bukan paksaan.",
+    "<strong>Amati dengan sabar</strong> — sebelum memutuskan."
+  ]
+},
+{
+  id: 86,
+  judul: "Anak dan Kelereng yang Diperebutkan",
+  ringkasan: "Seorang anak dan temannya berebut kelereng. Mereka berdua bersikeras bahwa kelereng itu miliknya. Ibunya datang dan bertanya, 'Kelereng ini apa warnanya?' Ternyata kelereng itu berwarna biru. Anak itu mengaku lupa. Ternyata kelereng itu milik temannya. Ia pun meminta maaf dan belajar untuk tidak cepat mengklaim sesuatu.",
+  pelajaran: "Jangan cepat mengklaim sesuatu sebagai milikmu tanpa bukti.",
+  pelajaranTambahan: [
+    "<strong>Bukti lebih penting dari keyakinan</strong> — dalam konflik.",
+    "<strong>Mengaku salah itu berani</strong> — bukan memalukan.",
+    "<strong>Kepemilikan harus jelas</strong> — bukan asal klaim.",
+    "<strong>Ajari anak untuk jujur</strong> — sejak kecil."
+  ]
+},
+{
+  id: 87,
+  judul: "Guru dan Murid yang Suka Menggambar di Meja",
+  ringkasan: "Seorang murid suka menggambar di meja sekolah. Guru-guru lain marah. Tapi guru itu justru memberinya buku gambar dan berkata, 'Gambarmu bagus. Tapi gambarlah di tempat yang tepat.' Murid itu tumbuh menjadi seniman. Ia berkata, 'Guru itu mengarahkan, bukan melarang.'",
+  pelajaran: "Mengarahkan bakat lebih baik daripada melarangnya.",
+  pelajaranTambahan: [
+    "<strong>Jangan matikan bakat</strong> — arahkan saja.",
+    "<strong>Beri tempat yang tepat</strong> — untuk ekspresi.",
+    "<strong>Anak-anak butuh bimbingan</strong> — bukan larangan.",
+    "<strong>Guru yang baik melihat potensi</strong> — di balik kenakalan."
+  ]
+},
+{
+  id: 88,
+  judul: "Petani dan Anak yang Malas Menyiangi",
+  ringkasan: "Seorang anak petani malas menyiangi rumput liar. Ia mengira rumput itu tidak masalah. Beberapa minggu kemudian, rumput liar menutupi tanamannya dan menghambat pertumbuhannya. Ayahnya berkata, 'Hal kecil yang diabaikan bisa menjadi besar.' Sejak itu, anak itu rajin menyiangi.",
+  pelajaran: "Hal kecil yang diabaikan bisa menjadi besar dan merugikan.",
+  pelajaranTambahan: [
+    "<strong>Jangan abaikan hal kecil</strong> — bisa tumbuh jadi besar.",
+    "<strong>Rawat rutin itu penting</strong> — bukan hanya saat masalah muncul.",
+    "<strong>Pencegahan lebih baik</strong> — dari perbaikan.",
+    "<strong>Konsistensi menjaga hasil</strong> — bukan hanya usaha awal."
+  ]
+},
+{
+  id: 89,
+  judul: "Anak dan Buku yang Dibaca di Bawah Selimut",
+  ringkasan: "Seorang anak suka membaca buku di bawah selimut dengan lampu senter. Ibunya menemukannya dan tidak marah, tapi berkata, 'Membaca itu baik, tapi jaga kesehatan matamu juga. Keseimbangan itu penting.' Anak itu belajar bahwa bahkan hal baik pun perlu takaran.",
+  pelajaran: "Bahkan hal baik pun perlu takaran agar tidak merugikan.",
+  pelajaranTambahan: [
+    "<strong>Keseimbangan dalam segala hal</strong> — termasuk yang baik.",
+    "<strong>Kesehatan itu penting</strong> — jangan dikorbankan demi hal baik.",
+    "<strong>Nasihat orang tua itu berharga</strong> — bukan larangan.",
+    "<strong>Ajari anak tentang batas</strong> — tanpa mematikan semangat."
+  ]
+},
+{
+  id: 90,
+  judul: "Guru dan Murid yang Selalu Cemas Nilai",
+  ringkasan: "Seorang murid selalu cemas tentang nilai. Ia belajar terus tanpa istirahat, sampai jatuh sakit. Guru itu berkata, 'Nilai itu penting, tapi kesehatanmu lebih penting. Kamu tidak bisa belajar jika tubuhmu sakit.' Murid itu pun belajar menyeimbangkan hidup.",
+  pelajaran: "Kesehatan adalah aset utama; jangan dikorbankan demi pencapaian.",
+  pelajaranTambahan: [
+    "<strong>Nilai bukan segalanya</strong> — kesehatan lebih utama.",
+    "<strong>Keseimbangan hidup</strong> — bukan hanya kerja keras.",
+    "<strong>Istirahat bagian dari belajar</strong> — bukan kemalasan.",
+    "<strong>Prestasi tanpa kesehatan itu hampa</strong> — selalu."
+  ]
+},
+{
+  id: 91,
+  judul: "Petani dan Tanaman yang Tumbuh Miring",
+  ringkasan: "Seorang petani memiliki tanaman yang tumbuh miring karena tertutup pohon besar. Ia ingin mencabutnya, tapi memutuskan untuk memindahkan pohon besarnya. Setelah pohon itu dipindahkan, tanaman itu tumbuh tegak dan sehat. Petani itu berkata, 'Kadang bukan tanamannya yang salah, tapi lingkungannya.'",
+  pelajaran: "Sebelum menyalahkan individu, periksa lingkungannya terlebih dahulu.",
+  pelajaranTambahan: [
+    "<strong>Lingkungan memengaruhi pertumbuhan</strong> — bukan hanya bakat.",
+    "<strong>Perbaiki akar masalah</strong> — bukan hanya gejalanya.",
+    "<strong>Jangan buru-buru menyalahkan</strong> — periksa dulu.",
+    "<strong>Ubah lingkungan</strong> — jika individu tidak bisa tumbuh di sana."
+  ]
+},
+{
+  id: 92,
+  judul: "Anak dan Sepatu Bekas yang Dibanggakan",
+  ringkasan: "Seorang anak memakai sepatu bekas yang sudah agak lusuh, tapi ia tetap bangga. Temannya mengejek. Anak itu berkata, 'Sepatu ini bekas, tapi aku tetap bisa berlari cepat dengannya. Yang penting bukan sepatunya, tapi kakinya.' Temannya terdiam dan menghormatinya.",
+  pelajaran: "Kualitas diri lebih penting dari kualitas barang yang kita pakai.",
+  pelajaranTambahan: [
+    "<strong>Jangan malu pada yang sederhana</strong> — yang penting fungsinya.",
+    "<strong>Kualitas dari dalam</strong> — bukan dari luar.",
+    "<strong>Kepercayaan diri mengalahkan ejekan</strong> — selalu.",
+    "<strong>Contoh lebih kuat dari kata</strong> — tunjukkan, bukan bicara."
+  ]
+},
+{
+  id: 93,
+  judul: "Guru dan Murid yang Selalu Menjawab Salah",
+  ringkasan: "Seorang murid selalu menjawab salah di kelas. Teman-temannya mulai menertawakan. Guru itu berkata, 'Setiap jawaban salah adalah kesempatan untuk belajar. Yang berani menjawab salah lebih baik dari yang tidak berani menjawab sama sekali.' Kelas pun kembali menghargai keberanian mencoba.",
+  pelajaran: "Berani mencoba dan salah lebih baik dari tidak mencoba sama sekali.",
+  pelajaranTambahan: [
+    "<strong>Kesalahan adalah pelajaran</strong> — bukan memalukan.",
+    "<strong>Keberanian mengalahkan kesempurnaan</strong> — selalu.",
+    "<strong>Jangan tertawakan yang berani</strong> — hargai usahanya.",
+    "<strong>Ruang aman untuk salah</strong> — kunci pembelajaran."
+  ]
+},
+{
+  id: 94,
+  judul: "Petani dan Anak yang Ingin Menjual Tanah",
+  ringkasan: "Seorang anak ingin menjual tanah warisan ayahnya untuk modal usaha. Ayahnya berkata, 'Tanah ini bukan sekadar harta, tapi sejarah keluarga. Kalau kamu butuh modal, cari cara lain. Tanah ini untuk generasi berikutnya.' Anak itu belajar tentang nilai jangka panjang.",
+  pelajaran: "Tidak semua warisan boleh dijual; sebagian untuk generasi berikutnya.",
+  pelajaranTambahan: [
+    "<strong>Warisan bukan hanya materi</strong> — tapi sejarah dan identitas.",
+    "<strong>Pikirkan jangka panjang</strong> — bukan hanya kebutuhan saat ini.",
+    "<strong>Cari alternatif sebelum menjual</strong> — yang tak bisa dibeli kembali.",
+    "<strong>Visi lintas generasi</strong> — tanda kedewasaan."
+  ]
+},
+{
+  id: 95,
+  judul: "Anak dan Lampu Belajar yang Redup",
+  ringkasan: "Seorang anak belajar dengan lampu yang redup. Matanya cepat lelah, tapi ia tetap belajar. Ibunya mengganti lampu itu dengan yang lebih terang dan berkata, 'Belajar itu penting, tapi jangan sampai merusak dirimu. Gunakan alat yang tepat.' Anak itu belajar lebih nyaman setelah lampu diganti.",
+  pelajaran: "Gunakan alat yang tepat untuk mendukung usaha, bukan hanya mengandalkan semangat.",
+  pelajaranTambahan: [
+    "<strong>Alat yang tepat mendukung hasil</strong> — bukan hanya semangat.",
+    "<strong>Jangan korbankan kesehatan</strong> — demi semangat semata.",
+    "<strong>Investasi pada alat itu penting</strong> — untuk hasil jangka panjang.",
+    "<strong>Cari bantuan saat perlu</strong> — bukan memaksakan diri."
+  ]
+},
+{
+  id: 96,
+  judul: "Guru dan Murid yang Berbicara Terlalu Banyak",
+  ringkasan: "Seorang murid suka berbicara di kelas tanpa henti. Guru itu tidak melarangnya, tapi mengajarinya mendengarkan. Ia berkata, 'Berbicara itu baik, tapi mendengarkan juga sama pentingnya. Yang bijak tahu kapan harus bicara dan kapan harus diam.'",
+  pelajaran: "Mendengarkan sama pentingnya dengan berbicara.",
+  pelajaranTambahan: [
+    "<strong>Keseimbangan bicara dan dengar</strong> — tanda kedewasaan.",
+    "<strong>Mendengarkan itu belajar</strong> — bukan pasif.",
+    "<strong>Bijak tahu kapan diam</strong> — bukan selalu bicara.",
+    "<strong>Komunikasi efektif butuh keduanya</strong> — bukan hanya satu."
+  ]
+},
+{
+  id: 97,
+  judul: "Petani dan Anak yang Bertanya Tentang Kemiskinan",
+  ringkasan: "Seorang anak bertanya, 'Ayah, kenapa kita miskin?' Ayahnya menjawab, 'Kita tidak miskin. Kita hanya belum kaya. Kita punya tanah, tenaga, dan keluarga. Itu sudah kekayaan.' Anak itu belajar bahwa kekayaan bukan hanya soal uang.",
+  pelajaran: "Kekayaan bukan hanya soal uang; kesehatan, keluarga, dan kemampuan juga kekayaan.",
+  pelajaranTambahan: [
+    "<strong>Ubah cara pandang tentang kekayaan</strong> — bukan hanya materi.",
+    "<strong>Syukur mengubah kemiskinan jadi kecukupan</strong> — dalam hati.",
+    "<strong>Keluarga adalah kekayaan</strong> — yang tak bisa dibeli.",
+    "<strong>Tenaga dan tanah adalah modal</strong> — bukan hanya uang."
+  ]
+},
+{
+  id: 98,
+  judul: "Anak dan Buku yang Dianggap Tidak Berguna",
+  ringkasan: "Seorang anak menemukan buku tua yang tidak menarik. Ia hampir membuangnya. Tapi ia membuka halaman pertama dan menemukan cerita yang menyentuh. Ia membaca seluruhnya dan menjadi salah satu buku favoritnya. Ia berkata, 'Jangan menilai buku dari sampulnya.'",
+  pelajaran: "Jangan menilai sesuatu dari tampilan luarnya saja.",
+  pelajaranTambahan: [
+    "<strong>Sampul bukan isi</strong> — selalu cek dulu.",
+    "<strong>Banyak hal berharga tersembunyi</strong> — di balik yang tampak biasa.",
+    "<strong>Beri kesempatan kedua</strong> — pada buku, pada orang, pada hidup.",
+    "<strong>Prasangka menghalangi penemuan</strong> — buang dulu."
+  ]
+},
+{
+  id: 99,
+  judul: "Guru dan Murid yang Ingin Cepat Jadi Pemimpin",
+  ringkasan: "Seorang murid ingin menjadi ketua kelas, tapi tidak mau membantu teman-temannya. Guru berkata, 'Pemimpin itu bukan yang paling banyak bicara, tapi yang paling banyak melayani. Kalau kamu ingin memimpin, mulailah dengan melayani.' Murid itu pun berubah dan akhirnya menjadi ketua yang dicintai.",
+  pelajaran: "Kepemimpinan sejati dimulai dari pelayanan, bukan dari kekuasaan.",
+  pelajaranTambahan: [
+    "<strong>Pemimpin itu pelayan</strong> — bukan penguasa.",
+    "<strong>Mulai dari bawah</strong> — sebelum memimpin di atas.",
+    "<strong>Dihormati karena melayani</strong> — bukan karena jabatan.",
+    "<strong>Kepemimpinan diuji dari tindakan</strong> — bukan dari kata-kata."
+  ]
+},
+{
+  id: 100,
+  judul: "Penutup: Seratus Cerita Ketiga",
+  ringkasan: "Seorang murid yang telah membaca ketiga seri cerita bertanya pada gurunya, 'Guru, kenapa ceritanya tidak pernah habis?' Gurunya tersenyum dan berkata, 'Karena kehidupan itu sendiri adalah cerita yang tak pernah selesai. Selama masih ada manusia yang belajar, akan selalu ada cerita baru. Seri ini bukan tentang 100 cerita, tapi tentang satu kebenaran: bahwa hidup mengajarkan pada siapa pun yang mau mendengarkan.' Murid itu tersenyum dan berkata, 'Kalau begitu, aku siap untuk seri keempat.'",
+  pelajaran: "Pelajaran hidup tidak pernah habis bagi mereka yang mau terus belajar.",
+  pelajaranTambahan: [
+    "<strong>Hidup adalah guru yang tak pernah berhenti</strong> — jika kita mau belajar.",
+    "<strong>Cerita baru selalu lahir</strong> — dari pengalaman sehari-hari.",
+    "<strong>Yang penting bukan jumlah cerita</strong> — tapi kedalaman pemahaman.",
+    "<strong>Belajar seumur hidup</strong> — itulah kunci kebijaksanaan."
+  ]
+}
+];
+
+/* =========================================================
+   RENDER & LOGIKA
+   ========================================================= */
+const grid = document.getElementById('grid');
+const searchInput = document.getElementById('searchInput');
+const stats = document.getElementById('stats');
+const modalOverlay = document.getElementById('modalOverlay');
+const modalContent = document.getElementById('modalContent');
+
+function renderCards(data) {
+  grid.innerHTML = '';
+
+  if (data.length === 0) {
+    grid.innerHTML = `<div class="no-result">😕 Tidak ada cerita yang cocok dengan pencarianmu.<br><small>Coba kata kunci lain.</small></div>`;
+    stats.textContent = `Menampilkan 0 dari ${ceritaData.length} cerita`;
+    return;
+  }
+
+  data.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <span class="number">Cerita #${c.id}</span>
+      <h3>${c.judul}</h3>
+      <p class="pelajaran">"${c.pelajaran}"</p>
+    `;
+    card.addEventListener('click', () => openModal(c));
+    grid.appendChild(card);
+  });
+
+  stats.textContent = `Menampilkan ${data.length} dari ${ceritaData.length} cerita`;
+}
+
+function openModal(c) {
+  const tambahan = (c.pelajaranTambahan || [])
+    .map(p => `<li>${p}</li>`)
+    .join('');
+
+  modalContent.innerHTML = `
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <span class="badge">Seri 3 · Cerita #${c.id}</span>
+    <h2>${c.judul}</h2>
+
+    <div class="section">
+      <h4>📖 Ringkasan Cerita</h4>
+      <p>${c.ringkasan}</p>
+    </div>
+
+    <div class="section pelajaran-box">
+      <h4>💡 Pelajaran Utama</h4>
+      <p>${c.pelajaran}</p>
+    </div>
+
+    ${tambahan ? `
+    <div class="section">
+      <h4>✨ Pelajaran Tambahan</h4>
+      <ul>${tambahan}</ul>
+    </div>` : ''}
+  `;
+
+  modalOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  modalOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+modalOverlay.addEventListener('click', (e) => {
+  if (e.target === modalOverlay) closeModal();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+});
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.toLowerCase().trim();
+
+  if (!q) {
+    renderCards(ceritaData);
+    return;
+  }
+
+  const filtered = ceritaData.filter(c => {
+    const gabungan = [
+      c.judul,
+      c.ringkasan,
+      c.pelajaran,
+      ...(c.pelajaranTambahan || [])
+    ].join(' ').toLowerCase();
+
+    return gabungan.includes(q);
+  });
+
+  renderCards(filtered);
+});
+
+renderCards(ceritaData);
+</script>
+</body>
+</html>
