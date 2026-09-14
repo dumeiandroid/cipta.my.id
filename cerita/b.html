@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daftar Isi — 100 Cerita Ilustrasi & Pelajaran Hidup</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: #e9e2d0;
+    background-image:
+      radial-gradient(circle at 50% 0%, rgba(0,0,0,0.06), transparent 60%),
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.015) 0px, rgba(0,0,0,0.015) 1px, transparent 1px, transparent 3px);
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+    color: #2b2419;
+  }
+
+  .book {
+    max-width: 760px;
+    margin: 0 auto;
+    background: #fdfaf3;
+    border: 1px solid #d8cdb0;
+    box-shadow:
+      0 1px 0 #fff inset,
+      0 25px 50px rgba(0,0,0,0.25),
+      0 0 0 6px #fdfaf3,
+      0 0 0 7px #b89b5e;
+    padding: 55px 60px 70px;
+    position: relative;
+  }
+
+  .book::before {
+    content: '';
+    position: absolute;
+    left: 22px; top: 0; bottom: 0;
+    width: 1px;
+    background: rgba(184,155,94,0.35);
+  }
+
+  header.cover {
+    text-align: center;
+    padding-bottom: 30px;
+    margin-bottom: 35px;
+    border-bottom: 3px double #b89b5e;
+  }
+  header.cover .kicker {
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    color: #8a7a4f;
+    margin-bottom: 12px;
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+  header.cover h1 {
+    font-size: 2.3rem;
+    color: #362c1a;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+  }
+  header.cover p {
+    font-style: italic;
+    color: #6b5d3f;
+    font-size: 1rem;
+  }
+  header.cover .ornament {
+    margin-top: 18px;
+    color: #b89b5e;
+    font-size: 1.1rem;
+    letter-spacing: 8px;
+  }
+
+  .toc-title {
+    text-align: center;
+    font-size: 1.4rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #4a3d24;
+    margin-bottom: 8px;
+  }
+  .toc-sub {
+    text-align: center;
+    color: #8a7a4f;
+    font-size: 0.85rem;
+    margin-bottom: 30px;
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+
+  .file-box {
+    max-width: 420px;
+    margin: 0 auto 22px;
+    font-family: 'Trebuchet MS', sans-serif;
+    position: relative;
+  }
+  .file-box label {
+    display: block;
+    text-align: center;
+    font-size: 0.7rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #a8996f;
+    margin-bottom: 6px;
+  }
+  .file-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #f4ecd8;
+    border: 1px solid #d8cdb0;
+    border-radius: 6px;
+    padding: 6px 8px;
+    position: relative;
+  }
+  .file-row input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 0.9rem;
+    color: #362c1a;
+    text-align: center;
+  }
+  .file-row input::placeholder { color: #b3a582; }
+  .file-row button {
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 0.8rem;
+    border: 1px solid #b89b5e;
+    background: #b89b5e;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.2s;
+    flex-shrink: 0;
+  }
+  .file-row button:hover { background: #a3854a; }
+  .file-row #resetFileBtn {
+    background: transparent;
+    color: #8a7a4f;
+    border: 1px solid #d8cdb0;
+    padding: 6px 10px;
+  }
+  .file-row #resetFileBtn:hover { background: #ece2c6; }
+  .file-hint {
+    text-align: center;
+    font-size: 0.72rem;
+    color: #a8996f;
+    margin-top: 5px;
+    font-style: italic;
+  }
+  .file-status {
+    text-align: center;
+    font-size: 0.75rem;
+    margin-top: 6px;
+    min-height: 1em;
+    color: #8a7a4f;
+  }
+  .file-status.error { color: #a3402f; }
+  .file-status.ok { color: #4f7a4a; }
+
+  .file-suggestions {
+    display: none;
+    list-style: none;
+    position: absolute;
+    left: 0; right: 0;
+    top: calc(100% + 4px);
+    background: #fdfaf3;
+    border: 1px solid #d8cdb0;
+    border-radius: 6px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 20;
+  }
+  .file-suggestions.active { display: block; }
+  .file-suggestions li {
+    padding: 8px 14px;
+    font-size: 0.88rem;
+    color: #4a3d24;
+    cursor: pointer;
+    text-align: left;
+  }
+  .file-suggestions li:hover { background: #f4ecd8; }
+  .file-suggestions li.empty {
+    color: #a8996f;
+    font-style: italic;
+    cursor: default;
+  }
+  .file-suggestions li.empty:hover { background: transparent; }
+
+  .search-box { max-width: 420px; margin: 0 auto 35px; position: relative; }
+
+  .search-box input {
+    width: 100%;
+    font-family: 'Trebuchet MS', sans-serif;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    border: none;
+    border-bottom: 1px solid #b89b5e;
+    background: transparent;
+    outline: none;
+    text-align: center;
+    color: #4a3d24;
+  }
+  .search-box input::placeholder { color: #a8996f; font-style: italic; }
+
+  .stats {
+    text-align: center;
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 0.78rem;
+    color: #a8996f;
+    margin-bottom: 25px;
+    letter-spacing: 0.5px;
+  }
+
+  .bagian-label {
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #b89b5e;
+    margin: 30px 0 10px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e3d9bd;
+  }
+  .bagian-label:first-of-type { margin-top: 0; }
+
+  .toc-list { list-style: none; }
+
+  .toc-item {
+    padding: 10px 6px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.2s, padding-left 0.2s;
+  }
+  .toc-item:hover {
+    background: rgba(184,155,94,0.1);
+    padding-left: 12px;
+  }
+
+  .toc-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .toc-item .num {
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 0.75rem;
+    color: #b89b5e;
+    min-width: 26px;
+    text-align: right;
+    flex-shrink: 0;
+    font-weight: bold;
+  }
+
+  .toc-item .judul {
+    font-size: 1rem;
+    color: #362c1a;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .toc-item .dots {
+    flex: 1;
+    border-bottom: 1.5px dotted #c9bb92;
+    position: relative;
+    top: -4px;
+    min-width: 20px;
+  }
+
+  .toc-item .page {
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 0.85rem;
+    color: #8a7a4f;
+    flex-shrink: 0;
+    min-width: 24px;
+    text-align: right;
+  }
+
+  .toc-item .quote {
+    margin-top: 5px;
+    padding-left: 34px;
+    font-size: 0.88rem;
+    font-style: italic;
+    line-height: 1.55;
+    color: #6b5d3f;
+  }
+
+  .no-result {
+    text-align: center;
+    color: #8a7a4f;
+    padding: 50px 20px;
+    font-style: italic;
+    font-size: 1rem;
+  }
+
+  footer.pagefoot {
+    text-align: center;
+    margin-top: 45px;
+    color: #b89b5e;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+  }
+
+  /* ===== MODAL (isi cerita) ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(20,15,5,0.55);
+    backdrop-filter: blur(3px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    animation: fadeIn 0.25s;
+  }
+  .modal-overlay.active { display: flex; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .modal {
+    background: #fdfaf3;
+    border: 1px solid #d8cdb0;
+    box-shadow: 0 0 0 6px #fdfaf3, 0 0 0 7px #b89b5e, 0 25px 60px rgba(0,0,0,0.4);
+    max-width: 680px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 45px 50px;
+    position: relative;
+    animation: slideUp 0.35s;
+    font-family: 'Georgia', serif;
+    color: #2b2419;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: transparent;
+    border: 1px solid #b89b5e;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+    color: #8a7a4f;
+  }
+  .modal-close:hover { background: #b89b5e; color: #fff; }
+
+  .modal .badge {
+    display: inline-block;
+    font-family: 'Trebuchet MS', sans-serif;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #b89b5e;
+    font-size: 0.75rem;
+    margin-bottom: 12px;
+  }
+
+  .modal h2 {
+    font-size: 1.7rem;
+    color: #362c1a;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 2px double #b89b5e;
+  }
+
+  .modal .section { margin-bottom: 22px; }
+  .modal .section h4 {
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #b89b5e;
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+  .modal .section p {
+    font-size: 1.02rem;
+    line-height: 1.85;
+    color: #3a3122;
+    text-align: justify;
+  }
+
+  .modal .section.pelajaran-box {
+    background: #f4ecd8;
+    border-left: 3px solid #b89b5e;
+    padding: 18px 22px;
+  }
+  .modal .section.pelajaran-box p { font-style: italic; }
+
+  .modal ul { list-style: none; padding: 0; }
+  .modal ul li {
+    position: relative;
+    padding-left: 24px;
+    margin-bottom: 12px;
+    font-size: 0.98rem;
+    line-height: 1.7;
+    color: #3a3122;
+  }
+  .modal ul li::before {
+    content: '❧';
+    position: absolute;
+    left: 0;
+    color: #b89b5e;
+  }
+  .modal ul li strong { color: #2b2419; }
+
+  .modal::-webkit-scrollbar { width: 7px; }
+  .modal::-webkit-scrollbar-thumb { background: #d8cdb0; border-radius: 4px; }
+
+  @media (max-width: 600px) {
+    .book { padding: 35px 22px 50px; }
+    header.cover h1 { font-size: 1.7rem; }
+    .toc-item .judul { white-space: normal; }
+    .toc-item .dots { display: none; }
+    .toc-item .quote { padding-left: 0; margin-top: 6px; }
+    .modal { padding: 30px 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="book">
+  <header class="cover">
+    <div class="kicker">Kumpulan Hikmah</div>
+    <h1>100 Cerita Ilustrasi</h1>
+    <p>&amp; Pelajaran Hidup</p>
+    <div class="ornament">❧ ❧ ❧</div>
+  </header>
+
+  <div class="toc-title">Daftar Isi</div>
+  <div class="toc-sub">Klik judul untuk membaca cerita</div>
+
+  <div class="file-box">
+    <form id="fileForm">
+      <label for="fileNameInput">Sumber Data</label>
+      <div class="file-row">
+        <input type="text" id="fileNameInput" placeholder="misal: 1" autocomplete="off">
+        <button type="submit">Muat</button>
+        <button type="button" id="resetFileBtn" title="Kembali ke default">↺</button>
+      </div>
+      <ul class="file-suggestions" id="fileSuggestions"></ul>
+    </form>
+    <div class="file-hint">Cukup ketik namanya saja, mis. <strong>1</strong> — tanpa "file/" dan ".txt"</div>
+    <div class="file-status" id="fileStatus"></div>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Cari cerita atau pelajaran...">
+  </div>
+
+  <div class="stats" id="stats">Memuat daftar isi...</div>
+
+  <ul class="toc-list" id="tocList"></ul>
+
+  <footer class="pagefoot">❧ tamat ❧</footer>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+/* =========================================================
+   DATA CERITA (JSON) — dimuat dari file eksternal
+   Cukup ketik nama filenya saja (tanpa "file/" dan ".txt"),
+   mis. "1" akan memuat file/1.txt, "2" akan memuat file/2.txt.
+   Nama file yang aktif disimpan di localStorage supaya bertahan
+   walau halaman ditutup/dibuka lagi, sampai di-reset/clear.
+   Daftar nama file yang pernah berhasil dimuat juga disimpan,
+   dipakai sebagai saran/filter pencarian di kotak "Sumber Data".
+   ========================================================= */
+const STORAGE_KEY = 'ceritaFileName';
+const KNOWN_FILES_KEY = 'ceritaKnownFiles';
+const DEFAULT_FILE = '1';
+const DEFAULT_KNOWN_FILES = ['1', '2'];
+
+let ceritaData = [];
+
+const tocList = document.getElementById('tocList');
+const searchInput = document.getElementById('searchInput');
+const stats = document.getElementById('stats');
+const modalOverlay = document.getElementById('modalOverlay');
+const modalContent = document.getElementById('modalContent');
+const fileForm = document.getElementById('fileForm');
+const fileNameInput = document.getElementById('fileNameInput');
+const resetFileBtn = document.getElementById('resetFileBtn');
+const fileStatus = document.getElementById('fileStatus');
+const fileSuggestions = document.getElementById('fileSuggestions');
+
+// Buang "file/" di depan dan ".txt"/".json" di belakang kalau
+// pengguna tetap mengetikkannya, supaya tetap toleran.
+function normalizeFileName(raw) {
+  return (raw || '')
+    .trim()
+    .replace(/^file\//i, '')
+    .replace(/\.(txt|json)$/i, '');
+}
+
+async function loadCeritaData(fileName) {
+  const targetFile = normalizeFileName(fileName) || getSavedFileName();
+  fileNameInput.value = targetFile;
+  hideSuggestions();
+  fileStatus.textContent = `Memuat "${targetFile}" ...`;
+  fileStatus.className = 'file-status';
+  stats.textContent = 'Memuat daftar isi...';
+
+  try {
+    const res = await fetch('file/' + targetFile + '.txt');
+    if (!res.ok) throw new Error('File "' + targetFile + '" tidak ditemukan (status ' + res.status + ')');
+    ceritaData = await res.json();
+  } catch (err) {
+    console.error('Gagal memuat data cerita:', err);
+    tocList.innerHTML = `<div class="no-result">⚠️ Gagal memuat "${targetFile}".<br><small>${err.message}</small></div>`;
+    stats.textContent = 'Gagal memuat data';
+    fileStatus.textContent = `Gagal memuat "${targetFile}"`;
+    fileStatus.className = 'file-status error';
+    return;
+  }
+
+  saveFileName(targetFile);
+  registerKnownFile(targetFile);
+  fileStatus.textContent = `Sedang menampilkan: ${targetFile}`;
+  fileStatus.className = 'file-status ok';
+  renderToc(ceritaData);
+}
+
+function getSavedFileName() {
+  try {
+    return localStorage.getItem(STORAGE_KEY) || DEFAULT_FILE;
+  } catch (err) {
+    console.warn('localStorage tidak tersedia:', err);
+    return DEFAULT_FILE;
+  }
+}
+
+function saveFileName(name) {
+  try {
+    localStorage.setItem(STORAGE_KEY, name);
+  } catch (err) {
+    console.warn('Gagal menyimpan ke localStorage:', err);
+  }
+}
+
+function getKnownFiles() {
+  try {
+    const raw = localStorage.getItem(KNOWN_FILES_KEY);
+    const list = raw ? JSON.parse(raw) : DEFAULT_KNOWN_FILES;
+    return Array.isArray(list) && list.length ? list : DEFAULT_KNOWN_FILES;
+  } catch (err) {
+    return DEFAULT_KNOWN_FILES;
+  }
+}
+
+function registerKnownFile(name) {
+  try {
+    const list = getKnownFiles();
+    if (!list.includes(name)) {
+      list.push(name);
+      localStorage.setItem(KNOWN_FILES_KEY, JSON.stringify(list));
+    }
+  } catch (err) {
+    console.warn('Gagal menyimpan daftar file:', err);
+  }
+}
+
+function hideSuggestions() {
+  fileSuggestions.classList.remove('active');
+  fileSuggestions.innerHTML = '';
+}
+
+function showSuggestions(query) {
+  const list = getKnownFiles();
+  const q = query.toLowerCase();
+  const filtered = q ? list.filter(name => name.toLowerCase().includes(q)) : list;
+
+  fileSuggestions.innerHTML = '';
+
+  if (filtered.length === 0) {
+    fileSuggestions.innerHTML = `<li class="empty">Tidak ada file cocok — tekan Muat untuk coba "${query}"</li>`;
+  } else {
+    filtered.forEach(name => {
+      const li = document.createElement('li');
+      li.textContent = name;
+      li.addEventListener('click', () => loadCeritaData(name));
+      fileSuggestions.appendChild(li);
+    });
+  }
+
+  fileSuggestions.classList.add('active');
+}
+
+fileNameInput.addEventListener('input', () => {
+  showSuggestions(fileNameInput.value.trim());
+});
+
+fileNameInput.addEventListener('focus', () => {
+  showSuggestions(fileNameInput.value.trim());
+});
+
+document.addEventListener('click', (e) => {
+  if (!fileForm.contains(e.target)) hideSuggestions();
+});
+
+fileForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = normalizeFileName(fileNameInput.value);
+  if (!name) return;
+  loadCeritaData(name);
+});
+
+resetFileBtn.addEventListener('click', () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (err) {
+    console.warn('Gagal menghapus localStorage:', err);
+  }
+  loadCeritaData(DEFAULT_FILE);
+});
+
+function renderToc(data) {
+  tocList.innerHTML = '';
+
+  if (data.length === 0) {
+    tocList.innerHTML = `<div class="no-result">😕 Tidak ada cerita yang cocok dengan pencarianmu.</div>`;
+    stats.textContent = `Menampilkan 0 dari ${ceritaData.length} cerita`;
+    return;
+  }
+
+  data.forEach(c => {
+    const li = document.createElement('li');
+    li.className = 'toc-item';
+    li.innerHTML = `
+      <div class="toc-row">
+        <span class="num">${String(c.id).padStart(2, '0')}</span>
+        <span class="judul">${c.judul}</span>
+        <span class="dots"></span>
+        <span class="page">${c.id}</span>
+      </div>
+      <div class="quote">"${c.pelajaran}"</div>
+    `;
+    li.addEventListener('click', () => openModal(c));
+    tocList.appendChild(li);
+  });
+
+  stats.textContent = `Menampilkan ${data.length} dari ${ceritaData.length} cerita`;
+}
+
+function openModal(c) {
+  const tambahan = (c.pelajaranTambahan || [])
+    .map(p => `<li>${p}</li>`)
+    .join('');
+
+  modalContent.innerHTML = `
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <span class="badge">Cerita ${String(c.id).padStart(2, '0')}</span>
+    <h2>${c.judul}</h2>
+
+    <div class="section">
+      <h4>Ringkasan Cerita</h4>
+      <p>${c.ringkasan}</p>
+    </div>
+
+    <div class="section pelajaran-box">
+      <h4>Pelajaran Utama</h4>
+      <p>${c.pelajaran}</p>
+    </div>
+
+    ${tambahan ? `
+    <div class="section">
+      <h4>Pelajaran Tambahan</h4>
+      <ul>${tambahan}</ul>
+    </div>` : ''}
+  `;
+
+  modalOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  modalOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+modalOverlay.addEventListener('click', (e) => {
+  if (e.target === modalOverlay) closeModal();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+});
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.toLowerCase().trim();
+
+  if (!q) {
+    renderToc(ceritaData);
+    return;
+  }
+
+  const filtered = ceritaData.filter(c => {
+    const gabungan = [
+      c.judul,
+      c.ringkasan,
+      c.pelajaran,
+      ...(c.pelajaranTambahan || [])
+    ].join(' ').toLowerCase();
+
+    return gabungan.includes(q);
+  });
+
+  renderToc(filtered);
+});
+
+loadCeritaData(getSavedFileName());
+</script>
+</body>
+</html>
