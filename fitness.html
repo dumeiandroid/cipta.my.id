@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal New Life Gym Lippo Plaza Medan</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            align-items: center;
+        }
+        .controls label {
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+        .controls input, .controls select {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .controls input:focus, .controls select:focus {
+            border-color: #2e7d32;
+        }
+        .controls input[type="text"] {
+            flex-grow: 1;
+            min-width: 180px;
+        }
+        .controls .btn-reset {
+            padding: 8px 16px;
+            background: #e53935;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .controls .btn-reset:hover {
+            background: #c62828;
+        }
+        .schedule-container {
+            overflow-x: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            color: #333;
+            position: sticky;
+            top: 0;
+        }
+        td.class-name {
+            background-color: #e8f4f8;
+            font-weight: bold;
+            text-align: left;
+            width: 150px;
+        }
+        td.time {
+            background-color: #fff3e0;
+            font-weight: bold;
+            width: 80px;
+        }
+        td.day {
+            width: 60px;
+        }
+        .check {
+            color: #2e7d32;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            display: inline-block;
+            transition: transform 0.15s ease;
+        }
+        .check:hover {
+            transform: scale(1.3);
+            color: #1b5e20;
+        }
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .note {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .empty-message {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-style: italic;
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: white;
+            padding: 25px 35px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 350px;
+            animation: popIn 0.2s ease;
+        }
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-box h3 {
+            margin: 0 0 10px 0;
+            color: #2e7d32;
+            font-size: 18px;
+        }
+        .modal-box p {
+            margin: 5px 0;
+            color: #333;
+            font-size: 15px;
+        }
+        .modal-box .instruktur-name {
+            font-weight: bold;
+            font-size: 20px;
+            color: #1b5e20;
+            margin: 10px 0;
+        }
+        .modal-box button {
+            margin-top: 15px;
+            padding: 8px 20px;
+            background: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .modal-box button:hover {
+            background: #1b5e20;
+        }
+        .result-info {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+        .highlight-day {
+            background-color: #fff9c4 !important;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Jadwal Kelas New Life Gym - Lippo Plaza Medan</h2>
+    <div class="subtitle">Periode: Agustus - Oktober 2026</div>
+
+    <div class="controls">
+        <label for="searchInput">🔍 Cari Kelas:</label>
+        <input type="text" id="searchInput" placeholder="Ketik nama kelas...">
+
+        <label for="classFilter">🏋️ Nama Kelas:</label>
+        <select id="classFilter">
+            <option value="">-- Semua --</option>
+        </select>
+
+        <label for="instructorFilter">👤 Instruktur:</label>
+        <select id="instructorFilter">
+            <option value="">-- Semua --</option>
+        </select>
+
+        <label for="timeFilter">🕐 Jam:</label>
+        <select id="timeFilter">
+            <option value="">-- Semua --</option>
+        </select>
+
+        <label for="dayFilter">📅 Hari:</label>
+        <select id="dayFilter">
+            <option value="">-- Semua --</option>
+        </select>
+
+        <button class="btn-reset" onclick="resetFilters()">🔄 Reset</button>
+    </div>
+
+    <div class="schedule-container">
+        <div id="resultInfo" class="result-info"></div>
+        <table id="scheduleTable">
+            <thead>
+                <tr id="tableHeaderRow">
+                    <th>Nama Kelas</th>
+                    <th>Jam</th>
+                    <th data-day="0">Senin</th>
+                    <th data-day="1">Selasa</th>
+                    <th data-day="2">Rabu</th>
+                    <th data-day="3">Kamis</th>
+                    <th data-day="4">Jumat</th>
+                    <th data-day="5">Sabtu</th>
+                    <th data-day="6">Minggu</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <div id="emptyMessage" class="empty-message" style="display:none;">Tidak ada jadwal yang cocok dengan filter.</div>
+    </div>
+    <div class="note">Klik tanda ✓ untuk melihat nama instruktur.</div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box">
+            <h3>Detail Kelas</h3>
+            <p id="modalClass">-</p>
+            <p id="modalDayTime">-</p>
+            <div class="instruktur-name" id="modalInstructor">-</div>
+            <button onclick="closeModal()">Tutup</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // DATA JADWAL
+        // ============================================
+        const scheduleData = [
+            { class: "Bodypump", time: "08:00", instructor: "Yayang", days: [0,0,0,0,0,1,1] },
+            { class: "Bodypump", time: "09:00", instructor: "Andi", days: [1,1,1,1,1,1,1] },
+            { class: "Bodypump", time: "10:00", instructor: "Sean", days: [1,0,1,0,0,0,0] },
+            { class: "Bodypump", time: "17:00", instructor: "Andi", days: [0,0,1,0,0,0,0] },
+            { class: "Bodypump", time: "19:00", instructor: "Hendra", days: [0,1,0,1,1,0,0] },
+
+            { class: "Bodycombat", time: "09:00", instructor: "Andy", days: [1,1,1,1,1,1,1] },
+            { class: "Bodycombat", time: "10:00", instructor: "Sean", days: [1,1,1,1,1,1,1] },
+            { class: "Bodycombat", time: "16:00", instructor: "Andi", days: [0,0,0,0,0,1,0] },
+            { class: "Bodycombat", time: "17:00", instructor: "Andy", days: [1,1,1,1,1,0,0] },
+            { class: "Bodycombat", time: "18:00", instructor: "Toga", days: [0,0,0,0,0,0,1] },
+            { class: "Bodycombat", time: "19:00", instructor: "Philip", days: [1,0,0,0,0,0,0] },
+
+            { class: "Bodybalance", time: "08:00", instructor: "Dedy", days: [0,0,1,0,0,0,0] },
+
+            { class: "Bodyjam", time: "18:00", instructor: "Sean", days: [0,1,1,1,1,1,0] },
+
+            { class: "Zumba", time: "08:00", instructor: "Dillah", days: [0,1,0,0,0,0,0] },
+            { class: "Zumba", time: "17:00", instructor: "Dedy", days: [1,0,1,0,1,0,0] },
+            { class: "Zumba", time: "09:00", instructor: "Dedy", days: [0,0,0,0,0,1,0] },
+
+            { class: "Aerobic", time: "17:00", instructor: "Dedy", days: [0,1,0,1,0,0,0] },
+            { class: "Aerobic", time: "17:00", instructor: "Ridho", days: [0,0,0,1,0,0,0] },
+            { class: "Aerobic", time: "14:00", instructor: "Janter", days: [0,0,0,0,0,1,0] },
+
+            { class: "RPM", time: "17:00", instructor: "April", days: [1,0,1,0,0,0,0] },
+            { class: "RPM", time: "17:00", instructor: "Susiani", days: [0,1,0,0,0,0,0] },
+            { class: "RPM", time: "17:00", instructor: "Hendra", days: [0,0,0,1,0,0,0] },
+            { class: "RPM", time: "17:00", instructor: "Veric", days: [0,0,0,0,1,0,0] },
+
+            { class: "Yoga", time: "08:00", instructor: "Fang", days: [1,0,0,0,0,0,0] },
+            { class: "Yoga", time: "08:00", instructor: "Monica", days: [0,1,1,0,0,0,0] },
+            { class: "Yoga", time: "07:00", instructor: "Jhony", days: [0,0,0,1,0,0,0] },
+            { class: "Yoga", time: "17:00", instructor: "Fanda", days: [1,0,0,0,1,0,0] },
+            { class: "Yoga", time: "17:00", instructor: "Fanda", days: [0,1,1,0,0,0,0] },
+            { class: "Yoga", time: "18:00", instructor: "Dedy", days: [1,0,0,0,0,0,0] },
+            { class: "Yoga", time: "18:00", instructor: "Yung-Yung", days: [0,0,1,0,0,0,0] },
+            { class: "Yoga", time: "18:00", instructor: "Randi", days: [0,0,0,0,1,0,0] },
+        ];
+
+        const dayNames = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
+
+        // ============================================
+        // AMBIL NILAI FILTER SAAT INI
+        // ============================================
+        function getFilters() {
+            return {
+                text: document.getElementById("searchInput").value.toLowerCase(),
+                classFilter: document.getElementById("classFilter").value,
+                instructor: document.getElementById("instructorFilter").value,
+                time: document.getElementById("timeFilter").value,
+                day: document.getElementById("dayFilter").value
+            };
+        }
+
+        // ============================================
+        // REFRESH DROPDOWN JAM (DINAMIS)
+        // Jam yang muncul hanya yang tersedia berdasar filter lain
+        // (text, classFilter, instructor, day)
+        // ============================================
+        function refreshTimeDropdown() {
+            const f = getFilters();
+            const currentTimeValue = f.time;
+
+            const availableTimes = new Set();
+            scheduleData.forEach(row => {
+                const matchText = row.class.toLowerCase().includes(f.text);
+                const matchClass = f.classFilter === "" || row.class === f.classFilter;
+                const matchInstructor = f.instructor === "" || row.instructor === f.instructor;
+                const matchDay = f.day === "" || row.days[parseInt(f.day)] === 1;
+
+                if (matchText && matchClass && matchInstructor && matchDay) {
+                    availableTimes.add(row.time);
+                }
+            });
+
+            const sortedTimes = [...availableTimes].sort();
+
+            const timeSelect = document.getElementById("timeFilter");
+            timeSelect.innerHTML = '<option value="">-- Semua --</option>';
+            sortedTimes.forEach(t => {
+                const opt = document.createElement("option");
+                opt.value = t;
+                opt.textContent = t;
+                timeSelect.appendChild(opt);
+            });
+
+            // Kembalikan pilihan jam jika masih tersedia
+            timeSelect.value = sortedTimes.includes(currentTimeValue) ? currentTimeValue : "";
+        }
+
+        // ============================================
+        // REFRESH DROPDOWN INSTRUKTUR (DINAMIS juga)
+        // Hanya instruktur yang mengajar kelas yang cocok filter
+        // ============================================
+        function refreshInstructorDropdown() {
+            const f = getFilters();
+            const currentValue = f.instructor;
+
+            const availableInstructors = new Set();
+            scheduleData.forEach(row => {
+                const matchText = row.class.toLowerCase().includes(f.text);
+                const matchClass = f.classFilter === "" || row.class === f.classFilter;
+                const matchDay = f.day === "" || row.days[parseInt(f.day)] === 1;
+
+                if (matchText && matchClass && matchDay) {
+                    availableInstructors.add(row.instructor);
+                }
+            });
+
+            const sorted = [...availableInstructors].sort();
+            const select = document.getElementById("instructorFilter");
+            select.innerHTML = '<option value="">-- Semua --</option>';
+            sorted.forEach(name => {
+                const opt = document.createElement("option");
+                opt.value = name;
+                opt.textContent = name;
+                select.appendChild(opt);
+            });
+
+            select.value = sorted.includes(currentValue) ? currentValue : "";
+        }
+
+        // ============================================
+        // RENDER TABEL
+        // ============================================
+        function renderTable() {
+            const f = getFilters();
+
+            const tbody = document.getElementById("tableBody");
+            const emptyMsg = document.getElementById("emptyMessage");
+            const resultInfo = document.getElementById("resultInfo");
+            tbody.innerHTML = "";
+
+            // Sembunyikan/tampilkan kolom hari
+            const headerCells = document.querySelectorAll("#tableHeaderRow th[data-day]");
+            headerCells.forEach(th => {
+                if (f.day === "" || th.dataset.day === f.day) {
+                    th.style.display = "";
+                    if (f.day !== "") th.classList.add("highlight-day");
+                    else th.classList.remove("highlight-day");
+                } else {
+                    th.style.display = "none";
+                }
+            });
+
+            let visibleCount = 0;
+
+            scheduleData.forEach(row => {
+                const matchText = row.class.toLowerCase().includes(f.text);
+                const matchClass = f.classFilter === "" || row.class === f.classFilter;
+                const matchInstructor = f.instructor === "" || row.instructor === f.instructor;
+                const matchTime = f.time === "" || row.time === f.time;
+                const matchDay = f.day === "" || row.days[parseInt(f.day)] === 1;
+
+                if (!(matchText && matchClass && matchInstructor && matchTime && matchDay)) return;
+
+                visibleCount++;
+                const tr = document.createElement("tr");
+
+                const tdClass = document.createElement("td");
+                tdClass.className = "class-name";
+                tdClass.textContent = row.class;
+                tr.appendChild(tdClass);
+
+                const tdTime = document.createElement("td");
+                tdTime.className = "time";
+                tdTime.textContent = row.time;
+                tr.appendChild(tdTime);
+
+                row.days.forEach((available, idx) => {
+                    const tdDay = document.createElement("td");
+                    tdDay.className = "day";
+                    tdDay.dataset.day = idx;
+
+                    if (f.day !== "" && idx.toString() !== f.day) {
+                        tdDay.style.display = "none";
+                    } else {
+                        if (f.day !== "") tdDay.classList.add("highlight-day");
+                    }
+
+                    if (available) {
+                        const span = document.createElement("span");
+                        span.className = "check";
+                        span.textContent = "✓";
+                        span.title = "Klik untuk lihat instruktur";
+                        span.onclick = () => openModal(row.class, dayNames[idx], row.time, row.instructor);
+                        tdDay.appendChild(span);
+                    }
+                    tr.appendChild(tdDay);
+                });
+
+                tbody.appendChild(tr);
+            });
+
+            if (visibleCount === 0) {
+                emptyMsg.style.display = "block";
+                resultInfo.textContent = "";
+            } else {
+                emptyMsg.style.display = "none";
+                let info = `Menampilkan ${visibleCount} baris jadwal.`;
+                if (f.day !== "") info += ` (Hari: ${dayNames[parseInt(f.day)]})`;
+                if (f.classFilter !== "") info += ` (Kelas: ${f.classFilter})`;
+                resultInfo.textContent = info;
+            }
+        }
+
+        // ============================================
+        // MODAL
+        // ============================================
+        function openModal(className, day, time, instructor) {
+            document.getElementById("modalClass").textContent = "Kelas: " + className;
+            document.getElementById("modalDayTime").textContent = day + ", " + time;
+            document.getElementById("modalInstructor").textContent = instructor;
+            document.getElementById("modalOverlay").classList.add("active");
+        }
+
+        function closeModal() {
+            document.getElementById("modalOverlay").classList.remove("active");
+        }
+
+        document.getElementById("modalOverlay").addEventListener("click", function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // ============================================
+        // ISI DROPDOWN STATIS (Kelas & Hari)
+        // ============================================
+        function populateStaticDropdowns() {
+            // Nama Kelas (unik, terurut)
+            const classSelect = document.getElementById("classFilter");
+            const classes = [...new Set(scheduleData.map(d => d.class))].sort();
+            classes.forEach(name => {
+                const opt = document.createElement("option");
+                opt.value = name;
+                opt.textContent = name;
+                classSelect.appendChild(opt);
+            });
+
+            // Hari
+            const daySelect = document.getElementById("dayFilter");
+            dayNames.forEach((name, idx) => {
+                const opt = document.createElement("option");
+                opt.value = idx;
+                opt.textContent = name;
+                daySelect.appendChild(opt);
+            });
+        }
+
+        // ============================================
+        // RESET
+        // ============================================
+        function resetFilters() {
+            document.getElementById("searchInput").value = "";
+            document.getElementById("classFilter").value = "";
+            document.getElementById("dayFilter").value = "";
+            // Instruktur & Jam akan di-refresh otomatis
+            refreshInstructorDropdown();
+            refreshTimeDropdown();
+            renderTable();
+        }
+
+        // ============================================
+        // EVENT LISTENER
+        // ============================================
+        document.getElementById("searchInput").addEventListener("input", () => {
+            refreshInstructorDropdown();
+            refreshTimeDropdown();
+            renderTable();
+        });
+
+        document.getElementById("classFilter").addEventListener("change", () => {
+            refreshInstructorDropdown();
+            refreshTimeDropdown();
+            renderTable();
+        });
+
+        document.getElementById("dayFilter").addEventListener("change", () => {
+            refreshInstructorDropdown();
+            refreshTimeDropdown();
+            renderTable();
+        });
+
+        document.getElementById("instructorFilter").addEventListener("change", () => {
+            refreshTimeDropdown();
+            renderTable();
+        });
+
+        document.getElementById("timeFilter").addEventListener("change", renderTable);
+
+        // ============================================
+        // INISIALISASI
+        // ============================================
+        populateStaticDropdowns();
+        refreshInstructorDropdown();
+        refreshTimeDropdown();
+        renderTable();
+
+    </script>
+
+</body>
+</html>
