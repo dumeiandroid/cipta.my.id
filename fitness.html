@@ -72,15 +72,15 @@
             padding: 12px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            /* Supaya tabel tidak melebar melebihi layar */
             max-width: 100%;
         }
         table {
-            /* Tabel mengikuti lebar isi (auto-fit) */
-            width: max-content;
+            /* KUNCI: min-width max-content agar tidak terpotong,
+               tapi width: 100% agar melebar penuh kalau masih muat */
+            width: 100%;
+            min-width: max-content;
             border-collapse: collapse;
-            /* Hapus min-width besar agar bisa menyesuaikan */
-            min-width: auto;
+            table-layout: auto;
         }
         th, td {
             border: 1px solid #ddd;
@@ -88,9 +88,7 @@
             text-align: center;
             vertical-align: middle;
             font-size: 12px;
-            /* Batas lebar maksimum kolom */
             max-width: 100px;
-            /* Agar teks panjang terpotong rapi */
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -100,20 +98,17 @@
             font-weight: bold;
             color: #333;
         }
-        /* Kolom Nama Kelas - lebih lebar sedikit karena teksnya panjang */
         td.class-name, th:first-child {
             background-color: #e8f4f8;
             font-weight: bold;
             text-align: left;
             max-width: 130px;
         }
-        /* Kolom Jam */
         td.time, th:nth-child(2) {
             background-color: #fff3e0;
             font-weight: bold;
             max-width: 60px;
         }
-        /* Kolom Hari */
         td.day, th[data-day] {
             max-width: 45px;
         }
@@ -240,7 +235,6 @@
             th, td {
                 padding: 4px 5px;
                 font-size: 10px;
-                /* Batas maksimum lebih kecil di HP */
                 max-width: 70px;
             }
             td.class-name, th:first-child {
@@ -436,6 +430,10 @@
             const emptyMsg = document.getElementById("emptyMessage");
             const resultInfo = document.getElementById("resultInfo");
             tbody.innerHTML = "";
+
+            // Hitung jumlah kolom hari yang ditampilkan untuk menentukan colspan
+            const visibleDayCount = f.day === "" ? 7 : 1;
+            const totalCols = 2 + visibleDayCount; // 2 = Nama Kelas + Jam
 
             const headerCells = document.querySelectorAll("#tableHeaderRow th[data-day]");
             headerCells.forEach(th => {
