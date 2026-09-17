@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Khotbah & Renungan Generator</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; padding: 20px; min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        .login-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
+        .login-overlay.active { display: flex; }
+        .login-box { background: white; border-radius: 20px; padding: 40px; max-width: 420px; width: 100%; box-shadow: 0 24px 80px rgba(0,0,0,0.4); animation: fadeIn 0.3s ease; }
+        .login-box .login-icon { font-size: 48px; text-align: center; display: block; margin-bottom: 4px; }
+        .login-box h2 { text-align: center; font-size: 24px; color: #1a202c; margin-bottom: 4px; }
+        .login-box p { text-align: center; color: #718096; font-size: 14px; margin-bottom: 20px; }
+        .login-box .form-group { margin-bottom: 14px; }
+        .login-box .form-group label { font-weight: 600; font-size: 13px; color: #4a5568; display: block; margin-bottom: 4px; }
+        .login-box .form-group input { width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border 0.2s; }
+        .login-box .form-group input:focus { outline: none; border-color: #805ad5; }
+        .login-box .form-remember { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+        .login-box .form-remember input[type="checkbox"] { width: 18px; height: 18px; accent-color: #805ad5; }
+        .login-box .form-remember label { font-size: 13px; color: #4a5568; cursor: pointer; }
+        .login-box .btn-login { width: 100%; padding: 12px; background: #805ad5; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .login-box .btn-login:hover { background: #6b46c1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(128,90,213,0.3); }
+        .login-box .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .login-box .login-error { color: #fc8181; font-size: 13px; text-align: center; margin-top: 10px; display: none; }
+        .login-box .login-error.show { display: block; }
+        .login-box .login-loading { display: none; text-align: center; margin-top: 10px; color: #718096; font-size: 13px; }
+        .login-box .login-loading.show { display: block; }
+
+        .header { background: white; padding: 20px 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .header h1 { font-size: 24px; color: #1a2332; display: flex; align-items: center; gap: 10px; }
+        .header h1 span { background: #2d3748; color: white; font-size: 12px; padding: 2px 10px; border-radius: 20px; }
+        .header-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4a5568; background: #f7fafc; padding: 4px 14px; border-radius: 20px; }
+        .user-info .user-role { font-weight: 600; padding: 1px 10px; border-radius: 10px; font-size: 10px; }
+        .user-info .user-role.admin { background: #c6f6d5; color: #276749; }
+        .user-info .user-role.user { background: #bee3f8; color: #2a69ac; }
+        .btn-logout { padding: 4px 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; background: #fc8181; color: white; transition: 0.2s; }
+        .btn-logout:hover { background: #f56565; }
+        .search-box { display: flex; gap: 8px; align-items: center; background: #f7fafc; padding: 0 15px; border-radius: 10px; border: 2px solid #e2e8f0; transition: border 0.2s; }
+        .search-box:focus-within { border-color: #805ad5; }
+        .search-box input { border: none; background: transparent; padding: 10px 0; font-size: 14px; outline: none; width: 200px; color: #2d3748; }
+        .search-box .icon { color: #a0aec0; font-size: 18px; }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: #805ad5; color: white; }
+        .btn-primary:hover { background: #6b46c1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(128,90,213,0.4); }
+        .btn-success { background: #48bb78; color: white; }
+        .btn-success:hover { background: #38a169; }
+        .btn-danger { background: #fc8181; color: white; }
+        .btn-danger:hover { background: #f56565; }
+        .btn-warning { background: #ed8936; color: white; }
+        .btn-warning:hover { background: #dd6b20; }
+        .btn-outline { background: transparent; color: #4a5568; border: 2px solid #e2e8f0; }
+        .btn-outline:hover { background: #f7fafc; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
+        .btn-xs { padding: 3px 10px; font-size: 11px; border-radius: 4px; }
+
+        .main-tabs-container { background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 24px; }
+        .main-tabs-header { display: flex; border-bottom: 2px solid #edf2f7; background: #f7fafc; padding: 0 20px; overflow-x: auto; flex-wrap: nowrap; }
+        .main-tab-btn { padding: 14px 24px; border: none; background: transparent; font-weight: 700; font-size: 14px; color: #a0aec0; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent; margin-bottom: -2px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .main-tab-btn:hover { color: #2d3748; }
+        .main-tab-btn.active { color: #805ad5; border-bottom-color: #805ad5; }
+        .main-tab-btn .badge-main { background: #edf2f7; color: #4a5568; font-size: 11px; padding: 1px 10px; border-radius: 12px; font-weight: 600; }
+        .main-tab-btn.active .badge-main { background: #e9d8fd; color: #6b46c1; }
+        .main-tab-content { padding: 24px 30px; display: none; }
+        .main-tab-content.active { display: block; }
+
+        .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+        .tool-card { background: #f7fafc; border-radius: 12px; padding: 20px; border: 2px solid #e2e8f0; transition: all 0.2s; text-align: center; }
+        .tool-card:hover { border-color: #805ad5; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(128,90,213,0.12); }
+        .tool-card .tool-icon { font-size: 32px; display: block; margin-bottom: 4px; }
+        .tool-card .tool-name { font-weight: 700; font-size: 15px; color: #2d3748; }
+        .tool-card .tool-desc { font-size: 12px; color: #718096; margin: 4px 0 12px; }
+        .tool-card .tool-actions { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+        .tool-card .tool-actions .btn { padding: 4px 12px; font-size: 11px; }
+
+        .studio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .studio-left { display: flex; flex-direction: column; gap: 16px; }
+        .studio-right { display: flex; flex-direction: column; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-weight: 600; font-size: 13px; color: #4a5568; }
+        .form-group input, .form-group textarea, .form-group select { padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border 0.2s; font-family: inherit; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #805ad5; }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        .prompt-preview { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 2px solid #e2e8f0; min-height: 150px; white-space: pre-wrap; font-size: 14px; line-height: 1.8; color: #2d3748; max-height: 250px; overflow-y: auto; position: relative; }
+        .prompt-preview .placeholder { color: #a0aec0; font-style: italic; }
+        .prompt-preview .copy-prompt-btn { position: absolute; top: 8px; right: 8px; background: rgba(128,90,213,0.9); color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .prompt-preview .copy-prompt-btn:hover { background: #6b46c1; }
+
+        .quill-wrapper { background: white; border-radius: 12px; border: 2px solid #e2e8f0; overflow: hidden; }
+        .quill-wrapper .ql-toolbar { border: none; border-bottom: 2px solid #e2e8f0; background: #f7fafc; }
+        .quill-wrapper .ql-container { border: none; min-height: 200px; font-size: 14px; }
+        .quill-wrapper .ql-editor { min-height: 200px; }
+
+        .result-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+
+        .history-sub-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; }
+        .history-sub-tab { padding: 6px 16px; border: none; background: #f7fafc; border-radius: 8px; font-weight: 600; font-size: 13px; color: #4a5568; cursor: pointer; transition: all 0.2s; }
+        .history-sub-tab:hover { background: #edf2f7; }
+        .history-sub-tab.active { background: #805ad5; color: white; }
+        .history-sub-tab .sub-badge { background: rgba(255,255,255,0.3); color: white; font-size: 10px; padding: 1px 8px; border-radius: 10px; margin-left: 4px; }
+        .history-sub-tab:not(.active) .sub-badge { background: #edf2f7; color: #4a5568; }
+
+        .history-filters { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+        .history-filters select, .history-filters input { padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; }
+        .history-filters select:focus, .history-filters input:focus { outline: none; border-color: #805ad5; }
+
+        .history-list { display: flex; flex-direction: column; gap: 16px; }
+        .history-item { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .history-item:hover { border-color: #805ad5; }
+        .history-item .history-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        .history-item .history-title { font-weight: 700; font-size: 15px; color: #2d3748; }
+        .history-item .history-meta { display: flex; gap: 12px; font-size: 12px; color: #718096; flex-wrap: wrap; align-items: center; }
+        .history-item .history-meta .type-badge { background: #e9d8fd; color: #6b46c1; padding: 2px 12px; border-radius: 12px; font-weight: 600; }
+        .history-item .history-meta .ai-badge { font-size: 10px; padding: 1px 8px; border-radius: 10px; font-weight: 600; }
+        .history-item .history-meta .ai-badge.chatgpt { background: #10a37f; color: white; }
+        .history-item .history-meta .ai-badge.claude { background: #d97757; color: white; }
+        .history-item .history-meta .ai-badge.gemini { background: #4285f4; color: white; }
+        .history-item .history-meta .ai-badge.deepseek { background: #4a6cf7; color: white; }
+        .history-item .history-meta .ai-badge.other { background: #718096; color: white; }
+        .history-item .history-prompt { font-size: 13px; color: #4a5568; background: white; padding: 8px 12px; border-radius: 6px; border-left: 3px solid #805ad5; margin-bottom: 10px; max-height: 60px; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+        .history-item .history-prompt:hover { background: #f7fafc; }
+        .history-item .history-prompt.expanded { max-height: none; white-space: pre-wrap; }
+        .history-item .history-result { font-size: 13px; color: #2d3748; margin-bottom: 8px; max-height: 80px; overflow: hidden; text-overflow: ellipsis; }
+        .history-item .history-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid #edf2f7; padding-top: 10px; }
+        .history-item .history-actions .btn { padding: 3px 12px; font-size: 11px; }
+
+        .empty-state { padding: 60px 20px; text-align: center; color: #a0aec0; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 15px; }
+        .empty-state h3 { color: #4a5568; margin-bottom: 8px; }
+        .empty-state p { font-size: 14px; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        .modal-overlay.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal { background: white; border-radius: 20px; max-width: 850px; width: 100%; max-height: 95vh; overflow-y: auto; padding: 30px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .modal-close { position: sticky; top: 0; float: right; background: #fc8181; border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; transition: 0.2s; z-index: 10; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: #f56565; transform: rotate(90deg); }
+        .modal-title { font-size: 22px; font-weight: 700; color: #1a2332; margin-bottom: 20px; padding-right: 50px; }
+        .modal-body { display: flex; flex-direction: column; gap: 16px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 2px solid #edf2f7; flex-wrap: wrap; }
+
+        .toast { position: fixed; bottom: 30px; right: 30px; padding: 16px 28px; border-radius: 12px; color: white; font-weight: 600; z-index: 2000; animation: slideUp 0.3s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.2); max-width: 400px; }
+        .toast.success { background: #48bb78; }
+        .toast.error { background: #fc8181; }
+        .toast.info { background: #4299e1; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-label { font-weight: 700; font-size: 14px; color: #2d3748; margin-top: 4px; margin-bottom: 2px; padding-bottom: 4px; border-bottom: 2px solid #edf2f7; }
+        .view-result-wrapper { background: white; border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; max-height: 350px; overflow-y: auto; }
+        .view-result-wrapper .ql-editor { padding: 0; }
+        .ai-source-select { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .ai-source-select select { padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; flex: 1; }
+        .ai-source-select select:focus { outline: none; border-color: #805ad5; }
+        .add-ai-modal .modal { max-width: 750px; }
+        .add-ai-modal .prompt-display { background: #f7fafc; padding: 12px 16px; border-radius: 8px; font-size: 14px; color: #4a5568; max-height: 120px; overflow-y: auto; white-space: pre-wrap; border-left: 3px solid #805ad5; position: relative; }
+        .add-ai-modal .prompt-display .copy-prompt-btn { position: absolute; top: 4px; right: 4px; background: rgba(128,90,213,0.9); color: white; border: none; padding: 2px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .add-ai-modal .prompt-display .copy-prompt-btn:hover { background: #6b46c1; }
+
+        .main-content { display: none; }
+        .main-content.visible { display: block; }
+
+        @media (max-width: 992px) {
+            .studio-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .main-tabs-header { padding: 0 12px; }
+            .main-tab-btn { padding: 12px 16px; font-size: 13px; }
+            .main-tab-content { padding: 16px; }
+            .tools-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+            .header { flex-direction: column; align-items: stretch; }
+            .search-box input { width: 100%; }
+            .modal { padding: 20px; }
+            .history-item .history-header { flex-direction: column; align-items: flex-start; }
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .btn { padding: 8px 14px; font-size: 13px; }
+            .tools-grid { grid-template-columns: 1fr 1fr; }
+            .tool-card { padding: 14px; }
+            .tool-card .tool-icon { font-size: 28px; }
+            .main-tab-btn { padding: 10px 12px; font-size: 12px; }
+            .main-tab-content { padding: 12px; }
+            .history-filters { flex-direction: column; align-items: stretch; }
+            .login-box { padding: 24px 20px; }
+        }
+        .modal::-webkit-scrollbar { width: 6px; }
+        .modal::-webkit-scrollbar-track { background: #f7fafc; }
+        .modal::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="login-overlay active" id="loginOverlay">
+        <div class="login-box">
+            <span class="login-icon">🔐</span>
+            <h2>Login</h2>
+            <p>Masuk untuk mengakses Khotbah & Renungan Generator</p>
+            <div class="form-group">
+                <label>👤 Username</label>
+                <input type="text" id="loginUsername" placeholder="Masukkan username" value="">
+            </div>
+            <div class="form-group">
+                <label>🔑 Password</label>
+                <input type="password" id="loginPassword" placeholder="Masukkan password" value="" onkeydown="if(event.key==='Enter') doLogin()">
+            </div>
+            <div class="form-remember">
+                <input type="checkbox" id="loginRemember" checked>
+                <label for="loginRemember">Ingat saya</label>
+            </div>
+            <button class="btn-login" id="loginBtn" onclick="doLogin()">Login</button>
+            <div class="login-error" id="loginError">❌ Username atau password salah!</div>
+            <div class="login-loading" id="loginLoading">⏳ Memeriksa...</div>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="container" id="app">
+            <div class="header">
+                <h1>🕊️ AI Khotbah & Renungan Generator <span>v1.0</span></h1>
+                <div class="header-actions">
+                    <span class="user-info" id="userInfo">
+                        👤 <span id="currentUser">-</span>
+                        <span class="user-role" id="userRole">user</span>
+                    </span>
+                    <button class="btn-logout" onclick="doLogout()">🚪 Logout</button>
+                    <div class="search-box">
+                        <span class="icon">🔍</span>
+                        <input type="text" id="searchInput" placeholder="Cari khotbah..." oninput="renderTools()">
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+                </div>
+            </div>
+
+            <div class="main-tabs-container">
+                <div class="main-tabs-header">
+                    <button class="main-tab-btn active" data-tab="tab1" onclick="switchMainTab('tab1')">
+                        📚 Jenis Khotbah
+                        <span class="badge-main" id="tab1Badge">8</span>
+                    </button>
+                    <button class="main-tab-btn" data-tab="tab2" onclick="switchMainTab('tab2')">
+                        ✏️ AI Prompt Studio
+                        <span class="badge-main">New</span>
+                    </button>
+                    <button class="main-tab-btn" data-tab="tab3" onclick="switchMainTab('tab3')">
+                        📋 History
+                        <span class="badge-main" id="tab3Badge">0</span>
+                    </button>
+                </div>
+
+                <div class="main-tab-content active" id="tab1">
+                    <div class="tools-grid" id="toolsGrid"></div>
+                </div>
+
+                <div class="main-tab-content" id="tab2">
+                    <div class="studio-grid">
+                        <div class="studio-left">
+                            <div class="form-group">
+                                <label>📂 Pilih Jenis Khotbah/Renungan</label>
+                                <select id="selectedTool" onchange="updateFormFields()"></select>
+                            </div>
+                            <div id="dynamicFields"></div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>📌 Judul Khotbah</label>
+                                    <input type="text" id="resultTitle" placeholder="Judul khotbah...">
+                                </div>
+                                <div class="form-group">
+                                    <label>👤 Dibuat Oleh</label>
+                                    <input type="text" id="createdBy" placeholder="Nama..." value="">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="generatePrompt()">📝 Generate Prompt</button>
+                        </div>
+                        <div class="studio-right">
+                            <div class="form-group">
+                                <label>📄 Prompt yang Dihasilkan</label>
+                                <div class="prompt-preview" id="promptPreview">
+                                    <span class="placeholder">Pilih jenis khotbah dan isi form untuk menghasilkan prompt...</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>🤖 Pilih AI Source</label>
+                                <div class="ai-source-select">
+                                    <select id="aiSource">
+                                        <option value="ChatGPT">ChatGPT</option>
+                                        <option value="Claude">Claude</option>
+                                        <option value="Gemini">Gemini</option>
+                                        <option value="DeepSeek">DeepSeek</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>📝 Hasil AI (Paste di sini)</label>
+                                <div class="quill-wrapper">
+                                    <div id="resultEditor"></div>
+                                </div>
+                            </div>
+                            <div class="result-actions">
+                                <button class="btn btn-success" onclick="saveResult()">💾 Simpan Hasil</button>
+                                <button class="btn btn-warning" onclick="clearForm()">🗑️ Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="main-tab-content" id="tab3">
+                    <div class="history-sub-tabs" id="historySubTabs">
+                        <button class="history-sub-tab active" data-subtab="all" onclick="switchHistorySubTab('all')">
+                            📋 All <span class="sub-badge" id="subAll">0</span>
+                        </button>
+                        <button class="history-sub-tab" data-subtab="today" onclick="switchHistorySubTab('today')">
+                            📅 Hari Ini <span class="sub-badge" id="subToday">0</span>
+                        </button>
+                    </div>
+                    <div class="history-filters">
+                        <select id="historyFilterTool" onchange="renderHistory()">
+                            <option value="all">📋 All Types</option>
+                        </select>
+                        <input type="text" id="historySearch" placeholder="🔍 Cari..." oninput="renderHistory()">
+                        <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑️ Hapus Semua</button>
+                        <span style="font-size:13px;color:#718096;" id="historyCount">0 items</span>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <div class="empty-state">
+                            <div class="icon">🕊️</div>
+                            <h3>Belum ada khotbah</h3>
+                            <p>Pergi ke Tab "AI Prompt Studio" untuk mulai membuat khotbah</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
+            <div class="modal-title" id="infoModalTitle">📋 Info</div>
+            <div class="modal-body" id="infoModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('infoModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+            <div class="modal-title" id="viewModalTitle">👁️ Detail Khotbah</div>
+            <div class="modal-body">
+                <div id="viewMeta" style="font-size:13px;color:#718096;margin-bottom:12px;padding:8px 12px;background:#f7fafc;border-radius:8px;"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt:</div>
+                <div style="background:#f7fafc;padding:12px 16px;border-radius:8px;font-size:14px;color:#4a5568;white-space:pre-wrap;max-height:150px;overflow-y:auto;border-left:3px solid #805ad5;" id="viewPrompt"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">🤖 Sumber AI:</div>
+                <div style="font-size:14px;color:#4a5568;margin-bottom:8px;" id="viewSource"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">📝 Hasil AI:</div>
+                <div class="view-result-wrapper" id="viewResultWrapper"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="copyViewResult()">📋 Copy</button>
+                <button class="btn btn-success" onclick="downloadViewDoc()">📥 Download .doc</button>
+                <button class="btn btn-outline" onclick="closeModal('viewModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay add-ai-modal" id="addAiModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('addAiModal')">✕</button>
+            <div class="modal-title">🤖 Tambah Hasil AI Baru</div>
+            <div class="modal-body">
+                <input type="hidden" id="addAiId">
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt (tidak bisa diedit):</div>
+                <div class="prompt-display" id="addAiPromptDisplay"></div>
+                <div class="form-group">
+                    <label>🤖 Pilih AI Source</label>
+                    <select id="addAiSource">
+                        <option value="ChatGPT">ChatGPT</option>
+                        <option value="Claude">Claude</option>
+                        <option value="Gemini">Gemini</option>
+                        <option value="DeepSeek">DeepSeek</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>📝 Hasil AI (Paste di sini)</label>
+                    <div class="quill-wrapper">
+                        <div id="addAiEditor"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>👤 Dibuat Oleh</label>
+                    <input type="text" id="addAiCreatedBy" placeholder="Nama...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addAiModal')">Batal</button>
+                <button class="btn btn-success" onclick="saveAddAiResult()">💾 Simpan Hasil</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="duplicateModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('duplicateModal')">✕</button>
+            <div class="modal-title">📋 Duplikat Prompt</div>
+            <div class="modal-body">
+                <input type="hidden" id="dupId">
+                <input type="hidden" id="dupFrameworkType">
+                <div class="form-group">
+                    <label>📂 Jenis Khotbah</label>
+                    <input type="text" id="dupFrameworkDisplay" disabled style="background:#f7fafc;font-weight:600;">
+                </div>
+                <div id="dupDynamicFields"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📌 Judul Baru</label>
+                        <input type="text" id="dupTitle" placeholder="Judul baru...">
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Dibuat Oleh</label>
+                        <input type="text" id="dupCreatedBy" placeholder="Nama...">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>📄 Prompt yang Dihasilkan</label>
+                    <div class="prompt-preview" id="dupPromptPreview" style="min-height:100px;max-height:200px;">
+                        <span class="placeholder">Generate prompt dari form di atas...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('duplicateModal')">Batal</button>
+                <button class="btn btn-primary" onclick="generateDuplicatePrompt()">📝 Generate Prompt</button>
+                <button class="btn btn-success" onclick="saveDuplicate()">💾 Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== SERMON TYPE DEFINITIONS ====================
+        const SERMON_TYPES = {
+            expository: {
+                id: 'expository',
+                icon: '📖',
+                name: 'Khotbah Ekspositori',
+                desc: 'Berdasarkan satu perikop Alkitab, menggali ayat per ayat.',
+                color: '#805ad5',
+                use_for: '✅ Kebaktian Minggu / Ibadah Umum\n✅ Pendalaman Alkitab (PA)\n✅ Khotbah dengan dasar Alkitab yang kuat\n✅ Jemaat yang ingin belajar firman lebih dalam\n✅ Pendeta & Pengkhotbah berpengalaman',
+                fields: [
+                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Kasih yang Mengubahkan' },
+                    { key: 'scripture', label: 'Perikop Alkitab', type: 'text', placeholder: 'Contoh: 1 Korintus 13:1-13' },
+                    { key: 'key_verse', label: 'Nats (Ayat Kunci)', type: 'text', placeholder: 'Contoh: 1 Korintus 13:13' },
+                    { key: 'audience', label: 'Jemaat Sasaran', type: 'text', placeholder: 'Contoh: Jemaat umum' },
+                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 30' },
+                    { key: 'main_points', label: 'Poin Utama', type: 'textarea', placeholder: 'Poin-poin yang ingin disampaikan...' },
+                    { key: 'illustration', label: 'Ilustrasi (Opsional)', type: 'textarea', placeholder: 'Ilustrasi/cerita yang relevan...' },
+                    { key: 'application', label: 'Aplikasi Praktis', type: 'textarea', placeholder: 'Aplikasi dalam kehidupan sehari-hari...' }
+                ],
+                prompt_template: `Buat khotbah ekspositori dengan tema "{theme}" berdasarkan perikop {scripture} dengan nats {key_verse}. Jemaat sasaran: {audience}. Durasi: {duration} menit. Poin utama: {main_points}. Ilustrasi: {illustration}. Aplikasi praktis: {application}.\n\nFORMAT OUTPUT:\n\n=== KHOTBAH EKSPOSITORI ===\n\nJudul: {theme}\nNats: {key_verse}\nPerikop: {scripture}\n\nI. PEMBUKAAN\n- Salam dan doa pembuka\n- Pengantar tema\n- Latar belakang perikop\n\nII. EKSPOSISI PERIKOP\n- Ayat per ayat (jelaskan konteks, makna, dan aplikasi)\n- Poin-poin utama\n- Ilustrasi yang relevan\n\nIII. APLIKASI PRAKTIS\n- Penerapan dalam kehidupan sehari-hari\n- Tantangan dan komitmen\n\nIV. PENUTUP\n- Ringkasan\n- Doa penutup\n- Berkat\n\nFormat dengan markdown yang rapi.`
+            },
+            topical: {
+                id: 'topical',
+                icon: '🎯',
+                name: 'Khotbah Topikal',
+                desc: 'Berdasarkan tema/topik tertentu dengan ayat pendukung.',
+                color: '#9f7aea',
+                use_for: '✅ Kebaktian Tematik\n✅ Retreat & Camp\n✅ Seminar Rohani\n✅ Ibadah Spesial (Natal, Paskah)\n✅ Menjawab isu aktual',
+                fields: [
+                    { key: 'theme', label: 'Tema/Topik', type: 'text', placeholder: 'Contoh: Mengatasi Kecemasan dengan Iman' },
+                    { key: 'supporting_verses', label: 'Ayat Pendukung', type: 'textarea', placeholder: 'Contoh: Filipi 4:6-7, Matius 6:25-34, 1 Petrus 5:7' },
+                    { key: 'key_verse', label: 'Nats (Ayat Kunci)', type: 'text', placeholder: 'Contoh: Filipi 4:6-7' },
+                    { key: 'audience', label: 'Jemaat Sasaran', type: 'text', placeholder: 'Contoh: Jemaat umum' },
+                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 30' },
+                    { key: 'main_points', label: 'Poin Utama', type: 'textarea', placeholder: 'Poin-poin yang ingin disampaikan...' },
+                    { key: 'illustration', label: 'Ilustrasi (Opsional)', type: 'textarea', placeholder: 'Ilustrasi/cerita yang relevan...' },
+                    { key: 'application', label: 'Aplikasi Praktis', type: 'textarea', placeholder: 'Aplikasi dalam kehidupan sehari-hari...' }
+                ],
+                prompt_template: `Buat khotbah topikal dengan tema "{theme}" dengan ayat pendukung {supporting_verses} dan nats {key_verse}. Jemaat sasaran: {audience}. Durasi: {duration} menit. Poin utama: {main_points}. Ilustrasi: {illustration}. Aplikasi praktis: {application}.\n\nFORMAT OUTPUT:\n\n=== KHOTBAH TOPIKAL ===\n\nJudul: {theme}\nNats: {key_verse}\nAyat Pendukung: {supporting_verses}\n\nI. PEMBUKAAN\n- Salam dan doa\n- Pengantar tema\n- Relevansi topik dengan kehidupan\n\nII. PEMBAHASAN TOPIK\n- Poin 1 dengan ayat pendukung\n- Poin 2 dengan ayat pendukung\n- Poin 3 dengan ayat pendukung\n- Ilustrasi untuk setiap poin\n\nIII. APLIKASI PRAKTIS\n- Penerapan dalam kehidupan\n- Komitmen dan tantangan\n\nIV. PENUTUP\n- Ringkasan\n- Doa penutup\n- Berkat\n\nFormat dengan markdown yang rapi.`
+            },
+            narrative: {
+                id: 'narrative',
+                icon: '📚',
+                name: 'Khotbah Naratif',
+                desc: 'Menceritakan kisah Alkitab secara naratif.',
+                color: '#4299e1',
+                use_for: '✅ Ibadah Anak Sekolah Minggu\n✅ Ibadah Keluarga\n✅ Ibadah Pemuda\n✅ Storytelling rohani\n✅ Pendekatan kreatif untuk jemaat',
+                fields: [
+                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Daud dan Goliat - Berani Karena Iman' },
+                    { key: 'scripture', label: 'Kisah Alkitab', type: 'text', placeholder: 'Contoh: 1 Samuel 17:1-58' },
+                    { key: 'key_verse', label: 'Nats (Ayat Kunci)', type: 'text', placeholder: 'Contoh: 1 Samuel 17:47' },
+                    { key: 'audience', label: 'Jemaat Sasaran', type: 'text', placeholder: 'Contoh: Anak-anak, Pemuda' },
+                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 20' },
+                    { key: 'characters', label: 'Tokoh Utama', type: 'textarea', placeholder: 'Tokoh-tokoh dalam kisah...' },
+                    { key: 'moral', label: 'Pesan Moral', type: 'textarea', placeholder: 'Pesan yang ingin disampaikan...' },
+                    { key: 'application', label: 'Aplikasi Praktis', type: 'textarea', placeholder: 'Aplikasi dalam kehidupan...' }
+                ],
+                prompt_template: `Buat khotbah naratif dengan tema "{theme}" berdasarkan kisah {scripture} dengan nats {key_verse}. Jemaat sasaran: {audience}. Durasi: {duration} menit. Tokoh utama: {characters}. Pesan moral: {moral}. Aplikasi praktis: {application}.\n\nFORMAT OUTPUT:\n\n=== KHOTBAH NARATIF ===\n\nJudul: {theme}\nNats: {key_verse}\nKisah: {scripture}\n\nI. PEMBUKAAN\n- Salam dan doa\n- Pengantar kisah\n- Setting cerita\n\nII. ALUR CERITA\n- Awal kisah (konflik)\n- Perkembangan (ketegangan)\n- Klimaks (titik balik)\n- Penyelesaian (resolusi)\n\nIII. PESAN MORAL\n- Pelajaran dari kisah\n- Karakter tokoh yang diteladani\n\nIV. APLIKASI PRAKTIS\n- Penerapan dalam kehidupan\n- Komitmen\n\nV. PENUTUP\n- Doa penutup\n- Berkat\n\nFormat dengan markdown yang rapi.`
+            },
+            textual: {
+                id: 'textual',
+                icon: '📝',
+                name: 'Khotbah Tekstual',
+                desc: 'Berdasarkan satu ayat Alkitab, dijabarkan mendalam.',
+                color: '#ed8936',
+                use_for: '✅ Ibadah Pendalaman Alkitab\n✅ Kebaktian Doa\n✅ Khotbah singkat & padat\n✅ Menggali satu ayat secara mendalam\n✅ Ibadah Rumah Tangga',
+                fields: [
+                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Damai Sejahtera yang Melampaui Segala Akal' },
+                    { key: 'scripture', label: 'Ayat Alkitab', type: 'text', placeholder: 'Contoh: Filipi 4:7' },
+                    { key: 'key_verse', label: 'Nats', type: 'text', placeholder: 'Contoh: Filipi 4:7' },
+                    { key: 'audience', label: 'Jemaat Sasaran', type: 'text', placeholder: 'Contoh: Jemaat umum' },
+                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 20' },
+                    { key: 'word_analysis', label: 'Analisis Kata/Frasa', type: 'textarea', placeholder: 'Kata/frasa kunci yang perlu digali...' },
+                    { key: 'application', label: 'Aplikasi Praktis', type: 'textarea', placeholder: 'Aplikasi dalam kehidupan...' }
+                ],
+                prompt_template: `Buat khotbah tekstual dengan tema "{theme}" berdasarkan ayat {scripture} dengan nats {key_verse}. Jemaat sasaran: {audience}. Durasi: {duration} menit. Analisis kata/frasa kunci: {word_analysis}. Aplikasi praktis: {application}.\n\nFORMAT OUTPUT:\n\n=== KHOTBAH TEKSTUAL ===\n\nJudul: {theme}\nNats: {key_verse}\n\nI. PEMBUKAAN\n- Salam dan doa\n- Pengantar ayat\n- Latar belakang\n\nII. ANALISIS TEKS\n- Analisis kata/frasa kunci\n- Makna gramatikal & konteks\n- Perbandingan dengan ayat lain\n\nIII. PESAN TEKS\n- Kebenaran utama\n- Implikasi teologis\n\nIV. APLIKASI PRAKTIS\n- Penerapan praktis\n- Komitmen\n\nV. PENUTUP\n- Doa penutup\n- Berkat\n\nFormat dengan markdown yang rapi.`
+            },
+            daily: {
+                id: 'daily',
+                icon: '🌅',
+                name: 'Renungan Harian',
+                desc: 'Renungan singkat untuk dibaca pribadi setiap hari.',
+                color: '#38b2ac',
+                use_for: '✅ Devosi Pribadi\n✅ Renungan Harian Keluarga\n✅ Bahan Sharing WA/Media Sosial\n✅ Bahan Renungan Pagi\n✅ Bahan KTB (Kelompok Tumbuh Bersama)',
+                fields: [
+                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Bersyukur di Tengah Kesulitan' },
+                    { key: 'scripture', label: 'Ayat Alkitab', type: 'text', placeholder: 'Contoh: 1 Tesalonika 5:18' },
+                    { key: 'key_verse', label: 'Nats', type: 'text', placeholder: 'Contoh: 1 Tesalonika 5:18' },
+                    { key: 'audience', label: 'Pembaca Sasaran', type: 'text', placeholder: 'Contoh: Jemaat umum, Pemuda' },
+                    { key: 'duration', label: 'Waktu Baca (menit)', type: 'text', placeholder: 'Contoh: 5' },
+                    { key: 'reflection', label: 'Poin Perenungan', type: 'textarea', placeholder: 'Poin-poin yang direnungkan...' },
+                    { key: 'application', label: 'Aplikasi Praktis', type: 'textarea', placeholder: 'Aplikasi dalam kehidupan...' },
+                    { key: 'prayer', label: 'Pokok Doa', type: 'textarea', placeholder: 'Pokok doa yang dinaikkan...' }
+                ],
+                prompt_template: `Buat renungan harian dengan tema "{theme}" berdasarkan ayat {scripture} dengan nats {key_verse}. Pembaca sasaran: {audience}. Waktu baca: {duration} menit. Poin perenungan: {reflection}. Aplikasi praktis: {application}. Pokok doa: {prayer}.\n\nFORMAT OUTPUT:\n\n=== RENUNGAN HARIAN ===\n\nJudul: {theme}\nNats: {key_verse}\n\n📖 BACAAN: {scripture}\n\n✍️ RENUNGAN:\n[3-5 paragraf renungan yang menggugah hati]\n\n💡 PERENUNGAN:\n- [Pertanyaan refleksi 1]\n- [Pertanyaan refleksi 2]\n- [Pertanyaan refleksi 3]\n\n🙏 DOA:\n[Doa singkat 2-3 kalimat]\n\nFormat dengan markdown yang rapi.`
+            },
+            family: {
+                id: 'family',
+                icon: '👨‍👩‍👧‍👦',
+                name: 'Renungan Keluarga',
+                desc: 'Renungan untuk ibadah keluarga/mezbah keluarga.',
+                color: '#48bb78',
+                use_for: '✅ Ibadah Keluarga (Mezbah Keluarga)\n✅ Renungan Orang Tua & Anak\n✅ Bahan PA Keluarga\n✅ Devosi Rumah Tangga\n✅ Waktu Berkualitas dengan Keluarga',
+                fields: [
+                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Keluarga yang Takut akan Tuhan' },
+                    { key: 'scripture', label: 'Ayat Alkitab', type: 'text', placeholder: 'Contoh: Mazmur 128:1-6' },
+                    { key: 'key_verse', label: 'Nats', type: 'text', placeholder: 'Contoh: Mazmur 128:1' },
+                    { key: 'audience', label: 'Anggota Keluarga', type: 'text', placeholder: 'Contoh: Suami, Isteri, 2 anak' },
+                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 15' },
+                    { key: 'main_message', label: 'Pesan Utama', type: 'textarea', placeholder: 'Pesan untuk keluarga...' },
+                    { key: 'discussion', label: 'Pertanyaan Diskusi', type: 'textarea', placeholder: 'Pertanyaan untuk diskusi keluarga...' },
+                    { key: 'prayer', label: 'Pokok Doa', type: 'textarea', placeholder: 'Pokok doa keluarga...' }
+                ],
+                prompt_template: `Buat renungan keluarga dengan tema "{theme}" berdasarkan ayat {scripture} dengan nats {key_verse}. Anggota keluarga: {audience}. Durasi: {duration} menit. Pesan utama: {main_message}. Pertanyaan diskusi: {discussion}. Pokok doa: {prayer}.\n\nFORMAT OUTPUT:\n\n=== RENUNGAN KELUARGA ===\n\nJudul: {theme}\nNats: {key_verse}\n\n📖 BACAAN BERSAMA: {scripture}\n\n✍️ RENUNGAN:\n[Renungan singkat untuk dibacakan]\n\n💬 DISKUSI KELUARGA:\n1. [Pertanyaan untuk ayah]\n2. [Pertanyaan untuk ibu]\n3. [Pertanyaan untuk anak-anak]\n\n🙏 DOA KELUARGA:\n[Doa bersama]\n\n🎯 KOMITMEN KELUARGA:\n[Komitmen yang akan dilakukan bersama]\n\nFormat dengan markdown yang rapi.`
+            },
+            youth: {
+                id: 'youth',
+                icon: '🔥',
+                name: 'Khotbah Pemuda',
+                desc: 'Khotbah dengan bahasa dan konteks anak muda.',
+                color: '#ed64a6',
+                use_for: '✅ Ibadah Pemuda / Youth Service\n✅ Camp & Retreat Pemuda\n✅ Persekutuan Remaja\n✅ Youth Gathering\n✅ Ibadah Anak Muda Milenial & Gen Z',
+                fields: [
+                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Menjadi Generasi yang Berdampak' },
+                    { key: 'scripture', label: 'Ayat Alkitab', type: 'text', placeholder: 'Contoh: 1 Timotius 4:12' },
+                    { key: 'key_verse', label: 'Nats', type: 'text', placeholder: 'Contoh: 1 Timotius 4:12' },
+                    { key: 'audience', label: 'Pemuda Sasaran', type: 'text', placeholder: 'Contoh: Pemuda & Remaja 15-30 tahun' },
+                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 30' },
+                    { key: 'relevant_issues', label: 'Isu Relevan', type: 'textarea', placeholder: 'Isu yang relevan dengan pemuda...' },
+                    { key: 'main_points', label: 'Poin Utama', type: 'textarea', placeholder: 'Poin-poin yang ingin disampaikan...' },
+                    { key: 'challenge', label: 'Tantangan/Komitmen', type: 'textarea', placeholder: 'Tantangan untuk pemuda...' }
+                ],
+                prompt_template: `Buat khotbah pemuda dengan tema "{theme}" berdasarkan ayat {scripture} dengan nats {key_verse}. Pemuda sasaran: {audience}. Durasi: {duration} menit. Isu relevan: {relevant_issues}. Poin utama: {main_points}. Tantangan/komitmen: {challenge}.\n\nFORMAT OUTPUT:\n\n=== KHOTBAH PEMUDA ===\n\nJudul: {theme}\nNats: {key_verse}\n\nI. PEMBUKAAN (5 menit)\n- Ice breaker / hook yang relevan\n- Pengantar tema dengan bahasa anak muda\n\nII. ISI (20 menit)\n- Poin 1 dengan ilustrasi kekinian\n- Poin 2 dengan contoh nyata\n- Poin 3 dengan tantangan\n\nIII. APLIKASI (5 menit)\n- Penerapan praktis untuk pemuda\n- Challenge mingguan\n\nIV. PENUTUP\n- Doa\n- Berkat\n\nGunakan bahasa yang relatable, tidak kaku, dan penuh semangat. Format dengan markdown yang rapi.`
+            },
+            celebration: {
+                id: 'celebration',
+                icon: '🎉',
+                name: 'Khotbah Perayaan',
+                desc: 'Khotbah untuk momen spesial (Natal, Paskah, Pentakosta, dll).',
+                color: '#d69e2e',
+                use_for: '✅ Ibadah Natal\n✅ Ibadah Paskah\n✅ Ibadah Pentakosta\n✅ Ibadah Tahun Baru\n✅ Ibadah Syukur & Perayaan lainnya',
+                fields: [
+                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Kasih Allah yang Nyata di Natal' },
+                    { key: 'celebration_type', label: 'Jenis Perayaan', type: 'text', placeholder: 'Contoh: Natal, Paskah, Pentakosta, Tahun Baru' },
+                    { key: 'scripture', label: 'Ayat Alkitab', type: 'text', placeholder: 'Contoh: Lukas 2:1-20' },
+                    { key: 'key_verse', label: 'Nats', type: 'text', placeholder: 'Contoh: Lukas 2:11' },
+                    { key: 'audience', label: 'Jemaat Sasaran', type: 'text', placeholder: 'Contoh: Jemaat umum & tamu' },
+                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 30' },
+                    { key: 'main_message', label: 'Pesan Utama', type: 'textarea', placeholder: 'Pesan utama perayaan...' },
+                    { key: 'application', label: 'Aplikasi Praktis', type: 'textarea', placeholder: 'Aplikasi dalam kehidupan...' }
+                ],
+                prompt_template: `Buat khotbah perayaan untuk {celebration_type} dengan tema "{theme}" berdasarkan ayat {scripture} dengan nats {key_verse}. Jemaat sasaran: {audience}. Durasi: {duration} menit. Pesan utama: {main_message}. Aplikasi praktis: {application}.\n\nFORMAT OUTPUT:\n\n=== KHOTBAH PERAYAAN {celebration_type} ===\n\nJudul: {theme}\nNats: {key_verse}\n\nI. PEMBUKAAN\n- Salam perayaan\n- Pengantar makna perayaan\n- Relevansi dengan kehidupan\n\nII. MAKNA PERAYAAN\n- Latar belakang perayaan\n- Makna teologis\n- Poin-poin utama\n\nIII. APLIKASI PRAKTIS\n- Penerapan dalam kehidupan\n- Komitmen perayaan\n\nIV. PENUTUP\n- Doa syukur\n- Berkat perayaan\n\nFormat dengan markdown yang rapi dan penuh sukacita.`
+            }
+        };
+
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'ai_sermon_generator';
+        const USERS_TABLE = 'users';
+        const SECRET = 'admin';
+        const STORAGE_KEY = 'ai_tools_user';
+
+        const SERMON_KEYS = Object.keys(SERMON_TYPES);
+
+        // ==================== STATE ====================
+        let allData = [];
+        let quillEditor = null;
+        let addAiEditor = null;
+        let viewData = null;
+        let currentPrompt = '';
+        let currentHistorySubTab = 'all';
+        let currentUser = null;
+        let isAdmin = false;
+
+        const COLUMNS = {
+            sermon_type: 'x_01',
+            title: 'x_02',
+            prompt: 'x_03',
+            field_values: 'x_04',
+            ai_source: 'x_05',
+            result: 'x_06',
+            created_by: 'x_07',
+            status: 'x_08',
+            notes: 'x_09',
+            created_date: 'x_10'
+        };
+
+        // ==================== LOGIN ====================
+        function getStoredUser() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    if (parsed.username && parsed.timestamp) {
+                        const days = (Date.now() - parsed.timestamp) / (1000 * 60 * 60 * 24);
+                        if (days < 7) return parsed.username;
+                    }
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function saveUserToStorage(username, remember) {
+            const data = JSON.stringify({ username, timestamp: Date.now() });
+            if (remember) localStorage.setItem(STORAGE_KEY, data);
+            else sessionStorage.setItem(STORAGE_KEY, data);
+        }
+
+        function clearUserStorage() {
+            localStorage.removeItem(STORAGE_KEY);
+            sessionStorage.removeItem(STORAGE_KEY);
+        }
+
+        function checkAutoLogin() {
+            const username = getStoredUser();
+            if (username) {
+                currentUser = username;
+                isAdmin = (username === 'admin');
+                showMainContent();
+                return true;
+            }
+            return false;
+        }
+
+        function showLogin() {
+            document.getElementById('loginOverlay').classList.add('active');
+            document.getElementById('mainContent').classList.remove('visible');
+        }
+
+        function showMainContent() {
+            document.getElementById('loginOverlay').classList.remove('active');
+            document.getElementById('mainContent').classList.add('visible');
+            document.getElementById('currentUser').textContent = currentUser;
+            const roleBadge = document.getElementById('userRole');
+            if (isAdmin) { roleBadge.textContent = '👑 Admin'; roleBadge.className = 'user-role admin'; }
+            else { roleBadge.textContent = '👤 User'; roleBadge.className = 'user-role user'; }
+            document.getElementById('createdBy').value = currentUser;
+            refreshData();
+        }
+
+        async function doLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const remember = document.getElementById('loginRemember').checked;
+            if (!username || !password) { showLoginError('Username dan password wajib diisi!'); return; }
+            const btn = document.getElementById('loginBtn');
+            const errorEl = document.getElementById('loginError');
+            const loadingEl = document.getElementById('loginLoading');
+            btn.disabled = true;
+            loadingEl.classList.add('show');
+            errorEl.classList.remove('show');
+            try {
+                const response = await fetch(`${API_URL}?table=${USERS_TABLE}`, {
+                    headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': USERS_TABLE, 'X-Role': 'admin' }
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const user = result.data.find(u => u.x_01 === username && u.x_02 === password);
+                    if (user) {
+                        currentUser = username;
+                        isAdmin = (username === 'admin');
+                        saveUserToStorage(username, remember);
+                        showMainContent();
+                        showToast('✅ Login berhasil! Selamat datang, ' + username, 'success');
+                    } else showLoginError('❌ Username atau password salah!');
+                } else showLoginError('❌ Gagal mengambil data user');
+            } catch (e) {
+                showLoginError('❌ Gagal login: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                loadingEl.classList.remove('show');
+            }
+        }
+
+        function showLoginError(message) {
+            const errorEl = document.getElementById('loginError');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+        }
+
+        function doLogout() {
+            if (!confirm('Yakin ingin logout?')) return;
+            clearUserStorage();
+            currentUser = null;
+            isAdmin = false;
+            showLogin();
+            showToast('👋 Logout berhasil', 'info');
+        }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!checkAutoLogin()) showLogin();
+            document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+            document.getElementById('loginUsername').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPassword').focus(); });
+
+            quillEditor = new Quill('#resultEditor', {
+                theme: 'snow', placeholder: 'Paste hasil AI di sini...',
+                modules: { toolbar: [[{ 'header': [1,2,3,4,5,6,false] }], ['bold','italic','underline','strike'], [{ 'list': 'ordered'},{ 'list': 'bullet' }], ['blockquote','code-block'], ['link','image'], ['clean']] }
+            });
+            addAiEditor = new Quill('#addAiEditor', {
+                theme: 'snow', placeholder: 'Paste hasil AI di sini...',
+                modules: { toolbar: [[{ 'header': [1,2,3,4,5,6,false] }], ['bold','italic','underline','strike'], [{ 'list': 'ordered'},{ 'list': 'bullet' }], ['blockquote','code-block'], ['link','image'], ['clean']] }
+            });
+
+            renderTools();
+            populateToolSelect();
+            updateFormFields();
+            if (currentUser) document.getElementById('createdBy').value = currentUser;
+        });
+
+        // ==================== API ====================
+        function getHeaders() {
+            return { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': TABLE, 'X-Role': 'admin' };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            const response = await fetch(url, { ...options, headers: { ...getHeaders(), ...(options.headers || {}) } });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || err.message || `HTTP ${response.status}`);
+            }
+            return await response.json();
+        }
+
+        async function fetchData() {
+            try {
+                const result = await apiFetch('');
+                if (result.success && result.data) {
+                    let data = result.data.map(row => parseRow(row));
+                    if (!isAdmin && currentUser) data = data.filter(d => d.created_by === currentUser);
+                    allData = data;
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            return {
+                id_x: row.id_x,
+                sermon_type: row.x_01 || '',
+                title: row.x_02 || '',
+                prompt: row.x_03 || '',
+                field_values: safeParseJSON(row.x_04),
+                ai_source: row.x_05 || '',
+                result: row.x_06 || '',
+                created_by: row.x_07 || '',
+                status: row.x_08 || 'published',
+                notes: row.x_09 || '',
+                created_date: row.x_10 || '',
+                _raw: row
+            };
+        }
+
+        function safeParseJSON(str) { if (!str) return {}; try { return JSON.parse(str); } catch (e) { return {}; } }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                if (key === 'field_values') row[col] = JSON.stringify(data[key] || {});
+                else row[col] = data[key] || '';
+            }
+            return row;
+        }
+
+        async function createResult(data) {
+            const row = buildRow(data);
+            return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function deleteResultApi(id) {
+            return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== RENDER ====================
+        function renderTools() {
+            const container = document.getElementById('toolsGrid');
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            let filtered = SERMON_KEYS;
+            if (search) filtered = filtered.filter(key => SERMON_TYPES[key].name.toLowerCase().includes(search) || SERMON_TYPES[key].desc.toLowerCase().includes(search));
+
+            container.innerHTML = filtered.map(key => {
+                const type = SERMON_TYPES[key];
+                const count = allData.filter(d => d.sermon_type === type.id).length;
+                return `
+                    <div class="tool-card" style="border-top:4px solid ${type.color};">
+                        <span class="tool-icon">${type.icon}</span>
+                        <div class="tool-name">${type.name}</div>
+                        <div class="tool-desc">${type.desc}</div>
+                        <div style="font-size:11px;color:#718096;margin-bottom:8px;">${count} khotbah</div>
+                        <div class="tool-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openInfoModal('${key}')">📖 Info</button>
+                            <button class="btn btn-primary btn-xs" onclick="useTool('${key}')">✏️ Create</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('tab1Badge').textContent = filtered.length;
+        }
+
+        function populateToolSelect() {
+            const select = document.getElementById('selectedTool');
+            select.innerHTML = SERMON_KEYS.map(key => {
+                const type = SERMON_TYPES[key];
+                return `<option value="${key}">${type.icon} ${type.name}</option>`;
+            }).join('');
+        }
+
+        function updateFormFields() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = SERMON_TYPES[toolKey];
+            if (!type) return;
+            const container = document.getElementById('dynamicFields');
+            const values = getCurrentFieldValues();
+            let html = `<div class="section-label">📝 ${type.icon} ${type.name} - Form</div>`;
+            type.fields.forEach(field => {
+                const fieldId = `field_${field.key}`;
+                const val = values[field.key] || '';
+                if (field.type === 'textarea') {
+                    html += `<div class="form-group"><label>${field.label}</label><textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea></div>`;
+                } else {
+                    html += `<div class="form-group"><label>${field.label}</label><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function getCurrentFieldValues() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = SERMON_TYPES[toolKey];
+            if (!type) return {};
+            const values = {};
+            type.fields.forEach(field => {
+                const el = document.getElementById(`field_${field.key}`);
+                if (el) values[field.key] = el.value;
+            });
+            return values;
+        }
+
+        function setFieldValues(values) {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = SERMON_TYPES[toolKey];
+            if (!type) return;
+            type.fields.forEach(field => {
+                const el = document.getElementById(`field_${field.key}`);
+                if (el && values[field.key] !== undefined) el.value = values[field.key] || '';
+            });
+        }
+
+        function generatePrompt() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = SERMON_TYPES[toolKey];
+            if (!type) return;
+            const values = getCurrentFieldValues();
+            let allFilled = true;
+            type.fields.forEach(field => { if (!values[field.key] || !values[field.key].trim()) allFilled = false; });
+            if (!allFilled) { showToast('❌ Semua field harus diisi!', 'error'); return; }
+
+            let prompt = type.prompt_template;
+            type.fields.forEach(field => {
+                prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || '');
+            });
+            currentPrompt = prompt;
+            document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+            addCopyButtonToPrompt('promptPreview');
+
+            const titleInput = document.getElementById('resultTitle');
+            if (!titleInput.value) titleInput.value = `${type.name} - ${values.theme || ''}`;
+            showToast('✅ Prompt berhasil digenerate!', 'success');
+        }
+
+        function addCopyButtonToPrompt(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const existing = container.querySelector('.copy-prompt-btn');
+            if (existing) existing.remove();
+            const btn = document.createElement('button');
+            btn.className = 'copy-prompt-btn';
+            btn.textContent = '📋 Copy';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const text = container.textContent.replace('📋 Copy', '').trim();
+                if (!text || text.includes('Pilih jenis')) { showToast('❌ Tidak ada prompt', 'error'); return; }
+                navigator.clipboard.writeText(text).then(() => showToast('✅ Prompt disalin!', 'success')).catch(() => {
+                    const ta = document.createElement('textarea');
+                    ta.value = text; document.body.appendChild(ta); ta.select();
+                    document.execCommand('copy'); document.body.removeChild(ta);
+                    showToast('✅ Prompt disalin!', 'success');
+                });
+            };
+            container.style.position = 'relative';
+            container.appendChild(btn);
+        }
+
+        async function saveResult() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const title = document.getElementById('resultTitle').value.trim();
+            const createdBy = document.getElementById('createdBy').value.trim() || currentUser || 'User';
+            const prompt = document.getElementById('promptPreview').textContent.replace('📋 Copy', '').trim();
+            if (!title) { showToast('❌ Judul wajib diisi', 'error'); return; }
+            if (!prompt || prompt.includes('Pilih jenis')) { showToast('❌ Generate prompt dulu', 'error'); return; }
+            const resultHtml = quillEditor.root.innerHTML;
+            if (!resultHtml || resultHtml === '<p><br></p>') { showToast('❌ Paste hasil AI dulu', 'error'); return; }
+            const values = getCurrentFieldValues();
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                sermon_type: toolKey, title, prompt, field_values: values,
+                ai_source: document.getElementById('aiSource').value,
+                result: resultHtml, created_by: createdBy,
+                status: 'published', notes: '', created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Khotbah berhasil disimpan!', 'success');
+                await refreshData();
+                clearForm();
+                switchMainTab('tab3');
+            } catch (e) { showToast('❌ Gagal menyimpan: ' + e.message, 'error'); }
+        }
+
+        function clearForm() {
+            quillEditor.root.innerHTML = '';
+            document.getElementById('resultTitle').value = '';
+            document.getElementById('promptPreview').innerHTML = '<span class="placeholder">Pilih jenis khotbah dan isi form untuk menghasilkan prompt...</span>';
+            currentPrompt = '';
+        }
+
+        function useTool(toolKey) {
+            document.getElementById('selectedTool').value = toolKey;
+            updateFormFields();
+            switchMainTab('tab2');
+            clearForm();
+            document.getElementById('createdBy').value = currentUser || '';
+            showToast(`✏️ Beralih ke ${SERMON_TYPES[toolKey].name}`, 'info');
+        }
+
+        // ==================== HISTORY ====================
+        function switchHistorySubTab(subtab) {
+            currentHistorySubTab = subtab;
+            document.querySelectorAll('.history-sub-tab').forEach(el => el.classList.toggle('active', el.dataset.subtab === subtab));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            const filterTool = document.getElementById('historyFilterTool').value;
+            const search = document.getElementById('historySearch').value.toLowerCase().trim();
+            let filtered = allData;
+            if (currentHistorySubTab === 'today') {
+                const today = new Date();
+                const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+                filtered = filtered.filter(d => d.created_date === todayStr);
+            }
+            if (filterTool !== 'all') filtered = filtered.filter(d => d.sermon_type === filterTool);
+            if (search) filtered = filtered.filter(d => d.title.toLowerCase().includes(search) || d.created_by.toLowerCase().includes(search) || d.prompt.toLowerCase().includes(search));
+
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            document.getElementById('subAll').textContent = allData.length;
+            document.getElementById('subToday').textContent = allData.filter(d => d.created_date === todayStr).length;
+            document.getElementById('tab3Badge').textContent = allData.length;
+            document.getElementById('historyCount').textContent = `${filtered.length} items`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">${allData.length === 0 ? '🕊️' : '🔍'}</div><h3>${allData.length === 0 ? 'Belum ada khotbah' : 'Tidak ditemukan'}</h3><p>${allData.length === 0 ? 'Pergi ke Tab "AI Prompt Studio" untuk mulai membuat khotbah' : 'Coba kata kunci lain'}</p></div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => {
+                const type = SERMON_TYPES[item.sermon_type];
+                const typeLabel = type ? `${type.icon} ${type.name}` : item.sermon_type;
+                const date = item.created_date || item._raw?.created_at || '-';
+                const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+                const sourceClass = item.ai_source.toLowerCase();
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = item.result;
+                const plainResult = tempDiv.textContent.substring(0, 100) + (tempDiv.textContent.length > 100 ? '...' : '');
+                return `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <span class="history-title">${escapeHtml(item.title)}</span>
+                            <div class="history-meta">
+                                <span class="type-badge">${typeLabel}</span>
+                                ${item.ai_source ? `<span class="ai-badge ${sourceClass}">${item.ai_source}</span>` : ''}
+                                <span>📅 ${displayDate}</span>
+                                <span>👤 ${escapeHtml(item.created_by)}</span>
+                                ${isAdmin ? `<span style="font-size:10px;background:#c6f6d5;color:#276749;padding:1px 8px;border-radius:8px;">👑</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="history-prompt" onclick="togglePrompt(this)">${escapeHtml(item.prompt.substring(0, 120))}${item.prompt.length > 120 ? '...' : ''}</div>
+                        <div class="history-result">${escapeHtml(plainResult)}</div>
+                        <div class="history-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openAddAiModal(${item.id_x})">➕ Tambah AI</button>
+                            <button class="btn btn-primary btn-xs" onclick="openDuplicateModal(${item.id_x})">📋 Duplikat</button>
+                            <button class="btn btn-outline btn-xs" onclick="openViewModal(${item.id_x})">👁️ Detail</button>
+                            <button class="btn btn-danger btn-xs" onclick="deleteResult(${item.id_x})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function togglePrompt(el) { el.classList.toggle('expanded'); }
+
+        // ==================== ADD AI ====================
+        function openAddAiModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            document.getElementById('addAiId').value = id;
+            document.getElementById('addAiPromptDisplay').textContent = item.prompt;
+            document.getElementById('addAiCreatedBy').value = currentUser || '';
+            addAiEditor.root.innerHTML = '';
+            const display = document.getElementById('addAiPromptDisplay');
+            const existingBtn = display.querySelector('.copy-prompt-btn');
+            if (existingBtn) existingBtn.remove();
+            const btn = document.createElement('button');
+            btn.className = 'copy-prompt-btn';
+            btn.textContent = '📋 Copy';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const text = display.textContent.replace('📋 Copy', '').trim();
+                navigator.clipboard.writeText(text).then(() => showToast('✅ Prompt disalin!', 'success')).catch(() => {
+                    const ta = document.createElement('textarea'); ta.value = text;
+                    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                    document.body.removeChild(ta); showToast('✅ Prompt disalin!', 'success');
+                });
+            };
+            display.style.position = 'relative';
+            display.appendChild(btn);
+            document.getElementById('addAiModal').classList.add('active');
+        }
+
+        async function saveAddAiResult() {
+            const id = parseInt(document.getElementById('addAiId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) { showToast('Data tidak ditemukan', 'error'); return; }
+            const aiSource = document.getElementById('addAiSource').value;
+            const createdBy = document.getElementById('addAiCreatedBy').value.trim() || currentUser || 'User';
+            const resultHtml = addAiEditor.root.innerHTML;
+            if (!resultHtml || resultHtml === '<p><br></p>') { showToast('❌ Paste hasil AI dulu', 'error'); return; }
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                sermon_type: originalItem.sermon_type,
+                title: originalItem.title + ` (${aiSource})`,
+                prompt: originalItem.prompt,
+                field_values: originalItem.field_values || {},
+                ai_source: aiSource, result: resultHtml, created_by: createdBy,
+                status: 'published', notes: `Hasil tambahan dari ${aiSource}`, created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Hasil AI baru disimpan!', 'success');
+                closeModal('addAiModal');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal menyimpan: ' + e.message, 'error'); }
+        }
+
+        // ==================== DUPLICATE ====================
+        function openDuplicateModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            document.getElementById('dupId').value = id;
+            document.getElementById('dupFrameworkType').value = item.sermon_type;
+            const type = SERMON_TYPES[item.sermon_type];
+            document.getElementById('dupFrameworkDisplay').value = type ? `${type.icon} ${type.name}` : item.sermon_type;
+            document.getElementById('dupTitle').value = item.title + ' (v2)';
+            document.getElementById('dupCreatedBy').value = currentUser || '';
+            renderDuplicateFields(item.sermon_type, item.field_values || {});
+            document.getElementById('dupPromptPreview').innerHTML = '<span class="placeholder">Generate prompt dari form di atas...</span>';
+            document.getElementById('duplicateModal').classList.add('active');
+        }
+
+        function renderDuplicateFields(typeKey, values) {
+            const type = SERMON_TYPES[typeKey];
+            if (!type) return;
+            const container = document.getElementById('dupDynamicFields');
+            let html = `<div class="section-label">📝 ${type.icon} ${type.name} - Edit Field</div>`;
+            type.fields.forEach(field => {
+                const fieldId = `dup_field_${field.key}`;
+                const val = values[field.key] || '';
+                if (field.type === 'textarea') {
+                    html += `<div class="form-group"><label>${field.label}</label><textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea></div>`;
+                } else {
+                    html += `<div class="form-group"><label>${field.label}</label><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function getDuplicateFieldValues() {
+            const typeKey = document.getElementById('dupFrameworkType').value;
+            const type = SERMON_TYPES[typeKey];
+            if (!type) return {};
+            const values = {};
+            type.fields.forEach(field => {
+                const el = document.getElementById(`dup_field_${field.key}`);
+                if (el) values[field.key] = el.value;
+            });
+            return values;
+        }
+
+        function generateDuplicatePrompt() {
+            const typeKey = document.getElementById('dupFrameworkType').value;
+            const type = SERMON_TYPES[typeKey];
+            if (!type) return;
+            const values = getDuplicateFieldValues();
+            let allFilled = true;
+            type.fields.forEach(field => { if (!values[field.key] || !values[field.key].trim()) allFilled = false; });
+            if (!allFilled) { showToast('❌ Semua field harus diisi!', 'error'); return; }
+            let prompt = type.prompt_template;
+            type.fields.forEach(field => { prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || ''); });
+            document.getElementById('dupPromptPreview').innerHTML = escapeHtml(prompt);
+            addCopyButtonToPrompt('dupPromptPreview');
+            showToast('✅ Prompt berhasil digenerate!', 'success');
+        }
+
+        async function saveDuplicate() {
+            const id = parseInt(document.getElementById('dupId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) { showToast('Data tidak ditemukan', 'error'); return; }
+            const typeKey = document.getElementById('dupFrameworkType').value;
+            const newTitle = document.getElementById('dupTitle').value.trim();
+            const createdBy = document.getElementById('dupCreatedBy').value.trim() || currentUser || 'User';
+            const prompt = document.getElementById('dupPromptPreview').textContent.replace('📋 Copy', '').trim();
+            if (!newTitle) { showToast('❌ Judul baru wajib diisi', 'error'); return; }
+            if (!prompt || prompt.includes('Generate prompt')) { showToast('❌ Generate prompt dulu', 'error'); return; }
+            const values = getDuplicateFieldValues();
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                sermon_type: typeKey, title: newTitle, prompt, field_values: values,
+                ai_source: '', result: '', created_by: createdBy,
+                status: 'published', notes: 'Duplikat dari prompt sebelumnya', created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Duplikat berhasil dibuat!', 'success');
+                closeModal('duplicateModal');
+                document.getElementById('selectedTool').value = typeKey;
+                updateFormFields();
+                setFieldValues(values);
+                document.getElementById('resultTitle').value = newTitle;
+                document.getElementById('createdBy').value = createdBy;
+                document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+                addCopyButtonToPrompt('promptPreview');
+                currentPrompt = prompt;
+                switchMainTab('tab2');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal menduplikat: ' + e.message, 'error'); }
+        }
+
+        // ==================== DELETE ====================
+        async function deleteResult(id) {
+            if (!confirm('Hapus khotbah ini?')) return;
+            try {
+                await deleteResultApi(id);
+                showToast('✅ Khotbah berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal hapus: ' + e.message, 'error'); }
+        }
+
+        async function clearHistory() {
+            if (allData.length === 0) { showToast('Tidak ada data', 'info'); return; }
+            if (!confirm('Hapus semua data history?')) return;
+            try {
+                for (const item of allData) await deleteResultApi(item.id_x);
+                showToast('✅ Semua data berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal hapus: ' + e.message, 'error'); }
+        }
+
+        // ==================== VIEW ====================
+        function openViewModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) { showToast('Data tidak ditemukan', 'error'); return; }
+            viewData = item;
+            const type = SERMON_TYPES[item.sermon_type];
+            const typeLabel = type ? `${type.icon} ${type.name}` : item.sermon_type;
+            const date = item.created_date || item._raw?.created_at || '-';
+            const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+            document.getElementById('viewModalTitle').textContent = `👁️ ${escapeHtml(item.title)}`;
+            document.getElementById('viewMeta').innerHTML = `<strong>Jenis:</strong> ${typeLabel} &nbsp;|&nbsp; <strong>AI:</strong> ${item.ai_source || '-'} &nbsp;|&nbsp; <strong>Dibuat:</strong> ${displayDate} &nbsp;|&nbsp; <strong>Oleh:</strong> ${escapeHtml(item.created_by)} ${isAdmin ? `&nbsp;|&nbsp; <span style="background:#c6f6d5;color:#276749;padding:1px 8px;border-radius:8px;font-size:11px;">👑</span>` : ''}`;
+            document.getElementById('viewPrompt').textContent = item.prompt;
+            document.getElementById('viewSource').textContent = item.ai_source || '-';
+            document.getElementById('viewResultWrapper').innerHTML = `<div class="ql-editor">${item.result}</div>`;
+            document.getElementById('viewModal').classList.add('active');
+        }
+
+        function copyViewResult() {
+            const resultHtml = document.getElementById('viewResultWrapper').innerHTML;
+            if (!resultHtml) { showToast('Tidak ada konten', 'error'); return; }
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = resultHtml;
+            const plainText = tempDiv.textContent;
+            navigator.clipboard.writeText(plainText).then(() => showToast('✅ Konten disalin!', 'success')).catch(() => {
+                const ta = document.createElement('textarea'); ta.value = plainText;
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                document.body.removeChild(ta); showToast('✅ Konten disalin!', 'success');
+            });
+        }
+
+        function downloadViewDoc() {
+            const title = viewData?.title || 'khotbah';
+            const content = document.getElementById('viewResultWrapper').innerHTML || '';
+            const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(title)}</title><style>body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #2d3748; line-height: 1.8; max-width: 800px; margin: auto; } h1, h2, h3, h4 { color: #1a202c; } p { margin: 8px 0; } ul, ol { padding-left: 24px; }</style></head><body>${content}</body></html>`;
+            const blob = new Blob([htmlContent], { type: 'application/msword;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `${title}.doc`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('✅ File .doc berhasil didownload!', 'success');
+        }
+
+        // ==================== INFO ====================
+        function openInfoModal(toolKey) {
+            const type = SERMON_TYPES[toolKey];
+            if (!type) return;
+            const fieldsHtml = type.fields.map(f => `<li><strong>${f.label}</strong> — ${f.placeholder}</li>`).join('');
+            let useForHtml = '';
+            if (type.use_for) {
+                const lines = type.use_for.split('\n').filter(l => l.trim());
+                useForHtml = `<div style="background:#ebf8ff;border-radius:8px;padding:12px 16px;margin-bottom:12px;border-left:4px solid #805ad5;"><strong style="color:#6b46c1;">🎯 Cocok Dipakai Untuk:</strong><ul style="margin:6px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">${lines.map(l => `<li>${l.replace('✅', '✔️')}</li>`).join('')}</ul></div>`;
+            }
+            document.getElementById('infoModalTitle').textContent = `📋 ${type.icon} ${type.name}`;
+            document.getElementById('infoModalBody').innerHTML = `
+                <div style="text-align:center;margin-bottom:12px;">
+                    <span style="font-size:48px;display:block;">${type.icon}</span>
+                    <h3 style="font-size:20px;color:#2d3748;">${type.name}</h3>
+                    <p style="color:#718096;font-size:14px;">${type.desc}</p>
+                </div>
+                ${useForHtml}
+                <div style="background:#f7fafc;border-radius:8px;padding:16px;margin-bottom:12px;">
+                    <h4 style="font-size:14px;color:#2d3748;margin-bottom:8px;">📝 Field yang Diisi:</h4>
+                    <ul style="padding-left:20px;color:#4a5568;font-size:13px;line-height:1.8;">${fieldsHtml}</ul>
+                </div>
+                <div style="background:#f0fff4;border-radius:8px;padding:12px 16px;border-left:4px solid #48bb78;">
+                    <strong style="color:#276749;">💡 Cara Penggunaan:</strong>
+                    <ol style="margin:4px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">
+                        <li>Pilih jenis khotbah di Tab "AI Prompt Studio"</li>
+                        <li>Isi semua field yang tersedia</li>
+                        <li>Klik "Generate Prompt"</li>
+                        <li>Copy prompt, paste ke AI eksternal</li>
+                        <li>Copy hasil AI, paste di editor</li>
+                        <li>Pilih AI Source dan klik "Simpan Hasil"</li>
+                    </ol>
+                </div>
+            `;
+            document.getElementById('infoModal').classList.add('active');
+        }
+
+        // ==================== TAB ====================
+        function switchMainTab(tabId) {
+            document.querySelectorAll('.main-tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.main-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.main-tab-btn[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            if (tabId === 'tab3') renderHistory();
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // ==================== REFRESH ====================
+        async function refreshData() {
+            if (!currentUser) { showLogin(); return; }
+            showToast('🔄 Memuat data...', 'info');
+            await fetchData();
+            renderTools();
+            updateHistoryFilter();
+            renderHistory();
+            document.getElementById('tab3Badge').textContent = allData.length;
+            showToast(`✅ ${allData.length} khotbah dimuat`, 'success');
+        }
+
+        function updateHistoryFilter() {
+            const select = document.getElementById('historyFilterTool');
+            const currentValue = select.value;
+            const types = {};
+            allData.forEach(item => { if (!types[item.sermon_type]) types[item.sermon_type] = 0; types[item.sermon_type]++; });
+            select.innerHTML = `<option value="all">📋 All Types (${allData.length})</option>`;
+            SERMON_KEYS.forEach(key => {
+                const type = SERMON_TYPES[key];
+                const count = types[key] || 0;
+                select.innerHTML += `<option value="${key}">${type.icon} ${type.name} (${count})</option>`;
+            });
+            if (currentValue) select.value = currentValue;
+        }
+
+        // ==================== TOAST & HELPER ====================
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+        });
+
+        window.debug = {
+            allData: () => allData,
+            refresh: refreshData,
+            SERMON_TYPES, SERMON_KEYS,
+            currentUser: () => currentUser,
+            isAdmin: () => isAdmin
+        };
+    </script>
+</body>
+</html>

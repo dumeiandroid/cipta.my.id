@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Counseling Models - 25 Model Konseling</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; padding: 20px; min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        .login-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
+        .login-overlay.active { display: flex; }
+        .login-box { background: white; border-radius: 20px; padding: 40px; max-width: 420px; width: 100%; box-shadow: 0 24px 80px rgba(0,0,0,0.4); animation: fadeIn 0.3s ease; }
+        .login-box .login-icon { font-size: 48px; text-align: center; display: block; margin-bottom: 4px; }
+        .login-box h2 { text-align: center; font-size: 24px; color: #1a202c; margin-bottom: 4px; }
+        .login-box p { text-align: center; color: #718096; font-size: 14px; margin-bottom: 20px; }
+        .login-box .form-group { margin-bottom: 14px; }
+        .login-box .form-group label { font-weight: 600; font-size: 13px; color: #4a5568; display: block; margin-bottom: 4px; }
+        .login-box .form-group input { width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border 0.2s; }
+        .login-box .form-group input:focus { outline: none; border-color: #6b46c1; }
+        .login-box .form-remember { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+        .login-box .form-remember input[type="checkbox"] { width: 18px; height: 18px; accent-color: #6b46c1; }
+        .login-box .form-remember label { font-size: 13px; color: #4a5568; cursor: pointer; }
+        .login-box .btn-login { width: 100%; padding: 12px; background: #6b46c1; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .login-box .btn-login:hover { background: #553c9a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(107,70,193,0.3); }
+        .login-box .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .login-box .login-error { color: #fc8181; font-size: 13px; text-align: center; margin-top: 10px; display: none; }
+        .login-box .login-error.show { display: block; }
+        .login-box .login-loading { display: none; text-align: center; margin-top: 10px; color: #718096; font-size: 13px; }
+        .login-box .login-loading.show { display: block; }
+
+        .header { background: white; padding: 20px 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .header h1 { font-size: 24px; color: #1a2332; display: flex; align-items: center; gap: 10px; }
+        .header h1 span { background: #2d3748; color: white; font-size: 12px; padding: 2px 10px; border-radius: 20px; }
+        .header-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4a5568; background: #f7fafc; padding: 4px 14px; border-radius: 20px; }
+        .user-info .user-role { font-weight: 600; padding: 1px 10px; border-radius: 10px; font-size: 10px; }
+        .user-info .user-role.admin { background: #c6f6d5; color: #276749; }
+        .user-info .user-role.user { background: #bee3f8; color: #2a69ac; }
+        .btn-logout { padding: 4px 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; background: #fc8181; color: white; transition: 0.2s; }
+        .btn-logout:hover { background: #f56565; }
+        .search-box { display: flex; gap: 8px; align-items: center; background: #f7fafc; padding: 0 15px; border-radius: 10px; border: 2px solid #e2e8f0; transition: border 0.2s; }
+        .search-box:focus-within { border-color: #6b46c1; }
+        .search-box input { border: none; background: transparent; padding: 10px 0; font-size: 14px; outline: none; width: 200px; color: #2d3748; }
+        .search-box .icon { color: #a0aec0; font-size: 18px; }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: #6b46c1; color: white; }
+        .btn-primary:hover { background: #553c9a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(107,70,193,0.4); }
+        .btn-success { background: #48bb78; color: white; }
+        .btn-success:hover { background: #38a169; }
+        .btn-danger { background: #fc8181; color: white; }
+        .btn-danger:hover { background: #f56565; }
+        .btn-warning { background: #ed8936; color: white; }
+        .btn-warning:hover { background: #dd6b20; }
+        .btn-outline { background: transparent; color: #4a5568; border: 2px solid #e2e8f0; }
+        .btn-outline:hover { background: #f7fafc; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
+        .btn-xs { padding: 3px 10px; font-size: 11px; border-radius: 4px; }
+
+        .main-tabs-container { background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 24px; }
+        .main-tabs-header { display: flex; border-bottom: 2px solid #edf2f7; background: #f7fafc; padding: 0 20px; overflow-x: auto; flex-wrap: nowrap; }
+        .main-tab-btn { padding: 14px 24px; border: none; background: transparent; font-weight: 700; font-size: 14px; color: #a0aec0; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent; margin-bottom: -2px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .main-tab-btn:hover { color: #2d3748; }
+        .main-tab-btn.active { color: #6b46c1; border-bottom-color: #6b46c1; }
+        .main-tab-btn .badge-main { background: #edf2f7; color: #4a5568; font-size: 11px; padding: 1px 10px; border-radius: 12px; font-weight: 600; }
+        .main-tab-btn.active .badge-main { background: #e9d8fd; color: #553c9a; }
+        .main-tab-content { padding: 24px 30px; display: none; }
+        .main-tab-content.active { display: block; }
+
+        /* Category Filter */
+        .category-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #edf2f7; }
+        .category-btn { padding: 8px 16px; border: 2px solid #e2e8f0; border-radius: 20px; background: white; font-weight: 600; font-size: 13px; color: #4a5568; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+        .category-btn:hover { border-color: #6b46c1; color: #6b46c1; }
+        .category-btn.active { background: #6b46c1; border-color: #6b46c1; color: white; }
+        .category-btn .cat-badge { background: rgba(255,255,255,0.3); color: white; font-size: 10px; padding: 1px 8px; border-radius: 10px; }
+        .category-btn:not(.active) .cat-badge { background: #edf2f7; color: #4a5568; }
+
+        .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+        .tool-card { background: #f7fafc; border-radius: 12px; padding: 20px; border: 2px solid #e2e8f0; transition: all 0.2s; text-align: center; position: relative; }
+        .tool-card:hover { border-color: #6b46c1; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(107,70,193,0.12); }
+        .tool-card .tool-icon { font-size: 32px; display: block; margin-bottom: 4px; }
+        .tool-card .tool-name { font-weight: 700; font-size: 14px; color: #2d3748; line-height: 1.3; }
+        .tool-card .tool-author { font-size: 11px; color: #6b46c1; font-weight: 600; margin: 2px 0; font-style: italic; }
+        .tool-card .tool-desc { font-size: 11px; color: #718096; margin: 6px 0 12px; line-height: 1.5; }
+        .tool-card .tool-actions { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+        .tool-card .tool-actions .btn { padding: 4px 12px; font-size: 11px; }
+        .tool-card .cat-tag { position: absolute; top: 8px; right: 8px; font-size: 9px; padding: 2px 8px; border-radius: 8px; font-weight: 600; text-transform: uppercase; }
+
+        .studio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .studio-left { display: flex; flex-direction: column; gap: 16px; }
+        .studio-right { display: flex; flex-direction: column; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-weight: 600; font-size: 13px; color: #4a5568; }
+        .form-group input, .form-group textarea, .form-group select { padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border 0.2s; font-family: inherit; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #6b46c1; }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+        /* Model Info Card */
+        .model-info-card { background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border-radius: 12px; padding: 16px 20px; border-left: 4px solid #6b46c1; margin-bottom: 4px; }
+        .model-info-card .mi-title { font-weight: 700; font-size: 16px; color: #553c9a; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .model-info-card .mi-author { font-size: 12px; color: #6b46c1; font-style: italic; margin-bottom: 6px; }
+        .model-info-card .mi-focus { font-size: 13px; color: #4a5568; margin-bottom: 4px; }
+        .model-info-card .mi-use { font-size: 12px; color: #718096; }
+
+        /* Collapse Section */
+        .collapse-section { border: 2px solid #e9d8fd; border-radius: 12px; overflow: hidden; margin-top: 8px; }
+        .collapse-header { background: #faf5ff; padding: 12px 16px; font-weight: 700; font-size: 13px; color: #553c9a; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        .collapse-header:hover { background: #f3e8ff; }
+        .collapse-header .arrow { transition: transform 0.2s; font-size: 12px; }
+        .collapse-section.collapsed .collapse-header .arrow { transform: rotate(-90deg); }
+        .collapse-body { padding: 16px; background: white; border-top: 1px solid #e9d8fd; }
+        .collapse-section.collapsed .collapse-body { display: none; }
+
+        .prompt-preview { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 2px solid #e2e8f0; min-height: 150px; white-space: pre-wrap; font-size: 14px; line-height: 1.8; color: #2d3748; max-height: 250px; overflow-y: auto; position: relative; }
+        .prompt-preview .placeholder { color: #a0aec0; font-style: italic; }
+        .prompt-preview .copy-prompt-btn { position: absolute; top: 8px; right: 8px; background: rgba(107,70,193,0.9); color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .prompt-preview .copy-prompt-btn:hover { background: #553c9a; }
+
+        .quill-wrapper { background: white; border-radius: 12px; border: 2px solid #e2e8f0; overflow: hidden; }
+        .quill-wrapper .ql-toolbar { border: none; border-bottom: 2px solid #e2e8f0; background: #f7fafc; }
+        .quill-wrapper .ql-container { border: none; min-height: 200px; font-size: 14px; }
+        .quill-wrapper .ql-editor { min-height: 200px; }
+        .result-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+
+        .history-sub-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; }
+        .history-sub-tab { padding: 6px 16px; border: none; background: #f7fafc; border-radius: 8px; font-weight: 600; font-size: 13px; color: #4a5568; cursor: pointer; transition: all 0.2s; }
+        .history-sub-tab:hover { background: #edf2f7; }
+        .history-sub-tab.active { background: #6b46c1; color: white; }
+        .history-sub-tab .sub-badge { background: rgba(255,255,255,0.3); color: white; font-size: 10px; padding: 1px 8px; border-radius: 10px; margin-left: 4px; }
+        .history-sub-tab:not(.active) .sub-badge { background: #edf2f7; color: #4a5568; }
+
+        .history-filters { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+        .history-filters select, .history-filters input { padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; }
+        .history-filters select:focus, .history-filters input:focus { outline: none; border-color: #6b46c1; }
+
+        .history-list { display: flex; flex-direction: column; gap: 16px; }
+        .history-item { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .history-item:hover { border-color: #6b46c1; }
+        .history-item .history-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        .history-item .history-title { font-weight: 700; font-size: 15px; color: #2d3748; }
+        .history-item .history-meta { display: flex; gap: 12px; font-size: 12px; color: #718096; flex-wrap: wrap; align-items: center; }
+        .history-item .history-meta .type-badge { background: #e9d8fd; color: #553c9a; padding: 2px 12px; border-radius: 12px; font-weight: 600; }
+        .history-item .history-meta .ai-badge { font-size: 10px; padding: 1px 8px; border-radius: 10px; font-weight: 600; }
+        .history-item .history-meta .ai-badge.chatgpt { background: #10a37f; color: white; }
+        .history-item .history-meta .ai-badge.claude { background: #d97757; color: white; }
+        .history-item .history-meta .ai-badge.gemini { background: #4285f4; color: white; }
+        .history-item .history-meta .ai-badge.deepseek { background: #4a6cf7; color: white; }
+        .history-item .history-meta .ai-badge.other { background: #718096; color: white; }
+        .history-item .history-prompt { font-size: 13px; color: #4a5568; background: white; padding: 8px 12px; border-radius: 6px; border-left: 3px solid #6b46c1; margin-bottom: 10px; max-height: 60px; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+        .history-item .history-prompt:hover { background: #f7fafc; }
+        .history-item .history-prompt.expanded { max-height: none; white-space: pre-wrap; }
+        .history-item .history-result { font-size: 13px; color: #2d3748; margin-bottom: 8px; max-height: 80px; overflow: hidden; text-overflow: ellipsis; }
+        .history-item .history-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid #edf2f7; padding-top: 10px; }
+        .history-item .history-actions .btn { padding: 3px 12px; font-size: 11px; }
+
+        .empty-state { padding: 60px 20px; text-align: center; color: #a0aec0; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 15px; }
+        .empty-state h3 { color: #4a5568; margin-bottom: 8px; }
+        .empty-state p { font-size: 14px; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        .modal-overlay.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal { background: white; border-radius: 20px; max-width: 850px; width: 100%; max-height: 95vh; overflow-y: auto; padding: 30px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .modal-close { position: sticky; top: 0; float: right; background: #fc8181; border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; transition: 0.2s; z-index: 10; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: #f56565; transform: rotate(90deg); }
+        .modal-title { font-size: 22px; font-weight: 700; color: #1a2332; margin-bottom: 20px; padding-right: 50px; }
+        .modal-body { display: flex; flex-direction: column; gap: 16px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 2px solid #edf2f7; flex-wrap: wrap; }
+
+        .toast { position: fixed; bottom: 30px; right: 30px; padding: 16px 28px; border-radius: 12px; color: white; font-weight: 600; z-index: 2000; animation: slideUp 0.3s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.2); max-width: 400px; }
+        .toast.success { background: #48bb78; }
+        .toast.error { background: #fc8181; }
+        .toast.info { background: #4299e1; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-label { font-weight: 700; font-size: 14px; color: #2d3748; margin-top: 4px; margin-bottom: 2px; padding-bottom: 4px; border-bottom: 2px solid #edf2f7; }
+        .view-result-wrapper { background: white; border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; max-height: 350px; overflow-y: auto; }
+        .view-result-wrapper .ql-editor { padding: 0; }
+        .ai-source-select { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .ai-source-select select { padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; flex: 1; }
+        .ai-source-select select:focus { outline: none; border-color: #6b46c1; }
+        .add-ai-modal .modal { max-width: 750px; }
+        .add-ai-modal .prompt-display { background: #f7fafc; padding: 12px 16px; border-radius: 8px; font-size: 14px; color: #4a5568; max-height: 120px; overflow-y: auto; white-space: pre-wrap; border-left: 3px solid #6b46c1; position: relative; }
+        .add-ai-modal .prompt-display .copy-prompt-btn { position: absolute; top: 4px; right: 4px; background: rgba(107,70,193,0.9); color: white; border: none; padding: 2px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .add-ai-modal .prompt-display .copy-prompt-btn:hover { background: #553c9a; }
+
+        .main-content { display: none; }
+        .main-content.visible { display: block; }
+
+        @media (max-width: 992px) {
+            .studio-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .form-row-3 { grid-template-columns: 1fr 1fr; }
+            .main-tabs-header { padding: 0 12px; }
+            .main-tab-btn { padding: 12px 16px; font-size: 13px; }
+            .main-tab-content { padding: 16px; }
+            .tools-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+            .header { flex-direction: column; align-items: stretch; }
+            .search-box input { width: 100%; }
+            .modal { padding: 20px; }
+            .history-item .history-header { flex-direction: column; align-items: flex-start; }
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .btn { padding: 8px 14px; font-size: 13px; }
+            .tools-grid { grid-template-columns: 1fr; }
+            .tool-card { padding: 14px; }
+            .main-tab-btn { padding: 10px 12px; font-size: 12px; }
+            .main-tab-content { padding: 12px; }
+            .history-filters { flex-direction: column; align-items: stretch; }
+            .form-row-3 { grid-template-columns: 1fr; }
+            .login-box { padding: 24px 20px; }
+        }
+        .modal::-webkit-scrollbar { width: 6px; }
+        .modal::-webkit-scrollbar-track { background: #f7fafc; }
+        .modal::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="login-overlay active" id="loginOverlay">
+        <div class="login-box">
+            <span class="login-icon">🔐</span>
+            <h2>Login</h2>
+            <p>Masuk untuk mengakses Counseling Models</p>
+            <div class="form-group">
+                <label>👤 Username</label>
+                <input type="text" id="loginUsername" placeholder="Masukkan username" value="">
+            </div>
+            <div class="form-group">
+                <label>🔑 Password</label>
+                <input type="password" id="loginPassword" placeholder="Masukkan password" value="" onkeydown="if(event.key==='Enter') doLogin()">
+            </div>
+            <div class="form-remember">
+                <input type="checkbox" id="loginRemember" checked>
+                <label for="loginRemember">Ingat saya</label>
+            </div>
+            <button class="btn-login" id="loginBtn" onclick="doLogin()">Login</button>
+            <div class="login-error" id="loginError">❌ Username atau password salah!</div>
+            <div class="login-loading" id="loginLoading">⏳ Memeriksa...</div>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="container" id="app">
+            <div class="header">
+                <h1>🧠 AI Counseling Models <span>25 Model</span></h1>
+                <div class="header-actions">
+                    <span class="user-info" id="userInfo">
+                        👤 <span id="currentUser">-</span>
+                        <span class="user-role" id="userRole">user</span>
+                    </span>
+                    <button class="btn-logout" onclick="doLogout()">🚪 Logout</button>
+                    <div class="search-box">
+                        <span class="icon">🔍</span>
+                        <input type="text" id="searchInput" placeholder="Cari model..." oninput="renderTools()">
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+                </div>
+            </div>
+
+            <div class="main-tabs-container">
+                <div class="main-tabs-header">
+                    <button class="main-tab-btn active" data-tab="tab1" onclick="switchMainTab('tab1')">
+                        📚 Katalog Model
+                        <span class="badge-main" id="tab1Badge">25</span>
+                    </button>
+                    <button class="main-tab-btn" data-tab="tab2" onclick="switchMainTab('tab2')">
+                        ✏️ AI Prompt Studio
+                        <span class="badge-main">New</span>
+                    </button>
+                    <button class="main-tab-btn" data-tab="tab3" onclick="switchMainTab('tab3')">
+                        📋 History
+                        <span class="badge-main" id="tab3Badge">0</span>
+                    </button>
+                </div>
+
+                <div class="main-tab-content active" id="tab1">
+                    <div style="background:#faf5ff;border-radius:12px;padding:16px 20px;margin-bottom:20px;border-left:4px solid #6b46c1;">
+                        <strong style="color:#553c9a;font-size:15px;">🧠 25 Model Konseling Profesional</strong>
+                        <p style="color:#4a5568;font-size:13px;margin-top:6px;line-height:1.7;">
+                            Pilih model konseling yang sesuai dengan kebutuhan klien Anda. Setiap model memiliki pendekatan, tokoh, dan teknik yang berbeda. Klik <strong>📖 Info</strong> untuk melihat detail model, atau <strong>✏️ Gunakan</strong> untuk membuat sesi konseling berbasis model tersebut.
+                        </p>
+                    </div>
+                    <div class="category-filter" id="categoryFilter"></div>
+                    <div class="tools-grid" id="toolsGrid"></div>
+                </div>
+
+                <div class="main-tab-content" id="tab2">
+                    <div class="studio-grid">
+                        <div class="studio-left">
+                            <div class="form-group">
+                                <label>📂 Pilih Kategori Model</label>
+                                <select id="selectedCategory" onchange="onCategoryChange()"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>🧠 Pilih Model Konseling</label>
+                                <select id="selectedModel" onchange="onModelChange()"></select>
+                            </div>
+
+                            <div id="modelInfoCard"></div>
+
+                            <div class="section-label">👤 Data Klien</div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Nama Klien</label>
+                                    <input type="text" id="field_client_name" placeholder="Contoh: Ahmad Fauzi">
+                                </div>
+                                <div class="form-group">
+                                    <label>Usia</label>
+                                    <input type="text" id="field_client_age" placeholder="Contoh: 28">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Jenis Kelamin</label>
+                                    <input type="text" id="field_client_gender" placeholder="Contoh: Laki-laki">
+                                </div>
+                                <div class="form-group">
+                                    <label>Pekerjaan</label>
+                                    <input type="text" id="field_client_job" placeholder="Contoh: Karyawan">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Masalah Utama</label>
+                                <textarea id="field_main_problem" placeholder="Ceritakan masalah utama klien..." rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Tujuan Konseling</label>
+                                <textarea id="field_goal" placeholder="Apa yang ingin dicapai..." rows="2"></textarea>
+                            </div>
+
+                            <div class="collapse-section" id="modelFieldsSection">
+                                <div class="collapse-header" onclick="toggleCollapse('modelFieldsSection')">
+                                    <span>🔧 Field Khusus Model: <span id="modelFieldsTitle">-</span></span>
+                                    <span class="arrow">▼</span>
+                                </div>
+                                <div class="collapse-body" id="modelFieldsBody"></div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>📌 Judul Sesi</label>
+                                    <input type="text" id="resultTitle" placeholder="Judul sesi konseling...">
+                                </div>
+                                <div class="form-group">
+                                    <label>👤 Dibuat Oleh</label>
+                                    <input type="text" id="createdBy" placeholder="Nama..." value="">
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary" onclick="generatePrompt()">📝 Generate Prompt</button>
+                        </div>
+
+                        <div class="studio-right">
+                            <div class="form-group">
+                                <label>📄 Prompt yang Dihasilkan</label>
+                                <div class="prompt-preview" id="promptPreview">
+                                    <span class="placeholder">Pilih model dan isi form untuk menghasilkan prompt...</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>🤖 Pilih AI Source</label>
+                                <div class="ai-source-select">
+                                    <select id="aiSource">
+                                        <option value="ChatGPT">ChatGPT</option>
+                                        <option value="Claude">Claude</option>
+                                        <option value="Gemini">Gemini</option>
+                                        <option value="DeepSeek">DeepSeek</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>📝 Hasil AI (Paste di sini)</label>
+                                <div class="quill-wrapper">
+                                    <div id="resultEditor"></div>
+                                </div>
+                            </div>
+                            <div class="result-actions">
+                                <button class="btn btn-success" onclick="saveResult()">💾 Simpan Hasil</button>
+                                <button class="btn btn-warning" onclick="clearForm()">🗑️ Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="main-tab-content" id="tab3">
+                    <div class="history-sub-tabs" id="historySubTabs">
+                        <button class="history-sub-tab active" data-subtab="all" onclick="switchHistorySubTab('all')">
+                            📋 All <span class="sub-badge" id="subAll">0</span>
+                        </button>
+                        <button class="history-sub-tab" data-subtab="today" onclick="switchHistorySubTab('today')">
+                            📅 Hari Ini <span class="sub-badge" id="subToday">0</span>
+                        </button>
+                    </div>
+                    <div class="history-filters">
+                        <select id="historyFilterTool" onchange="renderHistory()">
+                            <option value="all">📋 All Models</option>
+                        </select>
+                        <input type="text" id="historySearch" placeholder="🔍 Cari..." oninput="renderHistory()">
+                        <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑️ Hapus Semua</button>
+                        <span style="font-size:13px;color:#718096;" id="historyCount">0 items</span>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <div class="empty-state">
+                            <div class="icon">🧠</div>
+                            <h3>Belum ada sesi konseling</h3>
+                            <p>Pergi ke Tab "AI Prompt Studio" untuk mulai membuat sesi konseling</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
+            <div class="modal-title" id="infoModalTitle">📋 Info Model</div>
+            <div class="modal-body" id="infoModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('infoModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+            <div class="modal-title" id="viewModalTitle">👁️ Detail Sesi</div>
+            <div class="modal-body">
+                <div id="viewMeta" style="font-size:13px;color:#718096;margin-bottom:12px;padding:8px 12px;background:#f7fafc;border-radius:8px;"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt:</div>
+                <div style="background:#f7fafc;padding:12px 16px;border-radius:8px;font-size:14px;color:#4a5568;white-space:pre-wrap;max-height:150px;overflow-y:auto;border-left:3px solid #6b46c1;" id="viewPrompt"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">🤖 Sumber AI:</div>
+                <div style="font-size:14px;color:#4a5568;margin-bottom:8px;" id="viewSource"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">📝 Hasil AI:</div>
+                <div class="view-result-wrapper" id="viewResultWrapper"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="copyViewResult()">📋 Copy</button>
+                <button class="btn btn-success" onclick="downloadViewDoc()">📥 Download .doc</button>
+                <button class="btn btn-outline" onclick="closeModal('viewModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay add-ai-modal" id="addAiModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('addAiModal')">✕</button>
+            <div class="modal-title">🤖 Tambah Hasil AI Baru</div>
+            <div class="modal-body">
+                <input type="hidden" id="addAiId">
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt (tidak bisa diedit):</div>
+                <div class="prompt-display" id="addAiPromptDisplay"></div>
+                <div class="form-group">
+                    <label>🤖 Pilih AI Source</label>
+                    <select id="addAiSource">
+                        <option value="ChatGPT">ChatGPT</option>
+                        <option value="Claude">Claude</option>
+                        <option value="Gemini">Gemini</option>
+                        <option value="DeepSeek">DeepSeek</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>📝 Hasil AI (Paste di sini)</label>
+                    <div class="quill-wrapper">
+                        <div id="addAiEditor"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>👤 Dibuat Oleh</label>
+                    <input type="text" id="addAiCreatedBy" placeholder="Nama...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addAiModal')">Batal</button>
+                <button class="btn btn-success" onclick="saveAddAiResult()">💾 Simpan Hasil</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="duplicateModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('duplicateModal')">✕</button>
+            <div class="modal-title">📋 Duplikat Prompt</div>
+            <div class="modal-body">
+                <input type="hidden" id="dupId">
+                <input type="hidden" id="dupModelType">
+                <div class="form-group">
+                    <label>🧠 Model Konseling</label>
+                    <input type="text" id="dupModelDisplay" disabled style="background:#f7fafc;font-weight:600;">
+                </div>
+                <div class="form-group">
+                    <label>📌 Judul Baru</label>
+                    <input type="text" id="dupTitle" placeholder="Judul baru...">
+                </div>
+                <div class="form-group">
+                    <label>👤 Dibuat Oleh</label>
+                    <input type="text" id="dupCreatedBy" placeholder="Nama...">
+                </div>
+                <div class="form-group">
+                    <label>📄 Prompt yang Dihasilkan</label>
+                    <div class="prompt-preview" id="dupPromptPreview" style="min-height:100px;max-height:200px;">
+                        <span class="placeholder">Generate prompt dari form di atas...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('duplicateModal')">Batal</button>
+                <button class="btn btn-success" onclick="saveDuplicate()">💾 Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CATEGORIES ====================
+        const CATEGORIES = {
+            psychodynamic: { id: 'psychodynamic', icon: '🅰️', name: 'Psikodinamik & Analitik', color: '#805ad5', desc: 'Alam bawah sadar, masa kecil, konflik batin' },
+            cognitive: { id: 'cognitive', icon: '🅱️', name: 'Kognitif & Behavioral', color: '#3182ce', desc: 'Pikiran, perilaku, perubahan konkret' },
+            humanistic: { id: 'humanistic', icon: '🅲', name: 'Humanistik & Eksistensial', color: '#38b2ac', desc: 'Potensi diri, makna hidup, pertumbuhan' },
+            systemic: { id: 'systemic', icon: '🅳', name: 'Sistemik & Kontekstual', color: '#ed8936', desc: 'Sistem, relasi, konteks sosial' },
+            special: { id: 'special', icon: '🅴', name: 'Khusus & Kreatif', color: '#ed64a6', desc: 'Pendekatan khusus & terapi kreatif' },
+            custom: { id: 'custom', icon: '✏️', name: 'Model Custom', color: '#718096', desc: 'Tulis model konseling sendiri' }
+        };
+
+        // ==================== MODEL DEFINITIONS ====================
+        const MODELS = {
+            // ========== PSIKODINAMIK & ANALITIK ==========
+            psychoanalysis: {
+                id: 'psychoanalysis', cat: 'psychodynamic', icon: '🛋️',
+                name: 'Psikoanalisis Klasik', author: 'Sigmund Freud',
+                desc: 'Alam bawah sadar, konflik id-ego-superego, pengalaman masa kecil',
+                focus: 'Alam bawah sadar, konflik id-ego-superego, pengalaman masa kecil',
+                use_for: 'Trauma masa kecil, masalah mendalam, pola berulang',
+                fields: [
+                    { key: 'unconscious_conflict', label: 'Konflik Bawah Sadar', placeholder: 'Konflik yang tidak disadari...' },
+                    { key: 'defense_mechanism', label: 'Mekanisme Pertahanan', placeholder: 'Contoh: Represi, denial, proyeksi...' },
+                    { key: 'childhood_memory', label: 'Memori Masa Kecil', placeholder: 'Pengalaman masa kecil yang relevan...' },
+                    { key: 'id_ego_superego', label: 'Konflik Id-Ego-Superego', placeholder: 'Dinamika id, ego, superego...' },
+                    { key: 'transference', label: 'Transferensi', placeholder: 'Perasaan klien terhadap konselor...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan PSIKOANALISIS KLASIK (Sigmund Freud) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nDINAMIKA BAWAH SADAR:\n- Konflik Bawah Sadar: {unconscious_conflict}\n- Mekanisme Pertahanan: {defense_mechanism}\n- Memori Masa Kecil: {childhood_memory}\n- Konflik Id-Ego-Superego: {id_ego_superego}\n- Transferensi: {transference}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING PSIKOANALISIS KLASIK ===\n\nA. TUJUAN SESI\n- Menggali konflik bawah sadar\n- Menganalisis mekanisme pertahanan\n- Menghubungkan masa kecil dengan masalah saat ini\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang masa kecil]\n2. [Pertanyaan tentang mimpi & fantasi]\n3. [Pertanyaan tentang pola berulang]\n4. [Pertanyaan tentang perasaan transferensi]\n\nC. TEKNIK KONSELING\n- Free association\n- Dream analysis\n- Transference analysis\n- Interpretation\n\nD. ANALISIS DINAMIKA PSIKIS\n[Analisis id, ego, superego]\n\nE. RENCANA INTERVENSI\n[Rencana jangka panjang]\n\nF. HOMEWORK\n- Dream journal\n- Free writing\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            psychodynamic: {
+                id: 'psychodynamic', cat: 'psychodynamic', icon: '🌊',
+                name: 'Psikodinamik', author: 'Carl Jung, Melanie Klein',
+                desc: 'Pola bawah sadar, relasi objek, mekanisme pertahanan',
+                focus: 'Pola bawah sadar, relasi objek, mekanisme pertahanan',
+                use_for: 'Masalah relasi, pola berulang, konflik internal',
+                fields: [
+                    { key: 'recurring_pattern', label: 'Pola Berulang', placeholder: 'Pola yang berulang dalam hidup klien...' },
+                    { key: 'object_relations', label: 'Relasi Objek', placeholder: 'Pola relasi dengan orang lain...' },
+                    { key: 'defense_mechanism', label: 'Mekanisme Pertahanan', placeholder: 'Contoh: Splitting, projection...' },
+                    { key: 'attachment_style', label: 'Gaya Kelekatan', placeholder: 'Contoh: Anxious, avoidant, secure...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan PSIKODINAMIK untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nDINAMIKA PSIKODINAMIK:\n- Pola Berulang: {recurring_pattern}\n- Relasi Objek: {object_relations}\n- Mekanisme Pertahanan: {defense_mechanism}\n- Gaya Kelekatan: {attachment_style}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING PSIKODINAMIK ===\n\nA. TUJUAN SESI\n- Mengidentifikasi pola relasi berulang\n- Memahami mekanisme pertahanan\n- Membangun insight\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang pola relasi]\n2. [Pertanyaan tentang kelekatan]\n3. [Pertanyaan tentang perasaan saat ini]\n\nC. TEKNIK KONSELING\n- Object relations analysis\n- Attachment-based exploration\n- Defense analysis\n- Insight-oriented therapy\n\nD. ANALISIS POLA\n[Analisis pola relasi & pertahanan]\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            jungian: {
+                id: 'jungian', cat: 'psychodynamic', icon: '🔮',
+                name: 'Analitik Jungian', author: 'Carl Jung',
+                desc: 'Arketipe, shadow, anima/animus, individuasi',
+                focus: 'Arketipe, shadow, anima/animus, individuasi',
+                use_for: 'Pencarian makna, krisis spiritual, midlife crisis',
+                fields: [
+                    { key: 'archetype', label: 'Arketipe Dominan', placeholder: 'Contoh: Hero, Sage, Caregiver...' },
+                    { key: 'shadow', label: 'Shadow', placeholder: 'Aspek gelap yang belum diintegrasikan...' },
+                    { key: 'anima_animus', label: 'Anima/Animus', placeholder: 'Aspek feminin/maskulin dalam diri...' },
+                    { key: 'individuation', label: 'Proses Individuasi', placeholder: 'Tahap individuasi klien...' },
+                    { key: 'dream_symbol', label: 'Simbol Mimpi', placeholder: 'Simbol yang muncul dalam mimpi...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan ANALITIK JUNGIAN (Carl Jung) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS JUNGIAN:\n- Arketipe Dominan: {archetype}\n- Shadow: {shadow}\n- Anima/Animus: {anima_animus}\n- Proses Individuasi: {individuation}\n- Simbol Mimpi: {dream_symbol}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING ANALITIK JUNGIAN ===\n\nA. TUJUAN SESI\n- Mengintegrasikan shadow\n- Menyeimbangkan anima/animus\n- Mendukung proses individuasi\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang arketipe]\n2. [Pertanyaan tentang mimpi]\n3. [Pertanyaan tentang shadow]\n\nC. TEKNIK KONSELING\n- Dream analysis\n- Active imagination\n- Sandplay therapy\n- Archetype exploration\n\nD. ANALISIS PSIKIS\n[Analisis arketipe & individuasi]\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Dream journal\n- Active imagination\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+
+            // ========== KOGNITIF & BEHAVIORAL ==========
+            cbt: {
+                id: 'cbt', cat: 'cognitive', icon: '🧩',
+                name: 'CBT (Cognitive Behavioral Therapy)', author: 'Aaron Beck',
+                desc: 'Pikiran → Perasaan → Perilaku; cognitive distortion',
+                focus: 'Pikiran → Perasaan → Perilaku; cognitive distortion',
+                use_for: 'Kecemasan, depresi, fobia, OCD',
+                fields: [
+                    { key: 'automatic_thought', label: 'Automatic Thought', placeholder: 'Pikiran otomatis yang muncul...' },
+                    { key: 'cognitive_distortion', label: 'Cognitive Distortion', placeholder: 'Contoh: Catastrophizing, all-or-nothing...' },
+                    { key: 'evidence_for', label: 'Bukti yang Mendukung', placeholder: 'Bukti yang mendukung pikiran...' },
+                    { key: 'evidence_against', label: 'Bukti yang Menentang', placeholder: 'Bukti yang menentang pikiran...' },
+                    { key: 'alternative_thought', label: 'Pikiran Alternatif', placeholder: 'Pikiran yang lebih seimbang...' },
+                    { key: 'behavioral_experiment', label: 'Behavioral Experiment', placeholder: 'Eksperimen perilaku yang bisa dilakukan...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan CBT (Cognitive Behavioral Therapy - Aaron Beck) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS CBT:\n- Automatic Thought: {automatic_thought}\n- Cognitive Distortion: {cognitive_distortion}\n- Bukti Mendukung: {evidence_for}\n- Bukti Menentang: {evidence_against}\n- Pikiran Alternatif: {alternative_thought}\n- Behavioral Experiment: {behavioral_experiment}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING CBT ===\n\nA. TUJUAN SESI\n- Mengidentifikasi pikiran otomatis negatif\n- Mengenali cognitive distortion\n- Mengembangkan pikiran alternatif\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang situasi pemicu]\n2. [Pertanyaan tentang automatic thought]\n3. [Pertanyaan tentang emosi & perilaku]\n\nC. TEKNIK KONSELING\n- Cognitive restructuring\n- Socratic questioning\n- Thought record\n- Behavioral experiment\n\nD. ANALISIS COGNITIVE\n[Cognitive conceptualization]\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Thought record\n- Behavioral experiment\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            rebt: {
+                id: 'rebt', cat: 'cognitive', icon: '💭',
+                name: 'REBT (Rational Emotive Behavior Therapy)', author: 'Albert Ellis',
+                desc: 'Keyakinan irasional, ABCDE model',
+                focus: 'Keyakinan irasional, ABCDE model',
+                use_for: 'Marah, perfeksionisme, self-defeating',
+                fields: [
+                    { key: 'activating_event', label: 'Activating Event (A)', placeholder: 'Peristiwa pemicu...' },
+                    { key: 'irrational_belief', label: 'Irrational Belief (B)', placeholder: 'Keyakinan irasional...' },
+                    { key: 'consequence', label: 'Consequence (C)', placeholder: 'Konsekuensi emosi & perilaku...' },
+                    { key: 'dispute', label: 'Dispute (D)', placeholder: 'Bantahan terhadap keyakinan irasional...' },
+                    { key: 'effective_belief', label: 'Effective Belief (E)', placeholder: 'Keyakinan baru yang rasional...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan REBT (Rational Emotive Behavior Therapy - Albert Ellis) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS ABCDE:\n- A (Activating Event): {activating_event}\n- B (Irrational Belief): {irrational_belief}\n- C (Consequence): {consequence}\n- D (Dispute): {dispute}\n- E (Effective Belief): {effective_belief}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING REBT ===\n\nA. TUJUAN SESI\n- Mengidentifikasi keyakinan irasional\n- Mendisput keyakinan irasional\n- Mengembangkan keyakinan rasional\n\nB. PERTANYAAN EKSPLORASI (ABCDE)\n1. [Pertanyaan tentang A]\n2. [Pertanyaan tentang B]\n3. [Pertanyaan tentang C]\n4. [Pertanyaan tentang D]\n5. [Pertanyaan tentang E]\n\nC. TEKNIK KONSELING\n- Disputing irrational beliefs\n- Socratic dialogue\n- Rational emotive imagery\n- Homework assignment\n\nD. ANALISIS ABCDE\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- ABCDE worksheet\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            behavior: {
+                id: 'behavior', cat: 'cognitive', icon: '🎯',
+                name: 'Behavior Therapy', author: 'B.F. Skinner, Joseph Wolpe',
+                desc: 'Perilaku yang bisa diubah, reinforcement',
+                focus: 'Perilaku yang bisa diubah, reinforcement',
+                use_for: 'Fobia, OCD, kebiasaan buruk, adiksi',
+                fields: [
+                    { key: 'target_behavior', label: 'Target Behavior', placeholder: 'Perilaku yang ingin diubah...' },
+                    { key: 'antecedent', label: 'Antecedent (Pemicu)', placeholder: 'Apa yang memicu perilaku...' },
+                    { key: 'consequence', label: 'Consequence', placeholder: 'Konsekuensi dari perilaku...' },
+                    { key: 'reinforcement', label: 'Reinforcement Plan', placeholder: 'Rencana penguatan...' },
+                    { key: 'exposure_hierarchy', label: 'Exposure Hierarchy', placeholder: 'Tahapan exposure untuk fobia...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan BEHAVIOR THERAPY (B.F. Skinner, Joseph Wolpe) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS BEHAVIORAL:\n- Target Behavior: {target_behavior}\n- Antecedent: {antecedent}\n- Consequence: {consequence}\n- Reinforcement: {reinforcement}\n- Exposure Hierarchy: {exposure_hierarchy}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING BEHAVIOR THERAPY ===\n\nA. TUJUAN SESI\n- Mengidentifikasi target behavior\n- Menganalisis ABC perilaku\n- Merancang intervensi behavioral\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang target behavior]\n2. [Pertanyaan tentang antecedent]\n3. [Pertanyaan tentang consequence]\n\nC. TEKNIK KONSELING\n- Systematic desensitization\n- Exposure therapy\n- Reinforcement\n- Behavior modification\n\nD. ANALISIS ABC\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Behavior log\n- Exposure practice\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            dbt: {
+                id: 'dbt', cat: 'cognitive', icon: '⚖️',
+                name: 'DBT (Dialectical Behavior Therapy)', author: 'Marsha Linehan',
+                desc: 'Regulasi emosi, distress tolerance, mindfulness',
+                focus: 'Regulasi emosi, distress tolerance, mindfulness',
+                use_for: 'BPD, self-harm, emosi labil, suicidal',
+                fields: [
+                    { key: 'emotion_dysregulation', label: 'Emotion Dysregulation', placeholder: 'Pola emosi yang tidak stabil...' },
+                    { key: 'distress_triggers', label: 'Distress Triggers', placeholder: 'Pemicu distress...' },
+                    { key: 'self_harm_behavior', label: 'Self-Harm Behavior', placeholder: 'Perilaku menyakiti diri (jika ada)...' },
+                    { key: 'mindfulness_practice', label: 'Mindfulness Practice', placeholder: 'Latihan mindfulness yang cocok...' },
+                    { key: 'interpersonal_pattern', label: 'Interpersonal Pattern', placeholder: 'Pola hubungan interpersonal...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan DBT (Dialectical Behavior Therapy - Marsha Linehan) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS DBT:\n- Emotion Dysregulation: {emotion_dysregulation}\n- Distress Triggers: {distress_triggers}\n- Self-Harm Behavior: {self_harm_behavior}\n- Mindfulness Practice: {mindfulness_practice}\n- Interpersonal Pattern: {interpersonal_pattern}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING DBT ===\n\nA. TUJUAN SESI\n- Mengembangkan regulasi emosi\n- Meningkatkan distress tolerance\n- Membangun mindfulness\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang emosi]\n2. [Pertanyaan tentang distress]\n3. [Pertanyaan tentang hubungan]\n\nC. 4 MODUL DBT\n1. Mindfulness\n2. Distress Tolerance\n3. Emotion Regulation\n4. Interpersonal Effectiveness\n\nD. ANALISIS\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Diary card\n- Mindfulness practice\n\n⚠️ CATATAN: Untuk self-harm, rujuk ke psikiater jika perlu.\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            act: {
+                id: 'act', cat: 'cognitive', icon: '🌱',
+                name: 'ACT (Acceptance & Commitment Therapy)', author: 'Steven Hayes',
+                desc: 'Penerimaan, defusion, nilai hidup',
+                focus: 'Penerimaan, defusion, nilai hidup',
+                use_for: 'Kecemasan kronis, depresi, chronic pain',
+                fields: [
+                    { key: 'avoidance_pattern', label: 'Experiential Avoidance', placeholder: 'Pola menghindari pengalaman tidak nyaman...' },
+                    { key: 'cognitive_fusion', label: 'Cognitive Fusion', placeholder: 'Pikiran yang menyatu dengan diri...' },
+                    { key: 'values', label: 'Values', placeholder: 'Nilai hidup yang penting...' },
+                    { key: 'committed_action', label: 'Committed Action', placeholder: 'Tindakan komitmen yang bisa dilakukan...' },
+                    { key: 'present_moment', label: 'Present Moment', placeholder: 'Latihan hadir saat ini...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan ACT (Acceptance & Commitment Therapy - Steven Hayes) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS ACT:\n- Experiential Avoidance: {avoidance_pattern}\n- Cognitive Fusion: {cognitive_fusion}\n- Values: {values}\n- Committed Action: {committed_action}\n- Present Moment: {present_moment}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING ACT ===\n\nA. TUJUAN SESI\n- Mengembangkan acceptance\n- Melatih defusion\n- Mengklarifikasi values\n- Membangun committed action\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang avoidance]\n2. [Pertanyaan tentang fusion]\n3. [Pertanyaan tentang values]\n\nC. 6 PROSES ACT\n1. Acceptance\n2. Cognitive Defusion\n3. Present Moment\n4. Self-as-Context\n5. Values\n6. Committed Action\n\nD. ANALISIS\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Values clarification\n- Defusion exercise\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            schema: {
+                id: 'schema', cat: 'cognitive', icon: '🗂️',
+                name: 'Schema Therapy', author: 'Jeffrey Young',
+                desc: 'Schema maladaptif, mode',
+                focus: 'Schema maladaptif, mode',
+                use_for: 'Masalah kepribadian, pola berulang kronis',
+                fields: [
+                    { key: 'maladaptive_schema', label: 'Schema Maladaptif', placeholder: 'Contoh: Abandonment, defectiveness...' },
+                    { key: 'coping_style', label: 'Coping Style', placeholder: 'Contoh: Surrender, avoidance, overcompensation...' },
+                    { key: 'mode', label: 'Mode', placeholder: 'Mode yang aktif saat ini...' },
+                    { key: 'unmet_need', label: 'Unmet Core Need', placeholder: 'Kebutuhan inti yang tidak terpenuhi...' },
+                    { key: 'origin', label: 'Origin', placeholder: 'Asal schema (masa kecil)...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan SCHEMA THERAPY (Jeffrey Young) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS SCHEMA:\n- Schema Maladaptif: {maladaptive_schema}\n- Coping Style: {coping_style}\n- Mode: {mode}\n- Unmet Core Need: {unmet_need}\n- Origin: {origin}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING SCHEMA THERAPY ===\n\nA. TUJUAN SESI\n- Mengidentifikasi schema maladaptif\n- Memahami coping style\n- Memenuhi unmet core need\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang schema]\n2. [Pertanyaan tentang coping]\n3. [Pertanyaan tentang unmet need]\n\nC. TEKNIK KONSELING\n- Schema identification\n- Limited reparenting\n- Imagery rescripting\n- Mode work\n- Cognitive restructuring\n\nD. ANALISIS SCHEMA\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Schema diary\n- Imagery exercise\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+
+            // ========== HUMANISTIK & EKSISTENSIAL ==========
+            person_centered: {
+                id: 'person_centered', cat: 'humanistic', icon: '💚',
+                name: 'Person-Centered Therapy', author: 'Carl Rogers',
+                desc: 'Empati, unconditional positive regard, congruence',
+                focus: 'Empati, unconditional positive regard, congruence',
+                use_for: 'Masalah umum, pencarian diri, pengembangan pribadi',
+                fields: [
+                    { key: 'self_concept', label: 'Self-Concept', placeholder: 'Bagaimana klien melihat dirinya...' },
+                    { key: 'ideal_self', label: 'Ideal Self', placeholder: 'Diri yang diinginkan...' },
+                    { key: 'incongruence', label: 'Incongruence', placeholder: 'Kesenjangan self vs ideal self...' },
+                    { key: 'conditions_of_worth', label: 'Conditions of Worth', placeholder: 'Syarat berharga yang dirasakan...' },
+                    { key: 'actualizing_tendency', label: 'Actualizing Tendency', placeholder: 'Potensi yang ingin dikembangkan...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan PERSON-CENTERED THERAPY (Carl Rogers) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS PERSON-CENTERED:\n- Self-Concept: {self_concept}\n- Ideal Self: {ideal_self}\n- Incongruence: {incongruence}\n- Conditions of Worth: {conditions_of_worth}\n- Actualizing Tendency: {actualizing_tendency}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING PERSON-CENTERED ===\n\nA. TUJUAN SESI\n- Menciptakan ruang aman & empatik\n- Meningkatkan congruence\n- Mendukung aktualisasi diri\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang self-concept]\n2. [Pertanyaan tentang ideal self]\n3. [Pertanyaan tentang perasaan]\n\nC. 3 KONDISI INTI ROGERS\n1. Unconditional Positive Regard\n2. Empathic Understanding\n3. Congruence\n\nD. ANALISIS\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Self-reflection journal\n- Self-compassion practice\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            gestalt: {
+                id: 'gestalt', cat: 'humanistic', icon: '🎭',
+                name: 'Gestalt Therapy', author: 'Fritz Perls',
+                desc: 'Kesadaran saat ini (here and now), unfinished business',
+                focus: 'Kesadaran saat ini (here and now), unfinished business',
+                use_for: 'Konflik batin, blocked emotion, ekspresi diri',
+                fields: [
+                    { key: 'unfinished_business', label: 'Unfinished Business', placeholder: 'Urusan yang belum selesai...' },
+                    { key: 'here_now_awareness', label: 'Here & Now Awareness', placeholder: 'Apa yang dirasakan saat ini...' },
+                    { key: 'body_awareness', label: 'Body Awareness', placeholder: 'Sensasi tubuh yang dirasakan...' },
+                    { key: 'empty_chair', label: 'Empty Chair Target', placeholder: 'Siapa/apa yang ingin diajak dialog...' },
+                    { key: 'contact_boundary', label: 'Contact Boundary', placeholder: 'Pola kontak dengan lingkungan...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan GESTALT THERAPY (Fritz Perls) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS GESTALT:\n- Unfinished Business: {unfinished_business}\n- Here & Now Awareness: {here_now_awareness}\n- Body Awareness: {body_awareness}\n- Empty Chair Target: {empty_chair}\n- Contact Boundary: {contact_boundary}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING GESTALT ===\n\nA. TUJUAN SESI\n- Meningkatkan kesadaran saat ini\n- Menyelesaikan unfinished business\n- Mengintegrasikan aspek diri\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang here & now]\n2. [Pertanyaan tentang body awareness]\n3. [Pertanyaan tentang unfinished business]\n\nC. TEKNIK KONSELING\n- Empty chair technique\n- Two-chair technique\n- Body awareness\n- Experimentation\n- Here & now focus\n\nD. ANALISIS\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Body scan\n- Awareness exercise\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            logotherapy: {
+                id: 'logotherapy', cat: 'humanistic', icon: '🌟',
+                name: 'Logoterapi', author: 'Viktor Frankl',
+                desc: 'Pencarian makna hidup, existential vacuum',
+                focus: 'Pencarian makna hidup, existential vacuum',
+                use_for: 'Krisis eksistensial, kehilangan, quarter-life crisis',
+                fields: [
+                    { key: 'existential_vacuum', label: 'Existential Vacuum', placeholder: 'Kekosongan makna yang dirasakan...' },
+                    { key: 'meaning_source', label: 'Sumber Makna', placeholder: 'Apa yang memberi makna hidup...' },
+                    { key: 'values', label: 'Values', placeholder: 'Nilai-nilai yang dipegang...' },
+                    { key: 'suffering', label: 'Suffering', placeholder: 'Penderitaan yang dialami...' },
+                    { key: 'responsibility', label: 'Responsibility', placeholder: 'Tanggung jawab hidup yang dirasakan...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan LOGOTERAPI (Viktor Frankl) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS LOGOTERAPI:\n- Existential Vacuum: {existential_vacuum}\n- Sumber Makna: {meaning_source}\n- Values: {values}\n- Suffering: {suffering}\n- Responsibility: {responsibility}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING LOGOTERAPI ===\n\nA. TUJUAN SESI\n- Menemukan makna hidup\n- Mengatasi existential vacuum\n- Mengubah penderitaan menjadi pencapaian\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang makna hidup]\n2. [Pertanyaan tentang penderitaan]\n3. [Pertanyaan tentang nilai]\n\nC. 3 SUMBER MAKNA FRANKL\n1. Creative Values (karya)\n2. Experiential Values (pengalaman)\n3. Attitudinal Values (sikap terhadap penderitaan)\n\nD. TEKNIK KONSELING\n- Socratic dialogue\n- Dereflection\n- Paradoxical intention\n- Meaning exploration\n\nE. ANALISIS\n\nF. RENCANA INTERVENSI\n\nG. HOMEWORK\n- Meaning journal\n- Values reflection\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            existential: {
+                id: 'existential', cat: 'humanistic', icon: '🌌',
+                name: 'Eksistensial Therapy', author: 'Irvin Yalom, Rollo May',
+                desc: 'Kematian, kebebasan, isolasi, makna',
+                focus: 'Kematian, kebebasan, isolasi, makna',
+                use_for: 'Krisis hidup, anxiety eksistensial, kematian',
+                fields: [
+                    { key: 'death_anxiety', label: 'Death Anxiety', placeholder: 'Kecemasan tentang kematian...' },
+                    { key: 'freedom', label: 'Freedom & Responsibility', placeholder: 'Kebebasan & tanggung jawab...' },
+                    { key: 'isolation', label: 'Existential Isolation', placeholder: 'Perasaan terisolasi...' },
+                    { key: 'meaninglessness', label: 'Meaninglessness', placeholder: 'Perasaan tidak bermakna...' },
+                    { key: 'authenticity', label: 'Authenticity', placeholder: 'Keaslian diri...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan EKSISTENSIAL THERAPY (Irvin Yalom, Rollo May) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\n4 KEPRIHATINAN EKSISTENSIAL:\n- Death Anxiety: {death_anxiety}\n- Freedom & Responsibility: {freedom}\n- Existential Isolation: {isolation}\n- Meaninglessness: {meaninglessness}\n- Authenticity: {authenticity}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING EKSISTENSIAL ===\n\nA. TUJUAN SESI\n- Menghadapi kecemasan eksistensial\n- Menerima kebebasan & tanggung jawab\n- Menemukan keaslian diri\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang kematian]\n2. [Pertanyaan tentang kebebasan]\n3. [Pertanyaan tentang makna]\n\nC. TEKNIK KONSELING\n- Phenomenological exploration\n- Death awareness\n- Authenticity work\n- Meaning-making\n\nD. ANALISIS\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Mortality reflection\n- Authenticity journal\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            reality: {
+                id: 'reality', cat: 'humanistic', icon: '✅',
+                name: 'Reality Therapy / Choice Theory', author: 'William Glasser',
+                desc: 'Pilihan, tanggung jawab, kebutuhan dasar',
+                focus: 'Pilihan, tanggung jawab, kebutuhan dasar',
+                use_for: 'Masalah perilaku, hubungan, kontrol diri',
+                fields: [
+                    { key: 'basic_needs', label: 'Basic Needs', placeholder: 'Kebutuhan dasar yang tidak terpenuhi...' },
+                    { key: 'quality_world', label: 'Quality World', placeholder: 'Dunia kualitas klien...' },
+                    { key: 'total_behavior', label: 'Total Behavior', placeholder: 'Acting, thinking, feeling, physiology...' },
+                    { key: 'choice', label: 'Pilihan yang Diambil', placeholder: 'Pilihan yang lebih efektif...' },
+                    { key: 'responsibility', label: 'Tanggung Jawab', placeholder: 'Tanggung jawab klien...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan REALITY THERAPY / CHOICE THEORY (William Glasser) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS REALITY THERAPY:\n- Basic Needs: {basic_needs}\n- Quality World: {quality_world}\n- Total Behavior: {total_behavior}\n- Pilihan: {choice}\n- Tanggung Jawab: {responsibility}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING REALITY THERAPY ===\n\nA. TUJUAN SESI\n- Mengidentifikasi kebutuhan dasar\n- Mengevaluasi pilihan perilaku\n- Meningkatkan tanggung jawab\n\nB. PERTANYAAN EKSPLORASI (WDEP)\n- W (Wants): Apa yang diinginkan?\n- D (Doing): Apa yang dilakukan?\n- E (Evaluation): Apakah efektif?\n- P (Plan): Apa rencananya?\n\nC. 5 KEBUTUHAN DASAR\n1. Survival\n2. Love & Belonging\n3. Power\n4. Freedom\n5. Fun\n\nD. ANALISIS\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- WDEP worksheet\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+
+            // ========== SISTEMIK & KONTEKSTUAL ==========
+            sfbt: {
+                id: 'sfbt', cat: 'systemic', icon: '🎯',
+                name: 'Solution-Focused Brief Therapy (SFBT)', author: 'Steve de Shazer, Insoo Kim Berg',
+                desc: 'Solusi, miracle question, scaling',
+                focus: 'Solusi, miracle question, scaling',
+                use_for: 'Masalah ringan, goal-oriented, waktu singkat',
+                fields: [
+                    { key: 'miracle_question', label: 'Miracle Question', placeholder: 'Jika masalah selesai saat tidur, apa yang berbeda besok?' },
+                    { key: 'scaling', label: 'Scaling (1-10)', placeholder: 'Posisi klien saat ini...' },
+                    { key: 'exception', label: 'Exception', placeholder: 'Kapan masalah tidak terjadi...' },
+                    { key: 'coping', label: 'Coping Question', placeholder: 'Bagaimana klien bertahan selama ini...' },
+                    { key: 'goal', label: 'Goal', placeholder: 'Tujuan spesifik yang ingin dicapai...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan SFBT (Solution-Focused Brief Therapy) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS SFBT:\n- Miracle Question: {miracle_question}\n- Scaling: {scaling}/10\n- Exception: {exception}\n- Coping: {coping}\n- Goal: {goal}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING SFBT ===\n\nA. TUJUAN SESI\n- Fokus pada solusi, bukan masalah\n- Mengidentifikasi pengecualian\n- Membangun langkah kecil\n\nB. PERTANYAAN EKSPLORASI\n1. Miracle question\n2. Scaling question\n3. Exception finding\n4. Coping question\n\nC. TEKNIK KONSELING\n- Miracle question\n- Scaling\n- Exception finding\n- Compliment\n- Homework task\n\nD. ANALISIS\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Observasi exception\n- Scaling harian\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            narrative: {
+                id: 'narrative', cat: 'systemic', icon: '📖',
+                name: 'Narrative Therapy', author: 'Michael White, David Epston',
+                desc: 'Cerita hidup, re-authoring, externalization',
+                focus: 'Cerita hidup, re-authoring, externalization',
+                use_for: 'Trauma, identitas, masalah keluarga',
+                fields: [
+                    { key: 'dominant_story', label: 'Dominant Story', placeholder: 'Cerita dominan yang membelenggu...' },
+                    { key: 'alternative_story', label: 'Alternative Story', placeholder: 'Cerita alternatif yang lebih memberdayakan...' },
+                    { key: 'externalization', label: 'Externalization', placeholder: 'Nama masalah sebagai entitas terpisah...' },
+                    { key: 'unique_outcome', label: 'Unique Outcome', placeholder: 'Momen di mana masalah tidak dominan...' },
+                    { key: 're_authoring', label: 'Re-Authoring', placeholder: 'Cerita baru yang ingin dibangun...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan NARRATIVE THERAPY (Michael White, David Epston) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS NARRATIVE:\n- Dominant Story: {dominant_story}\n- Alternative Story: {alternative_story}\n- Externalization: {externalization}\n- Unique Outcome: {unique_outcome}\n- Re-Authoring: {re_authoring}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING NARRATIVE THERAPY ===\n\nA. TUJUAN SESI\n- Memisahkan masalah dari identitas\n- Menemukan cerita alternatif\n- Membangun cerita baru\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang cerita dominan]\n2. [Pertanyaan tentang unique outcome]\n3. [Pertanyaan tentang cerita alternatif]\n\nC. TEKNIK KONSELING\n- Externalization\n- Deconstruction\n- Re-authoring\n- Definitional ceremony\n- Therapeutic documents\n\nD. ANALISIS\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Letter writing\n- Journaling cerita baru\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            systemic: {
+                id: 'systemic', cat: 'systemic', icon: '🕸️',
+                name: 'Systemic / Family Systems', author: 'Murray Bowen',
+                desc: 'Sistem keluarga, genogram, triangulasi',
+                focus: 'Sistem keluarga, genogram, triangulasi',
+                use_for: 'Masalah keluarga, relasi, dinamika keluarga',
+                fields: [
+                    { key: 'family_genogram', label: 'Genogram', placeholder: 'Struktur keluarga 3 generasi...' },
+                    { key: 'triangulation', label: 'Triangulasi', placeholder: 'Pola triangulasi dalam keluarga...' },
+                    { key: 'differentiation', label: 'Differentiation of Self', placeholder: 'Tingkat diferensiasi diri...' },
+                    { key: 'multigenerational', label: 'Multigenerational Pattern', placeholder: 'Pola lintas generasi...' },
+                    { key: 'anxiety', label: 'Family Anxiety', placeholder: 'Kecemasan sistem keluarga...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan SYSTEMIC / FAMILY SYSTEMS (Murray Bowen) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS SYSTEMIC:\n- Genogram: {family_genogram}\n- Triangulasi: {triangulation}\n- Differentiation of Self: {differentiation}\n- Multigenerational Pattern: {multigenerational}\n- Family Anxiety: {anxiety}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING SYSTEMIC / FAMILY SYSTEMS ===\n\nA. TUJUAN SESI\n- Memetakan sistem keluarga\n- Meningkatkan diferensiasi diri\n- Mengurangi triangulasi\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang genogram]\n2. [Pertanyaan tentang triangulasi]\n3. [Pertanyaan tentang pola lintas generasi]\n\nC. TEKNIK KONSELING\n- Genogram\n- Circular questioning\n- Detriangulation\n- Differentiation coaching\n- Multigenerational exploration\n\nD. ANALISIS SISTEM\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Family genogram\n- Differentiation practice\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            structural: {
+                id: 'structural', cat: 'systemic', icon: '🏗️',
+                name: 'Structural Family Therapy', author: 'Salvador Minuchin',
+                desc: 'Struktur keluarga, boundary, hierarchy',
+                focus: 'Struktur keluarga, boundary, hierarchy',
+                use_for: 'Konflik keluarga, disfungsi keluarga',
+                fields: [
+                    { key: 'family_structure', label: 'Struktur Keluarga', placeholder: 'Struktur & hierarki keluarga...' },
+                    { key: 'boundaries', label: 'Boundaries', placeholder: 'Batas antar subsistem...' },
+                    { key: 'alliances', label: 'Alliances', placeholder: 'Aliansi dalam keluarga...' },
+                    { key: 'enmeshment', label: 'Enmeshment/Disengagement', placeholder: 'Pola keterlibatan berlebihan/terpisah...' },
+                    { key: 'subsystem', label: 'Subsistem', placeholder: 'Subsistem dalam keluarga...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan STRUCTURAL FAMILY THERAPY (Salvador Minuchin) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS STRUKTURAL:\n- Struktur Keluarga: {family_structure}\n- Boundaries: {boundaries}\n- Alliances: {alliances}\n- Enmeshment/Disengagement: {enmeshment}\n- Subsistem: {subsystem}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING STRUCTURAL FAMILY THERAPY ===\n\nA. TUJUAN SESI\n- Memetakan struktur keluarga\n- Memperbaiki boundaries\n- Restrukturisasi keluarga\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang struktur]\n2. [Pertanyaan tentang boundaries]\n3. [Pertanyaan tentang aliansi]\n\nC. TEKNIK KONSELING\n- Joining\n- Restructuring\n- Boundary making\n- Unbalancing\n- Enactment\n\nD. ANALISIS STRUKTUR\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Boundary exercise\n- Family meeting\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+
+            // ========== KHUSUS & KREATIF ==========
+            trauma_informed: {
+                id: 'trauma_informed', cat: 'special', icon: '🛡️',
+                name: 'Trauma-Informed Therapy', author: 'Judith Herman',
+                desc: 'Keamanan, pemberdayaan, fase pemulihan trauma',
+                focus: 'Keamanan, pemberdayaan, fase pemulihan trauma',
+                use_for: 'Trauma, PTSD, kekerasan',
+                fields: [
+                    { key: 'trauma_type', label: 'Jenis Trauma', placeholder: 'Contoh: Kekerasan, kecelakaan, bencana...' },
+                    { key: 'trauma_phase', label: 'Fase Pemulihan', placeholder: 'Contoh: Safety, remembrance, reconnection...' },
+                    { key: 'triggers', label: 'Triggers', placeholder: 'Pemicu trauma...' },
+                    { key: 'window_of_tolerance', label: 'Window of Tolerance', placeholder: 'Zona toleransi klien...' },
+                    { key: 'grounding_technique', label: 'Grounding Technique', placeholder: 'Teknik grounding yang cocok...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan TRAUMA-INFORMED THERAPY (Judith Herman) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS TRAUMA:\n- Jenis Trauma: {trauma_type}\n- Fase Pemulihan: {trauma_phase}\n- Triggers: {triggers}\n- Window of Tolerance: {window_of_tolerance}\n- Grounding Technique: {grounding_technique}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING TRAUMA-INFORMED ===\n\nA. TUJUAN SESI\n- Menciptakan rasa aman\n- Stabilisasi emosi\n- Memproses trauma bertahap\n\nB. 3 FASE HERMAN\n1. Safety & Stabilization\n2. Remembrance & Mourning\n3. Reconnection\n\nC. PERTANYAAN EKSPLORASI (hati-hati)\n1. [Pertanyaan tentang safety]\n2. [Pertanyaan tentang grounding]\n3. [Pertanyaan tentang support]\n\nD. TEKNIK KONSELING\n- Grounding\n- Psychoeducation\n- Safety planning\n- Window of tolerance\n- Somatic work\n\nE. ANALISIS\n\nF. RENCANA INTERVENSI\n\nG. HOMEWORK\n- Grounding practice\n- Safety plan\n\n⚠️ CATATAN: Jangan memaksa klien menceritakan detail trauma sebelum siap.\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            mindfulness: {
+                id: 'mindfulness', cat: 'special', icon: '🧘',
+                name: 'Mindfulness-Based (MBCT/MBSR)', author: 'Jon Kabat-Zinn',
+                desc: 'Mindfulness, meditasi, kesadaran penuh',
+                focus: 'Mindfulness, meditasi, kesadaran penuh',
+                use_for: 'Stres, kecemasan, relapse depresi',
+                fields: [
+                    { key: 'mindfulness_level', label: 'Tingkat Mindfulness', placeholder: 'Pengalaman meditasi klien...' },
+                    { key: 'stress_pattern', label: 'Pola Stres', placeholder: 'Pola stres yang dialami...' },
+                    { key: 'body_scan', label: 'Body Scan', placeholder: 'Pengalaman body scan...' },
+                    { key: 'meditation_practice', label: 'Meditation Practice', placeholder: 'Latihan meditasi yang cocok...' },
+                    { key: 'present_moment', label: 'Present Moment', placeholder: 'Kesadaran saat ini...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan MINDFULNESS-BASED (MBCT/MBSR - Jon Kabat-Zinn) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS MINDFULNESS:\n- Tingkat Mindfulness: {mindfulness_level}\n- Pola Stres: {stress_pattern}\n- Body Scan: {body_scan}\n- Meditation Practice: {meditation_practice}\n- Present Moment: {present_moment}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING MINDFULNESS-BASED ===\n\nA. TUJUAN SESI\n- Mengembangkan kesadaran penuh\n- Mengurangi stres & kecemasan\n- Mencegah relapse depresi\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang mindfulness]\n2. [Pertanyaan tentang stres]\n3. [Pertanyaan tentang tubuh]\n\nC. TEKNIK KONSELING\n- Body scan\n- Sitting meditation\n- Mindful movement\n- 3-minute breathing space\n- Loving-kindness\n\nD. ANALISIS\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Daily meditation 10-20 menit\n- Body scan\n- Mindful eating\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            motivational: {
+                id: 'motivational', cat: 'special', icon: '🔥',
+                name: 'Motivational Interviewing', author: 'Miller & Rollnick',
+                desc: 'Menggali motivasi perubahan, ambivalensi',
+                focus: 'Menggali motivasi perubahan, ambivalensi',
+                use_for: 'Adiksi, perubahan perilaku, resistensi',
+                fields: [
+                    { key: 'ambivalence', label: 'Ambivalensi', placeholder: 'Konflik antara ingin berubah & tidak...' },
+                    { key: 'change_talk', label: 'Change Talk', placeholder: 'Pernyataan tentang keinginan berubah...' },
+                    { key: 'sustain_talk', label: 'Sustain Talk', placeholder: 'Pernyataan mempertahankan perilaku...' },
+                    { key: 'readiness', label: 'Readiness Ruler (1-10)', placeholder: 'Kesiapan berubah...' },
+                    { key: 'importance_confidence', label: 'Importance & Confidence', placeholder: 'Seberapa penting & yakin...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan MOTIVATIONAL INTERVIEWING (Miller & Rollnick) untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS MI:\n- Ambivalensi: {ambivalence}\n- Change Talk: {change_talk}\n- Sustain Talk: {sustain_talk}\n- Readiness: {readiness}/10\n- Importance & Confidence: {importance_confidence}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING MOTIVATIONAL INTERVIEWING ===\n\nA. TUJUAN SESI\n- Menggali ambivalensi\n- Meningkatkan change talk\n- Membangun motivasi intrinsik\n\nB. 4 PROSES MI\n1. Engaging\n2. Focusing\n3. Evoking\n4. Planning\n\nC. TEKNIK KONSELING (OARS)\n- Open questions\n- Affirmations\n- Reflections\n- Summaries\n\nD. ANALISIS\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Readiness journal\n- Values reflection\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            art_therapy: {
+                id: 'art_therapy', cat: 'special', icon: '🎨',
+                name: 'Art Therapy', author: '-',
+                desc: 'Ekspresi melalui seni visual',
+                focus: 'Ekspresi melalui seni visual',
+                use_for: 'Anak, trauma, ekspresi diri, non-verbal',
+                fields: [
+                    { key: 'art_medium', label: 'Media Seni', placeholder: 'Contoh: Crayon, cat air, kolase...' },
+                    { key: 'theme', label: 'Tema Karya', placeholder: 'Tema yang ingin dieksplorasi...' },
+                    { key: 'symbol', label: 'Simbol yang Muncul', placeholder: 'Simbol dalam karya...' },
+                    { key: 'emotion_expressed', label: 'Emosi yang Terekspresi', placeholder: 'Emosi yang muncul...' },
+                    { key: 'interpretation', label: 'Interpretasi', placeholder: 'Makna karya bagi klien...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan ART THERAPY untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS ART THERAPY:\n- Media Seni: {art_medium}\n- Tema Karya: {theme}\n- Simbol: {symbol}\n- Emosi: {emotion_expressed}\n- Interpretasi: {interpretation}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING ART THERAPY ===\n\nA. TUJUAN SESI\n- Ekspresi emosi melalui seni\n- Mengakses alam bawah sadar\n- Membangun insight nonverbal\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang karya]\n2. [Pertanyaan tentang emosi]\n3. [Pertanyaan tentang simbol]\n\nC. TEKNIK KONSELING\n- Free drawing\n- Mandala\n- Collage\n- Scribble\n- Kinetic family drawing\n\nD. ANALISIS KARYA\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Daily art journal\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            play_therapy: {
+                id: 'play_therapy', cat: 'special', icon: '🧸',
+                name: 'Play Therapy', author: '-',
+                desc: 'Bermain sebagai media terapi',
+                focus: 'Bermain sebagai media terapi',
+                use_for: 'Anak-anak (3-12 tahun)',
+                fields: [
+                    { key: 'child_age', label: 'Usia Anak', placeholder: 'Contoh: 7 tahun' },
+                    { key: 'play_type', label: 'Jenis Permainan', placeholder: 'Contoh: Sandplay, puppet, role play...' },
+                    { key: 'theme', label: 'Tema Permainan', placeholder: 'Tema yang muncul...' },
+                    { key: 'behavior_observed', label: 'Perilaku yang Diamati', placeholder: 'Perilaku anak saat bermain...' },
+                    { key: 'parent_involvement', label: 'Keterlibatan Orang Tua', placeholder: 'Peran orang tua...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan PLAY THERAPY untuk klien:\n\n👤 Nama: {client_name}, {child_age}\n👨‍👩‍👧 Orang Tua: {parent_involvement}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS PLAY THERAPY:\n- Jenis Permainan: {play_type}\n- Tema: {theme}\n- Perilaku: {behavior_observed}\n- Keterlibatan Orang Tua: {parent_involvement}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING PLAY THERAPY ===\n\nA. TUJUAN SESI\n- Membangun rapport dengan anak\n- Ekspresi emosi melalui permainan\n- Mengamati dinamika psikologis\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang permainan]\n2. [Pertanyaan tentang perasaan]\n3. [Pertanyaan tentang keluarga]\n\nC. TEKNIK KONSELING\n- Child-centered play therapy\n- Sandplay\n- Puppet play\n- Role play\n- Art & play combination\n\nD. ANALISIS PERILAKU\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Parent-child play time\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            music_therapy: {
+                id: 'music_therapy', cat: 'special', icon: '🎵',
+                name: 'Music Therapy', author: '-',
+                desc: 'Musik sebagai media terapi',
+                focus: 'Musik sebagai media terapi',
+                use_for: 'Anak, remaja, lansia, demensia',
+                fields: [
+                    { key: 'music_preference', label: 'Preferensi Musik', placeholder: 'Jenis musik yang disukai...' },
+                    { key: 'music_activity', label: 'Aktivitas Musik', placeholder: 'Contoh: Mendengarkan, menyanyi, bermain alat...' },
+                    { key: 'emotional_response', label: 'Respons Emosi', placeholder: 'Emosi yang muncul saat musik...' },
+                    { key: 'memory_triggered', label: 'Memori yang Terpicu', placeholder: 'Memori yang muncul...' },
+                    { key: 'therapeutic_goal', label: 'Tujuan Terapi', placeholder: 'Tujuan terapi musik...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan MUSIC THERAPY untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS MUSIC THERAPY:\n- Preferensi Musik: {music_preference}\n- Aktivitas Musik: {music_activity}\n- Respons Emosi: {emotional_response}\n- Memori Terpicu: {memory_triggered}\n- Tujuan Terapi: {therapeutic_goal}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING MUSIC THERAPY ===\n\nA. TUJUAN SESI\n- Ekspresi emosi melalui musik\n- Mengakses memori & emosi\n- Meningkatkan kesejahteraan\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang musik]\n2. [Pertanyaan tentang emosi]\n3. [Pertanyaan tentang memori]\n\nC. TEKNIK KONSELING\n- Receptive listening\n- Active music making\n- Songwriting\n- Lyric analysis\n- Improvisation\n\nD. ANALISIS\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n- Daily music journal\n- Playlist terapi\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            integrative: {
+                id: 'integrative', cat: 'special', icon: '🔀',
+                name: 'Integrative / Eclectic', author: '-',
+                desc: 'Kombinasi beberapa model sesuai kebutuhan',
+                focus: 'Kombinasi beberapa model sesuai kebutuhan',
+                use_for: 'Kasus kompleks, butuh fleksibilitas',
+                fields: [
+                    { key: 'combined_models', label: 'Model yang Digabung', placeholder: 'Contoh: CBT + Mindfulness + SFBT...' },
+                    { key: 'rationale', label: 'Alasan Penggabungan', placeholder: 'Mengapa model ini digabung...' },
+                    { key: 'primary_model', label: 'Model Utama', placeholder: 'Model utama yang jadi dasar...' },
+                    { key: 'secondary_model', label: 'Model Pendukung', placeholder: 'Model pendukung...' },
+                    { key: 'integration_stage', label: 'Tahap Integrasi', placeholder: 'Tahap integrasi saat ini...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan INTEGRATIVE / ECLECTIC untuk klien:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nANALISIS INTEGRATIVE:\n- Model yang Digabung: {combined_models}\n- Alasan: {rationale}\n- Model Utama: {primary_model}\n- Model Pendukung: {secondary_model}\n- Tahap Integrasi: {integration_stage}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING INTEGRATIVE / ECLECTIC ===\n\nA. TUJUAN SESI\n- Menggabungkan kekuatan beberapa model\n- Menyesuaikan dengan kebutuhan klien\n- Fleksibilitas dalam intervensi\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan tentang masalah]\n2. [Pertanyaan tentang tujuan]\n3. [Pertanyaan tentang preferensi]\n\nC. MODEL & TEKNIK YANG DIGABUNG\n1. Model Utama: [teknik]\n2. Model Pendukung: [teknik]\n3. Kombinasi: [teknik]\n\nD. ANALISIS INTEGRATIF\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n\nFormat dengan markdown yang rapi dan profesional.`
+            },
+            custom: {
+                id: 'custom', cat: 'custom', icon: '✏️',
+                name: 'Model Custom', author: 'Sesuai Kebutuhan',
+                desc: 'Tulis model konseling sendiri sesuai kebutuhan',
+                focus: 'Model konseling yang Anda tentukan sendiri',
+                use_for: 'Model unik yang tidak ada di katalog',
+                fields: [
+                    { key: 'custom_model_name', label: 'Nama Model Custom', placeholder: 'Nama model yang Anda buat...' },
+                    { key: 'custom_author', label: 'Tokoh/Pendiri', placeholder: 'Tokoh pendiri model...' },
+                    { key: 'custom_focus', label: 'Fokus Utama', placeholder: 'Fokus utama model...' },
+                    { key: 'custom_approach', label: 'Pendekatan', placeholder: 'Pendekatan yang digunakan...' },
+                    { key: 'custom_techniques', label: 'Teknik Utama', placeholder: 'Teknik-teknik utama...' },
+                    { key: 'custom_goal', label: 'Tujuan Konseling', placeholder: 'Tujuan konseling dengan model ini...' }
+                ],
+                prompt_template: `Buat panduan konseling dengan pendekatan MODEL CUSTOM yang saya tentukan:\n\n👤 Nama: {client_name}, {client_age} tahun, {client_gender}\n💼 Pekerjaan: {client_job}\n\nMASALAH UTAMA: {main_problem}\nTUJUAN: {goal}\n\nDETAIL MODEL CUSTOM:\n- Nama Model: {custom_model_name}\n- Tokoh: {custom_author}\n- Fokus: {custom_focus}\n- Pendekatan: {custom_approach}\n- Teknik: {custom_techniques}\n- Tujuan Model: {custom_goal}\n\nFORMAT OUTPUT:\n\n=== PANDUAN KONSELING MODEL CUSTOM: {custom_model_name} ===\n\nA. TUJUAN SESI\n[Tujuan berdasarkan model custom]\n\nB. PERTANYAAN EKSPLORASI\n1. [Pertanyaan sesuai pendekatan]\n2. [Pertanyaan sesuai pendekatan]\n3. [Pertanyaan sesuai pendekatan]\n\nC. TEKNIK KONSELING\n[Berdasarkan teknik yang ditentukan]\n\nD. ANALISIS\n\nE. RENCANA INTERVENSI\n\nF. HOMEWORK\n\nFormat dengan markdown yang rapi dan profesional.`
+            }
+        };
+
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'ai_counseling_models';
+        const USERS_TABLE = 'users';
+        const SECRET = 'admin';
+        const STORAGE_KEY = 'ai_tools_user';
+        const MODEL_KEYS = Object.keys(MODELS);
+
+        // ==================== STATE ====================
+        let allData = [];
+        let quillEditor = null;
+        let addAiEditor = null;
+        let viewData = null;
+        let currentPrompt = '';
+        let currentHistorySubTab = 'all';
+        let currentCategoryFilter = 'all';
+        let currentUser = null;
+        let isAdmin = false;
+
+        const COLUMNS = {
+            category_type: 'x_01',
+            model_type: 'x_02',
+            title: 'x_03',
+            prompt: 'x_04',
+            field_values: 'x_05',
+            ai_source: 'x_06',
+            result: 'x_07',
+            created_by: 'x_08',
+            status: 'x_09',
+            notes: 'x_10',
+            created_date: 'x_11'
+        };
+
+        // ==================== LOGIN ====================
+        function getStoredUser() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    if (parsed.username && parsed.timestamp) {
+                        const days = (Date.now() - parsed.timestamp) / (1000 * 60 * 60 * 24);
+                        if (days < 7) return parsed.username;
+                    }
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function saveUserToStorage(username, remember) {
+            const data = JSON.stringify({ username, timestamp: Date.now() });
+            if (remember) localStorage.setItem(STORAGE_KEY, data);
+            else sessionStorage.setItem(STORAGE_KEY, data);
+        }
+
+        function clearUserStorage() {
+            localStorage.removeItem(STORAGE_KEY);
+            sessionStorage.removeItem(STORAGE_KEY);
+        }
+
+        function checkAutoLogin() {
+            const username = getStoredUser();
+            if (username) {
+                currentUser = username;
+                isAdmin = (username === 'admin');
+                showMainContent();
+                return true;
+            }
+            return false;
+        }
+
+        function showLogin() {
+            document.getElementById('loginOverlay').classList.add('active');
+            document.getElementById('mainContent').classList.remove('visible');
+        }
+
+        function showMainContent() {
+            document.getElementById('loginOverlay').classList.remove('active');
+            document.getElementById('mainContent').classList.add('visible');
+            document.getElementById('currentUser').textContent = currentUser;
+            const roleBadge = document.getElementById('userRole');
+            if (isAdmin) { roleBadge.textContent = '👑 Admin'; roleBadge.className = 'user-role admin'; }
+            else { roleBadge.textContent = '👤 User'; roleBadge.className = 'user-role user'; }
+            document.getElementById('createdBy').value = currentUser;
+            refreshData();
+        }
+
+        async function doLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const remember = document.getElementById('loginRemember').checked;
+            if (!username || !password) { showLoginError('Username dan password wajib diisi!'); return; }
+            const btn = document.getElementById('loginBtn');
+            const errorEl = document.getElementById('loginError');
+            const loadingEl = document.getElementById('loginLoading');
+            btn.disabled = true;
+            loadingEl.classList.add('show');
+            errorEl.classList.remove('show');
+            try {
+                const response = await fetch(`${API_URL}?table=${USERS_TABLE}`, {
+                    headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': USERS_TABLE, 'X-Role': 'admin' }
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const user = result.data.find(u => u.x_01 === username && u.x_02 === password);
+                    if (user) {
+                        currentUser = username;
+                        isAdmin = (username === 'admin');
+                        saveUserToStorage(username, remember);
+                        showMainContent();
+                        showToast('✅ Login berhasil! Selamat datang, ' + username, 'success');
+                    } else showLoginError('❌ Username atau password salah!');
+                } else showLoginError('❌ Gagal mengambil data user');
+            } catch (e) { showLoginError('❌ Gagal login: ' + e.message); }
+            finally { btn.disabled = false; loadingEl.classList.remove('show'); }
+        }
+
+        function showLoginError(message) {
+            const errorEl = document.getElementById('loginError');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+        }
+
+        function doLogout() {
+            if (!confirm('Yakin ingin logout?')) return;
+            clearUserStorage();
+            currentUser = null; isAdmin = false;
+            showLogin();
+            showToast('👋 Logout berhasil', 'info');
+        }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!checkAutoLogin()) showLogin();
+            document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+            document.getElementById('loginUsername').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPassword').focus(); });
+
+            quillEditor = new Quill('#resultEditor', {
+                theme: 'snow', placeholder: 'Paste hasil AI di sini...',
+                modules: { toolbar: [[{ 'header': [1,2,3,4,5,6,false] }], ['bold','italic','underline','strike'], [{ 'list': 'ordered'},{ 'list': 'bullet' }], ['blockquote','code-block'], ['link','image'], ['clean']] }
+            });
+            addAiEditor = new Quill('#addAiEditor', {
+                theme: 'snow', placeholder: 'Paste hasil AI di sini...',
+                modules: { toolbar: [[{ 'header': [1,2,3,4,5,6,false] }], ['bold','italic','underline','strike'], [{ 'list': 'ordered'},{ 'list': 'bullet' }], ['blockquote','code-block'], ['link','image'], ['clean']] }
+            });
+
+            renderCategoryFilter();
+            renderTools();
+            populateCategorySelect();
+            if (currentUser) document.getElementById('createdBy').value = currentUser;
+        });
+
+        // ==================== API ====================
+        function getHeaders() {
+            return { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': TABLE, 'X-Role': 'admin' };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            const response = await fetch(url, { ...options, headers: { ...getHeaders(), ...(options.headers || {}) } });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || err.message || `HTTP ${response.status}`);
+            }
+            return await response.json();
+        }
+
+        async function fetchData() {
+            try {
+                const result = await apiFetch('');
+                if (result.success && result.data) {
+                    let data = result.data.map(row => parseRow(row));
+                    if (!isAdmin && currentUser) data = data.filter(d => d.created_by === currentUser);
+                    allData = data;
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            return {
+                id_x: row.id_x,
+                category_type: row.x_01 || '',
+                model_type: row.x_02 || '',
+                title: row.x_03 || '',
+                prompt: row.x_04 || '',
+                field_values: safeParseJSON(row.x_05),
+                ai_source: row.x_06 || '',
+                result: row.x_07 || '',
+                created_by: row.x_08 || '',
+                status: row.x_09 || 'published',
+                notes: row.x_10 || '',
+                created_date: row.x_11 || '',
+                _raw: row
+            };
+        }
+
+        function safeParseJSON(str) { if (!str) return {}; try { return JSON.parse(str); } catch (e) { return {}; } }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                if (key === 'field_values') row[col] = JSON.stringify(data[key] || {});
+                else row[col] = data[key] || '';
+            }
+            return row;
+        }
+
+        async function createResult(data) {
+            const row = buildRow(data);
+            return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function deleteResultApi(id) {
+            return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== CATEGORY FILTER ====================
+        function renderCategoryFilter() {
+            const container = document.getElementById('categoryFilter');
+            let html = `<button class="category-btn active" onclick="filterByCategory('all')" data-cat="all">📚 Semua <span class="cat-badge">${MODEL_KEYS.length}</span></button>`;
+            Object.values(CATEGORIES).forEach(cat => {
+                const count = MODEL_KEYS.filter(k => MODELS[k].cat === cat.id).length;
+                if (count > 0) {
+                    html += `<button class="category-btn" onclick="filterByCategory('${cat.id}')" data-cat="${cat.id}">${cat.icon} ${cat.name} <span class="cat-badge">${count}</span></button>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function filterByCategory(catId) {
+            currentCategoryFilter = catId;
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === catId));
+            renderTools();
+        }
+
+        // ==================== RENDER ====================
+        function renderTools() {
+            const container = document.getElementById('toolsGrid');
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            let filtered = MODEL_KEYS;
+            if (currentCategoryFilter !== 'all') filtered = filtered.filter(k => MODELS[k].cat === currentCategoryFilter);
+            if (search) filtered = filtered.filter(k => MODELS[k].name.toLowerCase().includes(search) || MODELS[k].desc.toLowerCase().includes(search) || (MODELS[k].author && MODELS[k].author.toLowerCase().includes(search)));
+
+            container.innerHTML = filtered.map(key => {
+                const m = MODELS[key];
+                const cat = CATEGORIES[m.cat];
+                const count = allData.filter(d => d.model_type === key).length;
+                return `
+                    <div class="tool-card" style="border-top:4px solid ${cat.color};">
+                        <span class="cat-tag" style="background:${cat.color};color:white;">${cat.icon} ${cat.id}</span>
+                        <span class="tool-icon">${m.icon}</span>
+                        <div class="tool-name">${m.name}</div>
+                        ${m.author !== '-' ? `<div class="tool-author">👤 ${m.author}</div>` : ''}
+                        <div class="tool-desc">${m.desc}</div>
+                        <div style="font-size:11px;color:#718096;margin-bottom:8px;">${count} sesi</div>
+                        <div class="tool-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openInfoModal('${key}')">📖 Info</button>
+                            <button class="btn btn-primary btn-xs" onclick="useModel('${key}')">✏️ Gunakan</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('tab1Badge').textContent = filtered.length;
+        }
+
+        function populateCategorySelect() {
+            const select = document.getElementById('selectedCategory');
+            select.innerHTML = Object.values(CATEGORIES).map(cat => {
+                const count = MODEL_KEYS.filter(k => MODELS[k].cat === cat.id).length;
+                return `<option value="${cat.id}">${cat.icon} ${cat.name} (${count})</option>`;
+            }).join('');
+            onCategoryChange();
+        }
+
+        function onCategoryChange() {
+            const catId = document.getElementById('selectedCategory').value;
+            const select = document.getElementById('selectedModel');
+            const models = MODEL_KEYS.filter(k => MODELS[k].cat === catId);
+            select.innerHTML = models.map(key => {
+                const m = MODELS[key];
+                return `<option value="${key}">${m.icon} ${m.name}${m.author !== '-' ? ' - ' + m.author : ''}</option>`;
+            }).join('');
+            onModelChange();
+        }
+
+        function onModelChange() {
+            const modelKey = document.getElementById('selectedModel').value;
+            const m = MODELS[modelKey];
+            if (!m) return;
+            const cat = CATEGORIES[m.cat];
+
+            // Show model info card
+            document.getElementById('modelInfoCard').innerHTML = `
+                <div class="model-info-card">
+                    <div class="mi-title">${m.icon} ${m.name}</div>
+                    ${m.author !== '-' ? `<div class="mi-author">👤 ${m.author}</div>` : ''}
+                    <div class="mi-focus"><strong>🎯 Fokus:</strong> ${m.focus}</div>
+                    <div class="mi-use"><strong>✅ Cocok untuk:</strong> ${m.use_for}</div>
+                </div>
+            `;
+
+            // Render model-specific fields
+            document.getElementById('modelFieldsTitle').textContent = m.name;
+            const body = document.getElementById('modelFieldsBody');
+            body.innerHTML = m.fields.map(f => `
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label>${f.label}</label>
+                    <input type="text" id="model_field_${f.key}" placeholder="${f.placeholder}">
+                </div>
+            `).join('');
+            document.getElementById('modelFieldsSection').classList.remove('collapsed');
+        }
+
+        function toggleCollapse(id) {
+            document.getElementById(id).classList.toggle('collapsed');
+        }
+
+        // ==================== GENERATE PROMPT ====================
+        function generatePrompt() {
+            const modelKey = document.getElementById('selectedModel').value;
+            const m = MODELS[modelKey];
+            if (!m) return;
+
+            const values = {
+                client_name: document.getElementById('field_client_name').value.trim(),
+                client_age: document.getElementById('field_client_age').value.trim(),
+                client_gender: document.getElementById('field_client_gender').value.trim(),
+                client_job: document.getElementById('field_client_job').value.trim(),
+                main_problem: document.getElementById('field_main_problem').value.trim(),
+                goal: document.getElementById('field_goal').value.trim()
+            };
+
+            // Get model-specific fields
+            m.fields.forEach(f => {
+                const el = document.getElementById(`model_field_${f.key}`);
+                if (el) values[f.key] = el.value.trim();
+            });
+
+            // Validation
+            let missing = [];
+            if (!values.client_name) missing.push('Nama Klien');
+            if (!values.main_problem) missing.push('Masalah Utama');
+            m.fields.forEach(f => {
+                if (!values[f.key]) missing.push(f.label);
+            });
+            if (missing.length > 0) {
+                showToast('❌ Field wajib: ' + missing.slice(0, 3).join(', ') + (missing.length > 3 ? '...' : ''), 'error');
+                return;
+            }
+
+            let prompt = m.prompt_template;
+            Object.keys(values).forEach(key => {
+                prompt = prompt.replace(new RegExp(`{${key}}`, 'g'), values[key] || '-');
+            });
+
+            currentPrompt = prompt;
+            document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+            addCopyButtonToPrompt('promptPreview');
+
+            const titleInput = document.getElementById('resultTitle');
+            if (!titleInput.value) titleInput.value = `${m.name} - ${values.client_name}`;
+            showToast('✅ Prompt berhasil digenerate!', 'success');
+        }
+
+        function addCopyButtonToPrompt(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const existing = container.querySelector('.copy-prompt-btn');
+            if (existing) existing.remove();
+            const btn = document.createElement('button');
+            btn.className = 'copy-prompt-btn';
+            btn.textContent = '📋 Copy';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const text = container.textContent.replace('📋 Copy', '').trim();
+                if (!text || text.includes('Pilih model')) { showToast('❌ Tidak ada prompt', 'error'); return; }
+                navigator.clipboard.writeText(text).then(() => showToast('✅ Prompt disalin!', 'success')).catch(() => {
+                    const ta = document.createElement('textarea');
+                    ta.value = text; document.body.appendChild(ta); ta.select();
+                    document.execCommand('copy'); document.body.removeChild(ta);
+                    showToast('✅ Prompt disalin!', 'success');
+                });
+            };
+            container.style.position = 'relative';
+            container.appendChild(btn);
+        }
+
+        async function saveResult() {
+            const modelKey = document.getElementById('selectedModel').value;
+            const title = document.getElementById('resultTitle').value.trim();
+            const createdBy = document.getElementById('createdBy').value.trim() || currentUser || 'User';
+            const prompt = document.getElementById('promptPreview').textContent.replace('📋 Copy', '').trim();
+            if (!title) { showToast('❌ Judul wajib diisi', 'error'); return; }
+            if (!prompt || prompt.includes('Pilih model')) { showToast('❌ Generate prompt dulu', 'error'); return; }
+            const resultHtml = quillEditor.root.innerHTML;
+            if (!resultHtml || resultHtml === '<p><br></p>') { showToast('❌ Paste hasil AI dulu', 'error'); return; }
+
+            const values = { client_name: document.getElementById('field_client_name').value, client_age: document.getElementById('field_client_age').value, main_problem: document.getElementById('field_main_problem').value };
+            MODELS[modelKey].fields.forEach(f => {
+                const el = document.getElementById(`model_field_${f.key}`);
+                if (el) values[f.key] = el.value;
+            });
+
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+
+            const data = {
+                category_type: MODELS[modelKey].cat,
+                model_type: modelKey,
+                title, prompt, field_values: values,
+                ai_source: document.getElementById('aiSource').value,
+                result: resultHtml, created_by: createdBy,
+                status: 'published', notes: '', created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Sesi berhasil disimpan!', 'success');
+                await refreshData();
+                clearForm();
+                switchMainTab('tab3');
+            } catch (e) { showToast('❌ Gagal menyimpan: ' + e.message, 'error'); }
+        }
+
+        function clearForm() {
+            quillEditor.root.innerHTML = '';
+            document.getElementById('resultTitle').value = '';
+            document.getElementById('promptPreview').innerHTML = '<span class="placeholder">Pilih model dan isi form untuk menghasilkan prompt...</span>';
+            currentPrompt = '';
+        }
+
+        function useModel(modelKey) {
+            const m = MODELS[modelKey];
+            document.getElementById('selectedCategory').value = m.cat;
+            onCategoryChange();
+            document.getElementById('selectedModel').value = modelKey;
+            onModelChange();
+            switchMainTab('tab2');
+            clearForm();
+            document.getElementById('createdBy').value = currentUser || '';
+            showToast(`✏️ Beralih ke ${m.name}`, 'info');
+        }
+
+        // ==================== HISTORY ====================
+        function switchHistorySubTab(subtab) {
+            currentHistorySubTab = subtab;
+            document.querySelectorAll('.history-sub-tab').forEach(el => el.classList.toggle('active', el.dataset.subtab === subtab));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            const filterTool = document.getElementById('historyFilterTool').value;
+            const search = document.getElementById('historySearch').value.toLowerCase().trim();
+            let filtered = allData;
+            if (currentHistorySubTab === 'today') {
+                const today = new Date();
+                const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+                filtered = filtered.filter(d => d.created_date === todayStr);
+            }
+            if (filterTool !== 'all') filtered = filtered.filter(d => d.model_type === filterTool);
+            if (search) filtered = filtered.filter(d => d.title.toLowerCase().includes(search) || d.created_by.toLowerCase().includes(search) || d.prompt.toLowerCase().includes(search));
+
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            document.getElementById('subAll').textContent = allData.length;
+            document.getElementById('subToday').textContent = allData.filter(d => d.created_date === todayStr).length;
+            document.getElementById('tab3Badge').textContent = allData.length;
+            document.getElementById('historyCount').textContent = `${filtered.length} items`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">${allData.length === 0 ? '🧠' : '🔍'}</div><h3>${allData.length === 0 ? 'Belum ada sesi' : 'Tidak ditemukan'}</h3><p>${allData.length === 0 ? 'Pergi ke Tab "AI Prompt Studio" untuk mulai membuat sesi' : 'Coba kata kunci lain'}</p></div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => {
+                const m = MODELS[item.model_type];
+                const modelLabel = m ? `${m.icon} ${m.name}` : item.model_type;
+                const date = item.created_date || item._raw?.created_at || '-';
+                const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+                const sourceClass = item.ai_source.toLowerCase();
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = item.result;
+                const plainResult = tempDiv.textContent.substring(0, 100) + (tempDiv.textContent.length > 100 ? '...' : '');
+                return `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <span class="history-title">${escapeHtml(item.title)}</span>
+                            <div class="history-meta">
+                                <span class="type-badge">${modelLabel}</span>
+                                ${item.ai_source ? `<span class="ai-badge ${sourceClass}">${item.ai_source}</span>` : ''}
+                                <span>📅 ${displayDate}</span>
+                                <span>👤 ${escapeHtml(item.created_by)}</span>
+                            </div>
+                        </div>
+                        <div class="history-prompt" onclick="togglePrompt(this)">${escapeHtml(item.prompt.substring(0, 120))}${item.prompt.length > 120 ? '...' : ''}</div>
+                        <div class="history-result">${escapeHtml(plainResult)}</div>
+                        <div class="history-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openAddAiModal(${item.id_x})">➕ Tambah AI</button>
+                            <button class="btn btn-primary btn-xs" onclick="openDuplicateModal(${item.id_x})">📋 Duplikat</button>
+                            <button class="btn btn-outline btn-xs" onclick="openViewModal(${item.id_x})">👁️ Detail</button>
+                            <button class="btn btn-danger btn-xs" onclick="deleteResult(${item.id_x})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function togglePrompt(el) { el.classList.toggle('expanded'); }
+
+        // ==================== ADD AI ====================
+        function openAddAiModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            document.getElementById('addAiId').value = id;
+            document.getElementById('addAiPromptDisplay').textContent = item.prompt;
+            document.getElementById('addAiCreatedBy').value = currentUser || '';
+            addAiEditor.root.innerHTML = '';
+            const display = document.getElementById('addAiPromptDisplay');
+            const existingBtn = display.querySelector('.copy-prompt-btn');
+            if (existingBtn) existingBtn.remove();
+            const btn = document.createElement('button');
+            btn.className = 'copy-prompt-btn';
+            btn.textContent = '📋 Copy';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const text = display.textContent.replace('📋 Copy', '').trim();
+                navigator.clipboard.writeText(text).then(() => showToast('✅ Prompt disalin!', 'success')).catch(() => {
+                    const ta = document.createElement('textarea'); ta.value = text;
+                    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                    document.body.removeChild(ta); showToast('✅ Prompt disalin!', 'success');
+                });
+            };
+            display.style.position = 'relative';
+            display.appendChild(btn);
+            document.getElementById('addAiModal').classList.add('active');
+        }
+
+        async function saveAddAiResult() {
+            const id = parseInt(document.getElementById('addAiId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) { showToast('Data tidak ditemukan', 'error'); return; }
+            const aiSource = document.getElementById('addAiSource').value;
+            const createdBy = document.getElementById('addAiCreatedBy').value.trim() || currentUser || 'User';
+            const resultHtml = addAiEditor.root.innerHTML;
+            if (!resultHtml || resultHtml === '<p><br></p>') { showToast('❌ Paste hasil AI dulu', 'error'); return; }
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                category_type: originalItem.category_type,
+                model_type: originalItem.model_type,
+                title: originalItem.title + ` (${aiSource})`,
+                prompt: originalItem.prompt,
+                field_values: originalItem.field_values || {},
+                ai_source: aiSource, result: resultHtml, created_by: createdBy,
+                status: 'published', notes: `Hasil tambahan dari ${aiSource}`, created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Hasil AI baru disimpan!', 'success');
+                closeModal('addAiModal');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal menyimpan: ' + e.message, 'error'); }
+        }
+
+        // ==================== DUPLICATE ====================
+        function openDuplicateModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            document.getElementById('dupId').value = id;
+            document.getElementById('dupModelType').value = item.model_type;
+            const m = MODELS[item.model_type];
+            document.getElementById('dupModelDisplay').value = m ? `${m.icon} ${m.name}` : item.model_type;
+            document.getElementById('dupTitle').value = item.title + ' (v2)';
+            document.getElementById('dupCreatedBy').value = currentUser || '';
+            document.getElementById('dupPromptPreview').innerHTML = '<span class="placeholder">Klik Simpan untuk membuat duplikat dengan prompt yang sama...</span>';
+            document.getElementById('duplicateModal').classList.add('active');
+        }
+
+        async function saveDuplicate() {
+            const id = parseInt(document.getElementById('dupId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) { showToast('Data tidak ditemukan', 'error'); return; }
+            const newTitle = document.getElementById('dupTitle').value.trim();
+            const createdBy = document.getElementById('dupCreatedBy').value.trim() || currentUser || 'User';
+            if (!newTitle) { showToast('❌ Judul baru wajib diisi', 'error'); return; }
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                category_type: originalItem.category_type,
+                model_type: originalItem.model_type,
+                title: newTitle,
+                prompt: originalItem.prompt,
+                field_values: originalItem.field_values || {},
+                ai_source: '', result: '', created_by: createdBy,
+                status: 'published', notes: 'Duplikat dari prompt sebelumnya', created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Duplikat berhasil dibuat!', 'success');
+                closeModal('duplicateModal');
+                await refreshData();
+                switchMainTab('tab3');
+            } catch (e) { showToast('❌ Gagal menduplikat: ' + e.message, 'error'); }
+        }
+
+        // ==================== DELETE ====================
+        async function deleteResult(id) {
+            if (!confirm('Hapus sesi konseling ini?')) return;
+            try {
+                await deleteResultApi(id);
+                showToast('✅ Sesi berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal hapus: ' + e.message, 'error'); }
+        }
+
+        async function clearHistory() {
+            if (allData.length === 0) { showToast('Tidak ada data', 'info'); return; }
+            if (!confirm('Hapus semua data history?')) return;
+            try {
+                for (const item of allData) await deleteResultApi(item.id_x);
+                showToast('✅ Semua data berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal hapus: ' + e.message, 'error'); }
+        }
+
+        // ==================== VIEW ====================
+        function openViewModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) { showToast('Data tidak ditemukan', 'error'); return; }
+            viewData = item;
+            const m = MODELS[item.model_type];
+            const modelLabel = m ? `${m.icon} ${m.name}` : item.model_type;
+            const date = item.created_date || item._raw?.created_at || '-';
+            const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+            document.getElementById('viewModalTitle').textContent = `👁️ ${escapeHtml(item.title)}`;
+            document.getElementById('viewMeta').innerHTML = `<strong>Model:</strong> ${modelLabel} &nbsp;|&nbsp; <strong>AI:</strong> ${item.ai_source || '-'} &nbsp;|&nbsp; <strong>Dibuat:</strong> ${displayDate} &nbsp;|&nbsp; <strong>Oleh:</strong> ${escapeHtml(item.created_by)}`;
+            document.getElementById('viewPrompt').textContent = item.prompt;
+            document.getElementById('viewSource').textContent = item.ai_source || '-';
+            document.getElementById('viewResultWrapper').innerHTML = `<div class="ql-editor">${item.result}</div>`;
+            document.getElementById('viewModal').classList.add('active');
+        }
+
+        function copyViewResult() {
+            const resultHtml = document.getElementById('viewResultWrapper').innerHTML;
+            if (!resultHtml) { showToast('Tidak ada konten', 'error'); return; }
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = resultHtml;
+            const plainText = tempDiv.textContent;
+            navigator.clipboard.writeText(plainText).then(() => showToast('✅ Konten disalin!', 'success')).catch(() => {
+                const ta = document.createElement('textarea'); ta.value = plainText;
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                document.body.removeChild(ta); showToast('✅ Konten disalin!', 'success');
+            });
+        }
+
+        function downloadViewDoc() {
+            const title = viewData?.title || 'konseling';
+            const content = document.getElementById('viewResultWrapper').innerHTML || '';
+            const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(title)}</title><style>body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #2d3748; line-height: 1.8; max-width: 800px; margin: auto; } h1, h2, h3, h4 { color: #1a202c; } p { margin: 8px 0; } ul, ol { padding-left: 24px; }</style></head><body>${content}</body></html>`;
+            const blob = new Blob([htmlContent], { type: 'application/msword;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `${title}.doc`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('✅ File .doc berhasil didownload!', 'success');
+        }
+
+        // ==================== INFO ====================
+        function openInfoModal(modelKey) {
+            const m = MODELS[modelKey];
+            if (!m) return;
+            const cat = CATEGORIES[m.cat];
+            const fieldsHtml = m.fields.map(f => `<li><strong>${f.label}</strong> — ${f.placeholder}</li>`).join('');
+            document.getElementById('infoModalTitle').textContent = `📋 ${m.icon} ${m.name}`;
+            document.getElementById('infoModalBody').innerHTML = `
+                <div style="text-align:center;margin-bottom:12px;">
+                    <span style="font-size:48px;display:block;">${m.icon}</span>
+                    <h3 style="font-size:20px;color:#2d3748;">${m.name}</h3>
+                    ${m.author !== '-' ? `<p style="color:#6b46c1;font-style:italic;font-size:14px;">👤 ${m.author}</p>` : ''}
+                    <p style="color:#718096;font-size:14px;">${m.desc}</p>
+                </div>
+                <div style="background:#faf5ff;border-radius:8px;padding:12px 16px;margin-bottom:12px;border-left:4px solid ${cat.color};">
+                    <strong style="color:#553c9a;">${cat.icon} Kategori: ${cat.name}</strong>
+                    <p style="color:#4a5568;font-size:13px;margin-top:4px;">${cat.desc}</p>
+                </div>
+                <div style="background:#f0fff4;border-radius:8px;padding:12px 16px;margin-bottom:12px;border-left:4px solid #48bb78;">
+                    <strong style="color:#276749;">🎯 Fokus Utama:</strong>
+                    <p style="color:#2d3748;font-size:13px;margin-top:4px;">${m.focus}</p>
+                </div>
+                <div style="background:#fff5f5;border-radius:8px;padding:12px 16px;margin-bottom:12px;border-left:4px solid #ed64a6;">
+                    <strong style="color:#97266d;">✅ Cocok Dipakai Untuk:</strong>
+                    <p style="color:#2d3748;font-size:13px;margin-top:4px;">${m.use_for}</p>
+                </div>
+                <div style="background:#f7fafc;border-radius:8px;padding:16px;margin-bottom:12px;">
+                    <h4 style="font-size:14px;color:#2d3748;margin-bottom:8px;">📝 Field Khusus Model:</h4>
+                    <ul style="padding-left:20px;color:#4a5568;font-size:13px;line-height:1.8;">${fieldsHtml}</ul>
+                </div>
+                <div style="background:#f0fff4;border-radius:8px;padding:12px 16px;border-left:4px solid #38b2ac;">
+                    <strong style="color:#276749;">💡 Cara Penggunaan:</strong>
+                    <ol style="margin:4px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">
+                        <li>Klik "✏️ Gunakan" untuk memilih model ini</li>
+                        <li>Isi data klien & field khusus model</li>
+                        <li>Klik "Generate Prompt"</li>
+                        <li>Copy prompt, paste ke AI eksternal</li>
+                        <li>Copy hasil AI, paste di editor</li>
+                        <li>Pilih AI Source dan klik "Simpan Hasil"</li>
+                    </ol>
+                </div>
+            `;
+            document.getElementById('infoModal').classList.add('active');
+        }
+
+        // ==================== TAB ====================
+        function switchMainTab(tabId) {
+            document.querySelectorAll('.main-tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.main-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.main-tab-btn[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            if (tabId === 'tab3') renderHistory();
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // ==================== REFRESH ====================
+        async function refreshData() {
+            if (!currentUser) { showLogin(); return; }
+            showToast('🔄 Memuat data...', 'info');
+            await fetchData();
+            renderTools();
+            updateHistoryFilter();
+            renderHistory();
+            document.getElementById('tab3Badge').textContent = allData.length;
+            showToast(`✅ ${allData.length} sesi dimuat`, 'success');
+        }
+
+        function updateHistoryFilter() {
+            const select = document.getElementById('historyFilterTool');
+            const currentValue = select.value;
+            const types = {};
+            allData.forEach(item => { if (!types[item.model_type]) types[item.model_type] = 0; types[item.model_type]++; });
+            select.innerHTML = `<option value="all">📋 All Models (${allData.length})</option>`;
+            MODEL_KEYS.forEach(key => {
+                const m = MODELS[key];
+                const count = types[key] || 0;
+                if (count > 0) select.innerHTML += `<option value="${key}">${m.icon} ${m.name} (${count})</option>`;
+            });
+            if (currentValue) select.value = currentValue;
+        }
+
+        // ==================== TOAST & HELPER ====================
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+        });
+
+        window.debug = {
+            allData: () => allData,
+            refresh: refreshData,
+            MODELS, MODEL_KEYS, CATEGORIES,
+            currentUser: () => currentUser,
+            isAdmin: () => isAdmin
+        };
+    </script>
+</body>
+</html>
