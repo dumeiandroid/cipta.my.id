@@ -126,6 +126,13 @@
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 
+        /* Field AI Checkbox */
+        .field-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 2px; }
+        .field-header label { font-weight: 600; font-size: 13px; color: #4a5568; margin: 0; }
+        .field-ai-check { display: flex; align-items: center; gap: 4px; background: #ebf8ff; padding: 2px 8px; border-radius: 6px; border: 1px solid #bee3f8; cursor: pointer; }
+        .field-ai-check input[type="checkbox"] { width: 14px; height: 14px; accent-color: #3182ce; cursor: pointer; margin: 0; }
+        .field-ai-check span { font-size: 10px; font-weight: 600; color: #2b6cb0; white-space: nowrap; }
+
         .prompt-preview { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 2px solid #e2e8f0; min-height: 150px; white-space: pre-wrap; font-size: 14px; line-height: 1.8; color: #2d3748; max-height: 250px; overflow-y: auto; position: relative; }
         .prompt-preview .placeholder { color: #a0aec0; font-style: italic; }
         .prompt-preview .copy-prompt-btn { position: absolute; top: 8px; right: 8px; background: rgba(237,100,166,0.9); color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: 0.2s; font-weight: 600; }
@@ -917,13 +924,44 @@
             stage.fields.forEach(field => {
                 const fieldId = `field_${field.key}`;
                 const val = values[field.key] || '';
+                const checkId = `ai_check_${field.key}`;
+                
+                // Header dengan checkbox per field
+                html += `<div class="field-header">
+                    <label for="${fieldId}">${field.label}</label>
+                    <div class="field-ai-check">
+                        <input type="checkbox" id="${checkId}" onchange="toggleFieldAi('${field.key}', this.checked)">
+                        <span>🤖 AI Cari</span>
+                    </div>
+                </div>`;
+
                 if (field.type === 'textarea') {
-                    html += `<div class="form-group"><label>${field.label}</label><textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea></div>`;
+                    html += `<div class="form-group"><textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea></div>`;
                 } else {
-                    html += `<div class="form-group"><label>${field.label}</label><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
+                    html += `<div class="form-group"><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
                 }
             });
             container.innerHTML = html;
+        }
+
+        function toggleFieldAi(fieldKey, checked) {
+            const inputEl = document.getElementById(`field_${fieldKey}`);
+            if (!inputEl) return;
+
+            if (checked) {
+                inputEl.dataset.originalValue = inputEl.value;
+                inputEl.value = '🤖 AI akan mencari yang cocok';
+                inputEl.readOnly = true;
+                inputEl.style.background = '#f0fff4';
+                inputEl.style.color = '#276749';
+                inputEl.style.fontWeight = '600';
+            } else {
+                inputEl.value = inputEl.dataset.originalValue || '';
+                inputEl.readOnly = false;
+                inputEl.style.background = '';
+                inputEl.style.color = '';
+                inputEl.style.fontWeight = '';
+            }
         }
 
         function getCurrentFieldValues() {
@@ -933,7 +971,13 @@
             const values = {};
             stage.fields.forEach(field => {
                 const el = document.getElementById(`field_${field.key}`);
-                if (el) values[field.key] = el.value;
+                if (el) {
+                    if (el.readOnly && el.value === '🤖 AI akan mencari yang cocok') {
+                        values[field.key] = '';
+                    } else {
+                        values[field.key] = el.value;
+                    }
+                }
             });
             return values;
         }
@@ -953,14 +997,42 @@
             const stage = COUNSELING_STAGES[toolKey];
             if (!stage) return;
             const values = getCurrentFieldValues();
+
+            // Validasi: field yang TIDAK dicentang AI harus terisi
             let allFilled = true;
-            stage.fields.forEach(field => { if (!values[field.key] || !values[field.key].trim()) allFilled = false; });
-            if (!allFilled) { showToast('❌ Semua field harus diisi!', 'error'); return; }
+            let emptyFields = [];
+            stage.fields.forEach(field => {
+                const checkEl = document.getElementById(`ai_check_${field.key}`);
+                const isAiChecked = checkEl ? checkEl.checked : false;
+                if (!isAiChecked && (!values[field.key] || !values[field.key].trim())) {
+                    allFilled = false;
+                    emptyFields.push(field.label);
+                }
+            });
+
+            if (!allFilled) {
+                showToast('❌ Field berikut wajib diisi: ' + emptyFields.join(', '), 'error');
+                return;
+            }
 
             let prompt = stage.prompt_template;
+            let hasAiField = false;
+
             stage.fields.forEach(field => {
-                prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || '');
+                const checkEl = document.getElementById(`ai_check_${field.key}`);
+                const isAiChecked = checkEl ? checkEl.checked : false;
+                if (isAiChecked) {
+                    hasAiField = true;
+                    prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), `[AI CARI YANG COCOK UNTUK: ${field.label}]`);
+                } else {
+                    prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || '');
+                }
             });
+
+            // Tambahkan instruksi khusus jika ada field yang dicentang AI
+            if (hasAiField) {
+                prompt = `INSTRUKSI KHUSUS: Untuk beberapa bagian di bawah ini, pengkhotbah meminta Anda (AI) untuk mencari dan menentukan sendiri elemen yang cocok (ditandai dengan [AI CARI YANG COCOK UNTUK: ...]). Silakan pilih data yang paling tepat dan relevan. \n\n` + prompt;
+            }
 
             if (currentApproachKey && APPROACHES[currentApproachKey]) {
                 const app = APPROACHES[currentApproachKey];
@@ -975,7 +1047,11 @@
             if (!titleInput.value) {
                 const name = values.wife_name || values.husband_name || '';
                 const approachLabel = currentApproachKey ? ` [${APPROACHES[currentApproachKey].name}]` : '';
-                titleInput.value = `${stage.name}${approachLabel} - ${name}`;
+                if (hasAiField) {
+                    titleInput.value = `${stage.name}${approachLabel} - (AI Cari yang Cocok)`;
+                } else {
+                    titleInput.value = `${stage.name}${approachLabel} - ${name}`;
+                }
             }
             showToast('✅ Prompt berhasil digenerate!', 'success');
         }
@@ -1041,6 +1117,10 @@
             document.getElementById('selectedApproach').value = '';
             currentApproachKey = '';
             onApproachChange();
+            // Reset semua checkbox AI per field
+            document.querySelectorAll('.field-ai-check input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
         }
 
         function useTool(toolKey) {
@@ -1420,6 +1500,10 @@
                         <li><strong>Tahap 2 — Konseling Suami:</strong> Sesi pribadi dengan suami</li>
                         <li><strong>Tahap 3 — Konseling Bersama:</strong> Mediasi & kesepakatan</li>
                     </ol>
+                </div>
+                <div style="background:#fff5f5;border-radius:8px;padding:12px 16px;border-left:4px solid #fc8181;margin-top:12px;">
+                    <strong style="color:#9b2c2c;">🤖 AI Cari yang Cocok:</strong>
+                    <p style="color:#2d3748;font-size:13px;margin-top:4px;">Centang checkbox <strong>🤖 AI Cari</strong> di sebelah kanan label field jika ingin AI mencari sendiri data yang cocok untuk field tersebut. Field lain tetap bisa diisi manual.</p>
                 </div>
             `;
             document.getElementById('infoModal').classList.add('active');

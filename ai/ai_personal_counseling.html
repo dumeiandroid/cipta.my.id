@@ -91,6 +91,13 @@
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 
+        /* Field AI Checkbox */
+        .field-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 2px; }
+        .field-header label { font-weight: 600; font-size: 13px; color: #4a5568; margin: 0; }
+        .field-ai-check { display: flex; align-items: center; gap: 4px; background: #ebf8ff; padding: 2px 8px; border-radius: 6px; border: 1px solid #bee3f8; cursor: pointer; }
+        .field-ai-check input[type="checkbox"] { width: 14px; height: 14px; accent-color: #3182ce; cursor: pointer; margin: 0; }
+        .field-ai-check span { font-size: 10px; font-weight: 600; color: #2b6cb0; white-space: nowrap; }
+
         /* Model Selector */
         .model-selector-section { background: #faf5ff; border-radius: 12px; padding: 16px; border-left: 4px solid #6b46c1; margin-bottom: 4px; }
         .model-selector-section .ms-label { font-weight: 700; font-size: 13px; color: #553c9a; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
@@ -235,7 +242,7 @@
     <div class="main-content" id="mainContent">
         <div class="container" id="app">
             <div class="header">
-                <h1>🧠 AI Personal Counseling Generator <span>v2.0 · 25 Model</span></h1>
+                <h1>🧠 AI Personal Counseling Generator <span>v2.1 · 25 Model</span></h1>
                 <div class="header-actions">
                     <span class="user-info" id="userInfo">
                         👤 <span id="currentUser">-</span>
@@ -986,13 +993,44 @@
             type.fields.forEach(field => {
                 const fieldId = `field_${field.key}`;
                 const val = values[field.key] || '';
+                const checkId = `ai_check_${field.key}`;
+                
+                // Header dengan checkbox per field
+                html += `<div class="field-header">
+                    <label for="${fieldId}">${field.label}</label>
+                    <div class="field-ai-check">
+                        <input type="checkbox" id="${checkId}" onchange="toggleFieldAi('${field.key}', this.checked)">
+                        <span>🤖 AI Cari</span>
+                    </div>
+                </div>`;
+
                 if (field.type === 'textarea') {
-                    html += `<div class="form-group"><label>${field.label}</label><textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea></div>`;
+                    html += `<div class="form-group"><textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea></div>`;
                 } else {
-                    html += `<div class="form-group"><label>${field.label}</label><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
+                    html += `<div class="form-group"><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
                 }
             });
             container.innerHTML = html;
+        }
+
+        function toggleFieldAi(fieldKey, checked) {
+            const inputEl = document.getElementById(`field_${fieldKey}`);
+            if (!inputEl) return;
+
+            if (checked) {
+                inputEl.dataset.originalValue = inputEl.value;
+                inputEl.value = '🤖 AI akan mencari yang cocok';
+                inputEl.readOnly = true;
+                inputEl.style.background = '#f0fff4';
+                inputEl.style.color = '#276749';
+                inputEl.style.fontWeight = '600';
+            } else {
+                inputEl.value = inputEl.dataset.originalValue || '';
+                inputEl.readOnly = false;
+                inputEl.style.background = '';
+                inputEl.style.color = '';
+                inputEl.style.fontWeight = '';
+            }
         }
 
         function getCurrentFieldValues() {
@@ -1002,7 +1040,13 @@
             const values = {};
             type.fields.forEach(field => {
                 const el = document.getElementById(`field_${field.key}`);
-                if (el) values[field.key] = el.value;
+                if (el) {
+                    if (el.readOnly && el.value === '🤖 AI akan mencari yang cocok') {
+                        values[field.key] = '';
+                    } else {
+                        values[field.key] = el.value;
+                    }
+                }
             });
             return values;
         }
@@ -1022,14 +1066,42 @@
             const type = COUNSELING_TYPES[toolKey];
             if (!type) return;
             const values = getCurrentFieldValues();
+
+            // Validasi: field yang TIDAK dicentang AI harus terisi
             let allFilled = true;
-            type.fields.forEach(field => { if (!values[field.key] || !values[field.key].trim()) allFilled = false; });
-            if (!allFilled) { showToast('❌ Semua field harus diisi!', 'error'); return; }
+            let emptyFields = [];
+            type.fields.forEach(field => {
+                const checkEl = document.getElementById(`ai_check_${field.key}`);
+                const isAiChecked = checkEl ? checkEl.checked : false;
+                if (!isAiChecked && (!values[field.key] || !values[field.key].trim())) {
+                    allFilled = false;
+                    emptyFields.push(field.label);
+                }
+            });
+
+            if (!allFilled) {
+                showToast('❌ Field berikut wajib diisi: ' + emptyFields.join(', '), 'error');
+                return;
+            }
 
             let prompt = type.prompt_template;
+            let hasAiField = false;
+
             type.fields.forEach(field => {
-                prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || '');
+                const checkEl = document.getElementById(`ai_check_${field.key}`);
+                const isAiChecked = checkEl ? checkEl.checked : false;
+                if (isAiChecked) {
+                    hasAiField = true;
+                    prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), `[AI CARI YANG COCOK UNTUK: ${field.label}]`);
+                } else {
+                    prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || '');
+                }
             });
+
+            // Tambahkan instruksi khusus jika ada field yang dicentang AI
+            if (hasAiField) {
+                prompt = `INSTRUKSI KHUSUS: Untuk beberapa bagian di bawah ini, pengkhotbah meminta Anda (AI) untuk mencari dan menentukan sendiri elemen yang cocok (ditandai dengan [AI CARI YANG COCOK UNTUK: ...]). Silakan pilih data yang paling tepat dan relevan. \n\n` + prompt;
+            }
 
             if (currentApproachKey && APPROACHES[currentApproachKey]) {
                 const app = APPROACHES[currentApproachKey];
@@ -1043,7 +1115,11 @@
             const titleInput = document.getElementById('resultTitle');
             if (!titleInput.value) {
                 const approachLabel = currentApproachKey ? ` [${APPROACHES[currentApproachKey].name}]` : '';
-                titleInput.value = `${type.name}${approachLabel} - ${values.client_name || ''}`;
+                if (hasAiField) {
+                    titleInput.value = `${type.name}${approachLabel} - (AI Cari yang Cocok)`;
+                } else {
+                    titleInput.value = `${type.name}${approachLabel} - ${values.client_name || ''}`;
+                }
             }
             showToast('✅ Prompt berhasil digenerate!', 'success');
         }
@@ -1109,6 +1185,10 @@
             document.getElementById('selectedApproach').value = '';
             currentApproachKey = '';
             onApproachChange();
+            // Reset semua checkbox AI per field
+            document.querySelectorAll('.field-ai-check input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
         }
 
         function useTool(toolKey) {
@@ -1429,12 +1509,16 @@
                     <strong style="color:#553c9a;">🧠 25 Model Pendekatan Tersedia:</strong>
                     <p style="color:#2d3748;font-size:13px;margin-top:4px;">Di form, Anda bisa memilih model pendekatan konseling (CBT, Psikodinamik, SFBT, dll) agar prompt lebih terarah. Pilih "Tanpa Model Spesifik" jika ingin pendekatan umum.</p>
                 </div>
+                <div style="background:#fff5f5;border-radius:8px;padding:12px 16px;border-left:4px solid #fc8181;margin-top:12px;">
+                    <strong style="color:#9b2c2c;">🤖 AI Cari yang Cocok:</strong>
+                    <p style="color:#2d3748;font-size:13px;margin-top:4px;">Centang checkbox <strong>🤖 AI Cari</strong> di sebelah kanan label field jika ingin AI mencari sendiri data yang cocok untuk field tersebut. Field lain tetap bisa diisi manual.</p>
+                </div>
                 <div style="background:#f0fff4;border-radius:8px;padding:12px 16px;border-left:4px solid #48bb78;margin-top:12px;">
                     <strong style="color:#276749;">💡 Cara Penggunaan:</strong>
                     <ol style="margin:4px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">
                         <li>Pilih jenis konseling di Tab "AI Prompt Studio"</li>
                         <li>(Opsional) Pilih model pendekatan (CBT, dll)</li>
-                        <li>Isi semua field yang tersedia</li>
+                        <li>Isi field yang tersedia, atau centang 🤖 AI Cari untuk field yang ingin dicari AI</li>
                         <li>Klik "Generate Prompt"</li>
                         <li>Copy prompt, paste ke AI eksternal</li>
                         <li>Copy hasil AI, paste di editor</li>
