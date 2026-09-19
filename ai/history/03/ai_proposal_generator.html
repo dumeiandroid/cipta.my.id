@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Khotbah & Renungan Generator</title>
+    <title>AI Proposal Generator</title>
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <style>
@@ -89,15 +89,16 @@
         .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #805ad5; }
         .form-group textarea { resize: vertical; min-height: 60px; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 
-        /* Label + Checkbox AI per field */
+        /* Field AI Checkbox */
         .field-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 2px; }
         .field-header label { font-weight: 600; font-size: 13px; color: #4a5568; margin: 0; }
         .field-ai-check { display: flex; align-items: center; gap: 4px; background: #ebf8ff; padding: 2px 8px; border-radius: 6px; border: 1px solid #bee3f8; cursor: pointer; }
         .field-ai-check input[type="checkbox"] { width: 14px; height: 14px; accent-color: #3182ce; cursor: pointer; margin: 0; }
         .field-ai-check span { font-size: 10px; font-weight: 600; color: #2b6cb0; white-space: nowrap; }
 
-        .prompt-preview { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 2px solid #e2e8f0; min-height: 150px; white-space: pre-wrap; font-size: 14px; line-height: 1.8; color: #2d3748; max-height: 250px; overflow-y: auto; position: relative; }
+        .prompt-preview { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 2px solid #e2e8f0; min-height: 150px; white-space: pre-wrap; font-size: 14px; line-height: 1.8; color: #2d3748; max-height: 250px; overflow-y: auto; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; position: relative; }
         .prompt-preview .placeholder { color: #a0aec0; font-style: italic; }
         .prompt-preview .copy-prompt-btn { position: absolute; top: 8px; right: 8px; background: rgba(128,90,213,0.9); color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: 0.2s; font-weight: 600; }
         .prompt-preview .copy-prompt-btn:hover { background: #6b46c1; }
@@ -106,7 +107,6 @@
         .quill-wrapper .ql-toolbar { border: none; border-bottom: 2px solid #e2e8f0; background: #f7fafc; }
         .quill-wrapper .ql-container { border: none; min-height: 200px; font-size: 14px; }
         .quill-wrapper .ql-editor { min-height: 200px; }
-
         .result-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
 
         .history-sub-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; }
@@ -153,11 +153,6 @@
         .modal-close:hover { background: #f56565; transform: rotate(90deg); }
         .modal-title { font-size: 22px; font-weight: 700; color: #1a2332; margin-bottom: 20px; padding-right: 50px; }
         .modal-body { display: flex; flex-direction: column; gap: 16px; }
-        .contoh-box { background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%); border-radius: 12px; padding: 16px 20px; border-left: 4px solid #e53e3e; margin: 12px 0; }
-        .contoh-box .contoh-title { font-weight: 700; font-size: 13px; color: #9b2c2c; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
-        .contoh-box .contoh-item { background: white; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; color: #2d3748; line-height: 1.7; }
-        .contoh-box .contoh-item:last-child { margin-bottom: 0; }
-        .contoh-box .contoh-item .lbl { font-weight: 700; color: #e53e3e; display: inline-block; min-width: 90px; }
         .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 2px solid #edf2f7; flex-wrap: wrap; }
 
         .toast { position: fixed; bottom: 30px; right: 30px; padding: 16px 28px; border-radius: 12px; color: white; font-weight: 600; z-index: 2000; animation: slideUp 0.3s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.2); max-width: 400px; }
@@ -183,6 +178,7 @@
         @media (max-width: 992px) {
             .studio-grid { grid-template-columns: 1fr; }
             .form-row { grid-template-columns: 1fr; }
+            .form-row-3 { grid-template-columns: 1fr 1fr; }
             .main-tabs-header { padding: 0 12px; }
             .main-tab-btn { padding: 12px 16px; font-size: 13px; }
             .main-tab-content { padding: 16px; }
@@ -201,6 +197,7 @@
             .main-tab-btn { padding: 10px 12px; font-size: 12px; }
             .main-tab-content { padding: 12px; }
             .history-filters { flex-direction: column; align-items: stretch; }
+            .form-row-3 { grid-template-columns: 1fr; }
             .login-box { padding: 24px 20px; }
         }
         .modal::-webkit-scrollbar { width: 6px; }
@@ -215,7 +212,7 @@
         <div class="login-box">
             <span class="login-icon">🔐</span>
             <h2>Login</h2>
-            <p>Masuk untuk mengakses Khotbah & Renungan Generator</p>
+            <p>Masuk untuk mengakses AI Proposal Generator</p>
             <div class="form-group">
                 <label>👤 Username</label>
                 <input type="text" id="loginUsername" placeholder="Masukkan username" value="">
@@ -237,7 +234,7 @@
     <div class="main-content" id="mainContent">
         <div class="container" id="app">
             <div class="header">
-                <h1>🕊️ AI Khotbah & Renungan Generator <span>v1.2</span></h1>
+                <h1>📄 AI Proposal Generator <span>v1.1</span></h1>
                 <div class="header-actions">
                     <span class="user-info" id="userInfo">
                         👤 <span id="currentUser">-</span>
@@ -246,7 +243,7 @@
                     <button class="btn-logout" onclick="doLogout()">🚪 Logout</button>
                     <div class="search-box">
                         <span class="icon">🔍</span>
-                        <input type="text" id="searchInput" placeholder="Cari khotbah..." oninput="renderTools()">
+                        <input type="text" id="searchInput" placeholder="Cari proposal..." oninput="renderTools()">
                     </div>
                     <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
                 </div>
@@ -255,8 +252,8 @@
             <div class="main-tabs-container">
                 <div class="main-tabs-header">
                     <button class="main-tab-btn active" data-tab="tab1" onclick="switchMainTab('tab1')">
-                        📚 Jenis Khotbah
-                        <span class="badge-main" id="tab1Badge">11</span>
+                        📚 Metode List
+                        <span class="badge-main" id="tab1Badge">6</span>
                     </button>
                     <button class="main-tab-btn" data-tab="tab2" onclick="switchMainTab('tab2')">
                         ✏️ AI Prompt Studio
@@ -276,29 +273,34 @@
                     <div class="studio-grid">
                         <div class="studio-left">
                             <div class="form-group">
-                                <label>📂 Pilih Jenis Khotbah/Renungan</label>
+                                <label>📂 Pilih Metode Proposal</label>
                                 <select id="selectedTool" onchange="updateFormFields()"></select>
                             </div>
+
                             <div id="dynamicFields"></div>
+
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>📌 Judul Khotbah</label>
-                                    <input type="text" id="resultTitle" placeholder="Judul khotbah...">
+                                    <label>📌 Judul Proposal</label>
+                                    <input type="text" id="resultTitle" placeholder="Judul proposal...">
                                 </div>
                                 <div class="form-group">
                                     <label>👤 Dibuat Oleh</label>
                                     <input type="text" id="createdBy" placeholder="Nama..." value="">
                                 </div>
                             </div>
+
                             <button class="btn btn-primary" onclick="generatePrompt()">📝 Generate Prompt</button>
                         </div>
+
                         <div class="studio-right">
                             <div class="form-group">
                                 <label>📄 Prompt yang Dihasilkan</label>
                                 <div class="prompt-preview" id="promptPreview">
-                                    <span class="placeholder">Pilih jenis khotbah dan isi form untuk menghasilkan prompt...</span>
+                                    <span class="placeholder">Pilih metode dan isi form untuk menghasilkan prompt...</span>
                                 </div>
                             </div>
+
                             <div class="form-group">
                                 <label>🤖 Pilih AI Source</label>
                                 <div class="ai-source-select">
@@ -311,12 +313,14 @@
                                     </select>
                                 </div>
                             </div>
+
                             <div class="form-group">
                                 <label>📝 Hasil AI (Paste di sini)</label>
                                 <div class="quill-wrapper">
                                     <div id="resultEditor"></div>
                                 </div>
                             </div>
+
                             <div class="result-actions">
                                 <button class="btn btn-success" onclick="saveResult()">💾 Simpan Hasil</button>
                                 <button class="btn btn-warning" onclick="clearForm()">🗑️ Clear</button>
@@ -334,6 +338,7 @@
                             📅 Hari Ini <span class="sub-badge" id="subToday">0</span>
                         </button>
                     </div>
+
                     <div class="history-filters">
                         <select id="historyFilterTool" onchange="renderHistory()">
                             <option value="all">📋 All Types</option>
@@ -344,9 +349,9 @@
                     </div>
                     <div class="history-list" id="historyList">
                         <div class="empty-state">
-                            <div class="icon">🕊️</div>
-                            <h3>Belum ada khotbah</h3>
-                            <p>Pergi ke Tab "AI Prompt Studio" untuk mulai membuat khotbah</p>
+                            <div class="icon">📄</div>
+                            <h3>Belum ada proposal</h3>
+                            <p>Pergi ke Tab "AI Prompt Studio" untuk mulai membuat proposal</p>
                         </div>
                     </div>
                 </div>
@@ -357,7 +362,7 @@
     <div class="modal-overlay" id="infoModal">
         <div class="modal">
             <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
-            <div class="modal-title" id="infoModalTitle">📋 Info</div>
+            <div class="modal-title" id="infoModalTitle">📋 Metode Info</div>
             <div class="modal-body" id="infoModalBody"></div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('infoModal')">Tutup</button>
@@ -368,7 +373,7 @@
     <div class="modal-overlay" id="viewModal">
         <div class="modal" style="max-width:850px;">
             <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
-            <div class="modal-title" id="viewModalTitle">👁️ Detail Khotbah</div>
+            <div class="modal-title" id="viewModalTitle">👁️ Detail Proposal</div>
             <div class="modal-body">
                 <div id="viewMeta" style="font-size:13px;color:#718096;margin-bottom:12px;padding:8px 12px;background:#f7fafc;border-radius:8px;"></div>
                 <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt:</div>
@@ -389,7 +394,7 @@
     <div class="modal-overlay add-ai-modal" id="addAiModal">
         <div class="modal">
             <button class="modal-close" onclick="closeModal('addAiModal')">✕</button>
-            <div class="modal-title">🤖 Tambah Hasil AI Baru</div>
+            <div class="modal-title" id="addAiModalTitle">🤖 Tambah Hasil AI Baru</div>
             <div class="modal-body">
                 <input type="hidden" id="addAiId">
                 <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt (tidak bisa diedit):</div>
@@ -425,12 +430,12 @@
     <div class="modal-overlay" id="duplicateModal">
         <div class="modal" style="max-width:850px;">
             <button class="modal-close" onclick="closeModal('duplicateModal')">✕</button>
-            <div class="modal-title">📋 Duplikat Prompt</div>
+            <div class="modal-title" id="duplicateModalTitle">📋 Duplikat Prompt</div>
             <div class="modal-body">
                 <input type="hidden" id="dupId">
                 <input type="hidden" id="dupFrameworkType">
                 <div class="form-group">
-                    <label>📂 Jenis Khotbah</label>
+                    <label>📂 Jenis Proposal</label>
                     <input type="text" id="dupFrameworkDisplay" disabled style="background:#f7fafc;font-weight:600;">
                 </div>
                 <div id="dupDynamicFields"></div>
@@ -460,265 +465,138 @@
     </div>
 
     <script>
-        // ==================== SERMON TYPE DEFINITIONS ====================
-        const SERMON_TYPES = {
-            expository: {
-                id: 'expository',
-                icon: '📖',
-                name: 'Khotbah Ekspositori',
-                desc: 'Berdasarkan satu perikop Alkitab, menggali ayat per ayat.',
+        // ==================== PROPOSAL METHOD DEFINITIONS ====================
+        const PROPOSAL_METHODS = {
+            business: {
+                id: 'business', icon: '🏢', name: 'Proposal Bisnis',
+                desc: 'Business plan lengkap dengan analisis pasar, strategi, dan proyeksi keuangan.',
                 color: '#805ad5',
-                use_for: '✅ Kebaktian Minggu / Ibadah Umum\n✅ Pendalaman Alkitab (PA)\n✅ Khotbah dengan dasar Alkitab yang kuat\n✅ Jemaat yang ingin belajar firman lebih dalam\n✅ Pendeta & Pengkhotbah berpengalaman',
-                contoh: [
-                    { lbl: 'Contoh Hasil (cuplikan)', txt: 'Judul: "Kasih yang Mengubahkan" — Nats: Matius 1:1. PEMBUKAAN: "Silsilah sering kita lewati saat baca Alkitab, padahal di baliknya ada kisah kasih karunia Allah yang memakai orang-orang biasa — bahkan yang bermasalah — untuk rencana besar-Nya." EKSPOSISI: "Perhatikan, dalam silsilah Matius 1 disebut nama Rahab dan Rut, perempuan bukan Yahudi. Ini menunjukkan kasih Allah melampaui batas yang kita bayangkan." APLIKASI: "Jika Allah bisa memakai mereka, Ia juga bisa memakai masa lalu kita untuk sesuatu yang indah." PENUTUP: doa syukur atas kasih karunia yang mengubahkan.' }
-                ],
                 fields: [
-                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Kasih yang Mengubahkan' },
-                    { key: 'scripture', label: 'Perikop Alkitab (Satu Pasal & Rentang Ayat)', type: 'text', placeholder: 'Contoh: Matius 1:1-5' },
-                    { key: 'key_verse', label: 'Nats (Ayat Kunci)', type: 'text', placeholder: 'Contoh: Matius 1:1' },
-                    { key: 'audience', label: 'Jemaat Sasaran', type: 'text', placeholder: 'Contoh: Jemaat umum' },
-                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 30' },
-                    { key: 'main_points', label: 'Poin Utama', type: 'textarea', placeholder: 'Poin-poin yang ingin disampaikan...' },
-                    { key: 'illustration', label: 'Ilustrasi (Opsional)', type: 'textarea', placeholder: 'Ilustrasi/cerita yang relevan...' },
-                    { key: 'application', label: 'Aplikasi Praktis', type: 'textarea', placeholder: 'Aplikasi dalam kehidupan sehari-hari...' }
+                    { key: 'company_name', label: 'Nama Perusahaan', type: 'text', placeholder: 'PT. Lidan Psikologi' },
+                    { key: 'company_address', label: 'Alamat Perusahaan', type: 'text', placeholder: 'Jl. Merdeka No. 123, Jakarta' },
+                    { key: 'company_phone', label: 'Telepon Perusahaan', type: 'text', placeholder: '021-1234567' },
+                    { key: 'company_email', label: 'Email Perusahaan', type: 'text', placeholder: 'info@lidan.co.id' },
+                    { key: 'recipient_name', label: 'Nama Penerima', type: 'text', placeholder: 'Bapak/Ibu Direktur' },
+                    { key: 'recipient_position', label: 'Jabatan Penerima', type: 'text', placeholder: 'Direktur Utama' },
+                    { key: 'recipient_company', label: 'Perusahaan Penerima', type: 'text', placeholder: 'PT. Maju Jaya' },
+                    { key: 'letter_date', label: 'Tanggal Surat', type: 'date' },
+                    { key: 'business_name', label: 'Nama Bisnis', type: 'text', placeholder: 'Lidan Psikologi' },
+                    { key: 'business_description', label: 'Deskripsi Bisnis', type: 'textarea', placeholder: 'Deskripsi bisnis yang akan dijalankan...' },
+                    { key: 'target_market', label: 'Target Pasar', type: 'text', placeholder: 'Perusahaan, Sekolah, Karyawan' },
+                    { key: 'investment', label: 'Estimasi Investasi', type: 'text', placeholder: 'Rp 500.000.000' }
                 ],
-                prompt_template: `Buat khotbah ekspositori dengan tema "{theme}" berdasarkan perikop {scripture} dengan nats {key_verse}. Jemaat sasaran: {audience}. Durasi: {duration} menit. Poin utama: {main_points}. Ilustrasi: {illustration}. Aplikasi praktis: {application}.\n\nFOKUS UTAMA: Bahas HANYA perikop {scripture} (satu pasal dan rentang ayat tersebut). Jangan melebar ke ayat lain di luar rentang tersebut, kecuali sebagai referensi pendukung singkat. Gali setiap ayat dalam rentang tersebut secara mendalam.\n\nFORMAT OUTPUT:\n\n=== KHOTBAH EKSPOSITORI ===\n\nJudul: {theme}\nNats: {key_verse}\nPerikop: {scripture}\n\nI. PEMBUKAAN\n- Salam dan doa pembuka\n- Pengantar tema\n- Latar belakang perikop\n\nII. EKSPOSISI PERIKOP ({scripture})\n- Ayat per ayat (jelaskan konteks, makna, dan aplikasi)\n- Poin-poin utama\n- Ilustrasi yang relevan\n\nIII. APLIKASI PRAKTIS\n- Penerapan dalam kehidupan sehari-hari\n- Tantangan dan komitmen\n\nIV. PENUTUP\n- Ringkasan\n- Doa penutup\n- Berkat\n\nFormat dengan markdown yang rapi.`
+                prompt_template: `Buat proposal bisnis lengkap untuk {business_name} dengan deskripsi: {business_description}. Target pasar: {target_market}. Estimasi investasi: {investment}.\n\nFORMAT OUTPUT:\n\n=== SURAT PENGANTAR ===\n\n[KOP SURAT]\n{company_name}\n{company_address}\nTelp: {company_phone} | Email: {company_email}\n\nPerihal: Proposal Bisnis - {business_name}\nLampiran: 1 (Proposal)\nTanggal: {letter_date}\n\nKepada Yth.\n{recipient_name}\n{recipient_position}\n{recipient_company}\n\nDengan hormat,\n\nSehubungan dengan rencana pengembangan bisnis {business_name}, kami mengajukan proposal bisnis ini sebagai acuan kerjasama. Proposal ini disusun secara komprehensif untuk memberikan gambaran yang jelas tentang potensi bisnis yang akan dijalankan.\n\nDemikian surat pengantar ini kami sampaikan. Atas perhatian dan kerjasamanya, kami ucapkan terima kasih.\n\nHormat kami,\n\n{created_by}\nDirektur {company_name}\n\n=== ISI PROPOSAL ===\n\nBAB 1: PENDAHULUAN\n1.1 Latar Belakang\n1.2 Tujuan\n1.3 Ruang Lingkup\n\nBAB 2: ANALISIS BISNIS\n2.1 Analisis Pasar\n2.2 Analisis Kompetitor\n2.3 SWOT Analysis\n\nBAB 3: STRATEGI BISNIS\n3.1 Strategi Pemasaran\n3.2 Strategi Operasional\n3.3 Strategi Keuangan\n\nBAB 4: RENCANA IMPLEMENTASI\n4.1 Timeline\n4.2 Anggaran\n4.3 Sumber Daya\n\nBAB 5: PENUTUP\n5.1 Kesimpulan\n5.2 Rekomendasi\n\nFormat dengan markdown yang rapi dan profesional.`
             },
-            topical: {
-                id: 'topical',
-                icon: '🎯',
-                name: 'Khotbah Topikal',
-                desc: 'Berdasarkan tema/topik tertentu dengan ayat pendukung.',
-                color: '#9f7aea',
-                use_for: '✅ Kebaktian Tematik\n✅ Retreat & Camp\n✅ Seminar Rohani\n✅ Ibadah Spesial (Natal, Paskah)\n✅ Menjawab isu aktual',
-                contoh: [
-                    { lbl: 'Contoh Hasil (cuplikan)', txt: 'Judul: "Mengatasi Kecemasan dengan Iman" — Nats: Filipi 4:6-7. PEMBUKAAN: "Siapa di antara kita yang tidak pernah cemas soal pekerjaan, kesehatan, atau masa depan anak?" POIN 1 (Filipi 4:6-7): "Firman mengajak kita membawa kekhawatiran itu dalam doa, bukan memendamnya sendiri." POIN 2 (Matius 6:25-34): "Yesus mengingatkan burung di udara saja dipelihara Bapa, apalagi kita." POIN 3 (1 Petrus 5:7): "Serahkan segala kekhawatiran, sebab Ia yang memelihara kita." APLIKASI: latihan doa syukur setiap kali cemas muncul minggu ini.' }
-                ],
-                fields: [
-                    { key: 'theme', label: 'Tema/Topik', type: 'text', placeholder: 'Contoh: Mengatasi Kecemasan dengan Iman' },
-                    { key: 'supporting_verses', label: 'Ayat Pendukung', type: 'textarea', placeholder: 'Contoh: Filipi 4:6-7, Matius 6:25-34, 1 Petrus 5:7' },
-                    { key: 'key_verse', label: 'Nats (Ayat Kunci)', type: 'text', placeholder: 'Contoh: Filipi 4:6-7' },
-                    { key: 'audience', label: 'Jemaat Sasaran', type: 'text', placeholder: 'Contoh: Jemaat umum' },
-                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 30' },
-                    { key: 'main_points', label: 'Poin Utama', type: 'textarea', placeholder: 'Poin-poin yang ingin disampaikan...' },
-                    { key: 'illustration', label: 'Ilustrasi (Opsional)', type: 'textarea', placeholder: 'Ilustrasi/cerita yang relevan...' },
-                    { key: 'application', label: 'Aplikasi Praktis', type: 'textarea', placeholder: 'Aplikasi dalam kehidupan sehari-hari...' }
-                ],
-                prompt_template: `Buat khotbah topikal dengan tema "{theme}" dengan ayat pendukung {supporting_verses} dan nats {key_verse}. Jemaat sasaran: {audience}. Durasi: {duration} menit. Poin utama: {main_points}. Ilustrasi: {illustration}. Aplikasi praktis: {application}.\n\nFOKUS UTAMA: Bahas topik ini dengan mendalam berdasarkan ayat-ayat pendukung yang diberikan. Pastikan setiap poin didukung oleh ayat yang relevan.\n\nFORMAT OUTPUT:\n\n=== KHOTBAH TOPIKAL ===\n\nJudul: {theme}\nNats: {key_verse}\nAyat Pendukung: {supporting_verses}\n\nI. PEMBUKAAN\n- Salam dan doa\n- Pengantar tema\n- Relevansi topik dengan kehidupan\n\nII. PEMBAHASAN TOPIK\n- Poin 1 dengan ayat pendukung\n- Poin 2 dengan ayat pendukung\n- Poin 3 dengan ayat pendukung\n- Ilustrasi untuk setiap poin\n\nIII. APLIKASI PRAKTIS\n- Penerapan dalam kehidupan\n- Komitmen dan tantangan\n\nIV. PENUTUP\n- Ringkasan\n- Doa penutup\n- Berkat\n\nFormat dengan markdown yang rapi.`
-            },
-            narrative: {
-                id: 'narrative',
-                icon: '📚',
-                name: 'Khotbah Naratif',
-                desc: 'Menceritakan kisah Alkitab secara naratif.',
+            project: {
+                id: 'project', icon: '📊', name: 'Proposal Proyek',
+                desc: 'Rencana proyek dengan timeline, budget, dan sumber daya.',
                 color: '#4299e1',
-                use_for: '✅ Ibadah Anak Sekolah Minggu\n✅ Ibadah Keluarga\n✅ Ibadah Pemuda\n✅ Storytelling rohani\n✅ Pendekatan kreatif untuk jemaat',
-                contoh: [
-                    { lbl: 'Contoh Hasil (cuplikan)', txt: 'Judul: "Daud dan Goliat - Berani Karena Iman" — Nats: 1 Samuel 17:47. CERITA: "Bayangkan seorang gembala muda berdiri di depan raksasa bersenjata lengkap, sementara seluruh pasukan Israel gemetar ketakutan di belakangnya." KONFLIK: "Semua orang meragukan Daud, bahkan kakaknya sendiri menyepelekannya." KLIMAKS: "Namun Daud maju bukan dengan baju zirah, tapi dengan keyakinan bahwa Tuhanlah yang berperang baginya." RESOLUSI: "Satu lemparan batu, dan raksasa itu roboh." PESAN UNTUK ANAK: keberanian sejati datang dari percaya Tuhan, bukan dari besar-kecilnya diri kita.' }
-                ],
                 fields: [
-                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Daud dan Goliat - Berani Karena Iman' },
-                    { key: 'scripture', label: 'Kisah Alkitab (Satu Pasal & Rentang Ayat)', type: 'text', placeholder: 'Contoh: 1 Samuel 17:1-58' },
-                    { key: 'key_verse', label: 'Nats (Ayat Kunci)', type: 'text', placeholder: 'Contoh: 1 Samuel 17:47' },
-                    { key: 'audience', label: 'Jemaat Sasaran', type: 'text', placeholder: 'Contoh: Anak-anak, Pemuda' },
-                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 20' },
-                    { key: 'characters', label: 'Tokoh Utama', type: 'textarea', placeholder: 'Tokoh-tokoh dalam kisah...' },
-                    { key: 'moral', label: 'Pesan Moral', type: 'textarea', placeholder: 'Pesan yang ingin disampaikan...' },
-                    { key: 'application', label: 'Aplikasi Praktis', type: 'textarea', placeholder: 'Aplikasi dalam kehidupan...' }
+                    { key: 'company_name', label: 'Nama Perusahaan', type: 'text', placeholder: 'PT. Lidan Psikologi' },
+                    { key: 'company_address', label: 'Alamat Perusahaan', type: 'text', placeholder: 'Jl. Merdeka No. 123, Jakarta' },
+                    { key: 'company_phone', label: 'Telepon Perusahaan', type: 'text', placeholder: '021-1234567' },
+                    { key: 'company_email', label: 'Email Perusahaan', type: 'text', placeholder: 'info@lidan.co.id' },
+                    { key: 'recipient_name', label: 'Nama Penerima', type: 'text', placeholder: 'Bapak/Ibu Direktur' },
+                    { key: 'recipient_position', label: 'Jabatan Penerima', type: 'text', placeholder: 'Direktur Utama' },
+                    { key: 'recipient_company', label: 'Perusahaan Penerima', type: 'text', placeholder: 'PT. Maju Jaya' },
+                    { key: 'letter_date', label: 'Tanggal Surat', type: 'date' },
+                    { key: 'project_name', label: 'Nama Proyek', type: 'text', placeholder: 'Pengembangan Aplikasi Konseling' },
+                    { key: 'project_description', label: 'Deskripsi Proyek', type: 'textarea', placeholder: 'Deskripsi proyek yang akan dikerjakan...' },
+                    { key: 'duration', label: 'Durasi Proyek', type: 'text', placeholder: '6 bulan' },
+                    { key: 'budget', label: 'Estimasi Budget', type: 'text', placeholder: 'Rp 1.000.000.000' }
                 ],
-                prompt_template: `Buat khotbah naratif dengan tema "{theme}" berdasarkan kisah {scripture} dengan nats {key_verse}. Jemaat sasaran: {audience}. Durasi: {duration} menit. Tokoh utama: {characters}. Pesan moral: {moral}. Aplikasi praktis: {application}.\n\nFOKUS UTAMA: Ceritakan kisah ini secara naratif berdasarkan rentang ayat {scripture} saja. Jangan menambahkan detail di luar Alkitab atau di luar rentang ayat tersebut.\n\nFORMAT OUTPUT:\n\n=== KHOTBAH NARATIF ===\n\nJudul: {theme}\nNats: {key_verse}\nKisah: {scripture}\n\nI. PEMBUKAAN\n- Salam dan doa\n- Pengantar kisah\n- Setting cerita\n\nII. ALUR CERITA ({scripture})\n- Awal kisah (konflik)\n- Perkembangan (ketegangan)\n- Klimaks (titik balik)\n- Penyelesaian (resolusi)\n\nIII. PESAN MORAL\n- Pelajaran dari kisah\n- Karakter tokoh yang diteladani\n\nIV. APLIKASI PRAKTIS\n- Penerapan dalam kehidupan\n- Komitmen\n\nV. PENUTUP\n- Doa penutup\n- Berkat\n\nFormat dengan markdown yang rapi.`
+                prompt_template: `Buat proposal proyek untuk {project_name} dengan deskripsi: {project_description}. Durasi proyek: {duration}. Estimasi budget: {budget}.\n\nFORMAT OUTPUT:\n\n=== SURAT PENGANTAR ===\n\n[KOP SURAT]\n{company_name}\n{company_address}\nTelp: {company_phone} | Email: {company_email}\n\nPerihal: Proposal Proyek - {project_name}\nLampiran: 1 (Proposal)\nTanggal: {letter_date}\n\nKepada Yth.\n{recipient_name}\n{recipient_position}\n{recipient_company}\n\nDengan hormat,\n\nSehubungan dengan rencana pelaksanaan proyek {project_name}, kami mengajukan proposal ini untuk mendapatkan persetujuan dan dukungan. Proposal ini disusun secara detail untuk memastikan kelancaran pelaksanaan proyek.\n\nDemikian surat pengantar ini kami sampaikan. Atas perhatian dan kerjasamanya, kami ucapkan terima kasih.\n\nHormat kami,\n\n{created_by}\nManajer Proyek {company_name}\n\n=== ISI PROPOSAL ===\n\nBAB 1: PENDAHULUAN\n1.1 Latar Belakang\n1.2 Tujuan Proyek\n1.3 Manfaat Proyek\n\nBAB 2: RUANG LINGKUP PROYEK\n2.1 Deskripsi Pekerjaan\n2.2 Deliverables\n2.3 Batasan Proyek\n\nBAB 3: RENCANA PELAKSANAAN\n3.1 Metodologi\n3.2 Timeline Pelaksanaan\n3.3 Struktur Tim\n\nBAB 4: ANGGARAN\n4.1 Rincian Biaya\n4.2 Sumber Dana\n4.3 Proyeksi Cash Flow\n\nBAB 5: PENUTUP\n5.1 Kesimpulan\n5.2 Rekomendasi\n\nFormat dengan markdown yang rapi dan profesional.`
             },
-            textual: {
-                id: 'textual',
-                icon: '📝',
-                name: 'Khotbah Tekstual',
-                desc: 'Berdasarkan satu ayat Alkitab, dijabarkan mendalam.',
+            services: {
+                id: 'services', icon: '🛠️', name: 'Proposal Penawaran Jasa',
+                desc: 'Penawaran layanan profesional dengan portofolio dan testimoni.',
                 color: '#ed8936',
-                use_for: '✅ Ibadah Pendalaman Alkitab\n✅ Kebaktian Doa\n✅ Khotbah singkat & padat\n✅ Menggali satu ayat secara mendalam\n✅ Ibadah Rumah Tangga',
-                contoh: [
-                    { lbl: 'Contoh Hasil (cuplikan)', txt: 'Judul: "Damai Sejahtera yang Melampaui Segala Akal" — Nats: Filipi 4:7. PEMBUKAAN: "Ada satu frasa dalam ayat ini yang sering kita lewatkan begitu saja: damai yang melampaui akal." ANALISIS KATA: "Kata \'melampaui\' di sini berarti damai itu tidak bisa dijelaskan logika manusia — ia datang bukan karena masalah selesai, tapi karena hati bersandar pada Tuhan." PESAN TEKS: "Damai sejahtera bukan soal keadaan tenang di luar, tapi hati yang tenang di tengah badai." APLIKASI: latihan berdoa dengan ucapan syukur setiap kali cemas datang minggu ini.' }
-                ],
                 fields: [
-                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Damai Sejahtera yang Melampaui Segala Akal' },
-                    { key: 'scripture', label: 'Ayat Alkitab (Satu Pasal & Rentang Ayat)', type: 'text', placeholder: 'Contoh: Filipi 4:4-9' },
-                    { key: 'key_verse', label: 'Nats', type: 'text', placeholder: 'Contoh: Filipi 4:7' },
-                    { key: 'audience', label: 'Jemaat Sasaran', type: 'text', placeholder: 'Contoh: Jemaat umum' },
-                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 20' },
-                    { key: 'word_analysis', label: 'Analisis Kata/Frasa', type: 'textarea', placeholder: 'Kata/frasa kunci yang perlu digali...' },
-                    { key: 'application', label: 'Aplikasi Praktis', type: 'textarea', placeholder: 'Aplikasi dalam kehidupan...' }
+                    { key: 'company_name', label: 'Nama Perusahaan', type: 'text', placeholder: 'PT. Lidan Psikologi' },
+                    { key: 'company_address', label: 'Alamat Perusahaan', type: 'text', placeholder: 'Jl. Merdeka No. 123, Jakarta' },
+                    { key: 'company_phone', label: 'Telepon Perusahaan', type: 'text', placeholder: '021-1234567' },
+                    { key: 'company_email', label: 'Email Perusahaan', type: 'text', placeholder: 'info@lidan.co.id' },
+                    { key: 'recipient_name', label: 'Nama Penerima', type: 'text', placeholder: 'Bapak/Ibu HRD' },
+                    { key: 'recipient_position', label: 'Jabatan Penerima', type: 'text', placeholder: 'HRD Manager' },
+                    { key: 'recipient_company', label: 'Perusahaan Penerima', type: 'text', placeholder: 'PT. Maju Jaya' },
+                    { key: 'letter_date', label: 'Tanggal Surat', type: 'date' },
+                    { key: 'service_name', label: 'Nama Jasa', type: 'text', placeholder: 'Layanan Konseling Psikologi' },
+                    { key: 'service_description', label: 'Deskripsi Jasa', type: 'textarea', placeholder: 'Deskripsi layanan yang ditawarkan...' },
+                    { key: 'price', label: 'Harga Penawaran', type: 'text', placeholder: 'Rp 50.000.000' },
+                    { key: 'portfolio', label: 'Portofolio', type: 'textarea', placeholder: 'Proyek atau klien sebelumnya...' }
                 ],
-                prompt_template: `Buat khotbah tekstual dengan tema "{theme}" berdasarkan ayat {scripture} dengan nats {key_verse}. Jemaat sasaran: {audience}. Durasi: {duration} menit. Analisis kata/frasa kunci: {word_analysis}. Aplikasi praktis: {application}.\n\nFOKUS UTAMA: Bedah dan gali HANYA ayat {scripture} (satu pasal dan rentang ayat tersebut) secara mendalam. Jangan melebar ke ayat lain di luar rentang tersebut.\n\nFORMAT OUTPUT:\n\n=== KHOTBAH TEKSTUAL ===\n\nJudul: {theme}\nNats: {key_verse}\nAyat: {scripture}\n\nI. PEMBUKAAN\n- Salam dan doa\n- Pengantar ayat\n- Latar belakang\n\nII. ANALISIS TEKS ({scripture})\n- Analisis kata/frasa kunci\n- Makna gramatikal & konteks\n- Perbandingan dengan ayat lain\n\nIII. PESAN TEKS\n- Kebenaran utama\n- Implikasi teologis\n\nIV. APLIKASI PRAKTIS\n- Penerapan praktis\n- Komitmen\n\nV. PENUTUP\n- Doa penutup\n- Berkat\n\nFormat dengan markdown yang rapi.`
+                prompt_template: `Buat proposal penawaran jasa untuk {service_name} dengan deskripsi: {service_description}. Harga penawaran: {price}. Portofolio: {portfolio}.\n\nFORMAT OUTPUT:\n\n=== SURAT PENGANTAR ===\n\n[KOP SURAT]\n{company_name}\n{company_address}\nTelp: {company_phone} | Email: {company_email}\n\nPerihal: Penawaran Jasa - {service_name}\nLampiran: 1 (Proposal)\nTanggal: {letter_date}\n\nKepada Yth.\n{recipient_name}\n{recipient_position}\n{recipient_company}\n\nDengan hormat,\n\nSehubungan dengan kebutuhan perusahaan Bapak/Ibu akan layanan {service_name}, kami dengan ini mengajukan penawaran jasa untuk dipertimbangkan. Kami memiliki pengalaman dan kompetensi yang relevan dalam bidang ini.\n\nDemikian surat pengantar ini kami sampaikan. Kami menantikan kesempatan untuk dapat bekerjasama dengan perusahaan Bapak/Ibu.\n\nHormat kami,\n\n{created_by}\nDirektur {company_name}\n\n=== ISI PROPOSAL ===\n\nBAB 1: PENDAHULUAN\n1.1 Latar Belakang\n1.2 Tujuan Penawaran\n1.3 Profil Perusahaan\n\nBAB 2: LAYANAN\n2.1 Deskripsi Layanan\n2.2 Keunggulan\n2.3 Metodologi\n\nBAB 3: PORTOFOLIO\n3.1 Proyek Sebelumnya\n3.2 Testimoni Klien\n3.3 Penghargaan\n\nBAB 4: HARGA DAN PAKET\n4.1 Rincian Harga\n4.2 Paket Layanan\n4.3 Syarat dan Ketentuan\n\nBAB 5: PENUTUP\n5.1 Kesimpulan\n5.2 Komitmen Kami\n\nFormat dengan markdown yang rapi dan profesional.`
             },
-            daily: {
-                id: 'daily',
-                icon: '🌅',
-                name: 'Renungan Harian',
-                desc: 'Renungan singkat untuk dibaca pribadi setiap hari.',
+            collaboration: {
+                id: 'collaboration', icon: '🤝', name: 'Proposal Kerjasama',
+                desc: 'Proposal kemitraan atau kolaborasi antar perusahaan.',
                 color: '#38b2ac',
-                use_for: '✅ Devosi Pribadi\n✅ Renungan Harian Keluarga\n✅ Bahan Sharing WA/Media Sosial\n✅ Bahan Renungan Pagi\n✅ Bahan KTB (Kelompok Tumbuh Bersama)',
-                contoh: [
-                    { lbl: 'Contoh Hasil (cuplikan)', txt: 'Judul: "Bersyukur di Tengah Kesulitan" — Nats: 1 Tesalonika 5:18. BACAAN: 1 Tesalonika 5:16-18. RENUNGAN: "Bersyukur senantiasa bukan berarti berpura-pura bahagia saat susah, tapi memilih percaya bahwa Tuhan tetap baik meski keadaan belum berubah." PERENUNGAN: "Hal apa hari ini yang bisa kamu syukuri, sekecil apa pun itu?" DOA: "Tuhan, ajar aku bersyukur bukan karena keadaan mudah, tapi karena Engkau selalu menyertai. Amin."' }
-                ],
                 fields: [
-                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Bersyukur di Tengah Kesulitan' },
-                    { key: 'scripture', label: 'Ayat Alkitab (Satu Pasal & Rentang Ayat)', type: 'text', placeholder: 'Contoh: 1 Tesalonika 5:16-18' },
-                    { key: 'key_verse', label: 'Nats', type: 'text', placeholder: 'Contoh: 1 Tesalonika 5:18' },
-                    { key: 'audience', label: 'Pembaca Sasaran', type: 'text', placeholder: 'Contoh: Jemaat umum, Pemuda' },
-                    { key: 'duration', label: 'Waktu Baca (menit)', type: 'text', placeholder: 'Contoh: 5' },
-                    { key: 'reflection', label: 'Poin Perenungan', type: 'textarea', placeholder: 'Poin-poin yang direnungkan...' },
-                    { key: 'application', label: 'Aplikasi Praktis', type: 'textarea', placeholder: 'Aplikasi dalam kehidupan...' },
-                    { key: 'prayer', label: 'Pokok Doa', type: 'textarea', placeholder: 'Pokok doa yang dinaikkan...' }
+                    { key: 'company_name', label: 'Nama Perusahaan', type: 'text', placeholder: 'PT. Lidan Psikologi' },
+                    { key: 'company_address', label: 'Alamat Perusahaan', type: 'text', placeholder: 'Jl. Merdeka No. 123, Jakarta' },
+                    { key: 'company_phone', label: 'Telepon Perusahaan', type: 'text', placeholder: '021-1234567' },
+                    { key: 'company_email', label: 'Email Perusahaan', type: 'text', placeholder: 'info@lidan.co.id' },
+                    { key: 'recipient_name', label: 'Nama Penerima', type: 'text', placeholder: 'Bapak/Ibu CEO' },
+                    { key: 'recipient_position', label: 'Jabatan Penerima', type: 'text', placeholder: 'CEO' },
+                    { key: 'recipient_company', label: 'Perusahaan Penerima', type: 'text', placeholder: 'PT. Mitra Sejahtera' },
+                    { key: 'letter_date', label: 'Tanggal Surat', type: 'date' },
+                    { key: 'partnership_name', label: 'Nama Kerjasama', type: 'text', placeholder: 'Program Kesehatan Mental Bersama' },
+                    { key: 'partnership_description', label: 'Deskripsi Kerjasama', type: 'textarea', placeholder: 'Deskripsi kerjasama yang diusulkan...' },
+                    { key: 'benefits', label: 'Manfaat Kerjasama', type: 'textarea', placeholder: 'Manfaat bagi kedua belah pihak...' },
+                    { key: 'duration', label: 'Durasi Kerjasama', type: 'text', placeholder: '1 tahun' }
                 ],
-                prompt_template: `Buat renungan harian dengan tema "{theme}" berdasarkan ayat {scripture} dengan nats {key_verse}. Pembaca sasaran: {audience}. Waktu baca: {duration} menit. Poin perenungan: {reflection}. Aplikasi praktis: {application}. Pokok doa: {prayer}.\n\nFOKUS UTAMA: Renungan ini harus fokus membahas ayat {scripture} (satu pasal dan rentang ayat tersebut) secara mendalam dan aplikatif.\n\nFORMAT OUTPUT:\n\n=== RENUNGAN HARIAN ===\n\nJudul: {theme}\nNats: {key_verse}\n\n📖 BACAAN: {scripture}\n\n✍️ RENUNGAN:\n[3-5 paragraf renungan yang menggugah hati]\n\n💡 PERENUNGAN:\n- [Pertanyaan refleksi 1]\n- [Pertanyaan refleksi 2]\n- [Pertanyaan refleksi 3]\n\n🙏 DOA:\n[Doa singkat 2-3 kalimat]\n\nFormat dengan markdown yang rapi.`
+                prompt_template: `Buat proposal kerjasama untuk {partnership_name} dengan deskripsi: {partnership_description}. Manfaat kerjasama: {benefits}. Durasi kerjasama: {duration}.\n\nFORMAT OUTPUT:\n\n=== SURAT PENGANTAR ===\n\n[KOP SURAT]\n{company_name}\n{company_address}\nTelp: {company_phone} | Email: {company_email}\n\nPerihal: Proposal Kerjasama - {partnership_name}\nLampiran: 1 (Proposal)\nTanggal: {letter_date}\n\nKepada Yth.\n{recipient_name}\n{recipient_position}\n{recipient_company}\n\nDengan hormat,\n\nKami dari {company_name} bermaksud mengajukan proposal kerjasama dalam rangka {partnership_name}. Kami melihat adanya potensi sinergi yang besar antara kedua perusahaan.\n\nDemikian surat pengantar ini kami sampaikan. Kami berharap dapat membuka pintu kerjasama yang saling menguntungkan.\n\nHormat kami,\n\n{created_by}\nDirektur {company_name}\n\n=== ISI PROPOSAL ===\n\nBAB 1: PENDAHULUAN\n1.1 Latar Belakang\n1.2 Tujuan Kerjasama\n1.3 Ruang Lingkup\n\nBAB 2: PROFIL PERUSAHAAN\n2.1 Profil {company_name}\n2.2 Profil {recipient_company}\n2.3 Analisis Sinergi\n\nBAB 3: RENCANA KERJASAMA\n3.1 Ruang Lingkup Kerjasama\n3.2 Tanggung Jawab Masing-masing\n3.3 Timeline Pelaksanaan\n\nBAB 4: MANFAAT\n4.1 Manfaat bagi {company_name}\n4.2 Manfaat bagi {recipient_company}\n4.3 Manfaat bagi Pihak Lain\n\nBAB 5: PENUTUP\n5.1 Kesimpulan\n5.2 Harapan ke Depan\n\nFormat dengan markdown yang rapi dan profesional.`
             },
-            family: {
-                id: 'family',
-                icon: '👨‍👩‍👧‍👦',
-                name: 'Renungan Keluarga',
-                desc: 'Renungan untuk ibadah keluarga/mezbah keluarga.',
+            research: {
+                id: 'research', icon: '🔬', name: 'Proposal Penelitian',
+                desc: 'Proposal riset atau penelitian akademik.',
                 color: '#48bb78',
-                use_for: '✅ Ibadah Keluarga (Mezbah Keluarga)\n✅ Renungan Orang Tua & Anak\n✅ Bahan PA Keluarga\n✅ Devosi Rumah Tangga\n✅ Waktu Berkualitas dengan Keluarga',
-                contoh: [
-                    { lbl: 'Contoh Hasil (cuplikan)', txt: 'Judul: "Keluarga yang Takut akan Tuhan" — Nats: Mazmur 128:1. BACAAN BERSAMA: Mazmur 128. RENUNGAN: "Berbahagialah setiap orang yang hidup menurut jalan Tuhan, sebab dari situlah berkat keluarga mengalir." DISKUSI: Untuk Ayah — "Apa artinya jadi kepala keluarga yang takut akan Tuhan?" Untuk Ibu — "Bagaimana menghadirkan suasana rumah yang penuh damai?" Untuk Anak — "Apa satu hal yang bisa kamu lakukan agar keluarga makin akur?" DOA KELUARGA: bersama-sama berdoa mensyukuri berkat yang sudah diterima. KOMITMEN: makan malam bersama tanpa gadget minimal 3x seminggu.' }
-                ],
                 fields: [
-                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Keluarga yang Takut akan Tuhan' },
-                    { key: 'scripture', label: 'Ayat Alkitab (Satu Pasal & Rentang Ayat)', type: 'text', placeholder: 'Contoh: Mazmur 128:1-6' },
-                    { key: 'key_verse', label: 'Nats', type: 'text', placeholder: 'Contoh: Mazmur 128:1' },
-                    { key: 'audience', label: 'Anggota Keluarga', type: 'text', placeholder: 'Contoh: Suami, Isteri, 2 anak' },
-                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 15' },
-                    { key: 'main_message', label: 'Pesan Utama', type: 'textarea', placeholder: 'Pesan untuk keluarga...' },
-                    { key: 'discussion', label: 'Pertanyaan Diskusi', type: 'textarea', placeholder: 'Pertanyaan untuk diskusi keluarga...' },
-                    { key: 'prayer', label: 'Pokok Doa', type: 'textarea', placeholder: 'Pokok doa keluarga...' }
+                    { key: 'company_name', label: 'Nama Institusi', type: 'text', placeholder: 'Universitas Indonesia' },
+                    { key: 'company_address', label: 'Alamat Institusi', type: 'text', placeholder: 'Jl. Salemba No. 4, Jakarta' },
+                    { key: 'company_phone', label: 'Telepon', type: 'text', placeholder: '021-1234567' },
+                    { key: 'company_email', label: 'Email', type: 'text', placeholder: 'research@ui.ac.id' },
+                    { key: 'recipient_name', label: 'Nama Penerima', type: 'text', placeholder: 'Kepala Lembaga Penelitian' },
+                    { key: 'recipient_position', label: 'Jabatan Penerima', type: 'text', placeholder: 'Kepala Lembaga' },
+                    { key: 'recipient_company', label: 'Institusi Penerima', type: 'text', placeholder: 'Lembaga Penelitian' },
+                    { key: 'letter_date', label: 'Tanggal Surat', type: 'date' },
+                    { key: 'research_title', label: 'Judul Penelitian', type: 'text', placeholder: 'Dampak Program Mental Health terhadap Produktivitas' },
+                    { key: 'research_description', label: 'Deskripsi Penelitian', type: 'textarea', placeholder: 'Deskripsi penelitian yang akan dilakukan...' },
+                    { key: 'methodology', label: 'Metodologi', type: 'textarea', placeholder: 'Metode yang akan digunakan...' },
+                    { key: 'budget', label: 'Estimasi Anggaran', type: 'text', placeholder: 'Rp 200.000.000' }
                 ],
-                prompt_template: `Buat renungan keluarga dengan tema "{theme}" berdasarkan ayat {scripture} dengan nats {key_verse}. Anggota keluarga: {audience}. Durasi: {duration} menit. Pesan utama: {main_message}. Pertanyaan diskusi: {discussion}. Pokok doa: {prayer}.\n\nFOKUS UTAMA: Bahas ayat {scripture} (satu pasal dan rentang ayat tersebut) secara mendalam dan aplikatif untuk seluruh anggota keluarga.\n\nFORMAT OUTPUT:\n\n=== RENUNGAN KELUARGA ===\n\nJudul: {theme}\nNats: {key_verse}\n\n📖 BACAAN BERSAMA: {scripture}\n\n✍️ RENUNGAN:\n[Renungan singkat untuk dibacakan]\n\n💬 DISKUSI KELUARGA:\n1. [Pertanyaan untuk ayah]\n2. [Pertanyaan untuk ibu]\n3. [Pertanyaan untuk anak-anak]\n\n🙏 DOA KELUARGA:\n[Doa bersama]\n\n🎯 KOMITMEN KELUARGA:\n[Komitmen yang akan dilakukan bersama]\n\nFormat dengan markdown yang rapi.`
+                prompt_template: `Buat proposal penelitian untuk "{research_title}" dengan deskripsi: {research_description}. Metodologi: {methodology}. Estimasi anggaran: {budget}.\n\nFORMAT OUTPUT:\n\n=== SURAT PENGANTAR ===\n\n[KOP INSTITUSI]\n{company_name}\n{company_address}\nTelp: {company_phone} | Email: {company_email}\n\nPerihal: Proposal Penelitian - {research_title}\nLampiran: 1 (Proposal)\nTanggal: {letter_date}\n\nKepada Yth.\n{recipient_name}\n{recipient_position}\n{recipient_company}\n\nDengan hormat,\n\nSehubungan dengan rencana pelaksanaan penelitian "{research_title}", kami mengajukan proposal penelitian ini untuk mendapatkan persetujuan dan dukungan dana.\n\nDemikian surat pengantar ini kami sampaikan. Atas perhatian dan dukungannya, kami ucapkan terima kasih.\n\nHormat kami,\n\n{created_by}\nKetua Peneliti\n\n=== ISI PROPOSAL ===\n\nBAB 1: PENDAHULUAN\n1.1 Latar Belakang\n1.2 Rumusan Masalah\n1.3 Tujuan Penelitian\n1.4 Manfaat Penelitian\n\nBAB 2: TINJAUAN PUSTAKA\n2.1 Landasan Teori\n2.2 Penelitian Terdahulu\n2.3 Kerangka Berpikir\n\nBAB 3: METODOLOGI\n3.1 Desain Penelitian\n3.2 Populasi dan Sampel\n3.3 Instrumen Penelitian\n3.4 Analisis Data\n\nBAB 4: RENCANA PENELITIAN\n4.1 Timeline Penelitian\n4.2 Anggaran Biaya\n4.3 Sumber Daya\n\nBAB 5: PENUTUP\n5.1 Kesimpulan\n5.2 Harapan\n\nFormat dengan markdown yang rapi dan profesional.`
             },
-            youth: {
-                id: 'youth',
-                icon: '🔥',
-                name: 'Khotbah Pemuda',
-                desc: 'Khotbah dengan bahasa dan konteks anak muda.',
+            sponsorship: {
+                id: 'sponsorship', icon: '🎪', name: 'Proposal Sponsorship',
+                desc: 'Proposal sponsorship untuk event atau kegiatan.',
                 color: '#ed64a6',
-                use_for: '✅ Ibadah Pemuda / Youth Service\n✅ Camp & Retreat Pemuda\n✅ Persekutuan Remaja\n✅ Youth Gathering\n✅ Ibadah Anak Muda Milenial & Gen Z',
-                contoh: [
-                    { lbl: 'Contoh Hasil (cuplikan)', txt: 'Judul: "Menjadi Generasi yang Berdampak" — Nats: 1 Timotius 4:12. PEMBUKAAN: "Siapa di sini pernah diremehkan cuma karena masih muda? Firman hari ini punya jawaban buat kita." ISI: "Paulus bilang ke Timotius: jangan biarkan orang lain memandang rendah karena usia mudamu, tapi jadilah teladan dalam perkataan, sikap, kasih, dan iman." POIN: "Dampak itu bukan soal umur, tapi soal karakter yang kelihatan setiap hari — cara ngomong di grup chat, cara sikap di kampus." CHALLENGE: minggu ini, jadi teladan minimal ke 1 teman lewat sikap, bukan cuma story di medsos.' }
-                ],
                 fields: [
-                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Menjadi Generasi yang Berdampak' },
-                    { key: 'scripture', label: 'Ayat Alkitab (Satu Pasal & Rentang Ayat)', type: 'text', placeholder: 'Contoh: 1 Timotius 4:6-16' },
-                    { key: 'key_verse', label: 'Nats', type: 'text', placeholder: 'Contoh: 1 Timotius 4:12' },
-                    { key: 'audience', label: 'Pemuda Sasaran', type: 'text', placeholder: 'Contoh: Pemuda & Remaja 15-30 tahun' },
-                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 30' },
-                    { key: 'relevant_issues', label: 'Isu Relevan', type: 'textarea', placeholder: 'Isu yang relevan dengan pemuda...' },
-                    { key: 'main_points', label: 'Poin Utama', type: 'textarea', placeholder: 'Poin-poin yang ingin disampaikan...' },
-                    { key: 'challenge', label: 'Tantangan/Komitmen', type: 'textarea', placeholder: 'Tantangan untuk pemuda...' }
+                    { key: 'company_name', label: 'Nama Perusahaan', type: 'text', placeholder: 'PT. Lidan Psikologi' },
+                    { key: 'company_address', label: 'Alamat Perusahaan', type: 'text', placeholder: 'Jl. Merdeka No. 123, Jakarta' },
+                    { key: 'company_phone', label: 'Telepon Perusahaan', type: 'text', placeholder: '021-1234567' },
+                    { key: 'company_email', label: 'Email Perusahaan', type: 'text', placeholder: 'info@lidan.co.id' },
+                    { key: 'recipient_name', label: 'Nama Penerima', type: 'text', placeholder: 'Bapak/Ibu Direktur Marketing' },
+                    { key: 'recipient_position', label: 'Jabatan Penerima', type: 'text', placeholder: 'Direktur Marketing' },
+                    { key: 'recipient_company', label: 'Perusahaan Penerima', type: 'text', placeholder: 'PT. Sponsor Jaya' },
+                    { key: 'letter_date', label: 'Tanggal Surat', type: 'date' },
+                    { key: 'event_name', label: 'Nama Event', type: 'text', placeholder: 'Seminar Kesehatan Mental 2026' },
+                    { key: 'event_description', label: 'Deskripsi Event', type: 'textarea', placeholder: 'Deskripsi event yang akan dilaksanakan...' },
+                    { key: 'target_audience', label: 'Target Audiens', type: 'text', placeholder: 'HRD, Manajer, Karyawan' },
+                    { key: 'sponsorship_package', label: 'Paket Sponsorship', type: 'text', placeholder: 'Rp 100.000.000' }
                 ],
-                prompt_template: `Buat khotbah pemuda dengan tema "{theme}" berdasarkan ayat {scripture} dengan nats {key_verse}. Pemuda sasaran: {audience}. Durasi: {duration} menit. Isu relevan: {relevant_issues}. Poin utama: {main_points}. Tantangan/komitmen: {challenge}.\n\nFOKUS UTAMA: Bahas ayat {scripture} (satu pasal dan rentang ayat tersebut) secara mendalam, dikaitkan dengan isu-isu relevan anak muda saat ini.\n\nFORMAT OUTPUT:\n\n=== KHOTBAH PEMUDA ===\n\nJudul: {theme}\nNats: {key_verse}\n\nI. PEMBUKAAN (5 menit)\n- Ice breaker / hook yang relevan\n- Pengantar tema dengan bahasa anak muda\n\nII. ISI (20 menit)\n- Poin 1 dengan ilustrasi kekinian\n- Poin 2 dengan contoh nyata\n- Poin 3 dengan tantangan\n\nIII. APLIKASI (5 menit)\n- Penerapan praktis untuk pemuda\n- Challenge mingguan\n\nIV. PENUTUP\n- Doa\n- Berkat\n\nGunakan bahasa yang relatable, tidak kaku, dan penuh semangat. Format dengan markdown yang rapi.`
-            },
-            celebration: {
-                id: 'celebration',
-                icon: '🎉',
-                name: 'Khotbah Perayaan',
-                desc: 'Khotbah untuk momen spesial (Natal, Paskah, Pentakosta, dll).',
-                color: '#d69e2e',
-                use_for: '✅ Ibadah Natal\n✅ Ibadah Paskah\n✅ Ibadah Pentakosta\n✅ Ibadah Tahun Baru\n✅ Ibadah Syukur & Perayaan lainnya',
-                contoh: [
-                    { lbl: 'Contoh Hasil (cuplikan)', txt: 'Judul: "Kasih Allah yang Nyata di Natal" — Nats: Lukas 2:11. PEMBUKAAN: "Malam ini kita rayakan bukan sekadar tanggal di kalender, tapi momen ketika Allah memilih datang ke dunia sebagai bayi kecil di kandang domba." MAKNA PERAYAAN: "Kelahiran Yesus menunjukkan Allah tidak menjauh dari manusia, Ia justru mendekat, bahkan di tempat paling sederhana sekalipun." APLIKASI: "Natal mengajak kita menghadirkan kasih itu nyata — lewat kepedulian pada orang di sekitar kita." PENUTUP: doa syukur bersama dan berkat Natal untuk seluruh jemaat & tamu undangan.' }
-                ],
-                fields: [
-                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Kasih Allah yang Nyata di Natal' },
-                    { key: 'celebration_type', label: 'Jenis Perayaan', type: 'text', placeholder: 'Contoh: Natal, Paskah, Pentakosta, Tahun Baru' },
-                    { key: 'scripture', label: 'Ayat Alkitab (Satu Pasal & Rentang Ayat)', type: 'text', placeholder: 'Contoh: Lukas 2:1-20' },
-                    { key: 'key_verse', label: 'Nats', type: 'text', placeholder: 'Contoh: Lukas 2:11' },
-                    { key: 'audience', label: 'Jemaat Sasaran', type: 'text', placeholder: 'Contoh: Jemaat umum & tamu' },
-                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 30' },
-                    { key: 'main_message', label: 'Pesan Utama', type: 'textarea', placeholder: 'Pesan utama perayaan...' },
-                    { key: 'application', label: 'Aplikasi Praktis', type: 'textarea', placeholder: 'Aplikasi dalam kehidupan...' }
-                ],
-                prompt_template: `Buat khotbah perayaan untuk {celebration_type} dengan tema "{theme}" berdasarkan ayat {scripture} dengan nats {key_verse}. Jemaat sasaran: {audience}. Durasi: {duration} menit. Pesan utama: {main_message}. Aplikasi praktis: {application}.\n\nFOKUS UTAMA: Bahas ayat {scripture} (satu pasal dan rentang ayat tersebut) secara mendalam dalam konteks perayaan {celebration_type}.\n\nFORMAT OUTPUT:\n\n=== KHOTBAH PERAYAAN {celebration_type} ===\n\nJudul: {theme}\nNats: {key_verse}\n\nI. PEMBUKAAN\n- Salam perayaan\n- Pengantar makna perayaan\n- Relevansi dengan kehidupan\n\nII. MAKNA PERAYAAN ({scripture})\n- Latar belakang perayaan\n- Makna teologis\n- Poin-poin utama\n\nIII. APLIKASI PRAKTIS\n- Penerapan dalam kehidupan\n- Komitmen perayaan\n\nIV. PENUTUP\n- Doa syukur\n- Berkat perayaan\n\nFormat dengan markdown yang rapi dan penuh sukacita.`
-            },
-            // ===== 3 JENIS KHOTBAH BARU =====
-            comfort: {
-                id: 'comfort',
-                icon: '💐',
-                name: 'Khotbah Penghiburan',
-                desc: 'Kata penghiburan bagi keluarga yang kehilangan anggota keluarga.',
-                color: '#718096',
-                use_for: '✅ Ibadah Penghiburan / Pelayanan Duka\n✅ Menghibur keluarga yang berduka\n✅ Ibadah Peringatan 40 Hari / 1 Tahun\n✅ Kata penghiburan bagi yang berduka\n✅ Pendampingan pastoral',
-                contoh: [
-                    { lbl: 'Contoh Hasil (cuplikan)', txt: 'Judul: "Damai Sejahtera di Tengah Dukacita" — Nats: Yohanes 11:25. PEMBUKAAN: "Bapak, Ibu, dan keluarga besar Bapak Yohanes yang kami kasihi, hari ini kita berkumpul dalam dukacita, namun juga dalam pengharapan." RENUNGAN: "Ketika Marta dan Maria kehilangan Lazarus, Yesus tidak hanya turut berduka, tapi menunjukkan diri-Nya sebagai kebangkitan dan hidup — kematian bukan kata akhir." PENGHIBURAN: "Kepergian Bapak Yohanes memang meninggalkan duka mendalam, namun kasih dan iman beliau tetap hidup di hati kita semua." PENUTUP: doa penghiburan bagi keluarga yang ditinggalkan, memohon kekuatan dan damai sejahtera dari Tuhan.' }
-                ],
-                fields: [
-                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Damai Sejahtera di Tengah Dukacita' },
-                    { key: 'scripture', label: 'Ayat Alkitab (Satu Pasal & Rentang Ayat)', type: 'text', placeholder: 'Contoh: Yohanes 11:1-44' },
-                    { key: 'key_verse', label: 'Nats (Ayat Kunci)', type: 'text', placeholder: 'Contoh: Yohanes 11:25' },
-                    { key: 'deceased_name', label: 'Nama Almarhum/Almarhumah', type: 'text', placeholder: 'Contoh: Bapak/Ibu/Sdr...' },
-                    { key: 'family_name', label: 'Keluarga yang Ditinggalkan', type: 'text', placeholder: 'Contoh: Keluarga Bapak...' },
-                    { key: 'audience', label: 'Jemaat Sasaran', type: 'text', placeholder: 'Contoh: Keluarga berduka & jemaat' },
-                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 20' },
-                    { key: 'main_message', label: 'Pesan Utama', type: 'textarea', placeholder: 'Pesan penghiburan utama...' },
-                    { key: 'application', label: 'Aplikasi Praktis', type: 'textarea', placeholder: 'Aplikasi penghiburan...' }
-                ],
-                prompt_template: `Buat khotbah penghiburan dengan tema "{theme}" berdasarkan ayat {scripture} dengan nats {key_verse}. Almarhum/Almarhumah: {deceased_name}. Keluarga yang ditinggalkan: {family_name}. Jemaat sasaran: {audience}. Durasi: {duration} menit. Pesan utama: {main_message}. Aplikasi praktis: {application}.\n\nFOKUS UTAMA: Bahas ayat {scripture} (satu pasal dan rentang ayat tersebut) secara mendalam untuk memberikan penghiburan dan kekuatan bagi keluarga yang berduka. Hindari kata-kata yang menyakitkan, fokus pada kasih Tuhan dan pengharapan akan kehidupan kekal.\n\nFORMAT OUTPUT:\n\n=== KHOTBAH PENGHIBURAN ===\n\nJudul: {theme}\nNats: {key_verse}\n\nI. PEMBUKAAN\n- Salam penghiburan\n- Mengenang almarhum/almarhumah secara singkat\n- Pengantar tema pengharapan\n\nII. RENUNGAN DARI FIRMAN ({scripture})\n- Penghiburan dari ayat per ayat\n- Janji-janji Tuhan tentang kehidupan kekal\n- Kasih Tuhan yang tidak pernah berubah\n\nIII. APLIKASI PRAKTIS\n- Kekuatan untuk keluarga yang ditinggalkan\n- Pengharapan di dalam Kristus\n\nIV. PENUTUP\n- Doa penghiburan\n- Berkat\n\nGunakan bahasa yang lembut, penuh kasih, dan menenangkan. Format dengan markdown yang rapi.`
-            },
-            wedding: {
-                id: 'wedding',
-                icon: '💍',
-                name: 'Khotbah Pernikahan',
-                desc: 'Khotbah untuk pasangan yang menikah dan kedua orang tua mempelai.',
-                color: '#d53f8c',
-                use_for: '✅ Ibadah Pernikahan / Pemberkatan Nikah\n✅ Kata sambutan untuk mempelai\n✅ Nasihat untuk kedua orang tua\n✅ Ibadah Syukur Pernikahan\n✅ Konseling Pra-Nikah',
-                contoh: [
-                    { lbl: 'Contoh Hasil (cuplikan)', txt: 'Judul: "Keluarga yang Dibangun di Atas Kasih Kristus" — Nats: Efesus 5:31. RENUNGAN: "Pernikahan Sdr. Yohanes dan Sdri. Maria hari ini menjadi gambaran kasih Kristus pada jemaat-Nya — kasih yang mengorbankan diri dan setia." NASIHAT MEMPELAI: "Yohanes, kasihilah Maria seperti Kristus mengasihi jemaat-Nya. Maria, hormatilah Yohanes sebagaimana jemaat tunduk pada Kristus dalam kasih." NASIHAT ORANG TUA: "Kepada Bpk. A & Ibu B, Bpk. C & Ibu D — lepaskan mereka dengan doa restu, jadilah pendukung, bukan pengendali rumah tangga baru ini." PENUTUP: doa restu dan berkat pernikahan bagi kedua mempelai.' }
-                ],
-                fields: [
-                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Keluarga yang Dibangun di Atas Kasih Kristus' },
-                    { key: 'scripture', label: 'Ayat Alkitab (Satu Pasal & Rentang Ayat)', type: 'text', placeholder: 'Contoh: Efesus 5:22-33' },
-                    { key: 'key_verse', label: 'Nats (Ayat Kunci)', type: 'text', placeholder: 'Contoh: Efesus 5:31' },
-                    { key: 'groom_name', label: 'Nama Mempelai Pria', type: 'text', placeholder: 'Contoh: Sdr. Yohanes' },
-                    { key: 'bride_name', label: 'Nama Mempelai Wanita', type: 'text', placeholder: 'Contoh: Sdri. Maria' },
-                    { key: 'parents_name', label: 'Nama Orang Tua Kedua Mempelai', type: 'text', placeholder: 'Contoh: Bpk. A & Ibu B, Bpk. C & Ibu D' },
-                    { key: 'audience', label: 'Jemaat Sasaran', type: 'text', placeholder: 'Contoh: Keluarga, sahabat, jemaat' },
-                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 25' },
-                    { key: 'main_message', label: 'Pesan Utama', type: 'textarea', placeholder: 'Pesan utama pernikahan...' },
-                    { key: 'advice_groom_bride', label: 'Nasihat untuk Mempelai', type: 'textarea', placeholder: 'Nasihat bagi mempelai pria & wanita...' },
-                    { key: 'advice_parents', label: 'Nasihat untuk Orang Tua', type: 'textarea', placeholder: 'Nasihat bagi kedua orang tua mempelai...' }
-                ],
-                prompt_template: `Buat khotbah pernikahan dengan tema "{theme}" berdasarkan ayat {scripture} dengan nats {key_verse}. Mempelai pria: {groom_name}. Mempelai wanita: {bride_name}. Orang tua kedua mempelai: {parents_name}. Jemaat sasaran: {audience}. Durasi: {duration} menit. Pesan utama: {main_message}. Nasihat untuk mempelai: {advice_groom_bride}. Nasihat untuk orang tua: {advice_parents}.\n\nFOKUS UTAMA: Bahas ayat {scripture} (satu pasal dan rentang ayat tersebut) secara mendalam. Berikan nasihat yang seimbang untuk kedua mempelai dan juga untuk kedua orang tua dari kedua mempelai, sesuai dengan firman Tuhan.\n\nFORMAT OUTPUT:\n\n=== KHOTBAH PERNIKAHAN ===\n\nJudul: {theme}\nNats: {key_verse}\n\nI. PEMBUKAAN\n- Salam dan doa\n- Pengantar tema pernikahan\n- Relevansi firman Tuhan\n\nII. RENUNGAN PERNIKAHAN ({scripture})\n- Makna pernikahan menurut Alkitab\n- Peran suami dan isteri\n- Kasih Kristus sebagai teladan\n\nIII. NASIHAT UNTUK MEMPELAI\n- Nasihat bagi {groom_name}\n- Nasihat bagi {bride_name}\n- Komitmen pernikahan\n\nIV. NASIHAT UNTUK ORANG TUA\n- Peran orang tua dalam pernikahan anak\n- Doa restu dan dukungan\n- Nasihat bijak dari firman Tuhan\n\nV. PENUTUP\n- Doa restu\n- Berkat pernikahan\n\nFormat dengan markdown yang rapi dan penuh sukacita.`
-            },
-            newhome: {
-                id: 'newhome',
-                icon: '🏠',
-                name: 'Khotbah Rumah Baru',
-                desc: 'Khotbah untuk orang yang memasuki rumah baru.',
-                color: '#38a169',
-                use_for: '✅ Ibadah Syukur Rumah Baru\n✅ Pemberkatan Rumah\n✅ Doa Penyerahan Rumah\n✅ Ibadah Keluarga di Rumah Baru\n✅ Ucapan Syukur atas Berkat Tuhan',
-                contoh: [
-                    { lbl: 'Contoh Hasil (cuplikan)', txt: 'Judul: "Rumah yang Diberkati Tuhan" — Nats: Mazmur 127:1. PEMBUKAAN: "Hari ini kita bersyukur atas rumah baru Keluarga Bapak Andi — bukan sekadar bangunan, tapi tempat yang ingin kita serahkan sepenuhnya pada Tuhan." RENUNGAN: "Pemazmur mengingatkan, sia-sia usaha membangun rumah kalau Tuhan tidak turut membangunnya — rumah yang kokoh adalah rumah yang dibangun di atas iman." APLIKASI: "Jadikan rumah ini tempat ibadah keluarga, bukan hanya tempat istirahat." PENUTUP: doa penyerahan rumah dan berkat bagi keluarga yang akan tinggal di dalamnya.' }
-                ],
-                fields: [
-                    { key: 'theme', label: 'Tema/Judul', type: 'text', placeholder: 'Contoh: Rumah yang Diberkati Tuhan' },
-                    { key: 'scripture', label: 'Ayat Alkitab (Satu Pasal & Rentang Ayat)', type: 'text', placeholder: 'Contoh: Mazmur 127:1-5' },
-                    { key: 'key_verse', label: 'Nats (Ayat Kunci)', type: 'text', placeholder: 'Contoh: Mazmur 127:1' },
-                    { key: 'owner_name', label: 'Nama Pemilik Rumah', type: 'text', placeholder: 'Contoh: Bapak/Ibu...' },
-                    { key: 'family_name', label: 'Keluarga yang Tinggal', type: 'text', placeholder: 'Contoh: Keluarga Bapak...' },
-                    { key: 'audience', label: 'Jemaat Sasaran', type: 'text', placeholder: 'Contoh: Keluarga & tetangga' },
-                    { key: 'duration', label: 'Durasi (menit)', type: 'text', placeholder: 'Contoh: 15' },
-                    { key: 'main_message', label: 'Pesan Utama', type: 'textarea', placeholder: 'Pesan utama rumah baru...' },
-                    { key: 'application', label: 'Aplikasi Praktis', type: 'textarea', placeholder: 'Aplikasi dalam kehidupan...' }
-                ],
-                prompt_template: `Buat khotbah untuk rumah baru dengan tema "{theme}" berdasarkan ayat {scripture} dengan nats {key_verse}. Pemilik rumah: {owner_name}. Keluarga yang tinggal: {family_name}. Jemaat sasaran: {audience}. Durasi: {duration} menit. Pesan utama: {main_message}. Aplikasi praktis: {application}.\n\nFOKUS UTAMA: Bahas ayat {scripture} (satu pasal dan rentang ayat tersebut) secara mendalam. Kaitkan dengan makna rumah sebagai tempat perhentian, ibadah, dan berkat dari Tuhan.\n\nFORMAT OUTPUT:\n\n=== KHOTBAH RUMAH BARU ===\n\nJudul: {theme}\nNats: {key_verse}\n\nI. PEMBUKAAN\n- Salam dan doa syukur\n- Pengantar tema rumah baru\n- Ucapan syukur atas berkat Tuhan\n\nII. RENUNGAN DARI FIRMAN ({scripture})\n- Makna rumah menurut Alkitab\n- Tuhan sebagai pembangun rumah sejati\n- Berkat dan tanggung jawab\n\nIII. APLIKASI PRAKTIS\n- Menjadikan rumah sebagai tempat ibadah\n- Kasih dan keharmonisan keluarga\n- Doa penyerahan rumah\n\nIV. PENUTUP\n- Doa berkat\n- Ucapan syukur\n\nFormat dengan markdown yang rapi dan penuh ucapan syukur.`
+                prompt_template: `Buat proposal sponsorship untuk event "{event_name}" dengan deskripsi: {event_description}. Target audiens: {target_audience}. Paket sponsorship: {sponsorship_package}.\n\nFORMAT OUTPUT:\n\n=== SURAT PENGANTAR ===\n\n[KOP SURAT]\n{company_name}\n{company_address}\nTelp: {company_phone} | Email: {company_email}\n\nPerihal: Proposal Sponsorship - {event_name}\nLampiran: 1 (Proposal)\nTanggal: {letter_date}\n\nKepada Yth.\n{recipient_name}\n{recipient_position}\n{recipient_company}\n\nDengan hormat,\n\nKami dari {company_name} bermaksud mengajukan proposal sponsorship untuk kegiatan {event_name}. Acara ini merupakan kesempatan strategis untuk meningkatkan visibilitas brand dan menjangkau target audiens yang tepat.\n\nDemikian surat pengantar ini kami sampaikan. Kami berharap dapat menjalin kerjasama yang saling menguntungkan.\n\nHormat kami,\n\n{created_by}\nDirektur {company_name}\n\n=== ISI PROPOSAL ===\n\nBAB 1: PENDAHULUAN\n1.1 Latar Belakang\n1.2 Tujuan Event\n1.3 Manfaat Sponsorship\n\nBAB 2: DESKRIPSI EVENT\n2.1 Profil Event\n2.2 Timeline Event\n2.3 Target Audiens\n\nBAB 3: PAKET SPONSORSHIP\n3.1 Paket Sponsorship\n3.2 Benefit untuk Sponsor\n3.3 Eksposur Brand\n\nBAB 4: ANGGARAN\n4.1 Rincian Anggaran\n4.2 Sumber Pendanaan\n4.3 Proyeksi ROI\n\nBAB 5: PENUTUP\n5.1 Kesimpulan\n5.2 Harapan Kerjasama\n\nFormat dengan markdown yang rapi dan profesional.`
             }
         };
 
         // ==================== CONFIG ====================
         const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
-        const TABLE = 'ai_sermon_generator';
+        const TABLE = 'ai_proposal_generator';
         const USERS_TABLE = 'users';
         const SECRET = 'admin';
         const STORAGE_KEY = 'ai_tools_user';
 
-        const SERMON_KEYS = Object.keys(SERMON_TYPES);
+        const METHOD_KEYS = Object.keys(PROPOSAL_METHODS);
 
         // ==================== STATE ====================
         let allData = [];
@@ -731,7 +609,7 @@
         let isAdmin = false;
 
         const COLUMNS = {
-            sermon_type: 'x_01',
+            proposal_type: 'x_01',
             title: 'x_02',
             prompt: 'x_03',
             field_values: 'x_04',
@@ -759,7 +637,7 @@
         }
 
         function saveUserToStorage(username, remember) {
-            const data = JSON.stringify({ username, timestamp: Date.now() });
+            const data = JSON.stringify({ username: username, timestamp: Date.now() });
             if (remember) localStorage.setItem(STORAGE_KEY, data);
             else sessionStorage.setItem(STORAGE_KEY, data);
         }
@@ -823,12 +701,8 @@
                         showToast('✅ Login berhasil! Selamat datang, ' + username, 'success');
                     } else showLoginError('❌ Username atau password salah!');
                 } else showLoginError('❌ Gagal mengambil data user');
-            } catch (e) {
-                showLoginError('❌ Gagal login: ' + e.message);
-            } finally {
-                btn.disabled = false;
-                loadingEl.classList.remove('show');
-            }
+            } catch (e) { showLoginError('❌ Gagal login: ' + e.message); }
+            finally { btn.disabled = false; loadingEl.classList.remove('show'); }
         }
 
         function showLoginError(message) {
@@ -840,8 +714,7 @@
         function doLogout() {
             if (!confirm('Yakin ingin logout?')) return;
             clearUserStorage();
-            currentUser = null;
-            isAdmin = false;
+            currentUser = null; isAdmin = false;
             showLogin();
             showToast('👋 Logout berhasil', 'info');
         }
@@ -903,7 +776,7 @@
         function parseRow(row) {
             return {
                 id_x: row.id_x,
-                sermon_type: row.x_01 || '',
+                proposal_type: row.x_01 || '',
                 title: row.x_02 || '',
                 prompt: row.x_03 || '',
                 field_values: safeParseJSON(row.x_04),
@@ -941,18 +814,18 @@
         function renderTools() {
             const container = document.getElementById('toolsGrid');
             const search = document.getElementById('searchInput').value.toLowerCase().trim();
-            let filtered = SERMON_KEYS;
-            if (search) filtered = filtered.filter(key => SERMON_TYPES[key].name.toLowerCase().includes(search) || SERMON_TYPES[key].desc.toLowerCase().includes(search));
+            let filtered = METHOD_KEYS;
+            if (search) filtered = filtered.filter(key => PROPOSAL_METHODS[key].name.toLowerCase().includes(search) || PROPOSAL_METHODS[key].desc.toLowerCase().includes(search));
 
             container.innerHTML = filtered.map(key => {
-                const type = SERMON_TYPES[key];
-                const count = allData.filter(d => d.sermon_type === type.id).length;
+                const method = PROPOSAL_METHODS[key];
+                const count = allData.filter(d => d.proposal_type === method.id).length;
                 return `
-                    <div class="tool-card" style="border-top:4px solid ${type.color};">
-                        <span class="tool-icon">${type.icon}</span>
-                        <div class="tool-name">${type.name}</div>
-                        <div class="tool-desc">${type.desc}</div>
-                        <div style="font-size:11px;color:#718096;margin-bottom:8px;">${count} khotbah</div>
+                    <div class="tool-card" style="border-top:4px solid ${method.color};">
+                        <span class="tool-icon">${method.icon}</span>
+                        <div class="tool-name">${method.name}</div>
+                        <div class="tool-desc">${method.desc}</div>
+                        <div style="font-size:11px;color:#718096;margin-bottom:8px;">${count} proposal</div>
                         <div class="tool-actions">
                             <button class="btn btn-outline btn-xs" onclick="openInfoModal('${key}')">📖 Info</button>
                             <button class="btn btn-primary btn-xs" onclick="useTool('${key}')">✏️ Create</button>
@@ -965,26 +838,53 @@
 
         function populateToolSelect() {
             const select = document.getElementById('selectedTool');
-            select.innerHTML = SERMON_KEYS.map(key => {
-                const type = SERMON_TYPES[key];
-                return `<option value="${key}">${type.icon} ${type.name}</option>`;
+            select.innerHTML = METHOD_KEYS.map(key => {
+                const method = PROPOSAL_METHODS[key];
+                return `<option value="${key}">${method.icon} ${method.name}</option>`;
             }).join('');
         }
 
+        // ==================== UPDATE FORM FIELDS ====================
         function updateFormFields() {
             const toolKey = document.getElementById('selectedTool').value;
-            const type = SERMON_TYPES[toolKey];
-            if (!type) return;
+            const method = PROPOSAL_METHODS[toolKey];
+            if (!method) return;
             const container = document.getElementById('dynamicFields');
             const values = getCurrentFieldValues();
 
-            let html = `<div class="section-label">📝 ${type.icon} ${type.name} - Form</div>`;
-            type.fields.forEach(field => {
+            let html = `<div class="section-label">📝 ${method.icon} ${method.name} - Form</div>`;
+
+            const letterFields = ['company_name', 'company_address', 'company_phone', 'company_email', 'recipient_name', 'recipient_position', 'recipient_company', 'letter_date'];
+            const contentFields = method.fields.filter(f => !letterFields.includes(f.key));
+
+            html += `<div style="font-weight:600;font-size:13px;color:#4a5568;margin-top:8px;margin-bottom:4px;">📧 Surat Pengantar</div>`;
+            method.fields.forEach(field => {
+                if (!letterFields.includes(field.key)) return;
                 const fieldId = `field_${field.key}`;
                 const val = values[field.key] || '';
                 const checkId = `ai_check_${field.key}`;
-                
-                // Header dengan checkbox per field
+
+                html += `<div class="field-header">
+                    <label for="${fieldId}">${field.label}</label>
+                    <div class="field-ai-check">
+                        <input type="checkbox" id="${checkId}" onchange="toggleFieldAi('${field.key}', this.checked)">
+                        <span>🤖 AI Cari</span>
+                    </div>
+                </div>`;
+
+                if (field.type === 'date') {
+                    html += `<div class="form-group"><input type="date" id="${fieldId}" value="${val}"></div>`;
+                } else {
+                    html += `<div class="form-group"><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
+                }
+            });
+
+            html += `<div style="font-weight:600;font-size:13px;color:#4a5568;margin-top:12px;margin-bottom:4px;">📝 Isi Proposal</div>`;
+            contentFields.forEach(field => {
+                const fieldId = `field_${field.key}`;
+                const val = values[field.key] || '';
+                const checkId = `ai_check_${field.key}`;
+
                 html += `<div class="field-header">
                     <label for="${fieldId}">${field.label}</label>
                     <div class="field-ai-check">
@@ -999,6 +899,7 @@
                     html += `<div class="form-group"><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
                 }
             });
+
             container.innerHTML = html;
         }
 
@@ -1008,29 +909,41 @@
 
             if (checked) {
                 inputEl.dataset.originalValue = inputEl.value;
-                inputEl.value = '🤖 AI akan mencari yang cocok';
-                inputEl.readOnly = true;
-                inputEl.style.background = '#f0fff4';
-                inputEl.style.color = '#276749';
-                inputEl.style.fontWeight = '600';
+                if (inputEl.type === 'date') {
+                    inputEl.value = '';
+                    inputEl.readOnly = true;
+                    inputEl.style.background = '#f0fff4';
+                } else {
+                    inputEl.value = '🤖 AI akan mencari yang cocok';
+                    inputEl.readOnly = true;
+                    inputEl.style.background = '#f0fff4';
+                    inputEl.style.color = '#276749';
+                    inputEl.style.fontWeight = '600';
+                }
             } else {
-                inputEl.value = inputEl.dataset.originalValue || '';
-                inputEl.readOnly = false;
-                inputEl.style.background = '';
-                inputEl.style.color = '';
-                inputEl.style.fontWeight = '';
+                if (inputEl.type === 'date') {
+                    inputEl.value = inputEl.dataset.originalValue || '';
+                    inputEl.readOnly = false;
+                    inputEl.style.background = '';
+                } else {
+                    inputEl.value = inputEl.dataset.originalValue || '';
+                    inputEl.readOnly = false;
+                    inputEl.style.background = '';
+                    inputEl.style.color = '';
+                    inputEl.style.fontWeight = '';
+                }
             }
         }
 
         function getCurrentFieldValues() {
             const toolKey = document.getElementById('selectedTool').value;
-            const type = SERMON_TYPES[toolKey];
-            if (!type) return {};
+            const method = PROPOSAL_METHODS[toolKey];
+            if (!method) return {};
             const values = {};
-            type.fields.forEach(field => {
+            method.fields.forEach(field => {
                 const el = document.getElementById(`field_${field.key}`);
                 if (el) {
-                    if (el.readOnly && el.value === '🤖 AI akan mencari yang cocok') {
+                    if (el.readOnly && (el.value === '🤖 AI akan mencari yang cocok' || el.type === 'date')) {
                         values[field.key] = '';
                     } else {
                         values[field.key] = el.value;
@@ -1042,25 +955,26 @@
 
         function setFieldValues(values) {
             const toolKey = document.getElementById('selectedTool').value;
-            const type = SERMON_TYPES[toolKey];
-            if (!type) return;
-            type.fields.forEach(field => {
+            const method = PROPOSAL_METHODS[toolKey];
+            if (!method) return;
+            method.fields.forEach(field => {
                 const el = document.getElementById(`field_${field.key}`);
                 if (el && values[field.key] !== undefined) el.value = values[field.key] || '';
             });
         }
 
+        // ==================== GENERATE PROMPT ====================
         function generatePrompt() {
             const toolKey = document.getElementById('selectedTool').value;
-            const type = SERMON_TYPES[toolKey];
-            if (!type) return;
-
+            const method = PROPOSAL_METHODS[toolKey];
+            if (!method) return;
             const values = getCurrentFieldValues();
+            const createdBy = document.getElementById('createdBy').value.trim() || 'User';
 
             // Validasi: field yang TIDAK dicentang AI harus terisi
             let allFilled = true;
             let emptyFields = [];
-            type.fields.forEach(field => {
+            method.fields.forEach(field => {
                 const checkEl = document.getElementById(`ai_check_${field.key}`);
                 const isAiChecked = checkEl ? checkEl.checked : false;
                 if (!isAiChecked && (!values[field.key] || !values[field.key].trim())) {
@@ -1074,10 +988,10 @@
                 return;
             }
 
-            let prompt = type.prompt_template;
+            let prompt = method.prompt_template;
             let hasAiField = false;
 
-            type.fields.forEach(field => {
+            method.fields.forEach(field => {
                 const checkEl = document.getElementById(`ai_check_${field.key}`);
                 const isAiChecked = checkEl ? checkEl.checked : false;
                 if (isAiChecked) {
@@ -1087,11 +1001,11 @@
                     prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || '');
                 }
             });
+            prompt = prompt.replace(/{created_by}/g, createdBy);
 
             // Tambahkan instruksi khusus jika ada field yang dicentang AI
             if (hasAiField) {
-                prompt = `INSTRUKSI KHUSUS: Untuk beberapa bagian di bawah ini, pengkhotbah meminta Anda (AI) untuk mencari dan menentukan sendiri elemen yang cocok (ditandai dengan [AI CARI YANG COCOK UNTUK: ...]). Silakan pilih satu pasal dan rentang ayat tertentu yang paling tepat dan relevan. \n\n` + prompt;
-                prompt += `\n\nCATATAN PENTING: Fokuskan pembahasan pada SATU PASAL dan RENTANG AYAT tertentu yang Anda pilih. Jangan melebar ke banyak pasal. Beritahukan di awal output pasal dan rentang ayat yang Anda pilih.`;
+                prompt = `INSTRUKSI KHUSUS: Untuk beberapa bagian di bawah ini, pengguna meminta Anda (AI) untuk mencari dan menentukan sendiri elemen yang cocok (ditandai dengan [AI CARI YANG COCOK UNTUK: ...]). Silakan pilih data yang paling tepat, relevan, dan sesuai dengan konteks proposal. \n\n` + prompt;
             }
 
             currentPrompt = prompt;
@@ -1100,13 +1014,15 @@
 
             const titleInput = document.getElementById('resultTitle');
             if (!titleInput.value) {
+                const firstField = method.fields.find(f => f.key === 'business_name' || f.key === 'project_name' || f.key === 'service_name' || f.key === 'partnership_name' || f.key === 'research_title' || f.key === 'event_name');
                 if (hasAiField) {
-                    titleInput.value = `${type.name} - (AI Cari yang Cocok)`;
-                } else {
-                    titleInput.value = `${type.name} - ${values.theme || ''}`;
+                    titleInput.value = `${method.name} - (AI Cari yang Cocok)`;
+                } else if (firstField) {
+                    titleInput.value = `${method.name} - ${values[firstField.key] || ''}`;
                 }
             }
-            showToast('✅ Prompt berhasil digenerate!', 'success');
+
+            showToast('✅ Prompt berhasil digenerate! Copy ke AI eksternal.', 'success');
         }
 
         function addCopyButtonToPrompt(containerId) {
@@ -1120,7 +1036,7 @@
             btn.onclick = function(e) {
                 e.stopPropagation();
                 const text = container.textContent.replace('📋 Copy', '').trim();
-                if (!text || text.includes('Pilih jenis')) { showToast('❌ Tidak ada prompt', 'error'); return; }
+                if (!text || text.includes('Pilih metode')) { showToast('❌ Tidak ada prompt', 'error'); return; }
                 navigator.clipboard.writeText(text).then(() => showToast('✅ Prompt disalin!', 'success')).catch(() => {
                     const ta = document.createElement('textarea');
                     ta.value = text; document.body.appendChild(ta); ta.select();
@@ -1137,22 +1053,22 @@
             const title = document.getElementById('resultTitle').value.trim();
             const createdBy = document.getElementById('createdBy').value.trim() || currentUser || 'User';
             const prompt = document.getElementById('promptPreview').textContent.replace('📋 Copy', '').trim();
-            if (!title) { showToast('❌ Judul wajib diisi', 'error'); return; }
-            if (!prompt || prompt.includes('Pilih jenis')) { showToast('❌ Generate prompt dulu', 'error'); return; }
+            if (!title) { showToast('❌ Judul proposal wajib diisi', 'error'); return; }
+            if (!prompt || prompt.includes('Pilih metode')) { showToast('❌ Generate prompt dulu', 'error'); return; }
             const resultHtml = quillEditor.root.innerHTML;
             if (!resultHtml || resultHtml === '<p><br></p>') { showToast('❌ Paste hasil AI dulu', 'error'); return; }
             const values = getCurrentFieldValues();
             const today = new Date();
             const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
             const data = {
-                sermon_type: toolKey, title, prompt, field_values: values,
+                proposal_type: toolKey, title, prompt, field_values: values,
                 ai_source: document.getElementById('aiSource').value,
                 result: resultHtml, created_by: createdBy,
                 status: 'published', notes: '', created_date: todayStr
             };
             try {
                 await createResult(data);
-                showToast('✅ Khotbah berhasil disimpan!', 'success');
+                showToast('✅ Proposal berhasil disimpan!', 'success');
                 await refreshData();
                 clearForm();
                 switchMainTab('tab3');
@@ -1162,12 +1078,9 @@
         function clearForm() {
             quillEditor.root.innerHTML = '';
             document.getElementById('resultTitle').value = '';
-            document.getElementById('promptPreview').innerHTML = '<span class="placeholder">Pilih jenis khotbah dan isi form untuk menghasilkan prompt...</span>';
+            document.getElementById('promptPreview').innerHTML = '<span class="placeholder">Pilih metode dan isi form untuk menghasilkan prompt...</span>';
             currentPrompt = '';
-            // Reset semua checkbox AI per field
-            document.querySelectorAll('.field-ai-check input[type="checkbox"]').forEach(cb => {
-                cb.checked = false;
-            });
+            document.querySelectorAll('.field-ai-check input[type="checkbox"]').forEach(cb => { cb.checked = false; });
         }
 
         function useTool(toolKey) {
@@ -1175,8 +1088,9 @@
             updateFormFields();
             switchMainTab('tab2');
             clearForm();
+            document.getElementById('resultTitle').value = '';
             document.getElementById('createdBy').value = currentUser || '';
-            showToast(`✏️ Beralih ke ${SERMON_TYPES[toolKey].name}`, 'info');
+            showToast(`✏️ Beralih ke ${PROPOSAL_METHODS[toolKey].name}`, 'info');
         }
 
         // ==================== HISTORY ====================
@@ -1196,7 +1110,7 @@
                 const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
                 filtered = filtered.filter(d => d.created_date === todayStr);
             }
-            if (filterTool !== 'all') filtered = filtered.filter(d => d.sermon_type === filterTool);
+            if (filterTool !== 'all') filtered = filtered.filter(d => d.proposal_type === filterTool);
             if (search) filtered = filtered.filter(d => d.title.toLowerCase().includes(search) || d.created_by.toLowerCase().includes(search) || d.prompt.toLowerCase().includes(search));
 
             const today = new Date();
@@ -1207,13 +1121,13 @@
             document.getElementById('historyCount').textContent = `${filtered.length} items`;
 
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="empty-state"><div class="icon">${allData.length === 0 ? '🕊️' : '🔍'}</div><h3>${allData.length === 0 ? 'Belum ada khotbah' : 'Tidak ditemukan'}</h3><p>${allData.length === 0 ? 'Pergi ke Tab "AI Prompt Studio" untuk mulai membuat khotbah' : 'Coba kata kunci lain'}</p></div>`;
+                container.innerHTML = `<div class="empty-state"><div class="icon">${allData.length === 0 ? '📄' : '🔍'}</div><h3>${allData.length === 0 ? 'Belum ada proposal' : 'Tidak ditemukan'}</h3><p>${allData.length === 0 ? 'Pergi ke Tab "AI Prompt Studio" untuk mulai membuat proposal' : 'Coba kata kunci lain'}</p></div>`;
                 return;
             }
 
             container.innerHTML = filtered.map(item => {
-                const type = SERMON_TYPES[item.sermon_type];
-                const typeLabel = type ? `${type.icon} ${type.name}` : item.sermon_type;
+                const method = PROPOSAL_METHODS[item.proposal_type];
+                const methodLabel = method ? `${method.icon} ${method.name}` : item.proposal_type;
                 const date = item.created_date || item._raw?.created_at || '-';
                 const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
                 const sourceClass = item.ai_source.toLowerCase();
@@ -1225,7 +1139,7 @@
                         <div class="history-header">
                             <span class="history-title">${escapeHtml(item.title)}</span>
                             <div class="history-meta">
-                                <span class="type-badge">${typeLabel}</span>
+                                <span class="type-badge">${methodLabel}</span>
                                 ${item.ai_source ? `<span class="ai-badge ${sourceClass}">${item.ai_source}</span>` : ''}
                                 <span>📅 ${displayDate}</span>
                                 <span>👤 ${escapeHtml(item.created_by)}</span>
@@ -1286,7 +1200,7 @@
             const today = new Date();
             const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
             const data = {
-                sermon_type: originalItem.sermon_type,
+                proposal_type: originalItem.proposal_type,
                 title: originalItem.title + ` (${aiSource})`,
                 prompt: originalItem.prompt,
                 field_values: originalItem.field_values || {},
@@ -1306,26 +1220,28 @@
             const item = allData.find(d => d.id_x === id);
             if (!item) return;
             document.getElementById('dupId').value = id;
-            document.getElementById('dupFrameworkType').value = item.sermon_type;
-            const type = SERMON_TYPES[item.sermon_type];
-            document.getElementById('dupFrameworkDisplay').value = type ? `${type.icon} ${type.name}` : item.sermon_type;
+            document.getElementById('dupFrameworkType').value = item.proposal_type;
+            const method = PROPOSAL_METHODS[item.proposal_type];
+            document.getElementById('dupFrameworkDisplay').value = method ? `${method.icon} ${method.name}` : item.proposal_type;
             document.getElementById('dupTitle').value = item.title + ' (v2)';
             document.getElementById('dupCreatedBy').value = currentUser || '';
-            renderDuplicateFields(item.sermon_type, item.field_values || {});
+            renderDuplicateFields(item.proposal_type, item.field_values || {});
             document.getElementById('dupPromptPreview').innerHTML = '<span class="placeholder">Generate prompt dari form di atas...</span>';
             document.getElementById('duplicateModal').classList.add('active');
         }
 
         function renderDuplicateFields(typeKey, values) {
-            const type = SERMON_TYPES[typeKey];
-            if (!type) return;
+            const method = PROPOSAL_METHODS[typeKey];
+            if (!method) return;
             const container = document.getElementById('dupDynamicFields');
-            let html = `<div class="section-label">📝 ${type.icon} ${type.name} - Edit Field</div>`;
-            type.fields.forEach(field => {
+            let html = `<div class="section-label">📝 ${method.icon} ${method.name} - Edit Field</div>`;
+            method.fields.forEach(field => {
                 const fieldId = `dup_field_${field.key}`;
                 const val = values[field.key] || '';
                 if (field.type === 'textarea') {
                     html += `<div class="form-group"><label>${field.label}</label><textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea></div>`;
+                } else if (field.type === 'date') {
+                    html += `<div class="form-group"><label>${field.label}</label><input type="date" id="${fieldId}" value="${val}"></div>`;
                 } else {
                     html += `<div class="form-group"><label>${field.label}</label><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
                 }
@@ -1335,10 +1251,10 @@
 
         function getDuplicateFieldValues() {
             const typeKey = document.getElementById('dupFrameworkType').value;
-            const type = SERMON_TYPES[typeKey];
-            if (!type) return {};
+            const method = PROPOSAL_METHODS[typeKey];
+            if (!method) return {};
             const values = {};
-            type.fields.forEach(field => {
+            method.fields.forEach(field => {
                 const el = document.getElementById(`dup_field_${field.key}`);
                 if (el) values[field.key] = el.value;
             });
@@ -1347,14 +1263,16 @@
 
         function generateDuplicatePrompt() {
             const typeKey = document.getElementById('dupFrameworkType').value;
-            const type = SERMON_TYPES[typeKey];
-            if (!type) return;
+            const method = PROPOSAL_METHODS[typeKey];
+            if (!method) return;
             const values = getDuplicateFieldValues();
+            const createdBy = document.getElementById('dupCreatedBy').value.trim() || currentUser || 'User';
             let allFilled = true;
-            type.fields.forEach(field => { if (!values[field.key] || !values[field.key].trim()) allFilled = false; });
+            method.fields.forEach(field => { if (!values[field.key] || !values[field.key].trim()) allFilled = false; });
             if (!allFilled) { showToast('❌ Semua field harus diisi!', 'error'); return; }
-            let prompt = type.prompt_template;
-            type.fields.forEach(field => { prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || ''); });
+            let prompt = method.prompt_template;
+            method.fields.forEach(field => { prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || ''); });
+            prompt = prompt.replace(/{created_by}/g, createdBy);
             document.getElementById('dupPromptPreview').innerHTML = escapeHtml(prompt);
             addCopyButtonToPrompt('dupPromptPreview');
             showToast('✅ Prompt berhasil digenerate!', 'success');
@@ -1374,7 +1292,7 @@
             const today = new Date();
             const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
             const data = {
-                sermon_type: typeKey, title: newTitle, prompt, field_values: values,
+                proposal_type: typeKey, title: newTitle, prompt, field_values: values,
                 ai_source: '', result: '', created_by: createdBy,
                 status: 'published', notes: 'Duplikat dari prompt sebelumnya', created_date: todayStr
             };
@@ -1397,10 +1315,10 @@
 
         // ==================== DELETE ====================
         async function deleteResult(id) {
-            if (!confirm('Hapus khotbah ini?')) return;
+            if (!confirm('Hapus proposal ini?')) return;
             try {
                 await deleteResultApi(id);
-                showToast('✅ Khotbah berhasil dihapus', 'success');
+                showToast('✅ Proposal berhasil dihapus', 'success');
                 await refreshData();
             } catch (e) { showToast('❌ Gagal hapus: ' + e.message, 'error'); }
         }
@@ -1420,12 +1338,12 @@
             const item = allData.find(d => d.id_x === id);
             if (!item) { showToast('Data tidak ditemukan', 'error'); return; }
             viewData = item;
-            const type = SERMON_TYPES[item.sermon_type];
-            const typeLabel = type ? `${type.icon} ${type.name}` : item.sermon_type;
+            const method = PROPOSAL_METHODS[item.proposal_type];
+            const methodLabel = method ? `${method.icon} ${method.name}` : item.proposal_type;
             const date = item.created_date || item._raw?.created_at || '-';
             const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
             document.getElementById('viewModalTitle').textContent = `👁️ ${escapeHtml(item.title)}`;
-            document.getElementById('viewMeta').innerHTML = `<strong>Jenis:</strong> ${typeLabel} &nbsp;|&nbsp; <strong>AI:</strong> ${item.ai_source || '-'} &nbsp;|&nbsp; <strong>Dibuat:</strong> ${displayDate} &nbsp;|&nbsp; <strong>Oleh:</strong> ${escapeHtml(item.created_by)} ${isAdmin ? `&nbsp;|&nbsp; <span style="background:#c6f6d5;color:#276749;padding:1px 8px;border-radius:8px;font-size:11px;">👑</span>` : ''}`;
+            document.getElementById('viewMeta').innerHTML = `<strong>Metode:</strong> ${methodLabel} &nbsp;|&nbsp; <strong>AI Source:</strong> ${item.ai_source || '-'} &nbsp;|&nbsp; <strong>Dibuat:</strong> ${displayDate} &nbsp;|&nbsp; <strong>Oleh:</strong> ${escapeHtml(item.created_by)} ${isAdmin ? `&nbsp;|&nbsp; <span style="background:#c6f6d5;color:#276749;padding:1px 8px;border-radius:8px;font-size:11px;">👑 Admin View</span>` : ''}`;
             document.getElementById('viewPrompt').textContent = item.prompt;
             document.getElementById('viewSource').textContent = item.ai_source || '-';
             document.getElementById('viewResultWrapper').innerHTML = `<div class="ql-editor">${item.result}</div>`;
@@ -1446,7 +1364,7 @@
         }
 
         function downloadViewDoc() {
-            const title = viewData?.title || 'khotbah';
+            const title = viewData?.title || 'proposal';
             const content = document.getElementById('viewResultWrapper').innerHTML || '';
             const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(title)}</title><style>body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #2d3748; line-height: 1.8; max-width: 800px; margin: auto; } h1, h2, h3, h4 { color: #1a202c; } p { margin: 8px 0; } ul, ol { padding-left: 24px; }</style></head><body>${content}</body></html>`;
             const blob = new Blob([htmlContent], { type: 'application/msword;charset=utf-8' });
@@ -1460,37 +1378,29 @@
 
         // ==================== INFO ====================
         function openInfoModal(toolKey) {
-            const type = SERMON_TYPES[toolKey];
-            if (!type) return;
-            const fieldsHtml = type.fields.map(f => `<li><strong>${f.label}</strong> — ${f.placeholder}</li>`).join('');
-            let useForHtml = '';
-            if (type.use_for) {
-                const lines = type.use_for.split('\n').filter(l => l.trim());
-                useForHtml = `<div style="background:#ebf8ff;border-radius:8px;padding:12px 16px;margin-bottom:12px;border-left:4px solid #805ad5;"><strong style="color:#6b46c1;">🎯 Cocok Dipakai Untuk:</strong><ul style="margin:6px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">${lines.map(l => `<li>${l.replace('✅', '✔️')}</li>`).join('')}</ul></div>`;
-            }
-            let contohHtml = '';
-            if (type.contoh && type.contoh.length) {
-                const items = type.contoh.map(c => `<div class="contoh-item"><span class="lbl">${c.lbl}:</span> ${c.txt}</div>`).join('');
-                contohHtml = `<div class="contoh-box"><div class="contoh-title">💡 Contoh Nyata:</div>${items}</div>`;
-            }
-            document.getElementById('infoModalTitle').textContent = `📋 ${type.icon} ${type.name}`;
+            const method = PROPOSAL_METHODS[toolKey];
+            if (!method) return;
+            const fieldsHtml = method.fields.map(f => `<li><strong>${f.label}</strong> — ${f.placeholder || ''}</li>`).join('');
+            document.getElementById('infoModalTitle').textContent = `📋 ${method.icon} ${method.name}`;
             document.getElementById('infoModalBody').innerHTML = `
                 <div style="text-align:center;margin-bottom:12px;">
-                    <span style="font-size:48px;display:block;">${type.icon}</span>
-                    <h3 style="font-size:20px;color:#2d3748;">${type.name}</h3>
-                    <p style="color:#718096;font-size:14px;">${type.desc}</p>
+                    <span style="font-size:48px;display:block;">${method.icon}</span>
+                    <h3 style="font-size:20px;color:#2d3748;">${method.name}</h3>
+                    <p style="color:#718096;font-size:14px;">${method.desc}</p>
                 </div>
-                ${useForHtml}
-                ${contohHtml}
                 <div style="background:#f7fafc;border-radius:8px;padding:16px;margin-bottom:12px;">
                     <h4 style="font-size:14px;color:#2d3748;margin-bottom:8px;">📝 Field yang Diisi:</h4>
                     <ul style="padding-left:20px;color:#4a5568;font-size:13px;line-height:1.8;">${fieldsHtml}</ul>
                 </div>
+                <div style="background:#fff5f5;border-radius:8px;padding:12px 16px;border-left:4px solid #fc8181;margin-bottom:12px;">
+                    <strong style="color:#9b2c2c;">🤖 AI Cari yang Cocok:</strong>
+                    <p style="color:#2d3748;font-size:13px;margin-top:4px;">Centang checkbox <strong>🤖 AI Cari</strong> di sebelah kanan label field jika ingin AI mencari sendiri data yang cocok untuk field tersebut. Field lain tetap bisa diisi manual.</p>
+                </div>
                 <div style="background:#f0fff4;border-radius:8px;padding:12px 16px;border-left:4px solid #48bb78;">
                     <strong style="color:#276749;">💡 Cara Penggunaan:</strong>
                     <ol style="margin:4px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">
-                        <li>Pilih jenis khotbah di Tab "AI Prompt Studio"</li>
-                        <li>Isi field yang tersedia. Untuk field yang ingin AI cari sendiri, centang <strong>🤖 AI Cari</strong> di sebelah kanan label field tersebut.</li>
+                        <li>Pilih metode di Tab "AI Prompt Studio"</li>
+                        <li>Isi field yang tersedia, atau centang 🤖 AI Cari untuk field yang ingin dicari AI</li>
                         <li>Klik "Generate Prompt"</li>
                         <li>Copy prompt, paste ke AI eksternal</li>
                         <li>Copy hasil AI, paste di editor</li>
@@ -1521,19 +1431,19 @@
             updateHistoryFilter();
             renderHistory();
             document.getElementById('tab3Badge').textContent = allData.length;
-            showToast(`✅ ${allData.length} khotbah dimuat`, 'success');
+            showToast(`✅ ${allData.length} proposal dimuat`, 'success');
         }
 
         function updateHistoryFilter() {
             const select = document.getElementById('historyFilterTool');
             const currentValue = select.value;
             const types = {};
-            allData.forEach(item => { if (!types[item.sermon_type]) types[item.sermon_type] = 0; types[item.sermon_type]++; });
+            allData.forEach(item => { if (!types[item.proposal_type]) types[item.proposal_type] = 0; types[item.proposal_type]++; });
             select.innerHTML = `<option value="all">📋 All Types (${allData.length})</option>`;
-            SERMON_KEYS.forEach(key => {
-                const type = SERMON_TYPES[key];
+            METHOD_KEYS.forEach(key => {
+                const method = PROPOSAL_METHODS[key];
                 const count = types[key] || 0;
-                select.innerHTML += `<option value="${key}">${type.icon} ${type.name} (${count})</option>`;
+                select.innerHTML += `<option value="${key}">${method.icon} ${method.name} (${count})</option>`;
             });
             if (currentValue) select.value = currentValue;
         }
@@ -1572,7 +1482,8 @@
         window.debug = {
             allData: () => allData,
             refresh: refreshData,
-            SERMON_TYPES, SERMON_KEYS,
+            PROPOSAL_METHODS: PROPOSAL_METHODS,
+            METHOD_KEYS: METHOD_KEYS,
             currentUser: () => currentUser,
             isAdmin: () => isAdmin
         };
