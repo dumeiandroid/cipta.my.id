@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Motivation Generator</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; padding: 20px; min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        .login-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
+        .login-overlay.active { display: flex; }
+        .login-box { background: white; border-radius: 20px; padding: 40px; max-width: 420px; width: 100%; box-shadow: 0 24px 80px rgba(0,0,0,0.4); animation: fadeIn 0.3s ease; }
+        .login-box .login-icon { font-size: 48px; text-align: center; display: block; margin-bottom: 4px; }
+        .login-box h2 { text-align: center; font-size: 24px; color: #1a202c; margin-bottom: 4px; }
+        .login-box p { text-align: center; color: #718096; font-size: 14px; margin-bottom: 20px; }
+        .login-box .form-group { margin-bottom: 14px; }
+        .login-box .form-group label { font-weight: 600; font-size: 13px; color: #4a5568; display: block; margin-bottom: 4px; }
+        .login-box .form-group input { width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border 0.2s; }
+        .login-box .form-group input:focus { outline: none; border-color: #e53e3e; }
+        .login-box .form-remember { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+        .login-box .form-remember input[type="checkbox"] { width: 18px; height: 18px; accent-color: #e53e3e; }
+        .login-box .form-remember label { font-size: 13px; color: #4a5568; cursor: pointer; }
+        .login-box .btn-login { width: 100%; padding: 12px; background: #e53e3e; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .login-box .btn-login:hover { background: #c53030; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(229,62,62,0.3); }
+        .login-box .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .login-box .login-error { color: #fc8181; font-size: 13px; text-align: center; margin-top: 10px; display: none; }
+        .login-box .login-error.show { display: block; }
+        .login-box .login-loading { display: none; text-align: center; margin-top: 10px; color: #718096; font-size: 13px; }
+        .login-box .login-loading.show { display: block; }
+
+        .header { background: white; padding: 20px 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .header h1 { font-size: 24px; color: #1a2332; display: flex; align-items: center; gap: 10px; }
+        .header h1 span { background: #2d3748; color: white; font-size: 12px; padding: 2px 10px; border-radius: 20px; }
+        .header-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4a5568; background: #f7fafc; padding: 4px 14px; border-radius: 20px; }
+        .user-info .user-role { font-weight: 600; padding: 1px 10px; border-radius: 10px; font-size: 10px; }
+        .user-info .user-role.admin { background: #c6f6d5; color: #276749; }
+        .user-info .user-role.user { background: #bee3f8; color: #2a69ac; }
+        .btn-logout { padding: 4px 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; background: #fc8181; color: white; transition: 0.2s; }
+        .btn-logout:hover { background: #f56565; }
+        .search-box { display: flex; gap: 8px; align-items: center; background: #f7fafc; padding: 0 15px; border-radius: 10px; border: 2px solid #e2e8f0; transition: border 0.2s; }
+        .search-box:focus-within { border-color: #e53e3e; }
+        .search-box input { border: none; background: transparent; padding: 10px 0; font-size: 14px; outline: none; width: 200px; color: #2d3748; }
+        .search-box .icon { color: #a0aec0; font-size: 18px; }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: #e53e3e; color: white; }
+        .btn-primary:hover { background: #c53030; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(229,62,62,0.4); }
+        .btn-success { background: #48bb78; color: white; }
+        .btn-success:hover { background: #38a169; }
+        .btn-danger { background: #fc8181; color: white; }
+        .btn-danger:hover { background: #f56565; }
+        .btn-warning { background: #ed8936; color: white; }
+        .btn-warning:hover { background: #dd6b20; }
+        .btn-outline { background: transparent; color: #4a5568; border: 2px solid #e2e8f0; }
+        .btn-outline:hover { background: #f7fafc; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
+        .btn-xs { padding: 3px 10px; font-size: 11px; border-radius: 4px; }
+
+        .main-tabs-container { background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 24px; }
+        .main-tabs-header { display: flex; border-bottom: 2px solid #edf2f7; background: #f7fafc; padding: 0 20px; overflow-x: auto; flex-wrap: nowrap; }
+        .main-tab-btn { padding: 14px 24px; border: none; background: transparent; font-weight: 700; font-size: 14px; color: #a0aec0; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent; margin-bottom: -2px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .main-tab-btn:hover { color: #2d3748; }
+        .main-tab-btn.active { color: #e53e3e; border-bottom-color: #e53e3e; }
+        .main-tab-btn .badge-main { background: #edf2f7; color: #4a5568; font-size: 11px; padding: 1px 10px; border-radius: 12px; font-weight: 600; }
+        .main-tab-btn.active .badge-main { background: #fed7d7; color: #9b2c2c; }
+        .main-tab-content { padding: 24px 30px; display: none; }
+        .main-tab-content.active { display: block; }
+
+        .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+        .tool-card { background: #f7fafc; border-radius: 12px; padding: 20px; border: 2px solid #e2e8f0; transition: all 0.2s; text-align: center; }
+        .tool-card:hover { border-color: #e53e3e; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(229,62,62,0.12); }
+        .tool-card .tool-icon { font-size: 32px; display: block; margin-bottom: 4px; }
+        .tool-card .tool-name { font-weight: 700; font-size: 15px; color: #2d3748; }
+        .tool-card .tool-desc { font-size: 12px; color: #718096; margin: 4px 0 12px; }
+        .tool-card .tool-actions { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+        .tool-card .tool-actions .btn { padding: 4px 12px; font-size: 11px; }
+
+        .studio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .studio-left { display: flex; flex-direction: column; gap: 16px; }
+        .studio-right { display: flex; flex-direction: column; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-weight: 600; font-size: 13px; color: #4a5568; }
+        .form-group input, .form-group textarea, .form-group select { padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border 0.2s; font-family: inherit; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #e53e3e; }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        /* Section khusus untuk opsi dinamis */
+        .dynamic-section { background: #fff5f5; border-radius: 12px; padding: 14px 18px; border-left: 4px solid #e53e3e; margin-bottom: 4px; }
+        .dynamic-section .ds-title { font-weight: 700; font-size: 13px; color: #9b2c2c; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .dynamic-section .ds-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .dynamic-section .ds-row-full { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .dynamic-section .ds-col { display: flex; flex-direction: column; gap: 4px; }
+        .dynamic-section .ds-col label { font-weight: 600; font-size: 11px; color: #4a5568; text-transform: uppercase; letter-spacing: 0.5px; }
+        .dynamic-section .ds-col select,
+        .dynamic-section .ds-col input { padding: 8px 12px; border: 2px solid #fed7d7; border-radius: 8px; font-size: 13px; font-family: inherit; background: white; }
+        .dynamic-section .ds-col select:focus,
+        .dynamic-section .ds-col input:focus { outline: none; border-color: #e53e3e; }
+
+        /* Checkbox fitur tambahan */
+        .features-checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .feature-checkbox { display: flex; align-items: center; gap: 6px; background: white; padding: 8px 12px; border-radius: 8px; border: 2px solid #fed7d7; cursor: pointer; transition: all 0.2s; }
+        .feature-checkbox:hover { border-color: #e53e3e; }
+        .feature-checkbox input[type="checkbox"] { width: 16px; height: 16px; accent-color: #e53e3e; cursor: pointer; margin: 0; flex-shrink: 0; }
+        .feature-checkbox span { font-size: 12px; color: #2d3748; font-weight: 600; }
+        .feature-checkbox.checked { background: #fed7d7; border-color: #e53e3e; }
+
+        /* Field header dengan AI check */
+        .field-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 2px; }
+        .field-header label { font-weight: 600; font-size: 13px; color: #4a5568; margin: 0; }
+        .field-ai-check { display: flex; align-items: center; gap: 4px; background: #ebf8ff; padding: 2px 8px; border-radius: 6px; border: 1px solid #bee3f8; cursor: pointer; }
+        .field-ai-check input[type="checkbox"] { width: 14px; height: 14px; accent-color: #3182ce; cursor: pointer; margin: 0; }
+        .field-ai-check span { font-size: 10px; font-weight: 600; color: #2b6cb0; white-space: nowrap; }
+
+        .prompt-preview { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 2px solid #e2e8f0; min-height: 150px; white-space: pre-wrap; font-size: 14px; line-height: 1.8; color: #2d3748; max-height: 300px; overflow-y: auto; position: relative; }
+        .prompt-preview .placeholder { color: #a0aec0; font-style: italic; }
+        .prompt-preview .copy-prompt-btn { position: absolute; top: 8px; right: 8px; background: rgba(229,62,62,0.9); color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .prompt-preview .copy-prompt-btn:hover { background: #c53030; }
+
+        .quill-wrapper { background: white; border-radius: 12px; border: 2px solid #e2e8f0; overflow: hidden; }
+        .quill-wrapper .ql-toolbar { border: none; border-bottom: 2px solid #e2e8f0; background: #f7fafc; }
+        .quill-wrapper .ql-container { border: none; min-height: 200px; font-size: 14px; }
+        .quill-wrapper .ql-editor { min-height: 200px; }
+
+        .result-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+
+        .history-sub-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; }
+        .history-sub-tab { padding: 6px 16px; border: none; background: #f7fafc; border-radius: 8px; font-weight: 600; font-size: 13px; color: #4a5568; cursor: pointer; transition: all 0.2s; }
+        .history-sub-tab:hover { background: #edf2f7; }
+        .history-sub-tab.active { background: #e53e3e; color: white; }
+        .history-sub-tab .sub-badge { background: rgba(255,255,255,0.3); color: white; font-size: 10px; padding: 1px 8px; border-radius: 10px; margin-left: 4px; }
+        .history-sub-tab:not(.active) .sub-badge { background: #edf2f7; color: #4a5568; }
+
+        .history-filters { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+        .history-filters select, .history-filters input { padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; }
+        .history-filters select:focus, .history-filters input:focus { outline: none; border-color: #e53e3e; }
+
+        .history-list { display: flex; flex-direction: column; gap: 16px; }
+        .history-item { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .history-item:hover { border-color: #e53e3e; }
+        .history-item .history-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        .history-item .history-title { font-weight: 700; font-size: 15px; color: #2d3748; }
+        .history-item .history-meta { display: flex; gap: 12px; font-size: 12px; color: #718096; flex-wrap: wrap; align-items: center; }
+        .history-item .history-meta .type-badge { background: #fed7d7; color: #9b2c2c; padding: 2px 12px; border-radius: 12px; font-weight: 600; }
+        .history-item .history-meta .style-badge { background: #feebc8; color: #9c4221; padding: 2px 10px; border-radius: 10px; font-weight: 600; font-size: 10px; }
+        .history-item .history-meta .ai-badge { font-size: 10px; padding: 1px 8px; border-radius: 10px; font-weight: 600; }
+        .history-item .history-meta .ai-badge.chatgpt { background: #10a37f; color: white; }
+        .history-item .history-meta .ai-badge.claude { background: #d97757; color: white; }
+        .history-item .history-meta .ai-badge.gemini { background: #4285f4; color: white; }
+        .history-item .history-meta .ai-badge.deepseek { background: #4a6cf7; color: white; }
+        .history-item .history-meta .ai-badge.other { background: #718096; color: white; }
+        .history-item .history-prompt { font-size: 13px; color: #4a5568; background: white; padding: 8px 12px; border-radius: 6px; border-left: 3px solid #e53e3e; margin-bottom: 10px; max-height: 60px; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+        .history-item .history-prompt:hover { background: #f7fafc; }
+        .history-item .history-prompt.expanded { max-height: none; white-space: pre-wrap; }
+        .history-item .history-result { font-size: 13px; color: #2d3748; margin-bottom: 8px; max-height: 80px; overflow: hidden; text-overflow: ellipsis; }
+        .history-item .history-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid #edf2f7; padding-top: 10px; }
+        .history-item .history-actions .btn { padding: 3px 12px; font-size: 11px; }
+
+        .empty-state { padding: 60px 20px; text-align: center; color: #a0aec0; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 15px; }
+        .empty-state h3 { color: #4a5568; margin-bottom: 8px; }
+        .empty-state p { font-size: 14px; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        .modal-overlay.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal { background: white; border-radius: 20px; max-width: 850px; width: 100%; max-height: 95vh; overflow-y: auto; padding: 30px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .modal-close { position: sticky; top: 0; float: right; background: #fc8181; border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; transition: 0.2s; z-index: 10; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: #f56565; transform: rotate(90deg); }
+        .modal-title { font-size: 22px; font-weight: 700; color: #1a2332; margin-bottom: 20px; padding-right: 50px; }
+        .modal-body { display: flex; flex-direction: column; gap: 16px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 2px solid #edf2f7; flex-wrap: wrap; }
+
+        .toast { position: fixed; bottom: 30px; right: 30px; padding: 16px 28px; border-radius: 12px; color: white; font-weight: 600; z-index: 2000; animation: slideUp 0.3s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.2); max-width: 400px; }
+        .toast.success { background: #48bb78; }
+        .toast.error { background: #fc8181; }
+        .toast.info { background: #4299e1; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-label { font-weight: 700; font-size: 14px; color: #2d3748; margin-top: 4px; margin-bottom: 2px; padding-bottom: 4px; border-bottom: 2px solid #edf2f7; }
+        .view-result-wrapper { background: white; border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; max-height: 350px; overflow-y: auto; }
+        .view-result-wrapper .ql-editor { padding: 0; }
+        .ai-source-select { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .ai-source-select select { padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; flex: 1; }
+        .ai-source-select select:focus { outline: none; border-color: #e53e3e; }
+        .add-ai-modal .modal { max-width: 750px; }
+        .add-ai-modal .prompt-display { background: #f7fafc; padding: 12px 16px; border-radius: 8px; font-size: 14px; color: #4a5568; max-height: 120px; overflow-y: auto; white-space: pre-wrap; border-left: 3px solid #e53e3e; position: relative; }
+        .add-ai-modal .prompt-display .copy-prompt-btn { position: absolute; top: 4px; right: 4px; background: rgba(229,62,62,0.9); color: white; border: none; padding: 2px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .add-ai-modal .prompt-display .copy-prompt-btn:hover { background: #c53030; }
+
+        .main-content { display: none; }
+        .main-content.visible { display: block; }
+
+        @media (max-width: 992px) {
+            .studio-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .main-tabs-header { padding: 0 12px; }
+            .main-tab-btn { padding: 12px 16px; font-size: 13px; }
+            .main-tab-content { padding: 16px; }
+            .tools-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+            .header { flex-direction: column; align-items: stretch; }
+            .search-box input { width: 100%; }
+            .modal { padding: 20px; }
+            .history-item .history-header { flex-direction: column; align-items: flex-start; }
+            .features-checkbox-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .btn { padding: 8px 14px; font-size: 13px; }
+            .tools-grid { grid-template-columns: 1fr 1fr; }
+            .tool-card { padding: 14px; }
+            .tool-card .tool-icon { font-size: 28px; }
+            .main-tab-btn { padding: 10px 12px; font-size: 12px; }
+            .main-tab-content { padding: 12px; }
+            .history-filters { flex-direction: column; align-items: stretch; }
+            .login-box { padding: 24px 20px; }
+            .dynamic-section .ds-row { grid-template-columns: 1fr; }
+        }
+        .modal::-webkit-scrollbar { width: 6px; }
+        .modal::-webkit-scrollbar-track { background: #f7fafc; }
+        .modal::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .contoh-box { background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%); border-radius: 12px; padding: 16px 20px; border-left: 4px solid #e53e3e; margin: 12px 0; }
+        .contoh-box .contoh-title { font-weight: 700; font-size: 13px; color: #9b2c2c; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+        .contoh-box .contoh-item { background: white; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; color: #2d3748; line-height: 1.7; }
+        .contoh-box .contoh-item:last-child { margin-bottom: 0; }
+        .contoh-box .contoh-item .lbl { font-weight: 700; color: #e53e3e; display: inline-block; min-width: 90px; }
+    </style>
+</head>
+<body>
+
+    <div class="login-overlay active" id="loginOverlay">
+        <div class="login-box">
+            <span class="login-icon">🔐</span>
+            <h2>Login</h2>
+            <p>Masuk untuk mengakses AI Motivation Generator</p>
+            <div class="form-group">
+                <label>👤 Username</label>
+                <input type="text" id="loginUsername" placeholder="Masukkan username" value="">
+            </div>
+            <div class="form-group">
+                <label>🔑 Password</label>
+                <input type="password" id="loginPassword" placeholder="Masukkan password" value="" onkeydown="if(event.key==='Enter') doLogin()">
+            </div>
+            <div class="form-remember">
+                <input type="checkbox" id="loginRemember" checked>
+                <label for="loginRemember">Ingat saya</label>
+            </div>
+            <button class="btn-login" id="loginBtn" onclick="doLogin()">Login</button>
+            <div class="login-error" id="loginError">❌ Username atau password salah!</div>
+            <div class="login-loading" id="loginLoading">⏳ Memeriksa...</div>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="container" id="app">
+            <div class="header">
+                <h1>🔥 AI Motivation Generator <span>v1.0</span></h1>
+                <div class="header-actions">
+                    <span class="user-info" id="userInfo">
+                        👤 <span id="currentUser">-</span>
+                        <span class="user-role" id="userRole">user</span>
+                    </span>
+                    <button class="btn-logout" onclick="doLogout()">🚪 Logout</button>
+                    <div class="search-box">
+                        <span class="icon">🔍</span>
+                        <input type="text" id="searchInput" placeholder="Cari model motivasi..." oninput="renderTools()">
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+                </div>
+            </div>
+
+            <div class="main-tabs-container">
+                <div class="main-tabs-header">
+                    <button class="main-tab-btn active" data-tab="tab1" onclick="switchMainTab('tab1')">
+                        📚 Model Motivasi
+                        <span class="badge-main" id="tab1Badge">14</span>
+                    </button>
+                    <button class="main-tab-btn" data-tab="tab2" onclick="switchMainTab('tab2')">
+                        ✏️ AI Prompt Studio
+                        <span class="badge-main">New</span>
+                    </button>
+                    <button class="main-tab-btn" data-tab="tab3" onclick="switchMainTab('tab3')">
+                        📋 History
+                        <span class="badge-main" id="tab3Badge">0</span>
+                    </button>
+                </div>
+
+                <div class="main-tab-content active" id="tab1">
+                    <div style="background:#fff5f5;border-radius:12px;padding:16px 20px;margin-bottom:20px;border-left:4px solid #e53e3e;">
+                        <strong style="color:#9b2c2c;font-size:15px;">🔥 14 Model Motivasi Profesional</strong>
+                        <p style="color:#4a5568;font-size:13px;margin-top:6px;line-height:1.7;">
+                            Pilih model motivasi yang sesuai kebutuhan Anda. Tersedia <strong>Model Klasik & Filosofis</strong>, <strong>Psikologi Modern</strong>, <strong>Naratif & Emosional</strong>, dan <strong>Khusus</strong>. Setiap prompt bisa dikustom dinamis — nada, panjang, target audiens, dan fitur tambahan bisa dipilih.
+                        </p>
+                    </div>
+                    <div class="tools-grid" id="toolsGrid"></div>
+                </div>
+
+                <div class="main-tab-content" id="tab2">
+                    <div class="studio-grid">
+                        <div class="studio-left">
+                            <div class="form-group">
+                                <label>📂 Pilih Model Motivasi</label>
+                                <select id="selectedTool" onchange="updateFormFields()"></select>
+                            </div>
+
+                            <!-- DYNAMIC OPTIONS SECTION -->
+                            <div class="dynamic-section">
+                                <div class="ds-title">⚙️ Opsi Dinamis (Kustomisasi Output)</div>
+                                <div class="ds-row">
+                                    <div class="ds-col">
+                                        <label>🎯 Nada / Style</label>
+                                        <select id="optTone">
+                                            <option value="Hangat & Personal">💗 Hangat & Personal</option>
+                                            <option value="Tegas & Membakar">🔥 Tegas & Membakar</option>
+                                            <option value="Lembut & Menyentuh">🕊️ Lembut & Menyentuh</option>
+                                            <option value="Formal & Profesional">💼 Formal & Profesional</option>
+                                            <option value="Puitis & Reflektif">🌸 Puitis & Reflektif</option>
+                                            <option value="Santai & Relatable">😊 Santai & Relatable</option>
+                                        </select>
+                                    </div>
+                                    <div class="ds-col">
+                                        <label>📏 Panjang Output</label>
+                                        <select id="optLength">
+                                            <option value="Pendek (1-3 paragraf)">Pendek (1-3 paragraf)</option>
+                                            <option value="Menengah (4-6 paragraf)" selected>Menengah (4-6 paragraf)</option>
+                                            <option value="Panjang (1 halaman penuh)">Panjang (1 halaman penuh)</option>
+                                            <option value="Quote Singkat (1-2 kalimat)">Quote Singkat (1-2 kalimat)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="ds-row-full" style="margin-top:12px;">
+                                    <div class="ds-col">
+                                        <label>👥 Target Audiens</label>
+                                        <select id="optAudience">
+                                            <option value="Umum (siapapun)">🌍 Umum (siapapun)</option>
+                                            <option value="Karyawan / Profesional">💼 Karyawan / Profesional</option>
+                                            <option value="Pelajar / Mahasiswa">🎓 Pelajar / Mahasiswa</option>
+                                            <option value="Pemuda / Remaja">🔥 Pemuda / Remaja</option>
+                                            <option value="Wirausaha / Pebisnis">🚀 Wirausaha / Pebisnis</option>
+                                            <option value="Ibu Rumah Tangga">🏠 Ibu Rumah Tangga</option>
+                                            <option value="Jemaat / Rohani">🙏 Jemaat / Rohani</option>
+                                            <option value="Sedang dalam Kesulitan">💔 Sedang dalam Kesulitan</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style="margin-top:12px;">
+                                    <label style="font-weight:600;font-size:11px;color:#4a5568;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;">✨ Fitur Tambahan (bisa pilih lebih dari satu)</label>
+                                    <div class="features-checkbox-grid">
+                                        <label class="feature-checkbox" id="fc_quote">
+                                            <input type="checkbox" id="optQuote" onchange="toggleFeatureCheck(this)">
+                                            <span>💬 Quote Tokoh</span>
+                                        </label>
+                                        <label class="feature-checkbox" id="fc_affirmation">
+                                            <input type="checkbox" id="optAffirmation" onchange="toggleFeatureCheck(this)">
+                                            <span>✨ Afirmasi</span>
+                                        </label>
+                                        <label class="feature-checkbox" id="fc_action">
+                                            <input type="checkbox" id="optAction" onchange="toggleFeatureCheck(this)">
+                                            <span>🎯 Action Steps</span>
+                                        </label>
+                                        <label class="feature-checkbox" id="fc_reflection">
+                                            <input type="checkbox" id="optReflection" onchange="toggleFeatureCheck(this)">
+                                            <span>🤔 Refleksi</span>
+                                        </label>
+                                        <label class="feature-checkbox" id="fc_metaphor">
+                                            <input type="checkbox" id="optMetaphor" onchange="toggleFeatureCheck(this)">
+                                            <span>🌈 Metafora</span>
+                                        </label>
+                                        <label class="feature-checkbox" id="fc_story">
+                                            <input type="checkbox" id="optStory" onchange="toggleFeatureCheck(this)">
+                                            <span>📖 Kisah Pendek</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="ds-row-full" style="margin-top:12px;">
+                                    <div class="ds-col">
+                                        <label>💭 Label Penutup</label>
+                                        <select id="optClosing">
+                                            <option value="Langkah Nyata">🎯 Langkah Nyata (aksi konkret)</option>
+                                            <option value="Afirmasi Hari Ini">✨ Afirmasi Hari Ini</option>
+                                            <option value="Refleksi">🤔 Refleksi</option>
+                                            <option value="Quote Penutup">💬 Quote Penutup</option>
+                                            <option value="Pesan Terakhir">💌 Pesan Terakhir</option>
+                                            <option value="Tanpa Penutup">❌ Tanpa Penutup (langsung selesai)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="dynamicFields"></div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>📌 Judul Motivasi</label>
+                                    <input type="text" id="resultTitle" placeholder="Judul motivasi...">
+                                </div>
+                                <div class="form-group">
+                                    <label>👤 Dibuat Oleh</label>
+                                    <input type="text" id="createdBy" placeholder="Nama..." value="">
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary" onclick="generatePrompt()">📝 Generate Prompt</button>
+                        </div>
+
+                        <div class="studio-right">
+                            <div class="form-group">
+                                <label>📄 Prompt yang Dihasilkan</label>
+                                <div class="prompt-preview" id="promptPreview">
+                                    <span class="placeholder">Pilih model motivasi dan isi form untuk menghasilkan prompt...</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>🤖 Pilih AI Source</label>
+                                <div class="ai-source-select">
+                                    <select id="aiSource">
+                                        <option value="ChatGPT">ChatGPT</option>
+                                        <option value="Claude">Claude</option>
+                                        <option value="Gemini">Gemini</option>
+                                        <option value="DeepSeek">DeepSeek</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>📝 Hasil AI (Paste di sini)</label>
+                                <div class="quill-wrapper">
+                                    <div id="resultEditor"></div>
+                                </div>
+                            </div>
+
+                            <div class="result-actions">
+                                <button class="btn btn-success" onclick="saveResult()">💾 Simpan Hasil</button>
+                                <button class="btn btn-warning" onclick="clearForm()">🗑️ Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="main-tab-content" id="tab3">
+                    <div class="history-sub-tabs" id="historySubTabs">
+                        <button class="history-sub-tab active" data-subtab="all" onclick="switchHistorySubTab('all')">
+                            📋 All <span class="sub-badge" id="subAll">0</span>
+                        </button>
+                        <button class="history-sub-tab" data-subtab="today" onclick="switchHistorySubTab('today')">
+                            📅 Hari Ini <span class="sub-badge" id="subToday">0</span>
+                        </button>
+                    </div>
+                    <div class="history-filters">
+                        <select id="historyFilterTool" onchange="renderHistory()">
+                            <option value="all">📋 All Models</option>
+                        </select>
+                        <input type="text" id="historySearch" placeholder="🔍 Cari..." oninput="renderHistory()">
+                        <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑️ Hapus Semua</button>
+                        <span style="font-size:13px;color:#718096;" id="historyCount">0 items</span>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <div class="empty-state">
+                            <div class="icon">🔥</div>
+                            <h3>Belum ada motivasi</h3>
+                            <p>Pergi ke Tab "AI Prompt Studio" untuk mulai membuat motivasi</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
+            <div class="modal-title" id="infoModalTitle">📋 Info</div>
+            <div class="modal-body" id="infoModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('infoModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+            <div class="modal-title" id="viewModalTitle">👁️ Detail Motivasi</div>
+            <div class="modal-body">
+                <div id="viewMeta" style="font-size:13px;color:#718096;margin-bottom:12px;padding:8px 12px;background:#f7fafc;border-radius:8px;"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt:</div>
+                <div style="background:#f7fafc;padding:12px 16px;border-radius:8px;font-size:14px;color:#4a5568;white-space:pre-wrap;max-height:150px;overflow-y:auto;border-left:3px solid #e53e3e;" id="viewPrompt"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">🤖 Sumber AI:</div>
+                <div style="font-size:14px;color:#4a5568;margin-bottom:8px;" id="viewSource"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">📝 Hasil AI:</div>
+                <div class="view-result-wrapper" id="viewResultWrapper"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="copyViewResult()">📋 Copy</button>
+                <button class="btn btn-success" onclick="downloadViewDoc()">📥 Download .doc</button>
+                <button class="btn btn-outline" onclick="closeModal('viewModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay add-ai-modal" id="addAiModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('addAiModal')">✕</button>
+            <div class="modal-title">🤖 Tambah Hasil AI Baru</div>
+            <div class="modal-body">
+                <input type="hidden" id="addAiId">
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt (tidak bisa diedit):</div>
+                <div class="prompt-display" id="addAiPromptDisplay"></div>
+                <div class="form-group">
+                    <label>🤖 Pilih AI Source</label>
+                    <select id="addAiSource">
+                        <option value="ChatGPT">ChatGPT</option>
+                        <option value="Claude">Claude</option>
+                        <option value="Gemini">Gemini</option>
+                        <option value="DeepSeek">DeepSeek</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>📝 Hasil AI (Paste di sini)</label>
+                    <div class="quill-wrapper">
+                        <div id="addAiEditor"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>👤 Dibuat Oleh</label>
+                    <input type="text" id="addAiCreatedBy" placeholder="Nama...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addAiModal')">Batal</button>
+                <button class="btn btn-success" onclick="saveAddAiResult()">💾 Simpan Hasil</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="duplicateModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('duplicateModal')">✕</button>
+            <div class="modal-title">📋 Duplikat Prompt</div>
+            <div class="modal-body">
+                <input type="hidden" id="dupId">
+                <input type="hidden" id="dupFrameworkType">
+                <div class="form-group">
+                    <label>📂 Model Motivasi</label>
+                    <input type="text" id="dupFrameworkDisplay" disabled style="background:#f7fafc;font-weight:600;">
+                </div>
+                <div id="dupDynamicFields"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📌 Judul Baru</label>
+                        <input type="text" id="dupTitle" placeholder="Judul baru...">
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Dibuat Oleh</label>
+                        <input type="text" id="dupCreatedBy" placeholder="Nama...">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>📄 Prompt yang Dihasilkan</label>
+                    <div class="prompt-preview" id="dupPromptPreview" style="min-height:100px;max-height:200px;">
+                        <span class="placeholder">Generate prompt dari form di atas...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('duplicateModal')">Batal</button>
+                <button class="btn btn-primary" onclick="generateDuplicatePrompt()">📝 Generate Prompt</button>
+                <button class="btn btn-success" onclick="saveDuplicate()">💾 Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== MOTIVATION MODEL DEFINITIONS ====================
+        const MOTIVATION_TYPES = {
+            logotherapy: {
+                id: 'logotherapy', icon: '🌟', name: 'Logoterapi',
+                category: 'classic',
+                desc: 'Motivasi dari pencarian makna hidup, meski di tengah penderitaan. (Viktor Frankl)',
+                color: '#805ad5',
+                use_for: '✅ Orang yang merasa hidupnya kosong\n✅ Sedang mengalami penderitaan berat\n✅ Krisis eksistensial\n✅ Kehilangan tujuan hidup\n✅ Butuh alasan untuk bangkit',
+                contoh: [
+                    { lbl: 'Inti', txt: 'Manusia bisa bertahan menghadapi penderitaan apapun jika punya "mengapa" untuk hidup.' },
+                    { lbl: 'Contoh', txt: '"Ketika kita tidak bisa mengubah situasi, kita ditantang untuk mengubah diri kita dalam menghadapi situasi itu." — Viktor Frankl' },
+                    { lbl: 'Efek', txt: 'Motivasi yang dalam, membuat orang menemukan makna di balik kesulitan.' }
+                ],
+                fields: [
+                    { key: 'topic', label: 'Topik / Situasi', type: 'text', placeholder: 'Contoh: Bangkit setelah kehilangan pekerjaan' },
+                    { key: 'core_message', label: 'Pesan Inti', type: 'textarea', placeholder: 'Pesan utama yang ingin disampaikan...' },
+                    { key: 'personal_context', label: 'Konteks Personal (Opsional)', type: 'textarea', placeholder: 'Konteks spesifik penerima motivasi...' }
+                ],
+                prompt_template: `Buat konten motivasi dengan pendekatan LOGOTERAPI (Viktor Frankl) tentang "{topic}". Pesan inti: {core_message}. Konteks personal: {personal_context}.\n\nDEFINISI: Logoterapi adalah pendekatan yang menekankan pencarian makna hidup sebagai motivasi utama manusia. Bahkan dalam penderitaan terberat, manusia bisa menemukan makna.\n\nFORMAT OUTPUT:\n\n=== 🔥 MOTIVASI: LOGOTERAPI ===\n\n**Judul:** [judul kreatif]\n\n[Konten motivasi dengan pendekatan logoterapi]\n\n{DYNAMIC_OUTPUT}\n\nFormat dengan markdown yang rapi.`
+            },
+            stoicism: {
+                id: 'stoicism', icon: '🏛️', name: 'Stoikisme',
+                category: 'classic',
+                desc: 'Ketenangan dan kendali diri dari filsafat Yunani-Romawi kuno.',
+                color: '#4299e1',
+                use_for: '✅ Menghadapi situasi di luar kendali\n✅ Butuh ketenangan batin\n✅ Menghadapi kritik atau kegagalan\n✅ Overthinking dan kecemasan\n✅ Ingin lebih bijak',
+                contoh: [
+                    { lbl: 'Inti', txt: 'Kita tidak bisa mengendalikan apa yang terjadi, tapi kita bisa mengendalikan reaksi kita.' },
+                    { lbl: 'Contoh', txt: '"Engkau memiliki kendali atas pikiranmu, bukan peristiwa di luar. Sadari ini, dan engkau akan menemukan kekuatan." — Marcus Aurelius' },
+                    { lbl: 'Efek', txt: 'Motivasi yang menenangkan, membebaskan dari kecemasan berlebihan.' }
+                ],
+                fields: [
+                    { key: 'topic', label: 'Topik / Situasi', type: 'text', placeholder: 'Contoh: Menghadapi kegagalan usaha' },
+                    { key: 'core_message', label: 'Pesan Inti', type: 'textarea', placeholder: 'Pesan utama yang ingin disampaikan...' },
+                    { key: 'personal_context', label: 'Konteks Personal (Opsional)', type: 'textarea', placeholder: 'Konteks spesifik penerima motivasi...' }
+                ],
+                prompt_template: `Buat konten motivasi dengan pendekatan STOIKISME (Marcus Aurelius, Seneca, Epictetus) tentang "{topic}". Pesan inti: {core_message}. Konteks personal: {personal_context}.\n\nDEFINISI: Stoikisme mengajarkan bahwa kebahagiaan sejati berasal dari dalam, bukan dari luar. Kita fokus pada apa yang bisa dikendalikan (pikiran, tindakan) dan menerima apa yang tidak bisa dikendalikan.\n\nFORMAT OUTPUT:\n\n=== 🔥 MOTIVASI: STOIKISME ===\n\n**Judul:** [judul kreatif]\n\n[Konten motivasi dengan pendekatan stoikisme]\n\n{DYNAMIC_OUTPUT}\n\nFormat dengan markdown yang rapi.`
+            },
+            ikigai: {
+                id: 'ikigai', icon: '🌸', name: 'Ikigai',
+                category: 'classic',
+                desc: 'Alasan hidup dari filosofi Jepang — titik temu antara passion, skill, kebutuhan dunia, dan penghasilan.',
+                color: '#ed64a6',
+                use_for: '✅ Mencari arah hidup\n✅ Bingung dengan karier\n✅ Ingin hidup lebih bermakna\n✅ Quarter-life crisis\n✅ Menemukan passion',
+                contoh: [
+                    { lbl: 'Inti', txt: 'Ikigai = titik temu antara: yang kamu cintai + yang kamu kuasai + yang dunia butuhkan + yang bisa memberimu penghasilan.' },
+                    { lbl: 'Contoh', txt: '"Setiap pagi aku bangun dengan satu alasan. Bukan alarm, bukan kewajiban, tapi ikigai — alasan untuk hidup."' },
+                    { lbl: 'Efek', txt: 'Motivasi yang membuat orang menemukan arah dan tujuan hidup yang jelas.' }
+                ],
+                fields: [
+                    { key: 'topic', label: 'Topik / Situasi', type: 'text', placeholder: 'Contoh: Menemukan passion dan arah hidup' },
+                    { key: 'core_message', label: 'Pesan Inti', type: 'textarea', placeholder: 'Pesan utama yang ingin disampaikan...' },
+                    { key: 'personal_context', label: 'Konteks Personal (Opsional)', type: 'textarea', placeholder: 'Konteks spesifik penerima motivasi...' }
+                ],
+                prompt_template: `Buat konten motivasi dengan pendekatan IKIGAI (filosofi Jepang) tentang "{topic}". Pesan inti: {core_message}. Konteks personal: {personal_context}.\n\nDEFINISI: Ikigai adalah alasan untuk bangun setiap pagi. Titik temu antara: apa yang kamu cintai, apa yang kamu kuasai, apa yang dunia butuhkan, dan apa yang bisa memberimu penghasilan.\n\nFORMAT OUTPUT:\n\n=== 🔥 MOTIVASI: IKIGAI ===\n\n**Judul:** [judul kreatif]\n\n[Konten motivasi dengan pendekatan ikigai]\n\n{DYNAMIC_OUTPUT}\n\nFormat dengan markdown yang rapi.`
+            },
+            hero_journey: {
+                id: 'hero_journey', icon: '🦸', name: "Hero's Journey",
+                category: 'classic',
+                desc: 'Motivasi lewat struktur perjalanan pahlawan — panggilan, tantangan, transformasi, dan kemenangan.',
+                color: '#d69e2e',
+                use_for: '✅ Menghadapi tantangan besar\n✅ Butuh semangat petualangan\n✅ Memulai usaha baru\n✅ Bangkit dari kegagalan\n✅ Konten storytelling',
+                contoh: [
+                    { lbl: 'Inti', txt: 'Setiap orang adalah pahlawan dalam perjalanan hidupnya sendiri. Tantangan adalah bagian dari petualangan.' },
+                    { lbl: 'Contoh', txt: '"Kau bukan sedang gagal. Kau sedang berada di tengah-tengah petualanganmu. Setiap pahlawan pernah sampai di titik terendah sebelum menemukan kekuatannya."' },
+                    { lbl: 'Efek', txt: 'Motivasi yang membuat tantangan terasa sebagai bagian dari kisah heroik.' }
+                ],
+                fields: [
+                    { key: 'topic', label: 'Topik / Situasi', type: 'text', placeholder: 'Contoh: Memulai bisnis baru' },
+                    { key: 'core_message', label: 'Pesan Inti', type: 'textarea', placeholder: 'Pesan utama yang ingin disampaikan...' },
+                    { key: 'personal_context', label: 'Konteks Personal (Opsional)', type: 'textarea', placeholder: 'Konteks spesifik penerima motivasi...' }
+                ],
+                prompt_template: `Buat konten motivasi dengan pendekatan HERO'S JOURNEY (Joseph Campbell) tentang "{topic}". Pesan inti: {core_message}. Konteks personal: {personal_context}.\n\nDEFINISI: Hero's Journey adalah struktur naratif universal: panggilan petualangan → tantangan → titik terendah → transformasi → kemenangan → kembali dengan hikmah.\n\nFORMAT OUTPUT:\n\n=== 🔥 MOTIVASI: HERO'S JOURNEY ===\n\n**Judul:** [judul kreatif]\n\n[Konten motivasi dengan pendekatan hero's journey]\n\n{DYNAMIC_OUTPUT}\n\nFormat dengan markdown yang rapi.`
+            },
+            pep_talk: {
+                id: 'pep_talk', icon: '📣', name: 'Pep Talk',
+                category: 'classic',
+                desc: 'Gaya oratoris yang membakar semangat — seperti pidato motivator di atas panggung.',
+                color: '#e53e3e',
+                use_for: '✅ Butuh semangat instan\n✅ Sebelum pertandingan/presentasi\n✅ Bangkit dari kemalasan\n✅ Memotivasi tim\n✅ Konten media sosial',
+                contoh: [
+                    { lbl: 'Inti', txt: 'Pep talk langsung ke inti, penuh energi, dan menuntut aksi sekarang.' },
+                    { lbl: 'Contoh', txt: '"Kamu tahu apa yang harus dilakukan. Kamu tahu apa yang benar. Jadi kenapa masih duduk? Bangun! Bergerak! Hari ini bukan hari untuk menunggu, ini hari untuk bertindak!"' },
+                    { lbl: 'Efek', txt: 'Motivasi instan yang membuat orang langsung ingin bertindak.' }
+                ],
+                fields: [
+                    { key: 'topic', label: 'Topik / Situasi', type: 'text', placeholder: 'Contoh: Bangkit dari kemalasan' },
+                    { key: 'core_message', label: 'Pesan Inti', type: 'textarea', placeholder: 'Pesan utama yang ingin disampaikan...' },
+                    { key: 'personal_context', label: 'Konteks Personal (Opsional)', type: 'textarea', placeholder: 'Konteks spesifik penerima motivasi...' }
+                ],
+                prompt_template: `Buat konten motivasi dengan pendekatan PEP TALK (gaya oratoris membakar) tentang "{topic}". Pesan inti: {core_message}. Konteks personal: {personal_context}.\n\nDEFINISI: Pep talk adalah pidato motivasi singkat yang penuh energi, langsung, dan menuntut aksi. Gaya seperti motivator di atas panggung.\n\nFORMAT OUTPUT:\n\n=== 🔥 PEP TALK ===\n\n**Judul:** [judul kreatif]\n\n[Konten pep talk yang membakar semangat]\n\n{DYNAMIC_OUTPUT}\n\nFormat dengan markdown yang rapi.`
+            },
+            growth_mindset: {
+                id: 'growth_mindset', icon: '🌱', name: 'Growth Mindset',
+                category: 'psychology',
+                desc: 'Pola pikir berkembang — kegagalan adalah pelajaran, bukan akhir. (Carol Dweck)',
+                color: '#48bb78',
+                use_for: '✅ Takut gagal\n✅ Merasa tidak berbakat\n✅ Menghadapi kritik\n✅ Belajar hal baru\n✅ Butuh mindset positif',
+                contoh: [
+                    { lbl: 'Inti', txt: 'Kemampuan bisa dikembangkan. Kegagalan bukan bukti bodoh, tapi bagian dari proses belajar.' },
+                    { lbl: 'Contoh', txt: '"Kata \'aku belum bisa\' jauh lebih kuat dari kata \'aku tidak bisa\'. Yang pertama membuka pintu, yang kedua menutupnya."' },
+                    { lbl: 'Efek', txt: 'Motivasi yang membangun keberanian untuk terus mencoba.' }
+                ],
+                fields: [
+                    { key: 'topic', label: 'Topik / Situasi', type: 'text', placeholder: 'Contoh: Bangkit setelah gagal ujian' },
+                    { key: 'core_message', label: 'Pesan Inti', type: 'textarea', placeholder: 'Pesan utama yang ingin disampaikan...' },
+                    { key: 'personal_context', label: 'Konteks Personal (Opsional)', type: 'textarea', placeholder: 'Konteks spesifik penerima motivasi...' }
+                ],
+                prompt_template: `Buat konten motivasi dengan pendekatan GROWTH MINDSET (Carol Dweck) tentang "{topic}". Pesan inti: {core_message}. Konteks personal: {personal_context}.\n\nDEFINISI: Growth mindset adalah keyakinan bahwa kemampuan dan kecerdasan bisa dikembangkan melalui usaha, strategi, dan bantuan orang lain. Kegagalan adalah pelajaran, bukan akhir.\n\nFORMAT OUTPUT:\n\n=== 🔥 MOTIVASI: GROWTH MINDSET ===\n\n**Judul:** [judul kreatif]\n\n[Konten motivasi dengan pendekatan growth mindset]\n\n{DYNAMIC_OUTPUT}\n\nFormat dengan markdown yang rapi.`
+            },
+            self_determination: {
+                id: 'self_determination', icon: '🎯', name: 'Self-Determination',
+                category: 'psychology',
+                desc: 'Motivasi dari 3 kebutuhan dasar: Autonomy (kebebasan), Competence (kompetensi), Relatedness (koneksi). (Deci & Ryan)',
+                color: '#38b2ac',
+                use_for: '✅ Merasa terpaksa melakukan sesuatu\n✅ Kehilangan motivasi intrinsik\n✅ Butuh koneksi dan makna\n✅ Ingin mandiri\n✅ Membangun tim',
+                contoh: [
+                    { lbl: 'Inti', txt: 'Motivasi sejati muncul ketika 3 kebutuhan terpenuhi: otonomi, kompetensi, dan koneksi.' },
+                    { lbl: 'Contoh', txt: '"Kau tidak butuh motivasi dari luar. Yang kau butuh adalah: kebebasan memilih jalanmu, keyakinan bahwa kau mampu, dan seseorang yang percaya padamu."' },
+                    { lbl: 'Efek', txt: 'Motivasi yang bertahan lama karena berasal dari dalam.' }
+                ],
+                fields: [
+                    { key: 'topic', label: 'Topik / Situasi', type: 'text', placeholder: 'Contoh: Membangun motivasi intrinsik' },
+                    { key: 'core_message', label: 'Pesan Inti', type: 'textarea', placeholder: 'Pesan utama yang ingin disampaikan...' },
+                    { key: 'personal_context', label: 'Konteks Personal (Opsional)', type: 'textarea', placeholder: 'Konteks spesifik penerima motivasi...' }
+                ],
+                prompt_template: `Buat konten motivasi dengan pendekatan SELF-DETERMINATION THEORY (Deci & Ryan) tentang "{topic}". Pesan inti: {core_message}. Konteks personal: {personal_context}.\n\nDEFINISI: Motivasi sejati berasal dari dalam. 3 kebutuhan dasar: Autonomy (kebebasan memilih), Competence (kemampuan), Relatedness (koneksi dengan orang lain).\n\nFORMAT OUTPUT:\n\n=== 🔥 MOTIVASI: SELF-DETERMINATION ===\n\n**Judul:** [judul kreatif]\n\n[Konten motivasi dengan pendekatan self-determination]\n\n{DYNAMIC_OUTPUT}\n\nFormat dengan markdown yang rapi.`
+            },
+            grit: {
+                id: 'grit', icon: '💪', name: 'Grit & Resilience',
+                category: 'psychology',
+                desc: 'Ketangguhan — kemampuan bertahan dan bangkit dari kegagalan. (Angela Duckworth)',
+                color: '#ed8936',
+                use_for: '✅ Mau menyerah\n✅ Menghadapi kegagalan berulang\n✅ Butuh ketahanan jangka panjang\n✅ Sedang berjuang\n✅ Membangun karakter',
+                contoh: [
+                    { lbl: 'Inti', txt: 'Grit = kombinasi passion + perseverance jangka panjang. Bukan bakat, tapi kegigihan.' },
+                    { lbl: 'Contoh', txt: '"Bambu Cina butuh 5 tahun untuk tumbuh. 4 tahun pertama hanya akar. Di tahun ke-5, ia tumbuh 30 meter dalam 6 minggu. Kau sedang membangun akarmu."' },
+                    { lbl: 'Efek', txt: 'Motivasi untuk terus berjuang meski hasil belum kelihatan.' }
+                ],
+                fields: [
+                    { key: 'topic', label: 'Topik / Situasi', type: 'text', placeholder: 'Contoh: Bertahan dalam usaha yang sedang lesu' },
+                    { key: 'core_message', label: 'Pesan Inti', type: 'textarea', placeholder: 'Pesan utama yang ingin disampaikan...' },
+                    { key: 'personal_context', label: 'Konteks Personal (Opsional)', type: 'textarea', placeholder: 'Konteks spesifik penerima motivasi...' }
+                ],
+                prompt_template: `Buat konten motivasi dengan pendekatan GRIT & RESILIENCE (Angela Duckworth) tentang "{topic}". Pesan inti: {core_message}. Konteks personal: {personal_context}.\n\nDEFINISI: Grit adalah kombinasi passion dan perseverance jangka panjang. Ketangguhan untuk bertahan dan bangkit dari kegagalan berulang.\n\nFORMAT OUTPUT:\n\n=== 🔥 MOTIVASI: GRIT & RESILIENCE ===\n\n**Judul:** [judul kreatif]\n\n[Konten motivasi dengan pendekatan grit & resilience]\n\n{DYNAMIC_OUTPUT}\n\nFormat dengan markdown yang rapi.`
+            },
+            manifestation: {
+                id: 'manifestation', icon: '✨', name: 'Manifestasi & Visualisasi',
+                category: 'psychology',
+                desc: 'Kekuatan pikiran, visualisasi, dan keyakinan untuk menarik hal-hal baik.',
+                color: '#9f7aea',
+                use_for: '✅ Ingin mewujudkan impian\n✅ Butuh keyakinan diri\n✅ Memulai hal baru\n✅ Mengubah pola pikir\n✅ Konten afirmasi',
+                contoh: [
+                    { lbl: 'Inti', txt: 'Pikiran dan keyakinan membentuk realitas. Visualisasikan, yakini, dan bertindak.' },
+                    { lbl: 'Contoh', txt: '"Visualisasikan hidupmu seperti yang kau inginkan. Rasakan seolah sudah terjadi. Lalu ambil langkah nyata menuju sana. Alam semesta berpihak pada mereka yang percaya."' },
+                    { lbl: 'Efek', txt: 'Motivasi yang menguatkan keyakinan dan visi masa depan.' }
+                ],
+                fields: [
+                    { key: 'topic', label: 'Topik / Situasi', type: 'text', placeholder: 'Contoh: Mewujudkan impian karier' },
+                    { key: 'core_message', label: 'Pesan Inti', type: 'textarea', placeholder: 'Pesan utama yang ingin disampaikan...' },
+                    { key: 'personal_context', label: 'Konteks Personal (Opsional)', type: 'textarea', placeholder: 'Konteks spesifik penerima motivasi...' }
+                ],
+                prompt_template: `Buat konten motivasi dengan pendekatan MANIFESTASI & VISUALISASI tentang "{topic}". Pesan inti: {core_message}. Konteks personal: {personal_context}.\n\nDEFINISI: Manifestasi adalah keyakinan bahwa pikiran, visualisasi, dan keyakinan membentuk realitas. Kombinasi visualisasi + afirmasi + tindakan.\n\nFORMAT OUTPUT:\n\n=== 🔥 MOTIVASI: MANIFESTASI ===\n\n**Judul:** [judul kreatif]\n\n[Konten motivasi dengan pendekatan manifestasi]\n\n{DYNAMIC_OUTPUT}\n\nFormat dengan markdown yang rapi.`
+            },
+            letter_to_self: {
+                id: 'letter_to_self', icon: '💌', name: 'Surat untuk Diri Sendiri',
+                category: 'narrative',
+                desc: 'Motivasi berbentuk surat personal yang menyentuh hati — dari diri sendiri atau dari orang tersayang.',
+                color: '#d53f8c',
+                use_for: '✅ Butuh kelembutan & empati\n✅ Sedang rapuh\n✅ Merenung & refleksi\n✅ Hadiah untuk orang tersayang\n✅ Konten personal',
+                contoh: [
+                    { lbl: 'Inti', txt: 'Surat personal yang penuh empati, seolah dari orang yang sangat mencintai penerima.' },
+                    { lbl: 'Contoh', txt: '"Dear kamu, aku tahu hari ini berat. Aku tahu kamu ingin menyerah. Tapi dengar ya — kamu sudah melewati hari-hari yang lebih sulit, dan kamu masih di sini. Itu bukan kebetulan. Itu bukti bahwa kamu lebih kuat dari yang kamu kira."' },
+                    { lbl: 'Efek', txt: 'Motivasi yang menyentuh hati, membuat penerima merasa dilihat dan dicintai.' }
+                ],
+                fields: [
+                    { key: 'topic', label: 'Topik / Situasi', type: 'text', placeholder: 'Contoh: Pesan untuk diri sendiri yang sedang lelah' },
+                    { key: 'core_message', label: 'Pesan Inti', type: 'textarea', placeholder: 'Pesan utama yang ingin disampaikan...' },
+                    { key: 'personal_context', label: 'Konteks Personal (Opsional)', type: 'textarea', placeholder: 'Konteks spesifik penerima motivasi...' }
+                ],
+                prompt_template: `Buat konten motivasi dengan pendekatan SURAT UNTUK DIRI SENDIRI tentang "{topic}". Pesan inti: {core_message}. Konteks personal: {personal_context}.\n\nDEFINISI: Surat personal dari diri sendiri (atau orang tersayang) yang penuh empati, kelembutan, dan pengertian. Nada seperti menulis surat pada sahabat terdekat.\n\nFORMAT OUTPUT:\n\n=== 💌 SURAT UNTUK DIRI SENDIRI ===\n\n**Judul:** [judul kreatif]\n\n[Konten surat yang menyentuh]\n\n{DYNAMIC_OUTPUT}\n\nFormat dengan markdown yang rapi.`
+            },
+            inspiring_story: {
+                id: 'inspiring_story', icon: '📖', name: 'Kisah Inspiratif',
+                category: 'narrative',
+                desc: 'Motivasi lewat cerita nyata atau metafora yang menginspirasi — membuat pembaca berkata "aku bisa juga".',
+                color: '#4299e1',
+                use_for: '✅ Butuh contoh nyata\n✅ Merasa sendirian dalam perjuangan\n✅ Butuh harapan\n✅ Konten storytelling\n✅ Seminar & presentasi',
+                contoh: [
+                    { lbl: 'Inti', txt: 'Cerita nyata tentang orang yang berhasil melewati kesulitan serupa.' },
+                    { lbl: 'Contoh', txt: 'Thomas Edison gagal 10.000 kali sebelum menemukan bola lampu. Ketika ditanya, ia berkata: "Aku tidak gagal. Aku hanya menemukan 10.000 cara yang tidak berhasil."' },
+                    { lbl: 'Efek', txt: 'Motivasi lewat teladan nyata yang membuktikan bahwa kesulitan bisa diatasi.' }
+                ],
+                fields: [
+                    { key: 'topic', label: 'Topik / Situasi', type: 'text', placeholder: 'Contoh: Bangkit dari kegagalan berulang' },
+                    { key: 'core_message', label: 'Pesan Inti', type: 'textarea', placeholder: 'Pesan utama yang ingin disampaikan...' },
+                    { key: 'personal_context', label: 'Konteks Personal (Opsional)', type: 'textarea', placeholder: 'Konteks spesifik penerima motivasi...' }
+                ],
+                prompt_template: `Buat konten motivasi dengan pendekatan KISAH INSPIRATIF tentang "{topic}". Pesan inti: {core_message}. Konteks personal: {personal_context}.\n\nDEFINISI: Kisah inspiratif adalah cerita nyata atau metafora tentang orang yang berhasil melewati kesulitan serupa. Membuat pembaca merasa "aku bisa juga".\n\nFORMAT OUTPUT:\n\n=== 🔥 KISAH INSPIRATIF ===\n\n**Judul:** [judul kreatif]\n\n[Konten kisah inspiratif]\n\n{DYNAMIC_OUTPUT}\n\nFormat dengan markdown yang rapi.`
+            },
+            mentor_talk: {
+                id: 'mentor_talk', icon: '🎙️', name: 'Mentor Talk',
+                category: 'narrative',
+                desc: 'Motivasi bergaya nasihat mentor bijak — seperti bicara dengan seseorang yang lebih berpengalaman.',
+                color: '#805ad5',
+                use_for: '✅ Butuh bimbingan\n✅ Sedang bingung\n✅ Merasa sendiri\n✅ Butuh perspektif orang tua\n✅ Konten mentor-mentee',
+                contoh: [
+                    { lbl: 'Inti', txt: 'Nasihat hangat dari sosok mentor bijak yang sudah melewati banyak hal.' },
+                    { lbl: 'Contoh', txt: '"Dengar nak, aku sudah melewati apa yang kau alami sekarang. Dan aku bisa bilang: ini akan berlalu. Kau akan menoleh ke belakang dan tersenyum. Percayalah pada prosesnya."' },
+                    { lbl: 'Efek', txt: 'Motivasi yang menguatkan lewat kebijaksanaan seorang mentor.' }
+                ],
+                fields: [
+                    { key: 'topic', label: 'Topik / Situasi', type: 'text', placeholder: 'Contoh: Bingung dengan pilihan hidup' },
+                    { key: 'core_message', label: 'Pesan Inti', type: 'textarea', placeholder: 'Pesan utama yang ingin disampaikan...' },
+                    { key: 'personal_context', label: 'Konteks Personal (Opsional)', type: 'textarea', placeholder: 'Konteks spesifik penerima motivasi...' }
+                ],
+                prompt_template: `Buat konten motivasi dengan pendekatan MENTOR TALK tentang "{topic}". Pesan inti: {core_message}. Konteks personal: {personal_context}.\n\nDEFINISI: Mentor talk adalah nasihat hangat dari sosok mentor bijak — seperti orang tua, guru, atau kakak yang sudah melewati banyak pengalaman hidup.\n\nFORMAT OUTPUT:\n\n=== 🔥 MENTOR TALK ===\n\n**Judul:** [judul kreatif]\n\n[Konten mentor talk]\n\n{DYNAMIC_OUTPUT}\n\nFormat dengan markdown yang rapi.`
+            },
+            spiritual: {
+                id: 'spiritual', icon: '🕊️', name: 'Motivasi Spiritual',
+                category: 'special',
+                desc: 'Motivasi yang menyentuh dimensi rohani — menguatkan iman, harapan, dan kedekatan dengan Tuhan.',
+                color: '#38b2ac',
+                use_for: '✅ Butuh kekuatan iman\n✅ Sedang dalam pergumulan\n✅ Butuh kedamaian rohani\n✅ Renungan pribadi\n✅ Konten rohani',
+                contoh: [
+                    { lbl: 'Inti', txt: 'Motivasi yang mengingatkan bahwa ada Tuhan yang selalu menyertai dan menguatkan.' },
+                    { lbl: 'Contoh', txt: '"Ketika bebanmu terlalu berat, ingatlah: kau tidak pernah berjalan sendiri. Ada tangan yang tak terlihat menopangmu. Ada doa yang tak pernah tidur."' },
+                    { lbl: 'Efek', txt: 'Motivasi yang menenangkan dan menguatkan iman.' }
+                ],
+                fields: [
+                    { key: 'topic', label: 'Topik / Situasi', type: 'text', placeholder: 'Contoh: Menguatkan iman di tengah badai hidup' },
+                    { key: 'core_message', label: 'Pesan Inti', type: 'textarea', placeholder: 'Pesan utama yang ingin disampaikan...' },
+                    { key: 'personal_context', label: 'Konteks Personal (Opsional)', type: 'textarea', placeholder: 'Konteks spesifik penerima motivasi...' }
+                ],
+                prompt_template: `Buat konten motivasi SPIRITUAL tentang "{topic}". Pesan inti: {core_message}. Konteks personal: {personal_context}.\n\nDEFINISI: Motivasi spiritual menyentuh dimensi rohani — menguatkan iman, harapan, dan kedekatan dengan Tuhan. Menekankan penyertaan Tuhan di tengah pergumulan.\n\nFORMAT OUTPUT:\n\n=== 🕊️ MOTIVASI SPIRITUAL ===\n\n**Judul:** [judul kreatif]\n\n[Konten motivasi spiritual]\n\n{DYNAMIC_OUTPUT}\n\nFormat dengan markdown yang rapi.`
+            },
+            wake_up_call: {
+                id: 'wake_up_call', icon: '🚨', name: 'Wake-Up Call',
+                category: 'special',
+                desc: 'Tamparan realita — motivasi keras yang menyadarkan dan menggerakkan segera.',
+                color: '#e53e3e',
+                use_for: '✅ Sedang menunda-nunda\n✅ Butuh tamparan realita\n✅ Terlalu nyaman\n✅ Butuh aksi cepat\n✅ Konten shock therapy',
+                contoh: [
+                    { lbl: 'Inti', txt: 'Tamparan realita yang keras, membuat orang sadar dan segera bergerak.' },
+                    { lbl: 'Contoh', txt: '"Kamu tahu yang paling menyakitkan? Bukan kegagalan. Tapi penyesalan di masa tua karena tidak pernah mencoba. Berapa banyak impian yang kau kubur karena takut? Berapa tahun lagi mau kau buang?"' },
+                    { lbl: 'Efek', txt: 'Motivasi yang menyadarkan dan mendorong aksi segera.' }
+                ],
+                fields: [
+                    { key: 'topic', label: 'Topik / Situasi', type: 'text', placeholder: 'Contoh: Berhenti menunda mimpi' },
+                    { key: 'core_message', label: 'Pesan Inti', type: 'textarea', placeholder: 'Pesan utama yang ingin disampaikan...' },
+                    { key: 'personal_context', label: 'Konteks Personal (Opsional)', type: 'textarea', placeholder: 'Konteks spesifik penerima motivasi...' }
+                ],
+                prompt_template: `Buat konten motivasi WAKE-UP CALL tentang "{topic}". Pesan inti: {core_message}. Konteks personal: {personal_context}.\n\nDEFINISI: Wake-up call adalah tamparan realita yang keras dan menyadarkan. Nada tegas, langsung, bahkan sedikit keras — untuk mengguncang dan mendorong aksi segera.\n\nFORMAT OUTPUT:\n\n=== 🚨 WAKE-UP CALL ===\n\n**Judul:** [judul kreatif]\n\n[Konten wake-up call]\n\n{DYNAMIC_OUTPUT}\n\nFormat dengan markdown yang rapi.`
+            }
+        };
+
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'ai_motivation_generator';
+        const USERS_TABLE = 'users';
+        const SECRET = 'admin';
+        const STORAGE_KEY = 'ai_tools_user';
+
+        const MOTIVATION_KEYS = Object.keys(MOTIVATION_TYPES);
+
+        // ==================== STATE ====================
+        let allData = [];
+        let quillEditor = null;
+        let addAiEditor = null;
+        let viewData = null;
+        let currentPrompt = '';
+        let currentHistorySubTab = 'all';
+        let currentUser = null;
+        let isAdmin = false;
+
+        const COLUMNS = {
+            motivation_type: 'x_01',
+            title: 'x_02',
+            prompt: 'x_03',
+            field_values: 'x_04',
+            ai_source: 'x_05',
+            result: 'x_06',
+            created_by: 'x_07',
+            status: 'x_08',
+            notes: 'x_09',
+            created_date: 'x_10'
+        };
+
+        // ==================== LOGIN ====================
+        function getStoredUser() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    if (parsed.username && parsed.timestamp) {
+                        const days = (Date.now() - parsed.timestamp) / (1000 * 60 * 60 * 24);
+                        if (days < 7) return parsed.username;
+                    }
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function saveUserToStorage(username, remember) {
+            const data = JSON.stringify({ username, timestamp: Date.now() });
+            if (remember) localStorage.setItem(STORAGE_KEY, data);
+            else sessionStorage.setItem(STORAGE_KEY, data);
+        }
+
+        function clearUserStorage() {
+            localStorage.removeItem(STORAGE_KEY);
+            sessionStorage.removeItem(STORAGE_KEY);
+        }
+
+        function checkAutoLogin() {
+            const username = getStoredUser();
+            if (username) {
+                currentUser = username;
+                isAdmin = (username === 'admin');
+                showMainContent();
+                return true;
+            }
+            return false;
+        }
+
+        function showLogin() {
+            document.getElementById('loginOverlay').classList.add('active');
+            document.getElementById('mainContent').classList.remove('visible');
+        }
+
+        function showMainContent() {
+            document.getElementById('loginOverlay').classList.remove('active');
+            document.getElementById('mainContent').classList.add('visible');
+            document.getElementById('currentUser').textContent = currentUser;
+            const roleBadge = document.getElementById('userRole');
+            if (isAdmin) { roleBadge.textContent = '👑 Admin'; roleBadge.className = 'user-role admin'; }
+            else { roleBadge.textContent = '👤 User'; roleBadge.className = 'user-role user'; }
+            document.getElementById('createdBy').value = currentUser;
+            refreshData();
+        }
+
+        async function doLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const remember = document.getElementById('loginRemember').checked;
+            if (!username || !password) { showLoginError('Username dan password wajib diisi!'); return; }
+            const btn = document.getElementById('loginBtn');
+            const errorEl = document.getElementById('loginError');
+            const loadingEl = document.getElementById('loginLoading');
+            btn.disabled = true;
+            loadingEl.classList.add('show');
+            errorEl.classList.remove('show');
+            try {
+                const response = await fetch(`${API_URL}?table=${USERS_TABLE}`, {
+                    headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': USERS_TABLE, 'X-Role': 'admin' }
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const user = result.data.find(u => u.x_01 === username && u.x_02 === password);
+                    if (user) {
+                        currentUser = username;
+                        isAdmin = (username === 'admin');
+                        saveUserToStorage(username, remember);
+                        showMainContent();
+                        showToast('✅ Login berhasil! Selamat datang, ' + username, 'success');
+                    } else showLoginError('❌ Username atau password salah!');
+                } else showLoginError('❌ Gagal mengambil data user');
+            } catch (e) {
+                showLoginError('❌ Gagal login: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                loadingEl.classList.remove('show');
+            }
+        }
+
+        function showLoginError(message) {
+            const errorEl = document.getElementById('loginError');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+        }
+
+        function doLogout() {
+            if (!confirm('Yakin ingin logout?')) return;
+            clearUserStorage();
+            currentUser = null;
+            isAdmin = false;
+            showLogin();
+            showToast('👋 Logout berhasil', 'info');
+        }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!checkAutoLogin()) showLogin();
+            document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+            document.getElementById('loginUsername').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPassword').focus(); });
+
+            quillEditor = new Quill('#resultEditor', {
+                theme: 'snow', placeholder: 'Paste hasil AI di sini...',
+                modules: { toolbar: [[{ 'header': [1,2,3,4,5,6,false] }], ['bold','italic','underline','strike'], [{ 'list': 'ordered'},{ 'list': 'bullet' }], ['blockquote','code-block'], ['link','image'], ['clean']] }
+            });
+            addAiEditor = new Quill('#addAiEditor', {
+                theme: 'snow', placeholder: 'Paste hasil AI di sini...',
+                modules: { toolbar: [[{ 'header': [1,2,3,4,5,6,false] }], ['bold','italic','underline','strike'], [{ 'list': 'ordered'},{ 'list': 'bullet' }], ['blockquote','code-block'], ['link','image'], ['clean']] }
+            });
+
+            renderTools();
+            populateToolSelect();
+            updateFormFields();
+            if (currentUser) document.getElementById('createdBy').value = currentUser;
+        });
+
+        // ==================== API ====================
+        function getHeaders() {
+            return { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': TABLE, 'X-Role': 'admin' };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            const response = await fetch(url, { ...options, headers: { ...getHeaders(), ...(options.headers || {}) } });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || err.message || `HTTP ${response.status}`);
+            }
+            return await response.json();
+        }
+
+        async function fetchData() {
+            try {
+                const result = await apiFetch('');
+                if (result.success && result.data) {
+                    let data = result.data.map(row => parseRow(row));
+                    if (!isAdmin && currentUser) data = data.filter(d => d.created_by === currentUser);
+                    allData = data;
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            return {
+                id_x: row.id_x,
+                motivation_type: row.x_01 || '',
+                title: row.x_02 || '',
+                prompt: row.x_03 || '',
+                field_values: safeParseJSON(row.x_04),
+                ai_source: row.x_05 || '',
+                result: row.x_06 || '',
+                created_by: row.x_07 || '',
+                status: row.x_08 || 'published',
+                notes: row.x_09 || '',
+                created_date: row.x_10 || '',
+                _raw: row
+            };
+        }
+
+        function safeParseJSON(str) { if (!str) return {}; try { return JSON.parse(str); } catch (e) { return {}; } }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                if (key === 'field_values') row[col] = JSON.stringify(data[key] || {});
+                else row[col] = data[key] || '';
+            }
+            return row;
+        }
+
+        async function createResult(data) {
+            const row = buildRow(data);
+            return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function deleteResultApi(id) {
+            return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== RENDER ====================
+        function renderTools() {
+            const container = document.getElementById('toolsGrid');
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            let filtered = MOTIVATION_KEYS;
+            if (search) filtered = filtered.filter(key => MOTIVATION_TYPES[key].name.toLowerCase().includes(search) || MOTIVATION_TYPES[key].desc.toLowerCase().includes(search));
+
+            container.innerHTML = filtered.map(key => {
+                const type = MOTIVATION_TYPES[key];
+                const count = allData.filter(d => d.motivation_type === type.id).length;
+                const catLabels = {
+                    classic: '🏛️ Klasik',
+                    psychology: '🧠 Psikologi',
+                    narrative: '📖 Naratif',
+                    special: '⭐ Khusus'
+                };
+                return `
+                    <div class="tool-card" style="border-top:4px solid ${type.color};">
+                        <span class="tool-icon">${type.icon}</span>
+                        <div class="tool-name">${type.name}</div>
+                        <div class="tool-desc">${type.desc}</div>
+                        <div style="font-size:10px;color:#a0aec0;margin-bottom:4px;">${catLabels[type.category] || ''}</div>
+                        <div style="font-size:11px;color:#718096;margin-bottom:8px;">${count} motivasi</div>
+                        <div class="tool-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openInfoModal('${key}')">📖 Info</button>
+                            <button class="btn btn-primary btn-xs" onclick="useTool('${key}')">✏️ Create</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('tab1Badge').textContent = filtered.length;
+        }
+
+        function populateToolSelect() {
+            const select = document.getElementById('selectedTool');
+            select.innerHTML = MOTIVATION_KEYS.map(key => {
+                const type = MOTIVATION_TYPES[key];
+                const catLabels = { classic: '🏛️', psychology: '🧠', narrative: '📖', special: '⭐' };
+                return `<option value="${key}">${catLabels[type.category] || ''} ${type.icon} ${type.name}</option>`;
+            }).join('');
+        }
+
+        function updateFormFields() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = MOTIVATION_TYPES[toolKey];
+            if (!type) return;
+            const container = document.getElementById('dynamicFields');
+            const values = getCurrentFieldValues();
+
+            let html = `<div class="section-label">📝 ${type.icon} ${type.name} - Form</div>`;
+            type.fields.forEach(field => {
+                const fieldId = `field_${field.key}`;
+                const val = values[field.key] || '';
+                const checkId = `ai_check_${field.key}`;
+
+                html += `<div class="field-header">
+                    <label for="${fieldId}">${field.label}</label>
+                    <div class="field-ai-check">
+                        <input type="checkbox" id="${checkId}" onchange="toggleFieldAi('${field.key}', this.checked)">
+                        <span>🤖 AI Cari</span>
+                    </div>
+                </div>`;
+
+                if (field.type === 'textarea') {
+                    html += `<div class="form-group"><textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea></div>`;
+                } else {
+                    html += `<div class="form-group"><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function toggleFieldAi(fieldKey, checked) {
+            const inputEl = document.getElementById(`field_${fieldKey}`);
+            if (!inputEl) return;
+            if (checked) {
+                inputEl.dataset.originalValue = inputEl.value;
+                inputEl.value = '🤖 AI akan mencari yang cocok';
+                inputEl.readOnly = true;
+                inputEl.style.background = '#f0fff4';
+                inputEl.style.color = '#276749';
+                inputEl.style.fontWeight = '600';
+            } else {
+                inputEl.value = inputEl.dataset.originalValue || '';
+                inputEl.readOnly = false;
+                inputEl.style.background = '';
+                inputEl.style.color = '';
+                inputEl.style.fontWeight = '';
+            }
+        }
+
+        function toggleFeatureCheck(checkbox) {
+            const label = checkbox.closest('.feature-checkbox');
+            if (label) label.classList.toggle('checked', checkbox.checked);
+        }
+
+        function getCurrentFieldValues() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = MOTIVATION_TYPES[toolKey];
+            if (!type) return {};
+            const values = {};
+            type.fields.forEach(field => {
+                const el = document.getElementById(`field_${field.key}`);
+                if (el) {
+                    if (el.readOnly && el.value === '🤖 AI akan mencari yang cocok') {
+                        values[field.key] = '';
+                    } else {
+                        values[field.key] = el.value;
+                    }
+                }
+            });
+            return values;
+        }
+
+        function setFieldValues(values) {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = MOTIVATION_TYPES[toolKey];
+            if (!type) return;
+            type.fields.forEach(field => {
+                const el = document.getElementById(`field_${field.key}`);
+                if (el && values[field.key] !== undefined) el.value = values[field.key] || '';
+            });
+        }
+
+        function buildDynamicOutput() {
+            const tone = document.getElementById('optTone').value;
+            const length = document.getElementById('optLength').value;
+            const audience = document.getElementById('optAudience').value;
+            const closing = document.getElementById('optClosing').value;
+
+            const features = [];
+            if (document.getElementById('optQuote').checked) features.push('💬 Quote Tokoh: sisipkan 1-2 kutipan dari tokoh terkenal yang relevan');
+            if (document.getElementById('optAffirmation').checked) features.push('✨ Afirmasi: tambahkan 3-5 afirmasi positif yang bisa diulang');
+            if (document.getElementById('optAction').checked) features.push('🎯 Action Steps: sertakan 3-5 langkah konkret yang bisa langsung dilakukan');
+            if (document.getElementById('optReflection').checked) features.push('🤔 Refleksi: tambahkan 3-5 pertanyaan reflektif untuk merenung');
+            if (document.getElementById('optMetaphor').checked) features.push('🌈 Metafora: gunakan minimal 1 metafora visual yang kuat');
+            if (document.getElementById('optStory').checked) features.push('📖 Kisah Pendek: selipkan kisah pendek (2-3 paragraf) yang inspiratif');
+
+            let out = `INSTRUKSI DINAMIS:\n- 🎯 NADA/STYLE: ${tone}\n- 📏 PANJANG: ${length}\n- 👥 TARGET AUDIENS: ${audience}\n`;
+            if (features.length > 0) {
+                out += `- ✨ FITUR TAMBAHAN:\n${features.map(f => `  • ${f}`).join('\n')}\n`;
+            } else {
+                out += `- ✨ FITUR TAMBAHAN: Tidak ada (fokus pada konten utama)\n`;
+            }
+
+            if (closing !== 'Tanpa Penutup') {
+                const closingInstructions = {
+                    'Langkah Nyata': 'Sertakan bagian **🎯 Langkah Nyata** berisi 3-5 aksi konkret yang bisa langsung dilakukan pembaca hari ini.',
+                    'Afirmasi Hari Ini': 'Sertakan bagian **✨ Afirmasi Hari Ini** berisi 3-5 afirmasi positif yang bisa diucapkan pembaca untuk menguatkan diri.',
+                    'Refleksi': 'Sertakan bagian **🤔 Refleksi** berisi 3-5 pertanyaan reflektif untuk membantu pembaca merenungkan hidupnya.',
+                    'Quote Penutup': 'Sertakan bagian **💬 Quote Penutup** berisi 1-2 kutipan inspiratif dari tokoh terkenal sebagai penutup yang menguatkan.',
+                    'Pesan Terakhir': 'Sertakan bagian **💌 Pesan Terakhir** berisi 2-3 kalimat pesan personal yang menyentuh hati, seolah berbicara langsung ke pembaca.'
+                };
+                out += `- 💭 PENUTUP: ${closingInstructions[closing]}\n`;
+            } else {
+                out += `- 💭 PENUTUP: Tidak perlu bagian penutup khusus. Langsung selesai di inti konten.\n`;
+            }
+
+            return out;
+        }
+
+        function generatePrompt() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = MOTIVATION_TYPES[toolKey];
+            if (!type) return;
+            const values = getCurrentFieldValues();
+
+            let allFilled = true;
+            let emptyFields = [];
+            type.fields.forEach(field => {
+                const checkEl = document.getElementById(`ai_check_${field.key}`);
+                const isAiChecked = checkEl ? checkEl.checked : false;
+                if (!isAiChecked && (!values[field.key] || !values[field.key].trim())) {
+                    allFilled = false;
+                    emptyFields.push(field.label);
+                }
+            });
+
+            if (!allFilled) {
+                showToast('❌ Field berikut wajib diisi: ' + emptyFields.join(', '), 'error');
+                return;
+            }
+
+            let prompt = type.prompt_template;
+            let hasAiField = false;
+
+            type.fields.forEach(field => {
+                const checkEl = document.getElementById(`ai_check_${field.key}`);
+                const isAiChecked = checkEl ? checkEl.checked : false;
+                if (isAiChecked) {
+                    hasAiField = true;
+                    prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), `[AI CARI YANG COCOK UNTUK: ${field.label}]`);
+                } else {
+                    prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || '');
+                }
+            });
+
+            // Sisipkan dynamic output
+            const dynamicOutput = buildDynamicOutput();
+            prompt = prompt.replace(/{DYNAMIC_OUTPUT}/g, dynamicOutput);
+
+            if (hasAiField) {
+                prompt = `INSTRUKSI KHUSUS: Untuk beberapa bagian di bawah ini, pengguna meminta Anda (AI) untuk mencari dan menentukan sendiri elemen yang cocok (ditandai dengan [AI CARI YANG COCOK UNTUK: ...]). Silakan pilih elemen yang paling tepat, relevan, dan menggugah. \n\n` + prompt;
+            }
+
+            currentPrompt = prompt;
+            document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+            addCopyButtonToPrompt('promptPreview');
+
+            const titleInput = document.getElementById('resultTitle');
+            if (!titleInput.value) {
+                if (hasAiField) {
+                    titleInput.value = `${type.name} - (AI Cari yang Cocok)`;
+                } else {
+                    titleInput.value = `${type.name} - ${values.topic || 'Motivasi'}`;
+                }
+            }
+            showToast('✅ Prompt berhasil digenerate!', 'success');
+        }
+
+        function addCopyButtonToPrompt(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const existing = container.querySelector('.copy-prompt-btn');
+            if (existing) existing.remove();
+            const btn = document.createElement('button');
+            btn.className = 'copy-prompt-btn';
+            btn.textContent = '📋 Copy';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const text = container.textContent.replace('📋 Copy', '').trim();
+                if (!text || text.includes('Pilih model')) { showToast('❌ Tidak ada prompt', 'error'); return; }
+                navigator.clipboard.writeText(text).then(() => showToast('✅ Prompt disalin!', 'success')).catch(() => {
+                    const ta = document.createElement('textarea');
+                    ta.value = text; document.body.appendChild(ta); ta.select();
+                    document.execCommand('copy'); document.body.removeChild(ta);
+                    showToast('✅ Prompt disalin!', 'success');
+                });
+            };
+            container.style.position = 'relative';
+            container.appendChild(btn);
+        }
+
+        async function saveResult() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const title = document.getElementById('resultTitle').value.trim();
+            const createdBy = document.getElementById('createdBy').value.trim() || currentUser || 'User';
+            const prompt = document.getElementById('promptPreview').textContent.replace('📋 Copy', '').trim();
+            if (!title) { showToast('❌ Judul wajib diisi', 'error'); return; }
+            if (!prompt || prompt.includes('Pilih model')) { showToast('❌ Generate prompt dulu', 'error'); return; }
+            const resultHtml = quillEditor.root.innerHTML;
+            if (!resultHtml || resultHtml === '<p><br></p>') { showToast('❌ Paste hasil AI dulu', 'error'); return; }
+            const values = getCurrentFieldValues();
+
+            // Simpan opsi dinamis
+            values._tone = document.getElementById('optTone').value;
+            values._length = document.getElementById('optLength').value;
+            values._audience = document.getElementById('optAudience').value;
+            values._closing = document.getElementById('optClosing').value;
+            values._features = {
+                quote: document.getElementById('optQuote').checked,
+                affirmation: document.getElementById('optAffirmation').checked,
+                action: document.getElementById('optAction').checked,
+                reflection: document.getElementById('optReflection').checked,
+                metaphor: document.getElementById('optMetaphor').checked,
+                story: document.getElementById('optStory').checked
+            };
+
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                motivation_type: toolKey, title, prompt, field_values: values,
+                ai_source: document.getElementById('aiSource').value,
+                result: resultHtml, created_by: createdBy,
+                status: 'published', notes: '', created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Motivasi berhasil disimpan!', 'success');
+                await refreshData();
+                clearForm();
+                switchMainTab('tab3');
+            } catch (e) { showToast('❌ Gagal menyimpan: ' + e.message, 'error'); }
+        }
+
+        function clearForm() {
+            quillEditor.root.innerHTML = '';
+            document.getElementById('resultTitle').value = '';
+            document.getElementById('promptPreview').innerHTML = '<span class="placeholder">Pilih model motivasi dan isi form untuk menghasilkan prompt...</span>';
+            currentPrompt = '';
+            document.querySelectorAll('.field-ai-check input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+            ['optQuote','optAffirmation','optAction','optReflection','optMetaphor','optStory'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.checked = false; toggleFeatureCheck(el); }
+            });
+        }
+
+        function useTool(toolKey) {
+            document.getElementById('selectedTool').value = toolKey;
+            updateFormFields();
+            switchMainTab('tab2');
+            clearForm();
+            document.getElementById('createdBy').value = currentUser || '';
+            showToast(`✏️ Beralih ke ${MOTIVATION_TYPES[toolKey].name}`, 'info');
+        }
+
+        // ==================== HISTORY ====================
+        function switchHistorySubTab(subtab) {
+            currentHistorySubTab = subtab;
+            document.querySelectorAll('.history-sub-tab').forEach(el => el.classList.toggle('active', el.dataset.subtab === subtab));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            const filterTool = document.getElementById('historyFilterTool').value;
+            const search = document.getElementById('historySearch').value.toLowerCase().trim();
+            let filtered = allData;
+            if (currentHistorySubTab === 'today') {
+                const today = new Date();
+                const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+                filtered = filtered.filter(d => d.created_date === todayStr);
+            }
+            if (filterTool !== 'all') filtered = filtered.filter(d => d.motivation_type === filterTool);
+            if (search) filtered = filtered.filter(d => d.title.toLowerCase().includes(search) || d.created_by.toLowerCase().includes(search) || d.prompt.toLowerCase().includes(search));
+
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            document.getElementById('subAll').textContent = allData.length;
+            document.getElementById('subToday').textContent = allData.filter(d => d.created_date === todayStr).length;
+            document.getElementById('tab3Badge').textContent = allData.length;
+            document.getElementById('historyCount').textContent = `${filtered.length} items`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">${allData.length === 0 ? '🔥' : '🔍'}</div><h3>${allData.length === 0 ? 'Belum ada motivasi' : 'Tidak ditemukan'}</h3><p>${allData.length === 0 ? 'Pergi ke Tab "AI Prompt Studio" untuk mulai membuat motivasi' : 'Coba kata kunci lain'}</p></div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => {
+                const type = MOTIVATION_TYPES[item.motivation_type];
+                const typeLabel = type ? `${type.icon} ${type.name}` : item.motivation_type;
+                const date = item.created_date || item._raw?.created_at || '-';
+                const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+                const sourceClass = item.ai_source.toLowerCase();
+                const tone = item.field_values?._tone || '';
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = item.result;
+                const plainResult = tempDiv.textContent.substring(0, 100) + (tempDiv.textContent.length > 100 ? '...' : '');
+                return `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <span class="history-title">${escapeHtml(item.title)}</span>
+                            <div class="history-meta">
+                                <span class="type-badge">${typeLabel}</span>
+                                ${tone ? `<span class="style-badge">🎨 ${escapeHtml(tone)}</span>` : ''}
+                                ${item.ai_source ? `<span class="ai-badge ${sourceClass}">${item.ai_source}</span>` : ''}
+                                <span>📅 ${displayDate}</span>
+                                <span>👤 ${escapeHtml(item.created_by)}</span>
+                            </div>
+                        </div>
+                        <div class="history-prompt" onclick="togglePrompt(this)">${escapeHtml(item.prompt.substring(0, 120))}${item.prompt.length > 120 ? '...' : ''}</div>
+                        <div class="history-result">${escapeHtml(plainResult)}</div>
+                        <div class="history-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openAddAiModal(${item.id_x})">➕ Tambah AI</button>
+                            <button class="btn btn-primary btn-xs" onclick="openDuplicateModal(${item.id_x})">📋 Duplikat</button>
+                            <button class="btn btn-outline btn-xs" onclick="openViewModal(${item.id_x})">👁️ Detail</button>
+                            <button class="btn btn-danger btn-xs" onclick="deleteResult(${item.id_x})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function togglePrompt(el) { el.classList.toggle('expanded'); }
+
+        // ==================== ADD AI ====================
+        function openAddAiModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            document.getElementById('addAiId').value = id;
+            document.getElementById('addAiPromptDisplay').textContent = item.prompt;
+            document.getElementById('addAiCreatedBy').value = currentUser || '';
+            addAiEditor.root.innerHTML = '';
+            const display = document.getElementById('addAiPromptDisplay');
+            const existingBtn = display.querySelector('.copy-prompt-btn');
+            if (existingBtn) existingBtn.remove();
+            const btn = document.createElement('button');
+            btn.className = 'copy-prompt-btn';
+            btn.textContent = '📋 Copy';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const text = display.textContent.replace('📋 Copy', '').trim();
+                navigator.clipboard.writeText(text).then(() => showToast('✅ Prompt disalin!', 'success')).catch(() => {
+                    const ta = document.createElement('textarea'); ta.value = text;
+                    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                    document.body.removeChild(ta); showToast('✅ Prompt disalin!', 'success');
+                });
+            };
+            display.style.position = 'relative';
+            display.appendChild(btn);
+            document.getElementById('addAiModal').classList.add('active');
+        }
+
+        async function saveAddAiResult() {
+            const id = parseInt(document.getElementById('addAiId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) { showToast('Data tidak ditemukan', 'error'); return; }
+            const aiSource = document.getElementById('addAiSource').value;
+            const createdBy = document.getElementById('addAiCreatedBy').value.trim() || currentUser || 'User';
+            const resultHtml = addAiEditor.root.innerHTML;
+            if (!resultHtml || resultHtml === '<p><br></p>') { showToast('❌ Paste hasil AI dulu', 'error'); return; }
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                motivation_type: originalItem.motivation_type,
+                title: originalItem.title + ` (${aiSource})`,
+                prompt: originalItem.prompt,
+                field_values: originalItem.field_values || {},
+                ai_source: aiSource, result: resultHtml, created_by: createdBy,
+                status: 'published', notes: `Hasil tambahan dari ${aiSource}`, created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Hasil AI baru disimpan!', 'success');
+                closeModal('addAiModal');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal menyimpan: ' + e.message, 'error'); }
+        }
+
+        // ==================== DUPLICATE ====================
+        function openDuplicateModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            document.getElementById('dupId').value = id;
+            document.getElementById('dupFrameworkType').value = item.motivation_type;
+            const type = MOTIVATION_TYPES[item.motivation_type];
+            document.getElementById('dupFrameworkDisplay').value = type ? `${type.icon} ${type.name}` : item.motivation_type;
+            document.getElementById('dupTitle').value = item.title + ' (v2)';
+            document.getElementById('dupCreatedBy').value = currentUser || '';
+            renderDuplicateFields(item.motivation_type, item.field_values || {});
+            document.getElementById('dupPromptPreview').innerHTML = '<span class="placeholder">Generate prompt dari form di atas...</span>';
+            document.getElementById('duplicateModal').classList.add('active');
+        }
+
+        function renderDuplicateFields(typeKey, values) {
+            const type = MOTIVATION_TYPES[typeKey];
+            if (!type) return;
+            const container = document.getElementById('dupDynamicFields');
+            let html = `<div class="section-label">📝 ${type.icon} ${type.name} - Edit Field</div>`;
+            type.fields.forEach(field => {
+                const fieldId = `dup_field_${field.key}`;
+                const val = values[field.key] || '';
+                if (field.type === 'textarea') {
+                    html += `<div class="form-group"><label>${field.label}</label><textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea></div>`;
+                } else {
+                    html += `<div class="form-group"><label>${field.label}</label><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function getDuplicateFieldValues() {
+            const typeKey = document.getElementById('dupFrameworkType').value;
+            const type = MOTIVATION_TYPES[typeKey];
+            if (!type) return {};
+            const values = {};
+            type.fields.forEach(field => {
+                const el = document.getElementById(`dup_field_${field.key}`);
+                if (el) values[field.key] = el.value;
+            });
+            return values;
+        }
+
+        function generateDuplicatePrompt() {
+            const typeKey = document.getElementById('dupFrameworkType').value;
+            const type = MOTIVATION_TYPES[typeKey];
+            if (!type) return;
+            const values = getDuplicateFieldValues();
+            let allFilled = true;
+            type.fields.forEach(field => { if (!values[field.key] || !values[field.key].trim()) allFilled = false; });
+            if (!allFilled) { showToast('❌ Semua field harus diisi!', 'error'); return; }
+            let prompt = type.prompt_template;
+            type.fields.forEach(field => { prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || ''); });
+            prompt = prompt.replace(/{DYNAMIC_OUTPUT}/g, 'INSTRUKSI DINAMIS: Nada Hangat & Personal, Panjang Menengah, Target Umum.');
+            document.getElementById('dupPromptPreview').innerHTML = escapeHtml(prompt);
+            addCopyButtonToPrompt('dupPromptPreview');
+            showToast('✅ Prompt berhasil digenerate!', 'success');
+        }
+
+        async function saveDuplicate() {
+            const id = parseInt(document.getElementById('dupId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) { showToast('Data tidak ditemukan', 'error'); return; }
+            const typeKey = document.getElementById('dupFrameworkType').value;
+            const newTitle = document.getElementById('dupTitle').value.trim();
+            const createdBy = document.getElementById('dupCreatedBy').value.trim() || currentUser || 'User';
+            const prompt = document.getElementById('dupPromptPreview').textContent.replace('📋 Copy', '').trim();
+            if (!newTitle) { showToast('❌ Judul baru wajib diisi', 'error'); return; }
+            if (!prompt || prompt.includes('Generate prompt')) { showToast('❌ Generate prompt dulu', 'error'); return; }
+            const values = getDuplicateFieldValues();
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                motivation_type: typeKey, title: newTitle, prompt, field_values: values,
+                ai_source: '', result: '', created_by: createdBy,
+                status: 'published', notes: 'Duplikat dari prompt sebelumnya', created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Duplikat berhasil dibuat!', 'success');
+                closeModal('duplicateModal');
+                document.getElementById('selectedTool').value = typeKey;
+                updateFormFields();
+                setFieldValues(values);
+                document.getElementById('resultTitle').value = newTitle;
+                document.getElementById('createdBy').value = createdBy;
+                document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+                addCopyButtonToPrompt('promptPreview');
+                currentPrompt = prompt;
+                switchMainTab('tab2');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal menduplikat: ' + e.message, 'error'); }
+        }
+
+        // ==================== DELETE ====================
+        async function deleteResult(id) {
+            if (!confirm('Hapus motivasi ini?')) return;
+            try {
+                await deleteResultApi(id);
+                showToast('✅ Motivasi berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal hapus: ' + e.message, 'error'); }
+        }
+
+        async function clearHistory() {
+            if (allData.length === 0) { showToast('Tidak ada data', 'info'); return; }
+            if (!confirm('Hapus semua data history?')) return;
+            try {
+                for (const item of allData) await deleteResultApi(item.id_x);
+                showToast('✅ Semua data berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal hapus: ' + e.message, 'error'); }
+        }
+
+        // ==================== VIEW ====================
+        function openViewModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) { showToast('Data tidak ditemukan', 'error'); return; }
+            viewData = item;
+            const type = MOTIVATION_TYPES[item.motivation_type];
+            const typeLabel = type ? `${type.icon} ${type.name}` : item.motivation_type;
+            const date = item.created_date || item._raw?.created_at || '-';
+            const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+            const tone = item.field_values?._tone || '-';
+            const length = item.field_values?._length || '-';
+            const audience = item.field_values?._audience || '-';
+            document.getElementById('viewModalTitle').textContent = `👁️ ${escapeHtml(item.title)}`;
+            document.getElementById('viewMeta').innerHTML = `<strong>Model:</strong> ${typeLabel} &nbsp;|&nbsp; <strong>Nada:</strong> ${tone} &nbsp;|&nbsp; <strong>Panjang:</strong> ${length} &nbsp;|&nbsp; <strong>Audiens:</strong> ${audience} &nbsp;|&nbsp; <strong>AI:</strong> ${item.ai_source || '-'} &nbsp;|&nbsp; <strong>Dibuat:</strong> ${displayDate} &nbsp;|&nbsp; <strong>Oleh:</strong> ${escapeHtml(item.created_by)}`;
+            document.getElementById('viewPrompt').textContent = item.prompt;
+            document.getElementById('viewSource').textContent = item.ai_source || '-';
+            document.getElementById('viewResultWrapper').innerHTML = `<div class="ql-editor">${item.result}</div>`;
+            document.getElementById('viewModal').classList.add('active');
+        }
+
+        function copyViewResult() {
+            const resultHtml = document.getElementById('viewResultWrapper').innerHTML;
+            if (!resultHtml) { showToast('Tidak ada konten', 'error'); return; }
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = resultHtml;
+            const plainText = tempDiv.textContent;
+            navigator.clipboard.writeText(plainText).then(() => showToast('✅ Konten disalin!', 'success')).catch(() => {
+                const ta = document.createElement('textarea'); ta.value = plainText;
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                document.body.removeChild(ta); showToast('✅ Konten disalin!', 'success');
+            });
+        }
+
+        function downloadViewDoc() {
+            const title = viewData?.title || 'motivasi';
+            const content = document.getElementById('viewResultWrapper').innerHTML || '';
+            const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(title)}</title><style>body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #2d3748; line-height: 1.8; max-width: 800px; margin: auto; } h1, h2, h3, h4 { color: #1a202c; } p { margin: 8px 0; } ul, ol { padding-left: 24px; }</style></head><body>${content}</body></html>`;
+            const blob = new Blob([htmlContent], { type: 'application/msword;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `${title}.doc`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('✅ File .doc berhasil didownload!', 'success');
+        }
+
+        // ==================== INFO ====================
+        function openInfoModal(toolKey) {
+            const type = MOTIVATION_TYPES[toolKey];
+            if (!type) return;
+            const fieldsHtml = type.fields.map(f => `<li><strong>${f.label}</strong> — ${f.placeholder}</li>`).join('');
+            let useForHtml = '';
+            if (type.use_for) {
+                const lines = type.use_for.split('\n').filter(l => l.trim());
+                useForHtml = `<div style="background:#fff5f5;border-radius:8px;padding:12px 16px;margin-bottom:12px;border-left:4px solid #e53e3e;"><strong style="color:#9b2c2c;">🎯 Cocok Dipakai Untuk:</strong><ul style="margin:6px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">${lines.map(l => `<li>${l.replace('✅', '✔️')}</li>`).join('')}</ul></div>`;
+            }
+            let contohHtml = '';
+            if (type.contoh && type.contoh.length) {
+                const items = type.contoh.map(c => `<div class="contoh-item"><span class="lbl">${c.lbl}:</span> ${c.txt}</div>`).join('');
+                contohHtml = `<div class="contoh-box"><div class="contoh-title">💡 Contoh Nyata:</div>${items}</div>`;
+            }
+            const catLabels = {
+                classic: '🏛️ Model Klasik & Filosofis',
+                psychology: '🧠 Model Psikologi Modern',
+                narrative: '📖 Model Naratif & Emosional',
+                special: '⭐ Model Khusus'
+            };
+            document.getElementById('infoModalTitle').textContent = `📋 ${type.icon} ${type.name}`;
+            document.getElementById('infoModalBody').innerHTML = `
+                <div style="text-align:center;margin-bottom:12px;">
+                    <span style="font-size:48px;display:block;">${type.icon}</span>
+                    <h3 style="font-size:20px;color:#2d3748;">${type.name}</h3>
+                    <p style="color:#e53e3e;font-style:italic;font-size:13px;font-weight:600;">${catLabels[type.category] || ''}</p>
+                    <p style="color:#718096;font-size:14px;margin-top:6px;">${type.desc}</p>
+                </div>
+                ${contohHtml}
+                ${useForHtml}
+                <div style="background:#f7fafc;border-radius:8px;padding:16px;margin-bottom:12px;">
+                    <h4 style="font-size:14px;color:#2d3748;margin-bottom:8px;">📝 Field yang Diisi:</h4>
+                    <ul style="padding-left:20px;color:#4a5568;font-size:13px;line-height:1.8;">${fieldsHtml}</ul>
+                </div>
+                <div style="background:#f0fff4;border-radius:8px;padding:12px 16px;border-left:4px solid #48bb78;">
+                    <strong style="color:#276749;">💡 Cara Penggunaan:</strong>
+                    <ol style="margin:4px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">
+                        <li>Pilih model motivasi di Tab "AI Prompt Studio"</li>
+                        <li>Kustom opsi dinamis: nada, panjang, audiens, fitur tambahan, label penutup</li>
+                        <li>Isi field yang tersedia. Centang <strong>🤖 AI Cari</strong> untuk field yang ingin AI cari sendiri.</li>
+                        <li>Klik "Generate Prompt"</li>
+                        <li>Copy prompt, paste ke AI eksternal</li>
+                        <li>Copy hasil AI, paste di editor</li>
+                        <li>Pilih AI Source dan klik "Simpan Hasil"</li>
+                    </ol>
+                </div>
+            `;
+            document.getElementById('infoModal').classList.add('active');
+        }
+
+        // ==================== TAB ====================
+        function switchMainTab(tabId) {
+            document.querySelectorAll('.main-tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.main-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.main-tab-btn[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            if (tabId === 'tab3') renderHistory();
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // ==================== REFRESH ====================
+        async function refreshData() {
+            if (!currentUser) { showLogin(); return; }
+            showToast('🔄 Memuat data...', 'info');
+            await fetchData();
+            renderTools();
+            updateHistoryFilter();
+            renderHistory();
+            document.getElementById('tab3Badge').textContent = allData.length;
+            showToast(`✅ ${allData.length} motivasi dimuat`, 'success');
+        }
+
+        function updateHistoryFilter() {
+            const select = document.getElementById('historyFilterTool');
+            const currentValue = select.value;
+            const types = {};
+            allData.forEach(item => { if (!types[item.motivation_type]) types[item.motivation_type] = 0; types[item.motivation_type]++; });
+            select.innerHTML = `<option value="all">📋 All Models (${allData.length})</option>`;
+            MOTIVATION_KEYS.forEach(key => {
+                const type = MOTIVATION_TYPES[key];
+                const count = types[key] || 0;
+                select.innerHTML += `<option value="${key}">${type.icon} ${type.name} (${count})</option>`;
+            });
+            if (currentValue) select.value = currentValue;
+        }
+
+        // ==================== TOAST & HELPER ====================
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+        });
+
+        window.debug = {
+            allData: () => allData,
+            refresh: refreshData,
+            MOTIVATION_TYPES, MOTIVATION_KEYS,
+            currentUser: () => currentUser,
+            isAdmin: () => isAdmin
+        };
+    </script>
+</body>
+</html>
