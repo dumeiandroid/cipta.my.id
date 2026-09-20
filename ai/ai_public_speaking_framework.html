@@ -163,6 +163,8 @@
         .hasil-box .hasil-item { background: white; border-radius: 8px; padding: 9px 13px; margin-bottom: 6px; font-size: 12.5px; color: #2d3748; line-height: 1.6; }
         .hasil-box .hasil-item:last-child { margin-bottom: 0; }
         .hasil-box .hasil-item .h-lbl { display: block; font-weight: 700; color: #276749; font-size: 12px; margin-bottom: 2px; letter-spacing: .2px; }
+        .hasil-box .hasil-item .h-contoh-line { display: block; margin-top: 4px; }
+        .hasil-box .hasil-item .h-contoh { color: #2f855a; font-weight: normal; }
         .hasil-box .hasil-foot { font-size: 11px; color: #2f855a; margin-top: 9px; font-style: italic; line-height: 1.5; }
         .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 2px solid #edf2f7; flex-wrap: wrap; }
 
@@ -1397,7 +1399,10 @@
 
             let hasilHtml = '';
             if (fw.contoh_hasil && fw.contoh_hasil.length) {
-                const rows = fw.contoh_hasil.map(h => `<div class="hasil-item"><span class="h-lbl">${h.lbl}</span>${h.txt}</div>`).join('');
+                const rows = fw.contoh_hasil.map(h => {
+                    const txt = h.txt.replace(/Contoh:\s*(\u201c[^\u201d]*\u201d)/g, '<span class="h-contoh-line">Contoh: <span class="h-contoh">$1</span></span>');
+                    return `<div class="hasil-item"><span class="h-lbl">${h.lbl}</span>${txt}</div>`;
+                }).join('');
                 const note = fw.contoh_hasil_note || 'Gambaran outline + contoh naskah:';
                 hasilHtml = `<div class="hasil-box"><div class="hasil-title">📄 Contoh Gambaran Hasil AI:</div><div class="hasil-note">${note}</div>${rows}<div class="hasil-foot">Penjelasan dan contoh di atas hanya ilustrasi belajar. Hasil sebenarnya (dari AI eksternal) langsung berupa naskah jadi, tanpa format penjelasan seperti ini.</div></div>`;
             }
