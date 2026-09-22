@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Kunjungan - Lidan Psikologi</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f4f6fa;
+    color: #1f2937;
+    padding: 20px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+
+  /* ============ LOGIN SCREEN ============ */
+  #loginScreen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #1e40af, #2563eb);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+  }
+  .login-card {
+    background: #fff;
+    padding: 38px 32px;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.3);
+  }
+  .login-card h1 {
+    font-size: 22px;
+    margin-bottom: 6px;
+    color: #1f2937;
+    text-align: center;
+  }
+  .login-card p {
+    font-size: 13px;
+    color: #6b7280;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .login-card label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+  }
+  .login-card input[type="text"],
+  .login-card input[type="password"] {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 9px;
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 16px;
+    transition: border .2s;
+  }
+  .login-card input:focus { border-color: #2563eb; }
+  .login-card .remember-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #4b5563;
+  }
+  .login-card .remember-row input { margin: 0; cursor: pointer; }
+  .login-card .remember-row label { margin: 0; cursor: pointer; font-weight: 400; }
+  .login-card button {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .2s;
+  }
+  .login-card button:hover { opacity: .92; }
+  .login-card button:disabled { opacity: .6; cursor: not-allowed; }
+  .login-error {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .login-error.show { display: block; }
+
+  /* ============ DASHBOARD ============ */
+  #dashboardScreen { display: none; }
+
+  header {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    color: #fff;
+    padding: 24px 28px;
+    border-radius: 14px;
+    margin-bottom: 22px;
+    box-shadow: 0 8px 20px rgba(37,99,235,.25);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  header h1 { font-size: 22px; margin-bottom: 4px; }
+  header p { font-size: 13px; opacity: .85; }
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+  }
+  .user-info .avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .btn-logout {
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    padding: 7px 14px;
+    border: 1px solid rgba(255,255,255,.3);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .2s;
+  }
+  .btn-logout:hover { background: rgba(255,255,255,.25); }
+
+  /* ============ TAB PERIODE ============ */
+  .tab-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: #fff;
+    padding: 8px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.05);
+  }
+  .tab-bar button {
+    flex: 1;
+    min-width: 120px;
+    padding: 12px 18px;
+    border: none;
+    background: transparent;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4b5563;
+    cursor: pointer;
+    transition: .2s;
+  }
+  .tab-bar button:hover { background: #f1f5f9; color: #1f2937; }
+  .tab-bar button.active {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(37,99,235,.3);
+  }
+  .tab-bar button .tab-sub {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    opacity: .75;
+    margin-top: 2px;
+  }
+  .tab-bar button.active .tab-sub { opacity: .9; }
+
+  /* ============ SUB-TAB URL TYPE ============ */
+  .subtab-bar {
+    display: flex;
+    gap: 6px;
+    background: #eef2f7;
+    padding: 5px;
+    border-radius: 10px;
+    margin-bottom: 22px;
+    width: fit-content;
+    flex-wrap: wrap;
+  }
+  .subtab-bar button {
+    padding: 8px 18px;
+    border: none;
+    background: transparent;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4b5563;
+    cursor: pointer;
+    transition: .2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .subtab-bar button:hover { background: #fff; }
+  .subtab-bar button.active {
+    background: #fff;
+    color: #2563eb;
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+  }
+  .subtab-bar .count-pill {
+    background: #dbeafe;
+    color: #1e40af;
+    border-radius: 20px;
+    padding: 1px 8px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .subtab-bar button.active .count-pill {
+    background: #2563eb;
+    color: #fff;
+  }
+
+  .btn-refresh { background: #10b981; color: #fff; }
+  .btn-refresh:hover { background: #059669; }
+  .btn {
+    padding: 9px 18px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .2s;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+  .stat-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.05);
+    border-left: 4px solid #2563eb;
+  }
+  .stat-card h3 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: #6b7280;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .stat-card .value { font-size: 28px; font-weight: 700; color: #1f2937; }
+  .stat-card .sub { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+
+  .chart-card, .table-card {
+    background: #fff;
+    padding: 22px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.05);
+    margin-bottom: 22px;
+  }
+  .chart-card h2, .table-card h2 {
+    font-size: 16px;
+    margin-bottom: 16px;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chart-wrap { position: relative; height: 320px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left;
+    padding: 10px 12px;
+    background: #f9fafb;
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #374151;
+    vertical-align: middle;
+  }
+  tr:hover td { background: #f9fafb; }
+
+  .url-cell {
+    max-width: 420px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .url-cell a { color: #2563eb; text-decoration: none; }
+  .url-cell a:hover { text-decoration: underline; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-total {
+    background: #dcfce7;
+    color: #166534;
+    font-size: 12px;
+    padding: 4px 11px;
+  }
+  .badge-record { background: #fef3c7; color: #92400e; }
+  .badge-https { background: #dbeafe; color: #1e40af; }
+  .badge-nonhttps { background: #fee2e2; color: #991b1b; }
+
+  .date-cell { font-size: 12px; color: #6b7280; white-space: nowrap; }
+
+  .loading, .error, .empty {
+    text-align: center;
+    padding: 30px;
+    font-size: 14px;
+    color: #6b7280;
+  }
+  .error { color: #dc2626; }
+
+  .pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 14px;
+    font-size: 13px;
+    color: #6b7280;
+  }
+  .pagination button {
+    padding: 6px 14px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .pagination button:disabled { opacity: .4; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     LOGIN SCREEN
+     ============================================================ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <h1>🔐 Login Dashboard</h1>
+    <p>Masuk untuk melihat data kunjungan</p>
+
+    <div class="login-error" id="loginError"></div>
+
+    <form id="loginForm">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" autocomplete="username" required>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required>
+
+      <div class="remember-row">
+        <input type="checkbox" id="rememberMe" name="rememberMe">
+        <label for="rememberMe">Ingat saya (Remember me)</label>
+      </div>
+
+      <button type="submit" id="loginBtn">Masuk</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================
+     DASHBOARD SCREEN
+     ============================================================ -->
+<div id="dashboardScreen">
+  <div class="container">
+
+    <header>
+      <div>
+        <h1>📊 Dashboard Kunjungan</h1>
+        <p>Lidan Psikologi — data dari tabel <strong>kunjungan</strong></p>
+      </div>
+      <div class="user-info">
+        <div class="avatar" id="userAvatar">?</div>
+        <div>
+          <div style="font-weight:600;" id="userName">—</div>
+          <div style="opacity:.7; font-size:11px;">Administrator</div>
+        </div>
+        <button class="btn-logout" id="logoutBtn">Logout</button>
+      </div>
+    </header>
+
+    <!-- TAB PERIODE -->
+    <div class="tab-bar" id="tabBar">
+      <button data-range="today" class="active">
+        Hari Ini
+        <span class="tab-sub" id="subToday">—</span>
+      </button>
+      <button data-range="week">
+        Minggu Ini
+        <span class="tab-sub" id="subWeek">—</span>
+      </button>
+      <button data-range="month">
+        Bulan Ini
+        <span class="tab-sub" id="subMonth">—</span>
+      </button>
+      <button data-range="all">
+        All
+        <span class="tab-sub" id="subAll">—</span>
+      </button>
+    </div>
+
+    <!-- SUB-TAB URL TYPE -->
+    <div class="subtab-bar" id="subtabBar">
+      <button data-urltype="all" class="active">
+        🌐 Semua URL
+        <span class="count-pill" id="pillAll">0</span>
+      </button>
+      <button data-urltype="https">
+        🔒 HTTPS
+        <span class="count-pill" id="pillHttps">0</span>
+      </button>
+      <button data-urltype="nonhttps">
+        ⚠️ Non-HTTPS
+        <span class="count-pill" id="pillNonHttps">0</span>
+      </button>
+    </div>
+
+    <div style="text-align:right; margin-bottom:22px;">
+      <button class="btn btn-refresh" id="refreshBtn">🔄 Refresh Data</button>
+    </div>
+
+    <!-- SECTION 1: DETAIL DATA -->
+    <div class="table-card">
+      <h2>
+        <span>📋 Detail Data — <span id="tableRangeLabel">Hari Ini</span> • <span id="tableUrlTypeLabel">Semua URL</span></span>
+        <span class="badge badge-total" id="tableTotalBadge">0 kunjungan</span>
+      </h2>
+      <div id="tableContainer">
+        <div class="loading">Memuat data...</div>
+      </div>
+      <div class="pagination" id="pagination" style="display:none;">
+        <button id="prevPage">← Sebelumnya</button>
+        <span id="pageInfo"></span>
+        <button id="nextPage">Berikutnya →</button>
+      </div>
+    </div>
+
+    <!-- SECTION 2: STATISTIK -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>Total Kunjungan</h3>
+        <div class="value" id="totalVisits">—</div>
+        <div class="sub">dalam periode terpilih</div>
+      </div>
+      <div class="stat-card">
+        <h3>URL Unik</h3>
+        <div class="value" id="uniqueUrls">—</div>
+        <div class="sub">halaman berbeda</div>
+      </div>
+      <div class="stat-card">
+        <h3>Hari Aktif</h3>
+        <div class="value" id="activeDays">—</div>
+        <div class="sub">hari dengan kunjungan</div>
+      </div>
+      <div class="stat-card">
+        <h3>Rata-rata / Hari</h3>
+        <div class="value" id="avgPerDay">—</div>
+        <div class="sub">kunjungan per hari</div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: CHART -->
+    <div class="chart-card">
+      <h2 id="chartTitle">📈 Grafik Kunjungan</h2>
+      <div class="chart-wrap">
+        <canvas id="visitChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   KONFIGURASI API
+   ========================================================= */
+const API_BASE = "https://lidan-co-id.pages.dev/api/contacts";
+const TABLE_KUNJUNGAN = "kunjungan";
+const TABLE_ADMINS = "admins";
+
+/* Kunci localStorage untuk "Remember Me" */
+const LS_AUTH_KEY = "lidan_dashboard_auth";
+const LS_REMEMBER_KEY = "lidan_dashboard_remember";
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let state = {
+  range: "today",       // today | week | month | all
+  urlType: "all",       // all | https | nonhttps
+  rawData: [],
+  filtered: [],
+  grouped: [],
+  aggregated: [],
+  page: 1,
+  perPage: 20,
+  chart: null,
+  user: null
+};
+
+/* =========================================================
+   AUTENTIKASI
+   ========================================================= */
+function isHttpsUrl(url) {
+  return /^https:\/\//i.test(url || '');
+}
+
+/** Ambil semua admin via GET, lalu cocokkan user & password */
+async function loginCheck(username, password) {
+  const url = `${API_BASE}?tabel=${TABLE_ADMINS}`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: { 'X-Table-Name': TABLE_ADMINS }
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+
+  let rows = [];
+  if (Array.isArray(json)) rows = json;
+  else if (Array.isArray(json.data)) rows = json.data;
+  else if (Array.isArray(json.result)) rows = json.result;
+  else if (Array.isArray(json.rows)) rows = json.rows;
+
+  // Cari admin dengan x_01 === username && x_02 === password
+  const found = rows.find(r =>
+    String(r.x_01 || '').trim() === username.trim() &&
+    String(r.x_02 || '').trim() === password
+  );
+  return found || null;
+}
+
+function saveAuth(user, remember) {
+  const payload = JSON.stringify({ username: user.x_01, time: Date.now() });
+  if (remember) {
+    localStorage.setItem(LS_AUTH_KEY, payload);
+    localStorage.setItem(LS_REMEMBER_KEY, '1');
+  } else {
+    sessionStorage.setItem(LS_AUTH_KEY, payload);
+  }
+}
+
+function getAuth() {
+  return localStorage.getItem(LS_AUTH_KEY) || sessionStorage.getItem(LS_AUTH_KEY);
+}
+
+function clearAuth() {
+  localStorage.removeItem(LS_AUTH_KEY);
+  localStorage.removeItem(LS_REMEMBER_KEY);
+  sessionStorage.removeItem(LS_AUTH_KEY);
+}
+
+function showDashboard(user) {
+  state.user = user;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashboardScreen').style.display = 'block';
+  document.getElementById('userName').textContent = user.username || user.x_01 || 'Admin';
+  document.getElementById('userAvatar').textContent =
+    (user.username || user.x_01 || 'A').charAt(0).toUpperCase();
+}
+
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('dashboardScreen').style.display = 'none';
+}
+
+/* =========================================================
+   UTILITAS TANGGAL
+   ========================================================= */
+function toLocalDateStr(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function parseLocalDate(str) {
+  if (!str) return null;
+  const [datePart] = str.split(' ');
+  const [y, m, d] = datePart.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+function getMonthKey(dateStr) {
+  if (!dateStr) return null;
+  return dateStr.substring(0, 7);
+}
+
+function getRangeBounds(range) {
+  const now = new Date();
+  const todayStr = toLocalDateStr(now);
+
+  if (range === 'today') return { start: todayStr, end: todayStr, label: 'Hari Ini' };
+  if (range === 'week') {
+    const day = now.getDay();
+    const diffToMonday = (day === 0 ? -6 : 1 - day);
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + diffToMonday);
+    return { start: toLocalDateStr(monday), end: todayStr, label: 'Minggu Ini' };
+  }
+  if (range === 'month') {
+    const first = new Date(now.getFullYear(), now.getMonth(), 1);
+    return { start: toLocalDateStr(first), end: todayStr, label: 'Bulan Ini' };
+  }
+  return { start: null, end: null, label: 'Semua Waktu' };
+}
+
+/* =========================================================
+   FETCH DATA KUNJUNGAN
+   ========================================================= */
+async function fetchData() {
+  const url = `${API_BASE}?tabel=${TABLE_KUNJUNGAN}`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: { 'X-Table-Name': TABLE_KUNJUNGAN }
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+
+  let rows = [];
+  if (Array.isArray(json)) rows = json;
+  else if (Array.isArray(json.data)) rows = json.data;
+  else if (Array.isArray(json.result)) rows = json.result;
+  else if (Array.isArray(json.rows)) rows = json.rows;
+
+  return rows.map(r => ({
+    id: r.id_x || r.id || '',
+    url: r.x_01 || '',
+    x_02: r.x_02 || '',
+    count: parseInt(r.x_03, 10) || 0,
+    created: r.x_20 || '',
+    updated: r.x_19 || ''
+  }));
+}
+
+/* =========================================================
+   FILTER: RANGE + URL TYPE
+   ========================================================= */
+function applyRangeFilter(rows, range) {
+  const bounds = getRangeBounds(range);
+  if (!bounds.start) return rows;
+
+  return rows.filter(r => {
+    const d = r.updated || r.created;
+    if (!d) return false;
+    const dateStr = d.split(' ')[0];
+    return dateStr >= bounds.start && dateStr <= bounds.end;
+  });
+}
+
+function applyUrlTypeFilter(rows, urlType) {
+  if (urlType === 'https') return rows.filter(r => isHttpsUrl(r.url));
+  if (urlType === 'nonhttps') return rows.filter(r => !isHttpsUrl(r.url) && r.url);
+  return rows;
+}
+
+/* =========================================================
+   GROUP PER URL
+   ========================================================= */
+function groupByUrl(rows) {
+  const map = new Map();
+
+  rows.forEach(r => {
+    const key = r.url || '(tanpa url)';
+    if (!map.has(key)) {
+      map.set(key, {
+        url: key,
+        totalHits: 0,
+        recordCount: 0,
+        lastUpdate: '',
+        firstSeen: ''
+      });
+    }
+    const g = map.get(key);
+    g.totalHits += r.count;
+    g.recordCount += 1;
+
+    if (r.created && (!g.firstSeen || r.created < g.firstSeen)) g.firstSeen = r.created;
+    if (r.updated && (!g.lastUpdate || r.updated > g.lastUpdate)) g.lastUpdate = r.updated;
+  });
+
+  return Array.from(map.values()).sort((a, b) => {
+    const da = a.lastUpdate || a.firstSeen || '';
+    const db = b.lastUpdate || b.firstSeen || '';
+    return db.localeCompare(da);
+  });
+}
+
+/* =========================================================
+   AGGREGATE CHART
+   ========================================================= */
+function aggregate(rows, range) {
+  const map = new Map();
+
+  rows.forEach(r => {
+    const dateStr = (r.updated || r.created || '').split(' ')[0];
+    if (!dateStr) return;
+
+    let key;
+    if (range === 'all') key = getMonthKey(dateStr);
+    else key = dateStr;
+
+    if (!map.has(key)) map.set(key, { key, total: 0 });
+    map.get(key).total += r.count;
+  });
+
+  return Array.from(map.values()).sort((a, b) => a.key.localeCompare(b.key));
+}
+
+/* =========================================================
+   RENDER STATISTIK
+   ========================================================= */
+function renderStats() {
+  const totalVisits = state.filtered.reduce((s, r) => s + r.count, 0);
+  const uniqueUrls = state.grouped.length;
+  const activeDays = new Set(
+    state.filtered.map(r => (r.updated || r.created || '').split(' ')[0]).filter(Boolean)
+  ).size;
+  const avg = activeDays ? (totalVisits / activeDays).toFixed(1) : 0;
+
+  document.getElementById('totalVisits').textContent = totalVisits.toLocaleString('id-ID');
+  document.getElementById('uniqueUrls').textContent = uniqueUrls.toLocaleString('id-ID');
+  document.getElementById('activeDays').textContent = activeDays.toLocaleString('id-ID');
+  document.getElementById('avgPerDay').textContent = avg;
+}
+
+/* =========================================================
+   RENDER CHART
+   ========================================================= */
+function renderChart() {
+  const agg = state.aggregated;
+  const labels = agg.map(a => formatLabel(a.key, state.range));
+  const data = agg.map(a => a.total);
+
+  const ctx = document.getElementById('visitChart').getContext('2d');
+  if (state.chart) state.chart.destroy();
+
+  state.chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels.length ? labels : ['(kosong)'],
+      datasets: [{
+        label: 'Kunjungan',
+        data: data.length ? data : [0],
+        borderColor: '#2563eb',
+        backgroundColor: 'rgba(37,99,235,.12)',
+        fill: true,
+        tension: .35,
+        pointRadius: 4,
+        pointBackgroundColor: '#2563eb',
+        pointHoverRadius: 7
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${c.parsed.y} kunjungan` } }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0 } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  const titles = {
+    today: '📈 Grafik Kunjungan — Hari Ini',
+    week:  '📈 Grafik Kunjungan — Minggu Ini (per hari)',
+    month: '📈 Grafik Kunjungan — Bulan Ini (per hari)',
+    all:   '📈 Grafik Kunjungan — Semua Waktu (per bulan)'
+  };
+  document.getElementById('chartTitle').textContent = titles[state.range];
+}
+
+/* =========================================================
+   RENDER TABEL
+   ========================================================= */
+function renderTable() {
+  const container = document.getElementById('tableContainer');
+  const pag = document.getElementById('pagination');
+  const totalVisits = state.filtered.reduce((s, r) => s + r.count, 0);
+
+  const bounds = getRangeBounds(state.range);
+  const urlTypeLabels = { all: 'Semua URL', https: 'HTTPS', nonhttps: 'Non-HTTPS' };
+  document.getElementById('tableRangeLabel').textContent = bounds.label;
+  document.getElementById('tableUrlTypeLabel').textContent = urlTypeLabels[state.urlType];
+  document.getElementById('tableTotalBadge').textContent =
+    `${totalVisits.toLocaleString('id-ID')} kunjungan • ${state.grouped.length} URL`;
+
+  if (!state.grouped.length) {
+    container.innerHTML = '<div class="empty">Tidak ada data pada periode ini.</div>';
+    pag.style.display = 'none';
+    return;
+  }
+
+  const totalPages = Math.ceil(state.grouped.length / state.perPage);
+  if (state.page > totalPages) state.page = totalPages;
+
+  const start = (state.page - 1) * state.perPage;
+  const pageRows = state.grouped.slice(start, start + state.perPage);
+
+  let html = `<table>
+    <thead>
+      <tr>
+        <th style="width:40px;">#</th>
+        <th>URL</th>
+        <th style="width:90px;">Tipe</th>
+        <th style="width:110px;">Total Hits</th>
+        <th style="width:90px;">Record</th>
+        <th style="width:160px;">Terakhir Update</th>
+        <th style="width:160px;">Pertama Dilihat</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+  pageRows.forEach((g, i) => {
+    const safeUrl = escapeHtml(g.url);
+    const isHttps = isHttpsUrl(g.url);
+    const badge = g.url
+      ? (isHttps
+          ? '<span class="badge badge-https">🔒 HTTPS</span>'
+          : '<span class="badge badge-nonhttps">⚠️ Non-HTTPS</span>')
+      : '<span class="badge">—</span>';
+
+    html += `<tr>
+      <td>${start + i + 1}</td>
+      <td class="url-cell" title="${safeUrl}">
+        <a href="${safeUrl}" target="_blank" rel="noopener">${safeUrl}</a>
+      </td>
+      <td>${badge}</td>
+      <td><span class="badge badge-total">${g.totalHits.toLocaleString('id-ID')}</span></td>
+      <td><span class="badge badge-record">${g.recordCount}</span></td>
+      <td class="date-cell">${g.lastUpdate || '-'}</td>
+      <td class="date-cell">${g.firstSeen || '-'}</td>
+    </tr>`;
+  });
+
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+
+  pag.style.display = 'flex';
+  document.getElementById('pageInfo').textContent =
+    `Halaman ${state.page} dari ${totalPages} — ${state.grouped.length} URL unik`;
+  document.getElementById('prevPage').disabled = state.page <= 1;
+  document.getElementById('nextPage').disabled = state.page >= totalPages;
+}
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+function formatLabel(key, range) {
+  if (range === 'all') {
+    const [y, m] = key.split('-');
+    const namaBulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    return `${namaBulan[parseInt(m,10)-1]} ${y}`;
+  }
+  const [, m, d] = key.split('-');
+  return `${d}/${m}`;
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+/* =========================================================
+   UPDATE COUNT DI TAB & SUBTAB
+   ========================================================= */
+function updateTabCounts() {
+  const ranges = ['today', 'week', 'month', 'all'];
+  const ids = { today: 'subToday', week: 'subWeek', month: 'subMonth', all: 'subAll' };
+
+  ranges.forEach(r => {
+    const filtered = applyRangeFilter(state.rawData, r);
+    const total = filtered.reduce((s, x) => s + x.count, 0);
+    document.getElementById(ids[r]).textContent = `${total.toLocaleString('id-ID')} kunjungan`;
+  });
+}
+
+function updateSubtabCounts() {
+  // Hitung berdasarkan range aktif
+  const rangeFiltered = applyRangeFilter(state.rawData, state.range);
+
+  const all     = rangeFiltered;
+  const https   = rangeFiltered.filter(r => isHttpsUrl(r.url));
+  const nonhttps= rangeFiltered.filter(r => !isHttpsUrl(r.url) && r.url);
+
+  const sum = arr => arr.reduce((s, x) => s + x.count, 0);
+
+  document.getElementById('pillAll').textContent      = sum(all).toLocaleString('id-ID');
+  document.getElementById('pillHttps').textContent    = sum(https).toLocaleString('id-ID');
+  document.getElementById('pillNonHttps').textContent = sum(nonhttps).toLocaleString('id-ID');
+}
+
+/* =========================================================
+   RECALC
+   ========================================================= */
+function recalc() {
+  let rows = applyRangeFilter(state.rawData, state.range);
+  rows = applyUrlTypeFilter(rows, state.urlType);
+
+  state.filtered  = rows;
+  state.grouped   = groupByUrl(rows);
+  state.aggregated = aggregate(rows, state.range);
+  state.page = 1;
+
+  renderStats();
+  renderChart();
+  renderTable();
+}
+
+/* =========================================================
+   REFRESH
+   ========================================================= */
+async function refresh() {
+  const container = document.getElementById('tableContainer');
+  container.innerHTML = '<div class="loading">Memuat data...</div>';
+
+  try {
+    state.rawData = await fetchData();
+    updateTabCounts();
+    updateSubtabCounts();
+    recalc();
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = `<div class="error">Gagal memuat data: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+/* =========================================================
+   EVENT LISTENERS
+   ========================================================= */
+
+// LOGIN FORM
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errBox = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  errBox.classList.remove('show');
+
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  const remember = document.getElementById('rememberMe').checked;
+
+  btn.disabled = true;
+  btn.textContent = 'Memeriksa...';
+
+  try {
+    const user = await loginCheck(username, password);
+    if (!user) {
+      errBox.textContent = 'Username atau password salah.';
+      errBox.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Masuk';
+      return;
+    }
+    saveAuth(user, remember);
+    showDashboard({ username: user.x_01 });
+    refresh();
+  } catch (err) {
+    errBox.textContent = 'Gagal terhubung ke server: ' + err.message;
+    errBox.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Masuk';
+  }
+});
+
+// LOGOUT
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  clearAuth();
+  showLogin();
+  document.getElementById('loginForm').reset();
+});
+
+// TAB PERIODE
+document.getElementById('tabBar').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#tabBar button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.range = btn.dataset.range;
+  updateSubtabCounts();
+  recalc();
+});
+
+// SUB-TAB URL TYPE
+document.getElementById('subtabBar').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#subtabBar button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.urlType = btn.dataset.urltype;
+  recalc();
+});
+
+document.getElementById('refreshBtn').addEventListener('click', refresh);
+
+document.getElementById('prevPage').addEventListener('click', () => {
+  if (state.page > 1) { state.page--; renderTable(); }
+});
+document.getElementById('nextPage').addEventListener('click', () => {
+  const totalPages = Math.ceil(state.grouped.length / state.perPage);
+  if (state.page < totalPages) { state.page++; renderTable(); }
+});
+
+/* =========================================================
+   INISIALISASI
+   ========================================================= */
+(function init() {
+  // Cek sesi tersimpan (Remember Me / session)
+  const saved = getAuth();
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      showDashboard({ username: data.username });
+      refresh();
+      return;
+    } catch (e) {
+      clearAuth();
+    }
+  }
+  showLogin();
+})();
+</script>
+</body>
+</html>
