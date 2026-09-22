@@ -553,7 +553,7 @@
       </div>
       <div class="user-info">
         <span class="row-count-badge" id="rowCountBadge">📋 0 baris aktif</span>
-        <button class="btn-archive" id="archiveBtn" title="Rekap data kunjungan ke admin_kontrol & kosongkan tabel">
+        <button class="btn-archive" id="archiveBtn" title="Rekap data kunjungan ke kontrol_admin & kosongkan tabel">
           📦 Rekap & Bersihkan
         </button>
         <div class="avatar" id="userAvatar">?</div>
@@ -664,7 +664,7 @@
     <h3>📦 Konfirmasi Rekap & Bersihkan</h3>
     <p>Tindakan ini akan:</p>
     <ul>
-      <li>Menyimpan <strong id="modalRowCount">0</strong> baris dari tabel <code>kunjungan</code> ke rekap di <code>admin_kontrol</code> (id_x = 8)</li>
+      <li>Menyimpan <strong id="modalRowCount">0</strong> baris dari tabel <code>kunjungan</code> ke rekap di <code>kontrol_admin</code> (id_x = 8)</li>
       <li>Menghapus <strong>semua baris</strong> di tabel <code>kunjungan</code></li>
       <li>Total di dashboard <strong>tidak akan berubah</strong> karena digabung dengan rekap</li>
     </ul>
@@ -702,8 +702,8 @@
 const API_BASE = "https://lidan-co-id.pages.dev/api/contacts";
 const TABLE_KUNJUNGAN = "kunjungan";
 const TABLE_ADMINS = "admins";
-const TABLE_ADMIN_KONTROL = "admin_kontrol";
-const ADMIN_KONTROL_ID = 8;
+const TABLE_kontrol_admin = "kontrol_admin";
+const kontrol_admin_ID = 8;
 
 /* Konfigurasi chunk rekap (kolom x_06 s/d x_20 = 15 chunk) */
 const CHUNK_SIZE = 60000;
@@ -720,7 +720,7 @@ let state = {
   range: "today",
   urlType: "https",
   rawData: [],         // data dari tabel kunjungan (aktif)
-  rekap: null,         // data rekap dari admin_kontrol id_x=8
+  rekap: null,         // data rekap dari kontrol_admin id_x=8
   kunjunganRowCount: 0,
   grouped: [],         // hasil merge kunjungan aktif + rekap (untuk tabel)
   aggregated: [],      // untuk chart
@@ -884,13 +884,13 @@ async function fetchKunjungan() {
 }
 
 /* =========================================================
-   FETCH REKAP dari admin_kontrol id_x=8
+   FETCH REKAP dari kontrol_admin id_x=8
    ========================================================= */
 async function fetchRekapRaw() {
   try {
-    const res = await fetch(`${API_BASE}/${ADMIN_KONTROL_ID}?tabel=${TABLE_ADMIN_KONTROL}`, {
+    const res = await fetch(`${API_BASE}/${kontrol_admin_ID}?tabel=${TABLE_kontrol_admin}`, {
       method: 'GET',
-      headers: { 'X-Table-Name': TABLE_ADMIN_KONTROL }
+      headers: { 'X-Table-Name': TABLE_kontrol_admin }
     });
     if (!res.ok) return null;
     const json = await res.json();
@@ -926,7 +926,7 @@ async function fetchRekap() {
 }
 
 /* =========================================================
-   SIMPAN REKAP ke admin_kontrol id_x=8
+   SIMPAN REKAP ke kontrol_admin id_x=8
    ========================================================= */
 async function saveRekap(rekap) {
   const jsonStr = JSON.stringify(rekap);
@@ -958,28 +958,28 @@ async function saveRekap(rekap) {
 
   // Cek apakah record sudah ada
   const existing = await fetchRekapRaw();
-  const hasExisting = existing && (existing.id_x == ADMIN_KONTROL_ID);
+  const hasExisting = existing && (existing.id_x == kontrol_admin_ID);
 
   if (hasExisting) {
     // PUT
-    const res = await fetch(`${API_BASE}/${ADMIN_KONTROL_ID}?tabel=${TABLE_ADMIN_KONTROL}`, {
+    const res = await fetch(`${API_BASE}/${kontrol_admin_ID}?tabel=${TABLE_kontrol_admin}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'X-Table-Name': TABLE_ADMIN_KONTROL
+        'X-Table-Name': TABLE_kontrol_admin
       },
       body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error(`PUT gagal: HTTP ${res.status}`);
   } else {
     // POST dengan id_x=8
-    const res = await fetch(`${API_BASE}?tabel=${TABLE_ADMIN_KONTROL}`, {
+    const res = await fetch(`${API_BASE}?tabel=${TABLE_kontrol_admin}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Table-Name': TABLE_ADMIN_KONTROL
+        'X-Table-Name': TABLE_kontrol_admin
       },
-      body: JSON.stringify({ id_x: ADMIN_KONTROL_ID, ...payload })
+      body: JSON.stringify({ id_x: kontrol_admin_ID, ...payload })
     });
     if (!res.ok) throw new Error(`POST gagal: HTTP ${res.status}`);
   }
@@ -1066,7 +1066,7 @@ async function archiveAndClear(onProgress) {
   });
 
   // 4. Simpan rekap
-  onProgress('Menyimpan rekap ke admin_kontrol...', 45);
+  onProgress('Menyimpan rekap ke kontrol_admin...', 45);
   await saveRekap(rekapBaru);
 
   // 5. Hapus kunjungan (satu per satu, batch paralel 5)
