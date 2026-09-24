@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TTS Reader — Pembaca Teks dengan Berbagai Karakter Suara</title>
+<style>
+  :root {
+    --cream: #f5efe6;
+    --paper: #fbf7f0;
+    --ink: #2b2118;
+    --ink-soft: #5a4a3a;
+    --gold: #b8894a;
+    --gold-dark: #8a6334;
+    --brown: #6b4f3a;
+    --shadow: rgba(60, 40, 20, 0.15);
+    --accent: #a0522d;
+    --record: #c0392b;
+    --border: rgba(184,137,74,0.25);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--cream);
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(184,137,74,0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 90%, rgba(107,79,58,0.08) 0%, transparent 50%);
+    color: var(--ink);
+    line-height: 1.8;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  header {
+    text-align: center;
+    padding: 50px 20px 30px;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    font-size: clamp(1.5rem, 4vw, 2.3rem);
+    color: var(--brown);
+    font-weight: normal;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  header .subtitle {
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: clamp(0.88rem, 2vw, 1rem);
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  header .ornament {
+    color: var(--gold);
+    letter-spacing: 8px;
+    margin-top: 16px;
+    font-size: 1.2rem;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* FORM SECTION */
+  .form-section {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 26px;
+    margin-top: 30px;
+    box-shadow: 0 2px 12px var(--shadow);
+  }
+
+  .form-section label {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--brown);
+    margin-bottom: 8px;
+    font-style: italic;
+  }
+
+  .form-section label strong {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 220px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.7;
+    background: #fff;
+    color: var(--ink);
+    resize: vertical;
+    transition: border-color 0.25s;
+  }
+  textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(184,137,74,0.15);
+  }
+
+  .char-counter {
+    text-align: right;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    font-style: italic;
+    margin-top: 6px;
+  }
+
+  /* VOICE SELECTION */
+  .voice-section {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .section-title {
+    font-size: 1rem;
+    color: var(--brown);
+    margin-bottom: 14px;
+    font-style: italic;
+  }
+
+  .voice-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .voice-option {
+    background: #fff;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+  }
+  .voice-option:hover {
+    border-color: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px var(--shadow);
+  }
+  .voice-option.selected {
+    border-color: var(--gold-dark);
+    background: linear-gradient(135deg, #fff 0%, #f8f0e2 100%);
+    box-shadow: 0 0 0 3px rgba(184,137,74,0.2);
+  }
+  .voice-option.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    color: var(--gold-dark);
+    font-weight: bold;
+  }
+
+  .voice-name {
+    font-size: 0.95rem;
+    color: var(--brown);
+    font-weight: bold;
+  }
+  .voice-desc {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    font-style: italic;
+    line-height: 1.5;
+  }
+  .voice-meta {
+    font-size: 0.7rem;
+    color: var(--gold-dark);
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+  }
+
+  /* SPEED SECTION */
+  .speed-section {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding-top: 20px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .speed-section label {
+    margin-bottom: 0;
+    font-size: 0.88rem;
+  }
+
+  input[type="range"] {
+    width: 200px;
+    accent-color: var(--gold);
+    cursor: pointer;
+  }
+
+  .speed-value {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: var(--gold-dark);
+    min-width: 40px;
+  }
+
+  /* CONTROL BAR */
+  .control-bar {
+    margin-top: 24px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 14px 18px;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    box-shadow: 0 4px 16px var(--shadow);
+    position: sticky;
+    top: 16px;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    background: rgba(251,247,240,0.96);
+  }
+
+  .ctrl-btn {
+    border: none;
+    border-radius: 50px;
+    padding: 12px 22px;
+    font-family: inherit;
+    font-size: 0.92rem;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    background: var(--gold);
+    font-weight: 500;
+  }
+  .ctrl-btn:hover:not(:disabled) {
+    background: var(--gold-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(184,137,74,0.35);
+  }
+  .ctrl-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .ctrl-btn.stop { background: var(--brown); }
+  .ctrl-btn.stop:hover:not(:disabled) { background: #4a3626; }
+  .ctrl-btn.record { background: var(--record); }
+  .ctrl-btn.record:hover:not(:disabled) { background: #a03225; }
+  .ctrl-btn.record.recording { animation: pulse 1s infinite; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+  .ctrl-btn.ghost {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold-dark);
+  }
+  .ctrl-btn.ghost:hover:not(:disabled) {
+    background: var(--gold);
+    color: white;
+  }
+
+  .status-bar {
+    flex: 1;
+    min-width: 200px;
+    font-size: 0.82rem;
+    color: var(--gold-dark);
+    font-style: italic;
+    text-align: right;
+  }
+  .status-bar.recording { color: var(--record); font-weight: bold; }
+  .status-bar.error { color: #c0392b; }
+
+  /* PROGRESS */
+  .progress-wrap {
+    margin-top: 14px;
+    height: 4px;
+    background: rgba(184,137,74,0.15);
+    border-radius: 4px;
+    overflow: hidden;
+    display: none;
+  }
+  .progress-wrap.show { display: block; }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--brown));
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  /* PREVIEW TEXT */
+  .preview-section {
+    margin-top: 24px;
+  }
+  .preview-title {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    font-style: italic;
+    margin-bottom: 8px;
+  }
+  .preview-box {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--ink);
+    max-height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+  .preview-box:empty::before {
+    content: 'Teks yang akan dibacakan akan muncul di sini...';
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(43, 33, 24, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--paper);
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 520px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: fadeIn 0.3s;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .modal h3 {
+    color: var(--brown);
+    font-weight: normal;
+    margin-bottom: 14px;
+    font-size: 1.2rem;
+  }
+  .modal p {
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    line-height: 1.7;
+    margin-bottom: 12px;
+  }
+  .modal ol {
+    margin: 12px 0 20px 22px;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    line-height: 1.9;
+  }
+  .modal ol li { margin-bottom: 6px; }
+  .modal .modal-btns {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .modal button {
+    padding: 10px 22px;
+    border-radius: 30px;
+    border: none;
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .modal .btn-cancel {
+    background: transparent;
+    border: 1px solid var(--ink-soft);
+    color: var(--ink-soft);
+  }
+  .modal .btn-cancel:hover { background: var(--ink-soft); color: white; }
+  .modal .btn-ok {
+    background: var(--gold);
+    color: white;
+  }
+  .modal .btn-ok:hover { background: var(--gold-dark); }
+
+  /* VOICE HELP */
+  .voice-help {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: rgba(184,137,74,0.08);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 8px 8px 0;
+    font-size: 0.83rem;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+  .voice-help strong { color: var(--brown); }
+
+  footer {
+    text-align: center;
+    padding: 40px 24px;
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    font-style: italic;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+
+  @media (max-width: 600px) {
+    .form-section { padding: 20px 16px; }
+    .voice-grid { grid-template-columns: 1fr; }
+    .control-bar { border-radius: 16px; padding: 12px; }
+    .ctrl-btn { padding: 10px 16px; font-size: 0.85rem; }
+    .status-bar { text-align: center; width: 100%; }
+    input[type="range"] { width: 140px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>TTS Reader</h1>
+  <p class="subtitle">Paste teksmu, pilih karakter suara, lalu dengarkan atau rekam. Alat sederhana untuk mengubah tulisan menjadi suara Bahasa Indonesia.</p>
+  <div class="ornament">❋ ❋ ❋</div>
+</header>
+
+<div class="container">
+
+  <!-- FORM PASTE -->
+  <div class="form-section">
+    <label for="inputText"><strong>1.</strong> Paste teks di sini:</label>
+    <textarea id="inputText" placeholder="Paste atau ketik teks yang ingin dibacakan di sini...
+
+Bisa berupa artikel, cerita, catatan, atau apa pun. Sistem akan otomatis memecah teks panjang menjadi bagian-bagian kecil agar TTS berjalan lancar."></textarea>
+    <div class="char-counter"><span id="charCount">0</span> karakter · <span id="wordCount">0</span> kata · estimasi <span id="estTime">0:00</span></div>
+
+    <!-- VOICE SELECTION -->
+    <div class="voice-section">
+      <p class="section-title"><strong>2.</strong> Pilih karakter suara:</p>
+      <div class="voice-grid" id="voiceGrid"></div>
+      <div class="voice-help" id="voiceHelp">
+        <strong>ℹ Info:</strong> Pilihan suara di atas adalah variasi dari suara Bahasa Indonesia yang tersedia di perangkatmu. Jika suara tertentu tidak tersedia, sistem otomatis memakai suara Indonesia terdekat.
+      </div>
+    </div>
+
+    <!-- SPEED -->
+    <div class="speed-section">
+      <label for="speedSlider"><strong>3.</strong> Kecepatan:</label>
+      <input type="range" id="speedSlider" min="0.5" max="1.5" step="0.1" value="0.9">
+      <span class="speed-value" id="speedValue">0.9x</span>
+      <span style="font-size:0.8rem;color:var(--ink-soft);font-style:italic;margin-left:auto;">(0.5x lambat · 1.5x cepat)</span>
+    </div>
+  </div>
+
+  <!-- CONTROL BAR -->
+  <div class="control-bar">
+    <button class="ctrl-btn play" id="btnPlay" disabled>▶ Putar</button>
+    <button class="ctrl-btn" id="btnPause" disabled>⏸ Jeda</button>
+    <button class="ctrl-btn stop" id="btnStop" disabled>⏹ Stop</button>
+    <button class="ctrl-btn record" id="btnRecord" disabled>⏺ Rekam</button>
+    <button class="ctrl-btn ghost" id="btnClear">🗑 Bersihkan</button>
+    <div class="status-bar" id="statusBar">Siap. Paste teks dulu untuk mulai.</div>
+  </div>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="preview-section">
+    <p class="preview-title">📖 Preview teks yang akan dibacakan:</p>
+    <div class="preview-box" id="previewBox"></div>
+  </div>
+
+</div>
+
+<footer>
+  <p>TTS Reader · Menggunakan Web Speech API browser</p>
+  <p style="margin-top:6px; font-size:0.78rem;">Untuk hasil terbaik, gunakan Google Chrome di desktop</p>
+</footer>
+
+<!-- MODAL RECORD -->
+<div class="modal-overlay" id="recordModal">
+  <div class="modal">
+    <h3>⏺ Rekam Audio</h3>
+    <p>Untuk merekam audio, ikuti langkah ini:</p>
+    <ol>
+      <li>Klik <strong>"Mulai Rekam"</strong> di bawah</li>
+      <li>Browser akan minta izin <strong>share tab</strong> → pilih <em>tab ini</em></li>
+      <li>Centang <strong>"Share tab audio"</strong> / <strong>"Bagikan audio tab"</strong></li>
+      <li>Klik <strong>"Share"</strong></li>
+      <li>Rekaman mulai otomatis + TTS diputar dari awal</li>
+      <li>Tunggu selesai → file audio (.webm) otomatis ter-download</li>
+    </ol>
+    <p style="font-size:0.82rem;"><em>Catatan: file .webm bisa diputar di semua media player modern, atau dikonversi ke MP3 via cloudconvert.com.</em></p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Batal</button>
+      <button class="btn-ok" onclick="startRecording()">Mulai Rekam</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   KONFIGURASI KARAKTER SUARA
+   Setiap "karakter" memetakan preferensi voice + rate + pitch
+   yang akan dicoba saat dibacakan.
+============================================================ */
+const VOICE_PROFILES = [
+  {
+    id: 'natural',
+    name: '🎙 Suara Natural',
+    desc: 'Bacaan standar, jelas dan nyaman. Cocok untuk artikel dan berita.',
+    voiceMatch: ['google bahasa indonesia', 'damayanti', 'andika', 'gadis', 'indonesia'],
+    rate: 0.9,
+    pitch: 1.0
+  },
+  {
+    id: 'storyteller',
+    name: '📖 Sang Pendongeng',
+    desc: 'Sedikit lebih lambat, hangat, cocok untuk cerita dan perenungan.',
+    voiceMatch: ['damayanti', 'google bahasa indonesia', 'gadis', 'indonesia'],
+    rate: 0.82,
+    pitch: 0.95
+  },
+  {
+    id: 'announcer',
+    name: '📢 Pengumum',
+    desc: 'Tegas dan jelas dengan tempo sedikit lebih cepat. Untuk pengumuman.',
+    voiceMatch: ['andika', 'google bahasa indonesia', 'indonesia'],
+    rate: 1.05,
+    pitch: 1.05
+  },
+  {
+    id: 'calm',
+    name: '🌙 Ketenangan',
+    desc: 'Sangat lambat dan tenang. Untuk meditasi atau bacaan santai.',
+    voiceMatch: ['damayanti', 'gadis', 'google bahasa indonesia'],
+    rate: 0.7,
+    pitch: 0.9
+  },
+  {
+    id: 'energetic',
+    name: '⚡ Semangat',
+    desc: 'Cepat dan bersemangat. Untuk konten motivasi atau iklan.',
+    voiceMatch: ['google bahasa indonesia', 'andika'],
+    rate: 1.15,
+    pitch: 1.1
+  },
+  {
+    id: 'deep',
+    name: '🎭 Suara Berat',
+    desc: 'Nada lebih rendah dan berwibawa. Untuk narasi formal.',
+    voiceMatch: ['andika', 'google bahasa indonesia'],
+    rate: 0.88,
+    pitch: 0.75
+  },
+  {
+    id: 'bright',
+    name: '☀ Suara Ceria',
+    desc: 'Nada lebih tinggi dan ringan. Untuk konten ringan dan ramah.',
+    voiceMatch: ['gadis', 'damayanti', 'google bahasa indonesia'],
+    rate: 1.0,
+    pitch: 1.25
+  },
+  {
+    id: 'custom',
+    name: '🎛 Kustom',
+    desc: 'Atur sendiri nada dan kecepatan dengan slider di atas.',
+    voiceMatch: ['google bahasa indonesia', 'damayanti', 'andika', 'gadis', 'indonesia'],
+    rate: 0.9,
+    pitch: 1.0
+  }
+];
+
+/* ============================================================
+   STATE
+============================================================ */
+let selectedVoiceProfile = VOICE_PROFILES[0];
+let availableVoices = [];
+let idVoiceFallback = null;
+
+let ttsState = {
+  queue: [],
+  index: 0,
+  playing: false,
+  recording: false,
+  mediaRecorder: null,
+  chunks: [],
+  stream: null,
+  currentUtter: null
+};
+
+/* ============================================================
+   INIT — Render voice grid, load voices
+============================================================ */
+const voiceGrid = document.getElementById('voiceGrid');
+const inputText = document.getElementById('inputText');
+const previewBox = document.getElementById('previewBox');
+const charCount = document.getElementById('charCount');
+const wordCount = document.getElementById('wordCount');
+const estTime = document.getElementById('estTime');
+const speedSlider = document.getElementById('speedSlider');
+const speedValue = document.getElementById('speedValue');
+const statusBar = document.getElementById('statusBar');
+const btnPlay = document.getElementById('btnPlay');
+const btnPause = document.getElementById('btnPause');
+const btnStop = document.getElementById('btnStop');
+const btnRecord = document.getElementById('btnRecord');
+const btnClear = document.getElementById('btnClear');
+const progressWrap = document.getElementById('progressWrap');
+const progressBar = document.getElementById('progressBar');
+
+// Render voice options
+VOICE_PROFILES.forEach((vp, i) => {
+  const el = document.createElement('div');
+  el.className = 'voice-option' + (i === 0 ? ' selected' : '');
+  el.dataset.id = vp.id;
+  el.innerHTML = `
+    <div class="voice-name">${vp.name}</div>
+    <div class="voice-desc">${vp.desc}</div>
+    <div class="voice-meta">rate ${vp.rate} · pitch ${vp.pitch}</div>
+  `;
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.voice-option').forEach(x => x.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedVoiceProfile = vp;
+    // Sync slider kecepatan
+    speedSlider.value = vp.rate;
+    speedValue.textContent = vp.rate.toFixed(1) + 'x';
+    setStatus(`Karakter dipilih: ${vp.name}`);
+  });
+  voiceGrid.appendChild(el);
+});
+
+/* ============================================================
+   TEXTAREA HANDLERS
+============================================================ */
+function updateTextInfo() {
+  const text = inputText.value.trim();
+  const chars = text.length;
+  const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+  // Estimasi: rata-rata 3 kata/detik pada rate 0.9
+  const estSec = Math.round(words / 2.6);
+  const mm = Math.floor(estSec / 60);
+  const ss = estSec % 60;
+
+  charCount.textContent = chars.toLocaleString('id-ID');
+  wordCount.textContent = words.toLocaleString('id-ID');
+  estTime.textContent = `${mm}:${String(ss).padStart(2, '0')}`;
+
+  previewBox.textContent = text;
+  updateButtonState();
+}
+
+inputText.addEventListener('input', updateTextInfo);
+
+btnClear.addEventListener('click', () => {
+  if (inputText.value && !confirm('Hapus semua teks yang sudah dipaste?')) return;
+  inputText.value = '';
+  updateTextInfo();
+  setStatus('Teks dibersihkan.');
+});
+
+/* ============================================================
+   SPEED SLIDER
+============================================================ */
+speedSlider.addEventListener('input', () => {
+  const v = parseFloat(speedSlider.value);
+  speedValue.textContent = v.toFixed(1) + 'x';
+  // Kalau user geser slider, otomatis pilih "Kustom"
+  selectCustomProfile();
+});
+
+function selectCustomProfile() {
+  const custom = VOICE_PROFILES.find(v => v.id === 'custom');
+  document.querySelectorAll('.voice-option').forEach(x => {
+    x.classList.toggle('selected', x.dataset.id === 'custom');
+  });
+  selectedVoiceProfile = custom;
+}
+
+/* ============================================================
+   VOICE LOADING
+============================================================ */
+function loadVoices() {
+  availableVoices = window.speechSynthesis.getVoices();
+  // Cari voice Indonesia terbaik sebagai fallback
+  idVoiceFallback = availableVoices.find(v => v.lang === 'id-ID')
+                 || availableVoices.find(v => v.lang && v.lang.toLowerCase().startsWith('id'))
+                 || null;
+
+  if (idVoiceFallback) {
+    console.log('✅ Voice Indonesia tersedia:', idVoiceFallback.name);
+  } else {
+    console.warn('⚠ Voice Indonesia tidak ditemukan di perangkat ini.');
+  }
+}
+
+window.speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
+
+/* ============================================================
+   PICK VOICE berdasarkan profil
+============================================================ */
+function pickVoiceForProfile(profile) {
+  if (!availableVoices.length) loadVoices();
+
+  // Cari voice Indonesia dulu
+  const idVoices = availableVoices.filter(v =>
+    (v.lang === 'id-ID') || (v.lang && v.lang.toLowerCase().startsWith('id'))
+  );
+
+  if (idVoices.length === 0) {
+    // Fallback ke voice apapun
+    return availableVoices[0] || null;
+  }
+
+  // Coba match berdasarkan nama
+  for (const keyword of profile.voiceMatch) {
+    const found = idVoices.find(v =>
+      v.name.toLowerCase().includes(keyword.toLowerCase())
+    );
+    if (found) return found;
+  }
+
+  // Fallback: voice id pertama
+  return idVoices[0];
+}
+
+/* ============================================================
+   CHUNKING
+============================================================ */
+function chunkText(text, maxLen = 250) {
+  const sentences = text.replace(/\s+/g, ' ').trim().split(/(?<=[.!?])\s+/);
+  const chunks = [];
+  let current = '';
+  sentences.forEach(s => {
+    if ((current + ' ' + s).length > maxLen && current) {
+      chunks.push(current.trim());
+      current = s;
+    } else {
+      current += (current ? ' ' : '') + s;
+    }
+  });
+  if (current.trim()) chunks.push(current.trim());
+  return chunks;
+}
+
+/* ============================================================
+   SUPPRESS INTERRUPTED
+============================================================ */
+const synth = window.speechSynthesis;
+const origSpeak = synth.speak.bind(synth);
+synth.speak = function (utt) {
+  const origOnError = utt.onerror;
+  utt.onerror = function (e) {
+    if (e.error === 'interrupted' || e.error === 'canceled') return;
+    if (origOnError) origOnError.call(this, e);
+  };
+  return origSpeak(utt);
+};
+
+/* ============================================================
+   UI HELPERS
+============================================================ */
+function setStatus(msg, type = 'normal') {
+  statusBar.textContent = msg;
+  statusBar.classList.toggle('recording', type === 'recording');
+  statusBar.classList.toggle('error', type === 'error');
+}
+
+function updateButtonState() {
+  const hasText = inputText.value.trim().length > 0;
+  const isPlaying = ttsState.playing && !synth.paused;
+  const isPaused = synth.paused;
+
+  btnPlay.disabled = !hasText || isPlaying;
+  btnPause.disabled = !isPlaying;
+  btnStop.disabled = !(ttsState.playing || ttsState.recording || synth.speaking);
+  btnRecord.disabled = !hasText || ttsState.recording;
+  btnClear.disabled = !hasText;
+
+  progressWrap.classList.toggle('show', ttsState.playing || ttsState.recording);
+}
+
+function updateProgress() {
+  if (!ttsState.queue.length) {
+    progressBar.style.width = '0%';
+    return;
+  }
+  const pct = Math.round((ttsState.index / ttsState.queue.length) * 100);
+  progressBar.style.width = pct + '%';
+}
+
+/* ============================================================
+   TTS CORE
+============================================================ */
+function speakChunks() {
+  if (ttsState.index >= ttsState.queue.length) {
+    // Selesai
+    ttsState.playing = false;
+    updateButtonState();
+    updateProgress();
+    progressBar.style.width = '100%';
+
+    if (ttsState.recording) {
+      setTimeout(() => stopRecording(), 800);
+    } else {
+      setStatus('✓ Selesai membacakan.');
+      setTimeout(() => {
+        progressWrap.classList.remove('show');
+        progressBar.style.width = '0%';
+      }, 2500);
+    }
+    return;
+  }
+
+  const chunk = ttsState.queue[ttsState.index];
+  const utt = new SpeechSynthesisUtterance(chunk);
+  utt.lang = 'id-ID';
+
+  // Rate: kalau kustom pakai slider, kalau bukan pakai profil
+  if (selectedVoiceProfile.id === 'custom') {
+    utt.rate = parseFloat(speedSlider.value);
+  } else {
+    utt.rate = selectedVoiceProfile.rate;
+    // Sinkronkan slider biar konsisten
+    speedSlider.value = utt.rate;
+    speedValue.textContent = utt.rate.toFixed(1) + 'x';
+  }
+  utt.pitch = selectedVoiceProfile.pitch;
+  utt.volume = 1;
+
+  const voice = pickVoiceForProfile(selectedVoiceProfile);
+  if (voice) utt.voice = voice;
+
+  utt.onstart = () => {
+    ttsState.playing = true;
+    updateButtonState();
+    const prefix = ttsState.recording ? '⏺ Merekam' : '▶ Membacakan';
+    setStatus(`${prefix} bagian ${ttsState.index + 1} / ${ttsState.queue.length} — ${selectedVoiceProfile.name}`, ttsState.recording ? 'recording' : 'normal');
+  };
+
+  utt.onend = () => {
+    if (!ttsState.playing) return;
+    ttsState.index++;
+    updateProgress();
+    if (ttsState.index < ttsState.queue.length) {
+      setTimeout(speakChunks, 80);
+    } else {
+      speakChunks(); // trigger end handler
+    }
+  };
+
+  utt.onerror = (e) => {
+    if (e.error === 'interrupted' || e.error === 'canceled') return;
+    ttsState.playing = false;
+    updateButtonState();
+    setStatus('⚠ Error: ' + e.error, 'error');
+  };
+
+  ttsState.currentUtter = utt;
+  synth.speak(utt);
+}
+
+/* ============================================================
+   PLAY / PAUSE / STOP
+============================================================ */
+btnPlay.addEventListener('click', () => {
+  const text = inputText.value.trim();
+  if (!text) {
+    setStatus('Paste teks dulu.', 'error');
+    return;
+  }
+
+  // Resume
+  if (synth.paused && ttsState.queue.length > 0) {
+    synth.resume();
+    ttsState.playing = true;
+    updateButtonState();
+    setStatus('▶ Melanjutkan...');
+    return;
+  }
+
+  // Mulai baru
+  synth.cancel();
+  ttsState.queue = chunkText(text, 250);
+  ttsState.index = 0;
+  ttsState.playing = true;
+  updateButtonState();
+  updateProgress();
+  speakChunks();
+});
+
+btnPause.addEventListener('click', () => {
+  if (synth.speaking) {
+    synth.pause();
+    ttsState.playing = false;
+    updateButtonState();
+    setStatus('⏸ Dijeda.');
+  }
+});
+
+btnStop.addEventListener('click', () => {
+  synth.cancel();
+  const wasRecording = ttsState.recording;
+  ttsState.playing = false;
+  ttsState.index = 0;
+  ttsState.queue = [];
+
+  if (wasRecording) {
+    stopRecording();
+  } else {
+    updateButtonState();
+    updateProgress();
+    progressWrap.classList.remove('show');
+    setStatus('⏹ Dihentikan.');
+    setTimeout(() => setStatus('Siap.'), 2000);
+  }
+});
+
+/* ============================================================
+   RECORDING
+============================================================ */
+btnRecord.addEventListener('click', () => {
+  if (ttsState.recording) {
+    stopRecording();
+  } else {
+    document.getElementById('recordModal').classList.add('active');
+  }
+});
+
+function closeModal() {
+  document.getElementById('recordModal').classList.remove('active');
+}
+
+async function startRecording() {
+  closeModal();
+  const text = inputText.value.trim();
+  if (!text) return;
+
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: true
+    });
+
+    const audioTracks = stream.getAudioTracks();
+    if (audioTracks.length === 0) {
+      stream.getTracks().forEach(t => t.stop());
+      setStatus('⚠ Tidak ada audio tab. Coba lagi & centang "Share tab audio".', 'error');
+      return;
+    }
+
+    const audioStream = new MediaStream(audioTracks);
+    const mediaRecorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' });
+    ttsState.mediaRecorder = mediaRecorder;
+    ttsState.chunks = [];
+    ttsState.stream = stream;
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) ttsState.chunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(ttsState.chunks, { type: 'audio/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+      a.href = url;
+      a.download = `tts-${ts}.webm`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+      stream.getTracks().forEach(t => t.stop());
+      ttsState.recording = false;
+      ttsState.mediaRecorder = null;
+      ttsState.stream = null;
+      btnRecord.classList.remove('recording');
+      btnRecord.textContent = '⏺ Rekam';
+      updateButtonState();
+      progressWrap.classList.remove('show');
+      progressBar.style.width = '0%';
+      setStatus('✓ File audio ter-download (.webm). Konversi ke MP3 via cloudconvert.com jika perlu.');
+    };
+
+    mediaRecorder.start();
+    ttsState.recording = true;
+    btnRecord.classList.add('recording');
+    btnRecord.textContent = '⏹ Stop Rekam';
+    updateButtonState();
+
+    setStatus('⏺ Merekam... TTS akan segera dimulai.', 'recording');
+
+    // Mulai TTS dari awal
+    setTimeout(() => {
+      synth.cancel();
+      ttsState.queue = chunkText(text, 250);
+      ttsState.index = 0;
+      ttsState.playing = true;
+      updateProgress();
+      speakChunks();
+    }, 500);
+
+  } catch (err) {
+    console.error('Recording error:', err);
+    if (err.name === 'NotAllowedError') {
+      setStatus('⚠ Izin share tab ditolak.', 'error');
+    } else {
+      setStatus('⚠ Error: ' + err.message, 'error');
+    }
+  }
+}
+
+function stopRecording() {
+  if (ttsState.mediaRecorder && ttsState.mediaRecorder.state !== 'inactive') {
+    ttsState.mediaRecorder.stop();
+  }
+  synth.cancel();
+  ttsState.playing = false;
+  ttsState.index = 0;
+  updateButtonState();
+}
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+============================================================ */
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'TEXTAREA') return;
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (ttsState.playing) btnPause.click();
+    else btnPlay.click();
+  }
+  if (e.code === 'Escape') {
+    if (document.getElementById('recordModal').classList.contains('active')) {
+      closeModal();
+    } else {
+      btnStop.click();
+    }
+  }
+});
+
+/* ============================================================
+   INIT STATE
+============================================================ */
+updateTextInfo();
+setStatus('Siap. Paste teks dulu untuk mulai.');
+</script>
+</body>
+</html>
