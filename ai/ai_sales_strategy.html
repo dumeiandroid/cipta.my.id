@@ -1,0 +1,2841 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Sales Strategy Generator — Lidan Psikologi</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; padding: 20px; min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        .login-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
+        .login-overlay.active { display: flex; }
+        .login-box { background: white; border-radius: 20px; padding: 40px; max-width: 420px; width: 100%; box-shadow: 0 24px 80px rgba(0,0,0,0.4); animation: fadeIn 0.3s ease; }
+        .login-box .login-icon { font-size: 48px; text-align: center; display: block; margin-bottom: 4px; }
+        .login-box h2 { text-align: center; font-size: 24px; color: #1a202c; margin-bottom: 4px; }
+        .login-box p { text-align: center; color: #718096; font-size: 14px; margin-bottom: 20px; }
+        .login-box .form-group { margin-bottom: 14px; }
+        .login-box .form-group label { font-weight: 600; font-size: 13px; color: #4a5568; display: block; margin-bottom: 4px; }
+        .login-box .form-group input { width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border 0.2s; }
+        .login-box .form-group input:focus { outline: none; border-color: #2b6cb0; }
+        .login-box .form-remember { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+        .login-box .form-remember input[type="checkbox"] { width: 18px; height: 18px; accent-color: #2b6cb0; }
+        .login-box .form-remember label { font-size: 13px; color: #4a5568; cursor: pointer; }
+        .login-box .btn-login { width: 100%; padding: 12px; background: #2b6cb0; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .login-box .btn-login:hover { background: #2c5282; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(43,108,176,0.3); }
+        .login-box .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .login-box .login-error { color: #fc8181; font-size: 13px; text-align: center; margin-top: 10px; display: none; }
+        .login-box .login-error.show { display: block; }
+        .login-box .login-loading { display: none; text-align: center; margin-top: 10px; color: #718096; font-size: 13px; }
+        .login-box .login-loading.show { display: block; }
+
+        .header { background: white; padding: 20px 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .header h1 { font-size: 24px; color: #1a2332; display: flex; align-items: center; gap: 10px; }
+        .header h1 span { background: #2d3748; color: white; font-size: 12px; padding: 2px 10px; border-radius: 20px; }
+        .header-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4a5568; background: #f7fafc; padding: 4px 14px; border-radius: 20px; }
+        .user-info .user-role { font-weight: 600; padding: 1px 10px; border-radius: 10px; font-size: 10px; }
+        .user-info .user-role.admin { background: #c6f6d5; color: #276749; }
+        .user-info .user-role.user { background: #bee3f8; color: #2a69ac; }
+        .btn-logout { padding: 4px 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; background: #fc8181; color: white; transition: 0.2s; }
+        .btn-logout:hover { background: #f56565; }
+        .search-box { display: flex; gap: 8px; align-items: center; background: #f7fafc; padding: 0 15px; border-radius: 10px; border: 2px solid #e2e8f0; transition: border 0.2s; }
+        .search-box:focus-within { border-color: #2b6cb0; }
+        .search-box input { border: none; background: transparent; padding: 10px 0; font-size: 14px; outline: none; width: 200px; color: #2d3748; }
+        .search-box .icon { color: #a0aec0; font-size: 18px; }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: #2b6cb0; color: white; }
+        .btn-primary:hover { background: #2c5282; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(43,108,176,0.4); }
+        .btn-success { background: #48bb78; color: white; }
+        .btn-success:hover { background: #38a169; }
+        .btn-danger { background: #fc8181; color: white; }
+        .btn-danger:hover { background: #f56565; }
+        .btn-warning { background: #ed8936; color: white; }
+        .btn-warning:hover { background: #dd6b20; }
+        .btn-outline { background: transparent; color: #4a5568; border: 2px solid #e2e8f0; }
+        .btn-outline:hover { background: #f7fafc; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
+        .btn-xs { padding: 3px 10px; font-size: 11px; border-radius: 4px; }
+
+        .main-tabs-container { background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 24px; }
+        .main-tabs-header { display: flex; border-bottom: 2px solid #edf2f7; background: #f7fafc; padding: 0 20px; overflow-x: auto; flex-wrap: nowrap; }
+        .main-tab-btn { padding: 14px 24px; border: none; background: transparent; font-weight: 700; font-size: 14px; color: #a0aec0; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent; margin-bottom: -2px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .main-tab-btn:hover { color: #2d3748; }
+        .main-tab-btn.active { color: #2b6cb0; border-bottom-color: #2b6cb0; }
+        .main-tab-btn .badge-main { background: #edf2f7; color: #4a5568; font-size: 11px; padding: 1px 10px; border-radius: 12px; font-weight: 600; }
+        .main-tab-btn.active .badge-main { background: #bee3f8; color: #2c5282; }
+        .main-tab-content { padding: 24px 30px; display: none; }
+        .main-tab-content.active { display: block; }
+
+        .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+        .tool-card { background: #f7fafc; border-radius: 12px; padding: 20px; border: 2px solid #e2e8f0; transition: all 0.2s; text-align: center; }
+        .tool-card:hover { border-color: #2b6cb0; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(43,108,176,0.12); }
+        .tool-card .tool-icon { font-size: 32px; display: block; margin-bottom: 4px; }
+        .tool-card .tool-name { font-weight: 700; font-size: 15px; color: #2d3748; }
+        .tool-card .tool-desc { font-size: 12px; color: #718096; margin: 4px 0 12px; min-height: 48px; }
+        .tool-card .tool-actions { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+        .tool-card .tool-actions .btn { padding: 4px 12px; font-size: 11px; }
+
+        .studio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .studio-left { display: flex; flex-direction: column; gap: 16px; }
+        .studio-right { display: flex; flex-direction: column; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-weight: 600; font-size: 13px; color: #4a5568; }
+        .form-group input, .form-group textarea, .form-group select { padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border 0.2s; font-family: inherit; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #2b6cb0; }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        .field-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 2px; }
+        .field-header label { font-weight: 600; font-size: 13px; color: #4a5568; margin: 0; }
+        .field-ai-check { display: flex; align-items: center; gap: 4px; background: #ebf8ff; padding: 2px 8px; border-radius: 6px; border: 1px solid #bee3f8; cursor: pointer; }
+        .field-ai-check input[type="checkbox"] { width: 14px; height: 14px; accent-color: #3182ce; cursor: pointer; margin: 0; }
+        .field-ai-check span { font-size: 10px; font-weight: 600; color: #2b6cb0; white-space: nowrap; }
+
+        .prompt-preview { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 2px solid #e2e8f0; min-height: 150px; white-space: pre-wrap; font-size: 13px; line-height: 1.7; color: #2d3748; max-height: 300px; overflow-y: auto; position: relative; }
+        .prompt-preview .placeholder { color: #a0aec0; font-style: italic; }
+        .prompt-preview .copy-prompt-btn { position: absolute; top: 8px; right: 8px; background: rgba(43,108,176,0.9); color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .prompt-preview .copy-prompt-btn:hover { background: #2c5282; }
+
+        .quill-wrapper { background: white; border-radius: 12px; border: 2px solid #e2e8f0; overflow: hidden; }
+        .quill-wrapper .ql-toolbar { border: none; border-bottom: 2px solid #e2e8f0; background: #f7fafc; }
+        .quill-wrapper .ql-container { border: none; min-height: 200px; font-size: 14px; }
+        .quill-wrapper .ql-editor { min-height: 200px; }
+
+        .result-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+
+        .history-sub-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; }
+        .history-sub-tab { padding: 6px 16px; border: none; background: #f7fafc; border-radius: 8px; font-weight: 600; font-size: 13px; color: #4a5568; cursor: pointer; transition: all 0.2s; }
+        .history-sub-tab:hover { background: #edf2f7; }
+        .history-sub-tab.active { background: #2b6cb0; color: white; }
+        .history-sub-tab .sub-badge { background: rgba(255,255,255,0.3); color: white; font-size: 10px; padding: 1px 8px; border-radius: 10px; margin-left: 4px; }
+        .history-sub-tab:not(.active) .sub-badge { background: #edf2f7; color: #4a5568; }
+
+        .history-filters { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+        .history-filters select, .history-filters input { padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; }
+        .history-filters select:focus, .history-filters input:focus { outline: none; border-color: #2b6cb0; }
+
+        .history-list { display: flex; flex-direction: column; gap: 16px; }
+        .history-item { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .history-item:hover { border-color: #2b6cb0; }
+        .history-item .history-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        .history-item .history-title { font-weight: 700; font-size: 15px; color: #2d3748; }
+        .history-item .history-meta { display: flex; gap: 12px; font-size: 12px; color: #718096; flex-wrap: wrap; align-items: center; }
+        .history-item .history-meta .type-badge { background: #bee3f8; color: #2c5282; padding: 2px 12px; border-radius: 12px; font-weight: 600; }
+        .history-item .history-meta .ai-badge { font-size: 10px; padding: 1px 8px; border-radius: 10px; font-weight: 600; }
+        .history-item .history-meta .ai-badge.chatgpt { background: #10a37f; color: white; }
+        .history-item .history-meta .ai-badge.claude { background: #d97757; color: white; }
+        .history-item .history-meta .ai-badge.gemini { background: #4285f4; color: white; }
+        .history-item .history-meta .ai-badge.deepseek { background: #4a6cf7; color: white; }
+        .history-item .history-meta .ai-badge.other { background: #718096; color: white; }
+        .history-item .history-prompt { font-size: 13px; color: #4a5568; background: white; padding: 8px 12px; border-radius: 6px; border-left: 3px solid #2b6cb0; margin-bottom: 10px; max-height: 60px; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+        .history-item .history-prompt:hover { background: #f7fafc; }
+        .history-item .history-prompt.expanded { max-height: none; white-space: pre-wrap; }
+        .history-item .history-result { font-size: 13px; color: #2d3748; margin-bottom: 8px; max-height: 80px; overflow: hidden; text-overflow: ellipsis; }
+        .history-item .history-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid #edf2f7; padding-top: 10px; }
+        .history-item .history-actions .btn { padding: 3px 12px; font-size: 11px; }
+
+        .empty-state { padding: 60px 20px; text-align: center; color: #a0aec0; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 15px; }
+        .empty-state h3 { color: #4a5568; margin-bottom: 8px; }
+        .empty-state p { font-size: 14px; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        .modal-overlay.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal { background: white; border-radius: 20px; max-width: 850px; width: 100%; max-height: 95vh; overflow-y: auto; padding: 30px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .modal-close { position: sticky; top: 0; float: right; background: #fc8181; border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; transition: 0.2s; z-index: 10; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: #f56565; transform: rotate(90deg); }
+        .modal-title { font-size: 22px; font-weight: 700; color: #1a2332; margin-bottom: 20px; padding-right: 50px; }
+        .modal-body { display: flex; flex-direction: column; gap: 16px; }
+        .contoh-box { background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%); border-radius: 12px; padding: 16px 20px; border-left: 4px solid #2b6cb0; margin: 12px 0; }
+        .contoh-box .contoh-title { font-weight: 700; font-size: 13px; color: #2a4365; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+        .contoh-box .contoh-item { background: white; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; color: #2d3748; line-height: 1.7; }
+        .contoh-box .contoh-item:last-child { margin-bottom: 0; }
+        .contoh-box .contoh-item .lbl { font-weight: 700; color: #2b6cb0; display: inline-block; min-width: 90px; }
+        .hasil-box { background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%); border-radius: 12px; padding: 16px 20px; border-left: 4px solid #38a169; margin: 12px 0; }
+        .hasil-box .hasil-title { font-weight: 700; font-size: 13px; color: #22543d; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .hasil-box .hasil-note { font-size: 11.5px; color: #2f855a; margin-bottom: 10px; line-height: 1.5; }
+        .hasil-box .hasil-item { background: white; border-radius: 8px; padding: 9px 13px; margin-bottom: 6px; font-size: 12.5px; color: #2d3748; line-height: 1.6; }
+        .hasil-box .hasil-item:last-child { margin-bottom: 0; }
+        .hasil-box .hasil-item .h-lbl { display: block; font-weight: 700; color: #276749; font-size: 12px; margin-bottom: 2px; letter-spacing: .2px; }
+        .hasil-box .hasil-foot { font-size: 11px; color: #2f855a; margin-top: 9px; font-style: italic; line-height: 1.5; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 2px solid #edf2f7; flex-wrap: wrap; }
+
+        .toast { position: fixed; bottom: 30px; right: 30px; padding: 16px 28px; border-radius: 12px; color: white; font-weight: 600; z-index: 2000; animation: slideUp 0.3s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.2); max-width: 400px; }
+        .toast.success { background: #48bb78; }
+        .toast.error { background: #fc8181; }
+        .toast.info { background: #4299e1; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-label { font-weight: 700; font-size: 14px; color: #2d3748; margin-top: 4px; margin-bottom: 2px; padding-bottom: 4px; border-bottom: 2px solid #edf2f7; }
+        .view-result-wrapper { background: white; border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; max-height: 400px; overflow-y: auto; }
+        .view-result-wrapper .ql-editor { padding: 0; }
+        .ai-source-select { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .ai-source-select select { padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; flex: 1; }
+        .ai-source-select select:focus { outline: none; border-color: #2b6cb0; }
+        .add-ai-modal .modal { max-width: 750px; }
+        .add-ai-modal .prompt-display { background: #f7fafc; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #4a5568; max-height: 120px; overflow-y: auto; white-space: pre-wrap; border-left: 3px solid #2b6cb0; position: relative; }
+        .add-ai-modal .prompt-display .copy-prompt-btn { position: absolute; top: 4px; right: 4px; background: rgba(43,108,176,0.9); color: white; border: none; padding: 2px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .add-ai-modal .prompt-display .copy-prompt-btn:hover { background: #2c5282; }
+
+        .main-content { display: none; }
+        .main-content.visible { display: block; }
+
+        .info-tip { background: #fffaf0; border-left: 4px solid #ed8936; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; color: #7b341e; line-height: 1.6; margin-bottom: 12px; }
+
+        @media (max-width: 992px) {
+            .studio-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .main-tabs-header { padding: 0 12px; }
+            .main-tab-btn { padding: 12px 16px; font-size: 13px; }
+            .main-tab-content { padding: 16px; }
+            .tools-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+            .header { flex-direction: column; align-items: stretch; }
+            .search-box input { width: 100%; }
+            .modal { padding: 20px; }
+            .history-item .history-header { flex-direction: column; align-items: flex-start; }
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .btn { padding: 8px 14px; font-size: 13px; }
+            .tools-grid { grid-template-columns: 1fr 1fr; }
+            .tool-card { padding: 14px; }
+            .tool-card .tool-icon { font-size: 28px; }
+            .main-tab-btn { padding: 10px 12px; font-size: 12px; }
+            .main-tab-content { padding: 12px; }
+            .history-filters { flex-direction: column; align-items: stretch; }
+            .login-box { padding: 24px 20px; }
+        }
+        .modal::-webkit-scrollbar { width: 6px; }
+        .modal::-webkit-scrollbar-track { background: #f7fafc; }
+        .modal::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="login-overlay active" id="loginOverlay">
+        <div class="login-box">
+            <span class="login-icon">📈</span>
+            <h2>Login</h2>
+            <p>Masuk untuk mengakses Sales Strategy Generator</p>
+            <div class="form-group">
+                <label>👤 Username</label>
+                <input type="text" id="loginUsername" placeholder="Masukkan username" value="">
+            </div>
+            <div class="form-group">
+                <label>🔑 Password</label>
+                <input type="password" id="loginPassword" placeholder="Masukkan password" value="" onkeydown="if(event.key==='Enter') doLogin()">
+            </div>
+            <div class="form-remember">
+                <input type="checkbox" id="loginRemember" checked>
+                <label for="loginRemember">Ingat saya</label>
+            </div>
+            <button class="btn-login" id="loginBtn" onclick="doLogin()">Login</button>
+            <div class="login-error" id="loginError">❌ Username atau password salah!</div>
+            <div class="login-loading" id="loginLoading">⏳ Memeriksa...</div>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="container" id="app">
+            <div class="header">
+                <h1>📈 AI Sales Strategy Generator <span>v1.0</span></h1>
+                <div class="header-actions">
+                    <span class="user-info" id="userInfo">
+                        👤 <span id="currentUser">-</span>
+                        <span class="user-role" id="userRole">user</span>
+                    </span>
+                    <button class="btn-logout" onclick="doLogout()">🚪 Logout</button>
+                    <div class="search-box">
+                        <span class="icon">🔍</span>
+                        <input type="text" id="searchInput" placeholder="Cari metode..." oninput="renderTools()">
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+                </div>
+            </div>
+
+            <div class="main-tabs-container">
+                <div class="main-tabs-header">
+                    <button class="main-tab-btn active" data-tab="tab1" onclick="switchMainTab('tab1')">
+                        📚 Sales Strategy Models
+                        <span class="badge-main" id="tab1Badge">8</span>
+                    </button>
+                    <button class="main-tab-btn" data-tab="tab2" onclick="switchMainTab('tab2')">
+                        ✏️ Sales Strategy Studio
+                        <span class="badge-main">New</span>
+                    </button>
+                    <button class="main-tab-btn" data-tab="tab3" onclick="switchMainTab('tab3')">
+                        📋 History
+                        <span class="badge-main" id="tab3Badge">0</span>
+                    </button>
+                </div>
+
+                <div class="main-tab-content active" id="tab1">
+                    <div class="tools-grid" id="toolsGrid"></div>
+                </div>
+
+                <div class="main-tab-content" id="tab2">
+                    <div class="info-tip">
+                        💡 <strong>Tips:</strong> Semua prompt di sini sudah dikontekstualisasi untuk <strong>Lidan Psikologi</strong> — layanan psikologi (tes minat bakat, tes kesiapan kerja, psikotes rekrutmen, konseling, training). Ganti beberapa field untuk menyesuaikan dengan target spesifik Anda.
+                    </div>
+                    <div class="studio-grid">
+                        <div class="studio-left">
+                            <div class="form-group">
+                                <label>📂 Pilih Model Sales Strategy</label>
+                                <select id="selectedTool" onchange="updateFormFields()"></select>
+                            </div>
+                            <div id="dynamicFields"></div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>📌 Judul Strategi</label>
+                                    <input type="text" id="resultTitle" placeholder="Judul strategi...">
+                                </div>
+                                <div class="form-group">
+                                    <label>👤 Dibuat Oleh</label>
+                                    <input type="text" id="createdBy" placeholder="Nama..." value="">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="generatePrompt()">📝 Generate Prompt</button>
+                        </div>
+                        <div class="studio-right">
+                            <div class="form-group">
+                                <label>📄 Prompt yang Dihasilkan</label>
+                                <div class="prompt-preview" id="promptPreview">
+                                    <span class="placeholder">Pilih model sales strategy dan isi form untuk menghasilkan prompt...</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>🤖 Pilih AI Source</label>
+                                <div class="ai-source-select">
+                                    <select id="aiSource">
+                                        <option value="ChatGPT">ChatGPT</option>
+                                        <option value="Claude">Claude</option>
+                                        <option value="Gemini">Gemini</option>
+                                        <option value="DeepSeek">DeepSeek</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>📝 Hasil AI (Paste di sini)</label>
+                                <div class="quill-wrapper">
+                                    <div id="resultEditor"></div>
+                                </div>
+                            </div>
+                            <div class="result-actions">
+                                <button class="btn btn-success" onclick="saveResult()">💾 Simpan Hasil</button>
+                                <button class="btn btn-warning" onclick="clearForm()">🗑️ Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="main-tab-content" id="tab3">
+                    <div class="history-sub-tabs" id="historySubTabs">
+                        <button class="history-sub-tab active" data-subtab="all" onclick="switchHistorySubTab('all')">
+                            📋 All <span class="sub-badge" id="subAll">0</span>
+                        </button>
+                        <button class="history-sub-tab" data-subtab="today" onclick="switchHistorySubTab('today')">
+                            📅 Hari Ini <span class="sub-badge" id="subToday">0</span>
+                        </button>
+                    </div>
+                    <div class="history-filters">
+                        <select id="historyFilterTool" onchange="renderHistory()">
+                            <option value="all">📋 All Types</option>
+                        </select>
+                        <input type="text" id="historySearch" placeholder="🔍 Cari..." oninput="renderHistory()">
+                        <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑️ Hapus Semua</button>
+                        <span style="font-size:13px;color:#718096;" id="historyCount">0 items</span>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <div class="empty-state">
+                            <div class="icon">📈</div>
+                            <h3>Belum ada strategi</h3>
+                            <p>Pergi ke Tab "Sales Strategy Studio" untuk mulai membuat strategi</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
+            <div class="modal-title" id="infoModalTitle">📋 Info</div>
+            <div class="modal-body" id="infoModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('infoModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+            <div class="modal-title" id="viewModalTitle">👁️ Detail Strategi</div>
+            <div class="modal-body">
+                <div id="viewMeta" style="font-size:13px;color:#718096;margin-bottom:12px;padding:8px 12px;background:#f7fafc;border-radius:8px;"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt:</div>
+                <div style="background:#f7fafc;padding:12px 16px;border-radius:8px;font-size:13px;color:#4a5568;white-space:pre-wrap;max-height:150px;overflow-y:auto;border-left:3px solid #2b6cb0;" id="viewPrompt"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">🤖 Sumber AI:</div>
+                <div style="font-size:14px;color:#4a5568;margin-bottom:8px;" id="viewSource"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">📝 Hasil AI:</div>
+                <div class="view-result-wrapper" id="viewResultWrapper"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="copyViewResult()">📋 Copy</button>
+                <button class="btn btn-success" onclick="downloadViewDoc()">📥 Download .doc</button>
+                <button class="btn btn-outline" onclick="closeModal('viewModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay add-ai-modal" id="addAiModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('addAiModal')">✕</button>
+            <div class="modal-title">🤖 Tambah Hasil AI Baru</div>
+            <div class="modal-body">
+                <input type="hidden" id="addAiId">
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt (tidak bisa diedit):</div>
+                <div class="prompt-display" id="addAiPromptDisplay"></div>
+                <div class="form-group">
+                    <label>🤖 Pilih AI Source</label>
+                    <select id="addAiSource">
+                        <option value="ChatGPT">ChatGPT</option>
+                        <option value="Claude">Claude</option>
+                        <option value="Gemini">Gemini</option>
+                        <option value="DeepSeek">DeepSeek</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>📝 Hasil AI (Paste di sini)</label>
+                    <div class="quill-wrapper">
+                        <div id="addAiEditor"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>👤 Dibuat Oleh</label>
+                    <input type="text" id="addAiCreatedBy" placeholder="Nama...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addAiModal')">Batal</button>
+                <button class="btn btn-success" onclick="saveAddAiResult()">💾 Simpan Hasil</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="duplicateModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('duplicateModal')">✕</button>
+            <div class="modal-title">📋 Duplikat Prompt</div>
+            <div class="modal-body">
+                <input type="hidden" id="dupId">
+                <input type="hidden" id="dupToolType">
+                <div class="form-group">
+                    <label>📂 Model</label>
+                    <input type="text" id="dupFrameworkDisplay" disabled style="background:#f7fafc;font-weight:600;">
+                </div>
+                <div id="dupDynamicFields"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📌 Judul Baru</label>
+                        <input type="text" id="dupTitle" placeholder="Judul baru...">
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Dibuat Oleh</label>
+                        <input type="text" id="dupCreatedBy" placeholder="Nama...">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>📄 Prompt yang Dihasilkan</label>
+                    <div class="prompt-preview" id="dupPromptPreview" style="min-height:100px;max-height:200px;">
+                        <span class="placeholder">Generate prompt dari form di atas...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('duplicateModal')">Batal</button>
+                <button class="btn btn-primary" onclick="generateDuplicatePrompt()">📝 Generate Prompt</button>
+                <button class="btn btn-success" onclick="saveDuplicate()">💾 Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== SALES STRATEGY MODEL DEFINITIONS ====================
+        const SALES_TYPES = {
+            consultative_selling: {
+                id: 'consultative_selling',
+                icon: '🎯',
+                name: 'Consultative Selling',
+                desc: 'Pendekatan konsultatif — bangun kepercayaan dulu, jual solusi belakangan. Cocok untuk layanan psikologi.',
+                color: '#2b6cb0',
+                use_for: '✅ Menjual layanan psikologi ke institusi\n✅ Menjual ke HRD perusahaan\n✅ Menjual ke kepala sekolah/universitas\n✅ Menjual konseling & terapi\n✅ Menjual training & workshop',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Strategi consultative selling Lidan Psikologi untuk target HRD perusahaan: framework 5 tahap (Connect → Explore → Advise → Recommend → Support), 20 pertanyaan discovery, script percakapan, referral program.' }
+                ],
+                contoh_hasil_note: 'Gambaran output consultative selling untuk Lidan Psikologi:',
+                contoh_hasil: [
+                    { lbl: 'Framework 5 Tahap', txt: 'CONNECT: bangun rapport & kredibilitas. EXPLORE: gali masalah. ADVISE: edukasi. RECOMMEND: rekomendasi solusi. SUPPORT: after-sales.' },
+                    { lbl: '20 Discovery Questions', txt: 'Pertanyaan untuk menggali masalah HRD/sekolah: kualitas kandidat, turnover, kesiapan kerja siswa, dll.' },
+                    { lbl: 'Script Percakapan', txt: 'Contoh dialog lengkap dengan HRD — dari opening sampai close.' },
+                    { lbl: 'Trust Builders', txt: '5 elemen kredibilitas Lidan Psikologi: psikolog berlisensi, laporan detail, pengalaman.' },
+                    { lbl: 'Referral Engine', txt: 'Cara mengubah klien puas menjadi referral.' }
+                ],
+                fields: [
+                    { key: 'product', label: 'Layanan yang Dijual', type: 'text', placeholder: 'Contoh: Psikotes Rekrutmen & Asesmen Karyawan' },
+                    { key: 'target_market', label: 'Target Market', type: 'text', placeholder: 'Contoh: HRD Manager perusahaan 100-500 karyawan di Jakarta' },
+                    { key: 'buyer_persona', label: 'Buyer Persona', type: 'text', placeholder: 'Contoh: Bu Sarah, HR Manager, 35-45 tahun, FMCG' },
+                    { key: 'pain_points', label: 'Pain Points Target', type: 'textarea', placeholder: 'Contoh: Sulit menilai kandidat dengan tepat, turnover tinggi, biaya rekrut salah' },
+                    { key: 'key_differentiator', label: 'Keunggulan Lidan Psikologi', type: 'textarea', placeholder: 'Contoh: Psikolog berlisensi, laporan psikotes lengkap, 15+ tahun pengalaman' },
+                    { key: 'price_point', label: 'Rentang Harga', type: 'text', placeholder: 'Contoh: Rp 500rb - Rp 2 juta per kandidat' },
+                    { key: 'sales_cycle', label: 'Estimasi Sales Cycle', type: 'text', placeholder: 'Contoh: 1-3 bulan dari first contact ke deal' },
+                    { key: 'goal', label: 'Target Sales', type: 'text', placeholder: 'Contoh: 5 klien baru/bulan dengan kontrak tahunan' }
+                ],
+                prompt_template: `Anda adalah Sales Strategist untuk Lidan Psikologi (layanan psikologi profesional — tes minat bakat, kesiapan kerja, psikotes rekrutmen, konseling, training). Buat strategi CONSULTATIVE SELLING LENGKAP.
+
+INFORMASI:
+- Layanan: {product}
+- Target market: {target_market}
+- Buyer persona: {buyer_persona}
+- Pain points: {pain_points}
+- Keunggulan Lidan: {key_differentiator}
+- Price point: {price_point}
+- Sales cycle: {sales_cycle}
+- Target: {goal}
+
+OUTPUT (markdown rapi):
+
+=== 1. FILOSOFI CONSULTATIVE SELLING ===
+- Prinsip utama: "Diagnose before prescribe"
+- Perbedaan consultative vs hard-selling
+- Mindset yang harus dipegang sales Lidan Psikologi
+- Kenapa pendekatan ini cocok untuk layanan psikologi
+
+=== 2. FRAMEWORK 5 TAHAP ===
+Framework detail dengan durasi per tahap:
+
+**TAHAP 1: CONNECT (Rapport Building)**
+- Tujuan: bangun kepercayaan & kredibilitas dalam 5 menit pertama
+- Taktik: riset sebelum call, personal greeting, common ground
+- Script opening (3 varian)
+- Yang HARUS dihindari
+
+**TAHAP 2: EXPLORE (Discovery)**
+- Tujuan: gali masalah & kebutuhan sebelum pitching
+- Taktik: SPIN questioning, active listening, mirroring
+- 20 discovery questions (siap pakai)
+- Cara mengenali pain point tersembunyi
+
+**TAHAP 3: ADVISE (Edukasi) ===
+- Tujuan: edukasi tanpa jualan, tunjukkan expertise
+- Taktik: insight sharing, benchmark industri, mini case study
+- Contoh edukasi: "Perusahaan dengan turnover tinggi umumnya mengalami kerugian 30% dari gaji tahunan"
+
+**TAHAP 4: RECOMMEND (Solusi) ===
+- Tujuan: rekomendasi solusi yang TAILORED
+- Formula: [Pain] + [Impact] + [Solusi Lidan] + [Bukti]
+- Contoh presentasi solusi (2 skenario: rekrutmen & asesmen)
+- Handling keberatan dengan cara konsultatif
+
+**TAHAP 5: SUPPORT (After-Sales) ===
+- Tujuan: pastikan hasil, bangun loyalitas
+- Onboarding client, follow-up 30-60-90 hari
+- Referral ask (cara minta referral dengan elegan)
+
+=== 3. SCRIPT PERCAKAPAN LENGKAP ===
+Dialog [SALES LIDAN] & [CALON KLIEN] lengkap dari Tahap 1 sampai Tahap 5. Fokus pada target {buyer_persona}.
+
+Contoh skenario: Menghubungi HR Manager perusahaan untuk menawarkan psikotes rekrutmen.
+
+=== 4. 20 DISCOVERY QUESTIONS ===
+Kategorikan jadi 4:
+- Situation questions (5)
+- Problem questions (5)
+- Implication questions (5)
+- Need-payoff questions (5)
+
+Semua question dikontekstualisasi untuk {target_market}.
+
+=== 5. TRUST BUILDERS ===
+10 elemen kredibilitas Lidan Psikologi:
+- Psikolog berlisensi HIMPSI
+- Metode tes terstandar
+- Laporan detail & actionable
+- Pengalaman 15+ tahun
+- Testimoni klien
+- dll
+
+Cara menyampaikan di setiap tahap.
+
+=== 6. OBJECTION HANDLING CONSULTATIVE ===
+10 keberatan umum dengan respon konsultatif (bukan defensif):
+1. "Mahal" → reframe ke cost of wrong hire
+2. "Sudah ada vendor" → tanya apa yang kurang
+3. "Belum butuh" → cari trigger event
+4. "Harus rapat dulu" → bantu siapkan data
+5. "Kami punya tes sendiri" → tanya efektivitas
+6. dll
+
+=== 7. TOOLS & RESOURCES ===
+- Sales kit yang dibutuhkan
+- CRM & tracking
+- Template follow-up (WA/email)
+- Proposal template (jika diperlukan)
+
+=== 8. KPI & METRICS ===
+- Discovery call rate
+- Proposal conversion rate
+- Sales cycle length
+- Average deal size
+- Referral rate
+
+Target untuk sales Lidan Psikologi.
+
+=== 9. ROADMAP 90 HARI ===
+Bulan 1: build pipeline
+Bulan 2: sharpen approach
+Bulan 3: scale & referral
+
+PENTING:
+- Semua script harus terdengar seperti konsultan, bukan sales
+- Fokus pada KEBUTUHAN klien, bukan fitur Lidan
+- Sertakan contoh konkret & angka realistis
+- Tone: profesional, empatik, kredibel
+
+Markdown rapi.`
+            },
+            spin_selling: {
+                id: 'spin_selling',
+                icon: '🔍',
+                name: 'SPIN Selling',
+                desc: 'Metode selling berbasis 4 jenis pertanyaan: Situation, Problem, Implication, Need-payoff.',
+                color: '#3182ce',
+                use_for: '✅ Sales B2B kompleks\n✅ Layanan konsultatif\n✅ Deals besar (enterprise)\n✅ Sales cycle panjang\n✅ Menjual solusi custom',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'SPIN selling untuk Lidan Psikologi — target HRD: 12 Situation questions, 12 Problem, 12 Implication, 12 Need-payoff, dengan script percakapan lengkap.' }
+                ],
+                contoh_hasil_note: 'Gambaran output SPIN Selling untuk Lidan Psikologi:',
+                contoh_hasil: [
+                    { lbl: 'Situation Questions', txt: 'Pertanyaan tentang kondisi saat ini HRD/sekolah. Contoh: "Berapa banyak kandidat yang direkrut tahun lalu?"' },
+                    { lbl: 'Problem Questions', txt: 'Gali masalah. Contoh: "Apakah pernah hire yang tidak sesuai ekspektasi?"' },
+                    { lbl: 'Implication Questions', txt: 'Perluas dampak masalah. Contoh: "Berapa biaya yang keluar kalau kandidat salah di posisi kunci?"' },
+                    { lbl: 'Need-Payoff Questions', txt: 'Bikin klien sendiri melihat nilai solusi. Contoh: "Kalau bisa prediksi kandidat yang cocok, apa dampaknya?"' },
+                    { lbl: 'Script & Framework', txt: 'Percakapan 20 menit mengikuti struktur SPIN.' }
+                ],
+                fields: [
+                    { key: 'product', label: 'Layanan yang Dijual', type: 'text', placeholder: 'Contoh: Psikotes Rekrutmen & Assessment Center' },
+                    { key: 'target_market', label: 'Target Market', type: 'text', placeholder: 'Contoh: HR Director perusahaan manufaktur 500+ karyawan' },
+                    { key: 'buyer_persona', label: 'Buyer Persona', type: 'text', placeholder: 'Contoh: Pak Budi, HR Director, 45 tahun, 15 tahun pengalaman' },
+                    { key: 'pain_points', label: 'Pain Points Utama', type: 'textarea', placeholder: 'Contoh: Bad hire cost tinggi, sulit ukur soft skill, tim HRD kurang kapasitas' },
+                    { key: 'key_impact', label: 'Impact/Dampak Masalah Klien', type: 'textarea', placeholder: 'Contoh: Kerugian Rp 300 juta/tahun karena turnover' },
+                    { key: 'solution', label: 'Solusi Lidan', type: 'textarea', placeholder: 'Contoh: Psikotes berbasis kompetensi + wawancara terstruktur' },
+                    { key: 'sales_cycle', label: 'Estimasi Sales Cycle', type: 'text', placeholder: 'Contoh: 2-4 bulan' },
+                    { key: 'goal', label: 'Target Sales', type: 'text', placeholder: 'Contoh: 3 klien enterprise baru per kuartal' }
+                ],
+                prompt_template: `Anda adalah Sales Expert yang menguasai SPIN Selling (Neil Rackham). Buat strategi SPIN SELLING LENGKAP untuk Lidan Psikologi.
+
+KONTEKS LIDAN PSIKOLOGI:
+Layanan psikologi profesional — tes minat bakat, tes kesiapan kerja, psikotes rekrutmen, assessment center, konseling, training. Target utama: HRD perusahaan, sekolah, universitas, bimbel.
+
+INFORMASI:
+- Layanan: {product}
+- Target market: {target_market}
+- Buyer persona: {buyer_persona}
+- Pain points: {pain_points}
+- Impact masalah: {key_impact}
+- Solusi Lidan: {solution}
+- Sales cycle: {sales_cycle}
+- Target: {goal}
+
+OUTPUT (markdown rapi):
+
+=== 1. PENDAHULUAN SPIN ===
+- Apa itu SPIN Selling (Situation, Problem, Implication, Need-payoff)
+- Kenapa SPIN cocok untuk layanan psikologi B2B
+- Mindset yang harus dipegang
+- Perbedaan dengan sales tradisional
+
+=== 2. SITUATION QUESTIONS (12 pertanyaan) ===
+Pertanyaan untuk memahami kondisi saat ini. Tidak terlalu banyak (jangan buat klien bosan).
+
+Kategorisasi:
+- Tentang rekrutmen (3)
+- Tentang assessment (3)
+- Tentang turnover (3)
+- Tentang pengembangan karyawan (3)
+
+Untuk setiap pertanyaan: tujuan + kapan ditanyakan.
+
+=== 3. PROBLEM QUESTIONS (12 pertanyaan) ===
+Pertanyaan untuk menggali masalah & kesulitan.
+
+Kategorisasi:
+- Kualitas hire (3)
+- Biaya rekrut (3)
+- Waktu rekrut (3)
+- Kepuasan tim/atasan (3)
+
+Untuk setiap pertanyaan: tujuan + insight yang ingin digali.
+
+=== 4. IMPLICATION QUESTIONS (12 pertanyaan) ===
+Pertanyaan untuk memperluas dampak masalah — bikin klien sadar urgensi.
+
+Kategorisasi:
+- Dampak finansial (3)
+- Dampak operasional (3)
+- Dampak tim (3)
+- Dampak strategis (3)
+
+**Ini bagian paling penting dalam SPIN.**
+Untuk setiap pertanyaan: tujuan + contoh reaksi klien + cara lanjut.
+
+=== 5. NEED-PAYOFF QUESTIONS (12 pertanyaan) ===
+Pertanyaan yang membuat klien SENDIRI melihat nilai solusi.
+
+Kategorisasi:
+- Bayangkan kondisi ideal (3)
+- Manfaat solusi (3)
+- Prioritas (3)
+- Keputusan (3)
+
+Untuk setiap pertanyaan: tujuan + cara sampaikan.
+
+=== 6. SCRIPT PERCAKAPAN SPIN LENGKAP ===
+Dialog lengkap 20-30 menit dengan pola SPIN:
+- Opening (2 menit)
+- S: Situation (5 menit)
+- P: Problem (7 menit)
+- I: Implication (8 menit)
+- N: Need-payoff (5 menit)
+- Next steps (3 menit)
+
+Format dialog [SALES LIDAN] & [HRD]. Target: {buyer_persona}.
+
+Sertakan tanda (S), (P), (I), (N) di setiap pertanyaan.
+
+=== 7. TIPS MENDALAM SPIN ===
+- Cara membuat Implication questions yang kuat
+- Kapan berhenti bertanya dan mulai presentasi
+- Cara handle klien yang tidak mau jujur
+- Cara membaca buying signal
+- Kapan SPIN tidak cocok (misal: transaksional)
+
+=== 8. OBJECTION HANDLING SPIN-STYLE ===
+10 keberatan dengan respon SPIN (bukan defensive):
+- Klien mengelak dengan "belum butuh"
+- Klien bilang "mahal"
+- Klien bilang "sudah ada vendor"
+- dll
+
+=== 9. KPI & MEASUREMENT ===
+- Discovery call quality score
+- Ratio question vs statement (target: 70% bertanya)
+- Conversion rate per tahap
+- Average deal size
+
+=== 10. ROADMAP IMPLEMENTASI ===
+Minggu 1-4: Latihan SPIN & role-play
+Bulan 2: Terapkan di 5 call pertama
+Bulan 3: Review & refine
+
+PENTING:
+- SPIN bukan interogasi — tetap human & hangat
+- Jangan tanya terlalu banyak Situation questions (klien bosan)
+- Implication questions HARUS disampaikan dengan empati
+- Setiap pertanyaan harus punya TUJUAN
+- Sesuaikan bahasa dengan level {buyer_persona}
+
+Markdown rapi.`
+            },
+            solution_selling: {
+                id: 'solution_selling',
+                icon: '💡',
+                name: 'Solution Selling',
+                desc: 'Fokus pada diagnosis masalah klien, lalu presentasikan solusi yang benar-benar tailored.',
+                color: '#2f855a',
+                use_for: '✅ Layanan psikologi kompleks\n✅ Assessment center\n✅ Custom training\n✅ Konsultasi organisasi\n✅ Program jangka panjang',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Solution selling Lidan Psikologi untuk sekolah — framework diagnosa masalah siswa & guru, solusi modular (tes minat bakat, training guru, konseling siswa), 3 paket solusi.' }
+                ],
+                contoh_hasil_note: 'Gambaran output solution selling:',
+                contoh_hasil: [
+                    { lbl: 'Diagnosis Framework', txt: 'Cara diagnosa masalah institusi sebelum rekomendasi.' },
+                    { lbl: 'Solution Modules', txt: 'Layanan Lidan dipecah jadi modul yang bisa dikombinasi.' },
+                    { lbl: 'Pain-to-Solution Map', txt: 'Mapping pain point → solusi spesifik → hasil.' },
+                    { lbl: 'Presentasi Solusi', txt: 'Cara presentasi solusi dengan storytelling + ROI.' },
+                    { lbl: '3 Paket Solusi', txt: 'Paket Basic, Pro, Enterprise dengan harga & benefit.' }
+                ],
+                fields: [
+                    { key: 'product', label: 'Layanan Utama', type: 'text', placeholder: 'Contoh: Program Pengembangan Karir Siswa' },
+                    { key: 'target_market', label: 'Target Market', type: 'text', placeholder: 'Contoh: SMA swasta dengan 500+ siswa' },
+                    { key: 'buyer_persona', label: 'Buyer Persona', type: 'text', placeholder: 'Contoh: Kepala Sekolah / Wakil Kurikulum' },
+                    { key: 'pain_points', label: 'Masalah Target', type: 'textarea', placeholder: 'Contoh: Siswa bingung pilih jurusan, banyak salah jurusan, orang tua khawatir' },
+                    { key: 'solution_modules', label: 'Modul Solusi Lidan', type: 'textarea', placeholder: 'Contoh: Tes minat bakat, workshop siswa, training guru BK, laporan orang tua' },
+                    { key: 'price_range', label: 'Rentang Harga', type: 'text', placeholder: 'Contoh: Rp 100rb - Rp 500rb per siswa' },
+                    { key: 'proof_points', label: 'Bukti Sosial', type: 'textarea', placeholder: 'Contoh: 200+ sekolah, 50.000+ siswa terlayani, testimoni kepala sekolah' },
+                    { key: 'goal', label: 'Target Sales', type: 'text', placeholder: 'Contoh: 3 sekolah baru per bulan' }
+                ],
+                prompt_template: `Anda adalah Solution Selling Expert. Buat strategi SOLUTION SELLING LENGKAP untuk Lidan Psikologi.
+
+KONTEKS LIDAN PSIKOLOGI:
+Layanan psikologi profesional — tes minat bakat, tes kesiapan kerja, psikotes rekrutmen, assessment center, konseling, training. Sudah membantu 200+ sekolah, 50.000+ siswa, dan berbagai perusahaan.
+
+INFORMASI:
+- Layanan: {product}
+- Target market: {target_market}
+- Buyer persona: {buyer_persona}
+- Pain points: {pain_points}
+- Modul solusi: {solution_modules}
+- Harga: {price_range}
+- Bukti sosial: {proof_points}
+- Target: {goal}
+
+OUTPUT (markdown rapi):
+
+=== 1. FILOSOFI SOLUTION SELLING ===
+- Prinsip: "Don't sell products, solve problems"
+- Perbedaan dengan product selling
+- Kenapa cocok untuk Lidan Psikologi
+- Mindset yang dibutuhkan
+
+=== 2. DIAGNOSIS FRAMEWORK ===
+Framework diagnosa masalah klien sebelum jual:
+
+**STEP 1: Symptoms (Gejala)**
+- Apa yang klien lihat/keluhkan? Contoh: "Banyak siswa salah jurusan"
+- Cara identifikasi symptom
+
+**STEP 2: Impact (Dampak)**
+- Apa dampaknya ke institusi? Contoh: "Reputasi sekolah turun, orang tua komplain"
+
+**STEP 3: Root Cause (Akar Masalah)**
+- Apa penyebab sebenarnya? Contoh: "Tidak ada sistem assessment yang sistematis"
+
+**STEP 4: Desired State (Kondisi Ideal)**
+- Apa yang klien mau capai? Contoh: "Siswa pilih jurusan tepat, orang tua puas"
+
+**STEP 5: Solution (Solusi)**
+- Baru masuk solusi Lidan yang tailored
+
+=== 3. PAIN-TO-SOLUTION MAP ===
+Tabel mapping:
+| Pain Point | Impact | Lidan Solution | Expected Result |
+
+Contoh: 
+- Pain: Siswa salah jurusan
+- Impact: Reputasi sekolah + retensi siswa
+- Solusi: Tes minat bakat + konseling
+- Result: 90% siswa pilih jurusan tepat
+
+Buat 10 mapping untuk pain point berbeda.
+
+=== 4. SOLUTION MODULES ===
+Pecah layanan Lidan jadi modul modular:
+- Modul 1: [Nama modul, durasi, output]
+- Modul 2: ...
+- Modul 3: ...
+
+Setiap modul bisa dikombinasi sesuai kebutuhan klien.
+
+=== 5. 3 PAKET SOLUSI ===
+Buat 3 paket siap jual:
+
+**PAKET STARTER** (untuk budget terbatas)
+- Isi paket
+- Harga
+- Cocok untuk siapa
+- Benefit konkret
+
+**PAKET PROFESSIONAL** (mid-tier)
+- Isi paket (lebih lengkap)
+- Harga
+- Positioning
+- Value lebih besar
+
+**PAKET ENTERPRISE** (full service)
+- Isi paket (paling lengkap)
+- Harga
+- Bonus & extra
+- Cocok untuk institusi besar
+
+=== 6. SCRIPT PRESENTASI SOLUSI ===
+Script lengkap presentasi ke {buyer_persona}:
+- Rekap pain point yang sudah didengar (build trust)
+- Presentasi impact (bikin urgensi)
+- Presentasi solusi (modular, tailored)
+- Presentasi bukti (testimoni, data, studi kasus)
+- Presentasi harga (value-based)
+- Handling keberatan harga
+- Closing
+
+Format dialog, target 15-20 menit.
+
+=== 7. STORYTELLING FRAMEWORK ===
+Framework presentasi solusi dengan cerita:
+- Hero (klien) 
+- Villain (masalah)
+- Guide (Lidan)
+- Plan (solusi)
+- Success (hasil)
+
+Buat 1 contoh story lengkap.
+
+=== 8. OBJECTION HANDLING ===
+10 keberatan umum + respon solution-selling style:
+- "Mahal" → reframe ke ROI
+- "Sudah ada vendor" → tanya gap-nya
+- "Belum butuh sekarang" → tandai trigger event
+- "Harus rapat" → bantu siapkan deck
+- "Kurang yakin hasil" → tunjukkan data
+- dll
+
+=== 9. PROPOSAL & SALES KIT ===
+- Struktur proposal ideal (12 halaman)
+- Sales deck outline (15 slide)
+- One-pager summary
+- ROI calculator template
+
+=== 10. ROI CALCULATOR ===
+Formula ROI untuk tiap layanan:
+- Tes minat bakat: ROI = (siswa tidak salah jurusan × biaya kuliah 1 semester) - investasi
+- Psikotes rekrutmen: ROI = (bad hire cost avoided × jumlah hire) - investasi
+- Training: ROI = (produktivitas increase × gaji) - investasi
+
+Sertakan contoh kalkulasi konkret.
+
+=== 11. KPI & PIPELINE ===
+- Pipeline stages: Suspect → Prospect → Qualified → Proposal → Close
+- Conversion rate target per stage
+- Average sales cycle
+- Average deal size
+
+=== 12. REFERRAL ENGINE ===
+- Kapan minta referral (setelah hasil positif)
+- Cara minta referral elegan
+- Program referral (diskon untuk yang refer)
+
+PENTING:
+- SOLUSI HARUS TAILORED, bukan template
+- Fokus pada HASIL yang didapat klien
+- Sertakan angka & bukti konkret
+- Presentasi solusi harus pakai storytelling
+- Jangan presentasi solusi sebelum diagnosa selesai
+
+Markdown rapi.`
+            },
+            challenger_sale: {
+                id: 'challenger_sale',
+                icon: '⚡',
+                name: 'The Challenger Sale',
+                desc: 'Pendekatan yang menantang asumsi klien dengan insight baru — Teach, Tailor, Take Control.',
+                color: '#c05621',
+                use_for: '✅ Klien yang sudah punya vendor\n✅ Pasar yang jenuh\n✅ Menjual sesuatu yang baru/unik\n✅ Disruptive service\n✅ Mindset klien perlu digeser',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Challenger sale Lidan Psikologi: commercial teaching tentang "hidden cost of wrong hire" — bikin HRD sadar masalah yang belum mereka lihat, lalu posisikan Lidan sebagai solusi.' }
+                ],
+                contoh_hasil_note: 'Gambaran output challenger sale:',
+                contoh_hasil: [
+                    { lbl: 'Commercial Teaching', txt: 'Insight baru yang menantang asumsi. Contoh: "80% bad hire bisa diprediksi dengan tes psikotes."' },
+                    { lbl: 'Reframe Masalah', txt: 'Bantu klien lihat masalah dari sudut pandang baru.' },
+                    { lbl: 'Tailor Message', txt: 'Sesuaikan pesan dengan persona (HR, Direktur, Kepsek).' },
+                    { lbl: 'Take Control', txt: 'Kendalikan percakapan, jangan ikut arus.' },
+                    { lbl: 'Teaching Pitch', txt: 'Script 6-tahap teaching pitch yang powerful.' }
+                ],
+                fields: [
+                    { key: 'product', label: 'Layanan yang Dijual', type: 'text', placeholder: 'Contoh: Asesmen Psikologi untuk Rekrutmen' },
+                    { key: 'target_market', label: 'Target Market', type: 'text', placeholder: 'Contoh: HR Manager perusahaan teknologi yang sudah pakai vendor' },
+                    { key: 'buyer_persona', label: 'Buyer Persona', type: 'text', placeholder: 'Contoh: Bu Rina, HR Manager, 35 tahun, pernah pakai vendor lain' },
+                    { key: 'current_belief', label: 'Keyakinan Klien Saat Ini', type: 'textarea', placeholder: 'Contoh: "Psikotes hanya formalitas, keputusan akhirnya tetap feeling"' },
+                    { key: 'challenger_insight', label: 'Insight Menantang', type: 'textarea', placeholder: 'Contoh: "Data Lidan: 80% bad hire bisa diprediksi dari 3 aspek psikotes"' },
+                    { key: 'key_differentiator', label: 'Keunggulan Unik Lidan', type: 'textarea', placeholder: 'Contoh: Laporan prediktif, benchmark industri, 15 tahun data' },
+                    { key: 'goal', label: 'Target', type: 'text', placeholder: 'Contoh: 5 klien yang migrasi dari vendor lama' }
+                ],
+                prompt_template: `Anda adalah Challenger Sale Expert (Matthew Dixon & Brent Adamson). Buat strategi CHALLENGER SALE LENGKAP untuk Lidan Psikologi.
+
+KONTEKS LIDAN PSIKOLOGI:
+Layanan psikologi profesional — tes minat bakat, tes kesiapan kerja, psikotes rekrutmen, assessment center, konseling, training. Cocok untuk klien yang jenuh dengan vendor lama.
+
+INFORMASI:
+- Layanan: {product}
+- Target market: {target_market}
+- Buyer persona: {buyer_persona}
+- Keyakinan klien saat ini: {current_belief}
+- Insight menantang: {challenger_insight}
+- Keunggulan Lidan: {key_differentiator}
+- Target: {goal}
+
+OUTPUT (markdown rapi):
+
+=== 1. FILOSOFI CHALLENGER SALE ===
+- 3 tipe sales: Relationship Builder, Product Expert, Challenger
+- Kenapa Challenger paling berhasil di pasar jenuh
+- Prinsip utama: Teach, Tailor, Take Control
+- Kenapa cocok untuk Lidan Psikologi
+
+=== 2. CORE TEACHING (Insight Menantang) ===
+Bangun insight yang menantang asumsi klien:
+
+**A. Ketidaknyamanan Pasar**
+- Fakta mengejutkan tentang industri psikologi/rekrutmen Indonesia
+- Data atau studi yang mendukung
+- Contoh: "70% karyawan resign dalam 6 bulan pertama karena mismatch budaya, bukan skill"
+
+**B. Mengapa Konvensional Gagal**
+- Bongkar kelemahan pendekatan lama klien
+- Contoh: "Tes IQ saja tidak cukup — 60% job performance dipengaruhi soft skill"
+
+**C. Solusi Baru (Reframe)**
+- Perkenalkan cara baru melihat masalah
+- Posisikan Lidan sebagai enabler
+- Contoh: "Asesmen prediktif berbasis kompetensi + simulasi"
+
+**D. Bukti**
+- Data Lidan: hasil dengan 200+ sekolah & perusahaan
+- Testimoni klien
+- Studi kasus
+
+=== 3. 6-TAHAP TEACHING PITCH ===
+Framework Challenger untuk mempresentasikan insight:
+
+**1. THE WARMER** (Rapport + Credibility)
+- Opening yang tidak biasa (bukan "how are you")
+- Bangun kredibilitas dengan insight awal
+
+**2. THE REFRAME** (Bongkar Asumsi)
+- Tantang cara pandang klien
+- Contoh: "Bu Rina, banyak HR yang hire berdasarkan intuisi. Tapi data Lidan menunjukkan intuisi akurat hanya 50%. Apakah perusahaan Bu Rina sudah punya cara untuk mengukur ini?"
+
+**3. RATIONAL DROWNING** (Overload Insight)
+- Banjiri dengan insight & data
+- 5 fakta mengejutkan tentang {pain_point}
+
+**4. EMOTIONAL IMPACT** (Ceritakan Kerugian)
+- Storytelling tentang klien yang mengalami bad hire
+- Angka kerugian nyata
+- Buat klien merasa "ini bisa terjadi ke saya"
+
+**5. A NEW WAY** (Solusi Baru)
+- Presentasikan solusi Lidan sebagai cara baru
+- Bukan "lebih baik dari vendor lama", tapi "berbeda secara fundamental"
+- Framework 3-langkah Lidan
+
+**6. YOUR SOLUTION** (Tailored)
+- Sesuaikan dengan konteks klien
+- ROI calculator
+- Next steps
+
+=== 4. SCRIPT CHALLENGER PITCH LENGKAP ===
+Dialog lengkap 25-30 menit dengan {buyer_persona}. Ikuti 6 tahap di atas.
+
+Sertakan tanda tahap di setiap bagian. Fokus: REFRAME keyakinan klien "{current_belief}".
+
+=== 5. TAILOR MESSAGE PER PERSONA ===
+Cara menyesuaikan pesan untuk:
+
+**Untuk HRD/HR Manager:**
+- Fokus: efisiensi, akurasi, gap assessment
+- Insight: "Rekrut salah = rugi 2x gaji tahunan"
+
+**Untuk Direktur/C-Level:**
+- Fokus: ROI, competitive advantage, strategi
+- Insight: "Kualitas talent = 40% profitabilitas"
+
+**Untuk Kepala Sekolah:**
+- Fokus: reputasi sekolah, akreditasi, orang tua
+- Insight: "Sekolah dengan data siswa kuat = 3x lebih menarik bagi orang tua"
+
+**Untuk Universitas:**
+- Fokus: daya serap lulusan, akreditasi
+- Insight: "Alumni siap kerja = magnet mahasiswa baru"
+
+Buat poin & hook untuk tiap persona.
+
+=== 6. TAKE CONTROL ===
+- Cara memimpin percakapan (bukan reaktif)
+- Handling 10 objeksi TANPA kehilangan momentum:
+  - "Mahal" → reframe dengan cost of inaction
+  - "Sudah ada vendor" → tantang dengan benchmark
+  - "Belum butuh" → tandai trigger & biarkan klien "mikir"
+  - "Kami bisa lakukan sendiri" → tunjukkan opportunity cost
+  - dll
+
+=== 7. COMMERCIAL INSIGHT BANK ===
+20 insight menarik tentang:
+- Rekrutmen di Indonesia
+- Kesiapan kerja fresh graduate
+- Kesehatan mental karyawan
+- Minat bakat anak remaja
+- Efektivitas training
+
+Yang bisa dipakai sales untuk challenge klien.
+
+=== 8. OBJECTION HANDLING CHALLENGER STYLE ===
+10 objeksi dengan respon challenger (berani, bukan arogan):
+
+Sertakan script untuk tiap objeksi dengan tone: "Saya paham, tapi...", "Data kami menunjukkan...", "Justru itu masalahnya..."
+
+=== 9. EMAIL & FOLLOW-UP ===
+- Email pitch pertama (menantang, bukan jualan)
+- Follow-up sequence 5 email
+- Contoh subject line yang "provokatif tapi sopan"
+
+=== 10. KPI & LEADERSHIP ===
+- Challenger sales rep scorecard
+- Metrics penting: insight delivered, reframe success, etc.
+- Coaching untuk tim sales
+
+=== 11. LATIHAN ROLE-PLAY ===
+3 skenario latihan:
+1. Klien skeptis
+2. Klien dengan vendor lama
+3. Klien yang belum butuh
+
+PENTING:
+- CHALLENGER bukan arogan — tetap empatik
+- Insight harus BERDASARKAN DATA, bukan opini
+- Reframe HARUS membuat klien lihat masalah dari sudut baru
+- Sesuaikan tone dengan {buyer_persona}
+- Jangan pernah merendahkan kompetitor
+
+Markdown rapi.`
+            },
+            meddic: {
+                id: 'meddic',
+                icon: '📊',
+                name: 'MEDDIC Framework',
+                desc: 'Framework kualifikasi lead enterprise: Metrics, Economic Buyer, Decision Criteria, Decision Process, Identify Pain, Champion.',
+                color: '#6b46c1',
+                use_for: '✅ Sales enterprise/B2B besar\n✅ Kontrak bernilai tinggi\n✅ Sales cycle panjang\n✅ Multi-stakeholder decision\n✅ Institusi besar',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'MEDDIC untuk Lidan Psikologi — target universitas besar: kualifikasi 6 komponen, checklist pertanyaan, red flags, scoring pipeline.' }
+                ],
+                contoh_hasil_note: 'Gambaran output MEDDIC:',
+                contoh_hasil: [
+                    { lbl: 'Metrics', txt: 'Metrik yang jadi ukuran sukses klien — yang bisa di-quantify.' },
+                    { lbl: 'Economic Buyer', txt: 'Siapa yang pegang budget & punya final say.' },
+                    { lbl: 'Decision Criteria', txt: 'Kriteria apa yang klien pakai untuk pilih vendor.' },
+                    { lbl: 'Decision Process', txt: 'Bagaimana proses keputusan berjalan (steps, timeline, stakeholder).' },
+                    { lbl: 'Identify Pain', txt: 'Masalah konkret yang klien alami.' },
+                    { lbl: 'Champion', txt: 'Siapa internal yang mendukung kita.' }
+                ],
+                fields: [
+                    { key: 'product', label: 'Layanan yang Dijual', type: 'text', placeholder: 'Contoh: Kerja Sama Jangka Panjang Asesmen Karyawan' },
+                    { key: 'target_market', label: 'Target Institusi', type: 'text', placeholder: 'Contoh: Universitas swasta dengan 10.000+ mahasiswa' },
+                    { key: 'contact', label: 'Kontak Utama', type: 'text', placeholder: 'Contoh: Ibu Dewi, Kepala BKK Universitas X' },
+                    { key: 'deal_size', label: 'Estimasi Deal Size', type: 'text', placeholder: 'Contoh: Rp 500 juta/tahun' },
+                    { key: 'sales_cycle', label: 'Estimasi Sales Cycle', type: 'text', placeholder: 'Contoh: 4-6 bulan' },
+                    { key: 'pain_points', label: 'Pain Points Terindikasi', type: 'textarea', placeholder: 'Contoh: Lulusan susah terserap kerja, akreditasi butuh data' },
+                    { key: 'stakeholders', label: 'Stakeholder yang Terlibat', type: 'textarea', placeholder: 'Contoh: Rektor, Wakil Rektor, Kepala BKK, Bagian Keuangan' },
+                    { key: 'champion_candidate', label: 'Calon Champion', type: 'text', placeholder: 'Contoh: Ibu Dewi (antusias tapi bukan pengambil keputusan)' }
+                ],
+                prompt_template: `Anda adalah Enterprise Sales Expert yang menguasai MEDDIC/MEDDPICC. Buat kualifikasi & strategi MEDDIC untuk Lidan Psikologi.
+
+KONTEKS LIDAN PSIKOLOGI:
+Layanan psikologi profesional — tes minat bakat, kesiapan kerja, psikotes rekrutmen, assessment center, konseling, training. Deal B2B institusional.
+
+INFORMASI:
+- Layanan: {product}
+- Target institusi: {target_market}
+- Kontak utama: {contact}
+- Deal size: {deal_size}
+- Sales cycle: {sales_cycle}
+- Pain points: {pain_points}
+- Stakeholder: {stakeholders}
+- Calon Champion: {champion_candidate}
+
+OUTPUT (markdown rapi):
+
+=== 1. PENDAHULUAN MEDDIC ===
+- Apa itu MEDDIC/MEDDPICC
+- Kenapa cocok untuk enterprise sales Lidan Psikologi
+- Kapan MEDDIC relevan vs overkill
+- Cara pakai framework ini
+
+=== 2. M — METRICS ===
+Apa yang akan diukur? Metrik yang klien pedulikan.
+
+Untuk setiap layanan Lidan, tentukan metrics:
+- Untuk {product}: metrics seperti conversion rate alumni, retensi karyawan, akurasi hire
+- Cara quantify (dari X ke Y)
+- Contoh: "Meningkatkan % lulusan terserap kerja dari 60% ke 80% dalam 1 tahun"
+
+5-7 pertanyaan untuk gali metrics ke {contact}.
+
+=== 3. E — ECONOMIC BUYER ===
+Siapa yang pegang budget & final decision?
+
+- Daftar kemungkinan Economic Buyer di {target_market}
+  (Rektor? Direktur HR? CFO? Kabag?)
+- Cara identifikasi EB di awal
+- 5 pertanyaan untuk validasi EB
+- Strategi approach ke EB (bukan langsung, tapi via champion)
+
+=== 4. D — DECISION CRITERIA ===
+Kriteria apa yang klien pakai untuk pilih vendor?
+
+Kategori untuk industri psikologi:
+- Kredibilitas & sertifikasi (HIMPSI, izin)
+- Metode tes (validity, reliability)
+- Reporting quality
+- Harga
+- After-sales support
+- Referensi & pengalaman
+- Integrasi dengan sistem existing
+
+5-7 pertanyaan untuk gali kriteria.
+
+=== 5. D — DECISION PROCESS ===
+Bagaimana keputusan diambil?
+
+- Map step by step (dari identifikasi kebutuhan sampai tanda tangan)
+- Timeline realistic untuk {target_market}
+- Stakeholder di setiap step
+- Approval layer
+- Legal & procurement involvement
+- 5 pertanyaan untuk validasi process
+- Red flags (kalau process tidak jelas = deal macet)
+
+=== 6. I — IDENTIFY PAIN ===
+Gali pain point konkret & dampaknya.
+
+- 6 pain point umum di {target_market}
+- Cara validasi pain (jangan asumsi)
+- 10 pertanyaan untuk validasi pain
+- Impact quantification (pain → cost → urgency)
+- Kaitkan pain dengan solusi Lidan
+
+=== 7. C — CHAMPION ===
+Identifikasi & kembangkan champion internal.
+
+- Apa itu champion (bukan sekedar kontak)
+- Ciri champion sejati
+- Cara test kandidat champion ({champion_candidate})
+- 3 test untuk validasi champion:
+  1. Apakah mau share info sensitif?
+  2. Apakah mau endorse internal?
+  3. Apakah punya political capital?
+- Cara empower champion
+- Kapan ganti champion (kalau tidak efektif)
+
+=== 8. CHECKLIST KUALIFIKASI ===
+Checklist 30 pertanyaan untuk menguji apakah deal benar-benar layak dikejar:
+
+| Komponen | Pertanyaan | Status |
+M: Metric yang diukur? | Ya/Tidak |
+E: Siapa EB? | Ya/Tidak |
+...
+
+Rule: minimal 5 dari 6 komponen hijau untuk lanjut ke proposal.
+
+=== 9. RED FLAGS ===
+10 red flags yang menandakan deal TIDAK akan close:
+- EB tidak bisa diakses
+- Decision process tidak jelas
+- Tidak ada champion
+- Klien tidak mau share data
+- Timeline tidak jelas
+- dll
+
+Apa yang harus dilakukan kalau ketemu red flag.
+
+=== 10. DEAL SCORING ===
+Score deal dari 0-100:
+- Metrics defined: 15 poin
+- EB identified: 20 poin
+- Criteria known: 15 poin
+- Process mapped: 15 poin
+- Pain validated: 20 poin
+- Champion active: 15 poin
+
+Interpretasi score:
+- < 50: belum qualified, jangan buang waktu
+- 50-70: nurture
+- 70-85: qualified, push to proposal
+- > 85: hot deal, prioritize
+
+Contoh score untuk target {target_market}.
+
+=== 11. STRATEGY & ROADMAP ===
+Strategi 90 hari untuk deal ini:
+- Bulan 1: kualifikasi (identify EB, pain, criteria)
+- Bulan 2: build champion + proposal
+- Bulan 3: close
+
+Milestone per minggu.
+
+=== 12. SCRIPT KUALIFIKASI ===
+Script percakapan untuk menggali setiap komponen MEDDIC — tanpa terasa interogasi.
+
+PENTING:
+- MEDDIC bukan checklist sekali jalan — validasi berkala
+- Jangan skip komponen karena "kayaknya aman"
+- EB bisa berubah seiring waktu — re-validasi
+- Champion harus DIVALIDASI (banyak yang hanya jadi sponsor pasif)
+
+Markdown rapi.`
+            },
+            bant: {
+                id: 'bant',
+                icon: '✅',
+                name: 'BANT Qualification',
+                desc: 'Kualifikasi lead cepat: Budget, Authority, Need, Timeline. Untuk screening pipeline.',
+                color: '#38a169',
+                use_for: '✅ Screening lead cepat\n✅ Sales volume tinggi\n✅ Telemarketing\n✅ Kualifikasi awal\n✅ Prioritas pipeline',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'BANT qualification untuk Lidan Psikologi — script 15 menit untuk screening lead sekolah, framework scoring, kapan lanjut / kapan drop lead.' }
+                ],
+                contoh_hasil_note: 'Gambaran output BANT:',
+                contoh_hasil: [
+                    { lbl: 'Budget Check', txt: 'Cara halus tanya budget tanpa terkesan matre.' },
+                    { lbl: 'Authority Check', txt: 'Identifikasi siapa pengambil keputusan.' },
+                    { lbl: 'Need Check', txt: 'Validasi kebutuhan nyata vs nice-to-have.' },
+                    { lbl: 'Timeline Check', txt: 'Kapan klien mau eksekusi.' },
+                    { lbl: 'Scoring & Action', txt: 'Skor tiap komponen → action (lanjut/nurture/drop).' }
+                ],
+                fields: [
+                    { key: 'product', label: 'Layanan yang Dijual', type: 'text', placeholder: 'Contoh: Tes Minat Bakat untuk SMA' },
+                    { key: 'lead_source', label: 'Sumber Lead', type: 'text', placeholder: 'Contoh: Webinar, event, inbound, referral' },
+                    { key: 'contact', label: 'Kontak Awal', type: 'text', placeholder: 'Contoh: Pak Andi, Wakil Kurikulum SMA X' },
+                    { key: 'industry', label: 'Industri', type: 'text', placeholder: 'Contoh: Pendidikan / Kesehatan / Corporate' },
+                    { key: 'avg_deal_size', label: 'Rata-rata Deal Size', type: 'text', placeholder: 'Contoh: Rp 30 juta - Rp 100 juta' },
+                    { key: 'goal', label: 'Target Sales', type: 'text', placeholder: 'Contoh: 10 lead qualified per bulan' }
+                ],
+                prompt_template: `Anda adalah Sales Qualification Expert yang menguasai BANT (Budget, Authority, Need, Timeline). Buat framework kualifikasi BANT untuk Lidan Psikologi.
+
+KONTEKS LIDAN PSIKOLOGI:
+Layanan psikologi profesional — tes minat bakat, kesiapan kerja, psikotes rekrutmen, assessment center, konseling, training. Target: sekolah, universitas, perusahaan, individu.
+
+INFORMASI:
+- Layanan: {product}
+- Sumber lead: {lead_source}
+- Kontak awal: {contact}
+- Industri: {industry}
+- Deal size: {avg_deal_size}
+- Target: {goal}
+
+OUTPUT (markdown rapi):
+
+=== 1. PENDAHULUAN BANT ===
+- Apa itu BANT & kenapa penting untuk screening
+- Kapan BANT dipakai
+- Keterbatasan BANT (BANT bukan segalanya)
+- Kombinasi dengan framework lain (misal SPIN untuk discovery, MEDDIC untuk enterprise)
+
+=== 2. B — BUDGET ===
+Cara mengukur apakah lead punya budget.
+
+**Challenge:** Bertanya budget terdengar tidak sopan.
+**Solution:** Tanya secara tidak langsung & kontekstual.
+
+**10 pertanyaan halus untuk gali budget:**
+Contoh:
+- "Sekolah Bapak biasanya alokasi budget pengembangan siswa berapa persen dari total?"
+- "Untuk tahun ini, program apa saja yang sudah direncanakan?"
+- "Apakah sekolah pernah investasi di program serupa sebelumnya? Berapa range-nya?"
+
+**Kategori Budget Fit:**
+- 🟢 Budget confirmed & sesuai (deal size {avg_deal_size})
+- 🟡 Budget ada tapi belum tahu range
+- 🔴 Budget tidak ada / jauh dari range
+
+**Kalau budget tidak ada:**
+- Lead masih layak? Kapan?
+- Trigger event (anggaran tahunan, hibah, akhir tahun ajaran)
+- Roadmap nurturing
+
+=== 3. A — AUTHORITY ===
+Identifikasi siapa pengambil keputusan.
+
+**Tipe Contact:**
+- Decision Maker (punya final say)
+- Influencer (memberi rekomendasi)
+- User (menggunakan layanan)
+- Gatekeeper (menghalangi / memblokir)
+
+**10 pertanyaan untuk validasi Authority:**
+Contoh:
+- "Untuk keputusan seperti ini, siapa saja yang biasanya terlibat?"
+- "Apakah Bapak bisa memutuskan sendiri, atau perlu persetujuan?"
+- "Kalau ada pertemuan lanjutan, siapa yang sebaiknya hadir?"
+
+**Strategi Multi-threading:**
+- Jangan bergantung pada 1 kontak
+- Bangun hubungan dengan minimal 3 stakeholder
+- Map: siapa? role? influence level?
+
+=== 4. N — NEED ===
+Validasi apakah kebutuhannya nyata.
+
+**Tipe Need:**
+- Explicit Need (klien sudah sadar & sebutkan)
+- Latent Need (ada tapi belum sadar — perlu edukasi)
+- No Need (tidak butuh — drop atau nurture)
+
+**10 pertanyaan untuk validasi Need:**
+Contoh:
+- "Apa tantangan terbesar yang dihadapi saat ini?"
+- "Apakah masalah ini sudah pernah dicoba diatasi? Bagaimana hasilnya?"
+- "Kalau masalah ini tidak diselesaikan, apa dampaknya?"
+
+**Pain vs Nice-to-Have:**
+- Kalau pain → urgensi tinggi
+- Kalau nice-to-have → nurture, jangan push
+
+**Hubungkan ke solusi Lidan:**
+Untuk {product}, pain yang paling relevan: [list]
+
+=== 5. T — TIMELINE ===
+Kapan klien mau eksekusi.
+
+**Kategori Timeline:**
+- 🟢 Immediate (0-1 bulan)
+- 🟡 Short (1-3 bulan)
+- 🟠 Medium (3-6 bulan)
+- 🔴 Long (> 6 bulan)
+- ⚫ No timeline (dreamer)
+
+**10 pertanyaan untuk gali Timeline:**
+Contoh:
+- "Kapan idealnya program ini bisa mulai?"
+- "Ada momen spesifik yang jadi target? (misal: awal tahun ajaran)"
+- "Kalau kita siap bulan depan, apakah bisa langsung jalan?"
+
+**Kalau timeline jauh:**
+- Follow-up cadence (bulanan/kuartalan)
+- Trigger events (budget cycle, ajaran baru)
+- Nurture content
+
+=== 6. SCRIPT BANT QUALIFICATION LENGKAP ===
+Dialog 15-20 menit untuk lead baru ({contact}):
+
+**Opening (2 menit):** perkenalan + set agenda
+**B — Budget (3 menit):** gali range halus
+**A — Authority (3 menit):** identifikasi decision maker
+**N — Need (4 menit):** validasi pain
+**T — Timeline (3 menit):** kapan eksekusi
+**Wrap-up (2 menit):** next step
+
+Format dialog, tone: profesional, empatik, tidak interogatif.
+
+=== 7. SCORING SYSTEM ===
+Score tiap komponen 0-25 (total 100):
+
+**BUDGET:**
+- 25: Confirmed & sesuai
+- 15: Ada tapi belum range
+- 5: Tidak ada
+- 0: Jelas tidak ada
+
+**AUTHORITY:**
+- 25: Kontak = decision maker
+- 15: Kontak punya akses ke DM
+- 5: Kontak bukan siapa-siapa
+- 0: Gatekeeper
+
+**NEED:**
+- 25: Pain eksplisit, urgent
+- 15: Pain tapi belum urgent
+- 5: Nice-to-have
+- 0: Tidak butuh
+
+**TIMELINE:**
+- 25: < 1 bulan
+- 15: 1-3 bulan
+- 10: 3-6 bulan
+- 5: > 6 bulan
+- 0: Tidak ada
+
+**INTERPRETASI:**
+- 80-100: HOT 🔥 — prioritize, follow up dalam 24 jam
+- 60-79: WARM 🟡 — nurture, follow up mingguan
+- 40-59: COOL 🟠 — masuk nurture list
+- < 40: COLD ❄️ — drop atau re-engage 6 bulan lagi
+
+=== 8. APPLY KE CONTOH ===
+Ambil skenario {contact} — lead dari {lead_source}.
+Score BANT lengkap + interpretasi + rekomendasi action.
+
+=== 9. FAQ & COMMON MISTAKES ===
+- Kesalahan umum saat BANT (spoil klien dengan pitch terlalu cepat)
+- Cara handle klien yang tidak mau jawab
+- Kapan sebaiknya skip BANT (deal kecil, warm lead, referral)
+- Etika: kapan berhenti tanya & mulai layani
+
+=== 10. INTEGRASI DENGAN SALES PROCESS ===
+- Di tahap mana BANT dilakukan (biasanya di discovery)
+- Data BANT masuk ke CRM seperti apa
+- Trigger otomatis (kalau score > 80, kirim proposal template)
+- Sales rep scorecard
+
+PENTING:
+- BANT bukan interogasi — bungkus dengan percakapan natural
+- Jangan skip Authority — #1 alasan deal macet
+- Kalau timeline > 6 bulan, JANGAN push, masuk nurturing
+- Re-validasi BANT setiap 30 hari (kondisi bisa berubah)
+
+Markdown rapi.`
+            },
+            account_based: {
+                id: 'account_based',
+                icon: '🏢',
+                name: 'Account-Based Selling',
+                desc: 'Strategi fokus ke akun besar (institusi) dengan pendekatan multi-threading & personalized.',
+                color: '#805ad5',
+                use_for: '✅ Target akun besar (sekolah favorit, universitas top, perusahaan besar)\n✅ Deal bernilai tinggi\n✅ Sales cycle 3-6 bulan+\n✅ Multi-stakeholder\n✅ Hubungan jangka panjang',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'ABS untuk Lidan Psikologi — target 20 akun strategis (sekolah top): akun profile, stakeholder map, personalized outreach, cadence 90 hari.' }
+                ],
+                contoh_hasil_note: 'Gambaran output Account-Based Selling:',
+                contoh_hasil: [
+                    { lbl: 'Target Account List', txt: 'Daftar 20 akun ideal — kriteria & prioritas.' },
+                    { lbl: 'Account Profile', txt: 'Riset mendalam per akun: pain, budget, struktur, trigger.' },
+                    { lbl: 'Stakeholder Map', txt: 'Peta siapa saja yang terlibat & influence level.' },
+                    { lbl: 'Personalized Outreach', txt: 'Pesan khusus per persona per akun.' },
+                    { lbl: '90-Day Cadence', txt: 'Timeline interaksi per akun.' }
+                ],
+                fields: [
+                    { key: 'product', label: 'Layanan Lidan', type: 'text', placeholder: 'Contoh: Paket Kerja Sama Tahunan Sekolah' },
+                    { key: 'icp', label: 'Ideal Customer Profile (ICP)', type: 'textarea', placeholder: 'Contoh: SMA swasta, 500+ siswa, di kota besar, dengan program BK' },
+                    { key: 'num_accounts', label: 'Jumlah Target Akun', type: 'text', placeholder: 'Contoh: 20 akun' },
+                    { key: 'deal_size', label: 'Rata-rata Deal Size', type: 'text', placeholder: 'Contoh: Rp 50 juta - Rp 300 juta/tahun' },
+                    { key: 'sales_cycle', label: 'Sales Cycle', type: 'text', placeholder: 'Contoh: 3-6 bulan' },
+                    { key: 'stakeholder_roles', label: 'Stakeholder Kunci', type: 'textarea', placeholder: 'Contoh: Kepala Sekolah, Wakil Kurikulum, Kepala BK, Komite Sekolah' },
+                    { key: 'goal', label: 'Target Sales', type: 'text', placeholder: 'Contoh: 5 akun close per kuartal' }
+                ],
+                prompt_template: `Anda adalah Account-Based Selling (ABS) Expert. Buat strategi ACCOUNT-BASED SELLING untuk Lidan Psikologi.
+
+KONTEKS LIDAN PSIKOLOGI:
+Layanan psikologi profesional — tes minat bakat, kesiapan kerja, psikotes, konseling, training. Cocok untuk akun besar (sekolah favorit, universitas top, perusahaan besar) dengan deal bernilai tinggi & sales cycle panjang.
+
+INFORMASI:
+- Layanan: {product}
+- ICP: {icp}
+- Jumlah target akun: {num_accounts}
+- Deal size: {deal_size}
+- Sales cycle: {sales_cycle}
+- Stakeholder: {stakeholder_roles}
+- Target: {goal}
+
+OUTPUT (markdown rapi):
+
+=== 1. PENDAHULUAN ABS ===
+- Apa itu ABS & beda dengan inbound/outbound biasa
+- Kenapa cocok untuk Lidan Psikologi (deal besar, multi-stakeholder)
+- Kapan ABS TIDAK cocok
+- Prinsip: "Fewer accounts, deeper relationships"
+
+=== 2. IDEAL CUSTOMER PROFILE (ICP) ===
+ICP untuk Lidan Psikologi:
+
+**Firmographic:**
+- Industri: Sekolah / Universitas / Perusahaan
+- Size: [jumlah siswa/karyawan]
+- Lokasi: [geografis]
+- Budget range: [range]
+
+**Technographic:**
+- Sistem/teknologi yang sudah ada
+- Kematangan digital
+
+**Behavioral:**
+- Trigger event: kapan mereka butuh layanan psikologi?
+- Contoh: ajaran baru, akreditasi, turnover tinggi
+
+**Disqualifier:**
+- Kriteria yang membuat akun TIDAK layak
+
+=== 3. TARGET ACCOUNT LIST ===
+Buat template + kriteria untuk membangun daftar {num_accounts} akun:
+
+**Kriteria Prioritas:**
+- Fit dengan ICP (1-10)
+- Potential deal size (1-10)
+- Accessibility (kemudahan approach) (1-10)
+- Timing (apakah ada trigger) (1-10)
+
+**Total Score:** rata-rata
+- 8-10: Tier A (prioritas utama)
+- 6-7.9: Tier B
+- < 6: Tier C (skip atau long-term)
+
+Buat contoh 10 akun fiktif dengan scoring.
+
+=== 4. ACCOUNT PROFILING ===
+Template riset per akun sebelum outreach:
+
+- Basic info (nama, jenis, ukuran, alamat)
+- Kepemimpinan (siapa saja eksekutif)
+- Program/BK saat ini
+- Budget tahunan (kalau publik)
+- Berita/trigger event terbaru
+- Website & digital presence
+- Kompetitor yang mungkin sudah masuk
+- Koneksi internal kami (kalau ada)
+- Pain hypothesis
+
+Contoh lengkap untuk 1 akun sample.
+
+=== 5. STAKEHOLDER MAPPING ===
+Untuk setiap akun, map 5-8 stakeholder:
+
+| Nama | Role | Pengaruh | Sikap kita | Strategi |
+
+**Role kunci di institusi:**
+- Economic Buyer (pegang budget)
+- Champion (supporter kita)
+- Gatekeeper (bisa block akses)
+- Influencer (memberi rekomendasi)
+- End User (yang pakai layanan)
+
+**Cara riset stakeholder:**
+- LinkedIn search
+- Website institusi
+- Media & berita
+- Mutual connection
+
+=== 6. PERSONALIZED OUTREACH ===
+Pesan khusus per persona:
+
+**Untuk Kepala Sekolah:**
+- Hook: reputasi sekolah, akreditasi, kepuasan orang tua
+- Format: email + LinkedIn message
+- Template 3 varian
+
+**Untuk Kepala BK:**
+- Hook: efektivitas layanan BK, tools modern
+- Template 3 varian
+
+**Untuk Wakil Kurikulum:**
+- Hook: data siswa, kualitas lulusan
+- Template 3 varian
+
+**Untuk Direktur/Komisaris (kalau yayasan):**
+- Hook: ROI, positioning vs sekolah lain
+- Template 3 varian
+
+Setiap template personal (sebut nama, refer ke hal spesifik tentang akun).
+
+=== 7. MULTI-CHANNEL CADENCE ===
+Interaksi 90 hari dengan 1 akun:
+
+**Bulan 1 (Awareness):**
+- Hari 1: LinkedIn connect + intro message
+- Hari 3: Email personal (bukan pitch)
+- Hari 7: Kirim insight/artikel bermanfaat
+- Hari 14: LinkedIn engage di posting mereka
+- Hari 21: Soft intro ke layanan Lidan
+
+**Bulan 2 (Consideration):**
+- Hari 30-45: Personal email dengan case study relevan
+- Hari 50-55: Undang ke webinar/event Lidan
+- Hari 60-70: LinkedIn message dengan insight baru
+
+**Bulan 3 (Conversion):**
+- Hari 75-80: Email dengan proposal/penawaran
+- Hari 85: Call/message untuk follow up
+- Hari 90: Meeting request
+
+**Variasi channel:**
+- Email
+- LinkedIn (post, comment, DM)
+- WA (kalau sudah dapat kontak)
+- Phone call
+- Direct mail (untuk akun Tier A)
+- Event/webinar
+- Referral introduction
+
+=== 8. CONTENT & ASSET PER AKUN ===
+Setiap akun Tier A perlu:
+
+- Personalized one-pager (Lidan bisa bantu apa untuk mereka)
+- Case study relevan (sekolah serupa)
+- ROI calculator spesifik
+- Custom video message (30 detik)
+- Proposal modular
+
+Template & cara produce.
+
+=== 9. SALES & MARKETING ALIGNMENT ===
+- Kolaborasi antara sales & marketing
+- Siapa handle konten, siapa handle sales
+- Shared account plan
+- Meeting cadence (weekly/biweekly)
+- Data sharing
+
+=== 10. ACCOUNT PLAN TEMPLATE ===
+Template 1 halaman account plan:
+- Akun info & ICP score
+- Stakeholder map
+- Pain hypothesis
+- Value prop kami
+- Strategy & tactics
+- Next steps
+- Timeline
+- Success metrics
+
+=== 11. METRICS ABS ===
+- Account penetration rate (% stakeholder yang sudah engage)
+- Meeting booked per account
+- Proposal sent per account
+- Account conversion rate
+- Average deal size
+- Sales cycle length per tier
+
+Target untuk {num_accounts} akun.
+
+=== 12. TOOLS & TECH STACK ===
+- CRM: HubSpot, Pipedrive, Salesforce
+- Sales engagement: Outreach, Salesloft, Apollo
+- Research: LinkedIn Sales Navigator, Crunchbase
+- Personalization: Lavender, Crystal
+- Meeting: Calendly, Zoom
+- Content: Canva, Loom
+
+=== 13. ROADMAP 90 HARI ===
+Minggu 1-2: Build target list & profiling
+Minggu 3-4: Stakeholder mapping
+Bulan 2: Launch outreach multi-channel
+Bulan 3: Nurture & convert
+
+Milestone per fase.
+
+PENTING:
+- KUALITAS > kuantitas — 20 akun Tier A lebih baik dari 200 cold lead
+- Setiap outreach HARUS personal (bukan template generik)
+- Multi-threading WAJIB — jangan bergantung 1 kontak
+- ABS butuh SABAR — bukan overnight success
+- Align dengan marketing & leadership
+
+Markdown rapi.`
+            },
+            value_based: {
+                id: 'value_based',
+                icon: '💎',
+                name: 'Value-Based Selling',
+                desc: 'Jual berdasarkan VALUE yang didapat klien, bukan harga. Fokus pada ROI & hasil.',
+                color: '#d69e2e',
+                use_for: '✅ Klien yang tanya "kenapa mahal?"\n✅ Layanan premium\n✅ Kompetitor lebih murah\n✅ Butuh justifikasi ke manajemen\n✅ Deal besar butuh business case',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Value-based selling Lidan Psikologi: framework ROI untuk tiap layanan, value calculator, business case template, script menggeser percakapan dari harga ke value.' }
+                ],
+                contoh_hasil_note: 'Gambaran output value-based selling:',
+                contoh_hasil: [
+                    { lbl: 'Value Framework', txt: 'Cara hitung & komunikasikan value Lidan.' },
+                    { lbl: 'ROI Calculator', txt: 'Formula ROI per layanan dengan angka konkret.' },
+                    { lbl: 'Business Case', txt: 'Template business case untuk justifikasi ke manajemen klien.' },
+                    { lbl: 'Script Value Conversation', txt: 'Cara menggeser percakapan dari harga ke value.' },
+                    { lbl: 'Objection Handling', txt: 'Respon saat klien bilang "mahal".' }
+                ],
+                fields: [
+                    { key: 'product', label: 'Layanan Lidan', type: 'text', placeholder: 'Contoh: Psikotes Rekrutmen Premium' },
+                    { key: 'target_market', label: 'Target Market', type: 'text', placeholder: 'Contoh: HR Manager perusahaan FMCG 200-500 karyawan' },
+                    { key: 'price', label: 'Harga Layanan', type: 'text', placeholder: 'Contoh: Rp 1,5 juta per kandidat' },
+                    { key: 'competitor_price', label: 'Harga Kompetitor (rata-rata)', type: 'text', placeholder: 'Contoh: Rp 800rb - Rp 1 juta per kandidat' },
+                    { key: 'key_value', label: 'Value Utama Lidan', type: 'textarea', placeholder: 'Contoh: Akurasi prediksi 85%, laporan actionable, benchmark industri' },
+                    { key: 'client_pain_cost', label: 'Biaya Masalah Klien (cost of pain)', type: 'textarea', placeholder: 'Contoh: Bad hire = 2x gaji tahunan; turnover = Rp 200 juta/tahun' },
+                    { key: 'goal', label: 'Target Sales', type: 'text', placeholder: 'Contoh: 5 klien premium per bulan' }
+                ],
+                prompt_template: `Anda adalah Value-Based Selling Expert. Buat strategi VALUE-BASED SELLING LENGKAP untuk Lidan Psikologi.
+
+KONTEKS LIDAN PSIKOLOGI:
+Layanan psikologi profesional — tes minat bakat, kesiapan kerja, psikotes, konseling, training. Positioning: premium & berkualitas tinggi (psikolog berlisensi HIMPSI, metode terstandar, laporan actionable).
+
+INFORMASI:
+- Layanan: {product}
+- Target market: {target_market}
+- Harga Lidan: {price}
+- Harga kompetitor: {competitor_price}
+- Value utama Lidan: {key_value}
+- Cost of pain klien: {client_pain_cost}
+- Target: {goal}
+
+OUTPUT (markdown rapi):
+
+=== 1. FILOSOFI VALUE-BASED SELLING ===
+- Beda jual harga vs jual value
+- Kenapa klien Lidan BELAJAR untuk tidak compete di harga
+- Mindset: harga mahal = value tinggi (kalau disampaikan tepat)
+- Prinsip: "Never justify price, articulate value"
+
+=== 2. VALUE FRAMEWORK LIDAN ===
+Breakdown value Lidan Psikologi:
+
+**Tangible Value (bisa dihitung):**
+- Cost saving: [contoh & estimasi]
+- Revenue increase: [contoh]
+- Time saving: [contoh]
+- Risk mitigation: [contoh]
+
+**Intangible Value (sulit dihitung tapi nyata):**
+- Kualitas keputusan
+- Employer branding
+- Kepuasan stakeholder
+- Data & insight untuk strategi
+
+**Future Value:**
+- Data accumulation
+- Benchmark industri
+- Improvement berkelanjutan
+
+Untuk setiap layanan ({product}), list value spesifik.
+
+=== 3. ROI CALCULATOR ===
+Formula ROI untuk {product}:
+
+**Formula Umum:**
+ROI = (Value − Investment) / Investment × 100%
+
+**Untuk Psikotes Rekrutmen:**
+- Cost of bad hire = 2x gaji tahunan
+- Akurasi Lidan: 85% (vs 50% intuisi/kompetitor)
+- Improvement: 35% × [jumlah hire] × [biaya bad hire]
+- Contoh: Hire 50 karyawan/tahun × Rp 100 juta cost bad hire × 35% improvement = Rp 1,75 miliar saving
+- Investment: 50 × {price} = ...
+
+**Untuk Tes Minat Bakat Sekolah:**
+- Value: reputasi sekolah, retensi siswa, kepuasan orang tua
+- Estimasi kenaikan siswa baru: 10%
+- Value per siswa baru per tahun: Rp 10 juta
+- Contoh: 50 siswa × Rp 10 juta = Rp 500 juta additional revenue
+- Investment: 300 siswa × Rp 150rb = Rp 45 juta
+- ROI: 1.000%+
+
+**Untuk Konseling:**
+- Value: mental health → produktivitas → revenue
+- ...
+
+Buat 3 kalkulasi contoh lengkap dengan angka.
+
+=== 4. VALUE-BASED PITCH SCRIPT ===
+Script presentasi yang fokus ke value, bukan fitur:
+
+**Tahap 1: Understand Value Priorities**
+- 5 pertanyaan untuk tahu value apa yang paling penting untuk klien
+- Contoh: "Kalau bicara investasi HR, Bapak biasanya ukur keberhasilan dengan apa?"
+
+**Tahap 2: Quantify Current State**
+- Bantu klien hitung cost of pain mereka sendiri
+- Contoh: "Berapa kerugian perusahaan kalau 1 orang salah hire? Mari kita hitung..."
+
+**Tahap 3: Present Future State**
+- Tunjukkan gambaran ideal dengan data
+- Case study Lidan dengan angka
+
+**Tahap 4: Bridge with Value**
+- "Kalau Lidan bisa mengurangi bad hire dari 30% ke 10% — itu saving Rp X. Investasi kami Rp Y. Net benefit Rp Z dalam tahun pertama."
+
+**Tahap 5: Offer & Justify**
+- Presentasi harga sebagai investment
+- Tunjukkan ROI & payback period
+
+Script lengkap 20 menit dengan {target_market}.
+
+=== 5. BUSINESS CASE TEMPLATE ===
+Template business case untuk klien (mereka bisa pakai internal):
+
+**Executive Summary**
+- Problem statement
+- Proposed solution (Lidan)
+- Investment required
+- Expected ROI & timeline
+
+**Current State Analysis**
+- Pain points & cost
+- Benchmark industri
+
+**Solution Detail**
+- Apa yang akan dilakukan Lidan
+- Timeline & deliverables
+- KPI success
+
+**Financial Analysis**
+- Investment breakdown
+- Value breakdown
+- NPV / IRR / Payback period (kalau perlu)
+- Sensitivity analysis (best/worst case)
+
+**Risk & Mitigation**
+- Risk of action (do this)
+- Risk of inaction (don't do this)
+
+**Recommendation**
+- Clear recommendation
+- Next steps
+
+Buat contoh business case lengkap untuk 1 skenario.
+
+=== 6. HANDLING "MAHAL" ===
+10 variasi objeksi harga + respon value-based:
+
+**"Mahal"** → 
+"Boleh saya tahu mahal dibanding apa? Karena kalau kita lihat cost of bad hire = 2x gaji, investasi ini justru saving Rp X."
+
+**"Kompetitor lebih murah"** → 
+"Betul, kompetitor bisa lebih murah. Yang jadi pertanyaan: apakah harga murah = hasil yang diinginkan? Mari kita bandingkan apel ke apel..."
+
+**"Budget tidak ada"** →
+"Kalau kita bisa tunjukkan ROI 300%, apakah masih soal budget? Atau soal prioritas?"
+
+**"Pikir-pikir dulu"** →
+"Boleh. Data apa yang Bapak butuh untuk mempercepat keputusan? Saya bantu siapkan."
+
+**"Coba dulu versi kecil"** →
+"That's a great idea. Kita bisa mulai dengan pilot 50 kandidat. Kalau hasilnya sesuai prediksi kami, kita scale."
+
+Plus 5 variasi lain.
+
+=== 7. PRICE PRESENTATION ===
+Cara presentasi harga:
+
+**Sebelum angka:**
+- Recap value
+- Recap ROI calculation
+- Bangun anchor: "Cost of bad hire = Rp 200 juta"
+
+**Saat angka:**
+- Tenang, jangan defense
+- Frame sebagai INVESTMENT bukan COST
+- Sandingkan: "Investment Rp X vs Value Rp 10X"
+- Berhenti bicara (biarkan klien proses)
+
+**Setelah angka:**
+- Jangan langsung tawarkan diskon
+- Tanya: "Bagaimana menurut Bapak?"
+- Kalau diam → beri waktu
+
+=== 8. VALUE-BASED PROPOSAL ===
+Struktur proposal yang fokus VALUE:
+- Executive summary dengan ROI di depan
+- Problem & cost of pain
+- Solution dengan mapping ke value
+- Pricing dengan justifikasi nilai
+- ROI calculator (transparan)
+- Timeline & milestone
+- Success metrics
+
+Template lengkap.
+
+=== 9. REFRAME COMPETITOR COMPARISON ===
+Cara membandingkan dengan kompetitor:
+- Jangan merendahkan
+- Bandingkan apple-to-apple (fitur vs value)
+- Frame sebagai "different approach" bukan "better than"
+- Fokus pada total cost of ownership
+
+Template comparison matrix.
+
+=== 10. KPI VALUE-BASED ===
+- Average deal size (harus lebih tinggi dari kompetitor)
+- Discount rate (harus rendah)
+- Win rate vs price objection
+- Customer lifetime value
+- Referral rate
+
+Target untuk Lidan Psikologi.
+
+=== 11. TRAINING & ENABLEMENT ===
+- Sales team harus paham value proposition
+- Role-play skenario objeksi harga
+- Access to data & case studies
+- Regular reinforcement
+
+=== 12. COMMON PITFALLS ===
+Kesalahan umum value-based selling:
+- Overclaiming value tanpa data
+- Terlalu banyak bicara value → klien merasa jualan
+- Tidak pakai angka konkret
+- Justifikasi harga terlalu panjang
+- Tidak kontekstual (value untuk semua orang = value untuk siapapun)
+
+PENTING:
+- Value harus SPESIFIK untuk klien (bukan generic)
+- Selalu pakai ANGKA — "meningkatkan akurasi" tidak sekuat "meningkatkan dari 60% ke 85%"
+- Value-based selling BUKAN soal harga mahal — soal total value
+- Klien harus BISA MENJELASKAN value ini ke atasannya (bantu mereka)
+
+Markdown rapi.`
+            }
+        };
+
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'ai_sales_strategy';
+        const USERS_TABLE = 'users';
+        const SECRET = 'admin';
+        const STORAGE_KEY = 'ai_sales_strategy_user';
+
+        const SALES_KEYS = Object.keys(SALES_TYPES);
+
+        // ==================== STATE ====================
+        let allData = [];
+        let quillEditor = null;
+        let addAiEditor = null;
+        let viewData = null;
+        let currentPrompt = '';
+        let currentHistorySubTab = 'all';
+        let currentUser = null;
+        let isAdmin = false;
+
+        const COLUMNS = {
+            strategy_type: 'x_01',
+            title: 'x_02',
+            prompt: 'x_03',
+            field_values: 'x_04',
+            ai_source: 'x_05',
+            result: 'x_06',
+            created_by: 'x_07',
+            status: 'x_08',
+            notes: 'x_09',
+            created_date: 'x_10'
+        };
+
+        // ==================== LOGIN ====================
+        function getStoredUser() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    if (parsed.username && parsed.timestamp) {
+                        const days = (Date.now() - parsed.timestamp) / (1000 * 60 * 60 * 24);
+                        if (days < 7) return parsed.username;
+                    }
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function saveUserToStorage(username, remember) {
+            const data = JSON.stringify({ username, timestamp: Date.now() });
+            if (remember) localStorage.setItem(STORAGE_KEY, data);
+            else sessionStorage.setItem(STORAGE_KEY, data);
+        }
+
+        function clearUserStorage() {
+            localStorage.removeItem(STORAGE_KEY);
+            sessionStorage.removeItem(STORAGE_KEY);
+        }
+
+        function checkAutoLogin() {
+            const username = getStoredUser();
+            if (username) {
+                currentUser = username;
+                isAdmin = (username === 'admin');
+                showMainContent();
+                return true;
+            }
+            return false;
+        }
+
+        function showLogin() {
+            document.getElementById('loginOverlay').classList.add('active');
+            document.getElementById('mainContent').classList.remove('visible');
+        }
+
+        function showMainContent() {
+            document.getElementById('loginOverlay').classList.remove('active');
+            document.getElementById('mainContent').classList.add('visible');
+            document.getElementById('currentUser').textContent = currentUser;
+            const roleBadge = document.getElementById('userRole');
+            if (isAdmin) { roleBadge.textContent = '👑 Admin'; roleBadge.className = 'user-role admin'; }
+            else { roleBadge.textContent = '👤 User'; roleBadge.className = 'user-role user'; }
+            document.getElementById('createdBy').value = currentUser;
+            refreshData();
+        }
+
+        async function doLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const remember = document.getElementById('loginRemember').checked;
+            if (!username || !password) { showLoginError('Username dan password wajib diisi!'); return; }
+            const btn = document.getElementById('loginBtn');
+            const errorEl = document.getElementById('loginError');
+            const loadingEl = document.getElementById('loginLoading');
+            btn.disabled = true;
+            loadingEl.classList.add('show');
+            errorEl.classList.remove('show');
+            try {
+                const response = await fetch(`${API_URL}?table=${USERS_TABLE}`, {
+                    headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': USERS_TABLE, 'X-Role': 'admin' }
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const user = result.data.find(u => u.x_01 === username && u.x_02 === password);
+                    if (user) {
+                        currentUser = username;
+                        isAdmin = (username === 'admin');
+                        saveUserToStorage(username, remember);
+                        showMainContent();
+                        showToast('✅ Login berhasil! Selamat datang, ' + username, 'success');
+                    } else showLoginError('❌ Username atau password salah!');
+                } else showLoginError('❌ Gagal mengambil data user');
+            } catch (e) {
+                showLoginError('❌ Gagal login: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                loadingEl.classList.remove('show');
+            }
+        }
+
+        function showLoginError(message) {
+            const errorEl = document.getElementById('loginError');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+        }
+
+        function doLogout() {
+            if (!confirm('Yakin ingin logout?')) return;
+            clearUserStorage();
+            currentUser = null;
+            isAdmin = false;
+            showLogin();
+            showToast('👋 Logout berhasil', 'info');
+        }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!checkAutoLogin()) showLogin();
+            document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+            document.getElementById('loginUsername').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPassword').focus(); });
+
+            quillEditor = new Quill('#resultEditor', {
+                theme: 'snow', placeholder: 'Paste hasil AI di sini...',
+                modules: { toolbar: [[{ 'header': [1,2,3,4,5,6,false] }], ['bold','italic','underline','strike'], [{ 'list': 'ordered'},{ 'list': 'bullet' }], ['blockquote','code-block'], ['link','image'], ['clean']] }
+            });
+            addAiEditor = new Quill('#addAiEditor', {
+                theme: 'snow', placeholder: 'Paste hasil AI di sini...',
+                modules: { toolbar: [[{ 'header': [1,2,3,4,5,6,false] }], ['bold','italic','underline','strike'], [{ 'list': 'ordered'},{ 'list': 'bullet' }], ['blockquote','code-block'], ['link','image'], ['clean']] }
+            });
+
+            renderTools();
+            populateToolSelect();
+            updateFormFields();
+            if (currentUser) document.getElementById('createdBy').value = currentUser;
+        });
+
+        // ==================== API ====================
+        function getHeaders() {
+            return { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': TABLE, 'X-Role': 'admin' };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            const response = await fetch(url, { ...options, headers: { ...getHeaders(), ...(options.headers || {}) } });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || err.message || `HTTP ${response.status}`);
+            }
+            return await response.json();
+        }
+
+        async function fetchData() {
+            try {
+                const result = await apiFetch('');
+                if (result.success && result.data) {
+                    let data = result.data.map(row => parseRow(row));
+                    if (!isAdmin && currentUser) data = data.filter(d => d.created_by === currentUser);
+                    allData = data;
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            return {
+                id_x: row.id_x,
+                strategy_type: row.x_01 || '',
+                title: row.x_02 || '',
+                prompt: row.x_03 || '',
+                field_values: safeParseJSON(row.x_04),
+                ai_source: row.x_05 || '',
+                result: row.x_06 || '',
+                created_by: row.x_07 || '',
+                status: row.x_08 || 'published',
+                notes: row.x_09 || '',
+                created_date: row.x_10 || '',
+                _raw: row
+            };
+        }
+
+        function safeParseJSON(str) { if (!str) return {}; try { return JSON.parse(str); } catch (e) { return {}; } }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                if (key === 'field_values') row[col] = JSON.stringify(data[key] || {});
+                else row[col] = data[key] || '';
+            }
+            return row;
+        }
+
+        async function createResult(data) {
+            const row = buildRow(data);
+            return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function deleteResultApi(id) {
+            return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== RENDER ====================
+        function renderTools() {
+            const container = document.getElementById('toolsGrid');
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            let filtered = SALES_KEYS;
+            if (search) filtered = filtered.filter(key => SALES_TYPES[key].name.toLowerCase().includes(search) || SALES_TYPES[key].desc.toLowerCase().includes(search));
+
+            container.innerHTML = filtered.map(key => {
+                const type = SALES_TYPES[key];
+                const count = allData.filter(d => d.strategy_type === type.id).length;
+                return `
+                    <div class="tool-card" style="border-top:4px solid ${type.color};">
+                        <span class="tool-icon">${type.icon}</span>
+                        <div class="tool-name">${type.name}</div>
+                        <div class="tool-desc">${type.desc}</div>
+                        <div style="font-size:11px;color:#718096;margin-bottom:8px;">${count} strategi</div>
+                        <div class="tool-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openInfoModal('${key}')">📖 Info</button>
+                            <button class="btn btn-primary btn-xs" onclick="useTool('${key}')">✏️ Create</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('tab1Badge').textContent = filtered.length;
+        }
+
+        function populateToolSelect() {
+            const select = document.getElementById('selectedTool');
+            select.innerHTML = SALES_KEYS.map(key => {
+                const type = SALES_TYPES[key];
+                return `<option value="${key}">${type.icon} ${type.name}</option>`;
+            }).join('');
+        }
+
+        function updateFormFields() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = SALES_TYPES[toolKey];
+            if (!type) return;
+            const container = document.getElementById('dynamicFields');
+            const values = getCurrentFieldValues();
+
+            let html = `<div class="section-label">📝 ${type.icon} ${type.name} - Form</div>`;
+            type.fields.forEach(field => {
+                const fieldId = `field_${field.key}`;
+                const val = values[field.key] || '';
+                const checkId = `ai_check_${field.key}`;
+
+                html += `<div class="field-header">
+                    <label for="${fieldId}">${field.label}</label>
+                    <div class="field-ai-check">
+                        <input type="checkbox" id="${checkId}" onchange="toggleFieldAi('${field.key}', this.checked)">
+                        <span>🤖 AI Cari</span>
+                    </div>
+                </div>`;
+
+                if (field.type === 'textarea') {
+                    html += `<div class="form-group"><textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea></div>`;
+                } else {
+                    html += `<div class="form-group"><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function toggleFieldAi(fieldKey, checked) {
+            const inputEl = document.getElementById(`field_${fieldKey}`);
+            if (!inputEl) return;
+
+            if (checked) {
+                inputEl.dataset.originalValue = inputEl.value;
+                inputEl.value = '🤖 AI akan mencari yang cocok';
+                inputEl.readOnly = true;
+                inputEl.style.background = '#f0fff4';
+                inputEl.style.color = '#276749';
+                inputEl.style.fontWeight = '600';
+            } else {
+                inputEl.value = inputEl.dataset.originalValue || '';
+                inputEl.readOnly = false;
+                inputEl.style.background = '';
+                inputEl.style.color = '';
+                inputEl.style.fontWeight = '';
+            }
+        }
+
+        function getCurrentFieldValues() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = SALES_TYPES[toolKey];
+            if (!type) return {};
+            const values = {};
+            type.fields.forEach(field => {
+                const el = document.getElementById(`field_${field.key}`);
+                if (el) {
+                    if (el.readOnly && el.value === '🤖 AI akan mencari yang cocok') {
+                        values[field.key] = '';
+                    } else {
+                        values[field.key] = el.value;
+                    }
+                }
+            });
+            return values;
+        }
+
+        function setFieldValues(values) {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = SALES_TYPES[toolKey];
+            if (!type) return;
+            type.fields.forEach(field => {
+                const el = document.getElementById(`field_${field.key}`);
+                if (el && values[field.key] !== undefined) el.value = values[field.key] || '';
+            });
+        }
+
+        function generatePrompt() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = SALES_TYPES[toolKey];
+            if (!type) return;
+
+            const values = getCurrentFieldValues();
+
+            let allFilled = true;
+            let emptyFields = [];
+            type.fields.forEach(field => {
+                const checkEl = document.getElementById(`ai_check_${field.key}`);
+                const isAiChecked = checkEl ? checkEl.checked : false;
+                if (!isAiChecked && (!values[field.key] || !values[field.key].trim())) {
+                    allFilled = false;
+                    emptyFields.push(field.label);
+                }
+            });
+
+            if (!allFilled) {
+                showToast('❌ Field berikut wajib diisi: ' + emptyFields.join(', '), 'error');
+                return;
+            }
+
+            let prompt = type.prompt_template;
+            let hasAiField = false;
+
+            type.fields.forEach(field => {
+                const checkEl = document.getElementById(`ai_check_${field.key}`);
+                const isAiChecked = checkEl ? checkEl.checked : false;
+                if (isAiChecked) {
+                    hasAiField = true;
+                    prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), `[AI CARI YANG COCOK UNTUK: ${field.label}]`);
+                } else {
+                    prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || '');
+                }
+            });
+
+            if (hasAiField) {
+                prompt = `INSTRUKSI KHUSUS: Untuk beberapa bagian di bawah ini, sales strategist meminta Anda (AI) untuk mencari dan menentukan sendiri elemen yang cocok (ditandai dengan [AI CARI YANG COCOK UNTUK: ...]). Silakan pilih elemen yang paling tepat dan relevan dengan konteks Lidan Psikologi. \n\n` + prompt;
+                prompt += `\n\nCATATAN PENTING: Fokus pada konteks layanan psikologi Lidan — tes minat bakat, kesiapan kerja, psikotes rekrutmen, konseling, training. Semua output harus dalam Bahasa Indonesia profesional, actionable, dan siap dipakai tim sales Lidan.`;
+            }
+
+            currentPrompt = prompt;
+            document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+            addCopyButtonToPrompt('promptPreview');
+
+            const titleInput = document.getElementById('resultTitle');
+            if (!titleInput.value) {
+                if (hasAiField) {
+                    titleInput.value = `${type.name} - (AI Cari yang Cocok)`;
+                } else {
+                    titleInput.value = `${type.name} - ${values.product || values.target_market || ''}`;
+                }
+            }
+            showToast('✅ Prompt berhasil digenerate!', 'success');
+        }
+
+        function addCopyButtonToPrompt(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const existing = container.querySelector('.copy-prompt-btn');
+            if (existing) existing.remove();
+            const btn = document.createElement('button');
+            btn.className = 'copy-prompt-btn';
+            btn.textContent = '📋 Copy';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const text = container.textContent.replace('📋 Copy', '').trim();
+                if (!text || text.includes('Pilih model')) { showToast('❌ Tidak ada prompt', 'error'); return; }
+                navigator.clipboard.writeText(text).then(() => showToast('✅ Prompt disalin!', 'success')).catch(() => {
+                    const ta = document.createElement('textarea');
+                    ta.value = text; document.body.appendChild(ta); ta.select();
+                    document.execCommand('copy'); document.body.removeChild(ta);
+                    showToast('✅ Prompt disalin!', 'success');
+                });
+            };
+            container.style.position = 'relative';
+            container.appendChild(btn);
+        }
+
+        async function saveResult() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const title = document.getElementById('resultTitle').value.trim();
+            const createdBy = document.getElementById('createdBy').value.trim() || currentUser || 'User';
+            const prompt = document.getElementById('promptPreview').textContent.replace('📋 Copy', '').trim();
+            if (!title) { showToast('❌ Judul strategi wajib diisi', 'error'); return; }
+            if (!prompt || prompt.includes('Pilih model')) { showToast('❌ Generate prompt dulu', 'error'); return; }
+            const resultHtml = quillEditor.root.innerHTML;
+            if (!resultHtml || resultHtml === '<p><br></p>') { showToast('❌ Paste hasil AI dulu', 'error'); return; }
+            const values = getCurrentFieldValues();
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                strategy_type: toolKey, title, prompt, field_values: values,
+                ai_source: document.getElementById('aiSource').value,
+                result: resultHtml, created_by: createdBy,
+                status: 'published', notes: '', created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Strategi berhasil disimpan!', 'success');
+                await refreshData();
+                clearForm();
+                switchMainTab('tab3');
+            } catch (e) { showToast('❌ Gagal menyimpan: ' + e.message, 'error'); }
+        }
+
+        function clearForm() {
+            quillEditor.root.innerHTML = '';
+            document.getElementById('resultTitle').value = '';
+            document.getElementById('promptPreview').innerHTML = '<span class="placeholder">Pilih model sales strategy dan isi form untuk menghasilkan prompt...</span>';
+            currentPrompt = '';
+            document.querySelectorAll('.field-ai-check input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+        }
+
+        function useTool(toolKey) {
+            document.getElementById('selectedTool').value = toolKey;
+            updateFormFields();
+            switchMainTab('tab2');
+            clearForm();
+            document.getElementById('createdBy').value = currentUser || '';
+            showToast(`✏️ Beralih ke ${SALES_TYPES[toolKey].name}`, 'info');
+        }
+
+        // ==================== HISTORY ====================
+        function switchHistorySubTab(subtab) {
+            currentHistorySubTab = subtab;
+            document.querySelectorAll('.history-sub-tab').forEach(el => el.classList.toggle('active', el.dataset.subtab === subtab));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            const filterTool = document.getElementById('historyFilterTool').value;
+            const search = document.getElementById('historySearch').value.toLowerCase().trim();
+            let filtered = allData;
+            if (currentHistorySubTab === 'today') {
+                const today = new Date();
+                const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+                filtered = filtered.filter(d => d.created_date === todayStr);
+            }
+            if (filterTool !== 'all') filtered = filtered.filter(d => d.strategy_type === filterTool);
+            if (search) filtered = filtered.filter(d => d.title.toLowerCase().includes(search) || d.created_by.toLowerCase().includes(search) || d.prompt.toLowerCase().includes(search));
+
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            document.getElementById('subAll').textContent = allData.length;
+            document.getElementById('subToday').textContent = allData.filter(d => d.created_date === todayStr).length;
+            document.getElementById('tab3Badge').textContent = allData.length;
+            document.getElementById('historyCount').textContent = `${filtered.length} items`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">${allData.length === 0 ? '📈' : '🔍'}</div><h3>${allData.length === 0 ? 'Belum ada strategi' : 'Tidak ditemukan'}</h3><p>${allData.length === 0 ? 'Pergi ke Tab "Sales Strategy Studio" untuk mulai membuat strategi' : 'Coba kata kunci lain'}</p></div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => {
+                const type = SALES_TYPES[item.strategy_type];
+                const typeLabel = type ? `${type.icon} ${type.name}` : item.strategy_type;
+                const date = item.created_date || item._raw?.created_at || '-';
+                const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+                const sourceClass = item.ai_source.toLowerCase();
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = item.result;
+                const plainResult = tempDiv.textContent.substring(0, 100) + (tempDiv.textContent.length > 100 ? '...' : '');
+                return `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <span class="history-title">${escapeHtml(item.title)}</span>
+                            <div class="history-meta">
+                                <span class="type-badge">${typeLabel}</span>
+                                ${item.ai_source ? `<span class="ai-badge ${sourceClass}">${item.ai_source}</span>` : ''}
+                                <span>📅 ${displayDate}</span>
+                                <span>👤 ${escapeHtml(item.created_by)}</span>
+                                ${isAdmin ? `<span style="font-size:10px;background:#c6f6d5;color:#276749;padding:1px 8px;border-radius:8px;">👑</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="history-prompt" onclick="togglePrompt(this)">${escapeHtml(item.prompt.substring(0, 120))}${item.prompt.length > 120 ? '...' : ''}</div>
+                        <div class="history-result">${escapeHtml(plainResult)}</div>
+                        <div class="history-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openAddAiModal(${item.id_x})">➕ Tambah AI</button>
+                            <button class="btn btn-primary btn-xs" onclick="openDuplicateModal(${item.id_x})">📋 Duplikat</button>
+                            <button class="btn btn-outline btn-xs" onclick="openViewModal(${item.id_x})">👁️ Detail</button>
+                            <button class="btn btn-danger btn-xs" onclick="deleteResult(${item.id_x})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function togglePrompt(el) { el.classList.toggle('expanded'); }
+
+        // ==================== ADD AI ====================
+        function openAddAiModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            document.getElementById('addAiId').value = id;
+            document.getElementById('addAiPromptDisplay').textContent = item.prompt;
+            document.getElementById('addAiCreatedBy').value = currentUser || '';
+            addAiEditor.root.innerHTML = '';
+            const display = document.getElementById('addAiPromptDisplay');
+            const existingBtn = display.querySelector('.copy-prompt-btn');
+            if (existingBtn) existingBtn.remove();
+            const btn = document.createElement('button');
+            btn.className = 'copy-prompt-btn';
+            btn.textContent = '📋 Copy';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const text = display.textContent.replace('📋 Copy', '').trim();
+                navigator.clipboard.writeText(text).then(() => showToast('✅ Prompt disalin!', 'success')).catch(() => {
+                    const ta = document.createElement('textarea'); ta.value = text;
+                    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                    document.body.removeChild(ta); showToast('✅ Prompt disalin!', 'success');
+                });
+            };
+            display.style.position = 'relative';
+            display.appendChild(btn);
+            document.getElementById('addAiModal').classList.add('active');
+        }
+
+        async function saveAddAiResult() {
+            const id = parseInt(document.getElementById('addAiId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) { showToast('Data tidak ditemukan', 'error'); return; }
+            const aiSource = document.getElementById('addAiSource').value;
+            const createdBy = document.getElementById('addAiCreatedBy').value.trim() || currentUser || 'User';
+            const resultHtml = addAiEditor.root.innerHTML;
+            if (!resultHtml || resultHtml === '<p><br></p>') { showToast('❌ Paste hasil AI dulu', 'error'); return; }
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                strategy_type: originalItem.strategy_type,
+                title: originalItem.title + ` (${aiSource})`,
+                prompt: originalItem.prompt,
+                field_values: originalItem.field_values || {},
+                ai_source: aiSource, result: resultHtml, created_by: createdBy,
+                status: 'published', notes: `Hasil tambahan dari ${aiSource}`, created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Hasil AI baru disimpan!', 'success');
+                closeModal('addAiModal');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal menyimpan: ' + e.message, 'error'); }
+        }
+
+        // ==================== DUPLICATE ====================
+        function openDuplicateModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            document.getElementById('dupId').value = id;
+            document.getElementById('dupToolType').value = item.strategy_type;
+            const type = SALES_TYPES[item.strategy_type];
+            document.getElementById('dupFrameworkDisplay').value = type ? `${type.icon} ${type.name}` : item.strategy_type;
+            document.getElementById('dupTitle').value = item.title + ' (v2)';
+            document.getElementById('dupCreatedBy').value = currentUser || '';
+            renderDuplicateFields(item.strategy_type, item.field_values || {});
+            document.getElementById('dupPromptPreview').innerHTML = '<span class="placeholder">Generate prompt dari form di atas...</span>';
+            document.getElementById('duplicateModal').classList.add('active');
+        }
+
+        function renderDuplicateFields(typeKey, values) {
+            const type = SALES_TYPES[typeKey];
+            if (!type) return;
+            const container = document.getElementById('dupDynamicFields');
+            let html = `<div class="section-label">📝 ${type.icon} ${type.name} - Edit Field</div>`;
+            type.fields.forEach(field => {
+                const fieldId = `dup_field_${field.key}`;
+                const val = values[field.key] || '';
+                if (field.type === 'textarea') {
+                    html += `<div class="form-group"><label>${field.label}</label><textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea></div>`;
+                } else {
+                    html += `<div class="form-group"><label>${field.label}</label><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function getDuplicateFieldValues() {
+            const typeKey = document.getElementById('dupToolType').value;
+            const type = SALES_TYPES[typeKey];
+            if (!type) return {};
+            const values = {};
+            type.fields.forEach(field => {
+                const el = document.getElementById(`dup_field_${field.key}`);
+                if (el) values[field.key] = el.value;
+            });
+            return values;
+        }
+
+        function generateDuplicatePrompt() {
+            const typeKey = document.getElementById('dupToolType').value;
+            const type = SALES_TYPES[typeKey];
+            if (!type) return;
+            const values = getDuplicateFieldValues();
+            let allFilled = true;
+            type.fields.forEach(field => { if (!values[field.key] || !values[field.key].trim()) allFilled = false; });
+            if (!allFilled) { showToast('❌ Semua field harus diisi!', 'error'); return; }
+            let prompt = type.prompt_template;
+            type.fields.forEach(field => { prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || ''); });
+            document.getElementById('dupPromptPreview').innerHTML = escapeHtml(prompt);
+            addCopyButtonToPrompt('dupPromptPreview');
+            showToast('✅ Prompt berhasil digenerate!', 'success');
+        }
+
+        async function saveDuplicate() {
+            const id = parseInt(document.getElementById('dupId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) { showToast('Data tidak ditemukan', 'error'); return; }
+            const typeKey = document.getElementById('dupToolType').value;
+            const newTitle = document.getElementById('dupTitle').value.trim();
+            const createdBy = document.getElementById('dupCreatedBy').value.trim() || currentUser || 'User';
+            const prompt = document.getElementById('dupPromptPreview').textContent.replace('📋 Copy', '').trim();
+            if (!newTitle) { showToast('❌ Judul baru wajib diisi', 'error'); return; }
+            if (!prompt || prompt.includes('Generate prompt')) { showToast('❌ Generate prompt dulu', 'error'); return; }
+            const values = getDuplicateFieldValues();
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                strategy_type: typeKey, title: newTitle, prompt, field_values: values,
+                ai_source: '', result: '', created_by: createdBy,
+                status: 'published', notes: 'Duplikat dari prompt sebelumnya', created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Duplikat berhasil dibuat!', 'success');
+                closeModal('duplicateModal');
+                document.getElementById('selectedTool').value = typeKey;
+                updateFormFields();
+                setFieldValues(values);
+                document.getElementById('resultTitle').value = newTitle;
+                document.getElementById('createdBy').value = createdBy;
+                document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+                addCopyButtonToPrompt('promptPreview');
+                currentPrompt = prompt;
+                switchMainTab('tab2');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal menduplikat: ' + e.message, 'error'); }
+        }
+
+        // ==================== DELETE ====================
+        async function deleteResult(id) {
+            if (!confirm('Hapus strategi ini?')) return;
+            try {
+                await deleteResultApi(id);
+                showToast('✅ Strategi berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal hapus: ' + e.message, 'error'); }
+        }
+
+        async function clearHistory() {
+            if (allData.length === 0) { showToast('Tidak ada data', 'info'); return; }
+            if (!confirm('Hapus semua data history?')) return;
+            try {
+                for (const item of allData) await deleteResultApi(item.id_x);
+                showToast('✅ Semua data berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal hapus: ' + e.message, 'error'); }
+        }
+
+        // ==================== VIEW ====================
+        function openViewModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) { showToast('Data tidak ditemukan', 'error'); return; }
+            viewData = item;
+            const type = SALES_TYPES[item.strategy_type];
+            const typeLabel = type ? `${type.icon} ${type.name}` : item.strategy_type;
+            const date = item.created_date || item._raw?.created_at || '-';
+            const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+            document.getElementById('viewModalTitle').textContent = `👁️ ${escapeHtml(item.title)}`;
+            document.getElementById('viewMeta').innerHTML = `<strong>Metode:</strong> ${typeLabel} &nbsp;|&nbsp; <strong>AI:</strong> ${item.ai_source || '-'} &nbsp;|&nbsp; <strong>Dibuat:</strong> ${displayDate} &nbsp;|&nbsp; <strong>Oleh:</strong> ${escapeHtml(item.created_by)} ${isAdmin ? `&nbsp;|&nbsp; <span style="background:#c6f6d5;color:#276749;padding:1px 8px;border-radius:8px;font-size:11px;">👑</span>` : ''}`;
+            document.getElementById('viewPrompt').textContent = item.prompt;
+            document.getElementById('viewSource').textContent = item.ai_source || '-';
+            document.getElementById('viewResultWrapper').innerHTML = `<div class="ql-editor">${item.result}</div>`;
+            document.getElementById('viewModal').classList.add('active');
+        }
+
+        function copyViewResult() {
+            const resultHtml = document.getElementById('viewResultWrapper').innerHTML;
+            if (!resultHtml) { showToast('Tidak ada konten', 'error'); return; }
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = resultHtml;
+            const plainText = tempDiv.textContent;
+            navigator.clipboard.writeText(plainText).then(() => showToast('✅ Konten disalin!', 'success')).catch(() => {
+                const ta = document.createElement('textarea'); ta.value = plainText;
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                document.body.removeChild(ta); showToast('✅ Konten disalin!', 'success');
+            });
+        }
+
+        function downloadViewDoc() {
+            const title = viewData?.title || 'sales-strategy';
+            const content = document.getElementById('viewResultWrapper').innerHTML || '';
+            const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(title)}</title><style>body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #2d3748; line-height: 1.8; max-width: 900px; margin: auto; } h1, h2, h3, h4 { color: #1a202c; } p { margin: 8px 0; } table { border-collapse: collapse; width: 100%; margin: 12px 0; } td, th { border: 1px solid #cbd5e0; padding: 8px; text-align: left; } th { background: #f7fafc; } ul, ol { padding-left: 24px; }</style></head><body>${content}</body></html>`;
+            const blob = new Blob([htmlContent], { type: 'application/msword;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `${title}.doc`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('✅ File .doc berhasil didownload!', 'success');
+        }
+
+        // ==================== INFO ====================
+        function openInfoModal(toolKey) {
+            const type = SALES_TYPES[toolKey];
+            if (!type) return;
+            const fieldsHtml = type.fields.map(f => `<li><strong>${f.label}</strong> — ${f.placeholder}</li>`).join('');
+            let useForHtml = '';
+            if (type.use_for) {
+                const lines = type.use_for.split('\n').filter(l => l.trim());
+                useForHtml = `<div style="background:#ebf8ff;border-radius:8px;padding:12px 16px;margin-bottom:12px;border-left:4px solid #2b6cb0;"><strong style="color:#2c5282;">🎯 Cocok Dipakai Untuk:</strong><ul style="margin:6px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">${lines.map(l => `<li>${l.replace('✅', '✔️')}</li>`).join('')}</ul></div>`;
+            }
+            let contohHtml = '';
+            if (type.contoh && type.contoh.length) {
+                const items = type.contoh.map(c => `<div class="contoh-item"><span class="lbl">${c.lbl}:</span> ${c.txt}</div>`).join('');
+                contohHtml = `<div class="contoh-box"><div class="contoh-title">💡 Contoh Nyata (Lidan Psikologi):</div>${items}</div>`;
+            }
+
+            let hasilHtml = '';
+            if (type.contoh_hasil && type.contoh_hasil.length) {
+                const rows = type.contoh_hasil.map(h => `<div class="hasil-item"><span class="h-lbl">${h.lbl}</span>${h.txt}</div>`).join('');
+                const note = type.contoh_hasil_note || 'Gambaran output yang dihasilkan AI:';
+                hasilHtml = `<div class="hasil-box"><div class="hasil-title">📄 Contoh Gambaran Hasil AI:</div><div class="hasil-note">${note}</div>${rows}<div class="hasil-foot">Penjelasan di atas hanya ilustrasi. Hasil sebenarnya dari AI akan jauh lebih detail dan panjang.</div></div>`;
+            }
+            document.getElementById('infoModalTitle').textContent = `📋 ${type.icon} ${type.name}`;
+            document.getElementById('infoModalBody').innerHTML = `
+                <div style="text-align:center;margin-bottom:12px;">
+                    <span style="font-size:48px;display:block;">${type.icon}</span>
+                    <h3 style="font-size:20px;color:#2d3748;">${type.name}</h3>
+                    <p style="color:#718096;font-size:14px;">${type.desc}</p>
+                </div>
+                ${useForHtml}
+                ${contohHtml}
+                ${hasilHtml}
+                <div style="background:#f7fafc;border-radius:8px;padding:16px;margin-bottom:12px;">
+                    <h4 style="font-size:14px;color:#2d3748;margin-bottom:8px;">📝 Field yang Diisi:</h4>
+                    <ul style="padding-left:20px;color:#4a5568;font-size:13px;line-height:1.8;">${fieldsHtml}</ul>
+                </div>
+                <div style="background:#f0fff4;border-radius:8px;padding:12px 16px;border-left:4px solid #48bb78;">
+                    <strong style="color:#276749;">💡 Cara Penggunaan:</strong>
+                    <ol style="margin:4px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">
+                        <li>Pilih metode sales strategy di Tab "Sales Strategy Studio"</li>
+                        <li>Isi field yang tersedia. Untuk field yang ingin AI cari sendiri, centang <strong>🤖 AI Cari</strong>.</li>
+                        <li>Klik "Generate Prompt"</li>
+                        <li>Copy prompt, paste ke AI eksternal (ChatGPT/Claude/Gemini/DeepSeek)</li>
+                        <li>Copy hasil AI, paste di editor</li>
+                        <li>Pilih AI Source dan klik "Simpan Hasil"</li>
+                    </ol>
+                </div>
+            `;
+            document.getElementById('infoModal').classList.add('active');
+        }
+
+        // ==================== TAB ====================
+        function switchMainTab(tabId) {
+            document.querySelectorAll('.main-tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.main-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.main-tab-btn[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            if (tabId === 'tab3') renderHistory();
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // ==================== REFRESH ====================
+        async function refreshData() {
+            if (!currentUser) { showLogin(); return; }
+            showToast('🔄 Memuat data...', 'info');
+            await fetchData();
+            renderTools();
+            updateHistoryFilter();
+            renderHistory();
+            document.getElementById('tab3Badge').textContent = allData.length;
+            showToast(`✅ ${allData.length} strategi dimuat`, 'success');
+        }
+
+        function updateHistoryFilter() {
+            const select = document.getElementById('historyFilterTool');
+            const currentValue = select.value;
+            const types = {};
+            allData.forEach(item => { if (!types[item.strategy_type]) types[item.strategy_type] = 0; types[item.strategy_type]++; });
+            select.innerHTML = `<option value="all">📋 All Types (${allData.length})</option>`;
+            SALES_KEYS.forEach(key => {
+                const type = SALES_TYPES[key];
+                const count = types[key] || 0;
+                select.innerHTML += `<option value="${key}">${type.icon} ${type.name} (${count})</option>`;
+            });
+            if (currentValue) select.value = currentValue;
+        }
+
+        // ==================== TOAST & HELPER ====================
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+        });
+
+        window.debug = {
+            allData: () => allData,
+            refresh: refreshData,
+            SALES_TYPES, SALES_KEYS,
+            currentUser: () => currentUser,
+            isAdmin: () => isAdmin
+        };
+    </script>
+</body>
+</html>

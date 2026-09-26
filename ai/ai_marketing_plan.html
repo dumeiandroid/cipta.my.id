@@ -1,0 +1,2837 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Marketing Plan Generator</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; padding: 20px; min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        .login-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
+        .login-overlay.active { display: flex; }
+        .login-box { background: white; border-radius: 20px; padding: 40px; max-width: 420px; width: 100%; box-shadow: 0 24px 80px rgba(0,0,0,0.4); animation: fadeIn 0.3s ease; }
+        .login-box .login-icon { font-size: 48px; text-align: center; display: block; margin-bottom: 4px; }
+        .login-box h2 { text-align: center; font-size: 24px; color: #1a202c; margin-bottom: 4px; }
+        .login-box p { text-align: center; color: #718096; font-size: 14px; margin-bottom: 20px; }
+        .login-box .form-group { margin-bottom: 14px; }
+        .login-box .form-group label { font-weight: 600; font-size: 13px; color: #4a5568; display: block; margin-bottom: 4px; }
+        .login-box .form-group input { width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border 0.2s; }
+        .login-box .form-group input:focus { outline: none; border-color: #d53f8c; }
+        .login-box .form-remember { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+        .login-box .form-remember input[type="checkbox"] { width: 18px; height: 18px; accent-color: #d53f8c; }
+        .login-box .form-remember label { font-size: 13px; color: #4a5568; cursor: pointer; }
+        .login-box .btn-login { width: 100%; padding: 12px; background: #d53f8c; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .login-box .btn-login:hover { background: #b83280; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(213,63,140,0.3); }
+        .login-box .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .login-box .login-error { color: #fc8181; font-size: 13px; text-align: center; margin-top: 10px; display: none; }
+        .login-box .login-error.show { display: block; }
+        .login-box .login-loading { display: none; text-align: center; margin-top: 10px; color: #718096; font-size: 13px; }
+        .login-box .login-loading.show { display: block; }
+
+        .header { background: white; padding: 20px 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .header h1 { font-size: 24px; color: #1a2332; display: flex; align-items: center; gap: 10px; }
+        .header h1 span { background: #2d3748; color: white; font-size: 12px; padding: 2px 10px; border-radius: 20px; }
+        .header-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4a5568; background: #f7fafc; padding: 4px 14px; border-radius: 20px; }
+        .user-info .user-role { font-weight: 600; padding: 1px 10px; border-radius: 10px; font-size: 10px; }
+        .user-info .user-role.admin { background: #c6f6d5; color: #276749; }
+        .user-info .user-role.user { background: #bee3f8; color: #2a69ac; }
+        .btn-logout { padding: 4px 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; background: #fc8181; color: white; transition: 0.2s; }
+        .btn-logout:hover { background: #f56565; }
+        .search-box { display: flex; gap: 8px; align-items: center; background: #f7fafc; padding: 0 15px; border-radius: 10px; border: 2px solid #e2e8f0; transition: border 0.2s; }
+        .search-box:focus-within { border-color: #d53f8c; }
+        .search-box input { border: none; background: transparent; padding: 10px 0; font-size: 14px; outline: none; width: 200px; color: #2d3748; }
+        .search-box .icon { color: #a0aec0; font-size: 18px; }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: #d53f8c; color: white; }
+        .btn-primary:hover { background: #b83280; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(213,63,140,0.4); }
+        .btn-success { background: #48bb78; color: white; }
+        .btn-success:hover { background: #38a169; }
+        .btn-danger { background: #fc8181; color: white; }
+        .btn-danger:hover { background: #f56565; }
+        .btn-warning { background: #ed8936; color: white; }
+        .btn-warning:hover { background: #dd6b20; }
+        .btn-outline { background: transparent; color: #4a5568; border: 2px solid #e2e8f0; }
+        .btn-outline:hover { background: #f7fafc; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
+        .btn-xs { padding: 3px 10px; font-size: 11px; border-radius: 4px; }
+
+        .main-tabs-container { background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 24px; }
+        .main-tabs-header { display: flex; border-bottom: 2px solid #edf2f7; background: #f7fafc; padding: 0 20px; overflow-x: auto; flex-wrap: nowrap; }
+        .main-tab-btn { padding: 14px 24px; border: none; background: transparent; font-weight: 700; font-size: 14px; color: #a0aec0; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent; margin-bottom: -2px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .main-tab-btn:hover { color: #2d3748; }
+        .main-tab-btn.active { color: #d53f8c; border-bottom-color: #d53f8c; }
+        .main-tab-btn .badge-main { background: #edf2f7; color: #4a5568; font-size: 11px; padding: 1px 10px; border-radius: 12px; font-weight: 600; }
+        .main-tab-btn.active .badge-main { background: #fed7e2; color: #97266d; }
+        .main-tab-content { padding: 24px 30px; display: none; }
+        .main-tab-content.active { display: block; }
+
+        .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+        .tool-card { background: #f7fafc; border-radius: 12px; padding: 20px; border: 2px solid #e2e8f0; transition: all 0.2s; text-align: center; }
+        .tool-card:hover { border-color: #d53f8c; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(213,63,140,0.12); }
+        .tool-card .tool-icon { font-size: 32px; display: block; margin-bottom: 4px; }
+        .tool-card .tool-name { font-weight: 700; font-size: 15px; color: #2d3748; }
+        .tool-card .tool-desc { font-size: 12px; color: #718096; margin: 4px 0 12px; min-height: 48px; }
+        .tool-card .tool-actions { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+        .tool-card .tool-actions .btn { padding: 4px 12px; font-size: 11px; }
+
+        .studio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .studio-left { display: flex; flex-direction: column; gap: 16px; }
+        .studio-right { display: flex; flex-direction: column; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-weight: 600; font-size: 13px; color: #4a5568; }
+        .form-group input, .form-group textarea, .form-group select { padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border 0.2s; font-family: inherit; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #d53f8c; }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        .field-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 2px; }
+        .field-header label { font-weight: 600; font-size: 13px; color: #4a5568; margin: 0; }
+        .field-ai-check { display: flex; align-items: center; gap: 4px; background: #ebf8ff; padding: 2px 8px; border-radius: 6px; border: 1px solid #bee3f8; cursor: pointer; }
+        .field-ai-check input[type="checkbox"] { width: 14px; height: 14px; accent-color: #3182ce; cursor: pointer; margin: 0; }
+        .field-ai-check span { font-size: 10px; font-weight: 600; color: #2b6cb0; white-space: nowrap; }
+
+        .prompt-preview { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 2px solid #e2e8f0; min-height: 150px; white-space: pre-wrap; font-size: 13px; line-height: 1.7; color: #2d3748; max-height: 300px; overflow-y: auto; position: relative; }
+        .prompt-preview .placeholder { color: #a0aec0; font-style: italic; }
+        .prompt-preview .copy-prompt-btn { position: absolute; top: 8px; right: 8px; background: rgba(213,63,140,0.9); color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .prompt-preview .copy-prompt-btn:hover { background: #b83280; }
+
+        .quill-wrapper { background: white; border-radius: 12px; border: 2px solid #e2e8f0; overflow: hidden; }
+        .quill-wrapper .ql-toolbar { border: none; border-bottom: 2px solid #e2e8f0; background: #f7fafc; }
+        .quill-wrapper .ql-container { border: none; min-height: 200px; font-size: 14px; }
+        .quill-wrapper .ql-editor { min-height: 200px; }
+
+        .result-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+
+        .history-sub-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; }
+        .history-sub-tab { padding: 6px 16px; border: none; background: #f7fafc; border-radius: 8px; font-weight: 600; font-size: 13px; color: #4a5568; cursor: pointer; transition: all 0.2s; }
+        .history-sub-tab:hover { background: #edf2f7; }
+        .history-sub-tab.active { background: #d53f8c; color: white; }
+        .history-sub-tab .sub-badge { background: rgba(255,255,255,0.3); color: white; font-size: 10px; padding: 1px 8px; border-radius: 10px; margin-left: 4px; }
+        .history-sub-tab:not(.active) .sub-badge { background: #edf2f7; color: #4a5568; }
+
+        .history-filters { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+        .history-filters select, .history-filters input { padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; }
+        .history-filters select:focus, .history-filters input:focus { outline: none; border-color: #d53f8c; }
+
+        .history-list { display: flex; flex-direction: column; gap: 16px; }
+        .history-item { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .history-item:hover { border-color: #d53f8c; }
+        .history-item .history-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        .history-item .history-title { font-weight: 700; font-size: 15px; color: #2d3748; }
+        .history-item .history-meta { display: flex; gap: 12px; font-size: 12px; color: #718096; flex-wrap: wrap; align-items: center; }
+        .history-item .history-meta .type-badge { background: #fed7e2; color: #97266d; padding: 2px 12px; border-radius: 12px; font-weight: 600; }
+        .history-item .history-meta .ai-badge { font-size: 10px; padding: 1px 8px; border-radius: 10px; font-weight: 600; }
+        .history-item .history-meta .ai-badge.chatgpt { background: #10a37f; color: white; }
+        .history-item .history-meta .ai-badge.claude { background: #d97757; color: white; }
+        .history-item .history-meta .ai-badge.gemini { background: #4285f4; color: white; }
+        .history-item .history-meta .ai-badge.deepseek { background: #4a6cf7; color: white; }
+        .history-item .history-meta .ai-badge.other { background: #718096; color: white; }
+        .history-item .history-prompt { font-size: 13px; color: #4a5568; background: white; padding: 8px 12px; border-radius: 6px; border-left: 3px solid #d53f8c; margin-bottom: 10px; max-height: 60px; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+        .history-item .history-prompt:hover { background: #f7fafc; }
+        .history-item .history-prompt.expanded { max-height: none; white-space: pre-wrap; }
+        .history-item .history-result { font-size: 13px; color: #2d3748; margin-bottom: 8px; max-height: 80px; overflow: hidden; text-overflow: ellipsis; }
+        .history-item .history-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid #edf2f7; padding-top: 10px; }
+        .history-item .history-actions .btn { padding: 3px 12px; font-size: 11px; }
+
+        .empty-state { padding: 60px 20px; text-align: center; color: #a0aec0; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 15px; }
+        .empty-state h3 { color: #4a5568; margin-bottom: 8px; }
+        .empty-state p { font-size: 14px; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        .modal-overlay.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal { background: white; border-radius: 20px; max-width: 850px; width: 100%; max-height: 95vh; overflow-y: auto; padding: 30px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .modal-close { position: sticky; top: 0; float: right; background: #fc8181; border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; transition: 0.2s; z-index: 10; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: #f56565; transform: rotate(90deg); }
+        .modal-title { font-size: 22px; font-weight: 700; color: #1a2332; margin-bottom: 20px; padding-right: 50px; }
+        .modal-body { display: flex; flex-direction: column; gap: 16px; }
+        .contoh-box { background: linear-gradient(135deg, #fff5f7 0%, #fed7e2 100%); border-radius: 12px; padding: 16px 20px; border-left: 4px solid #d53f8c; margin: 12px 0; }
+        .contoh-box .contoh-title { font-weight: 700; font-size: 13px; color: #702459; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+        .contoh-box .contoh-item { background: white; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; color: #2d3748; line-height: 1.7; }
+        .contoh-box .contoh-item:last-child { margin-bottom: 0; }
+        .contoh-box .contoh-item .lbl { font-weight: 700; color: #d53f8c; display: inline-block; min-width: 90px; }
+        .hasil-box { background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%); border-radius: 12px; padding: 16px 20px; border-left: 4px solid #38a169; margin: 12px 0; }
+        .hasil-box .hasil-title { font-weight: 700; font-size: 13px; color: #22543d; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .hasil-box .hasil-note { font-size: 11.5px; color: #2f855a; margin-bottom: 10px; line-height: 1.5; }
+        .hasil-box .hasil-item { background: white; border-radius: 8px; padding: 9px 13px; margin-bottom: 6px; font-size: 12.5px; color: #2d3748; line-height: 1.6; }
+        .hasil-box .hasil-item:last-child { margin-bottom: 0; }
+        .hasil-box .hasil-item .h-lbl { display: block; font-weight: 700; color: #276749; font-size: 12px; margin-bottom: 2px; letter-spacing: .2px; }
+        .hasil-box .hasil-foot { font-size: 11px; color: #2f855a; margin-top: 9px; font-style: italic; line-height: 1.5; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 2px solid #edf2f7; flex-wrap: wrap; }
+
+        .toast { position: fixed; bottom: 30px; right: 30px; padding: 16px 28px; border-radius: 12px; color: white; font-weight: 600; z-index: 2000; animation: slideUp 0.3s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.2); max-width: 400px; }
+        .toast.success { background: #48bb78; }
+        .toast.error { background: #fc8181; }
+        .toast.info { background: #4299e1; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-label { font-weight: 700; font-size: 14px; color: #2d3748; margin-top: 4px; margin-bottom: 2px; padding-bottom: 4px; border-bottom: 2px solid #edf2f7; }
+        .view-result-wrapper { background: white; border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; max-height: 400px; overflow-y: auto; }
+        .view-result-wrapper .ql-editor { padding: 0; }
+        .ai-source-select { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .ai-source-select select { padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; flex: 1; }
+        .ai-source-select select:focus { outline: none; border-color: #d53f8c; }
+        .add-ai-modal .modal { max-width: 750px; }
+        .add-ai-modal .prompt-display { background: #f7fafc; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #4a5568; max-height: 120px; overflow-y: auto; white-space: pre-wrap; border-left: 3px solid #d53f8c; position: relative; }
+        .add-ai-modal .prompt-display .copy-prompt-btn { position: absolute; top: 4px; right: 4px; background: rgba(213,63,140,0.9); color: white; border: none; padding: 2px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .add-ai-modal .prompt-display .copy-prompt-btn:hover { background: #b83280; }
+
+        .main-content { display: none; }
+        .main-content.visible { display: block; }
+
+        .info-tip { background: #fffaf0; border-left: 4px solid #ed8936; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; color: #7b341e; line-height: 1.6; margin-bottom: 12px; }
+
+        @media (max-width: 992px) {
+            .studio-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .main-tabs-header { padding: 0 12px; }
+            .main-tab-btn { padding: 12px 16px; font-size: 13px; }
+            .main-tab-content { padding: 16px; }
+            .tools-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+            .header { flex-direction: column; align-items: stretch; }
+            .search-box input { width: 100%; }
+            .modal { padding: 20px; }
+            .history-item .history-header { flex-direction: column; align-items: flex-start; }
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .btn { padding: 8px 14px; font-size: 13px; }
+            .tools-grid { grid-template-columns: 1fr 1fr; }
+            .tool-card { padding: 14px; }
+            .tool-card .tool-icon { font-size: 28px; }
+            .main-tab-btn { padding: 10px 12px; font-size: 12px; }
+            .main-tab-content { padding: 12px; }
+            .history-filters { flex-direction: column; align-items: stretch; }
+            .login-box { padding: 24px 20px; }
+        }
+        .modal::-webkit-scrollbar { width: 6px; }
+        .modal::-webkit-scrollbar-track { background: #f7fafc; }
+        .modal::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="login-overlay active" id="loginOverlay">
+        <div class="login-box">
+            <span class="login-icon">📊</span>
+            <h2>Login</h2>
+            <p>Masuk untuk mengakses Marketing Plan Generator</p>
+            <div class="form-group">
+                <label>👤 Username</label>
+                <input type="text" id="loginUsername" placeholder="Masukkan username" value="">
+            </div>
+            <div class="form-group">
+                <label>🔑 Password</label>
+                <input type="password" id="loginPassword" placeholder="Masukkan password" value="" onkeydown="if(event.key==='Enter') doLogin()">
+            </div>
+            <div class="form-remember">
+                <input type="checkbox" id="loginRemember" checked>
+                <label for="loginRemember">Ingat saya</label>
+            </div>
+            <button class="btn-login" id="loginBtn" onclick="doLogin()">Login</button>
+            <div class="login-error" id="loginError">❌ Username atau password salah!</div>
+            <div class="login-loading" id="loginLoading">⏳ Memeriksa...</div>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="container" id="app">
+            <div class="header">
+                <h1>📊 AI Marketing Plan Generator <span>v1.0</span></h1>
+                <div class="header-actions">
+                    <span class="user-info" id="userInfo">
+                        👤 <span id="currentUser">-</span>
+                        <span class="user-role" id="userRole">user</span>
+                    </span>
+                    <button class="btn-logout" onclick="doLogout()">🚪 Logout</button>
+                    <div class="search-box">
+                        <span class="icon">🔍</span>
+                        <input type="text" id="searchInput" placeholder="Cari metode..." oninput="renderTools()">
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+                </div>
+            </div>
+
+            <div class="main-tabs-container">
+                <div class="main-tabs-header">
+                    <button class="main-tab-btn active" data-tab="tab1" onclick="switchMainTab('tab1')">
+                        📚 Metode Marketing
+                        <span class="badge-main" id="tab1Badge">10</span>
+                    </button>
+                    <button class="main-tab-btn" data-tab="tab2" onclick="switchMainTab('tab2')">
+                        ✏️ Marketing Studio
+                        <span class="badge-main">New</span>
+                    </button>
+                    <button class="main-tab-btn" data-tab="tab3" onclick="switchMainTab('tab3')">
+                        📋 History
+                        <span class="badge-main" id="tab3Badge">0</span>
+                    </button>
+                </div>
+
+                <div class="main-tab-content active" id="tab1">
+                    <div class="tools-grid" id="toolsGrid"></div>
+                </div>
+
+                <div class="main-tab-content" id="tab2">
+                    <div class="info-tip">
+                        💡 <strong>Tips:</strong> Setiap metode menghasilkan <strong>prompt lengkap</strong> yang bisa Anda paste ke AI eksternal (ChatGPT/Claude/Gemini/DeepSeek). Hasilnya berupa <strong>marketing plan detail</strong> yang siap dieksekusi.
+                    </div>
+                    <div class="studio-grid">
+                        <div class="studio-left">
+                            <div class="form-group">
+                                <label>📂 Pilih Metode Marketing</label>
+                                <select id="selectedTool" onchange="updateFormFields()"></select>
+                            </div>
+                            <div id="dynamicFields"></div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>📌 Judul Marketing Plan</label>
+                                    <input type="text" id="resultTitle" placeholder="Judul marketing plan...">
+                                </div>
+                                <div class="form-group">
+                                    <label>👤 Dibuat Oleh</label>
+                                    <input type="text" id="createdBy" placeholder="Nama..." value="">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="generatePrompt()">📝 Generate Prompt</button>
+                        </div>
+                        <div class="studio-right">
+                            <div class="form-group">
+                                <label>📄 Prompt yang Dihasilkan</label>
+                                <div class="prompt-preview" id="promptPreview">
+                                    <span class="placeholder">Pilih metode marketing dan isi form untuk menghasilkan prompt...</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>🤖 Pilih AI Source</label>
+                                <div class="ai-source-select">
+                                    <select id="aiSource">
+                                        <option value="ChatGPT">ChatGPT</option>
+                                        <option value="Claude">Claude</option>
+                                        <option value="Gemini">Gemini</option>
+                                        <option value="DeepSeek">DeepSeek</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>📝 Hasil AI (Paste di sini)</label>
+                                <div class="quill-wrapper">
+                                    <div id="resultEditor"></div>
+                                </div>
+                            </div>
+                            <div class="result-actions">
+                                <button class="btn btn-success" onclick="saveResult()">💾 Simpan Hasil</button>
+                                <button class="btn btn-warning" onclick="clearForm()">🗑️ Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="main-tab-content" id="tab3">
+                    <div class="history-sub-tabs" id="historySubTabs">
+                        <button class="history-sub-tab active" data-subtab="all" onclick="switchHistorySubTab('all')">
+                            📋 All <span class="sub-badge" id="subAll">0</span>
+                        </button>
+                        <button class="history-sub-tab" data-subtab="today" onclick="switchHistorySubTab('today')">
+                            📅 Hari Ini <span class="sub-badge" id="subToday">0</span>
+                        </button>
+                    </div>
+                    <div class="history-filters">
+                        <select id="historyFilterTool" onchange="renderHistory()">
+                            <option value="all">📋 All Types</option>
+                        </select>
+                        <input type="text" id="historySearch" placeholder="🔍 Cari..." oninput="renderHistory()">
+                        <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑️ Hapus Semua</button>
+                        <span style="font-size:13px;color:#718096;" id="historyCount">0 items</span>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <div class="empty-state">
+                            <div class="icon">📊</div>
+                            <h3>Belum ada marketing plan</h3>
+                            <p>Pergi ke Tab "Marketing Studio" untuk mulai membuat marketing plan</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
+            <div class="modal-title" id="infoModalTitle">📋 Info</div>
+            <div class="modal-body" id="infoModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('infoModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+            <div class="modal-title" id="viewModalTitle">👁️ Detail Marketing Plan</div>
+            <div class="modal-body">
+                <div id="viewMeta" style="font-size:13px;color:#718096;margin-bottom:12px;padding:8px 12px;background:#f7fafc;border-radius:8px;"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt:</div>
+                <div style="background:#f7fafc;padding:12px 16px;border-radius:8px;font-size:13px;color:#4a5568;white-space:pre-wrap;max-height:150px;overflow-y:auto;border-left:3px solid #d53f8c;" id="viewPrompt"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">🤖 Sumber AI:</div>
+                <div style="font-size:14px;color:#4a5568;margin-bottom:8px;" id="viewSource"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">📝 Hasil AI:</div>
+                <div class="view-result-wrapper" id="viewResultWrapper"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="copyViewResult()">📋 Copy</button>
+                <button class="btn btn-success" onclick="downloadViewDoc()">📥 Download .doc</button>
+                <button class="btn btn-outline" onclick="closeModal('viewModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay add-ai-modal" id="addAiModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('addAiModal')">✕</button>
+            <div class="modal-title">🤖 Tambah Hasil AI Baru</div>
+            <div class="modal-body">
+                <input type="hidden" id="addAiId">
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt (tidak bisa diedit):</div>
+                <div class="prompt-display" id="addAiPromptDisplay"></div>
+                <div class="form-group">
+                    <label>🤖 Pilih AI Source</label>
+                    <select id="addAiSource">
+                        <option value="ChatGPT">ChatGPT</option>
+                        <option value="Claude">Claude</option>
+                        <option value="Gemini">Gemini</option>
+                        <option value="DeepSeek">DeepSeek</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>📝 Hasil AI (Paste di sini)</label>
+                    <div class="quill-wrapper">
+                        <div id="addAiEditor"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>👤 Dibuat Oleh</label>
+                    <input type="text" id="addAiCreatedBy" placeholder="Nama...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addAiModal')">Batal</button>
+                <button class="btn btn-success" onclick="saveAddAiResult()">💾 Simpan Hasil</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="duplicateModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('duplicateModal')">✕</button>
+            <div class="modal-title">📋 Duplikat Prompt</div>
+            <div class="modal-body">
+                <input type="hidden" id="dupId">
+                <input type="hidden" id="dupToolType">
+                <div class="form-group">
+                    <label>📂 Metode Marketing</label>
+                    <input type="text" id="dupFrameworkDisplay" disabled style="background:#f7fafc;font-weight:600;">
+                </div>
+                <div id="dupDynamicFields"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📌 Judul Baru</label>
+                        <input type="text" id="dupTitle" placeholder="Judul baru...">
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Dibuat Oleh</label>
+                        <input type="text" id="dupCreatedBy" placeholder="Nama...">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>📄 Prompt yang Dihasilkan</label>
+                    <div class="prompt-preview" id="dupPromptPreview" style="min-height:100px;max-height:200px;">
+                        <span class="placeholder">Generate prompt dari form di atas...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('duplicateModal')">Batal</button>
+                <button class="btn btn-primary" onclick="generateDuplicatePrompt()">📝 Generate Prompt</button>
+                <button class="btn btn-success" onclick="saveDuplicate()">💾 Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== MARKETING MODEL DEFINITIONS ====================
+        const MARKETING_TYPES = {
+            marketing_mix: {
+                id: 'marketing_mix',
+                icon: '🎯',
+                name: 'Marketing Plan 4P / 7P',
+                desc: 'Marketing plan klasik & lengkap dengan framework 4P (Product, Price, Place, Promotion) atau 7P (+ People, Process, Physical Evidence).',
+                color: '#d53f8c',
+                use_for: '✅ Marketing plan produk baru\n✅ Business plan & proposal\n✅ UMKM yang baru mulai\n✅ Perusahaan yang ingin review strategi\n✅ Marketing plan komprehensif',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Marketing plan lengkap "Kopi Kekinian" untuk 6 bulan: analisis pasar, 4P/7P strategy, target sales, budget Rp 50 juta, timeline mingguan, KPI.' }
+                ],
+                contoh_hasil_note: 'Gambaran output marketing plan 4P/7P (contoh: Kopi Kekinian):',
+                contoh_hasil: [
+                    { lbl: 'Executive Summary', txt: 'Ringkasan 1 halaman: tujuan, target, strategi utama, budget.' },
+                    { lbl: 'Analisis Situasi', txt: 'Pasar, kompetitor, SWOT singkat, target audience.' },
+                    { lbl: 'Product Strategy', txt: 'Produk/varian, packaging, positioning, USP.' },
+                    { lbl: 'Price Strategy', txt: 'Harga jual, margin, diskon, bundling.' },
+                    { lbl: 'Place Strategy', txt: 'Channel distribusi, lokasi, online/offline.' },
+                    { lbl: 'Promotion Strategy', txt: 'Media, konten, promo, kolaborasi, budget per channel.' },
+                    { lbl: 'Timeline & KPI', txt: 'Roadmap 6 bulan, target sales, KPI per bulan.' }
+                ],
+                fields: [
+                    { key: 'brand_name', label: 'Nama Brand/Produk', type: 'text', placeholder: 'Contoh: Kopi Kekinian' },
+                    { key: 'product_desc', label: 'Deskripsi Produk', type: 'textarea', placeholder: 'Apa produknya, apa keunggulannya...' },
+                    { key: 'target_market', label: 'Target Pasar', type: 'text', placeholder: 'Contoh: Gen Z 18-25, urban, penggemar kopi' },
+                    { key: 'industry', label: 'Industri/Kategori', type: 'text', placeholder: 'Contoh: F&B / Kopi / Retail' },
+                    { key: 'budget', label: 'Budget Marketing', type: 'text', placeholder: 'Contoh: Rp 50.000.000 / 6 bulan' },
+                    { key: 'duration', label: 'Durasi Plan', type: 'text', placeholder: 'Contoh: 6 bulan / 1 tahun' },
+                    { key: 'goal', label: 'Tujuan Utama', type: 'text', placeholder: 'Contoh: 10.000 cup/bulan, brand awareness 50% Gen Z' },
+                    { key: 'usp', label: 'Unique Selling Proposition', type: 'textarea', placeholder: 'Apa yang membedakan dari kompetitor...' },
+                    { key: 'framework', label: 'Framework', type: 'text', placeholder: 'Contoh: 4P / 7P' }
+                ],
+                prompt_template: `Anda adalah Marketing Strategist profesional. Buat MARKETING PLAN LENGKAP dengan framework {framework} (Product, Price, Place, Promotion, [People, Process, Physical Evidence untuk 7P]).
+
+INFORMASI:
+- Brand/Produk: {brand_name}
+- Deskripsi: {product_desc}
+- Target pasar: {target_market}
+- Industri: {industry}
+- Budget: {budget}
+- Durasi: {duration}
+- Tujuan utama: {goal}
+- USP: {usp}
+- Framework: {framework}
+
+OUTPUT (markdown rapi):
+
+=== 1. EXECUTIVE SUMMARY ===
+Ringkasan 1 halaman: kondisi, tujuan, strategi utama, ekspektasi hasil, budget ringkas.
+
+=== 2. ANALISIS SITUASI ===
+- Overview pasar & tren industri
+- Analisis kompetitor (3-5 pemain utama)
+- Analisis SWOT singkat
+- Target audience (persona lengkap: demografi, psikografi, behavior)
+
+=== 3. PRODUCT STRATEGY ===
+- Product portfolio / varian
+- Packaging & branding
+- Positioning
+- USP & messaging
+- Product roadmap kalau ada
+
+=== 4. PRICE STRATEGY ===
+- Harga jual & struktur harga
+- Margin & cost analysis
+- Strategi diskon & bundling
+- Harga vs kompetitor (price positioning)
+
+=== 5. PLACE STRATEGY ===
+- Channel distribusi (online & offline)
+- Lokasi (kalau retail)
+- E-commerce & marketplace
+- Kemitraan & reseller
+
+=== 6. PROMOTION STRATEGY ===
+- Media mix (digital, tradisional, PR)
+- Content strategy (jenis konten, kalender)
+- Campaign ideas (min 5 campaign dengan tema)
+- Influencer & KOL strategy
+- Budget allocation per channel (dengan persentase)
+
+${'{framework}'} === 7. (Jika 7P) PEOPLE, PROCESS, PHYSICAL EVIDENCE ===
+- People: tim marketing, training, customer service
+- Process: customer journey, SOP layanan
+- Physical Evidence: toko, kemasan, seragam, signage
+
+=== 8. TIMELINE & ROADMAP ===
+Roadmap {duration} dengan milestone bulanan:
+Bulan 1: [aktivitas]
+Bulan 2: [aktivitas]
+dst.
+
+=== 9. BUDGET BREAKDOWN ===
+Alokasi budget {budget} per channel & aktivitas:
+- Digital ads: Rp X (Y%)
+- Content production: Rp X (Y%)
+- Influencer: Rp X (Y%)
+- Event: Rp X (Y%)
+- Lain-lain: Rp X (Y%)
+
+=== 10. KPI & METRICS ===
+KPI utama:
+- Sales target
+- CAC (Customer Acquisition Cost)
+- ROAS (Return on Ad Spend)
+- Brand awareness
+- Engagement rate
+- Repeat purchase rate
+Target per bulan & cara ukur.
+
+=== 11. RISK & MITIGATION ===
+5 risiko utama + cara mengatasinya.
+
+=== 12. ACTION PLAN ===
+Langkah 30 hari pertama (mingguan, detail, siapa yang bertanggung jawab).
+
+PENTING:
+- Semua angka, target, dan timeline harus REALISTIS
+- Gunakan data industri {industry} Indonesia
+- Setiap strategi harus ACTIONABLE (bisa langsung dieksekusi)
+- Sertakan contoh konten/ad copy untuk beberapa campaign
+
+Markdown rapi, siap presentasi.`
+            },
+            stp: {
+                id: 'stp',
+                icon: '🎯',
+                name: 'STP (Segmenting, Targeting, Positioning)',
+                desc: 'Fondasi strategi marketing — segmentasi pasar, pilih target, dan tentukan positioning brand.',
+                color: '#9f7aea',
+                use_for: '✅ Fondasi brand strategy\n✅ Sebelum bikin marketing plan\n✅ Produk baru yang belum jelas targetnya\n✅ Repositioning brand\n✅ Business plan investor',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'STP untuk skincare lokal: 5 segmen pasar, pilih 2 target utama, positioning "skincare terjangkau untuk kulit tropis Indonesia".' }
+                ],
+                contoh_hasil_note: 'Gambaran output STP:',
+                contoh_hasil: [
+                    { lbl: 'Segmentasi Pasar', txt: 'Bagi pasar jadi 4-6 segmen berdasarkan demografi, psikografi, behavior, geografi.' },
+                    { lbl: 'Evaluasi Segmen', txt: 'Analisis attractiveness tiap segmen (size, growth, competition, fit).' },
+                    { lbl: 'Target Selection', txt: 'Pilih 1-3 target utama + alasan pemilihan.' },
+                    { lbl: 'Positioning Statement', txt: '1 kalimat positioning yang tajam.' },
+                    { lbl: 'Positioning Map', txt: 'Peta posisi brand vs kompetitor.' },
+                    { lbl: 'Differentiation & Proof', txt: 'Poin pembeda + bukti pendukung.' }
+                ],
+                fields: [
+                    { key: 'brand_name', label: 'Nama Brand/Produk', type: 'text', placeholder: 'Contoh: GlowUp Skincare' },
+                    { key: 'product_desc', label: 'Deskripsi Produk', type: 'textarea', placeholder: 'Apa produknya...' },
+                    { key: 'industry', label: 'Industri/Kategori', type: 'text', placeholder: 'Contoh: Skincare / F&B / Pendidikan' },
+                    { key: 'current_market', label: 'Pasar Saat Ini (jika ada)', type: 'text', placeholder: 'Contoh: Wanita 20-35 di kota besar' },
+                    { key: 'competitors', label: 'Kompetitor Utama', type: 'text', placeholder: 'Contoh: Wardah, Somethinc, Avoskin' },
+                    { key: 'goal', label: 'Tujuan STP', type: 'text', placeholder: 'Contoh: Menemukan target market baru / repositioning brand' },
+                    { key: 'budget', label: 'Budget (opsional)', type: 'text', placeholder: 'Contoh: Rp 100 juta / 3 bulan' }
+                ],
+                prompt_template: `Anda adalah Brand Strategist profesional. Buat analisis STP (Segmenting, Targeting, Positioning) yang mendalam.
+
+INFORMASI:
+- Brand/Produk: {brand_name}
+- Deskripsi: {product_desc}
+- Industri: {industry}
+- Pasar saat ini: {current_market}
+- Kompetitor: {competitors}
+- Tujuan STP: {goal}
+- Budget: {budget}
+
+OUTPUT (markdown rapi):
+
+=== 1. SEGMENTING (Segmentasi Pasar) ===
+Bagi pasar menjadi 5-6 segmen. Untuk setiap segmen jelaskan:
+- Nama segmen (catchy)
+- Demografi (usia, gender, income, education, lokasi)
+- Psikografi (values, lifestyle, personality)
+- Behavior (buying habits, usage, loyalty)
+- Needs & pain points
+- Size estimasi (% dari total market)
+
+=== 2. EVALUASI SEGMEN ===
+Tabel per segmen:
+| Segmen | Size | Growth | Competition | Fit dengan brand | Skor Total |
+
+Skor 1-10 per kategori, total menentukan attractiveness.
+
+=== 3. TARGETING ===
+- Pilih 1-3 segmen utama (target market)
+- Justifikasi kenapa segmen ini
+- Persona lengkap untuk setiap target:
+  - Nama, usia, pekerjaan
+  - Goals & motivasi
+  - Pain points & frustrasi
+  - Media konsumsi (platform, jam aktif)
+  - Trigger pembelian
+- Segmen yang TIDAK diincar (dan kenapa)
+
+=== 4. POSITIONING ===
+- Positioning statement (1 kalimat tajam dengan formula: "Untuk [target], [brand] adalah [category] yang [differentiation], karena [reason to believe]")
+- Brand essence (3 kata kunci)
+- Value proposition (3-5 poin)
+- Brand personality (5 traits)
+- Tone of voice
+
+=== 5. POSITIONING MAP ===
+Peta 2 dimensi (pilih 2 axis paling relevan). Plot:
+- Brand Anda
+- 5-7 kompetitor
+Jelaskan di kuadran mana masing-masing berada.
+
+=== 6. DIFFERENTIATION & PROOF ===
+- 3-5 poin pembeda utama
+- Bukti untuk setiap poin (data, testimoni, fitur)
+- Alasan kompetitor sulit meniru
+
+=== 7. POSITIONING MESSAGING ===
+- Tagline (5 alternatif)
+- Elevator pitch (30 detik)
+- Key messages untuk 3 channel berbeda (medsos, website, iklan)
+
+=== 8. STRATEGI EKSEKUSI STP ===
+- Cara brand akan mengomunikasikan positioning
+- Content pillars yang align dengan positioning
+- Channel utama
+- Contoh konten/iklan yang mencerminkan positioning
+
+=== 9. RISIKO & ANTISIPASI ===
+- Risiko positioning (terlalu sempit, terlalu luas, tidak jelas)
+- Cara validasi positioning (riset, A/B test, feedback)
+
+PENTING:
+- Segmentasi harus berdasarkan data psikografis juga, bukan hanya demografi
+- Positioning harus DIFFERENTIATIVE (kalau kompetitor juga bilang "berkualitas", itu bukan positioning)
+- Sertakan contoh konkret konten/iklan
+- Bahasa marketing yang tajam, hindari jargon berlebihan
+
+Markdown rapi.`
+            },
+            digital_marketing: {
+                id: 'digital_marketing',
+                icon: '💻',
+                name: 'Digital Marketing Plan',
+                desc: 'Marketing plan khusus digital — SEO, SEM, Social Media Ads, Email Marketing, Content, dll.',
+                color: '#3182ce',
+                use_for: '✅ Brand yang mau fokus digital\n✅ E-commerce & online business\n✅ Lead generation\n✅ DTC (Direct to Consumer)\n✅ SaaS & startup',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Digital marketing plan 6 bulan untuk SaaS HR: SEO strategy (100 keywords), Google Ads (budget per campaign), LinkedIn Ads, content marketing (24 blog posts), email nurture (5 sequence).' }
+                ],
+                contoh_hasil_note: 'Gambaran output digital marketing plan:',
+                contoh_hasil: [
+                    { lbl: 'Funnel Analysis', txt: 'TOFU, MOFU, BOFU dengan channel per tahap.' },
+                    { lbl: 'SEO Strategy', txt: 'Keyword research, content cluster, on-page & off-page.' },
+                    { lbl: 'Paid Ads Strategy', txt: 'Google, Meta, LinkedIn, TikTok — budget & targeting.' },
+                    { lbl: 'Content Marketing', txt: 'Content pillars, kalender, distribusi.' },
+                    { lbl: 'Email Marketing', txt: 'Nurture sequence, drip campaign, segmentasi.' },
+                    { lbl: 'Analytics & KPI', txt: 'Tracking setup, dashboard, KPI per channel.' }
+                ],
+                fields: [
+                    { key: 'brand_name', label: 'Nama Brand', type: 'text', placeholder: 'Contoh: HRku SaaS' },
+                    { key: 'product_desc', label: 'Deskripsi Produk/Layanan', type: 'textarea', placeholder: 'Apa yang ditawarkan...' },
+                    { key: 'target_market', label: 'Target Market', type: 'text', placeholder: 'Contoh: HR manager di perusahaan 100-500 karyawan' },
+                    { key: 'goal', label: 'Tujuan Utama', type: 'text', placeholder: 'Contoh: 500 leads berkualitas/bulan, CAC < Rp 200rb' },
+                    { key: 'budget', label: 'Budget Digital Marketing', type: 'text', placeholder: 'Contoh: Rp 30 juta/bulan' },
+                    { key: 'duration', label: 'Durasi Plan', type: 'text', placeholder: 'Contoh: 6 bulan' },
+                    { key: 'channels', label: 'Channel Prioritas', type: 'text', placeholder: 'Contoh: Google Ads, LinkedIn, SEO, Email' },
+                    { key: 'current_assets', label: 'Aset yang Sudah Ada', type: 'textarea', placeholder: 'Contoh: Website, 5.000 email list, IG 10rb followers' },
+                    { key: 'competitor_digital', label: 'Kompetitor Digital', type: 'text', placeholder: 'Contoh: Talenta, Mekari, GajiGesa' }
+                ],
+                prompt_template: `Anda adalah Digital Marketing Strategist profesional. Buat DIGITAL MARKETING PLAN lengkap dan actionable.
+
+INFORMASI:
+- Brand: {brand_name}
+- Produk: {product_desc}
+- Target market: {target_market}
+- Tujuan: {goal}
+- Budget: {budget}
+- Durasi: {duration}
+- Channel prioritas: {channels}
+- Aset yang sudah ada: {current_assets}
+- Kompetitor digital: {competitor_digital}
+
+OUTPUT (markdown rapi):
+
+=== 1. RINGKASAN & TUJUAN ===
+- Tujuan SMART (Specific, Measurable, Achievable, Relevant, Time-bound)
+- KPI utama
+- Budget overview
+
+=== 2. FUNNEL MARKETING ===
+Bagi strategi ke 3 tahap:
+
+**TOFU (Awareness)**
+- Channel: SEO, Content, Social Media Organic, PR
+- Target: reach, impression, traffic
+
+**MOFU (Consideration)**
+- Channel: Retargeting Ads, Email Nurture, Webinar, Lead Magnet
+- Target: leads, MQL, engagement
+
+**BOFU (Conversion)**
+- Channel: Google Ads (brand+intent), Sales outreach, Demo, Trial
+- Target: SQL, conversion rate, CAC
+
+=== 3. SEO STRATEGY ===
+- 20 keyword utama (dengan search volume & difficulty estimasi)
+- Cluster konten (pillar + cluster)
+- On-page SEO checklist
+- Off-page SEO (backlink strategy)
+- Technical SEO to-do
+- Timeline: kapan bisa lihat hasil
+
+=== 4. PAID ADS STRATEGY ===
+Untuk setiap platform (Google, Meta, LinkedIn, TikTok — sesuai channel prioritas):
+- Campaign objective
+- Target audience (interest, behavior, lookalike)
+- Budget per campaign
+- Ad format & creative direction
+- Contoh copy 3 varian
+- Expected CPL/CPA
+
+Budget split:
+| Platform | Budget/bulan | % | Target Results |
+
+=== 5. CONTENT MARKETING ===
+- Content pillar (4-5 tema utama)
+- Format mix (blog, video, infographic, carousel)
+- Kalender konten 4 minggu (contoh)
+- Distribusi & repurposing
+- Contoh 5 judul konten (SEO-optimized)
+
+=== 6. EMAIL MARKETING ===
+- List building strategy
+- Welcome sequence (5 email)
+- Nurture sequence (5 email)
+- Re-engagement campaign
+- Contoh subject line (10 alternatif dengan A/B test)
+
+=== 7. SOCIAL MEDIA STRATEGY ===
+- Platform prioritas & alasan
+- Content mix per platform (80/20 rule)
+- Posting frequency
+- Contoh content calendar 2 minggu
+- Engagement strategy
+
+=== 8. CONVERSION OPTIMIZATION ===
+- Landing page best practices
+- A/B test plan (headline, CTA, form)
+- Heatmap & user behavior analysis
+- Conversion funnel optimization
+
+=== 9. BUDGET BREAKDOWN ===
+Alokasi {budget}:
+| Channel | Budget | % | Expected Results |
+
+=== 10. KPI & TRACKING ===
+- Setup tracking (GA4, GTM, pixel)
+- Dashboard metrics
+- Weekly/monthly reporting
+- KPI per channel dengan target bulanan
+
+=== 11. TIMELINE 6 BULAN ===
+Bulan per bulan: fokus, aktivitas, milestone.
+
+=== 12. OPTIMIZATION LOOP ===
+- Cara test & scale
+- Weekly review ritual
+- Kapan kill campaign yang tidak perform
+
+=== 13. TOOLS RECOMMENDATION ===
+Tools untuk tiap fungsi (dengan alternatif gratis & berbayar):
+- SEO: Ahrefs, Semrush, Ubersuggest
+- Ads: Google Ads, Meta Business
+- Email: Mailchimp, ConvertKit
+- Analytics: GA4, Hotjar
+- Design: Canva, Figma
+
+PENTING:
+- Semua angka harus realistis untuk pasar Indonesia
+- Setiap strategi harus punya "cara ukur"
+- Prioritaskan channel yang paling ROI-nya tinggi
+- Sertakan contoh copy & creative direction
+- Budget allocation harus masuk akal
+
+Markdown rapi.`
+            },
+            content_marketing: {
+                id: 'content_marketing',
+                icon: '📝',
+                name: 'Content Marketing Plan',
+                desc: 'Strategi konten lengkap — content pillar, kalender, distribusi, sampai repurposing.',
+                color: '#38a169',
+                use_for: '✅ Content creator & brand\n✅ Personal branding\n✅ Blog & media online\n✅ Community building\n✅ Thought leadership',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Content plan 3 bulan untuk personal brand coach: 4 pillar konten, 36 post IG, 12 reels, 6 YouTube video, 12 newsletter, distribusi & repurposing.' }
+                ],
+                contoh_hasil_note: 'Gambaran output content marketing plan:',
+                contoh_hasil: [
+                    { lbl: 'Content Pillar', txt: '4-5 tema utama yang konsisten.' },
+                    { lbl: 'Content Format Mix', txt: 'Kombinasi format untuk tiap platform.' },
+                    { lbl: 'Kalender Konten', txt: 'Kalender mingguan 4-12 minggu.' },
+                    { lbl: 'Content Funnel', txt: 'Mapping konten ke tahap TOFU/MOFU/BOFU.' },
+                    { lbl: 'Repurposing Strategy', txt: 'Cara 1 konten jadi 10 aset.' },
+                    { lbl: 'Distribution Plan', txt: 'Kapan & di mana posting.' }
+                ],
+                fields: [
+                    { key: 'brand_name', label: 'Nama Brand/Creator', type: 'text', placeholder: 'Contoh: Andi Coach' },
+                    { key: 'niche', label: 'Niche/Topik Utama', type: 'text', placeholder: 'Contoh: Karier & personal development' },
+                    { key: 'target_audience', label: 'Target Audience', type: 'text', placeholder: 'Contoh: Profesional muda 25-35 tahun' },
+                    { key: 'goal', label: 'Tujuan Konten', type: 'text', placeholder: 'Contoh: Bangun personal brand + 10.000 followers' },
+                    { key: 'platforms', label: 'Platform Prioritas', type: 'text', placeholder: 'Contoh: Instagram, LinkedIn, YouTube, TikTok' },
+                    { key: 'duration', label: 'Durasi Plan', type: 'text', placeholder: 'Contoh: 3 bulan' },
+                    { key: 'frequency', label: 'Frekuensi Posting', type: 'text', placeholder: 'Contoh: 5x/minggu IG, 3x/minggu LinkedIn' },
+                    { key: 'tone', label: 'Tone Konten', type: 'text', placeholder: 'Contoh: Hangat, praktis, insightful' }
+                ],
+                prompt_template: `Anda adalah Content Strategist profesional. Buat CONTENT MARKETING PLAN lengkap dan actionable.
+
+INFORMASI:
+- Brand/Creator: {brand_name}
+- Niche: {niche}
+- Target audience: {target_audience}
+- Tujuan: {goal}
+- Platform: {platforms}
+- Durasi: {duration}
+- Frekuensi: {frequency}
+- Tone: {tone}
+
+OUTPUT (markdown rapi):
+
+=== 1. CONTENT MISSION ===
+- Content mission statement (1 kalimat)
+- 3 tujuan utama konten
+- Unique angle (apa yang beda dari creator lain di niche)
+
+=== 2. CONTENT PILLAR (4-5 PILLAR) ===
+Untuk setiap pillar:
+- Nama pillar
+- Deskripsi
+- Contoh topik (5-10 per pillar)
+- % dari total konten (untuk menjaga balance)
+- Format yang paling cocok
+
+=== 3. TARGET AUDIENCE DEEP DIVE ===
+- Persona lengkap
+- Platform mana yang paling efektif untuk mereka
+- Jam aktif
+- Jenis konten yang paling mereka konsumsi
+- Pain points & aspirasi
+
+=== 4. CONTENT FORMAT MIX ===
+Format per platform:
+- Long-form video (YouTube)
+- Short-form video (Reels, TikTok, Shorts)
+- Carousel (IG, LinkedIn)
+- Single image
+- Text post (LinkedIn, Twitter)
+- Newsletter/email
+- Blog post
+- Podcast (kalau relevan)
+
+Untuk setiap format: durasi/panjang ideal, hook pattern, CTA.
+
+=== 5. CONTENT FUNNEL ===
+- TOFU konten: jenis, contoh, tujuan (reach)
+- MOFU konten: jenis, contoh, tujuan (engagement)
+- BOFU konten: jenis, contoh, tujuan (conversion)
+
+Ratio: misal 60% TOFU, 30% MOFU, 10% BOFU.
+
+=== 6. CONTENT CALENDAR ===
+Buat kalender konten 4 minggu (kalau durasi 3 bulan, cukup 4 minggu sebagai template):
+Setiap hari: tanggal, platform, format, topik, hook, CTA.
+
+Contoh format:
+Minggu 1, Senin - IG Carousel - "5 Kesalahan Fresh Graduate" - Hook: "Kamu pasti pernah..." - CTA: "Save & share"
+
+=== 7. HOOK & CTA LIBRARY ===
+- 20 hook template (untuk berbagai jenis konten)
+- 10 CTA template
+
+=== 8. REPURPOSING STRATEGY ===
+1 konten utama → 10 aset:
+Contoh: 1 YouTube video → 1 blog post, 5 short clips, 1 carousel, 3 story, 1 newsletter, 1 quote post.
+
+Buat playbook repurposing lengkap.
+
+=== 9. DISTRIBUTION & TIMING ===
+- Jadwal posting per platform (jam optimal)
+- Strategi cross-promote antar platform
+- Engagement strategy (reply comment, DM, engage komunitas)
+- Kolaborasi & cross-post
+
+=== 10. CONTENT PRODUCTION PROCESS ===
+- Workflow dari ide ke posting
+- Batching strategy (produksi 1 hari untuk 2 minggu)
+- Tools yang dibutuhkan
+- Tim (kalau ada) & role
+
+=== 11. KPI & METRICS ===
+KPI per platform:
+- Reach, impression, engagement rate
+- Follower growth
+- Save, share, comment
+- Website traffic & lead
+Target bulanan.
+
+=== 12. KONTEN 30 HARI PERTAMA ===
+List 30 ide konten siap dieksekusi (1 bulan).
+
+PENTING:
+- Setiap konten harus punya HOOK kuat di 3 detik pertama
+- Konten harus deliver VALUE (educate, entertain, inspire)
+- Tone {tone} harus konsisten
+- Sertakan contoh konkret hook & CTA
+
+Markdown rapi.`
+            },
+            social_media: {
+                id: 'social_media',
+                icon: '📱',
+                name: 'Social Media Marketing Plan',
+                desc: 'Strategi khusus media sosial — platform mix, content strategy, ads, engagement, community.',
+                color: '#ed64a6',
+                use_for: '✅ Brand yang mau viral di medsos\n✅ UMKM yang jualan via IG/TikTok\n✅ Personal branding\n✅ Community building\n✅ E-commerce & affiliate',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Social media plan untuk fashion brand lokal: IG + TikTok strategy, 30 konten/bulan, kolaborasi KOL, TikTok Ads budget Rp 10 juta, target 100rb followers dalam 3 bulan.' }
+                ],
+                contoh_hasil_note: 'Gambaran output social media plan:',
+                contoh_hasil: [
+                    { lbl: 'Platform Strategy', txt: 'Pilih 2-3 platform utama + alasan.' },
+                    { lbl: 'Content Strategy per Platform', txt: 'Format & jenis konten berbeda per platform.' },
+                    { lbl: 'Posting Schedule', txt: 'Jadwal harian/mingguan.' },
+                    { lbl: 'Growth Hacking', txt: 'Cara cepat naik followers & engagement.' },
+                    { lbl: 'Ads Strategy', txt: 'Meta Ads, TikTok Ads, KOL collaboration.' },
+                    { lbl: 'Community Management', txt: 'Cara handle comment, DM, crisis.' }
+                ],
+                fields: [
+                    { key: 'brand_name', label: 'Nama Brand', type: 'text', placeholder: 'Contoh: Lokal Threads' },
+                    { key: 'product_desc', label: 'Produk/Layanan', type: 'textarea', placeholder: 'Apa yang dijual...' },
+                    { key: 'target_audience', label: 'Target Audience', type: 'text', placeholder: 'Contoh: Gen Z 18-24, urban, fashion enthusiast' },
+                    { key: 'platforms', label: 'Platform Prioritas', type: 'text', placeholder: 'Contoh: Instagram, TikTok, YouTube Shorts' },
+                    { key: 'goal', label: 'Tujuan Utama', type: 'text', placeholder: 'Contoh: 100rb followers + Rp 200 juta sales dalam 3 bulan' },
+                    { key: 'budget_ads', label: 'Budget Ads per Bulan', type: 'text', placeholder: 'Contoh: Rp 10 juta/bulan' },
+                    { key: 'content_freq', label: 'Frekuensi Posting', type: 'text', placeholder: 'Contoh: 2x/hari IG+TT, 3x/minggu YT' },
+                    { key: 'kols', label: 'KOL/Influencer Prioritas', type: 'textarea', placeholder: 'Contoh: Micro KOL 10-50rb followers, kategori fashion' }
+                ],
+                prompt_template: `Anda adalah Social Media Strategist profesional. Buat SOCIAL MEDIA MARKETING PLAN lengkap.
+
+INFORMASI:
+- Brand: {brand_name}
+- Produk: {product_desc}
+- Target audience: {target_audience}
+- Platform: {platforms}
+- Tujuan: {goal}
+- Budget Ads: {budget_ads}
+- Frekuensi: {content_freq}
+- KOL prioritas: {kols}
+
+OUTPUT (markdown rapi):
+
+=== 1. PLATFORM STRATEGY ===
+Untuk setiap platform di {platforms}:
+- Kenapa platform ini (fit dengan target)
+- Jenis konten yang paling efektif di platform ini
+- Posting frequency optimal
+- Best time to post
+- KPI utama
+
+=== 2. CONTENT STRATEGY ===
+- 4-5 content pillar
+- Content mix: edukasi, hiburan, inspirasi, promosi (ratio)
+- Format mix per platform (reels, carousel, story, live, dll)
+- Contoh 30 ide konten siap eksekusi (10 per platform prioritas)
+
+=== 3. HOOK LIBRARY ===
+30 hook viral yang bisa dipakai:
+- Curiosity hook (10)
+- Contrarian hook (5)
+- Story hook (5)
+- Value hook (5)
+- Question hook (5)
+
+=== 4. POSTING SCHEDULE ===
+Kalender konten 4 minggu detail:
+- Setiap hari: jam, platform, format, topik, hook, CTA
+- Warna-coded untuk pillar berbeda
+
+=== 5. GROWTH HACKING STRATEGY ===
+10 taktik growth:
+1. Collab & cross-post
+2. Giveaway & challenge
+3. User-generated content campaign
+4. Trending audio/content hack
+5. Comment marketing
+6. DM outreach strategy
+7. Community engagement
+8. Repost viral content strategy
+9. Live streaming routine
+10. SEO untuk social (hashtag + keyword)
+
+=== 6. PAID ADS STRATEGY ===
+Budget {budget_ads}/bulan:
+- Meta Ads (IG+FB): campaign type, target, format, budget
+- TikTok Ads: campaign type, target, format, budget
+- YouTube Ads (kalau relevan)
+- Retargeting strategy
+
+Untuk setiap campaign: objective, target audience, budget, expected result (CPM, CPC, ROAS).
+
+=== 7. KOL & INFLUENCER STRATEGY ===
+- Kriteria KOL (followers, engagement, niche)
+- Tier (nano, micro, macro)
+- Budget allocation
+- Cara kolaborasi (paid, barter, affiliate)
+- Contoh brief KOL
+
+=== 8. ENGAGEMENT & COMMUNITY ===
+- Cara handle comment (positive, negative, spam)
+- DM strategy (auto-reply, sales DM, CS)
+- Cara bangun community (WA group, Discord, dll)
+- UGC campaign idea
+- Crisis management SOP
+
+=== 9. CONTENT PRODUCTION ===
+- Workflow produksi
+- Batching schedule
+- Tools yang dipakai
+- Tim & role (kalau ada)
+
+=== 10. KPI & TRACKING ===
+KPI per platform:
+- Follower growth
+- Engagement rate
+- Reach & impression
+- Save & share
+- Website click
+- Sales/conversion
+
+Target bulanan (bulan 1, 2, 3, dst).
+
+=== 11. TIMELINE 3 BULAN ===
+Bulan 1: fokus & aktivitas
+Bulan 2: fokus & aktivitas
+Bulan 3: fokus & aktivitas
+
+=== 12. CHECKLIST HARIAN CREATOR ===
+Rutinitas harian social media manager:
+- Pagi: [aktivitas]
+- Siang: [aktivitas]
+- Sore: [aktivitas]
+- Malam: [aktivitas]
+
+PENTING:
+- Setiap ide konten harus SPESIFIK, bukan generic
+- Hook harus dalam 3 detik pertama
+- Algoritma 2026 aware (Reels, TikTok, Shorts)
+- Sertakan contoh visual direction
+- Semua taktik harus AMAN (tidak melanggar TOS platform)
+
+Markdown rapi.`
+            },
+            product_launch: {
+                id: 'product_launch',
+                icon: '🚀',
+                name: 'Product Launch Plan',
+                desc: 'Strategi peluncuran produk baru — pre-launch, launch day, dan post-launch.',
+                color: '#dd6b20',
+                use_for: '✅ Produk baru launching\n✅ Fitur baru SaaS\n✅ Event atau buku\n✅ Kursus online\n✅ Kickstarter/crowdfunding',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Launch plan untuk aplikasi mobile baru: 8 minggu pre-launch (teaser, waitlist), launch day (PR, ads, KOL), post-launch (retention, referral).' }
+                ],
+                contoh_hasil_note: 'Gambaran output product launch plan:',
+                contoh_hasil: [
+                    { lbl: 'Pre-Launch (T-8 minggu)', txt: 'Teaser, waitlist, PR pitch, KOL seeding.' },
+                    { lbl: 'Launch Week', txt: 'Kickoff event, ads burst, PR release, KOL activation.' },
+                    { lbl: 'Post-Launch', txt: 'Retention, referral, feedback loop, iterasi.' },
+                    { lbl: 'Budget & Timeline', txt: 'Alokasi budget per fase, timeline mingguan.' },
+                    { lbl: 'Success Metrics', txt: 'KPI launch success (downloads, revenue, virality).' }
+                ],
+                fields: [
+                    { key: 'product_name', label: 'Nama Produk', type: 'text', placeholder: 'Contoh: TaskFlow App' },
+                    { key: 'product_desc', label: 'Deskripsi Produk', type: 'textarea', placeholder: 'Apa produknya, keunggulannya...' },
+                    { key: 'target_market', label: 'Target Market', type: 'text', placeholder: 'Contoh: Freelancer & startup founder' },
+                    { key: 'launch_date', label: 'Tanggal Launching', type: 'text', placeholder: 'Contoh: 1 Mei 2026' },
+                    { key: 'pre_launch_weeks', label: 'Durasi Pre-Launch', type: 'text', placeholder: 'Contoh: 8 minggu' },
+                    { key: 'budget', label: 'Budget Launch', type: 'text', placeholder: 'Contoh: Rp 150 juta' },
+                    { key: 'goal', label: 'Target Launch', type: 'text', placeholder: 'Contoh: 10.000 downloads minggu pertama, 500 paying users' },
+                    { key: 'channels', label: 'Channel Utama', type: 'text', placeholder: 'Contoh: Product Hunt, LinkedIn, TikTok, PR media' },
+                    { key: 'usp', label: 'USP / Keunggulan', type: 'textarea', placeholder: 'Kenapa produk ini beda...' }
+                ],
+                prompt_template: `Anda adalah Product Marketing Manager berpengalaman. Buat PRODUCT LAUNCH PLAN lengkap dengan 3 fase.
+
+INFORMASI:
+- Produk: {product_name}
+- Deskripsi: {product_desc}
+- Target market: {target_market}
+- Tanggal launch: {launch_date}
+- Pre-launch: {pre_launch_weeks}
+- Budget: {budget}
+- Target: {goal}
+- Channel: {channels}
+- USP: {usp}
+
+OUTPUT (markdown rapi):
+
+=== 1. LAUNCH OVERVIEW ===
+- Big idea launch (1 kalimat)
+- Positioning produk
+- Target audience (persona lengkap)
+- USP vs kompetitor
+- Success metrics (KPI)
+
+=== 2. FASE 1: PRE-LAUNCH (T-{pre_launch_weeks}) ===
+**Minggu 1-2: RISET & FONDASI**
+- Validasi target market
+- Landing page / waitlist setup
+- Brand asset & messaging
+- Beta tester recruitment
+
+**Minggu 3-4: TEASER**
+- Teaser campaign (social, PR)
+- Behind-the-scenes content
+- Waitlist push
+- Komunitas awal setup
+
+**Minggu 5-6: BUILD ANTICIPATION**
+- Countdown mulai
+- KOL seeding (early access)
+- PR outreach ke media
+- Email sequence to waitlist
+
+**Minggu 7-8: FINAL PREP**
+- Press kit & media assets
+- Launch day contingency plan
+- Ads campaign ready (dark post)
+- Team briefing
+
+=== 3. FASE 2: LAUNCH DAY & WEEK ===
+**Launch Day (T-0)**
+- Jam per jam aktivitas
+- Press release distribution
+- Social media blitz
+- Email blast ke waitlist
+- Ads live
+- KOL posting starts
+- Real-time monitoring
+
+**Launch Week (T+1 to T+7)**
+- Daily activities
+- Community management
+- Response to feedback
+- Optimization ads
+- Follow-up press
+
+=== 4. FASE 3: POST-LAUNCH (T+8 to T+30) ===
+- Retention campaign
+- Referral program
+- User testimonials & case studies
+- Product iteration based on feedback
+- Scale winning channels
+- PR #2 (milestone announcement)
+
+=== 5. CHANNEL STRATEGY ===
+Untuk setiap channel ({channels}):
+- Role dalam launch
+- Content plan
+- Budget allocation
+- Timeline aktivasi
+- KPI
+
+=== 6. BUDGET BREAKDOWN ===
+Alokasi {budget}:
+| Fase | Aktivitas | Budget | % |
+Pre-launch: X
+Launch: X
+Post-launch: X
+
+Breakdown lebih detail per item.
+
+=== 7. CONTENT & MESSAGING ===
+- Key messages (3-5 utama)
+- Tagline & slogan
+- Elevator pitch
+- Press release draft
+- Social media copy (10 post siap pakai)
+- Email sequence (5 email)
+
+=== 8. PR & MEDIA STRATEGY ===
+- Media list (target media & jurnalis)
+- Press release angle
+- Embargo strategy
+- Media kit content
+- Interview & podcast opportunities
+
+=== 9. KOL & COMMUNITY ===
+- KOL tier strategy
+- KOL brief template
+- Community building
+- Ambassador program
+
+=== 10. LAUNCH DAY RUNBOOK ===
+Detail jam per jam aktivitas launch day:
+06:00 - 08:00: [aktivitas]
+08:00 - 10:00: [aktivitas]
+dst.
+
+Sertakan:
+- Siapa bertanggung jawab
+- Checklist per jam
+- Contingency plan
+
+=== 11. KPI & TRACKING ===
+KPI per fase:
+- Pre-launch: waitlist signups, PR mentions
+- Launch: downloads/sales, CAC, virality coefficient
+- Post-launch: retention, NPS, referral rate
+
+Dashboard metric & reporting cadence.
+
+=== 12. RISK & CONTINGENCY ===
+10 risiko launch + mitigation plan.
+
+=== 13. TIMELINE VISUAL ===
+Timeline ringkas semua aktivitas dalam 1 tabel.
+
+PENTING:
+- Timeline harus REALISTIS (jangan terlalu optimis)
+- Setiap aktivitas harus punya PIC & deadline
+- Antisipasi hal-hal yang bisa gagal
+- Sertakan contingency plan yang konkret
+
+Markdown rapi.`
+            },
+            aida_funnel: {
+                id: 'aida_funnel',
+                icon: '🔄',
+                name: 'AIDA Marketing Funnel',
+                desc: 'Strategi marketing berbasis funnel AIDA (Attention, Interest, Desire, Action) dengan optimasi konversi.',
+                color: '#d69e2e',
+                use_for: '✅ Sales funnel optimization\n✅ Lead generation\n✅ E-commerce conversion\n✅ Info produk & kursus\n✅ Webinar & event',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'AIDA funnel untuk kursus online: TOFU content (Attention), MOFU webinar (Interest+Desire), BOFU sales page + email (Action) dengan conversion rate target per tahap.' }
+                ],
+                contoh_hasil_note: 'Gambaran output AIDA funnel:',
+                contoh_hasil: [
+                    { lbl: 'Attention Strategy', txt: 'Iklan, content, PR untuk menarik perhatian.' },
+                    { lbl: 'Interest Strategy', txt: 'Lead magnet, konten edukatif, webinar.' },
+                    { lbl: 'Desire Strategy', txt: 'Testimoni, demo, case study, scarcity.' },
+                    { lbl: 'Action Strategy', txt: 'Sales page, penawaran, CTA, urgency.' },
+                    { lbl: 'Funnel Metrics', txt: 'Conversion rate per tahap, target.' }
+                ],
+                fields: [
+                    { key: 'product_name', label: 'Nama Produk/Layanan', type: 'text', placeholder: 'Contoh: Kursus Digital Marketing' },
+                    { key: 'product_desc', label: 'Deskripsi Singkat', type: 'textarea', placeholder: 'Apa yang ditawarkan...' },
+                    { key: 'price', label: 'Harga Produk', type: 'text', placeholder: 'Contoh: Rp 1.500.000' },
+                    { key: 'target_market', label: 'Target Market', type: 'text', placeholder: 'Contoh: Freelancer & UMKM 25-40 tahun' },
+                    { key: 'goal', label: 'Target Konversi', type: 'text', placeholder: 'Contoh: 100 pembeli/bulan dari 50rb traffic' },
+                    { key: 'duration', label: 'Durasi Campaign', type: 'text', placeholder: 'Contoh: 3 bulan' },
+                    { key: 'budget', label: 'Budget Ads', type: 'text', placeholder: 'Contoh: Rp 20 juta/bulan' },
+                    { key: 'channels', label: 'Channel Utama', type: 'text', placeholder: 'Contoh: Facebook Ads, Instagram, Email, Webinar' },
+                    { key: 'usp', label: 'USP / Keunggulan', type: 'textarea', placeholder: 'Apa yang membedakan...' }
+                ],
+                prompt_template: `Anda adalah Funnel Marketing Expert. Buat strategi AIDA FUNNEL lengkap.
+
+INFORMASI:
+- Produk: {product_name}
+- Deskripsi: {product_desc}
+- Harga: {price}
+- Target market: {target_market}
+- Tujuan: {goal}
+- Durasi: {duration}
+- Budget: {budget}
+- Channel: {channels}
+- USP: {usp}
+
+OUTPUT (markdown rapi):
+
+=== 1. FUNNEL OVERVIEW ===
+- Funnel visualization (dengan angka estimasi)
+- Conversion target per tahap
+- Customer journey map
+
+Contoh funnel:
+Traffic 50.000 → Lead 5.000 (10%) → Qualified 1.000 (20%) → Sales 100 (10%)
+
+=== 2. TAHAP 1: ATTENTION ===
+**Tujuan:** Menarik perhatian target market
+**Channel & Taktik:**
+- Ads (Facebook, IG, Google): target audience, format, budget
+- Content marketing: jenis konten, platform
+- PR & Influencer
+- Community engagement
+
+**Contoh:**
+- 5 hook/headline iklan
+- 5 ide konten TOFU
+- Target metrics: CPM, CTR, reach
+
+=== 3. TAHAP 2: INTEREST ===
+**Tujuan:** Membangun ketertarikan & trust
+**Lead Magnet Ideas (5 pilihan):**
+- Ebook, template, checklist, webinar, free trial
+- Untuk setiap lead magnet: judul, deskripsi, cara deliver
+
+**Channel & Taktik:**
+- Landing page (contoh headline & copy)
+- Email sequence (5 email welcome)
+- Retargeting ads
+- Content MOFU (10 ide)
+
+**Target metrics:** Opt-in rate, engagement rate, email open rate
+
+=== 4. TAHAP 3: DESIRE ===
+**Tujuan:** Menciptakan keinginan kuat untuk beli
+**Taktik:**
+- Testimoni & case study (contoh 3)
+- Video demo / preview
+- Webinar / masterclass gratis
+- Comparison dengan alternatif
+- FAQ & objection handling
+- Scarcity & urgency
+
+**Content ideas (10):**
+- Behind the scenes
+- Transformation story
+- Q&A dengan expert
+
+**Target metrics:** Webinar attendance, consideration time, page view depth
+
+=== 5. TAHAP 4: ACTION ===
+**Tujuan:** Konversi ke pembelian
+**Sales Page Anatomy:**
+- Headline
+- Sub-headline
+- Video sales letter outline
+- Problem agitation
+- Solution presentation
+- Social proof section
+- Offer stack (apa yang didapat)
+- Pricing & bonus
+- Guarantee
+- FAQ
+- Urgent CTA
+
+**Taktik Closing:**
+- Flash sale
+- Bonus terbatas
+- Payment plan
+- Free trial
+- Live Q&A
+
+**Email Sequence (7 email closing):**
+- Email 1: Reminder value
+- Email 2: Testimoni
+- Email 3: Objekti + jawaban
+- Email 4: Bonus & penawaran
+- Email 5: Urgency (t-48 jam)
+- Email 6: Urgency (t-24 jam)
+- Email 7: Last call
+
+**Target metrics:** Conversion rate, AOV, CAC
+
+=== 6. RETENTION (Bonus) ===
+- Onboarding sequence
+- Upsell & cross-sell
+- Referral program
+- Community membership
+- NPS survey
+
+=== 7. BUDGET ALLOCATION ===
+Alokasi {budget}:
+| Fase | Budget | % | Expected Result |
+
+=== 8. FUNNEL METRICS ===
+Tracking per tahap:
+| Tahap | Metric | Target | Current |
+Attention: CPM, CPC, CTR
+Interest: Opt-in rate, CPL
+Desire: Webinar attendance, engagement
+Action: Conversion, ROAS
+
+=== 9. CONTENT CALENDAR ===
+Kalender campaign {duration} dengan konten per fase.
+
+=== 10. OPTIMIZATION PLAN ===
+- A/B test priority (headline, LP, email, ads)
+- Weekly review ritual
+- Kapan pivot strategy
+
+=== 11. TEMPLATE & SWIPE FILE ===
+- Landing page template
+- Email template
+- Ads copy template
+- Webinar outline template
+
+PENTING:
+- Funnel metrics harus masuk akal untuk pasar Indonesia
+- Setiap tahap harus punya multiple channels (jangan bergantung 1 channel)
+- Copy harus fokus pada PAIN, bukan FEATURE
+- Sertakan contoh nyata (headline, email, dll)
+
+Markdown rapi.`
+            },
+            brand_strategy: {
+                id: 'brand_strategy',
+                icon: '💎',
+                name: 'Brand Strategy Plan',
+                desc: 'Bangun brand yang kuat — brand identity, voice, values, positioning, brand experience.',
+                color: '#805ad5',
+                use_for: '✅ Rebranding\n✅ Brand baru\n✅ Brand guideline\n✅ Personal branding\n✅ Brand elevation',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Brand strategy untuk brand fashion sustainable: brand identity, mission, values, personality, visual identity direction, tone of voice, brand experience touchpoints.' }
+                ],
+                contoh_hasil_note: 'Gambaran output brand strategy:',
+                contoh_hasil: [
+                    { lbl: 'Brand Foundation', txt: 'Mission, vision, values, purpose.' },
+                    { lbl: 'Brand Identity', txt: 'Name, tagline, logo direction, visual identity.' },
+                    { lbl: 'Brand Personality', txt: 'Archetype, traits, tone of voice.' },
+                    { lbl: 'Brand Positioning', txt: 'Positioning statement & differentiation.' },
+                    { lbl: 'Brand Experience', txt: 'Touchpoints, customer journey.' },
+                    { lbl: 'Brand Guideline', txt: 'Do & don\'t, contoh aplikasi.' }
+                ],
+                fields: [
+                    { key: 'brand_name', label: 'Nama Brand', type: 'text', placeholder: 'Contoh: Eco Threads' },
+                    { key: 'industry', label: 'Industri', type: 'text', placeholder: 'Contoh: Fashion sustainable' },
+                    { key: 'product_desc', label: 'Produk/Layanan', type: 'textarea', placeholder: 'Apa yang ditawarkan...' },
+                    { key: 'target_market', label: 'Target Market', type: 'text', placeholder: 'Contoh: Wanita 25-40, eco-conscious, urban' },
+                    { key: 'brand_goal', label: 'Tujuan Brand', type: 'text', placeholder: 'Contoh: Jadi brand fashion sustainable #1 di Indonesia' },
+                    { key: 'competitors', label: 'Kompetitor Utama', type: 'text', placeholder: 'Contoh: Sejauh Mata Memandang, SukkhaCitta' },
+                    { key: 'values', label: 'Nilai yang Dipegang', type: 'textarea', placeholder: 'Contoh: Sustainability, ethical, mindful...' },
+                    { key: 'personality', label: 'Kepribadian Brand', type: 'text', placeholder: 'Contoh: Hangat, jujur, modern, mindful' }
+                ],
+                prompt_template: `Anda adalah Brand Strategist profesional. Buat BRAND STRATEGY lengkap.
+
+INFORMASI:
+- Brand: {brand_name}
+- Industri: {industry}
+- Produk: {product_desc}
+- Target market: {target_market}
+- Tujuan brand: {brand_goal}
+- Kompetitor: {competitors}
+- Nilai: {values}
+- Personality: {personality}
+
+OUTPUT (markdown rapi):
+
+=== 1. BRAND FOUNDATION ===
+- Brand purpose (WHY — kenapa brand ini ada di dunia)
+- Brand mission (APA yang dilakukan)
+- Brand vision (MAU jadi apa)
+- Brand values (5 nilai utama dengan penjelasan)
+- Brand promise (janji ke customer)
+
+=== 2. BRAND IDENTITY ===
+- Brand name analysis (makna, asosiasi)
+- 5 alternatif tagline
+- 5 alternatif brand statement
+- Brand story (300 kata, bisa dipakai untuk About Us)
+- Brand archetype (dari 12 archetypes: Hero, Sage, Creator, dll) + alasan
+
+=== 3. BRAND PERSONALITY ===
+- 5 personality traits
+- Tone of voice:
+  - 4 dimensi (formal-casual, serius-fun, dll)
+  - Contoh kalimat dalam tone brand
+  - Do's and don'ts
+- Brand character (kalau brand itu orang, seperti apa?)
+
+=== 4. BRAND POSITIONING ===
+- Positioning statement
+- Target audience (persona lengkap)
+- Competitive landscape (peta posisi vs kompetitor)
+- Differentiation (3-5 poin pembeda)
+- Reason to believe
+
+=== 5. VISUAL IDENTITY DIRECTION ===
+- Color palette (primary, secondary, accent dengan HEX)
+- Typography direction (heading, body)
+- Logo direction (symbolism, style)
+- Photography style
+- Graphic elements
+- Contoh aplikasi di touchpoint berbeda
+
+=== 6. BRAND MESSAGING ===
+- Key messages (5 poin utama)
+- Elevator pitch (30 detik)
+- Brand vocabulary (kata yang sering dipakai)
+- Brand anti-vocabulary (kata yang dihindari)
+- Contoh copywriting dalam tone brand
+
+=== 7. BRAND EXPERIENCE ===
+- Customer journey touchpoints
+- Brand experience di setiap touchpoint (online & offline)
+- Sensory branding (kalau relevan): suara, aroma, sentuhan
+- Packaging experience
+- After-sales experience
+
+=== 8. BRAND GUIDELINE ===
+- Logo usage rules
+- Color usage rules
+- Typography rules
+- Photography rules
+- Do's and don'ts
+- Contoh aplikasi benar vs salah
+
+=== 9. BRAND ACTIVATION ===
+- 5 campaign idea yang align dengan brand
+- Partnership & collaboration
+- Community building
+- Content pillar (4-5 tema)
+
+=== 10. BRAND MEASUREMENT ===
+- Brand awareness metrics (unaided, aided)
+- Brand recall
+- NPS
+- Brand sentiment
+- Market share of voice
+
+Cara ukur & target tahunan.
+
+=== 11. BRAND ROADMAP ===
+Roadmap 12 bulan:
+- Q1: Launch/refresh
+- Q2: Awareness building
+- Q3: Consideration & engagement
+- Q4: Loyalty & advocacy
+
+PENTING:
+- Brand harus DIFFERENTIATIVE — bukan copy kompetitor
+- Setiap elemen harus align satu dengan yang lain
+- Sertakan contoh konkret (copy, visual direction)
+- Values harus autentik, bukan buzzword
+
+Markdown rapi.`
+            },
+            customer_journey: {
+                id: 'customer_journey',
+                icon: '🗺️',
+                name: 'Customer Journey Marketing',
+                desc: 'Petakan perjalanan customer dari awareness sampai advocacy, dengan strategi marketing di setiap touchpoint.',
+                color: '#38b2ac',
+                use_for: '✅ Optimasi customer experience\n✅ Reduce churn\n✅ Increase LTV\n✅ Mapping touchpoint\n✅ Improve CX',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Customer journey untuk SaaS: 5 tahap (Awareness → Consideration → Purchase → Onboarding → Advocacy), touchpoint per tahap, pain point, strategi marketing di setiap touchpoint.' }
+                ],
+                contoh_hasil_note: 'Gambaran output customer journey:',
+                contoh_hasil: [
+                    { lbl: 'Journey Mapping', txt: '5-7 tahap journey dengan visual mapping.' },
+                    { lbl: 'Touchpoint Analysis', txt: 'Semua touchpoint di setiap tahap.' },
+                    { lbl: 'Emotion Curve', txt: 'Emosi customer di setiap tahap.' },
+                    { lbl: 'Pain Points', txt: 'Masalah & frustrasi di setiap tahap.' },
+                    { lbl: 'Moment of Truth', txt: 'Momen krusial yang menentukan.' },
+                    { lbl: 'Marketing Strategy', txt: 'Strategi & konten di setiap touchpoint.' }
+                ],
+                fields: [
+                    { key: 'brand_name', label: 'Nama Brand/Produk', type: 'text', placeholder: 'Contoh: TaskFlow SaaS' },
+                    { key: 'product_desc', label: 'Deskripsi Produk', type: 'textarea', placeholder: 'Apa produknya...' },
+                    { key: 'target_market', label: 'Target Market', type: 'text', placeholder: 'Contoh: Startup founder & project manager' },
+                    { key: 'price_point', label: 'Harga/Tier', type: 'text', placeholder: 'Contoh: Freemium, Pro Rp 99rb/bln, Business Rp 499rb/bln' },
+                    { key: 'channels', label: 'Channel Utama', type: 'text', placeholder: 'Contoh: Website, app, email, social, support' },
+                    { key: 'goal', label: 'Tujuan Journey Mapping', type: 'text', placeholder: 'Contoh: Meningkatkan retention & reduce churn' },
+                    { key: 'current_issues', label: 'Masalah Saat Ini', type: 'textarea', placeholder: 'Keluhan customer yang sering muncul...' },
+                    { key: 'duration', label: 'Fokus Periode Journey', type: 'text', placeholder: 'Contoh: Dari first touch sampai 90 hari post-purchase' }
+                ],
+                prompt_template: `Anda adalah Customer Experience (CX) Strategist profesional. Buat CUSTOMER JOURNEY MAPPING lengkap.
+
+INFORMASI:
+- Brand: {brand_name}
+- Produk: {product_desc}
+- Target market: {target_market}
+- Pricing: {price_point}
+- Channel: {channels}
+- Tujuan: {goal}
+- Masalah saat ini: {current_issues}
+- Periode: {duration}
+
+OUTPUT (markdown rapi):
+
+=== 1. JOURNEY OVERVIEW ===
+- Journey stages (5-7 tahap)
+- Duration per tahap
+- Visual journey map (dalam bentuk tabel/ASCII art)
+- Persona utama (siapa yang journey-nya kita petakan)
+
+=== 2. DETAIL PER TAHAP ===
+Untuk SETIAP tahap, jelaskan:
+
+**STAGE 1: AWARENESS**
+- Apa yang customer lakukan
+- Touchpoint (semua)
+- Channel
+- Emotion (skor 1-10 & deskripsi)
+- Pain points
+- Moment of truth
+- **Strategi Marketing:**
+  - Content/asset yang dibutuhkan
+  - Channel aktivasi
+  - KPI tahap ini
+- Contoh eksekusi konkret
+
+**STAGE 2: CONSIDERATION**
+[sama strukturnya]
+
+**STAGE 3: PURCHASE / CONVERSION**
+[sama]
+
+**STAGE 4: ONBOARDING / FIRST EXPERIENCE**
+[sama]
+
+**STAGE 5: RETENTION / USAGE**
+[sama]
+
+**STAGE 6: ADVOCACY / REFERRAL**
+[sama]
+
+(Tambahkan stage lain kalau perlu — Renewal, Upsell, dll)
+
+=== 3. EMOTION CURVE ===
+Grafik emosi customer dari tahap 1 sampai akhir. Tandai:
+- Peak moments (puncak kepuasan)
+- Valley moments (titik terendah)
+- Kapan customer paling mungkin churn
+
+=== 4. MOMENTS OF TRUTH ===
+3-5 moment of truth yang paling menentukan:
+- Apa momennya
+- Kenapa penting
+- Bagaimana cara memenangkannya
+- Konsekuensi kalau gagal
+
+=== 5. TOUCHPOINT INVENTORY ===
+Tabel semua touchpoint:
+| Touchpoint | Stage | Channel | Owner | KPI |
+
+=== 6. PAIN POINT ANALYSIS ===
+Untuk setiap pain point utama:
+- Deskripsi pain
+- Impact ke customer
+- Impact ke bisnis
+- Root cause
+- Solusi yang diusulkan
+
+=== 7. MARKETING STRATEGY PER STAGE ===
+Untuk setiap stage, tentukan:
+- Marketing objective
+- Message yang tepat
+- Content type
+- Channel mix
+- Frequency
+- Automation (kalau ada)
+- KPI & target
+
+=== 8. CONTENT MAPPING ===
+Map konten ke setiap stage:
+| Stage | Content Type | Contoh | Channel | CTA |
+
+=== 9. AUTOMATION & CRM ===
+- Email sequence per stage
+- Push notification strategy
+- In-app messaging
+- CRM journey
+
+=== 10. KPIs PER STAGE ===
+| Stage | Primary KPI | Secondary KPI | Target |
+
+Contoh:
+Awareness: Reach, Impression
+Consideration: Website visit, Content download
+Purchase: Conversion rate, AOV
+Onboarding: Activation rate, Time to value
+Retention: Retention rate, Churn
+Advocacy: NPS, Referral rate
+
+=== 11. QUICK WINS (30 HARI PERTAMA) ===
+10 perbaikan cepat yang bisa dilakukan dalam 30 hari untuk improve journey.
+
+=== 12. LONG-TERM ROADMAP ===
+Roadmap 6-12 bulan untuk journey optimization.
+
+PENTING:
+- Setiap touchpoint harus punya OWNER (siapa yang handle)
+- Customer journey harus berdasarkan REAL customer behavior, bukan asumsi
+- Fokus pada pain point yang paling impactful
+- Sertakan contoh konkret komunikasi di setiap touchpoint
+
+Markdown rapi.`
+            },
+            growth_hacking: {
+                id: 'growth_hacking',
+                icon: '📈',
+                name: 'Growth Hacking Plan',
+                desc: 'Strategi growth experiment-driven — AARRR funnel, eksperimen cepat, dan scaling yang terukur.',
+                color: '#e53e3e',
+                use_for: '✅ Startup & SaaS growth\n✅ Aplikasi mobile\n✅ E-commerce scale-up\n✅ Marketplace\n✅ Subscription business',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Growth hacking plan untuk app: AARRR funnel analysis, 10 eksperimen prioritas (ICE score), growth loop, viral mechanics, north star metric.' }
+                ],
+                contoh_hasil_note: 'Gambaran output growth hacking plan:',
+                contoh_hasil: [
+                    { lbl: 'North Star Metric', txt: 'Metrik utama yang mencerminkan growth.' },
+                    { lbl: 'AARRR Funnel', txt: 'Acquisition, Activation, Retention, Referral, Revenue.' },
+                    { lbl: 'Growth Experiments', txt: '10+ eksperimen dengan ICE score.' },
+                    { lbl: 'Growth Loops', txt: 'Viral, content, paid loops.' },
+                    { lbl: 'Playbook Eksperimen', txt: 'Cara test, ukur, scale.' },
+                    { lbl: 'Growth Model', txt: 'Projection 6-12 bulan.' }
+                ],
+                fields: [
+                    { key: 'product_name', label: 'Nama Produk', type: 'text', placeholder: 'Contoh: Notion Clone Indonesia' },
+                    { key: 'product_desc', label: 'Deskripsi Produk', type: 'textarea', placeholder: 'Apa produknya...' },
+                    { key: 'business_model', label: 'Business Model', type: 'text', placeholder: 'Contoh: Freemium SaaS / Marketplace / E-commerce' },
+                    { key: 'target_market', label: 'Target Market', type: 'text', placeholder: 'Contoh: Knowledge worker & startup' },
+                    { key: 'current_metrics', label: 'Metrik Saat Ini', type: 'textarea', placeholder: 'Contoh: 5.000 MAU, 200 paying, churn 8%' },
+                    { key: 'goal', label: 'Target Growth', type: 'text', placeholder: 'Contoh: 50.000 MAU dalam 6 bulan' },
+                    { key: 'budget', label: 'Budget Growth', type: 'text', placeholder: 'Contoh: Rp 200 juta / 6 bulan' },
+                    { key: 'channels', label: 'Channel Prioritas', type: 'text', placeholder: 'Contoh: SEO, community, referral, paid ads' },
+                    { key: 'constraints', label: 'Constraint / Batasan', type: 'textarea', placeholder: 'Contoh: Tim kecil 3 orang, no budget ads besar' }
+                ],
+                prompt_template: `Anda adalah Growth Hacker & Growth Marketing Expert. Buat GROWTH HACKING PLAN lengkap dengan pendekatan eksperimen.
+
+INFORMASI:
+- Produk: {product_name}
+- Deskripsi: {product_desc}
+- Business model: {business_model}
+- Target market: {target_market}
+- Metrik saat ini: {current_metrics}
+- Target: {goal}
+- Budget: {budget}
+- Channel prioritas: {channels}
+- Constraint: {constraints}
+
+OUTPUT (markdown rapi):
+
+=== 1. GROWTH DIAGNOSIS ===
+- North Star Metric (metrik utama yang mencerminkan value ke customer & growth bisnis)
+- Supporting metrics (3-5 metrik pendukung)
+- Growth model overview (bagaimana bisnis ini tumbuh)
+- Bottleneck saat ini (di mana growth stuck)
+
+=== 2. AARRR FUNNEL ANALYSIS ===
+Analisis funnel saat ini dengan target optimasi:
+
+**ACQUISITION**
+- Current: [channel aktif, CAC]
+- Target: [jumlah & channel baru]
+- Gaps: [apa yang kurang]
+
+**ACTIVATION**
+- Current: [activation rate, time to value]
+- Target: [percentage yang lebih tinggi]
+
+**RETENTION**
+- Current: [retention rate, churn]
+- Target: [improvement]
+
+**REFERRAL**
+- Current: [viral coefficient, referral rate]
+- Target: [k-factor yang lebih tinggi]
+
+**REVENUE**
+- Current: [ARPU, LTV]
+- Target: [expansion]
+
+=== 3. GROWTH LOOP DESIGN ===
+Rancang 3-5 growth loop (self-reinforcing):
+
+**Loop 1: [Nama Loop]**
+- Trigger: [apa yang memulai]
+- Action: [apa yang dilakukan user]
+- Reward: [apa yang didapat user]
+- Investment: [apa yang user 'invest' — data, share, dll]
+- Kembali ke trigger: [bagaimana loop berlanjut]
+
+Loop ideas:
+- Viral loop (invite friends)
+- Content loop (UGC → SEO → traffic)
+- Paid loop (revenue → ads → revenue)
+- Product loop (usage → data → better product → more usage)
+
+=== 4. 15 GROWTH EXPERIMENTS (PRIORITIZED) ===
+Buat 15 eksperimen dengan scoring ICE (Impact, Confidence, Ease):
+
+Format tabel:
+| # | Eksperimen | Channel | ICE Score | Effort | Expected Lift |
+
+Detail per eksperimen:
+- Hipotesis
+- Metrics yang diukur
+- Cara test
+- Durasi test
+- Success criteria
+
+Eksperimen ideas untuk berbagai tahap:
+- Acquisition: SEO cluster, referral program, partnership
+- Activation: onboarding wizard, aha moment acceleration
+- Retention: habit loop, notification, feature adoption
+- Referral: viral share, incentive, social proof
+- Revenue: pricing test, upsell, bundle
+
+=== 5. GROWTH PLAYBOOK ===
+Cara menjalankan growth di perusahaan:
+
+**Ritual Mingguan:**
+- Senin: prioritize experiments
+- Rabu: check progress
+- Jumat: analyze result & decide scale/kill
+
+**Test → Learn → Scale:**
+- Kapan scale experiment (success criteria)
+- Kapan pivot atau kill
+- Bagaimana dokumentasi learning
+
+=== 6. VIRAL MECHANICS ===
+- Viral coefficient (k-factor) target
+- Viral loop design detail
+- Referral program (insentif, mekanik)
+- Shareability hooks
+- Contagious content elements
+
+=== 7. RETENTION TACTICS ===
+- Cohort analysis plan
+- Churn prediction
+- Win-back campaign
+- Habit formation (trigger-action-reward)
+- Feature adoption roadmap
+
+=== 8. CHANNEL EXPERIMENTS ===
+Untuk setiap channel ({channels}), rancang eksperimen spesifik:
+- SEO: [eksperimen]
+- Content: [eksperimen]
+- Community: [eksperimen]
+- Paid ads: [eksperimen]
+- Partnership: [eksperimen]
+- Referral: [eksperimen]
+
+=== 9. TECH & TOOLS ===
+- Analytics: Amplitude, Mixpanel, GA4
+- Experimentation: Optimizely, VWO, atau build sendiri
+- Automation: Zapier, Make
+- CRM: HubSpot, Intercom
+- Referral: Viral Loops, ReferralCandy
+
+=== 10. GROWTH MODEL & PROJECTION ===
+Model pertumbuhan 12 bulan:
+- Input (channel, konversi rate)
+- Output (MAU, paying users, revenue)
+- Scenario: worst / base / best case
+
+Projection tabel bulanan.
+
+=== 11. BUDGET ALLOCATION ===
+Alokasi {budget}:
+| Kategori | Budget | % | Expected ROI |
+
+Alokasi 70/20/10:
+- 70% proven channels
+- 20% emerging channels
+- 10% experimental
+
+=== 12. TEAM & ROLES ===
+- Growth team structure (kalau ada tim)
+- Tools & processes
+- Hiring plan kalau perlu
+- Outsourcing option
+
+=== 13. 90-DAY GROWTH SPRINT ===
+**Bulan 1: Foundation**
+- Quick wins
+- Setup tracking
+- Run 5 eksperimen pertama
+
+**Bulan 2: Scale Winners**
+- Double down eksperimen yang menang
+- Kill yang gagal
+- Run 5 eksperimen baru
+
+**Bulan 3: Compound Growth**
+- Integrate growth loops
+- Optimize funnel
+- Build for sustainability
+
+Target metrik per bulan.
+
+PENTING:
+- Setiap eksperimen harus punya HIPOTESIS yang jelas
+- Prioritaskan eksperimen dengan ICE score tinggi
+- KILL cepat eksperimen yang gagal (jangan sayang)
+- Semua harus MEASURABLE
+- Fokus pada COMPOUND growth (bukan one-time spike)
+
+Markdown rapi, actionable.`
+            }
+        };
+
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'ai_marketing_plan';
+        const USERS_TABLE = 'users';
+        const SECRET = 'admin';
+        const STORAGE_KEY = 'ai_marketing_plan_user';
+
+        const MARKETING_KEYS = Object.keys(MARKETING_TYPES);
+
+        // ==================== STATE ====================
+        let allData = [];
+        let quillEditor = null;
+        let addAiEditor = null;
+        let viewData = null;
+        let currentPrompt = '';
+        let currentHistorySubTab = 'all';
+        let currentUser = null;
+        let isAdmin = false;
+
+        const COLUMNS = {
+            marketing_type: 'x_01',
+            title: 'x_02',
+            prompt: 'x_03',
+            field_values: 'x_04',
+            ai_source: 'x_05',
+            result: 'x_06',
+            created_by: 'x_07',
+            status: 'x_08',
+            notes: 'x_09',
+            created_date: 'x_10'
+        };
+
+        // ==================== LOGIN ====================
+        function getStoredUser() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    if (parsed.username && parsed.timestamp) {
+                        const days = (Date.now() - parsed.timestamp) / (1000 * 60 * 60 * 24);
+                        if (days < 7) return parsed.username;
+                    }
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function saveUserToStorage(username, remember) {
+            const data = JSON.stringify({ username, timestamp: Date.now() });
+            if (remember) localStorage.setItem(STORAGE_KEY, data);
+            else sessionStorage.setItem(STORAGE_KEY, data);
+        }
+
+        function clearUserStorage() {
+            localStorage.removeItem(STORAGE_KEY);
+            sessionStorage.removeItem(STORAGE_KEY);
+        }
+
+        function checkAutoLogin() {
+            const username = getStoredUser();
+            if (username) {
+                currentUser = username;
+                isAdmin = (username === 'admin');
+                showMainContent();
+                return true;
+            }
+            return false;
+        }
+
+        function showLogin() {
+            document.getElementById('loginOverlay').classList.add('active');
+            document.getElementById('mainContent').classList.remove('visible');
+        }
+
+        function showMainContent() {
+            document.getElementById('loginOverlay').classList.remove('active');
+            document.getElementById('mainContent').classList.add('visible');
+            document.getElementById('currentUser').textContent = currentUser;
+            const roleBadge = document.getElementById('userRole');
+            if (isAdmin) { roleBadge.textContent = '👑 Admin'; roleBadge.className = 'user-role admin'; }
+            else { roleBadge.textContent = '👤 User'; roleBadge.className = 'user-role user'; }
+            document.getElementById('createdBy').value = currentUser;
+            refreshData();
+        }
+
+        async function doLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const remember = document.getElementById('loginRemember').checked;
+            if (!username || !password) { showLoginError('Username dan password wajib diisi!'); return; }
+            const btn = document.getElementById('loginBtn');
+            const errorEl = document.getElementById('loginError');
+            const loadingEl = document.getElementById('loginLoading');
+            btn.disabled = true;
+            loadingEl.classList.add('show');
+            errorEl.classList.remove('show');
+            try {
+                const response = await fetch(`${API_URL}?table=${USERS_TABLE}`, {
+                    headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': USERS_TABLE, 'X-Role': 'admin' }
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const user = result.data.find(u => u.x_01 === username && u.x_02 === password);
+                    if (user) {
+                        currentUser = username;
+                        isAdmin = (username === 'admin');
+                        saveUserToStorage(username, remember);
+                        showMainContent();
+                        showToast('✅ Login berhasil! Selamat datang, ' + username, 'success');
+                    } else showLoginError('❌ Username atau password salah!');
+                } else showLoginError('❌ Gagal mengambil data user');
+            } catch (e) {
+                showLoginError('❌ Gagal login: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                loadingEl.classList.remove('show');
+            }
+        }
+
+        function showLoginError(message) {
+            const errorEl = document.getElementById('loginError');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+        }
+
+        function doLogout() {
+            if (!confirm('Yakin ingin logout?')) return;
+            clearUserStorage();
+            currentUser = null;
+            isAdmin = false;
+            showLogin();
+            showToast('👋 Logout berhasil', 'info');
+        }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!checkAutoLogin()) showLogin();
+            document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+            document.getElementById('loginUsername').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPassword').focus(); });
+
+            quillEditor = new Quill('#resultEditor', {
+                theme: 'snow', placeholder: 'Paste hasil AI di sini...',
+                modules: { toolbar: [[{ 'header': [1,2,3,4,5,6,false] }], ['bold','italic','underline','strike'], [{ 'list': 'ordered'},{ 'list': 'bullet' }], ['blockquote','code-block'], ['link','image'], ['clean']] }
+            });
+            addAiEditor = new Quill('#addAiEditor', {
+                theme: 'snow', placeholder: 'Paste hasil AI di sini...',
+                modules: { toolbar: [[{ 'header': [1,2,3,4,5,6,false] }], ['bold','italic','underline','strike'], [{ 'list': 'ordered'},{ 'list': 'bullet' }], ['blockquote','code-block'], ['link','image'], ['clean']] }
+            });
+
+            renderTools();
+            populateToolSelect();
+            updateFormFields();
+            if (currentUser) document.getElementById('createdBy').value = currentUser;
+        });
+
+        // ==================== API ====================
+        function getHeaders() {
+            return { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': TABLE, 'X-Role': 'admin' };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            const response = await fetch(url, { ...options, headers: { ...getHeaders(), ...(options.headers || {}) } });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || err.message || `HTTP ${response.status}`);
+            }
+            return await response.json();
+        }
+
+        async function fetchData() {
+            try {
+                const result = await apiFetch('');
+                if (result.success && result.data) {
+                    let data = result.data.map(row => parseRow(row));
+                    if (!isAdmin && currentUser) data = data.filter(d => d.created_by === currentUser);
+                    allData = data;
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            return {
+                id_x: row.id_x,
+                marketing_type: row.x_01 || '',
+                title: row.x_02 || '',
+                prompt: row.x_03 || '',
+                field_values: safeParseJSON(row.x_04),
+                ai_source: row.x_05 || '',
+                result: row.x_06 || '',
+                created_by: row.x_07 || '',
+                status: row.x_08 || 'published',
+                notes: row.x_09 || '',
+                created_date: row.x_10 || '',
+                _raw: row
+            };
+        }
+
+        function safeParseJSON(str) { if (!str) return {}; try { return JSON.parse(str); } catch (e) { return {}; } }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                if (key === 'field_values') row[col] = JSON.stringify(data[key] || {});
+                else row[col] = data[key] || '';
+            }
+            return row;
+        }
+
+        async function createResult(data) {
+            const row = buildRow(data);
+            return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function deleteResultApi(id) {
+            return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== RENDER ====================
+        function renderTools() {
+            const container = document.getElementById('toolsGrid');
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            let filtered = MARKETING_KEYS;
+            if (search) filtered = filtered.filter(key => MARKETING_TYPES[key].name.toLowerCase().includes(search) || MARKETING_TYPES[key].desc.toLowerCase().includes(search));
+
+            container.innerHTML = filtered.map(key => {
+                const type = MARKETING_TYPES[key];
+                const count = allData.filter(d => d.marketing_type === type.id).length;
+                return `
+                    <div class="tool-card" style="border-top:4px solid ${type.color};">
+                        <span class="tool-icon">${type.icon}</span>
+                        <div class="tool-name">${type.name}</div>
+                        <div class="tool-desc">${type.desc}</div>
+                        <div style="font-size:11px;color:#718096;margin-bottom:8px;">${count} plan</div>
+                        <div class="tool-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openInfoModal('${key}')">📖 Info</button>
+                            <button class="btn btn-primary btn-xs" onclick="useTool('${key}')">✏️ Create</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('tab1Badge').textContent = filtered.length;
+        }
+
+        function populateToolSelect() {
+            const select = document.getElementById('selectedTool');
+            select.innerHTML = MARKETING_KEYS.map(key => {
+                const type = MARKETING_TYPES[key];
+                return `<option value="${key}">${type.icon} ${type.name}</option>`;
+            }).join('');
+        }
+
+        function updateFormFields() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = MARKETING_TYPES[toolKey];
+            if (!type) return;
+            const container = document.getElementById('dynamicFields');
+            const values = getCurrentFieldValues();
+
+            let html = `<div class="section-label">📝 ${type.icon} ${type.name} - Form</div>`;
+            type.fields.forEach(field => {
+                const fieldId = `field_${field.key}`;
+                const val = values[field.key] || '';
+                const checkId = `ai_check_${field.key}`;
+
+                html += `<div class="field-header">
+                    <label for="${fieldId}">${field.label}</label>
+                    <div class="field-ai-check">
+                        <input type="checkbox" id="${checkId}" onchange="toggleFieldAi('${field.key}', this.checked)">
+                        <span>🤖 AI Cari</span>
+                    </div>
+                </div>`;
+
+                if (field.type === 'textarea') {
+                    html += `<div class="form-group"><textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea></div>`;
+                } else {
+                    html += `<div class="form-group"><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function toggleFieldAi(fieldKey, checked) {
+            const inputEl = document.getElementById(`field_${fieldKey}`);
+            if (!inputEl) return;
+
+            if (checked) {
+                inputEl.dataset.originalValue = inputEl.value;
+                inputEl.value = '🤖 AI akan mencari yang cocok';
+                inputEl.readOnly = true;
+                inputEl.style.background = '#f0fff4';
+                inputEl.style.color = '#276749';
+                inputEl.style.fontWeight = '600';
+            } else {
+                inputEl.value = inputEl.dataset.originalValue || '';
+                inputEl.readOnly = false;
+                inputEl.style.background = '';
+                inputEl.style.color = '';
+                inputEl.style.fontWeight = '';
+            }
+        }
+
+        function getCurrentFieldValues() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = MARKETING_TYPES[toolKey];
+            if (!type) return {};
+            const values = {};
+            type.fields.forEach(field => {
+                const el = document.getElementById(`field_${field.key}`);
+                if (el) {
+                    if (el.readOnly && el.value === '🤖 AI akan mencari yang cocok') {
+                        values[field.key] = '';
+                    } else {
+                        values[field.key] = el.value;
+                    }
+                }
+            });
+            return values;
+        }
+
+        function setFieldValues(values) {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = MARKETING_TYPES[toolKey];
+            if (!type) return;
+            type.fields.forEach(field => {
+                const el = document.getElementById(`field_${field.key}`);
+                if (el && values[field.key] !== undefined) el.value = values[field.key] || '';
+            });
+        }
+
+        function generatePrompt() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = MARKETING_TYPES[toolKey];
+            if (!type) return;
+
+            const values = getCurrentFieldValues();
+
+            let allFilled = true;
+            let emptyFields = [];
+            type.fields.forEach(field => {
+                const checkEl = document.getElementById(`ai_check_${field.key}`);
+                const isAiChecked = checkEl ? checkEl.checked : false;
+                if (!isAiChecked && (!values[field.key] || !values[field.key].trim())) {
+                    allFilled = false;
+                    emptyFields.push(field.label);
+                }
+            });
+
+            if (!allFilled) {
+                showToast('❌ Field berikut wajib diisi: ' + emptyFields.join(', '), 'error');
+                return;
+            }
+
+            let prompt = type.prompt_template;
+            let hasAiField = false;
+
+            type.fields.forEach(field => {
+                const checkEl = document.getElementById(`ai_check_${field.key}`);
+                const isAiChecked = checkEl ? checkEl.checked : false;
+                if (isAiChecked) {
+                    hasAiField = true;
+                    prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), `[AI CARI YANG COCOK UNTUK: ${field.label}]`);
+                } else {
+                    prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || '');
+                }
+            });
+
+            // Cleanup: hapus baris `${'{framework}'}` yang tidak tergantikan
+            prompt = prompt.replace(/\$\{'\{framework\}'\}/g, values.framework || '');
+
+            if (hasAiField) {
+                prompt = `INSTRUKSI KHUSUS: Untuk beberapa bagian di bawah ini, marketing strategist meminta Anda (AI) untuk mencari dan menentukan sendiri elemen yang cocok (ditandai dengan [AI CARI YANG COCOK UNTUK: ...]). Silakan pilih elemen yang paling tepat dan relevan dengan konteks marketing plan. \n\n` + prompt;
+                prompt += `\n\nCATATAN PENTING: Fokus pada kualitas strategi, data yang realistis untuk pasar Indonesia, dan eksekusi yang actionable. Semua output harus dalam Bahasa Indonesia yang baik, mengalir, dan profesional.`;
+            }
+
+            currentPrompt = prompt;
+            document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+            addCopyButtonToPrompt('promptPreview');
+
+            const titleInput = document.getElementById('resultTitle');
+            if (!titleInput.value) {
+                if (hasAiField) {
+                    titleInput.value = `${type.name} - (AI Cari yang Cocok)`;
+                } else {
+                    titleInput.value = `${type.name} - ${values.brand_name || values.product_name || ''}`;
+                }
+            }
+            showToast('✅ Prompt berhasil digenerate!', 'success');
+        }
+
+        function addCopyButtonToPrompt(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const existing = container.querySelector('.copy-prompt-btn');
+            if (existing) existing.remove();
+            const btn = document.createElement('button');
+            btn.className = 'copy-prompt-btn';
+            btn.textContent = '📋 Copy';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const text = container.textContent.replace('📋 Copy', '').trim();
+                if (!text || text.includes('Pilih metode')) { showToast('❌ Tidak ada prompt', 'error'); return; }
+                navigator.clipboard.writeText(text).then(() => showToast('✅ Prompt disalin!', 'success')).catch(() => {
+                    const ta = document.createElement('textarea');
+                    ta.value = text; document.body.appendChild(ta); ta.select();
+                    document.execCommand('copy'); document.body.removeChild(ta);
+                    showToast('✅ Prompt disalin!', 'success');
+                });
+            };
+            container.style.position = 'relative';
+            container.appendChild(btn);
+        }
+
+        async function saveResult() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const title = document.getElementById('resultTitle').value.trim();
+            const createdBy = document.getElementById('createdBy').value.trim() || currentUser || 'User';
+            const prompt = document.getElementById('promptPreview').textContent.replace('📋 Copy', '').trim();
+            if (!title) { showToast('❌ Judul plan wajib diisi', 'error'); return; }
+            if (!prompt || prompt.includes('Pilih metode')) { showToast('❌ Generate prompt dulu', 'error'); return; }
+            const resultHtml = quillEditor.root.innerHTML;
+            if (!resultHtml || resultHtml === '<p><br></p>') { showToast('❌ Paste hasil AI dulu', 'error'); return; }
+            const values = getCurrentFieldValues();
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                marketing_type: toolKey, title, prompt, field_values: values,
+                ai_source: document.getElementById('aiSource').value,
+                result: resultHtml, created_by: createdBy,
+                status: 'published', notes: '', created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Marketing plan berhasil disimpan!', 'success');
+                await refreshData();
+                clearForm();
+                switchMainTab('tab3');
+            } catch (e) { showToast('❌ Gagal menyimpan: ' + e.message, 'error'); }
+        }
+
+        function clearForm() {
+            quillEditor.root.innerHTML = '';
+            document.getElementById('resultTitle').value = '';
+            document.getElementById('promptPreview').innerHTML = '<span class="placeholder">Pilih metode marketing dan isi form untuk menghasilkan prompt...</span>';
+            currentPrompt = '';
+            document.querySelectorAll('.field-ai-check input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+        }
+
+        function useTool(toolKey) {
+            document.getElementById('selectedTool').value = toolKey;
+            updateFormFields();
+            switchMainTab('tab2');
+            clearForm();
+            document.getElementById('createdBy').value = currentUser || '';
+            showToast(`✏️ Beralih ke ${MARKETING_TYPES[toolKey].name}`, 'info');
+        }
+
+        // ==================== HISTORY ====================
+        function switchHistorySubTab(subtab) {
+            currentHistorySubTab = subtab;
+            document.querySelectorAll('.history-sub-tab').forEach(el => el.classList.toggle('active', el.dataset.subtab === subtab));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            const filterTool = document.getElementById('historyFilterTool').value;
+            const search = document.getElementById('historySearch').value.toLowerCase().trim();
+            let filtered = allData;
+            if (currentHistorySubTab === 'today') {
+                const today = new Date();
+                const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+                filtered = filtered.filter(d => d.created_date === todayStr);
+            }
+            if (filterTool !== 'all') filtered = filtered.filter(d => d.marketing_type === filterTool);
+            if (search) filtered = filtered.filter(d => d.title.toLowerCase().includes(search) || d.created_by.toLowerCase().includes(search) || d.prompt.toLowerCase().includes(search));
+
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            document.getElementById('subAll').textContent = allData.length;
+            document.getElementById('subToday').textContent = allData.filter(d => d.created_date === todayStr).length;
+            document.getElementById('tab3Badge').textContent = allData.length;
+            document.getElementById('historyCount').textContent = `${filtered.length} items`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">${allData.length === 0 ? '📊' : '🔍'}</div><h3>${allData.length === 0 ? 'Belum ada marketing plan' : 'Tidak ditemukan'}</h3><p>${allData.length === 0 ? 'Pergi ke Tab "Marketing Studio" untuk mulai membuat marketing plan' : 'Coba kata kunci lain'}</p></div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => {
+                const type = MARKETING_TYPES[item.marketing_type];
+                const typeLabel = type ? `${type.icon} ${type.name}` : item.marketing_type;
+                const date = item.created_date || item._raw?.created_at || '-';
+                const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+                const sourceClass = item.ai_source.toLowerCase();
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = item.result;
+                const plainResult = tempDiv.textContent.substring(0, 100) + (tempDiv.textContent.length > 100 ? '...' : '');
+                return `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <span class="history-title">${escapeHtml(item.title)}</span>
+                            <div class="history-meta">
+                                <span class="type-badge">${typeLabel}</span>
+                                ${item.ai_source ? `<span class="ai-badge ${sourceClass}">${item.ai_source}</span>` : ''}
+                                <span>📅 ${displayDate}</span>
+                                <span>👤 ${escapeHtml(item.created_by)}</span>
+                                ${isAdmin ? `<span style="font-size:10px;background:#c6f6d5;color:#276749;padding:1px 8px;border-radius:8px;">👑</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="history-prompt" onclick="togglePrompt(this)">${escapeHtml(item.prompt.substring(0, 120))}${item.prompt.length > 120 ? '...' : ''}</div>
+                        <div class="history-result">${escapeHtml(plainResult)}</div>
+                        <div class="history-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openAddAiModal(${item.id_x})">➕ Tambah AI</button>
+                            <button class="btn btn-primary btn-xs" onclick="openDuplicateModal(${item.id_x})">📋 Duplikat</button>
+                            <button class="btn btn-outline btn-xs" onclick="openViewModal(${item.id_x})">👁️ Detail</button>
+                            <button class="btn btn-danger btn-xs" onclick="deleteResult(${item.id_x})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function togglePrompt(el) { el.classList.toggle('expanded'); }
+
+        // ==================== ADD AI ====================
+        function openAddAiModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            document.getElementById('addAiId').value = id;
+            document.getElementById('addAiPromptDisplay').textContent = item.prompt;
+            document.getElementById('addAiCreatedBy').value = currentUser || '';
+            addAiEditor.root.innerHTML = '';
+            const display = document.getElementById('addAiPromptDisplay');
+            const existingBtn = display.querySelector('.copy-prompt-btn');
+            if (existingBtn) existingBtn.remove();
+            const btn = document.createElement('button');
+            btn.className = 'copy-prompt-btn';
+            btn.textContent = '📋 Copy';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const text = display.textContent.replace('📋 Copy', '').trim();
+                navigator.clipboard.writeText(text).then(() => showToast('✅ Prompt disalin!', 'success')).catch(() => {
+                    const ta = document.createElement('textarea'); ta.value = text;
+                    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                    document.body.removeChild(ta); showToast('✅ Prompt disalin!', 'success');
+                });
+            };
+            display.style.position = 'relative';
+            display.appendChild(btn);
+            document.getElementById('addAiModal').classList.add('active');
+        }
+
+        async function saveAddAiResult() {
+            const id = parseInt(document.getElementById('addAiId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) { showToast('Data tidak ditemukan', 'error'); return; }
+            const aiSource = document.getElementById('addAiSource').value;
+            const createdBy = document.getElementById('addAiCreatedBy').value.trim() || currentUser || 'User';
+            const resultHtml = addAiEditor.root.innerHTML;
+            if (!resultHtml || resultHtml === '<p><br></p>') { showToast('❌ Paste hasil AI dulu', 'error'); return; }
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                marketing_type: originalItem.marketing_type,
+                title: originalItem.title + ` (${aiSource})`,
+                prompt: originalItem.prompt,
+                field_values: originalItem.field_values || {},
+                ai_source: aiSource, result: resultHtml, created_by: createdBy,
+                status: 'published', notes: `Hasil tambahan dari ${aiSource}`, created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Hasil AI baru disimpan!', 'success');
+                closeModal('addAiModal');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal menyimpan: ' + e.message, 'error'); }
+        }
+
+        // ==================== DUPLICATE ====================
+        function openDuplicateModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            document.getElementById('dupId').value = id;
+            document.getElementById('dupToolType').value = item.marketing_type;
+            const type = MARKETING_TYPES[item.marketing_type];
+            document.getElementById('dupFrameworkDisplay').value = type ? `${type.icon} ${type.name}` : item.marketing_type;
+            document.getElementById('dupTitle').value = item.title + ' (v2)';
+            document.getElementById('dupCreatedBy').value = currentUser || '';
+            renderDuplicateFields(item.marketing_type, item.field_values || {});
+            document.getElementById('dupPromptPreview').innerHTML = '<span class="placeholder">Generate prompt dari form di atas...</span>';
+            document.getElementById('duplicateModal').classList.add('active');
+        }
+
+        function renderDuplicateFields(typeKey, values) {
+            const type = MARKETING_TYPES[typeKey];
+            if (!type) return;
+            const container = document.getElementById('dupDynamicFields');
+            let html = `<div class="section-label">📝 ${type.icon} ${type.name} - Edit Field</div>`;
+            type.fields.forEach(field => {
+                const fieldId = `dup_field_${field.key}`;
+                const val = values[field.key] || '';
+                if (field.type === 'textarea') {
+                    html += `<div class="form-group"><label>${field.label}</label><textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea></div>`;
+                } else {
+                    html += `<div class="form-group"><label>${field.label}</label><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function getDuplicateFieldValues() {
+            const typeKey = document.getElementById('dupToolType').value;
+            const type = MARKETING_TYPES[typeKey];
+            if (!type) return {};
+            const values = {};
+            type.fields.forEach(field => {
+                const el = document.getElementById(`dup_field_${field.key}`);
+                if (el) values[field.key] = el.value;
+            });
+            return values;
+        }
+
+        function generateDuplicatePrompt() {
+            const typeKey = document.getElementById('dupToolType').value;
+            const type = MARKETING_TYPES[typeKey];
+            if (!type) return;
+            const values = getDuplicateFieldValues();
+            let allFilled = true;
+            type.fields.forEach(field => { if (!values[field.key] || !values[field.key].trim()) allFilled = false; });
+            if (!allFilled) { showToast('❌ Semua field harus diisi!', 'error'); return; }
+            let prompt = type.prompt_template;
+            type.fields.forEach(field => { prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || ''); });
+            prompt = prompt.replace(/\$\{'\{framework\}'\}/g, values.framework || '');
+            document.getElementById('dupPromptPreview').innerHTML = escapeHtml(prompt);
+            addCopyButtonToPrompt('dupPromptPreview');
+            showToast('✅ Prompt berhasil digenerate!', 'success');
+        }
+
+        async function saveDuplicate() {
+            const id = parseInt(document.getElementById('dupId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) { showToast('Data tidak ditemukan', 'error'); return; }
+            const typeKey = document.getElementById('dupToolType').value;
+            const newTitle = document.getElementById('dupTitle').value.trim();
+            const createdBy = document.getElementById('dupCreatedBy').value.trim() || currentUser || 'User';
+            const prompt = document.getElementById('dupPromptPreview').textContent.replace('📋 Copy', '').trim();
+            if (!newTitle) { showToast('❌ Judul baru wajib diisi', 'error'); return; }
+            if (!prompt || prompt.includes('Generate prompt')) { showToast('❌ Generate prompt dulu', 'error'); return; }
+            const values = getDuplicateFieldValues();
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                marketing_type: typeKey, title: newTitle, prompt, field_values: values,
+                ai_source: '', result: '', created_by: createdBy,
+                status: 'published', notes: 'Duplikat dari prompt sebelumnya', created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Duplikat berhasil dibuat!', 'success');
+                closeModal('duplicateModal');
+                document.getElementById('selectedTool').value = typeKey;
+                updateFormFields();
+                setFieldValues(values);
+                document.getElementById('resultTitle').value = newTitle;
+                document.getElementById('createdBy').value = createdBy;
+                document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+                addCopyButtonToPrompt('promptPreview');
+                currentPrompt = prompt;
+                switchMainTab('tab2');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal menduplikat: ' + e.message, 'error'); }
+        }
+
+        // ==================== DELETE ====================
+        async function deleteResult(id) {
+            if (!confirm('Hapus marketing plan ini?')) return;
+            try {
+                await deleteResultApi(id);
+                showToast('✅ Marketing plan berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal hapus: ' + e.message, 'error'); }
+        }
+
+        async function clearHistory() {
+            if (allData.length === 0) { showToast('Tidak ada data', 'info'); return; }
+            if (!confirm('Hapus semua data history?')) return;
+            try {
+                for (const item of allData) await deleteResultApi(item.id_x);
+                showToast('✅ Semua data berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal hapus: ' + e.message, 'error'); }
+        }
+
+        // ==================== VIEW ====================
+        function openViewModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) { showToast('Data tidak ditemukan', 'error'); return; }
+            viewData = item;
+            const type = MARKETING_TYPES[item.marketing_type];
+            const typeLabel = type ? `${type.icon} ${type.name}` : item.marketing_type;
+            const date = item.created_date || item._raw?.created_at || '-';
+            const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+            document.getElementById('viewModalTitle').textContent = `👁️ ${escapeHtml(item.title)}`;
+            document.getElementById('viewMeta').innerHTML = `<strong>Metode:</strong> ${typeLabel} &nbsp;|&nbsp; <strong>AI:</strong> ${item.ai_source || '-'} &nbsp;|&nbsp; <strong>Dibuat:</strong> ${displayDate} &nbsp;|&nbsp; <strong>Oleh:</strong> ${escapeHtml(item.created_by)} ${isAdmin ? `&nbsp;|&nbsp; <span style="background:#c6f6d5;color:#276749;padding:1px 8px;border-radius:8px;font-size:11px;">👑</span>` : ''}`;
+            document.getElementById('viewPrompt').textContent = item.prompt;
+            document.getElementById('viewSource').textContent = item.ai_source || '-';
+            document.getElementById('viewResultWrapper').innerHTML = `<div class="ql-editor">${item.result}</div>`;
+            document.getElementById('viewModal').classList.add('active');
+        }
+
+        function copyViewResult() {
+            const resultHtml = document.getElementById('viewResultWrapper').innerHTML;
+            if (!resultHtml) { showToast('Tidak ada konten', 'error'); return; }
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = resultHtml;
+            const plainText = tempDiv.textContent;
+            navigator.clipboard.writeText(plainText).then(() => showToast('✅ Konten disalin!', 'success')).catch(() => {
+                const ta = document.createElement('textarea'); ta.value = plainText;
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                document.body.removeChild(ta); showToast('✅ Konten disalin!', 'success');
+            });
+        }
+
+        function downloadViewDoc() {
+            const title = viewData?.title || 'marketing-plan';
+            const content = document.getElementById('viewResultWrapper').innerHTML || '';
+            const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(title)}</title><style>body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #2d3748; line-height: 1.8; max-width: 900px; margin: auto; } h1, h2, h3, h4 { color: #1a202c; } p { margin: 8px 0; } table { border-collapse: collapse; width: 100%; margin: 12px 0; } td, th { border: 1px solid #cbd5e0; padding: 8px; text-align: left; } th { background: #f7fafc; } ul, ol { padding-left: 24px; }</style></head><body>${content}</body></html>`;
+            const blob = new Blob([htmlContent], { type: 'application/msword;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `${title}.doc`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('✅ File .doc berhasil didownload!', 'success');
+        }
+
+        // ==================== INFO ====================
+        function openInfoModal(toolKey) {
+            const type = MARKETING_TYPES[toolKey];
+            if (!type) return;
+            const fieldsHtml = type.fields.map(f => `<li><strong>${f.label}</strong> — ${f.placeholder}</li>`).join('');
+            let useForHtml = '';
+            if (type.use_for) {
+                const lines = type.use_for.split('\n').filter(l => l.trim());
+                useForHtml = `<div style="background:#fff5f7;border-radius:8px;padding:12px 16px;margin-bottom:12px;border-left:4px solid #d53f8c;"><strong style="color:#97266d;">🎯 Cocok Dipakai Untuk:</strong><ul style="margin:6px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">${lines.map(l => `<li>${l.replace('✅', '✔️')}</li>`).join('')}</ul></div>`;
+            }
+            let contohHtml = '';
+            if (type.contoh && type.contoh.length) {
+                const items = type.contoh.map(c => `<div class="contoh-item"><span class="lbl">${c.lbl}:</span> ${c.txt}</div>`).join('');
+                contohHtml = `<div class="contoh-box"><div class="contoh-title">💡 Contoh Nyata:</div>${items}</div>`;
+            }
+
+            let hasilHtml = '';
+            if (type.contoh_hasil && type.contoh_hasil.length) {
+                const rows = type.contoh_hasil.map(h => `<div class="hasil-item"><span class="h-lbl">${h.lbl}</span>${h.txt}</div>`).join('');
+                const note = type.contoh_hasil_note || 'Gambaran output yang dihasilkan AI:';
+                hasilHtml = `<div class="hasil-box"><div class="hasil-title">📄 Contoh Gambaran Hasil AI:</div><div class="hasil-note">${note}</div>${rows}<div class="hasil-foot">Penjelasan di atas hanya ilustrasi. Hasil sebenarnya dari AI akan jauh lebih detail dan panjang.</div></div>`;
+            }
+            document.getElementById('infoModalTitle').textContent = `📋 ${type.icon} ${type.name}`;
+            document.getElementById('infoModalBody').innerHTML = `
+                <div style="text-align:center;margin-bottom:12px;">
+                    <span style="font-size:48px;display:block;">${type.icon}</span>
+                    <h3 style="font-size:20px;color:#2d3748;">${type.name}</h3>
+                    <p style="color:#718096;font-size:14px;">${type.desc}</p>
+                </div>
+                ${useForHtml}
+                ${contohHtml}
+                ${hasilHtml}
+                <div style="background:#f7fafc;border-radius:8px;padding:16px;margin-bottom:12px;">
+                    <h4 style="font-size:14px;color:#2d3748;margin-bottom:8px;">📝 Field yang Diisi:</h4>
+                    <ul style="padding-left:20px;color:#4a5568;font-size:13px;line-height:1.8;">${fieldsHtml}</ul>
+                </div>
+                <div style="background:#f0fff4;border-radius:8px;padding:12px 16px;border-left:4px solid #48bb78;">
+                    <strong style="color:#276749;">💡 Cara Penggunaan:</strong>
+                    <ol style="margin:4px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">
+                        <li>Pilih metode marketing di Tab "Marketing Studio"</li>
+                        <li>Isi field yang tersedia. Untuk field yang ingin AI cari sendiri, centang <strong>🤖 AI Cari</strong> di sebelah kanan label field tersebut.</li>
+                        <li>Klik "Generate Prompt"</li>
+                        <li>Copy prompt, paste ke AI eksternal (ChatGPT/Claude/Gemini/DeepSeek)</li>
+                        <li>Copy hasil AI, paste di editor</li>
+                        <li>Pilih AI Source dan klik "Simpan Hasil"</li>
+                    </ol>
+                </div>
+            `;
+            document.getElementById('infoModal').classList.add('active');
+        }
+
+        // ==================== TAB ====================
+        function switchMainTab(tabId) {
+            document.querySelectorAll('.main-tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.main-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.main-tab-btn[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            if (tabId === 'tab3') renderHistory();
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // ==================== REFRESH ====================
+        async function refreshData() {
+            if (!currentUser) { showLogin(); return; }
+            showToast('🔄 Memuat data...', 'info');
+            await fetchData();
+            renderTools();
+            updateHistoryFilter();
+            renderHistory();
+            document.getElementById('tab3Badge').textContent = allData.length;
+            showToast(`✅ ${allData.length} plan dimuat`, 'success');
+        }
+
+        function updateHistoryFilter() {
+            const select = document.getElementById('historyFilterTool');
+            const currentValue = select.value;
+            const types = {};
+            allData.forEach(item => { if (!types[item.marketing_type]) types[item.marketing_type] = 0; types[item.marketing_type]++; });
+            select.innerHTML = `<option value="all">📋 All Types (${allData.length})</option>`;
+            MARKETING_KEYS.forEach(key => {
+                const type = MARKETING_TYPES[key];
+                const count = types[key] || 0;
+                select.innerHTML += `<option value="${key}">${type.icon} ${type.name} (${count})</option>`;
+            });
+            if (currentValue) select.value = currentValue;
+        }
+
+        // ==================== TOAST & HELPER ====================
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+        });
+
+        window.debug = {
+            allData: () => allData,
+            refresh: refreshData,
+            MARKETING_TYPES, MARKETING_KEYS,
+            currentUser: () => currentUser,
+            isAdmin: () => isAdmin
+        };
+    </script>
+</body>
+</html>

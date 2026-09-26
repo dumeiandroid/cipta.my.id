@@ -1,0 +1,2357 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales CRM - Sales Psikologi</title>
+    <script>
+        // ==================== AUTH GUARD (Sales Tools Suite - SSO) ====================
+        const AUTH_SESSION_KEY = 'lidan_sales_session';
+        const AUTH_LOGIN_PAGE = 'login.html';
+
+        function getAuthSession() {
+            try {
+                const raw = localStorage.getItem(AUTH_SESSION_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+        function clearAuthSession() { localStorage.removeItem(AUTH_SESSION_KEY); }
+        function isSupervisor(session) { return !!session && String(session.role || '').toLowerCase() === 'spv'; }
+        function isAdmin(session) { return !!session && String(session.username || '').toLowerCase() === 'admin'; }
+        function logout() { clearAuthSession(); window.location.href = AUTH_LOGIN_PAGE; }
+
+        let CURRENT_USER = getAuthSession();
+        if (!CURRENT_USER || !CURRENT_USER.username) {
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.replace(AUTH_LOGIN_PAGE + '?return=' + returnUrl);
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === AUTH_SESSION_KEY && !e.newValue) {
+                window.location.href = AUTH_LOGIN_PAGE;
+            }
+        });
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            padding: 16px;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container { max-width: 1500px; margin: 0 auto; }
+
+        /* ==================== HEADER ==================== */
+        .header {
+            background: white;
+            padding: 16px 24px;
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            color: #1a2332;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header h1 span {
+            background: #2d3748;
+            color: white;
+            font-size: 11px;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            color: #2d3748;
+        }
+        .user-badge .role-tag {
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            text-transform: capitalize;
+        }
+        .user-badge .role-tag.spv { background: #9f7aea; }
+        .user-badge .role-tag.sales { background: #4299e1; }
+
+        .btn-logout {
+            background: #fc8181;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-logout:hover { background: #f56565; }
+
+        .search-box {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            background: #f7fafc;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            transition: border 0.2s;
+        }
+        .search-box:focus-within { border-color: #4299e1; }
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 8px 0;
+            font-size: 13px;
+            outline: none;
+            width: 180px;
+            color: #2d3748;
+        }
+        .search-box .icon { color: #a0aec0; font-size: 15px; }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .btn-primary { background: #4299e1; color: white; }
+        .btn-primary:hover { background: #3182ce; }
+        .btn-success { background: #48bb78; color: white; }
+        .btn-success:hover { background: #38a169; }
+        .btn-danger { background: #fc8181; color: white; }
+        .btn-danger:hover { background: #f56565; }
+        .btn-warning { background: #ed8936; color: white; }
+        .btn-warning:hover { background: #dd6b20; }
+        .btn-outline {
+            background: transparent;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-outline:hover { background: #f7fafc; }
+        .btn-sm { padding: 5px 10px; font-size: 11px; border-radius: 6px; }
+        .btn-xs { padding: 3px 8px; font-size: 11px; border-radius: 6px; }
+        .btn-purple { background: #9f7aea; color: white; }
+        .btn-purple:hover { background: #805ad5; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* ==================== TABS ==================== */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: white;
+            padding: 6px;
+            border-radius: 12px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 10px 18px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #4a5568;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tab-btn:hover { background: #f7fafc; }
+        .tab-btn.active {
+            background: #4299e1;
+            color: white;
+            box-shadow: 0 2px 6px rgba(66,153,225,0.3);
+        }
+        .tab-btn .count {
+            background: rgba(0,0,0,0.15);
+            padding: 1px 7px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .tab-btn.active .count { background: rgba(255,255,255,0.25); }
+
+        /* ==================== FILTER BAR ==================== */
+        .filter-bar {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+            background: white;
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+        .filter-bar .filter-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #718096;
+            margin-right: 2px;
+        }
+        .filter-bar .filter-info {
+            margin-left: auto;
+            font-size: 11px;
+            color: #a0aec0;
+        }
+        .filter-bar .filter-info b { color: #4a5568; }
+        .filter-btn {
+            padding: 5px 12px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .filter-btn:hover { background: #f7fafc; }
+        .filter-btn.active {
+            background: #4299e1;
+            color: white;
+            border-color: #4299e1;
+        }
+
+        /* ==================== LIST ==================== */
+        .list-container {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+
+        .list-header {
+            display: grid;
+            grid-template-columns: 55px 1.4fr 1fr 0.9fr 0.8fr 0.8fr 0.9fr 110px;
+            gap: 8px;
+            padding: 12px 18px;
+            background: #f7fafc;
+            font-weight: 700;
+            font-size: 11px;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .list-item {
+            display: grid;
+            grid-template-columns: 55px 1.4fr 1fr 0.9fr 0.8fr 0.8fr 0.9fr 110px;
+            gap: 8px;
+            padding: 12px 18px;
+            border-bottom: 1px solid #edf2f7;
+            align-items: center;
+            transition: background 0.15s;
+            cursor: pointer;
+        }
+        .list-item:hover { background: #f7fafc; }
+        .list-item:last-child { border-bottom: none; }
+
+        .list-item .id { font-weight: 700; color: #4299e1; font-size: 13px; }
+        .list-item .field {
+            color: #2d3748;
+            font-size: 13px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .list-item .field .sub {
+            font-size: 11px;
+            color: #718096;
+        }
+        .list-item .field .label { display: none; }
+        .list-item .actions {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .badge-status {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .badge-status.hot { background: #fc8181; color: white; }
+        .badge-status.warm { background: #fefcbf; color: #975a16; }
+        .badge-status.cold { background: #bee3f8; color: #2a69ac; }
+        .badge-status.converted { background: #c6f6d5; color: #276749; }
+        .badge-status.lost { background: #fed7d7; color: #9b2c2c; }
+
+        .badge-stage {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .badge-stage.prospecting { background: #bee3f8; color: #2a69ac; }
+        .badge-stage.qualification { background: #fefcbf; color: #975a16; }
+        .badge-stage.negotiation { background: #e9d8fd; color: #6b46c1; }
+        .badge-stage.proposal { background: #fbd38d; color: #7b341e; }
+        .badge-stage.closing { background: #fc8181; color: white; }
+        .badge-stage.won { background: #c6f6d5; color: #276749; }
+        .badge-stage.lost { background: #fed7d7; color: #9b2c2c; }
+
+        .badge-activity-status {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .badge-activity-status.scheduled { background: #bee3f8; color: #2a69ac; }
+        .badge-activity-status.visited { background: #c6f6d5; color: #276749; }
+        .badge-activity-status.cancelled { background: #fed7d7; color: #9b2c2c; }
+        .badge-activity-status.rescheduled { background: #fefcbf; color: #975a16; }
+
+        .badge-type {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .badge-type.corporate { background: #bee3f8; color: #2a69ac; }
+        .badge-type.school { background: #c6f6d5; color: #276749; }
+        .badge-type.university { background: #e9d8fd; color: #6b46c1; }
+        .badge-type.government { background: #fefcbf; color: #975a16; }
+        .badge-type.other { background: #edf2f7; color: #4a5568; }
+        .badge-type.active { background: #c6f6d5; color: #276749; }
+        .badge-type.inactive { background: #fed7d7; color: #9b2c2c; }
+        .badge-type.prospect { background: #fefcbf; color: #975a16; }
+
+        .followup-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .followup-badge.overdue { background: #fed7d7; color: #9b2c2c; }
+        .followup-badge.today { background: #feebc8; color: #9c4221; }
+        .followup-badge.tomorrow { background: #bee3f8; color: #2a69ac; }
+        .followup-badge.future { background: #edf2f7; color: #4a5568; }
+        .followup-badge.done { background: #c6f6d5; color: #276749; }
+
+        .rel-badges {
+            display: inline-flex;
+            gap: 4px;
+            margin-top: 4px;
+        }
+        .rel-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: default;
+        }
+        .rel-badge.act { background: #feebc8; color: #9c4221; }
+        .rel-badge.deal { background: #bee3f8; color: #2a69ac; }
+        .rel-badge.client { background: #c6f6d5; color: #276749; }
+
+        .empty-state {
+            padding: 50px 20px;
+            text-align: center;
+            color: #a0aec0;
+        }
+        .empty-state .icon { font-size: 42px; margin-bottom: 12px; }
+        .empty-state h3 { color: #4a5568; margin-bottom: 6px; font-size: 16px; }
+        .empty-state p { font-size: 13px; }
+
+        /* ==================== DRAWER ==================== */
+        .drawer-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(2px);
+            z-index: 900;
+            animation: fadeIn 0.15s ease;
+        }
+        .drawer-overlay.active { display: block; }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            width: 480px;
+            max-width: 100%;
+            background: white;
+            box-shadow: -8px 0 30px rgba(0,0,0,0.15);
+            z-index: 950;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.25s ease;
+        }
+        .drawer.active { transform: translateX(0); }
+
+        .drawer-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            background: #f7fafc;
+        }
+        .drawer-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a2332;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .drawer-title .sub {
+            font-size: 12px;
+            color: #718096;
+            font-weight: 400;
+        }
+        .drawer-close {
+            background: #fc8181;
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .drawer-close:hover { background: #f56565; }
+
+        .drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .drawer-info {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 13px;
+        }
+        .drawer-info .row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+        .drawer-info .row .k {
+            color: #718096;
+            min-width: 80px;
+            font-size: 12px;
+        }
+        .drawer-info .row .v {
+            color: #2d3748;
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .drawer-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 8px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+        .quick-action {
+            padding: 10px 6px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s;
+        }
+        .quick-action:hover { background: #f7fafc; border-color: #4299e1; }
+        .quick-action .ico { font-size: 18px; }
+
+        .timeline-item {
+            display: flex;
+            gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+        }
+        .timeline-item .ico {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .timeline-item .body {
+            flex: 1;
+            min-width: 0;
+        }
+        .timeline-item .title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+        .timeline-item .meta {
+            font-size: 11px;
+            color: #718096;
+            margin-top: 2px;
+        }
+        .timeline-item .note {
+            font-size: 12px;
+            color: #4a5568;
+            margin-top: 4px;
+            word-break: break-word;
+        }
+
+        .drawer-footer {
+            padding: 12px 20px;
+            border-top: 1px solid #edf2f7;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            background: #f7fafc;
+        }
+
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-overlay.active { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 18px;
+            max-width: 640px;
+            width: 100%;
+            max-height: 92vh;
+            overflow-y: auto;
+            padding: 24px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        }
+
+        .modal-close {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: #fc8181;
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover { background: #f56565; }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a2332;
+            margin-bottom: 16px;
+            padding-right: 40px;
+        }
+
+        .modal-body { display: flex; flex-direction: column; gap: 12px; }
+
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-weight: 600; font-size: 12px; color: #4a5568; }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: border 0.15s;
+            font-family: inherit;
+            background: white;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+        .form-group textarea { resize: vertical; min-height: 50px; }
+        .form-group small { color: #a0aec0; font-size: 11px; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 2px solid #edf2f7;
+            flex-wrap: wrap;
+        }
+
+        /* ==================== TOAST ==================== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 22px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            max-width: 380px;
+        }
+        .toast.success { background: #48bb78; }
+        .toast.error { background: #fc8181; }
+        .toast.info { background: #4299e1; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #a0aec0;
+            font-size: 13px;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+
+            .header { padding: 12px 16px; }
+            .header h1 { font-size: 16px; }
+            .search-box { flex: 1; }
+            .search-box input { width: 100%; }
+
+            .list-header { display: none; }
+            .list-item {
+                grid-template-columns: 1fr;
+                gap: 4px;
+                padding: 14px;
+            }
+            .list-item .field .label {
+                display: inline;
+                font-size: 11px;
+                color: #a0aec0;
+                font-weight: 600;
+            }
+            .list-item .actions {
+                margin-top: 6px;
+                justify-content: flex-start;
+            }
+
+            /* Drawer jadi bottom sheet */
+            .drawer {
+                top: auto;
+                bottom: 0;
+                right: 0;
+                left: 0;
+                width: 100%;
+                height: 85vh;
+                border-radius: 18px 18px 0 0;
+                transform: translateY(100%);
+            }
+            .drawer.active { transform: translateY(0); }
+
+            .quick-actions { grid-template-columns: repeat(3, 1fr); }
+            .form-row { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .tabs { padding: 4px; }
+            .tab-btn { padding: 8px 12px; font-size: 12px; }
+            .modal { padding: 18px; }
+            .quick-actions { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .modal::-webkit-scrollbar,
+        .drawer-body::-webkit-scrollbar { width: 6px; }
+        .modal::-webkit-scrollbar-thumb,
+        .drawer-body::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>
+                📋 Sales CRM
+                <span>Sales Psikologi</span>
+            </h1>
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Cari..." oninput="renderActiveTab()">
+                </div>
+                <button class="btn btn-primary" id="addBtn" onclick="openAddForActiveTab()">➕ Tambah</button>
+                <button class="btn btn-outline btn-sm" onclick="refreshAll()" title="Refresh">🔄</button>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('infoModal').classList.add('active')" title="Info">ℹ️</button>
+                <div class="user-badge">
+                    <span id="userBadgeName">👤 -</span>
+                    <span class="role-tag" id="userBadgeRole">-</span>
+                    <button class="btn-logout" onclick="logout()">🚪</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="leads" onclick="switchTab('leads')">
+                📋 Leads <span class="count" id="tabCountLeads">0</span>
+            </button>
+            <button class="tab-btn" data-tab="activities" onclick="switchTab('activities')">
+                🗒️ Aktivitas <span class="count" id="tabCountActivities">0</span>
+            </button>
+            <button class="tab-btn" data-tab="deals" onclick="switchTab('deals')">
+                💼 Deals <span class="count" id="tabCountDeals">0</span>
+            </button>
+            <button class="tab-btn" data-tab="clients" onclick="switchTab('clients')">
+                🏢 Clients <span class="count" id="tabCountClients">0</span>
+            </button>
+        </div>
+
+        <!-- CONTENT -->
+        <div id="tabContent">
+            <div class="loading">⏳ Memuat data...</div>
+        </div>
+    </div>
+
+    <!-- DRAWER -->
+    <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+    <div class="drawer" id="drawer">
+        <div class="drawer-header">
+            <div class="drawer-title" id="drawerTitle">
+                <span>Loading...</span>
+            </div>
+            <button class="drawer-close" onclick="closeDrawer()">✕</button>
+        </div>
+        <div class="drawer-body" id="drawerBody"></div>
+        <div class="drawer-footer" id="drawerFooter"></div>
+    </div>
+
+    <!-- MODAL INFO -->
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
+            <div class="modal-title">📋 Panduan Sales CRM</div>
+            <div class="modal-body">
+                <p style="font-size:13px;line-height:1.7;">Sales CRM menggabungkan 4 alat dalam satu tempat:</p>
+
+                <h4 style="margin-top:8px;font-size:14px;">📋 Leads</h4>
+                <p style="font-size:13px;line-height:1.7;">Semua prospek masuk sini dulu. Filter <b>Hari Ini</b> untuk tahu siapa yang perlu dihubungi.</p>
+
+                <h4 style="margin-top:8px;font-size:14px;">🗒️ Aktivitas</h4>
+                <p style="font-size:13px;line-height:1.7;">Rencana & hasil Call/WA/Email/Visit. Isi <b>Next Follow-up</b> di lead → otomatis muncul di sini.</p>
+
+                <h4 style="margin-top:8px;font-size:14px;">💼 Deals</h4>
+                <p style="font-size:13px;line-height:1.7;">Deal yang sudah punya jadwal pelaksanaan pasti.</p>
+
+                <h4 style="margin-top:8px;font-size:14px;">🏢 Clients</h4>
+                <p style="font-size:13px;line-height:1.7;">Perusahaan yang sudah jadi klien & riwayat layanan.</p>
+
+                <div style="background:#f0fff4;border-left:4px solid #48bb78;border-radius:8px;padding:10px 14px;font-size:12px;margin-top:8px;">
+                    💡 <b>Tips:</b> Klik lead untuk buka <b>drawer</b> — di situ ada tombol cepat Call/WA/Email.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORM LEAD -->
+    <div class="modal-overlay" id="formLeadModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('formLeadModal')">✕</button>
+            <div class="modal-title" id="formLeadTitle">📋 Tambah Lead</div>
+            <div class="modal-body">
+                <input type="hidden" id="leadEditId" value="">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>👤 Nama Kontak *</label>
+                        <input type="text" id="leadContactName" placeholder="Nama lengkap">
+                    </div>
+                    <div class="form-group">
+                        <label>📱 Nomor HP *</label>
+                        <input type="text" id="leadPhone" placeholder="0812-3456-7890">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>🏢 Nama Perusahaan</label>
+                        <input type="text" id="leadCompanyName" placeholder="Nama perusahaan/sekolah">
+                    </div>
+                    <div class="form-group">
+                        <label>📧 Email</label>
+                        <input type="email" id="leadEmail" placeholder="email@domain.com">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📌 Layanan Diminati</label>
+                        <select id="leadServiceInterest">
+                            <option value="Seminar">Seminar</option>
+                            <option value="Pelatihan">Pelatihan</option>
+                            <option value="Tes Minat Bakat">Tes Minat Bakat</option>
+                            <option value="Tes Kesiapan Kerja">Tes Kesiapan Kerja</option>
+                            <option value="Assesment Psikologi">Assesment Psikologi</option>
+                            <option value="Konseling">Konseling</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>💰 Estimasi Nilai</label>
+                        <input type="text" id="leadEstimatedValue" placeholder="Rp 10.000.000">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📂 Status Lead</label>
+                        <select id="leadStatus">
+                            <option value="cold">🔵 Cold</option>
+                            <option value="warm">🟠 Warm</option>
+                            <option value="hot">🔥 Hot</option>
+                            <option value="converted">✅ Converted</option>
+                            <option value="lost">❌ Lost</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>🎯 Prioritas</label>
+                        <select id="leadPriority">
+                            <option value="low">🟢 Low</option>
+                            <option value="medium" selected>🟠 Medium</option>
+                            <option value="high">🔴 High</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📅 Next Follow-up</label>
+                        <input type="date" id="leadNextFollowup">
+                        <small>Isi → otomatis dibuat jadwal Call di Aktivitas</small>
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Sales</label>
+                        <input type="text" id="leadSalesAssign" readonly style="background:#edf2f7;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>📝 Catatan</label>
+                    <textarea id="leadNotes" placeholder="Catatan tentang lead..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-danger" id="leadDeleteBtn" onclick="deleteLeadFromForm()" style="display:none;">🗑️ Hapus</button>
+                    <button class="btn btn-outline" onclick="closeModal('formLeadModal')">Batal</button>
+                    <button class="btn btn-primary" id="leadSaveBtn" onclick="saveLead()">💾 Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORM AKTIVITAS -->
+    <div class="modal-overlay" id="formActivityModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('formActivityModal')">✕</button>
+            <div class="modal-title" id="formActivityTitle">🗒️ Tambah Aktivitas</div>
+            <div class="modal-body">
+                <input type="hidden" id="actEditId" value="">
+                <input type="hidden" id="actLeadId" value="">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>🏢 Perusahaan *</label>
+                        <input type="text" id="actCompanyName" placeholder="Nama perusahaan">
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Nama Kontak</label>
+                        <input type="text" id="actContactName" placeholder="Nama kontak">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📅 Tanggal & Jam *</label>
+                        <input type="datetime-local" id="actVisitDate">
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Sales</label>
+                        <input type="text" id="actSalesName" readonly style="background:#edf2f7;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📌 Jenis Interaksi</label>
+                    <div style="display:flex;gap:14px;flex-wrap:wrap;padding:4px 0;">
+                        <label style="display:flex;align-items:center;gap:6px;font-weight:500;font-size:13px;cursor:pointer;">
+                            <input type="radio" name="actType" value="call" checked onchange="onActTypeChange()"> ☎️ Call
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;font-weight:500;font-size:13px;cursor:pointer;">
+                            <input type="radio" name="actType" value="whatsapp" onchange="onActTypeChange()"> 💬 WhatsApp
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;font-weight:500;font-size:13px;cursor:pointer;">
+                            <input type="radio" name="actType" value="email" onchange="onActTypeChange()"> 📧 Email
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;font-weight:500;font-size:13px;cursor:pointer;">
+                            <input type="radio" name="actType" value="visit" onchange="onActTypeChange()"> 🚗 Visit
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label id="actLocationLabel">📞 Nomor yang Dihubungi</label>
+                    <input type="text" id="actLocation" placeholder="08xx-xxxx-xxxx">
+                </div>
+
+                <div class="form-group">
+                    <label>🎯 Tujuan</label>
+                    <select id="actPurpose">
+                        <option value="Presentasi">Presentasi Layanan</option>
+                        <option value="Penawaran">Penawaran Proposal</option>
+                        <option value="Follow Up" selected>Follow Up</option>
+                        <option value="Closing">Closing Deal</option>
+                        <option value="Pelatihan">Pelaksanaan Pelatihan</option>
+                        <option value="Tes">Pelaksanaan Tes</option>
+                        <option value="Survey">Survey Kebutuhan</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>📂 Status</label>
+                    <select id="actStatus" onchange="toggleActHasilSection()">
+                        <option value="scheduled">📅 Terjadwal (Rencana)</option>
+                        <option value="visited">✅ Selesai</option>
+                        <option value="cancelled">❌ Batal</option>
+                        <option value="rescheduled">🔄 Dijadwalkan Ulang</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Rencana</label>
+                    <textarea id="actRencana" placeholder="Agenda rencana..." rows="2"></textarea>
+                </div>
+
+                <div id="actHasilSection" style="display:none;background:#f0fff4;border:2px solid #c6f6d5;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px;">
+                    <div class="form-group">
+                        <label>✅ Catatan Hasil *</label>
+                        <textarea id="actHasil" placeholder="Apa yang terjadi..." rows="3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>📅 Tanggal Aktual</label>
+                            <input type="date" id="actHasilTanggal">
+                        </div>
+                        <div class="form-group">
+                            <label>➡️ Tindak Lanjut</label>
+                            <input type="text" id="actHasilTindakLanjut" placeholder="Follow up berikutnya">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-danger" id="actDeleteBtn" onclick="deleteActivityFromForm()" style="display:none;">🗑️ Hapus</button>
+                    <button class="btn btn-outline" onclick="closeModal('formActivityModal')">Batal</button>
+                    <button class="btn btn-primary" id="actSaveBtn" onclick="saveActivity()">💾 Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const SECRET = 'admin';
+
+        const TABLES = {
+            leads: 'lead_management',
+            activities: 'sales_visit_tracker',
+            deals: 'sales_pipeline',
+            clients: 'client_company_profile'
+        };
+
+        const CONTROL_TABLE = 'kontrol_admin';
+        const CONTROL_ROW_ID = 7;
+
+        // ==================== KOLOM MAPPING ====================
+        const LEAD_COLS = {
+            contact_name: 'x_01', company_name: 'x_02', email: 'x_03', phone: 'x_04',
+            status: 'x_05', priority: 'x_06', service_interest: 'x_07', sales_assign: 'x_08',
+            notes: 'x_09', next_followup: 'x_10', estimated_value: 'x_11'
+        };
+        const ACT_COLS = {
+            company_name: 'x_01', contact_name: 'x_02', visit_date: 'x_03', sales_name: 'x_04',
+            location: 'x_05', status: 'x_06', visit_purpose: 'x_07', notes: 'x_08',
+            lead_id: 'x_09', interaction_type: 'x_10'
+        };
+        const DEAL_COLS = {
+            deal_name: 'x_01', company_name: 'x_02', service_type: 'x_03', sales_name: 'x_04',
+            stage: 'x_05', priority: 'x_06', deal_value: 'x_07', probability: 'x_08',
+            close_date: 'x_09', created_date: 'x_10', notes: 'x_11', lead_id: 'x_12'
+        };
+        const CLIENT_COLS = {
+            company_name: 'x_01', company_type: 'x_02', email: 'x_03', phone: 'x_04',
+            pic_name: 'x_05', pic_phone: 'x_06', address: 'x_07', status: 'x_08',
+            services_used: 'x_09', sales_assign: 'x_10', join_date: 'x_11', notes: 'x_12',
+            lead_id: 'x_13', conversion_history: 'x_14'
+        };
+
+        // ==================== STATE ====================
+        const STATE = {
+            activeTab: 'leads',
+            search: '',
+            dateFilter: 'today',           // untuk tab leads
+            activityFilter: 'all',         // untuk tab activities
+            leads: [],
+            activities: [],
+            deals: [],
+            clients: [],
+            raw: { leads: {}, activities: {}, deals: {}, clients: {} },
+            drawer: { leadId: null, context: 'lead' },
+            featureConfig: null
+        };
+
+        // ==================== FEATURE CONFIG ====================
+        const DEFAULT_FEATURE_CONFIG = {
+            spv: { edit: true, delete: true, riwayat: true, tambah: true },
+            non_spv: { edit: true, delete: false, riwayat: true, tambah: true }
+        };
+
+        function canUse(feature) {
+            if (isAdmin(CURRENT_USER)) return true;
+            const roleKey = isSupervisor(CURRENT_USER) ? 'spv' : 'non_spv';
+            const cfg = (STATE.featureConfig && STATE.featureConfig[roleKey]) || DEFAULT_FEATURE_CONFIG[roleKey];
+            return !!(cfg && cfg[feature]);
+        }
+
+        // ==================== API HELPER ====================
+        function buildHeaders(table) {
+            return {
+                'Content-Type': 'application/json',
+                'X-Custom-Auth': SECRET,
+                'X-Table-Name': table,
+                'X-Role': 'admin'
+            };
+        }
+
+        async function apiFetch(table, endpoint = '', options = {}) {
+            const url = `${API_URL}?table=${table}${endpoint}`;
+            const response = await fetch(url, {
+                ...options,
+                headers: { ...buildHeaders(table), ...(options.headers || {}) }
+            });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || err.message || `HTTP ${response.status}`);
+            }
+            return await response.json();
+        }
+
+        // ==================== UTILS ====================
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function parseJSON(raw, fallback = []) {
+            if (!raw) return fallback;
+            try {
+                const p = JSON.parse(raw);
+                return Array.isArray(p) ? p : fallback;
+            } catch (e) { return fallback; }
+        }
+
+        function isPendingStatus(s) { return s === 'scheduled' || s === 'rescheduled'; }
+
+        function todayStr() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        function dateOnly(dateTimeStr) {
+            return dateTimeStr ? dateTimeStr.slice(0, 10) : '';
+        }
+
+        function formatDate(dateStr, opts = {}) {
+            if (!dateStr) return '-';
+            try {
+                const d = new Date(dateStr.length <= 10 ? dateStr + 'T00:00:00' : dateStr);
+                return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', ...opts });
+            } catch (e) { return dateStr; }
+        }
+
+        function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr) return '-';
+            try {
+                const d = new Date(dateTimeStr);
+                return d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            } catch (e) { return dateTimeStr; }
+        }
+
+        function followupStatus(dateStr) {
+            if (!dateStr) return null;
+            const today = new Date(); today.setHours(0,0,0,0);
+            const d = new Date(dateStr + 'T00:00:00');
+            const diff = Math.floor((d - today) / 86400000);
+            if (diff < 0) return 'overdue';
+            if (diff === 0) return 'today';
+            if (diff === 1) return 'tomorrow';
+            if (diff <= 7) return 'week';
+            return 'future';
+        }
+
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // ==================== PARSERS ====================
+        function parseLead(row) {
+            const o = { id_x: row.id_x };
+            for (const [k, col] of Object.entries(LEAD_COLS)) o[k] = row[col] || '';
+            return o;
+        }
+
+        function parseActivity(row) {
+            const o = { id_x: row.id_x };
+            for (const [k, col] of Object.entries(ACT_COLS)) o[k] = row[col] || '';
+            // Parse notes JSON
+            const notes = o.notes;
+            o.rencana = '';
+            o.hasil = null;
+            if (notes) {
+                try {
+                    const p = JSON.parse(notes);
+                    if (p.rencana) o.rencana = p.rencana.catatan || '';
+                    if (p.hasil) o.hasil = p.hasil;
+                } catch (e) {
+                    o.hasil = { catatan: notes, tanggal_aktual: '', tindak_lanjut: '' };
+                }
+            }
+            return o;
+        }
+
+        function parseDeal(row) {
+            const o = { id_x: row.id_x };
+            for (const [k, col] of Object.entries(DEAL_COLS)) o[k] = row[col] || '';
+            o.probability = parseInt(o.probability) || 0;
+            return o;
+        }
+
+        function parseClient(row) {
+            const o = { id_x: row.id_x };
+            for (const [k, col] of Object.entries(CLIENT_COLS)) o[k] = row[col] || '';
+            o.services_used = parseJSON(o.services_used, []);
+            o.conversion_history = parseJSON(o.conversion_history, []);
+            return o;
+        }
+
+        // ==================== DATA LOADING ====================
+        async function loadAll() {
+            try {
+                const [leadsRes, actsRes, dealsRes, clientsRes] = await Promise.all([
+                    apiFetch(TABLES.leads),
+                    apiFetch(TABLES.activities),
+                    apiFetch(TABLES.deals),
+                    apiFetch(TABLES.clients)
+                ]);
+
+                const filterByUser = !isSupervisor(CURRENT_USER) && !isAdmin(CURRENT_USER);
+                const uname = CURRENT_USER.username;
+
+                STATE.raw.leads = {};
+                STATE.raw.activities = {};
+                STATE.raw.deals = {};
+                STATE.raw.clients = {};
+
+                (leadsRes.data || []).forEach(r => { STATE.raw.leads[r.id_x] = r; });
+                (actsRes.data || []).forEach(r => { STATE.raw.activities[r.id_x] = r; });
+                (dealsRes.data || []).forEach(r => { STATE.raw.deals[r.id_x] = r; });
+                (clientsRes.data || []).forEach(r => { STATE.raw.clients[r.id_x] = r; });
+
+                STATE.leads = Object.values(STATE.raw.leads)
+                    .map(parseLead)
+                    .filter(l => !filterByUser || l.sales_assign === uname);
+
+                STATE.activities = Object.values(STATE.raw.activities)
+                    .map(parseActivity)
+                    .filter(a => !filterByUser || a.sales_name === uname);
+
+                STATE.deals = Object.values(STATE.raw.deals)
+                    .map(parseDeal)
+                    .filter(d => !filterByUser || d.sales_name === uname);
+
+                STATE.clients = Object.values(STATE.raw.clients)
+                    .map(parseClient)
+                    .filter(c => !filterByUser || c.sales_assign === uname);
+
+                console.log('✅ Data loaded:', {
+                    leads: STATE.leads.length,
+                    activities: STATE.activities.length,
+                    deals: STATE.deals.length,
+                    clients: STATE.clients.length
+                });
+            } catch (e) {
+                console.error('❌ Load error:', e);
+                showToast('Gagal memuat data: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== RELASI ====================
+        function getLeadRelations(leadId) {
+            const acts = STATE.activities.filter(a => String(a.lead_id) === String(leadId));
+            const pending = acts.filter(a => isPendingStatus(a.status));
+            const deals = STATE.deals.filter(d => String(d.lead_id) === String(leadId));
+            const activeDeals = deals.filter(d => !['won','lost'].includes(d.stage));
+            const client = STATE.clients.find(c => String(c.lead_id) === String(leadId));
+            return { acts, pending, deals, activeDeals, client };
+        }
+
+        // ==================== TAB SWITCHING ====================
+        function switchTab(tab) {
+            STATE.activeTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tab);
+            });
+            // Update tombol tambah
+            const addLabels = { leads: '➕ Tambah Lead', activities: '➕ Tambah Aktivitas', deals: '➕ Tambah Deal', clients: '➕ Tambah Client' };
+            document.getElementById('addBtn').textContent = addLabels[tab] || '➕ Tambah';
+            renderActiveTab();
+        }
+
+        function openAddForActiveTab() {
+            if (STATE.activeTab === 'leads') openLeadForm();
+            else if (STATE.activeTab === 'activities') openActivityForm();
+            else if (STATE.activeTab === 'deals') showToast('🚧 Form Deal akan hadir di tahap berikutnya', 'info');
+            else if (STATE.activeTab === 'clients') showToast('🚧 Form Client akan hadir di tahap berikutnya', 'info');
+        }
+
+        function renderActiveTab() {
+            const tab = STATE.activeTab;
+            // Update counts
+            document.getElementById('tabCountLeads').textContent = STATE.leads.length;
+            document.getElementById('tabCountActivities').textContent = STATE.activities.length;
+            document.getElementById('tabCountDeals').textContent = STATE.deals.length;
+            document.getElementById('tabCountClients').textContent = STATE.clients.length;
+
+            const content = document.getElementById('tabContent');
+            if (tab === 'leads') content.innerHTML = renderLeadsTab();
+            else if (tab === 'activities') content.innerHTML = renderActivitiesTab();
+            else if (tab === 'deals') content.innerHTML = renderDealsTab();
+            else if (tab === 'clients') content.innerHTML = renderClientsTab();
+        }
+
+        // ==================== RENDER TAB LEADS ====================
+        function renderLeadsTab() {
+            const search = STATE.search.toLowerCase().trim();
+            let list = STATE.leads.filter(l =>
+                !search ||
+                l.contact_name.toLowerCase().includes(search) ||
+                l.company_name.toLowerCase().includes(search) ||
+                l.phone.includes(search) ||
+                l.email.toLowerCase().includes(search)
+            );
+
+            // Filter tanggal
+            list = list.filter(l => {
+                if (STATE.dateFilter === 'all') return true;
+                const st = followupStatus(l.next_followup);
+                if (!st) return false;
+                if (STATE.dateFilter === 'overdue') return st === 'overdue';
+                if (STATE.dateFilter === 'today') return st === 'today' || st === 'overdue';
+                if (STATE.dateFilter === 'tomorrow') return st === 'tomorrow';
+                if (STATE.dateFilter === 'week') return ['today','tomorrow','week','overdue'].includes(st);
+                return true;
+            });
+
+            const filterBar = `
+                <div class="filter-bar">
+                    <span class="filter-label">📅 Follow-up:</span>
+                    ${[
+                        ['all','Semua'], ['today','Hari Ini'], ['tomorrow','Besok'],
+                        ['week','7 Hari'], ['overdue','⚠️ Terlambat']
+                    ].map(([v, label]) =>
+                        `<button class="filter-btn ${STATE.dateFilter === v ? 'active' : ''}" onclick="setDateFilter('${v}')">${label}</button>`
+                    ).join('')}
+                    <span class="filter-info">Menampilkan: <b>${list.length} lead</b></span>
+                </div>
+            `;
+
+            if (list.length === 0) {
+                return filterBar + `
+                    <div class="list-container">
+                        <div class="empty-state">
+                            <div class="icon">${STATE.leads.length === 0 ? '📋' : '🔍'}</div>
+                            <h3>${STATE.leads.length === 0 ? 'Belum ada lead' : 'Tidak ada lead di filter ini'}</h3>
+                            <p>${STATE.leads.length === 0 ? 'Klik "Tambah Lead" untuk mulai' : 'Coba ubah filter atau kata kunci'}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const statusLabels = { cold: '🔵 Cold', warm: '🟠 Warm', hot: '🔥 Hot', converted: '✅ Converted', lost: '❌ Lost' };
+            const priorityLabels = { low: '🟢', medium: '🟠', high: '🔴' };
+
+            const items = list.map(l => {
+                const rel = getLeadRelations(l.id_x);
+                const relBadges = [];
+                if (rel.acts.length) relBadges.push(`<span class="rel-badge act" title="${rel.acts.length} aktivitas">🗒️${rel.acts.length}</span>`);
+                if (rel.deals.length) relBadges.push(`<span class="rel-badge deal" title="${rel.deals.length} deal">💼${rel.deals.length}</span>`);
+                if (rel.client) relBadges.push(`<span class="rel-badge client" title="Sudah jadi klien">🏢</span>`);
+
+                // Follow-up badge
+                let followupHtml = '<span style="color:#cbd5e0;font-size:11px;">—</span>';
+                if (l.next_followup) {
+                    const st = followupStatus(l.next_followup);
+                    const labels = { overdue: '⚠️ Terlambat', today: '📅 Hari ini', tomorrow: '📅 Besok', week: '📅', future: '📅' };
+                    const label = st === 'week' || st === 'future' ? formatDate(l.next_followup, { day: '2-digit', month: 'short' }) : labels[st];
+                    followupHtml = `<span class="followup-badge ${st}">${label}</span>`;
+                }
+
+                return `
+                    <div class="list-item" onclick="openDrawer(${l.id_x})">
+                        <div class="id">#${l.id_x}</div>
+                        <div class="field">
+                            <span class="label">Nama:</span> ${escapeHtml(l.contact_name) || '-'}
+                            ${l.company_name ? `<div class="sub">${escapeHtml(l.company_name)}</div>` : ''}
+                            ${relBadges.length ? `<div class="rel-badges">${relBadges.join('')}</div>` : ''}
+                        </div>
+                        <div class="field">
+                            <span class="label">Kontak:</span>
+                            ${escapeHtml(l.phone) || '-'}
+                            ${l.email ? `<div class="sub">${escapeHtml(l.email)}</div>` : ''}
+                        </div>
+                        <div class="field">
+                            <span class="label">Layanan:</span>
+                            ${escapeHtml(l.service_interest) || '-'}
+                        </div>
+                        <div class="field">
+                            <span class="label">Status:</span>
+                            <span class="badge-status ${l.status}">${statusLabels[l.status] || l.status}</span>
+                        </div>
+                        <div class="field">
+                            <span class="label">Prioritas:</span>
+                            ${priorityLabels[l.priority] || ''} ${l.priority || '-'}
+                        </div>
+                        <div class="field">
+                            <span class="label">Follow-up:</span>
+                            ${followupHtml}
+                        </div>
+                        <div class="actions" onclick="event.stopPropagation();">
+                            <button class="btn btn-primary btn-xs" onclick="openDrawer(${l.id_x})" title="Buka detail">🔍</button>
+                            <button class="btn btn-warning btn-xs" onclick="openLeadForm(${l.id_x})" title="Edit">✏️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return filterBar + `
+                <div class="list-container">
+                    <div class="list-header">
+                        <span>ID</span>
+                        <span>Nama / Perusahaan</span>
+                        <span>Kontak</span>
+                        <span>Layanan</span>
+                        <span>Status</span>
+                        <span>Prioritas</span>
+                        <span>Follow-up</span>
+                        <span>Aksi</span>
+                    </div>
+                    ${items}
+                </div>
+            `;
+        }
+
+        function setDateFilter(v) {
+            STATE.dateFilter = v;
+            renderActiveTab();
+        }
+
+        // ==================== RENDER TAB AKTIVITAS ====================
+        function renderActivitiesTab() {
+            const search = STATE.search.toLowerCase().trim();
+            let list = STATE.activities.filter(a =>
+                !search ||
+                a.company_name.toLowerCase().includes(search) ||
+                a.contact_name.toLowerCase().includes(search) ||
+                a.sales_name.toLowerCase().includes(search) ||
+                a.location.toLowerCase().includes(search)
+            );
+
+            if (STATE.activityFilter === 'today') {
+                const today = todayStr();
+                list = list.filter(a => dateOnly(a.visit_date) === today);
+            } else if (STATE.activityFilter === 'pending') {
+                list = list.filter(a => isPendingStatus(a.status));
+            } else if (STATE.activityFilter === 'done') {
+                list = list.filter(a => a.status === 'visited');
+            }
+
+            // Sort: terbaru dulu
+            list = [...list].sort((a, b) => (b.visit_date || '').localeCompare(a.visit_date || ''));
+
+            const filterBar = `
+                <div class="filter-bar">
+                    <span class="filter-label">🎯 Filter:</span>
+                    ${[
+                        ['all','Semua'], ['today','📅 Hari Ini'], ['pending','⏳ Rencana'], ['done','✅ Selesai']
+                    ].map(([v, label]) =>
+                        `<button class="filter-btn ${STATE.activityFilter === v ? 'active' : ''}" onclick="setActivityFilter('${v}')">${label}</button>`
+                    ).join('')}
+                    <span class="filter-info">Menampilkan: <b>${list.length} aktivitas</b></span>
+                </div>
+            `;
+
+            if (list.length === 0) {
+                return filterBar + `
+                    <div class="list-container">
+                        <div class="empty-state">
+                            <div class="icon">${STATE.activities.length === 0 ? '🗒️' : '🔍'}</div>
+                            <h3>${STATE.activities.length === 0 ? 'Belum ada aktivitas' : 'Tidak ada aktivitas di filter ini'}</h3>
+                            <p>${STATE.activities.length === 0 ? 'Buat lead dulu, lalu isi next_followup atau tambah aktivitas' : 'Coba ubah filter'}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const statusLabels = {
+                scheduled: '📅 Terjadwal', visited: '✅ Selesai',
+                cancelled: '❌ Batal', rescheduled: '🔄 Reschedule'
+            };
+            const typeIcon = { call: '☎️', whatsapp: '💬', email: '📧', visit: '🚗' };
+
+            const items = list.map(a => {
+                const lead = STATE.leads.find(l => String(l.id_x) === String(a.lead_id));
+                const leadBadge = a.lead_id
+                    ? (lead ? `<span class="rel-badge act" title="Lead #${a.lead_id}">#${a.lead_id}</span>` : `<span class="rel-badge" style="background:#fed7d7;color:#9b2c2c;" title="Lead sudah dihapus">⚠️ Lead #${a.lead_id}</span>`)
+                    : '';
+                const notesPreview = a.hasil && a.hasil.catatan ? a.hasil.catatan : (a.rencana ? 'Rencana: ' + a.rencana : '-');
+                return `
+                    <div class="list-item" onclick="openActivityForm(${a.id_x})">
+                        <div class="id">#${a.id_x}</div>
+                        <div class="field">
+                            <span class="label">Perusahaan:</span>
+                            ${typeIcon[a.interaction_type] || '🚗'} ${escapeHtml(a.company_name) || '-'}
+                            ${leadBadge}
+                            ${a.contact_name ? `<div class="sub">${escapeHtml(a.contact_name)}</div>` : ''}
+                        </div>
+                        <div class="field"><span class="label">Sales:</span> ${escapeHtml(a.sales_name) || '-'}</div>
+                        <div class="field"><span class="label">Tanggal:</span> ${formatDateTime(a.visit_date)}</div>
+                        <div class="field"><span class="label">Tujuan:</span> ${escapeHtml(a.visit_purpose) || '-'}</div>
+                        <div class="field"><span class="label">Status:</span> <span class="badge-activity-status ${a.status}">${statusLabels[a.status] || a.status}</span></div>
+                        <div class="field" title="${escapeHtml(notesPreview)}">
+                            <span class="label">Catatan:</span>
+                            ${escapeHtml(notesPreview.substring(0, 30))}${notesPreview.length > 30 ? '...' : ''}
+                        </div>
+                        <div class="actions" onclick="event.stopPropagation();">
+                            <button class="btn btn-warning btn-xs" onclick="openActivityForm(${a.id_x})" title="Edit">✏️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return filterBar + `
+                <div class="list-container">
+                    <div class="list-header">
+                        <span>ID</span>
+                        <span>Perusahaan / Kontak</span>
+                        <span>Sales</span>
+                        <span>Tanggal</span>
+                        <span>Tujuan</span>
+                        <span>Status</span>
+                        <span>Catatan</span>
+                        <span>Aksi</span>
+                    </div>
+                    ${items}
+                </div>
+            `;
+        }
+
+        function setActivityFilter(v) {
+            STATE.activityFilter = v;
+            renderActiveTab();
+        }
+
+        // ==================== RENDER TAB DEALS ====================
+        function renderDealsTab() {
+            const search = STATE.search.toLowerCase().trim();
+            const list = STATE.deals.filter(d =>
+                !search ||
+                d.deal_name.toLowerCase().includes(search) ||
+                d.company_name.toLowerCase().includes(search) ||
+                d.sales_name.toLowerCase().includes(search)
+            ).sort((a, b) => (b.close_date || '').localeCompare(a.close_date || ''));
+
+            if (list.length === 0) {
+                return `
+                    <div class="list-container">
+                        <div class="empty-state">
+                            <div class="icon">${STATE.deals.length === 0 ? '💼' : '🔍'}</div>
+                            <h3>${STATE.deals.length === 0 ? 'Belum ada deal' : 'Tidak ada deal yang cocok'}</h3>
+                            <p>${STATE.deals.length === 0 ? 'Deal dibuat dari drawer lead (tombol 💼 Buat Deal) — form akan hadir di tahap berikutnya' : 'Coba ubah kata kunci'}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const stageLabels = {
+                prospecting: '🔍 Prospecting', qualification: '📋 Qualification',
+                negotiation: '🤝 Negotiation', proposal: '📄 Proposal',
+                closing: '🎯 Closing', won: '✅ Won', lost: '❌ Lost'
+            };
+
+            const items = list.map(d => {
+                const lead = STATE.leads.find(l => String(l.id_x) === String(d.lead_id));
+                const leadBadge = d.lead_id
+                    ? (lead ? `<span class="rel-badge deal">#${d.lead_id}</span>` : `<span class="rel-badge" style="background:#fed7d7;color:#9b2c2c;">⚠️ Lead #${d.lead_id}</span>`)
+                    : '';
+                return `
+                    <div class="list-item">
+                        <div class="id">#${d.id_x}</div>
+                        <div class="field">
+                            <span class="label">Deal:</span> ${escapeHtml(d.deal_name) || '-'}
+                            ${leadBadge}
+                            ${d.company_name ? `<div class="sub">${escapeHtml(d.company_name)}</div>` : ''}
+                        </div>
+                        <div class="field"><span class="label">Layanan:</span> ${escapeHtml(d.service_type) || '-'}</div>
+                        <div class="field"><span class="label">Sales:</span> ${escapeHtml(d.sales_name) || '-'}</div>
+                        <div class="field"><span class="label">Stage:</span> <span class="badge-stage ${d.stage}">${stageLabels[d.stage] || d.stage}</span></div>
+                        <div class="field"><span class="label">Nilai:</span> ${escapeHtml(d.deal_value) || '-'}</div>
+                        <div class="field"><span class="label">Pelaksanaan:</span> ${d.close_date ? formatDate(d.close_date) : '-'}</div>
+                        <div class="actions">
+                            <span style="font-size:11px;color:#a0aec0;">🚧 Tahap 2</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="filter-bar">
+                    <span class="filter-label">🚧</span>
+                    <span style="font-size:12px;color:#718070;">Tab Deals masih menampilkan data. Form tambah/edit akan hadir di tahap berikutnya.</span>
+                    <span class="filter-info">Menampilkan: <b>${list.length} deal</b></span>
+                </div>
+                <div class="list-container">
+                    <div class="list-header">
+                        <span>ID</span>
+                        <span>Deal / Perusahaan</span>
+                        <span>Layanan</span>
+                        <span>Sales</span>
+                        <span>Stage</span>
+                        <span>Nilai</span>
+                        <span>Pelaksanaan</span>
+                        <span>Aksi</span>
+                    </div>
+                    ${items}
+                </div>
+            `;
+        }
+
+        // ==================== RENDER TAB CLIENTS ====================
+        function renderClientsTab() {
+            const search = STATE.search.toLowerCase().trim();
+            const list = STATE.clients.filter(c =>
+                !search ||
+                c.company_name.toLowerCase().includes(search) ||
+                c.pic_name.toLowerCase().includes(search) ||
+                c.email.toLowerCase().includes(search)
+            );
+
+            if (list.length === 0) {
+                return `
+                    <div class="list-container">
+                        <div class="empty-state">
+                            <div class="icon">${STATE.clients.length === 0 ? '🏢' : '🔍'}</div>
+                            <h3>${STATE.clients.length === 0 ? 'Belum ada klien' : 'Tidak ada klien yang cocok'}</h3>
+                            <p>${STATE.clients.length === 0 ? 'Klien otomatis muncul saat Deal Won — form akan hadir di tahap berikutnya' : 'Coba ubah kata kunci'}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const typeLabels = {
+                corporate: '🏢', school: '🏫', university: '🎓', government: '🏛️', other: '📌'
+            };
+            const statusLabels = { active: '✅ Aktif', inactive: '❌ Inaktif', prospect: '🔶 Prospek' };
+
+            const items = list.map(c => {
+                const lead = STATE.leads.find(l => String(l.id_x) === String(c.lead_id));
+                const leadBadge = c.lead_id
+                    ? (lead ? `<span class="rel-badge client">#${c.lead_id}</span>` : `<span class="rel-badge" style="background:#fed7d7;color:#9b2c2c;">⚠️ Lead #${c.lead_id}</span>`)
+                    : '';
+                const conv = c.conversion_history.length;
+                return `
+                    <div class="list-item">
+                        <div class="id">#${c.id_x}</div>
+                        <div class="field">
+                            <span class="label">Perusahaan:</span>
+                            ${escapeHtml(c.company_name) || '-'}
+                            ${leadBadge}
+                            ${c.address ? `<div class="sub">${escapeHtml(c.address)}</div>` : ''}
+                        </div>
+                        <div class="field">
+                            <span class="label">PIC:</span> ${escapeHtml(c.pic_name) || '-'}
+                            ${c.pic_phone ? `<div class="sub">${escapeHtml(c.pic_phone)}</div>` : ''}
+                        </div>
+                        <div class="field"><span class="label">Tipe:</span> <span class="badge-type ${c.company_type}">${typeLabels[c.company_type] || ''} ${c.company_type}</span></div>
+                        <div class="field"><span class="label">Status:</span> <span class="badge-type ${c.status}">${statusLabels[c.status] || c.status}</span></div>
+                        <div class="field"><span class="label">Layanan:</span> ${c.services_used.length ? c.services_used.length + ' layanan' : '-'}</div>
+                        <div class="field"><span class="label">Konversi:</span> ${conv ? conv + '×' : '-'}</div>
+                        <div class="actions">
+                            <span style="font-size:11px;color:#a0aec0;">🚧 Tahap 2</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="filter-bar">
+                    <span class="filter-label">🚧</span>
+                    <span style="font-size:12px;color:#718096;">Tab Clients masih menampilkan data. Form tambah/edit akan hadir di tahap berikutnya.</span>
+                    <span class="filter-info">Menampilkan: <b>${list.length} klien</b></span>
+                </div>
+                <div class="list-container">
+                    <div class="list-header">
+                        <span>ID</span>
+                        <span>Perusahaan</span>
+                        <span>PIC</span>
+                        <span>Tipe</span>
+                        <span>Status</span>
+                        <span>Layanan</span>
+                        <span>Konversi</span>
+                        <span>Aksi</span>
+                    </div>
+                    ${items}
+                </div>
+            `;
+        }
+
+        // ==================== DRAWER ====================
+        function openDrawer(leadId) {
+            const lead = STATE.leads.find(l => l.id_x === leadId);
+            if (!lead) { showToast('Lead tidak ditemukan', 'error'); return; }
+
+            STATE.drawer.leadId = leadId;
+            document.getElementById('drawerTitle').innerHTML = `
+                <span>👤 ${escapeHtml(lead.contact_name) || '-'}</span>
+                <span class="sub">${escapeHtml(lead.company_name || '-')} · Lead #${lead.id_x}</span>
+            `;
+            document.getElementById('drawerOverlay').classList.add('active');
+            document.getElementById('drawer').classList.add('active');
+            renderDrawer();
+        }
+
+        function closeDrawer() {
+            document.getElementById('drawerOverlay').classList.remove('active');
+            document.getElementById('drawer').classList.remove('active');
+            STATE.drawer.leadId = null;
+        }
+
+        function renderDrawer() {
+            const leadId = STATE.drawer.leadId;
+            if (!leadId) return;
+            const lead = STATE.leads.find(l => l.id_x === leadId);
+            if (!lead) { closeDrawer(); return; }
+
+            const rel = getLeadRelations(leadId);
+            const statusLabels = { cold: '🔵 Cold', warm: '🟠 Warm', hot: '🔥 Hot', converted: '✅ Converted', lost: '❌ Lost' };
+            const priorityLabels = { low: '🟢 Low', medium: '🟠 Medium', high: '🔴 High' };
+            const actStatusLabels = { scheduled: '📅', visited: '✅', cancelled: '❌', rescheduled: '🔄' };
+            const typeIcon = { call: '☎️', whatsapp: '💬', email: '📧', visit: '🚗' };
+
+            // Info
+            const infoHtml = `
+                <div class="drawer-info">
+                    <div class="row"><span class="k">📱 Telepon:</span><span class="v">${escapeHtml(lead.phone) || '-'}</span></div>
+                    <div class="row"><span class="k">📧 Email:</span><span class="v">${escapeHtml(lead.email) || '-'}</span></div>
+                    <div class="row"><span class="k">📌 Layanan:</span><span class="v">${escapeHtml(lead.service_interest) || '-'}</span></div>
+                    <div class="row"><span class="k">📂 Status:</span><span class="v"><span class="badge-status ${lead.status}">${statusLabels[lead.status]}</span> <span class="badge-status" style="background:#edf2f7;color:#4a5568;">${priorityLabels[lead.priority]}</span></span></div>
+                    <div class="row"><span class="k">📅 Follow-up:</span><span class="v">${lead.next_followup ? formatDate(lead.next_followup) : '-'}</span></div>
+                    <div class="row"><span class="k">💰 Estimasi:</span><span class="v">${escapeHtml(lead.estimated_value) || '-'}</span></div>
+                    ${lead.notes ? `<div class="row"><span class="k">📝 Catatan:</span><span class="v">${escapeHtml(lead.notes)}</span></div>` : ''}
+                </div>
+            `;
+
+            // Quick actions
+            const quickActionsHtml = `
+                <div>
+                    <div class="drawer-section-title">⚡ Aksi Cepat</div>
+                    <div class="quick-actions">
+                        <button class="quick-action" onclick="openActivityFormFromDrawer('call')">
+                            <span class="ico">☎️</span><span>Call</span>
+                        </button>
+                        <button class="quick-action" onclick="openActivityFormFromDrawer('whatsapp')">
+                            <span class="ico">💬</span><span>WhatsApp</span>
+                        </button>
+                        <button class="quick-action" onclick="openActivityFormFromDrawer('email')">
+                            <span class="ico">📧</span><span>Email</span>
+                        </button>
+                        <button class="quick-action" onclick="openActivityFormFromDrawer('visit', true)">
+                            <span class="ico">🚗</span><span>Rencana Visit</span>
+                        </button>
+                        <button class="quick-action" onclick="openActivityFormFromDrawer('call', true)">
+                            <span class="ico">📅</span><span>Rencana Call</span>
+                        </button>
+                        <button class="quick-action" onclick="alert('Form Deal akan hadir di tahap berikutnya')">
+                            <span class="ico">💼</span><span>Buat Deal</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Timeline
+            let timelineHtml = '';
+            if (rel.acts.length === 0) {
+                timelineHtml = '<div style="font-size:12px;color:#a0aec0;text-align:center;padding:14px;">Belum ada aktivitas. Mulai dengan tombol di atas ☝️</div>';
+            } else {
+                const sorted = [...rel.acts].sort((a, b) => (b.visit_date || '').localeCompare(a.visit_date || ''));
+                timelineHtml = sorted.map(a => {
+                    const notes = a.hasil && a.hasil.catatan ? a.hasil.catatan : (a.rencana || '');
+                    return `
+                        <div class="timeline-item" onclick="openActivityForm(${a.id_x})" style="cursor:pointer;">
+                            <div class="ico">${typeIcon[a.interaction_type] || '📝'}</div>
+                            <div class="body">
+                                <div class="title">
+                                    ${actStatusLabels[a.status]} ${escapeHtml(a.visit_purpose) || 'Interaksi'}
+                                </div>
+                                <div class="meta">${formatDateTime(a.visit_date)} · ${escapeHtml(a.sales_name) || '-'}</div>
+                                ${notes ? `<div class="note">${escapeHtml(notes.substring(0, 100))}${notes.length > 100 ? '...' : ''}</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const timelineSection = `
+                <div>
+                    <div class="drawer-section-title">🕘 Timeline Aktivitas (${rel.acts.length})</div>
+                    <div style="display:flex;flex-direction:column;gap:6px;">${timelineHtml}</div>
+                </div>
+            `;
+
+            // Deals section
+            let dealsHtml = '';
+            if (rel.deals.length) {
+                dealsHtml = `
+                    <div>
+                        <div class="drawer-section-title">💼 Deals (${rel.deals.length})</div>
+                        <div style="display:flex;flex-direction:column;gap:6px;">
+                            ${rel.deals.map(d => `
+                                <div class="timeline-item">
+                                    <div class="ico">💼</div>
+                                    <div class="body">
+                                        <div class="title">${escapeHtml(d.deal_name)}</div>
+                                        <div class="meta">${escapeHtml(d.stage)} · ${escapeHtml(d.deal_value || '-')}</div>
+                                        ${d.close_date ? `<div class="note">📅 ${formatDate(d.close_date)}</div>` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Client section
+            let clientHtml = '';
+            if (rel.client) {
+                clientHtml = `
+                    <div>
+                        <div class="drawer-section-title">🏢 Klien</div>
+                        <div class="timeline-item">
+                            <div class="ico">🏢</div>
+                            <div class="body">
+                                <div class="title">${escapeHtml(rel.client.company_name)}</div>
+                                <div class="meta">${rel.client.services_used.length} layanan · ${rel.client.conversion_history.length} konversi</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('drawerBody').innerHTML = infoHtml + quickActionsHtml + timelineSection + dealsHtml + clientHtml;
+
+            // Footer
+            document.getElementById('drawerFooter').innerHTML = `
+                <button class="btn btn-outline btn-sm" onclick="openLeadForm(${lead.id_x})">✏️ Edit Lead</button>
+                ${canUse('delete') ? `<button class="btn btn-danger btn-sm" onclick="confirmDeleteLead(${lead.id_x})">🗑️ Hapus</button>` : ''}
+                <button class="btn btn-primary btn-sm" onclick="closeDrawer()">Tutup</button>
+            `;
+        }
+
+        // ==================== FORM LEAD ====================
+        function openLeadForm(leadId) {
+            const isEdit = !!leadId;
+            const lead = isEdit ? STATE.leads.find(l => l.id_x === leadId) : null;
+            if (isEdit && !lead) { showToast('Lead tidak ditemukan', 'error'); return; }
+
+            document.getElementById('leadEditId').value = isEdit ? leadId : '';
+            document.getElementById('formLeadTitle').textContent = isEdit ? `✏️ Edit Lead #${leadId}` : '📋 Tambah Lead';
+            document.getElementById('leadDeleteBtn').style.display = isEdit && canUse('delete') ? 'inline-flex' : 'none';
+            document.getElementById('leadSaveBtn').textContent = isEdit ? '💾 Update' : '💾 Simpan';
+
+            document.getElementById('leadContactName').value = lead ? lead.contact_name : '';
+            document.getElementById('leadPhone').value = lead ? lead.phone : '';
+            document.getElementById('leadCompanyName').value = lead ? lead.company_name : '';
+            document.getElementById('leadEmail').value = lead ? lead.email : '';
+            document.getElementById('leadServiceInterest').value = lead ? (lead.service_interest || 'Seminar') : 'Seminar';
+            document.getElementById('leadEstimatedValue').value = lead ? lead.estimated_value : '';
+            document.getElementById('leadStatus').value = lead ? (lead.status || 'cold') : 'cold';
+            document.getElementById('leadPriority').value = lead ? (lead.priority || 'medium') : 'medium';
+            document.getElementById('leadNextFollowup').value = lead ? lead.next_followup : '';
+            document.getElementById('leadSalesAssign').value = lead ? lead.sales_assign : CURRENT_USER.username;
+            document.getElementById('leadNotes').value = lead ? lead.notes : '';
+
+            document.getElementById('formLeadModal').classList.add('active');
+        }
+
+        async function saveLead() {
+            const contactName = document.getElementById('leadContactName').value.trim();
+            const phone = document.getElementById('leadPhone').value.trim();
+            if (!contactName) { showToast('Nama Kontak wajib diisi', 'error'); return; }
+            if (!phone) { showToast('Nomor HP wajib diisi', 'error'); return; }
+
+            const editId = parseInt(document.getElementById('leadEditId').value) || null;
+            const data = {
+                contact_name: contactName,
+                company_name: document.getElementById('leadCompanyName').value.trim(),
+                email: document.getElementById('leadEmail').value.trim(),
+                phone,
+                service_interest: document.getElementById('leadServiceInterest').value,
+                estimated_value: document.getElementById('leadEstimatedValue').value.trim(),
+                status: document.getElementById('leadStatus').value,
+                priority: document.getElementById('leadPriority').value,
+                next_followup: document.getElementById('leadNextFollowup').value,
+                sales_assign: document.getElementById('leadSalesAssign').value.trim() || CURRENT_USER.username,
+                notes: document.getElementById('leadNotes').value.trim()
+            };
+
+            const row = {};
+            for (const [k, col] of Object.entries(LEAD_COLS)) row[col] = data[k] || '';
+
+            const btn = document.getElementById('leadSaveBtn');
+            btn.disabled = true; btn.textContent = '⏳ Menyimpan...';
+
+            try {
+                let newId = editId;
+                if (editId) {
+                    await apiFetch(TABLES.leads, `&id_x=${editId}`, { method: 'PUT', body: JSON.stringify(row) });
+                    showToast('✅ Lead diupdate', 'success');
+                } else {
+                    const res = await apiFetch(TABLES.leads, '', { method: 'POST', body: JSON.stringify(row) });
+                    // Cari ID baru
+                    newId = res.id_x || res.id || null;
+                    if (!newId) {
+                        // fallback: cari di raw setelah reload
+                        await loadAll();
+                        const cand = STATE.leads.filter(l => l.contact_name === contactName && l.phone === phone);
+                        newId = cand.sort((a,b) => b.id_x - a.id_x)[0]?.id_x;
+                    }
+                    showToast('✅ Lead dibuat', 'success');
+                }
+
+                // Sync next_followup → tracker
+                if (newId && data.next_followup) {
+                    await syncNextFollowupToTracker(newId, data);
+                } else if (newId && !data.next_followup) {
+                    // next_followup dikosongkan → tidak menyentuh tracker (sesuai keputusan)
+                }
+
+                await loadAll();
+                closeModal('formLeadModal');
+                renderActiveTab();
+                if (STATE.drawer.leadId) renderDrawer();
+            } catch (e) {
+                console.error('Save lead error:', e);
+                showToast('❌ Gagal: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = editId ? '💾 Update' : '💾 Simpan';
+            }
+        }
+
+        async function syncNextFollowupToTracker(leadId, leadData) {
+            const visitDateTime = leadData.next_followup + 'T09:00';
+            const existing = STATE.activities.find(a =>
+                String(a.lead_id) === String(leadId) && isPendingStatus(a.status)
+            );
+
+            try {
+                if (existing) {
+                    // Update baris yang ada
+                    const fullRow = { ...STATE.raw.activities[existing.id_x] };
+                    delete fullRow.id_x;
+                    fullRow[ACT_COLS.company_name] = leadData.company_name || '';
+                    fullRow[ACT_COLS.contact_name] = leadData.contact_name || '';
+                    fullRow[ACT_COLS.visit_date] = visitDateTime;
+                    fullRow[ACT_COLS.sales_name] = leadData.sales_assign || '';
+                    // JANGAN ubah location, status, purpose, notes, interaction_type
+                    fullRow[ACT_COLS.lead_id] = String(leadId);
+                    await apiFetch(TABLES.activities, `&id_x=${existing.id_x}`, { method: 'PUT', body: JSON.stringify(fullRow) });
+                    console.log('✅ Tracker row diupdate:', existing.id_x);
+                } else {
+                    // Create baru
+                    const newRow = {};
+                    newRow[ACT_COLS.company_name] = leadData.company_name || '';
+                    newRow[ACT_COLS.contact_name] = leadData.contact_name || '';
+                    newRow[ACT_COLS.visit_date] = visitDateTime;
+                    newRow[ACT_COLS.sales_name] = leadData.sales_assign || '';
+                    newRow[ACT_COLS.location] = leadData.phone || '';
+                    newRow[ACT_COLS.status] = 'scheduled';
+                    newRow[ACT_COLS.visit_purpose] = 'Follow Up';
+                    newRow[ACT_COLS.notes] = JSON.stringify({ rencana: { catatan: 'Auto dari Lead Management' } });
+                    newRow[ACT_COLS.lead_id] = String(leadId);
+                    newRow[ACT_COLS.interaction_type] = 'call';
+                    await apiFetch(TABLES.activities, '', { method: 'POST', body: JSON.stringify(newRow) });
+                    console.log('✅ Tracker row baru dibuat untuk lead', leadId);
+                }
+            } catch (e) {
+                console.warn('⚠️ Sync ke tracker gagal:', e.message);
+                showToast('⚠️ Lead tersimpan, tapi sync ke aktivitas gagal', 'error');
+            }
+        }
+
+        function confirmDeleteLead(leadId) {
+            const lead = STATE.leads.find(l => l.id_x === leadId);
+            if (!lead) return;
+            const rel = getLeadRelations(leadId);
+            const warn = (rel.acts.length || rel.deals.length || rel.client)
+                ? `\n\n⚠️ Lead ini punya ${rel.acts.length} aktivitas, ${rel.deals.length} deal${rel.client ? ', dan sudah jadi klien' : ''}.\nData terkait TIDAK akan terhapus.`
+                : '';
+            if (!confirm(`Hapus lead "${lead.contact_name}" (ID: ${leadId})?${warn}`)) return;
+            doDeleteLead(leadId);
+        }
+
+        function deleteLeadFromForm() {
+            const leadId = parseInt(document.getElementById('leadEditId').value);
+            if (!leadId) return;
+            if (!confirm('Hapus lead ini secara permanen? Data terkait di tool lain tidak akan terhapus.')) return;
+            closeModal('formLeadModal');
+            doDeleteLead(leadId);
+        }
+
+        async function doDeleteLead(leadId) {
+            try {
+                await apiFetch(TABLES.leads, `&id_x=${leadId}`, { method: 'DELETE' });
+                showToast('✅ Lead dihapus', 'success');
+                if (STATE.drawer.leadId === leadId) closeDrawer();
+                await loadAll();
+                renderActiveTab();
+            } catch (e) {
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== FORM AKTIVITAS ====================
+        function openActivityForm(actId) {
+            const isEdit = !!actId;
+            const act = isEdit ? STATE.activities.find(a => a.id_x === actId) : null;
+            if (isEdit && !act) { showToast('Aktivitas tidak ditemukan', 'error'); return; }
+
+            const lead = act ? STATE.leads.find(l => String(l.id_x) === String(act.lead_id)) : null;
+
+            document.getElementById('actEditId').value = isEdit ? actId : '';
+            document.getElementById('actLeadId').value = act ? (act.lead_id || '') : (STATE.drawer.leadId || '');
+            document.getElementById('formActivityTitle').textContent = isEdit ? `✏️ Edit Aktivitas #${actId}` : '🗒️ Tambah Aktivitas';
+            document.getElementById('actDeleteBtn').style.display = isEdit && canUse('delete') ? 'inline-flex' : 'none';
+            document.getElementById('actSaveBtn').textContent = isEdit ? '💾 Update' : '💾 Simpan';
+
+            if (isEdit) {
+                document.getElementById('actCompanyName').value = act.company_name || '';
+                document.getElementById('actContactName').value = act.contact_name || '';
+                document.getElementById('actVisitDate').value = act.visit_date ? act.visit_date.slice(0, 16) : '';
+                document.getElementById('actSalesName').value = act.sales_name || CURRENT_USER.username;
+                setActType(act.interaction_type || 'call');
+                document.getElementById('actLocation').value = act.location || '';
+                document.getElementById('actPurpose').value = act.visit_purpose || 'Follow Up';
+                document.getElementById('actStatus').value = act.status || 'scheduled';
+                document.getElementById('actRencana').value = act.rencana || '';
+                document.getElementById('actHasil').value = (act.hasil && act.hasil.catatan) || '';
+                document.getElementById('actHasilTanggal').value = (act.hasil && act.hasil.tanggal_aktual) || '';
+                document.getElementById('actHasilTindakLanjut').value = (act.hasil && act.hasil.tindak_lanjut) || '';
+            } else {
+                document.getElementById('actCompanyName').value = lead ? lead.company_name : '';
+                document.getElementById('actContactName').value = lead ? lead.contact_name : '';
+                // default: sekarang
+                const now = new Date();
+                const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+                document.getElementById('actVisitDate').value = local.toISOString().slice(0, 16);
+                document.getElementById('actSalesName').value = CURRENT_USER.username;
+                setActType('call');
+                document.getElementById('actLocation').value = lead ? (lead.phone || '') : '';
+                document.getElementById('actPurpose').value = 'Follow Up';
+                document.getElementById('actStatus').value = 'scheduled';
+                document.getElementById('actRencana').value = '';
+                document.getElementById('actHasil').value = '';
+                document.getElementById('actHasilTanggal').value = '';
+                document.getElementById('actHasilTindakLanjut').value = '';
+            }
+
+            toggleActHasilSection();
+            document.getElementById('formActivityModal').classList.add('active');
+        }
+
+        // Buka form aktivitas dari drawer dengan prefill jenis + status
+        function openActivityFormFromDrawer(type, isRencana) {
+            const leadId = STATE.drawer.leadId;
+            if (!leadId) return;
+            const lead = STATE.leads.find(l => l.id_x === leadId);
+            if (!lead) return;
+
+            // Cek pending
+            const rel = getLeadRelations(leadId);
+            if (rel.pending.length && isRencana) {
+                showToast('⚠️ Lead ini masih punya rencana yang belum diisi hasilnya', 'info');
+                openActivityForm(rel.pending[0].id_x);
+                return;
+            }
+
+            openActivityForm();
+            setActType(type);
+            document.getElementById('actStatus').value = isRencana ? 'scheduled' : 'visited';
+            // Isi tanggal sesuai jenis
+            if (isRencana) {
+                // Besok
+                const t = new Date(); t.setDate(t.getDate() + 1); t.setHours(9, 0, 0, 0);
+                const local = new Date(t.getTime() - t.getTimezoneOffset() * 60000);
+                document.getElementById('actVisitDate').value = local.toISOString().slice(0, 16);
+            }
+            // Prefill lokasi
+            if (type === 'call' || type === 'whatsapp') {
+                document.getElementById('actLocation').value = lead.phone || '';
+            } else if (type === 'email') {
+                document.getElementById('actLocation').value = lead.email || '';
+            }
+            toggleActHasilSection();
+            if (!isRencana) {
+                setTimeout(() => document.getElementById('actHasil')?.focus(), 150);
+            }
+        }
+
+        const ACT_TYPE_CFG = {
+            call: { label: '📞 Nomor yang Dihubungi', ph: '08xx-xxxx-xxxx' },
+            whatsapp: { label: '💬 Nomor WhatsApp', ph: '08xx-xxxx-xxxx' },
+            email: { label: '📧 Alamat Email', ph: 'email@domain.com' },
+            visit: { label: '📍 Lokasi', ph: 'Alamat lengkap' }
+        };
+
+        function setActType(type) {
+            const radio = document.querySelector(`input[name="actType"][value="${type}"]`);
+            if (radio) radio.checked = true;
+            onActTypeChange();
+        }
+
+        function onActTypeChange() {
+            const checked = document.querySelector('input[name="actType"]:checked');
+            const type = checked ? checked.value : 'call';
+            const cfg = ACT_TYPE_CFG[type] || ACT_TYPE_CFG.call;
+            document.getElementById('actLocationLabel').textContent = cfg.label;
+            document.getElementById('actLocation').placeholder = cfg.ph;
+        }
+
+        function getActType() {
+            const checked = document.querySelector('input[name="actType"]:checked');
+            return checked ? checked.value : 'call';
+        }
+
+        function toggleActHasilSection() {
+            const st = document.getElementById('actStatus').value;
+            const sec = document.getElementById('actHasilSection');
+            if (isPendingStatus(st)) {
+                sec.style.display = 'none';
+            } else {
+                sec.style.display = 'flex';
+            }
+        }
+
+        async function saveActivity() {
+            const companyName = document.getElementById('actCompanyName').value.trim();
+            const visitDate = document.getElementById('actVisitDate').value;
+            const status = document.getElementById('actStatus').value;
+            const hasilCatatan = document.getElementById('actHasil').value.trim();
+
+            if (!companyName) { showToast('Nama Perusahaan wajib', 'error'); return; }
+            if (!visitDate) { showToast('Tanggal wajib', 'error'); return; }
+            if (!isPendingStatus(status) && !hasilCatatan) {
+                showToast('Catatan hasil wajib untuk status Selesai/Batal', 'error');
+                return;
+            }
+
+            const editId = parseInt(document.getElementById('actEditId').value) || null;
+            const leadId = document.getElementById('actLeadId').value || '';
+
+            // Cek konflik pending
+            if (!editId && leadId) {
+                const pending = STATE.activities.find(a =>
+                    String(a.lead_id) === String(leadId) && isPendingStatus(a.status)
+                );
+                if (pending && isPendingStatus(status)) {
+                    showToast('❌ Lead ini sudah punya rencana (#' + pending.id_x + '). Edit rencana itu dulu.', 'error');
+                    return;
+                }
+            }
+
+            const rencanaCatatan = document.getElementById('actRencana').value.trim();
+            const hasilTanggalAktual = document.getElementById('actHasilTanggal').value;
+            const hasilTindakLanjut = document.getElementById('actHasilTindakLanjut').value.trim();
+
+            let hasil = null;
+            if (hasilCatatan || hasilTanggalAktual || hasilTindakLanjut) {
+                hasil = { catatan: hasilCatatan, tanggal_aktual: hasilTanggalAktual, tindak_lanjut: hasilTindakLanjut };
+            }
+
+            const notesJson = JSON.stringify({ rencana: { catatan: rencanaCatatan }, hasil });
+
+            const data = {
+                company_name: companyName,
+                contact_name: document.getElementById('actContactName').value.trim(),
+                visit_date: visitDate,
+                sales_name: document.getElementById('actSalesName').value.trim() || CURRENT_USER.username,
+                location: document.getElementById('actLocation').value.trim(),
+                status,
+                visit_purpose: document.getElementById('actPurpose').value,
+                notes: notesJson,
+                lead_id: leadId,
+                interaction_type: getActType()
+            };
+
+            const row = {};
+            for (const [k, col] of Object.entries(ACT_COLS)) row[col] = data[k] || '';
+
+            const btn = document.getElementById('actSaveBtn');
+            btn.disabled = true; btn.textContent = '⏳ Menyimpan...';
+
+            try {
+                if (editId) {
+                    await apiFetch(TABLES.activities, `&id_x=${editId}`, { method: 'PUT', body: JSON.stringify(row) });
+                    showToast('✅ Aktivitas diupdate', 'success');
+                } else {
+                    await apiFetch(TABLES.activities, '', { method: 'POST', body: JSON.stringify(row) });
+                    showToast('✅ Aktivitas dibuat', 'success');
+                }
+
+                // Sync balik ke lead
+                if (leadId) {
+                    if (isPendingStatus(status)) {
+                        await updateLeadFollowupFromActivity(leadId, dateOnly(visitDate));
+                    } else {
+                        await updateLeadFollowupFromActivity(leadId, '');
+                    }
+                }
+
+                await loadAll();
+                closeModal('formActivityModal');
+                renderActiveTab();
+                if (STATE.drawer.leadId) renderDrawer();
+            } catch (e) {
+                console.error('Save activity error:', e);
+                showToast('❌ Gagal: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = editId ? '💾 Update' : '💾 Simpan';
+            }
+        }
+
+        async function updateLeadFollowupFromActivity(leadId, newDate) {
+            const raw = STATE.raw.leads[leadId];
+            if (!raw) return;   // lead sudah dihapus
+            if ((raw[LEAD_COLS.next_followup] || '') === (newDate || '')) return;
+
+            const fullRow = { ...raw };
+            delete fullRow.id_x;
+            fullRow[LEAD_COLS.next_followup] = newDate;
+
+            try {
+                await apiFetch(TABLES.leads, `&id_x=${leadId}`, { method: 'PUT', body: JSON.stringify(fullRow) });
+                console.log('✅ Lead next_followup diupdate:', leadId, '→', newDate || '(kosong)');
+            } catch (e) {
+                console.warn('⚠️ Update lead followup gagal:', e.message);
+            }
+        }
+
+        function deleteActivityFromForm() {
+            const id = parseInt(document.getElementById('actEditId').value);
+            if (!id) return;
+            if (!confirm('Hapus aktivitas ini?')) return;
+            doDeleteActivity(id);
+        }
+
+        async function doDeleteActivity(id) {
+            try {
+                await apiFetch(TABLES.activities, `&id_x=${id}`, { method: 'DELETE' });
+                showToast('✅ Aktivitas dihapus', 'success');
+                closeModal('formActivityModal');
+                await loadAll();
+                renderActiveTab();
+                if (STATE.drawer.leadId) renderDrawer();
+            } catch (e) {
+                showToast('❌ Gagal hapus: ' + e.message, 'error');
+            }
+        }
+
+        // ==================== INIT ====================
+        async function init() {
+            // User badge
+            document.getElementById('userBadgeName').textContent = '👤 ' + (CURRENT_USER.username || '-');
+            const roleEl = document.getElementById('userBadgeRole');
+            roleEl.textContent = CURRENT_USER.role || '-';
+            roleEl.className = 'role-tag ' + (isSupervisor(CURRENT_USER) ? 'spv' : 'sales');
+
+            // Load feature config
+            try {
+                const res = await apiFetch(CONTROL_TABLE);
+                const row = (res.data || []).find(r => Number(r.id_x) === CONTROL_ROW_ID);
+                if (row && row.x_01) {
+                    const parsed = JSON.parse(row.x_01);
+                    if (parsed && parsed.lead_management) STATE.featureConfig = parsed.lead_management;
+                    else if (parsed) STATE.featureConfig = parsed;
+                }
+            } catch (e) {
+                console.warn('⚠️ kontrol_admin gagal:', e.message);
+                STATE.featureConfig = null;
+            }
+
+            // Load all data
+            await loadAll();
+            renderActiveTab();
+            console.log('✅ Sales CRM siap');
+        }
+
+        // ==================== EVENT ====================
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            STATE.search = e.target.value;
+            renderActiveTab();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeDrawer();
+                document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+            }
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(ov => {
+            ov.addEventListener('click', (e) => {
+                if (e.target === ov) ov.classList.remove('active');
+            });
+        });
+
+        // ==================== START ====================
+        init();
+
+        // Debug
+        window.debug = {
+            state: STATE,
+            refresh: async () => { await loadAll(); renderActiveTab(); },
+            openDrawer,
+            reload: init
+        };
+    </script>
+</body>
+</html>
