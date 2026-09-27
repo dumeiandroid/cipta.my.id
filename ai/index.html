@@ -74,6 +74,58 @@
             border: 1px solid rgba(255,255,255,0.1);
         }
 
+        /* CATEGORY FILTER */
+        .category-filter {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .category-btn {
+            padding: 8px 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            background: white;
+            font-weight: 600;
+            font-size: 13px;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .category-btn:hover {
+            border-color: #4299e1;
+            color: #4299e1;
+            transform: translateY(-2px);
+        }
+
+        .category-btn.active {
+            background: #4299e1;
+            color: white;
+            border-color: #4299e1;
+        }
+
+        .category-btn .cat-count {
+            background: rgba(0,0,0,0.08);
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        .category-btn.active .cat-count {
+            background: rgba(255,255,255,0.25);
+            color: white;
+        }
+
         .tools-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -89,6 +141,10 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
             position: relative;
             overflow: hidden;
+        }
+
+        .tool-card.hidden {
+            display: none;
         }
 
         .tool-card::before {
@@ -113,11 +169,31 @@
             opacity: 1;
         }
 
+        .tool-card .cat-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cat-badge.bisnis { background: #bee3f8; color: #2a69ac; }
+        .cat-badge.konten { background: #c6f6d5; color: #276749; }
+        .cat-badge.konseling { background: #e9d8fd; color: #553c9a; }
+        .cat-badge.marketing { background: #fed7e2; color: #97266d; }
+        .cat-badge.sales { background: #c6f6d5; color: #22543d; }
+        .cat-badge.penulisan { background: #feebc8; color: #7b341e; }
+
         .tool-card .card-header {
             display: flex;
             align-items: center;
             gap: 12px;
             margin-bottom: 8px;
+            padding-top: 12px;
         }
 
         .tool-card .card-header .icon {
@@ -499,6 +575,13 @@
             .tool-card .card-footer .btn-group {
                 justify-content: center;
             }
+            .category-filter {
+                padding: 12px;
+            }
+            .category-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
         }
 
         .toast {
@@ -551,15 +634,40 @@
         <div class="header">
             <h1>
                 🏢 AI Business Tools Suite
-                <span>v3.1</span>
+                <span>v3.3</span>
             </h1>
-            <p>Kumpulan lengkap tools berbasis AI untuk membantu bisnis, pelayanan, dan konseling Anda</p>
+            <p>Kumpulan lengkap tools berbasis AI untuk bisnis, pelayanan, konseling, penulisan, marketing & sales</p>
             <div class="badge-container">
-                <span class="badge">📝 11 Tools</span>
+                <span class="badge">📝 16 Tools</span>
                 <span class="badge">🤖 AI-Powered</span>
-                <span class="badge">📊 11 Database</span>
+                <span class="badge">📊 16 Database</span>
                 <span class="badge">⚡ Siap Pakai</span>
             </div>
+        </div>
+
+        <!-- CATEGORY FILTER -->
+        <div class="category-filter" id="categoryFilter">
+            <button class="category-btn active" data-cat="all" onclick="filterCategory('all')">
+                📦 Semua <span class="cat-count" id="countAll">16</span>
+            </button>
+            <button class="category-btn" data-cat="bisnis" onclick="filterCategory('bisnis')">
+                🏢 Bisnis <span class="cat-count" id="countBisnis">0</span>
+            </button>
+            <button class="category-btn" data-cat="konten" onclick="filterCategory('konten')">
+                ✍️ Konten <span class="cat-count" id="countKonten">0</span>
+            </button>
+            <button class="category-btn" data-cat="konseling" onclick="filterCategory('konseling')">
+                🧠 Konseling <span class="cat-count" id="countKonseling">0</span>
+            </button>
+            <button class="category-btn" data-cat="marketing" onclick="filterCategory('marketing')">
+                📊 Marketing <span class="cat-count" id="countMarketing">0</span>
+            </button>
+            <button class="category-btn" data-cat="sales" onclick="filterCategory('sales')">
+                💼 Sales <span class="cat-count" id="countSales">0</span>
+            </button>
+            <button class="category-btn" data-cat="penulisan" onclick="filterCategory('penulisan')">
+                📚 Penulisan <span class="cat-count" id="countPenulisan">0</span>
+            </button>
         </div>
 
         <!-- TOOLS GRID -->
@@ -596,6 +704,7 @@
             name: 'Business Tools Suite',
             table: 'ai_prompt_results',
             file: 'ai_prompt_results.html',
+            category: 'bisnis',
             desc: 'Tools analisis bisnis dengan AI Prompt (SWOT, PESTEL, BMC, Lean Canvas, Porter\'s, Marketing Mix, OKR, VPC, Competitive, Risk, KPI, Customer Journey, Brainstorming, Public Speaking)',
             features: ['15 Tools', 'AI Prompt', 'Multi AI Source', 'WYSIWYG Editor', 'History'],
             info: `
@@ -637,6 +746,7 @@
             name: 'Copywriting Framework',
             table: 'ai_copywriting_framework',
             file: 'ai_copywriting_framework.html',
+            category: 'konten',
             desc: '11 framework copywriting dengan AI Prompt (HBT, AIDA, PAS, 4P, APP, PASTOR, BAB, FAB, QUEST, SCQA, 4U)',
             features: ['11 Framework', 'AI Prompt', 'Multi AI Source', 'WYSIWYG Editor', 'History'],
             info: `
@@ -674,6 +784,7 @@
             name: 'Public Speaking Framework',
             table: 'ai_public_speaking_framework',
             file: 'ai_public_speaking_framework.html',
+            category: 'konten',
             desc: '6 framework public speaking dengan AI Prompt (IBC, PREP, TED Talk, Monroe, Storytelling, PSB)',
             features: ['6 Framework', 'AI Prompt', 'Multi AI Source', 'WYSIWYG Editor', 'History'],
             info: `
@@ -706,6 +817,7 @@
             name: 'Proposal Generator',
             table: 'ai_proposal_generator',
             file: 'ai_proposal_generator.html',
+            category: 'bisnis',
             desc: '6 jenis proposal dengan AI Prompt (Bisnis, Proyek, Penawaran Jasa, Kerjasama, Penelitian, Sponsorship)',
             features: ['6 Metode', 'AI Prompt', 'Multi AI Source', 'Surat Pengantar', 'WYSIWYG Editor'],
             info: `
@@ -738,6 +850,7 @@
             name: 'Contract Generator',
             table: 'ai_contract_generator',
             file: 'ai_contract_generator.html',
+            category: 'bisnis',
             desc: '7 jenis kontrak dengan AI Prompt (Kerja, PKWT, Mitra, Vendor, NDA, Freelance, OJT)',
             features: ['7 Jenis', 'AI Prompt', 'Multi AI Source', 'Surat Pengantar', 'WYSIWYG Editor'],
             info: `
@@ -771,6 +884,7 @@
             name: 'Email Generator',
             table: 'ai_email_generator',
             file: 'ai_email_generator.html',
+            category: 'konten',
             desc: '10 jenis email dengan AI Prompt (Formal, Penawaran, Follow Up, Konfirmasi, Undangan, dll)',
             features: ['10 Jenis', 'AI Prompt', 'Multi AI Source', 'WYSIWYG Editor', 'History'],
             info: `
@@ -807,6 +921,7 @@
             name: 'Short Message Generator',
             table: 'ai_short_message_generator',
             file: 'ai_short_message_generator.html',
+            category: 'konten',
             desc: '10 jenis pesan singkat untuk WA/DM/Media Sosial dengan AI Prompt',
             features: ['10 Jenis', 'AI Prompt', 'Multi AI Source', 'WYSIWYG Editor', 'History'],
             info: `
@@ -843,18 +958,19 @@
             name: 'Khotbah & Renungan Generator',
             table: 'ai_sermon_generator',
             file: 'ai_sermon_generator.html',
-            desc: '8 jenis khotbah & renungan Kristen dengan AI Prompt (Ekspositori, Topikal, Naratif, Tekstual, Renungan Harian, Renungan Keluarga, Khotbah Pemuda, Khotbah Perayaan)',
-            features: ['8 Jenis', 'AI Prompt', 'Multi AI Source', 'Ayat Alkitab', 'WYSIWYG Editor'],
+            category: 'konseling',
+            desc: '11 jenis khotbah & renungan Kristen dengan AI Prompt (Ekspositori, Topikal, Naratif, Tekstual, Renungan Harian, Keluarga, Pemuda, Perayaan, Penghiburan, Pernikahan, Rumah Baru)',
+            features: ['11 Jenis', 'AI Prompt', 'Multi AI Source', 'Ayat Alkitab', 'WYSIWYG Editor'],
             info: `
                 <span class="modal-icon">🕊️</span>
                 <h2 class="modal-title">Khotbah & Renungan Generator</h2>
-                <p class="modal-subtitle">8 jenis khotbah & renungan Kristen dengan AI Prompt</p>
+                <p class="modal-subtitle">11 jenis khotbah & renungan Kristen dengan AI Prompt</p>
                 <div class="modal-divider"></div>
                 <div class="modal-body">
                     <h4>📌 Apa Itu Khotbah & Renungan Generator?</h4>
-                    <p><strong>Khotbah & Renungan Generator</strong> adalah tools untuk membantu Pendeta, Pengkhotbah, Pembina, dan umat Kristen dalam mempersiapkan bahan khotbah dan renungan dengan 8 jenis format yang didukung AI Prompt.</p>
+                    <p><strong>Khotbah & Renungan Generator</strong> adalah tools untuk membantu Pendeta, Pengkhotbah, Pembina, dan umat Kristen dalam mempersiapkan bahan khotbah dan renungan dengan 11 jenis format yang didukung AI Prompt.</p>
 
-                    <h4>🧩 8 Jenis Khotbah & Renungan</h4>
+                    <h4>🧩 11 Jenis Khotbah & Renungan</h4>
                     <ul>
                         <li><strong>📖 Khotbah Ekspositori</strong> - Berdasarkan satu perikop, ayat per ayat</li>
                         <li><strong>🎯 Khotbah Topikal</strong> - Berdasarkan tema dengan ayat pendukung</li>
@@ -864,6 +980,9 @@
                         <li><strong>👨‍👩‍👧‍👦 Renungan Keluarga</strong> - Untuk ibadah keluarga/mezbah keluarga</li>
                         <li><strong>🔥 Khotbah Pemuda</strong> - Dengan bahasa dan konteks anak muda</li>
                         <li><strong>🎉 Khotbah Perayaan</strong> - Untuk momen spesial (Natal, Paskah, dll)</li>
+                        <li><strong>💐 Khotbah Penghiburan</strong> - Kata penghiburan bagi keluarga yang berduka</li>
+                        <li><strong>💍 Khotbah Pernikahan</strong> - Untuk pasangan yang menikah & orang tua mempelai</li>
+                        <li><strong>🏠 Khotbah Rumah Baru</strong> - Untuk orang yang memasuki rumah baru</li>
                     </ul>
 
                     <div class="highlight-box">
@@ -877,6 +996,7 @@
             name: 'Couples Counseling Generator',
             table: 'ai_couples_counseling',
             file: 'ai_couples_counseling.html',
+            category: 'konseling',
             desc: 'Konseling pasangan dengan 3 tahap berurutan: Konseling Isteri → Konseling Suami → Konseling Bersama',
             features: ['3 Tahapan', 'Progress Tracker', 'Group by Pasangan', 'AI Prompt', 'Multi AI Source'],
             info: `
@@ -914,6 +1034,7 @@
             name: 'Personal Counseling Generator',
             table: 'ai_personal_counseling',
             file: 'ai_personal_counseling.html',
+            category: 'konseling',
             desc: '10 jenis konseling pribadi dengan AI Prompt (Umum, Kecemasan, Depresi, Stres Kerja, Trauma, Remaja, Karier, Grief, Self-Esteem, Keluarga)',
             features: ['10 Jenis', 'AI Prompt', 'Multi AI Source', 'Pendekatan Terapi', 'WYSIWYG Editor'],
             info: `
@@ -958,6 +1079,7 @@
             name: 'Counseling Models (25 Model)',
             table: 'ai_counseling_models',
             file: 'ai_counseling_models.html',
+            category: 'konseling',
             desc: 'Katalog lengkap 25 model pendekatan konseling profesional (Psikoanalisis, CBT, REBT, DBT, ACT, Schema, Person-Centered, Gestalt, Logoterapi, Eksistensial, Reality, SFBT, Narrative, Systemic, Structural, Trauma-Informed, Mindfulness, MI, Art, Play, Music, Integrative, Custom)',
             features: ['25 Model', '6 Kategori', 'AI Prompt', 'Multi AI Source', 'WYSIWYG Editor'],
             info: `
@@ -1028,14 +1150,248 @@
                     </div>
                 </div>
             `
+        }, {
+            id: 'ai_telesales',
+            icon: '📞',
+            name: 'Telesales Script Generator',
+            table: 'ai_telesales',
+            file: 'ai_telesales.html',
+            category: 'sales',
+            desc: '8 model script telesales lengkap dengan handling keberatan — cocok untuk menawarkan produk tes minat bakat, tes kesiapan kerja, dll ke sekolah, universitas, bimbel, dan institusi.',
+            features: ['8 Model', 'Script Lengkap', 'Handling Keberatan', 'Multi AI Source', 'WYSIWYG Editor'],
+            info: `
+                <span class="modal-icon">📞</span>
+                <h2 class="modal-title">Telesales Script Generator</h2>
+                <p class="modal-subtitle">8 model script telesales lengkap dengan handling keberatan</p>
+                <div class="modal-divider"></div>
+                <div class="modal-body">
+                    <h4>📌 Apa Itu Telesales Script Generator?</h4>
+                    <p><strong>Telesales Script Generator</strong> adalah tools untuk membuat <strong>script percakapan telesales lengkap</strong> — mulai dari opening, probing, presentasi, handling keberatan, sampai closing. Cocok untuk menawarkan produk seperti <em>tes minat bakat</em>, <em>tes kesiapan kerja</em>, dan sejenisnya ke sekolah, universitas, bimbel, dan institusi lain.</p>
+
+                    <h4>🧩 8 Model Telesales</h4>
+                    <ul>
+                        <li><strong>🏫 Cold Call Sekolah</strong> - Telepon pertama ke SMA/SMK, tawarkan tes minat bakat</li>
+                        <li><strong>🎓 Cold Call Universitas</strong> - Telepon pertama ke kampus, tawarkan tes kesiapan kerja</li>
+                        <li><strong>📚 Cold Call Bimbel</strong> - Tawarkan kerja sama revenue sharing ke bimbel</li>
+                        <li><strong>🤝 Warm Lead & Referral</strong> - Prospek dari webinar/referral/form</li>
+                        <li><strong>📧 Follow Up Proposal</strong> - Tindak lanjut proposal yang sudah dikirim</li>
+                        <li><strong>🛡️ Objection Handling Intensive</strong> - Fokus menghadapi keberatan berat</li>
+                        <li><strong>🔄 Reactivation Klien Lama</strong> - Hidupkan kembali klien yang tidak aktif</li>
+                        <li><strong>📈 Upselling & Cross-Selling</strong> - Tawarkan produk tambahan ke klien aktif</li>
+                    </ul>
+
+                    <h4>🎯 Yang Dihasilkan Setiap Prompt</h4>
+                    <ul>
+                        <li><strong>Script percakapan lengkap</strong> (opening → hook → probing → presentasi → handling keberatan → closing)</li>
+                        <li><strong>Minimal 3-5 keberatan</strong> muncul dalam dialog + responnya</li>
+                        <li><strong>Bank keberatan</strong> (6-12 keberatan dengan respon siap pakai)</li>
+                        <li><strong>Template WA follow up</strong> (H+1, H+3, H+7)</li>
+                        <li><strong>Script untuk situasi khusus</strong> (dijawab sekretaris, diputus, dll)</li>
+                        <li><strong>Tips & catatan</strong> untuk telesales</li>
+                    </ul>
+
+                    <div class="highlight-box">
+                        <p><strong>🎯 Fitur Utama:</strong> Generate Prompt otomatis, Multi AI Source, WYSIWYG Editor, History, Duplikat Prompt.</p>
+                    </div>
+                </div>
+            `
+        }, {
+            id: 'ai_book_writer',
+            icon: '📚',
+            name: 'Book Writer Studio',
+            table: 'ai_book_writer',
+            file: 'ai_book_writer.html',
+            category: 'penulisan',
+            desc: '11 model penulisan buku: dari hasil penelitian jadi buku, buku ajar, non-fiksi, how-to, novel, biografi, blueprint, book proposal, kumpulan humor, ice breaker/games, dan cerita inspiratif.',
+            features: ['11 Model', 'Blueprint + Sample Bab', 'Multi AI Source', 'WYSIWYG Editor', 'History'],
+            info: `
+                <span class="modal-icon">📚</span>
+                <h2 class="modal-title">Book Writer Studio</h2>
+                <p class="modal-subtitle">11 model penulisan buku lengkap dengan blueprint + sample bab</p>
+                <div class="modal-divider"></div>
+                <div class="modal-body">
+                    <h4>📌 Apa Itu Book Writer Studio?</h4>
+                    <p><strong>Book Writer Studio</strong> adalah tools untuk membantu siapa saja menulis buku — dari <strong>dosen yang ingin mengubah hasil penelitian menjadi buku</strong>, <strong>praktisi dengan ide/insight</strong>, sampai <strong>penulis fiksi</strong>. Setiap model menghasilkan blueprint lengkap + sample bab siap dikembangkan.</p>
+
+                    <h4>🧩 11 Model Penulisan Buku</h4>
+                    <ul>
+                        <li><strong>🔬 Buku dari Hasil Penelitian</strong> - Ubah skripsi/tesis/disertasi/riset jadi buku referensi</li>
+                        <li><strong>🎓 Buku Ajar / Textbook</strong> - Buku ajar dengan struktur pedagogis lengkap (CPL/CPMK)</li>
+                        <li><strong>💡 Buku Non-Fiksi dari Ide/Insight</strong> - Ubah ide/pengalaman jadi buku populer</li>
+                        <li><strong>🛠️ Buku Panduan Praktis (How-To)</strong> - Buku step-by-step praktis</li>
+                        <li><strong>✍️ Buku Fiksi (Novel/Cerpen)</strong> - Novel, cerpen, novela dengan struktur naratif kuat</li>
+                        <li><strong>👤 Biografi & Memoar</strong> - Perjalanan hidup yang menginspirasi</li>
+                        <li><strong>📋 Book Blueprint</strong> - Kerangka buku sebelum mulai menulis</li>
+                        <li><strong>📨 Book Proposal</strong> - Proposal untuk dikirim ke penerbit</li>
+                        <li><strong>😂 Buku Kumpulan Humor</strong> - Kumpulan joke, cerita lucu, stand-up comedy</li>
+                        <li><strong>🎲 Ice Breaker & Games</strong> - Kumpulan ice breaker untuk kelas/training/team building</li>
+                        <li><strong>✨ Cerita Inspiratif & Pelajaran</strong> - Kumpulan cerita pendek dengan pelajaran hidup</li>
+                    </ul>
+
+                    <h4>🎯 Yang Dihasilkan Setiap Prompt</h4>
+                    <ul>
+                        <li><strong>Blueprint buku</strong> (positioning, target pembaca, USP)</li>
+                        <li><strong>Daftar isi lengkap</strong> (semua bab + sub-bab)</li>
+                        <li><strong>Outline detail per bab</strong> (poin isi, data, referensi)</li>
+                        <li><strong>Sample Bab 1 & 2 lengkap</strong> (1500-2500 kata masing-masing)</li>
+                        <li><strong>Style guide</strong> (tone, POV, struktur bab)</li>
+                        <li><strong>Tips & langkah selanjutnya</strong></li>
+                    </ul>
+
+                    <div class="highlight-box">
+                        <p><strong>🎯 Fitur Utama:</strong> Generate Prompt otomatis, Multi AI Source, WYSIWYG Editor, History, Duplikat Prompt (untuk melanjutkan bab berikutnya).</p>
+                    </div>
+                </div>
+            `
+        }, {
+            id: 'ai_marketing_plan',
+            icon: '📊',
+            name: 'Marketing Plan Generator',
+            table: 'ai_marketing_plan',
+            file: 'ai_marketing_plan.html',
+            category: 'marketing',
+            desc: '10 metode marketing plan: 4P/7P, STP, Digital Marketing, Content Marketing, Social Media, Product Launch, AIDA Funnel, Brand Strategy, Customer Journey, Growth Hacking.',
+            features: ['10 Metode', 'Multi AI Source', 'WYSIWYG Editor', 'History', 'Duplikat Prompt'],
+            info: `
+                <span class="modal-icon">📊</span>
+                <h2 class="modal-title">Marketing Plan Generator</h2>
+                <p class="modal-subtitle">10 metode marketing plan untuk segala kebutuhan bisnis</p>
+                <div class="modal-divider"></div>
+                <div class="modal-body">
+                    <h4>📌 Apa Itu Marketing Plan Generator?</h4>
+                    <p><strong>Marketing Plan Generator</strong> adalah tools untuk membuat <strong>rencana marketing lengkap</strong> dengan 10 metode berbeda. Cocok untuk UMKM, startup, brand, maupun perusahaan yang ingin memperkuat strategi pemasaran.</p>
+
+                    <h4>🧩 10 Metode Marketing Plan</h4>
+                    <ul>
+                        <li><strong>🎯 Marketing Plan 4P/7P</strong> - Framework klasik marketing mix</li>
+                        <li><strong>🎯 STP (Segmenting, Targeting, Positioning)</strong> - Fondasi strategi pemasaran</li>
+                        <li><strong>💻 Digital Marketing Plan</strong> - SEO, Ads, Content, Email</li>
+                        <li><strong>📝 Content Marketing Plan</strong> - Content pillar, kalender, distribusi</li>
+                        <li><strong>📱 Social Media Marketing Plan</strong> - IG/TikTok/YouTube strategy</li>
+                        <li><strong>🚀 Product Launch Plan</strong> - Pre-launch, launch, post-launch</li>
+                        <li><strong>🔄 AIDA Marketing Funnel</strong> - Attention, Interest, Desire, Action</li>
+                        <li><strong>💎 Brand Strategy Plan</strong> - Brand identity, voice, positioning</li>
+                        <li><strong>🗺️ Customer Journey Marketing</strong> - Mapping pengalaman customer</li>
+                        <li><strong>📈 Growth Hacking Plan</strong> - AARRR funnel & eksperimen growth</li>
+                    </ul>
+
+                    <div class="highlight-box">
+                        <p><strong>🎯 Fitur Utama:</strong> Generate Prompt otomatis, Multi AI Source, WYSIWYG Editor, History, Duplikat Prompt.</p>
+                    </div>
+                </div>
+            `
+        }, {
+            id: 'ai_sales_strategy',
+            icon: '📈',
+            name: 'Sales Strategy Generator',
+            table: 'ai_sales_strategy',
+            file: 'ai_sales_strategy.html',
+            category: 'sales',
+            desc: '8 model sales strategy untuk Lidan Psikologi: Consultative Selling, SPIN Selling, Solution Selling, Challenger Sale, MEDDIC, BANT, Account-Based Selling, Value-Based Selling.',
+            features: ['8 Model', 'Konteks Lidan Psikologi', 'Multi AI Source', 'WYSIWYG Editor', 'History'],
+            info: `
+                <span class="modal-icon">📈</span>
+                <h2 class="modal-title">Sales Strategy Generator</h2>
+                <p class="modal-subtitle">8 model sales strategy untuk Lidan Psikologi</p>
+                <div class="modal-divider"></div>
+                <div class="modal-body">
+                    <h4>📌 Apa Itu Sales Strategy Generator?</h4>
+                    <p><strong>Sales Strategy Generator</strong> adalah tools untuk membuat <strong>strategi sales lengkap</strong> dengan 8 metode berbeda. <strong>Semua prompt sudah dikontekstualisasi untuk Lidan Psikologi</strong> — layanan psikologi (tes minat bakat, kesiapan kerja, psikotes rekrutmen, konseling, training).</p>
+
+                    <h4>🧩 8 Model Sales Strategy</h4>
+                    <ul>
+                        <li><strong>🎯 Consultative Selling</strong> - Bangun trust dulu, jual solusi belakangan</li>
+                        <li><strong>🔍 SPIN Selling</strong> - 4 jenis pertanyaan (Situation, Problem, Implication, Need-payoff)</li>
+                        <li><strong>💡 Solution Selling</strong> - Diagnosa masalah → solusi tailored</li>
+                        <li><strong>⚡ The Challenger Sale</strong> - Tantang asumsi klien (Teach, Tailor, Take Control)</li>
+                        <li><strong>📊 MEDDIC Framework</strong> - Kualifikasi enterprise (Metrics-EB-Criteria-Process-Pain-Champion)</li>
+                        <li><strong>✅ BANT Qualification</strong> - Screening cepat (Budget-Authority-Need-Timeline)</li>
+                        <li><strong>🏢 Account-Based Selling</strong> - Fokus 20 akun besar dengan multi-threading</li>
+                        <li><strong>💎 Value-Based Selling</strong> - Jual VALUE, bukan harga (ROI calculator)</li>
+                    </ul>
+
+                    <h4>🎯 Yang Dihasilkan Setiap Prompt</h4>
+                    <ul>
+                        <li><strong>Framework lengkap</strong> per metode</li>
+                        <li><strong>Script percakapan</strong> siap pakai</li>
+                        <li><strong>Discovery questions</strong> untuk gali kebutuhan</li>
+                        <li><strong>Objection handling</strong> kontekstual</li>
+                        <li><strong>KPI & roadmap</strong> implementasi</li>
+                    </ul>
+
+                    <div class="highlight-box">
+                        <p><strong>🎯 Fitur Utama:</strong> Generate Prompt otomatis, Multi AI Source, WYSIWYG Editor, History, Duplikat Prompt.</p>
+                    </div>
+                </div>
+            `
+        }, {
+            id: 'ai_sales_process',
+            icon: '⚙️',
+            name: 'Sales Process Generator',
+            table: 'ai_sales_process',
+            file: 'ai_sales_process.html',
+            category: 'sales',
+            desc: '8 SOP sales process untuk Lidan Psikologi: 7-Step Sales Process, Funnel SOP, Prospecting & Cold Outreach, Inbound Lead Handling, Discovery Meeting, Proposal & Negotiation, Onboarding & Handover, Pipeline Management.',
+            features: ['8 SOP', 'Konteks Lidan Psikologi', 'Multi AI Source', 'WYSIWYG Editor', 'History'],
+            info: `
+                <span class="modal-icon">⚙️</span>
+                <h2 class="modal-title">Sales Process Generator</h2>
+                <p class="modal-subtitle">8 SOP sales process operasional untuk Lidan Psikologi</p>
+                <div class="modal-divider"></div>
+                <div class="modal-body">
+                    <h4>📌 Apa Itu Sales Process Generator?</h4>
+                    <p><strong>Sales Process Generator</strong> adalah tools untuk membuat <strong>SOP operasional sales</strong> — dari prospecting harian, handling inbound lead, discovery meeting, proposal, negosiasi, sampai onboarding klien. <strong>Semua prompt sudah dikontekstualisasi untuk Lidan Psikologi</strong>.</p>
+
+                    <h4>🧩 8 Model Sales Process SOP</h4>
+                    <ul>
+                        <li><strong>🎯 7-Step Sales Process</strong> - SOP lengkap dari prospecting sampai follow-up</li>
+                        <li><strong>🔄 Sales Funnel SOP per Tahap</strong> - TOFU, MOFU, BOFU, Retention, Advocacy</li>
+                        <li><strong>📞 Prospecting & Cold Outreach</strong> - SOP harian prospecting + script multi-channel</li>
+                        <li><strong>📥 Inbound Lead Handling</strong> - SOP handle lead masuk dari web/WA/IG/referral</li>
+                        <li><strong>🤝 Discovery Meeting</strong> - SOP meeting: pre/during/post + 20 discovery questions</li>
+                        <li><strong>📄 Proposal & Negotiation</strong> - SOP proposal 12 halaman + 8 teknik negosiasi</li>
+                        <li><strong>🎓 Onboarding & Handover</strong> - SOP dari sales ke delivery + kickoff + 30-day plan</li>
+                        <li><strong>📊 Pipeline Management</strong> - SOP kelola pipeline + weekly review + forecast</li>
+                    </ul>
+
+                    <h4>🎯 Yang Dihasilkan Setiap Prompt</h4>
+                    <ul>
+                        <li><strong>SOP lengkap</strong> dengan langkah-langkah detail</li>
+                        <li><strong>Script & template</strong> siap pakai</li>
+                        <li><strong>KPI & SLA</strong> per proses</li>
+                        <li><strong>Ritual harian/mingguan</strong> tim sales</li>
+                        <li><strong>Onboarding sales baru</strong></li>
+                    </ul>
+
+                    <div class="highlight-box">
+                        <p><strong>🎯 Fitur Utama:</strong> Generate Prompt otomatis, Multi AI Source, WYSIWYG Editor, History, Duplikat Prompt.</p>
+                    </div>
+                </div>
+            `
         }];
+
+        // ==================== CATEGORY LABELS ====================
+        const CATEGORY_LABELS = {
+            bisnis: 'Bisnis',
+            konten: 'Konten',
+            konseling: 'Konseling',
+            marketing: 'Marketing',
+            sales: 'Sales',
+            penulisan: 'Penulisan'
+        };
+
+        // ==================== STATE ====================
+        let currentCategory = 'all';
 
         // ==================== RENDER TOOLS ====================
         function renderTools() {
             const container = document.getElementById('toolsGrid');
 
-            container.innerHTML = TOOLS.map(tool => `
-                <div class="tool-card">
+            container.innerHTML = TOOLS.map(tool => {
+                const catLabel = CATEGORY_LABELS[tool.category] || tool.category;
+                return `
+                <div class="tool-card" data-category="${tool.category}">
+                    <span class="cat-badge ${tool.category}">${catLabel}</span>
                     <div class="card-header">
                         <span class="icon">${tool.icon}</span>
                         <div class="title-group">
@@ -1061,7 +1417,49 @@
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
+
+            updateCategoryCounts();
+            applyCategoryFilter();
+        }
+
+        // ==================== CATEGORY COUNTS ====================
+        function updateCategoryCounts() {
+            document.getElementById('countAll').textContent = TOOLS.length;
+            const counts = {};
+            TOOLS.forEach(t => { counts[t.category] = (counts[t.category] || 0) + 1; });
+            ['bisnis', 'konten', 'konseling', 'marketing', 'sales', 'penulisan'].forEach(cat => {
+                const el = document.getElementById('count' + cat.charAt(0).toUpperCase() + cat.slice(1));
+                if (el) el.textContent = counts[cat] || 0;
+            });
+        }
+
+        // ==================== CATEGORY FILTER ====================
+        function filterCategory(category) {
+            currentCategory = category;
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.cat === category);
+            });
+            applyCategoryFilter();
+        }
+
+        function applyCategoryFilter() {
+            const cards = document.querySelectorAll('.tool-card');
+            let visible = 0;
+            cards.forEach(card => {
+                const cat = card.dataset.category;
+                if (currentCategory === 'all' || cat === currentCategory) {
+                    card.classList.remove('hidden');
+                    visible++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+            // show toast if empty
+            if (visible === 0) {
+                showToast('Tidak ada tool di kategori ini', 'info');
+            }
         }
 
         // ==================== MODAL INFO ====================
@@ -1131,6 +1529,7 @@
             console.log('🏢 AI Business Tools Suite Loaded!');
             console.log(`📊 ${TOOLS.length} Tools siap pakai`);
             console.log('📁 Tabel:', TOOLS.map(t => t.table).join(', '));
+            console.log('📂 Kategori:', Object.keys(CATEGORY_LABELS).join(', '));
         });
     </script>
 </body>
