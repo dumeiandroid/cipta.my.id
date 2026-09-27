@@ -1,0 +1,2638 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Journal Article Writer</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; padding: 20px; min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        .login-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
+        .login-overlay.active { display: flex; }
+        .login-box { background: white; border-radius: 20px; padding: 40px; max-width: 420px; width: 100%; box-shadow: 0 24px 80px rgba(0,0,0,0.4); animation: fadeIn 0.3s ease; }
+        .login-box .login-icon { font-size: 48px; text-align: center; display: block; margin-bottom: 4px; }
+        .login-box h2 { text-align: center; font-size: 24px; color: #1a202c; margin-bottom: 4px; }
+        .login-box p { text-align: center; color: #718096; font-size: 14px; margin-bottom: 20px; }
+        .login-box .form-group { margin-bottom: 14px; }
+        .login-box .form-group label { font-weight: 600; font-size: 13px; color: #4a5568; display: block; margin-bottom: 4px; }
+        .login-box .form-group input { width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border 0.2s; }
+        .login-box .form-group input:focus { outline: none; border-color: #6b46c1; }
+        .login-box .form-remember { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+        .login-box .form-remember input[type="checkbox"] { width: 18px; height: 18px; accent-color: #6b46c1; }
+        .login-box .form-remember label { font-size: 13px; color: #4a5568; cursor: pointer; }
+        .login-box .btn-login { width: 100%; padding: 12px; background: #6b46c1; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .login-box .btn-login:hover { background: #553c9a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(107,70,193,0.3); }
+        .login-box .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .login-box .login-error { color: #fc8181; font-size: 13px; text-align: center; margin-top: 10px; display: none; }
+        .login-box .login-error.show { display: block; }
+        .login-box .login-loading { display: none; text-align: center; margin-top: 10px; color: #718096; font-size: 13px; }
+        .login-box .login-loading.show { display: block; }
+
+        .header { background: white; padding: 20px 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .header h1 { font-size: 24px; color: #1a2332; display: flex; align-items: center; gap: 10px; }
+        .header h1 span { background: #2d3748; color: white; font-size: 12px; padding: 2px 10px; border-radius: 20px; }
+        .header-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4a5568; background: #f7fafc; padding: 4px 14px; border-radius: 20px; }
+        .user-info .user-role { font-weight: 600; padding: 1px 10px; border-radius: 10px; font-size: 10px; }
+        .user-info .user-role.admin { background: #c6f6d5; color: #276749; }
+        .user-info .user-role.user { background: #bee3f8; color: #2a69ac; }
+        .btn-logout { padding: 4px 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; background: #fc8181; color: white; transition: 0.2s; }
+        .btn-logout:hover { background: #f56565; }
+        .search-box { display: flex; gap: 8px; align-items: center; background: #f7fafc; padding: 0 15px; border-radius: 10px; border: 2px solid #e2e8f0; transition: border 0.2s; }
+        .search-box:focus-within { border-color: #6b46c1; }
+        .search-box input { border: none; background: transparent; padding: 10px 0; font-size: 14px; outline: none; width: 200px; color: #2d3748; }
+        .search-box .icon { color: #a0aec0; font-size: 18px; }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: #6b46c1; color: white; }
+        .btn-primary:hover { background: #553c9a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(107,70,193,0.4); }
+        .btn-success { background: #48bb78; color: white; }
+        .btn-success:hover { background: #38a169; }
+        .btn-danger { background: #fc8181; color: white; }
+        .btn-danger:hover { background: #f56565; }
+        .btn-warning { background: #ed8936; color: white; }
+        .btn-warning:hover { background: #dd6b20; }
+        .btn-outline { background: transparent; color: #4a5568; border: 2px solid #e2e8f0; }
+        .btn-outline:hover { background: #f7fafc; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
+        .btn-xs { padding: 3px 10px; font-size: 11px; border-radius: 4px; }
+
+        .main-tabs-container { background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 24px; }
+        .main-tabs-header { display: flex; border-bottom: 2px solid #edf2f7; background: #f7fafc; padding: 0 20px; overflow-x: auto; flex-wrap: nowrap; }
+        .main-tab-btn { padding: 14px 24px; border: none; background: transparent; font-weight: 700; font-size: 14px; color: #a0aec0; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent; margin-bottom: -2px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .main-tab-btn:hover { color: #2d3748; }
+        .main-tab-btn.active { color: #6b46c1; border-bottom-color: #6b46c1; }
+        .main-tab-btn .badge-main { background: #edf2f7; color: #4a5568; font-size: 11px; padding: 1px 10px; border-radius: 12px; font-weight: 600; }
+        .main-tab-btn.active .badge-main { background: #e9d8fd; color: #553c9a; }
+        .main-tab-content { padding: 24px 30px; display: none; }
+        .main-tab-content.active { display: block; }
+
+        .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+        .tool-card { background: #f7fafc; border-radius: 12px; padding: 20px; border: 2px solid #e2e8f0; transition: all 0.2s; text-align: center; }
+        .tool-card:hover { border-color: #6b46c1; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(107,70,193,0.12); }
+        .tool-card .tool-icon { font-size: 32px; display: block; margin-bottom: 4px; }
+        .tool-card .tool-name { font-weight: 700; font-size: 15px; color: #2d3748; }
+        .tool-card .tool-desc { font-size: 12px; color: #718096; margin: 4px 0 12px; min-height: 48px; }
+        .tool-card .tool-actions { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+        .tool-card .tool-actions .btn { padding: 4px 12px; font-size: 11px; }
+
+        .studio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .studio-left { display: flex; flex-direction: column; gap: 16px; }
+        .studio-right { display: flex; flex-direction: column; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-weight: 600; font-size: 13px; color: #4a5568; }
+        .form-group input, .form-group textarea, .form-group select { padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border 0.2s; font-family: inherit; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #6b46c1; }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        .field-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 2px; }
+        .field-header label { font-weight: 600; font-size: 13px; color: #4a5568; margin: 0; }
+        .field-ai-check { display: flex; align-items: center; gap: 4px; background: #ebf8ff; padding: 2px 8px; border-radius: 6px; border: 1px solid #bee3f8; cursor: pointer; }
+        .field-ai-check input[type="checkbox"] { width: 14px; height: 14px; accent-color: #3182ce; cursor: pointer; margin: 0; }
+        .field-ai-check span { font-size: 10px; font-weight: 600; color: #2b6cb0; white-space: nowrap; }
+
+        .prompt-preview { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 2px solid #e2e8f0; min-height: 150px; white-space: pre-wrap; font-size: 13px; line-height: 1.7; color: #2d3748; max-height: 350px; overflow-y: auto; position: relative; }
+        .prompt-preview .placeholder { color: #a0aec0; font-style: italic; }
+        .prompt-preview .copy-prompt-btn { position: absolute; top: 8px; right: 8px; background: rgba(107,70,193,0.9); color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .prompt-preview .copy-prompt-btn:hover { background: #553c9a; }
+
+        .quill-wrapper { background: white; border-radius: 12px; border: 2px solid #e2e8f0; overflow: hidden; }
+        .quill-wrapper .ql-toolbar { border: none; border-bottom: 2px solid #e2e8f0; background: #f7fafc; }
+        .quill-wrapper .ql-container { border: none; min-height: 200px; font-size: 14px; }
+        .quill-wrapper .ql-editor { min-height: 200px; }
+
+        .result-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+
+        .history-sub-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; }
+        .history-sub-tab { padding: 6px 16px; border: none; background: #f7fafc; border-radius: 8px; font-weight: 600; font-size: 13px; color: #4a5568; cursor: pointer; transition: all 0.2s; }
+        .history-sub-tab:hover { background: #edf2f7; }
+        .history-sub-tab.active { background: #6b46c1; color: white; }
+        .history-sub-tab .sub-badge { background: rgba(255,255,255,0.3); color: white; font-size: 10px; padding: 1px 8px; border-radius: 10px; margin-left: 4px; }
+        .history-sub-tab:not(.active) .sub-badge { background: #edf2f7; color: #4a5568; }
+
+        .history-filters { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+        .history-filters select, .history-filters input { padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; }
+        .history-filters select:focus, .history-filters input:focus { outline: none; border-color: #6b46c1; }
+
+        .history-list { display: flex; flex-direction: column; gap: 16px; }
+        .history-item { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .history-item:hover { border-color: #6b46c1; }
+        .history-item .history-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        .history-item .history-title { font-weight: 700; font-size: 15px; color: #2d3748; }
+        .history-item .history-meta { display: flex; gap: 12px; font-size: 12px; color: #718096; flex-wrap: wrap; align-items: center; }
+        .history-item .history-meta .type-badge { background: #e9d8fd; color: #553c9a; padding: 2px 12px; border-radius: 12px; font-weight: 600; }
+        .history-item .history-meta .ai-badge { font-size: 10px; padding: 1px 8px; border-radius: 10px; font-weight: 600; }
+        .history-item .history-meta .ai-badge.chatgpt { background: #10a37f; color: white; }
+        .history-item .history-meta .ai-badge.claude { background: #d97757; color: white; }
+        .history-item .history-meta .ai-badge.gemini { background: #4285f4; color: white; }
+        .history-item .history-meta .ai-badge.deepseek { background: #4a6cf7; color: white; }
+        .history-item .history-meta .ai-badge.other { background: #718096; color: white; }
+        .history-item .history-prompt { font-size: 13px; color: #4a5568; background: white; padding: 8px 12px; border-radius: 6px; border-left: 3px solid #6b46c1; margin-bottom: 10px; max-height: 60px; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+        .history-item .history-prompt:hover { background: #f7fafc; }
+        .history-item .history-prompt.expanded { max-height: none; white-space: pre-wrap; }
+        .history-item .history-result { font-size: 13px; color: #2d3748; margin-bottom: 8px; max-height: 80px; overflow: hidden; text-overflow: ellipsis; }
+        .history-item .history-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid #edf2f7; padding-top: 10px; }
+        .history-item .history-actions .btn { padding: 3px 12px; font-size: 11px; }
+
+        .empty-state { padding: 60px 20px; text-align: center; color: #a0aec0; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 15px; }
+        .empty-state h3 { color: #4a5568; margin-bottom: 8px; }
+        .empty-state p { font-size: 14px; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        .modal-overlay.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal { background: white; border-radius: 20px; max-width: 850px; width: 100%; max-height: 95vh; overflow-y: auto; padding: 30px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .modal-close { position: sticky; top: 0; float: right; background: #fc8181; border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; transition: 0.2s; z-index: 10; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: #f56565; transform: rotate(90deg); }
+        .modal-title { font-size: 22px; font-weight: 700; color: #1a2332; margin-bottom: 20px; padding-right: 50px; }
+        .modal-body { display: flex; flex-direction: column; gap: 16px; }
+        .contoh-box { background: linear-gradient(135deg, #faf5ff 0%, #e9d8fd 100%); border-radius: 12px; padding: 16px 20px; border-left: 4px solid #6b46c1; margin: 12px 0; }
+        .contoh-box .contoh-title { font-weight: 700; font-size: 13px; color: #44337a; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+        .contoh-box .contoh-item { background: white; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; color: #2d3748; line-height: 1.7; }
+        .contoh-box .contoh-item:last-child { margin-bottom: 0; }
+        .contoh-box .contoh-item .lbl { font-weight: 700; color: #6b46c1; display: inline-block; min-width: 90px; }
+        .hasil-box { background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%); border-radius: 12px; padding: 16px 20px; border-left: 4px solid #38a169; margin: 12px 0; }
+        .hasil-box .hasil-title { font-weight: 700; font-size: 13px; color: #22543d; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .hasil-box .hasil-note { font-size: 11.5px; color: #2f855a; margin-bottom: 10px; line-height: 1.5; }
+        .hasil-box .hasil-item { background: white; border-radius: 8px; padding: 9px 13px; margin-bottom: 6px; font-size: 12.5px; color: #2d3748; line-height: 1.6; }
+        .hasil-box .hasil-item:last-child { margin-bottom: 0; }
+        .hasil-box .hasil-item .h-lbl { display: block; font-weight: 700; color: #276749; font-size: 12px; margin-bottom: 2px; letter-spacing: .2px; }
+        .hasil-box .hasil-foot { font-size: 11px; color: #2f855a; margin-top: 9px; font-style: italic; line-height: 1.5; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 2px solid #edf2f7; flex-wrap: wrap; }
+
+        .toast { position: fixed; bottom: 30px; right: 30px; padding: 16px 28px; border-radius: 12px; color: white; font-weight: 600; z-index: 2000; animation: slideUp 0.3s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.2); max-width: 400px; }
+        .toast.success { background: #48bb78; }
+        .toast.error { background: #fc8181; }
+        .toast.info { background: #4299e1; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-label { font-weight: 700; font-size: 14px; color: #2d3748; margin-top: 4px; margin-bottom: 2px; padding-bottom: 4px; border-bottom: 2px solid #edf2f7; }
+        .view-result-wrapper { background: white; border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; max-height: 400px; overflow-y: auto; }
+        .view-result-wrapper .ql-editor { padding: 0; }
+        .ai-source-select { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .ai-source-select select { padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; flex: 1; }
+        .ai-source-select select:focus { outline: none; border-color: #6b46c1; }
+        .add-ai-modal .modal { max-width: 750px; }
+        .add-ai-modal .prompt-display { background: #f7fafc; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #4a5568; max-height: 120px; overflow-y: auto; white-space: pre-wrap; border-left: 3px solid #6b46c1; position: relative; }
+        .add-ai-modal .prompt-display .copy-prompt-btn { position: absolute; top: 4px; right: 4px; background: rgba(107,70,193,0.9); color: white; border: none; padding: 2px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .add-ai-modal .prompt-display .copy-prompt-btn:hover { background: #553c9a; }
+
+        .main-content { display: none; }
+        .main-content.visible { display: block; }
+
+        .info-tip { background: #faf5ff; border-left: 4px solid #6b46c1; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; color: #44337a; line-height: 1.6; margin-bottom: 12px; }
+        .warn-tip { background: #fffaf0; border-left: 4px solid #ed8936; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; color: #7b341e; line-height: 1.6; margin-bottom: 12px; }
+
+        .reference-options { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: #f7fafc; border-radius: 10px; border: 2px solid #e2e8f0; }
+        .reference-options label { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; background: white; border-radius: 8px; border: 2px solid #e2e8f0; cursor: pointer; transition: all 0.2s; font-weight: normal; font-size: 13px; }
+        .reference-options label:hover { border-color: #6b46c1; }
+        .reference-options input[type="radio"] { margin-top: 3px; width: 16px; height: 16px; accent-color: #6b46c1; cursor: pointer; flex-shrink: 0; }
+        .reference-options label.selected { border-color: #6b46c1; background: #faf5ff; }
+        .reference-options .ref-title { font-weight: 700; color: #2d3748; display: block; margin-bottom: 2px; }
+        .reference-options .ref-desc { font-size: 12px; color: #718096; line-height: 1.5; }
+        .reference-options .ref-warn { font-size: 11px; color: #c05621; font-weight: 600; margin-top: 3px; }
+
+        .upload-modal .modal { max-width: 600px; }
+
+        @media (max-width: 992px) {
+            .studio-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .main-tabs-header { padding: 0 12px; }
+            .main-tab-btn { padding: 12px 16px; font-size: 13px; }
+            .main-tab-content { padding: 16px; }
+            .tools-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+            .header { flex-direction: column; align-items: stretch; }
+            .search-box input { width: 100%; }
+            .modal { padding: 20px; }
+            .history-item .history-header { flex-direction: column; align-items: flex-start; }
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .btn { padding: 8px 14px; font-size: 13px; }
+            .tools-grid { grid-template-columns: 1fr 1fr; }
+            .tool-card { padding: 14px; }
+            .tool-card .tool-icon { font-size: 28px; }
+            .main-tab-btn { padding: 10px 12px; font-size: 12px; }
+            .main-tab-content { padding: 12px; }
+            .history-filters { flex-direction: column; align-items: stretch; }
+            .login-box { padding: 24px 20px; }
+        }
+        .modal::-webkit-scrollbar { width: 6px; }
+        .modal::-webkit-scrollbar-track { background: #f7fafc; }
+        .modal::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="login-overlay active" id="loginOverlay">
+        <div class="login-box">
+            <span class="login-icon">📚</span>
+            <h2>Login</h2>
+            <p>Masuk untuk mengakses Journal Article Writer</p>
+            <div class="form-group">
+                <label>👤 Username</label>
+                <input type="text" id="loginUsername" placeholder="Masukkan username" value="">
+            </div>
+            <div class="form-group">
+                <label>🔑 Password</label>
+                <input type="password" id="loginPassword" placeholder="Masukkan password" value="" onkeydown="if(event.key==='Enter') doLogin()">
+            </div>
+            <div class="form-remember">
+                <input type="checkbox" id="loginRemember" checked>
+                <label for="loginRemember">Ingat saya</label>
+            </div>
+            <button class="btn-login" id="loginBtn" onclick="doLogin()">Login</button>
+            <div class="login-error" id="loginError">❌ Username atau password salah!</div>
+            <div class="login-loading" id="loginLoading">⏳ Memeriksa...</div>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="container" id="app">
+            <div class="header">
+                <h1>📚 AI Journal Article Writer <span>v1.1</span></h1>
+                <div class="header-actions">
+                    <span class="user-info" id="userInfo">
+                        👤 <span id="currentUser">-</span>
+                        <span class="user-role" id="userRole">user</span>
+                    </span>
+                    <button class="btn-logout" onclick="doLogout()">🚪 Logout</button>
+                    <div class="search-box">
+                        <span class="icon">🔍</span>
+                        <input type="text" id="searchInput" placeholder="Cari model..." oninput="renderTools()">
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+                </div>
+            </div>
+
+            <div class="main-tabs-container">
+                <div class="main-tabs-header">
+                    <button class="main-tab-btn active" data-tab="tab1" onclick="switchMainTab('tab1')">
+                        📚 Journal Article Models
+                        <span class="badge-main" id="tab1Badge">10</span>
+                    </button>
+                    <button class="main-tab-btn" data-tab="tab2" onclick="switchMainTab('tab2')">
+                        ✏️ Article Studio
+                        <span class="badge-main">New</span>
+                    </button>
+                    <button class="main-tab-btn" data-tab="tab3" onclick="switchMainTab('tab3')">
+                        📋 History
+                        <span class="badge-main" id="tab3Badge">0</span>
+                    </button>
+                </div>
+
+                <div class="main-tab-content active" id="tab1">
+                    <div class="tools-grid" id="toolsGrid"></div>
+                </div>
+
+                <div class="main-tab-content" id="tab2">
+                    <div class="info-tip">
+                        💡 <strong>Tips:</strong> Tool ini menghasilkan <strong>prompt untuk AI</strong> (ChatGPT/Claude). Output AI = artikel lengkap <strong>2 bahasa</strong> (Indonesia + Inggris). Semua prompt dalam Bahasa Indonesia.
+                    </div>
+                    <div class="warn-tip">
+                        📎 <strong>Alur Skenario B (Upload Data ke AI):</strong>
+                        <ol style="margin:6px 0 0 20px;padding:0;">
+                            <li>Isi field di form ini (data statistik <strong>tidak perlu diisi di sini</strong>)</li>
+                            <li>Klik <strong>"Generate Prompt"</strong> → copy prompt</li>
+                            <li>Paste prompt ke AI (ChatGPT/Claude/Gemini/DeepSeek)</li>
+                            <li><strong>Upload file Word/PDF data Anda</strong> ke AI (atau paste tabel ke chat)</li>
+                            <li>AI akan otomatis menulis artikel lengkap 2 bahasa</li>
+                        </ol>
+                    </div>
+                    <div class="studio-grid">
+                        <div class="studio-left">
+                            <div class="form-group">
+                                <label>📂 Pilih Model Penulisan</label>
+                                <select id="selectedTool" onchange="updateFormFields()"></select>
+                            </div>
+                            <div id="dynamicFields"></div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>📌 Judul Proyek</label>
+                                    <input type="text" id="resultTitle" placeholder="Judul proyek artikel...">
+                                </div>
+                                <div class="form-group">
+                                    <label>👤 Dibuat Oleh</label>
+                                    <input type="text" id="createdBy" placeholder="Nama..." value="">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="generatePrompt()">📝 Generate Prompt</button>
+                        </div>
+                        <div class="studio-right">
+                            <div class="form-group">
+                                <label>📄 Prompt yang Dihasilkan</label>
+                                <div class="prompt-preview" id="promptPreview">
+                                    <span class="placeholder">Pilih model dan isi form untuk menghasilkan prompt...</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>🤖 Pilih AI Source</label>
+                                <div class="ai-source-select">
+                                    <select id="aiSource">
+                                        <option value="ChatGPT">ChatGPT</option>
+                                        <option value="Claude">Claude</option>
+                                        <option value="Gemini">Gemini</option>
+                                        <option value="DeepSeek">DeepSeek</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>📝 Hasil AI (Paste di sini)</label>
+                                <div class="quill-wrapper">
+                                    <div id="resultEditor"></div>
+                                </div>
+                            </div>
+                            <div class="result-actions">
+                                <button class="btn btn-success" onclick="saveResult()">💾 Simpan Hasil</button>
+                                <button class="btn btn-warning" onclick="clearForm()">🗑️ Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="main-tab-content" id="tab3">
+                    <div class="history-sub-tabs" id="historySubTabs">
+                        <button class="history-sub-tab active" data-subtab="all" onclick="switchHistorySubTab('all')">
+                            📋 All <span class="sub-badge" id="subAll">0</span>
+                        </button>
+                        <button class="history-sub-tab" data-subtab="today" onclick="switchHistorySubTab('today')">
+                            📅 Hari Ini <span class="sub-badge" id="subToday">0</span>
+                        </button>
+                    </div>
+                    <div class="history-filters">
+                        <select id="historyFilterTool" onchange="renderHistory()">
+                            <option value="all">📋 All Types</option>
+                        </select>
+                        <input type="text" id="historySearch" placeholder="🔍 Cari..." oninput="renderHistory()">
+                        <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑️ Hapus Semua</button>
+                        <span style="font-size:13px;color:#718096;" id="historyCount">0 items</span>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <div class="empty-state">
+                            <div class="icon">📚</div>
+                            <h3>Belum ada proyek artikel</h3>
+                            <p>Pergi ke Tab "Article Studio" untuk mulai membuat artikel jurnal</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
+            <div class="modal-title" id="infoModalTitle">📋 Info</div>
+            <div class="modal-body" id="infoModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('infoModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+            <div class="modal-title" id="viewModalTitle">👁️ Detail Artikel</div>
+            <div class="modal-body">
+                <div id="viewMeta" style="font-size:13px;color:#718096;margin-bottom:12px;padding:8px 12px;background:#f7fafc;border-radius:8px;"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt:</div>
+                <div style="background:#f7fafc;padding:12px 16px;border-radius:8px;font-size:13px;color:#4a5568;white-space:pre-wrap;max-height:150px;overflow-y:auto;border-left:3px solid #6b46c1;" id="viewPrompt"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">🤖 Sumber AI:</div>
+                <div style="font-size:14px;color:#4a5568;margin-bottom:8px;" id="viewSource"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">📝 Hasil AI:</div>
+                <div class="view-result-wrapper" id="viewResultWrapper"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="copyViewResult()">📋 Copy</button>
+                <button class="btn btn-success" onclick="downloadViewDoc()">📥 Download .doc</button>
+                <button class="btn btn-outline" onclick="closeModal('viewModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay add-ai-modal" id="addAiModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('addAiModal')">✕</button>
+            <div class="modal-title">🤖 Tambah Hasil AI Baru</div>
+            <div class="modal-body">
+                <input type="hidden" id="addAiId">
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt (tidak bisa diedit):</div>
+                <div class="prompt-display" id="addAiPromptDisplay"></div>
+                <div class="form-group">
+                    <label>🤖 Pilih AI Source</label>
+                    <select id="addAiSource">
+                        <option value="ChatGPT">ChatGPT</option>
+                        <option value="Claude">Claude</option>
+                        <option value="Gemini">Gemini</option>
+                        <option value="DeepSeek">DeepSeek</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>📝 Hasil AI (Paste di sini)</label>
+                    <div class="quill-wrapper">
+                        <div id="addAiEditor"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>👤 Dibuat Oleh</label>
+                    <input type="text" id="addAiCreatedBy" placeholder="Nama...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addAiModal')">Batal</button>
+                <button class="btn btn-success" onclick="saveAddAiResult()">💾 Simpan Hasil</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="duplicateModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('duplicateModal')">✕</button>
+            <div class="modal-title">📋 Duplikat Prompt</div>
+            <div class="modal-body">
+                <input type="hidden" id="dupId">
+                <input type="hidden" id="dupToolType">
+                <div class="form-group">
+                    <label>📂 Model</label>
+                    <input type="text" id="dupFrameworkDisplay" disabled style="background:#f7fafc;font-weight:600;">
+                </div>
+                <div id="dupDynamicFields"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📌 Judul Baru</label>
+                        <input type="text" id="dupTitle" placeholder="Judul baru...">
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Dibuat Oleh</label>
+                        <input type="text" id="dupCreatedBy" placeholder="Nama...">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>📄 Prompt yang Dihasilkan</label>
+                    <div class="prompt-preview" id="dupPromptPreview" style="min-height:100px;max-height:200px;">
+                        <span class="placeholder">Generate prompt dari form di atas...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('duplicateModal')">Batal</button>
+                <button class="btn btn-primary" onclick="generateDuplicatePrompt()">📝 Generate Prompt</button>
+                <button class="btn btn-success" onclick="saveDuplicate()">💾 Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REMINDER UPLOAD DATA -->
+    <div class="modal-overlay upload-modal" id="uploadReminderModal">
+        <div class="modal" style="max-width:620px;">
+            <button class="modal-close" onclick="closeModal('uploadReminderModal')">✕</button>
+            <div style="text-align:center;margin-bottom:16px;">
+                <span style="font-size:56px;display:block;margin-bottom:8px;">📎</span>
+                <h2 style="font-size:22px;color:#1a2332;margin-bottom:4px;">Langkah Selanjutnya!</h2>
+                <p style="color:#718096;font-size:14px;">Prompt sudah siap. Ikuti 4 langkah ini untuk mendapatkan artikel jurnal lengkap:</p>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:12px;margin:20px 0;">
+                <div style="background:#faf5ff;border-radius:10px;padding:14px 16px;border-left:4px solid #6b46c1;">
+                    <div style="font-weight:700;color:#553c9a;font-size:14px;margin-bottom:4px;">1️⃣ Copy Prompt</div>
+                    <div style="font-size:13px;color:#4a5568;line-height:1.6;">Klik tombol <strong>📋 Copy</strong> di bawah untuk copy prompt yang sudah dihasilkan.</div>
+                </div>
+
+                <div style="background:#ebf8ff;border-radius:10px;padding:14px 16px;border-left:4px solid #3182ce;">
+                    <div style="font-weight:700;color:#2a69ac;font-size:14px;margin-bottom:4px;">2️⃣ Paste ke AI</div>
+                    <div style="font-size:13px;color:#4a5568;line-height:1.6;">Buka <strong>ChatGPT / Claude / Gemini / DeepSeek</strong>, lalu paste prompt tersebut sebagai pesan pertama.</div>
+                </div>
+
+                <div style="background:#fffaf0;border-radius:10px;padding:14px 16px;border-left:4px solid #ed8936;">
+                    <div style="font-weight:700;color:#c05621;font-size:14px;margin-bottom:4px;">3️⃣ Upload Data Statistik Anda</div>
+                    <div style="font-size:13px;color:#4a5568;line-height:1.6;">
+                        Setelah prompt terkirim, AI akan bilang <em>"Menunggu data..."</em>. Sekarang <strong>upload file Word/PDF data Anda</strong> ke chat AI.
+                        <br><br>
+                        <span style="color:#718096;font-size:12px;">💡 ChatGPT Free tidak bisa upload — paste tabel dari Word manual ke chat.</span>
+                    </div>
+                </div>
+
+                <div style="background:#f0fff4;border-radius:10px;padding:14px 16px;border-left:4px solid #48bb78;">
+                    <div style="font-weight:700;color:#276749;font-size:14px;margin-bottom:4px;">4️⃣ AI Tulis Artikel 2 Bahasa</div>
+                    <div style="font-size:13px;color:#4a5568;line-height:1.6;">AI akan otomatis menghasilkan artikel lengkap dalam <strong>Bahasa Indonesia</strong> dan <strong>Bahasa Inggris</strong>. Setelah selesai, copy hasilnya ke kolom "Hasil AI" di tool ini.</div>
+                </div>
+            </div>
+
+            <div style="background:#fff5f5;border-radius:8px;padding:10px 14px;border-left:4px solid #e53e3e;margin-bottom:16px;font-size:12.5px;color:#742a2a;line-height:1.6;">
+                ⚠️ <strong>Penting:</strong> AI tidak akan mulai menulis sampai Anda kirim data. Ini mencegah AI mengarang angka statistik.
+            </div>
+
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-outline" onclick="closeModal('uploadReminderModal')">Mengerti</button>
+                <button class="btn btn-primary" onclick="copyPromptAndClose()">📋 Copy Prompt &amp; Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== TEMPLATE JURNAL ====================
+        const JOURNAL_TEMPLATES = {
+            jehcp: {
+                id: 'jehcp',
+                name: 'JEHCP (Journal of Educational, Health and Community Psychology)',
+                short: 'JEHCP',
+                language: 'EN',
+                structure: `Title → Author's Name & Affiliation → Abstract (100-150 kata, past tense) → Keywords (3-5) → Introduction (dengan subsection literature review per variabel) → Method (Design, Respondents/Participants, Measurements, Procedures, Data Analysis) → Result (data + tabel/gambar) → Discussion → Conclusion → Funding → Ethical Statement → Informed Consent Statement → Acknowledgments → Conflicts of Interest → Data Availability → References (APA 7th)`,
+                notes: 'JEHCP berbahasa Inggris. Fokus pada psikologi pendidikan, kesehatan, dan komunitas. Abstract harus 100-150 kata, past tense. Referensi APA 7th.'
+            },
+            jpi: {
+                id: 'jpi',
+                name: 'Jurnal Psikologi Indonesia (JPI)',
+                short: 'JPI',
+                language: 'ID',
+                structure: `Judul → Nama Penulis & Afiliasi → Abstrak (150-250 kata) → Kata Kunci → Pendahuluan (latar belakang, gap, tujuan, manfaat) → Kajian Pustaka → Metode (Desain, Partisipan, Instrumen, Prosedur, Analisis Data) → Hasil → Diskusi → Kesimpulan → Saran → Daftar Pustaka (APA 7th)`,
+                notes: 'JPI berbahasa Indonesia. Struktur lebih fleksibel, biasanya ada Kajian Pustaka terpisah.'
+            },
+            generic_imrad: {
+                id: 'generic_imrad',
+                name: 'Generic IMRaD (International Standard)',
+                short: 'IMRaD',
+                language: 'EN',
+                structure: `Title → Authors & Affiliation → Abstract (150-250 kata) → Keywords → Introduction (background, gap, objective, hypothesis) → Method (Participants, Instruments, Procedure, Data Analysis) → Results → Discussion (findings, comparison with prior studies, limitations) → Conclusion → References`,
+                notes: 'Format IMRaD standar internasional (Introduction, Method, Results, and Discussion). Cocok untuk jurnal internasional umum.'
+            }
+        };
+
+        // ==================== REFERENCE MODE ====================
+        const REFERENCE_MODES = {
+            ai_search: {
+                id: 'ai_search',
+                name: 'AI Cari Referensi Sendiri',
+                desc: 'AI akan mencari referensi dari pengetahuannya sendiri.',
+                warn: '⚠️ RISIKO TINGGI: AI bisa menciptakan referensi fiktif (halusinasi). HANYA gunakan untuk draft awal.'
+            },
+            user_provided: {
+                id: 'user_provided',
+                name: 'Saya Kasih Daftar Referensi',
+                desc: 'Saya akan memberi daftar referensi yang sudah saya miliki. AI hanya menyitasi dari daftar tersebut.',
+                warn: '✅ RECOMMENDED: Cara paling aman untuk mencegah referensi fiktif.'
+            },
+            placeholder: {
+                id: 'placeholder',
+                name: 'Buat Placeholder [REF: ...]',
+                desc: 'AI akan menulis placeholder [REF: topik_tahun] yang harus saya isi manual.',
+                warn: '✅ AMAN: Cocok jika Anda ingin mengisi referensi setelah draft selesai.'
+            }
+        };
+
+        // ==================== JOURNAL ARTICLE MODEL DEFINITIONS ====================
+        const ARTICLE_TYPES = {
+            full_article: {
+                id: 'full_article',
+                icon: '📄',
+                name: 'Full Article Generator',
+                desc: 'Generate prompt untuk artikel jurnal LENGKAP dari Title sampai References, dalam 2 bahasa (Indonesia + Inggris).',
+                color: '#6b46c1',
+                use_for: '✅ Draft pertama artikel jurnal\n✅ Submit ke JEHCP/JPI/jurnal lain\n✅ Konversi skripsi/tesis ke artikel\n✅ Publikasi hasil penelitian',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Artikel lengkap 20-30 halaman dalam 2 bahasa: dari Title, Abstract, Introduction, Method, Result, Discussion, Conclusion, sampai References. Siap submit ke JEHCP setelah polish.' }
+                ],
+                contoh_hasil_note: 'Gambaran output Full Article (2 bahasa):',
+                contoh_hasil: [
+                    { lbl: 'Bagian B. Indonesia', txt: 'Artikel lengkap dalam Bahasa Indonesia: Judul, Penulis, Abstrak, Pendahuluan, Metode, Hasil, Diskusi, Kesimpulan, Daftar Pustaka.' },
+                    { lbl: 'Bagian B. Inggris', txt: 'Versi Inggris profesional: Title, Authors, Abstract, Introduction, Method, Result, Discussion, Conclusion, References.' },
+                    { lbl: 'Data Statistik', txt: 'Tabel dan gambar sesuai hasil olah data (PLS, regresi, ANOVA, dll) dengan narasi hasil — AI baca dari file yang Anda upload.' },
+                    { lbl: 'Referensi APA', txt: 'Daftar pustaka format APA 7th, sesuai mode referensi yang dipilih user.' },
+                    { lbl: 'Total Output', txt: 'Biasanya 20-30 halaman / 6000-10000 kata per bahasa.' }
+                ],
+                fields: [
+                    { key: 'article_title', label: 'Judul Sementara Artikel', type: 'text', placeholder: 'Contoh: Pengaruh Loneliness terhadap Gender Role Conflict pada Remaja Fatherless' },
+                    { key: 'authors', label: 'Penulis & Afiliasi', type: 'text', placeholder: 'Contoh: Andi Pratama (Universitas X), Sari Dewi (Universitas Y)' },
+                    { key: 'journal_template', label: 'Template Jurnal', type: 'select', options: 'journal', placeholder: '' },
+                    { key: 'field_of_study', label: 'Bidang Ilmu', type: 'text', placeholder: 'Contoh: Psikologi Klinis / Psikologi Pendidikan' },
+                    { key: 'research_variables', label: 'Variabel Penelitian', type: 'textarea', placeholder: 'Contoh: IV1: Fatherless, IV2: Loneliness, IV3: Subjective Well-Being, DV: Gender Role Conflict' },
+                    { key: 'sample_size', label: 'Jumlah Sampel (N)', type: 'text', placeholder: 'Contoh: 220' },
+                    { key: 'research_design', label: 'Desain Penelitian', type: 'text', placeholder: 'Contoh: Kuantitatif korelasional / Eksperimen / Mixed Methods' },
+                    { key: 'hypothesis', label: 'Hipotesis Penelitian', type: 'textarea', placeholder: 'Contoh: H1: Fatherless berpengaruh negatif terhadap Gender Role Conflict...' },
+                    { key: 'reference_mode', label: 'Pilihan Referensi', type: 'radio_reference', placeholder: '' },
+                    { key: 'reference_list', label: 'Daftar Referensi yang Sudah Ada (Opsional)', type: 'textarea', placeholder: 'Jika mode referensi = "Saya Kasih Daftar", paste daftar referensi di sini. Format APA 7th.' },
+                    { key: 'additional_notes', label: 'Catatan Tambahan', type: 'textarea', placeholder: 'Contoh: Fokus pada implikasi praktis untuk konselor remaja' }
+                ],
+                prompt_template: `Anda adalah penulis artikel jurnal akademik profesional berpengalaman dengan rekam jejak publikasi di jurnal internasional bereputasi. Tugas Anda menulis artikel jurnal LENGKAP berdasarkan data dan informasi yang diberikan.
+
+═══════════════════════════════════
+INFORMASI ARTIKEL
+═══════════════════════════════════
+- Judul Sementara: {article_title}
+- Penulis & Afiliasi: {authors}
+- Template Jurnal: {journal_template}
+- Bidang Ilmu: {field_of_study}
+- Variabel Penelitian: {research_variables}
+- Jumlah Sampel (N): {sample_size}
+- Desain Penelitian: {research_design}
+- Hipotesis: {hypothesis}
+- Catatan Tambahan: {additional_notes}
+
+═══════════════════════════════════
+📎 DATA STATISTIK — PENTING!
+═══════════════════════════════════
+Saya akan MELAMPIRKAN file data hasil olah data (Word/PDF) atau paste tabel statistik ke chat SETELAH prompt ini dikirim.
+
+INSTRUKSI UNTUK AI — WAJIB DIPATUHI:
+1. ❌ JANGAN mulai menulis artikel sampai saya kirim data
+2. ⏳ Tunggu saya kirim file/tabel data terlebih dahulu
+3. ✅ Setelah data diterima, baru mulai menulis artikel lengkap
+4. 🔢 Gunakan HANYA data yang saya berikan — JANGAN mengarang angka statistik
+5. 🤔 Jika ada data yang kurang, TANYAKAN ke saya — jangan mengisi sendiri
+
+Balas prompt ini dengan: "Baik, saya tunggu file data statistik Anda. Silakan upload file Word/PDF atau paste tabel statistik ke chat."
+
+═══════════════════════════════════
+INSTRUKSI KHUSUS UNTUK BAHASA
+═══════════════════════════════════
+Anda akan menulis artikel dalam DUA BAHASA sekaligus:
+1. **VERSI BAHASA INDONESIA** (akademik, formal, sesuai kaidah PUEBI)
+2. **VERSI BAHASA INGGRIS** (academic English, formal, natural untuk pembaca internasional)
+
+Kedua versi harus setara kualitas dan substansinya. Jangan hanya menerjemahkan kata-per-kata — tulis ulang dengan gaya akademik yang natural di masing-masing bahasa.
+
+═══════════════════════════════════
+STRUKTUR TEMPLATE JURNAL
+═══════════════════════════════════
+{journal_structure}
+
+CATATAN TEMPLATE: {journal_notes}
+
+═══════════════════════════════════
+INSTRUKSI REFERENSI
+═══════════════════════════════════
+{reference_instruction}
+
+═══════════════════════════════════
+OUTPUT YANG DIBUTUHKAN (SETELAH DATA DITERIMA)
+═══════════════════════════════════
+
+Tuliskan DUA VERSI artikel lengkap dengan struktur template di atas.
+
+═══════════════════════════════════
+==== VERSI 1: BAHASA INDONESIA ====
+═══════════════════════════════════
+
+[Ikuti struktur template secara lengkap, dari Title sampai References]
+
+Persyaratan:
+- Minimal 6000-8000 kata
+- Setiap section memiliki narasi yang mengalir, bukan bullet point mentah
+- Introduction: latar belakang fenomena, gap penelitian, state of the art, tujuan, manfaat, hipotesis
+- Literature Review: bahas teori utama per variabel + penelitian terdahulu yang relevan
+- Method: detail lengkap (desain, partisipan, instrumen dengan validitas-reliabilitas, prosedur, analisis data)
+- Result: sajikan tabel-tabel penting + narasi interpretasi berdasarkan DATA YANG SAYA KIRIM
+- Discussion: kaitkan temuan dengan teori & penelitian terdahulu, limitations, implikasi
+- Conclusion: ringkas jawaban tujuan, kontribusi teoretis & praktis, saran
+
+═══════════════════════════════════
+==== VERSI 2: BAHASA INGGRIS ====
+═══════════════════════════════════
+
+[Lengkap dengan struktur template yang sama]
+
+Pastikan istilah psikologi/keilmuan menggunakan terminologi standar internasional.
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+1. JANGAN mengarang data statistik — gunakan hanya data yang saya berikan
+2. JANGAN mengarang referensi — ikuti instruksi referensi di atas
+3. Ikuti template {journal_template} secara ketat (struktur section, panjang abstract, gaya sitasi)
+4. Fokus pada kualitas akademik, bukan panjang semata
+5. Setelah selesai, cek apakah kedua versi konsisten secara substansi
+6. Sertakan tabel dan figure (dalam bentuk tabel markdown) di section Result
+7. Untuk figure/model yang kompleks (CFA, PLS), deskripsikan dalam caption + narasi
+
+Mulai dari VERSI BAHASA INDONESIA, lalu VERSI BAHASA INGGRIS.`
+            },
+            abstract_keywords: {
+                id: 'abstract_keywords',
+                icon: '📝',
+                name: 'Abstract & Keywords',
+                desc: 'Generate prompt khusus untuk Abstract dan Keywords saja, dalam 2 bahasa.',
+                color: '#805ad5',
+                use_for: '✅ Refresh abstract\n✅ Abstrak untuk submission\n✅ Abstrak untuk konferensi\n✅ Abstrak untuk repository',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Abstract 100-150 kata (JEHCP) dalam Bahasa Indonesia dan Inggris + 3-5 keywords.' }
+                ],
+                contoh_hasil_note: 'Gambaran output Abstract:',
+                contoh_hasil: [
+                    { lbl: 'Struktur Abstract', txt: 'Problem statement → Approach/method → Key findings → Implication/conclusion.' },
+                    { lbl: 'Keywords', txt: '3-5 kata kunci yang mencerminkan inti penelitian.' },
+                    { lbl: '2 Versi', txt: 'Abstract Indonesia (150-250 kata) + Abstract Inggris (100-150 kata untuk JEHCP).' }
+                ],
+                fields: [
+                    { key: 'article_title', label: 'Judul Artikel', type: 'text', placeholder: 'Contoh: Pengaruh Loneliness terhadap Gender Role Conflict pada Remaja Fatherless' },
+                    { key: 'journal_template', label: 'Template Jurnal', type: 'select', options: 'journal', placeholder: '' },
+                    { key: 'research_purpose', label: 'Tujuan Penelitian', type: 'textarea', placeholder: 'Apa yang ingin dicapai penelitian ini?' },
+                    { key: 'method_summary', label: 'Ringkasan Metode', type: 'textarea', placeholder: 'Desain, partisipan (N), instrumen, analisis' },
+                    { key: 'key_findings', label: 'Temuan Utama', type: 'textarea', placeholder: 'Hasil utama: hipotesis apa yang diterima/ditolak, effect size, dsb' },
+                    { key: 'implication', label: 'Implikasi/Kesimpulan', type: 'textarea', placeholder: 'Implikasi teoretis & praktis' },
+                    { key: 'keywords_draft', label: 'Draft Keywords (opsional)', type: 'text', placeholder: 'Contoh: fatherless, loneliness, gender role conflict, remaja' }
+                ],
+                prompt_template: `Anda adalah penulis abstrak jurnal akademik profesional. Tulis ABSTRACT dan KEYWORDS untuk artikel jurnal berikut.
+
+INFORMASI:
+- Judul Artikel: {article_title}
+- Template Jurnal: {journal_template}
+- Tujuan Penelitian: {research_purpose}
+- Metode: {method_summary}
+- Temuan Utama: {key_findings}
+- Implikasi: {implication}
+- Draft Keywords: {keywords_draft}
+
+═══════════════════════════════════
+📎 DATA STATISTIK — PENTING!
+═══════════════════════════════════
+Saya akan MELAMPIRKAN file data hasil olah data atau paste tabel statistik ke chat SETELAH prompt ini.
+
+INSTRUKSI UNTUK AI:
+1. ❌ JANGAN mulai menulis abstract sampai saya kirim data
+2. ⏳ Tunggu saya kirim file/tabel data
+3. ✅ Setelah data diterima, baru mulai menulis
+4. 🔢 Gunakan HANYA data yang saya berikan
+
+Balas prompt ini dengan: "Baik, saya tunggu file data statistik Anda."
+
+═══════════════════════════════════
+STRUKTUR TEMPLATE
+═══════════════════════════════════
+{journal_structure}
+
+═══════════════════════════════════
+OUTPUT YANG DIBUTUHKAN (SETELAH DATA DITERIMA)
+═══════════════════════════════════
+
+=== VERSI 1: ABSTRACT BAHASA INDONESIA ===
+[150-250 kata. Struktur: problem → tujuan → metode → temuan utama → implikasi. Gunakan kalimat akademik formal.]
+
+=== VERSI 2: ABSTRACT BAHASA INGGRIS ===
+[Untuk JEHCP: 100-150 kata. Gunakan past tense. Struktur sama. Natural academic English.]
+
+=== KEYWORDS ===
+- Bahasa Indonesia: 3-5 kata
+- Bahasa Inggris: 3-5 keywords
+
+PENTING:
+- Abstract adalah "self-explanatory"
+- Hindari sitasi di abstract
+- Hindari singkatan yang tidak standar
+- Gunakan angka statistik konkret dari data yang saya kirim
+- Pastikan keywords tidak duplikat dengan kata di judul
+
+Markdown rapi.`
+            },
+            introduction_litrev: {
+                id: 'introduction_litrev',
+                icon: '📚',
+                name: 'Introduction & Literature Review',
+                desc: 'Generate prompt untuk Introduction + Literature Review dengan subsection per variabel.',
+                color: '#9f7aea',
+                use_for: '✅ Section introduction berkualitas\n✅ Literature review mendalam\n✅ Justifikasi gap penelitian\n✅ Landasan teori per variabel',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Introduction 2000-3000 kata + Literature Review dengan subsection per variabel (contoh: Fatherless & Gender Role Conflict; Loneliness & Gender Role Conflict; Subjective Well-Being & Gender Role Conflict).' }
+                ],
+                contoh_hasil_note: 'Gambaran output Introduction & Lit Review:',
+                contoh_hasil: [
+                    { lbl: 'Introduction', txt: 'Fenomena → gap → state of the art → tujuan → manfaat → hipotesis.' },
+                    { lbl: 'Literature Review Subsection', txt: 'Setiap variabel punya subsection sendiri yang bahas teori + penelitian terdahulu.' },
+                    { lbl: 'Hipotesis', txt: 'Dirumuskan dari teori & penelitian sebelumnya.' },
+                    { lbl: 'Panjang', txt: 'Sekitar 20% dari total artikel (biasanya 2000-3000 kata).' }
+                ],
+                fields: [
+                    { key: 'article_title', label: 'Judul Artikel', type: 'text', placeholder: 'Judul penelitian' },
+                    { key: 'journal_template', label: 'Template Jurnal', type: 'select', options: 'journal', placeholder: '' },
+                    { key: 'field_of_study', label: 'Bidang Ilmu', type: 'text', placeholder: 'Contoh: Psikologi Perkembangan' },
+                    { key: 'phenomenon', label: 'Fenomena yang Diangkat', type: 'textarea', placeholder: 'Fenomena aktual yang melatarbelakangi penelitian...' },
+                    { key: 'research_gap', label: 'Gap Penelitian', type: 'textarea', placeholder: 'Apa yang belum diteliti sebelumnya?' },
+                    { key: 'variables', label: 'Variabel & Definisi', type: 'textarea', placeholder: 'Contoh: Fatherless (definisi); Loneliness (definisi); Gender Role Conflict (definisi)' },
+                    { key: 'main_theories', label: 'Teori Utama yang Dipakai', type: 'textarea', placeholder: 'Contoh: Teori Gender Role Conflict (O\'Neil), Teori Loneliness (Peplau & Perlman)' },
+                    { key: 'hypotheses', label: 'Hipotesis', type: 'textarea', placeholder: 'H1: ...; H2: ...; H3: ...' },
+                    { key: 'reference_mode', label: 'Pilihan Referensi', type: 'radio_reference', placeholder: '' },
+                    { key: 'reference_list', label: 'Daftar Referensi (Opsional)', type: 'textarea', placeholder: 'Paste daftar referensi jika mode = user_provided' }
+                ],
+                prompt_template: `Anda adalah penulis artikel jurnal akademik profesional. Tulis INTRODUCTION dan LITERATURE REVIEW untuk artikel jurnal berikut.
+
+INFORMASI:
+- Judul: {article_title}
+- Template Jurnal: {journal_template}
+- Bidang Ilmu: {field_of_study}
+- Fenomena: {phenomenon}
+- Research Gap: {research_gap}
+- Variabel: {variables}
+- Teori Utama: {main_theories}
+- Hipotesis: {hypotheses}
+
+═══════════════════════════════════
+📎 DATA STATISTIK — PENTING!
+═══════════════════════════════════
+Saya akan MELAMPIRKAN file data hasil olah data ke chat SETELAH prompt ini. Untuk bagian Introduction & Literature Review, data statistik dipakai untuk memperkuat latar belakang.
+
+INSTRUKSI UNTUK AI:
+1. ❌ JANGAN mulai menulis sampai saya kirim data
+2. ⏳ Tunggu saya kirim file/tabel data
+3. ✅ Setelah data diterima, baru mulai menulis
+4. 🔢 Gunakan HANYA data yang saya berikan
+
+Balas prompt ini dengan: "Baik, saya tunggu file data statistik Anda."
+
+═══════════════════════════════════
+STRUKTUR TEMPLATE
+═══════════════════════════════════
+{journal_structure}
+
+═══════════════════════════════════
+INSTRUKSI REFERENSI
+═══════════════════════════════════
+{reference_instruction}
+
+═══════════════════════════════════
+OUTPUT YANG DIBUTUHKAN (SETELAH DATA DITERIMA)
+═══════════════════════════════════
+
+═══════════════════════════════════
+==== VERSI 1: BAHASA INDONESIA ====
+═══════════════════════════════════
+
+A. INTRODUCTION (~1500-2000 kata):
+1. Latar belakang fenomena (data aktual + konteks Indonesia/global)
+2. State of the art (penelitian sebelumnya)
+3. Research gap (apa yang belum diteliti)
+4. Tujuan penelitian
+5. Manfaat penelitian (teoretis & praktis)
+6. Rumusan hipotesis
+
+B. LITERATURE REVIEW (~1500-2000 kata):
+Buat subsection per variabel atau per hubungan variabel:
+
+Subsection 1: [Variabel IV1] dan [Variabel DV]
+- Teori yang mendasari
+- Penelitian terdahulu (minimal 3 studi)
+- Dinamika psikologis hubungan
+
+Subsection 2: [Variabel IV2] dan [Variabel DV]
+[struktur sama]
+
+Subsection 3: [Variabel IV3] dan [Variabel DV]
+[struktur sama]
+
+Subsection 4: Kerangka Berpikir / Hipotesis
+- Model penelitian
+- Justifikasi setiap hipotesis
+
+═══════════════════════════════════
+==== VERSI 2: BAHASA INGGRIS ====
+═══════════════════════════════════
+
+[Struktur sama, academic English]
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+1. Setiap klaim harus didukung referensi
+2. Ikuti instruksi referensi di atas
+3. Sitasi APA 7th dalam teks: (Author, tahun)
+4. Bahas penelitian terbaru (maksimal 5-10 tahun terakhir)
+5. Jangan plagiat — paraphrase semua sumber
+6. Panjang total ~20% dari artikel full
+
+Markdown rapi.`
+            },
+            method_section: {
+                id: 'method_section',
+                icon: '🔬',
+                name: 'Method Section',
+                desc: 'Generate prompt untuk Method: Design, Respondents, Measurements, Procedures, Data Analysis.',
+                color: '#4299e1',
+                use_for: '✅ Section method lengkap\n✅ Replikabilitas penelitian\n✅ Detail instrumen & prosedur\n✅ Justifikasi analisis data',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Method section 1500-2000 kata dengan 5 subsection: Design (kuantitatif korelasional), Respondents (N=220, demografi), Measurements (3 skala + validitas-reliabilitas), Procedures, Data Analysis (PLS-SEM dengan software).' }
+                ],
+                contoh_hasil_note: 'Gambaran output Method Section:',
+                contoh_hasil: [
+                    { lbl: 'Design', txt: 'Pendekatan kuantitatif/kualitatif/mixed + desain spesifik (korelasional/eksperimen/survey).' },
+                    { lbl: 'Respondents', txt: 'Kriteria inklusi-eksklusi, teknik sampling, N, karakteristik demografis.' },
+                    { lbl: 'Measurements', txt: 'Setiap instrumen: nama, penulis, jumlah item, skala Likert, contoh item, validitas & reliabilitas (α/CR/AVE).' },
+                    { lbl: 'Procedures', txt: 'Langkah pengumpulan data, etika, waktu, lokasi.' },
+                    { lbl: 'Data Analysis', txt: 'Teknik analisis (PLS-SEM/regresi/ANOVA), software, tahapan, kriteria.' }
+                ],
+                fields: [
+                    { key: 'article_title', label: 'Judul Artikel', type: 'text', placeholder: 'Judul penelitian' },
+                    { key: 'journal_template', label: 'Template Jurnal', type: 'select', options: 'journal', placeholder: '' },
+                    { key: 'research_design', label: 'Desain Penelitian', type: 'text', placeholder: 'Contoh: Kuantitatif korelasional' },
+                    { key: 'participants', label: 'Partisipan/Responden', type: 'textarea', placeholder: 'Kriteria inklusi, eksklusi, N, demografi (usia, gender, dll)' },
+                    { key: 'sampling_technique', label: 'Teknik Sampling', type: 'text', placeholder: 'Contoh: Purposive sampling / Snowball / Random' },
+                    { key: 'instruments', label: 'Instrumen Penelitian', type: 'textarea', placeholder: 'Contoh: Skala Fatherless (X, 2020, 15 item, α=0.85); Skala Loneliness UCLA (Y, 1978, 20 item, α=0.90)' },
+                    { key: 'procedure', label: 'Prosedur Pengumpulan Data', type: 'textarea', placeholder: 'Kapan, di mana, bagaimana data dikumpulkan' },
+                    { key: 'data_analysis', label: 'Analisis Data', type: 'textarea', placeholder: 'Contoh: PLS-SEM dengan SmartPLS 4.0; uji outer model; inner model; bootstrapping 5000' },
+                    { key: 'ethical_notes', label: 'Catatan Etika', type: 'textarea', placeholder: 'Contoh: Informed consent, anonimitas, hak menarik diri' }
+                ],
+                prompt_template: `Anda adalah penulis artikel jurnal akademik profesional. Tulis METHOD SECTION lengkap untuk artikel berikut.
+
+INFORMASI:
+- Judul: {article_title}
+- Template Jurnal: {journal_template}
+- Desain Penelitian: {research_design}
+- Partisipan: {participants}
+- Teknik Sampling: {sampling_technique}
+- Instrumen: {instruments}
+- Prosedur: {procedure}
+- Analisis Data: {data_analysis}
+- Catatan Etika: {ethical_notes}
+
+═══════════════════════════════════
+📎 DATA STATISTIK — PENTING!
+═══════════════════════════════════
+Saya akan MELAMPIRKAN file data hasil olah data ke chat SETELAH prompt ini. Data ini dipakai untuk melengkapi detail instrumen (α Cronbach, CR, AVE, dll).
+
+INSTRUKSI UNTUK AI:
+1. ❌ JANGAN mulai menulis sampai saya kirim data
+2. ⏳ Tunggu saya kirim file/tabel data
+3. ✅ Setelah data diterima, baru mulai menulis Method Section
+4. 🔢 Gunakan HANYA angka validitas/reliabilitas yang saya berikan
+
+Balas prompt ini dengan: "Baik, saya tunggu file data statistik Anda."
+
+═══════════════════════════════════
+STRUKTUR TEMPLATE
+═══════════════════════════════════
+{journal_structure}
+
+═══════════════════════════════════
+OUTPUT YANG DIBUTUHKAN (SETELAH DATA DITERIMA)
+═══════════════════════════════════
+
+═══════════════════════════════════
+==== VERSI 1: BAHASA INDONESIA ====
+═══════════════════════════════════
+
+A. DESIGN
+- Pendekatan (kuantitatif/kualitatif/mixed)
+- Desain spesifik + justifikasi
+- Variabel & operasionalisasi
+
+B. RESPONDENTS/PARTICIPANTS
+- Kriteria inklusi & eksklusi
+- Teknik sampling + justifikasi
+- Jumlah sampel (N) + power analysis (jika ada)
+- Karakteristik demografis (dalam tabel)
+
+C. MEASUREMENTS
+Untuk setiap instrumen:
+- Nama skala, pengembang, tahun
+- Jumlah item, format respons (Likert 1-5, dll)
+- Contoh item
+- Validitas & reliabilitas (α Cronbach, CR, AVE)
+- Adaptasi bahasa (jika ada)
+
+D. PROCEDURES
+- Persiapan penelitian
+- Pengumpulan data (langkah per langkah)
+- Etika penelitian (informed consent, anonimitas)
+- Waktu & lokasi
+
+E. DATA ANALYSIS
+- Teknik analisis utama + justifikasi
+- Software yang dipakai
+- Tahapan analisis (misal: outer model → inner model)
+- Kriteria penerimaan (cut-off values)
+
+═══════════════════════════════════
+==== VERSI 2: BAHASA INGGRIS ====
+═══════════════════════════════════
+
+[Struktur sama, academic English]
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+1. Method harus REPLIKABEL — peneliti lain bisa ulang penelitian ini
+2. Detail instrumen LENGKAP (validitas-reliabilitas)
+3. Sitasi instrumen asli (Author, tahun)
+4. Panjang ~20% dari artikel full (1500-2000 kata)
+5. Semua keputusan metodologis harus dijustifikasi
+
+Markdown rapi.`
+            },
+            result_section: {
+                id: 'result_section',
+                icon: '📊',
+                name: 'Result Section',
+                desc: 'Generate prompt untuk Result dengan input jenis analisis (PLS-SEM, Regresi, ANOVA, CFA).',
+                color: '#38a169',
+                use_for: '✅ Section result dengan tabel\n✅ Narasi hasil analisis\n✅ Interpretasi statistik\n✅ Konversi output SPSS/SmartPLS/AMOS ke narasi',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Result section untuk PLS-SEM: outer model (loading, CR, AVE), inner model (R², path coefficient, p-value), korelasi antar variabel, dan tabel ANOVA.' }
+                ],
+                contoh_hasil_note: 'Gambaran output Result Section:',
+                contoh_hasil: [
+                    { lbl: 'Deskriptif', txt: 'Tabel statistik deskriptif (N, mean, SD, min, max) + tabel kategorisasi.' },
+                    { lbl: 'Asumsi', txt: 'Uji asumsi (VIF, Breusch-Pagan, normalitas) + interpretasi.' },
+                    { lbl: 'Hasil Utama', txt: 'Tabel koefisien regresi/PLS + interpretasi.' },
+                    { lbl: 'Narasi', txt: 'Paragraf yang menjelaskan setiap tabel secara mengalir.' },
+                    { lbl: 'Figure', txt: 'Deskripsi gambar (path diagram, CFA model) + caption.' }
+                ],
+                fields: [
+                    { key: 'article_title', label: 'Judul Artikel', type: 'text', placeholder: 'Judul penelitian' },
+                    { key: 'journal_template', label: 'Template Jurnal', type: 'select', options: 'journal', placeholder: '' },
+                    { key: 'analysis_type', label: 'Jenis Analisis Utama', type: 'text', placeholder: 'Contoh: PLS-SEM / Regresi Berganda / ANOVA / CFA / Mediasi' },
+                    { key: 'software', label: 'Software yang Dipakai', type: 'text', placeholder: 'Contoh: SmartPLS 4.0 / SPSS 26 / AMOS 24 / JASP' },
+                    { key: 'sample_size', label: 'Jumlah Sampel (N)', type: 'text', placeholder: 'Contoh: 220' },
+                    { key: 'figures', label: 'Gambar/Figure yang Akan Disertakan', type: 'textarea', placeholder: 'Contoh: Figure 1: Path diagram PLS (dibuat di SmartPLS); Figure 2: CFA model (AMOS)' },
+                    { key: 'key_findings', label: 'Temuan Utama yang Harus Ditulis', type: 'textarea', placeholder: 'Contoh: Fatherless berpengaruh negatif; Loneliness berpengaruh positif; SWB tidak signifikan' }
+                ],
+                prompt_template: `Anda adalah penulis artikel jurnal akademik profesional. Tulis RESULT SECTION lengkap berdasarkan data yang saya berikan.
+
+INFORMASI:
+- Judul: {article_title}
+- Template Jurnal: {journal_template}
+- Jenis Analisis: {analysis_type}
+- Software: {software}
+- N Sampel: {sample_size}
+- Figure: {figures}
+- Temuan Utama: {key_findings}
+
+═══════════════════════════════════
+📎 DATA STATISTIK — PENTING!
+═══════════════════════════════════
+Saya akan MELAMPIRKAN file data hasil olah data (Word/PDF) atau paste tabel statistik ke chat SETELAH prompt ini.
+
+INSTRUKSI UNTUK AI — WAJIB DIPATUHI:
+1. ❌ JANGAN mulai menulis sampai saya kirim data
+2. ⏳ Tunggu saya kirim file/tabel data
+3. ✅ Setelah data diterima, baru mulai menulis Result Section
+4. 🔢 Gunakan HANYA data yang saya berikan
+5. 🤔 Jika ada data yang kurang, TANYAKAN ke saya — jangan mengisi sendiri
+
+Balas prompt ini dengan: "Baik, saya tunggu file data statistik Anda."
+
+═══════════════════════════════════
+STRUKTUR TEMPLATE
+═══════════════════════════════════
+{journal_structure}
+
+═══════════════════════════════════
+OUTPUT YANG DIBUTUHKAN (SETELAH DATA DITERIMA)
+═══════════════════════════════════
+
+═══════════════════════════════════
+==== VERSI 1: BAHASA INDONESIA ====
+═══════════════════════════════════
+
+A. STATISTIK DESKRIPTIF
+- Tabel deskriptif (N, min, max, mean, SD)
+- Tabel kategorisasi (rendah/sedang/tinggi) jika ada
+- Narasi interpretasi
+
+B. UJI ASUMSI (jika relevan)
+- Multikolinearitas (VIF)
+- Heteroskedastisitas (Breusch-Pagan)
+- Normalitas
+- Interpretasi masing-masing
+
+C. HASIL ANALISIS UTAMA
+Sesuaikan dengan jenis analisis ({analysis_type}):
+- Untuk PLS-SEM: outer model (loading, CR, AVE), inner model (path coefficient, t, p), R², f²
+- Untuk Regresi: tabel coefficients, ANOVA, R²
+- Untuk ANOVA: F, p, post-hoc
+- Sertakan TABEL untuk setiap hasil
+- Narasi interpretasi lengkap per tabel
+
+D. TABEL KORELASI ANTAR VARIABEL
+- Matriks korelasi
+- Interpretasi arah & kekuatan
+
+E. FIGURE
+- Figure 1: [deskripsi + caption]
+- Figure 2: [deskripsi + caption]
+(Gunakan placeholder [FIGURE X: deskripsi] untuk gambar yang harus dibuat di software)
+
+═══════════════════════════════════
+==== VERSI 2: BAHASA INGGRIS ====
+═══════════════════════════════════
+
+[Struktur sama, academic English]
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+1. JANGAN mengarang data — hanya pakai data yang saya berikan
+2. Setiap tabel harus ada narasi interpretasi
+3. Format angka: gunakan 2-3 desimal konsisten
+4. Sitasi hanya untuk alat analisis/jurnal referensi, bukan untuk hasil
+5. Untuk angka signifikan, sebutkan p-value dengan format (p = 0,012)
+6. Untuk path diagram/CFA, gunakan placeholder [FIGURE X] karena gambar harus dibuat di software
+7. Jika ada data yang tidak saya berikan, TANYAKAN — jangan mengisi sendiri
+
+Markdown rapi dengan tabel yang proper.`
+            },
+            discussion_section: {
+                id: 'discussion_section',
+                icon: '💬',
+                name: 'Discussion Section',
+                desc: 'Generate prompt untuk Discussion: temuan + perbandingan dengan literatur + limitasi + implikasi.',
+                color: '#ed8936',
+                use_for: '✅ Diskusi temuan mendalam\n✅ Perbandingan dengan penelitian terdahulu\n✅ Limitasi & future research\n✅ Implikasi teoretis & praktis',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Discussion 2000-3000 kata: interpretasi temuan, perbandingan dengan 10+ penelitian terdahulu, limitasi, implikasi untuk konselor & peneliti.' }
+                ],
+                contoh_hasil_note: 'Gambaran output Discussion:',
+                contoh_hasil: [
+                    { lbl: 'Ringkasan Temuan', txt: 'Recap singkat hipotesis & hasil.' },
+                    { lbl: 'Interpretasi per Hipotesis', txt: 'Setiap hipotesis dibahas: kenapa hasilnya demikian, dinamika psikologisnya.' },
+                    { lbl: 'Perbandingan', txt: 'Bandingkan dengan penelitian terdahulu: konsisten/berbeda, jelaskan kenapa.' },
+                    { lbl: 'Implikasi', txt: 'Teoretis (kontribusi ilmu) + praktis (rekomendasi untuk praktisi/pembuat kebijakan).' },
+                    { lbl: 'Limitasi', txt: 'Keterbatasan metodologis + saran future research.' }
+                ],
+                fields: [
+                    { key: 'article_title', label: 'Judul Artikel', type: 'text', placeholder: 'Judul penelitian' },
+                    { key: 'journal_template', label: 'Template Jurnal', type: 'select', options: 'journal', placeholder: '' },
+                    { key: 'research_findings', label: 'Ringkasan Temuan', type: 'textarea', placeholder: 'Ringkas temuan utama: hipotesis mana yang diterima/ditolak, arah hubungan' },
+                    { key: 'findings_detail', label: 'Detail Temuan (β, p, effect size)', type: 'textarea', placeholder: 'Contoh: Fatherless → GRC (β = -0,084, p = 0,015); Loneliness → GRC (β = 0,297, p = 0,012)' },
+                    { key: 'key_theories', label: 'Teori Kunci untuk Diskusi', type: 'textarea', placeholder: 'Teori yang akan dipakai untuk menjelaskan temuan' },
+                    { key: 'comparison_studies', label: 'Studi Pembanding (opsional)', type: 'textarea', placeholder: 'Nama peneliti & temuan yang bisa dibandingkan' },
+                    { key: 'theoretical_implication', label: 'Implikasi Teoretis', type: 'textarea', placeholder: 'Kontribusi ke ilmu' },
+                    { key: 'practical_implication', label: 'Implikasi Praktis', type: 'textarea', placeholder: 'Rekomendasi untuk praktisi' },
+                    { key: 'limitations', label: 'Limitasi Penelitian', type: 'textarea', placeholder: 'Keterbatasan metodologis' },
+                    { key: 'reference_mode', label: 'Pilihan Referensi', type: 'radio_reference', placeholder: '' },
+                    { key: 'reference_list', label: 'Daftar Referensi (Opsional)', type: 'textarea', placeholder: 'Paste daftar referensi jika mode = user_provided' }
+                ],
+                prompt_template: `Anda adalah penulis artikel jurnal akademik profesional. Tulis DISCUSSION SECTION lengkap untuk artikel berikut.
+
+INFORMASI:
+- Judul: {article_title}
+- Template Jurnal: {journal_template}
+- Ringkasan Temuan: {research_findings}
+- Detail Temuan: {findings_detail}
+- Teori Kunci: {key_theories}
+- Studi Pembanding: {comparison_studies}
+- Implikasi Teoretis: {theoretical_implication}
+- Implikasi Praktis: {practical_implication}
+- Limitasi: {limitations}
+
+═══════════════════════════════════
+📎 DATA STATISTIK — PENTING!
+═══════════════════════════════════
+Saya akan MELAMPIRKAN file data hasil olah data ke chat SETELAH prompt ini. Data dipakai untuk memastikan akurasi interpretasi.
+
+INSTRUKSI UNTUK AI:
+1. ❌ JANGAN mulai menulis sampai saya kirim data
+2. ⏳ Tunggu saya kirim file/tabel data
+3. ✅ Setelah data diterima, baru mulai menulis Discussion
+4. 🔢 Gunakan HANYA angka statistik yang saya berikan
+
+Balas prompt ini dengan: "Baik, saya tunggu file data statistik Anda."
+
+═══════════════════════════════════
+STRUKTUR TEMPLATE
+═══════════════════════════════════
+{journal_structure}
+
+═══════════════════════════════════
+INSTRUKSI REFERENSI
+═══════════════════════════════════
+{reference_instruction}
+
+═══════════════════════════════════
+OUTPUT YANG DIBUTUHKAN (SETELAH DATA DITERIMA)
+═══════════════════════════════════
+
+═══════════════════════════════════
+==== VERSI 1: BAHASA INDONESIA ====
+═══════════════════════════════════
+
+A. RINGKASAN TEMUAN
+Recap singkat hipotesis & hasil (1-2 paragraf).
+
+B. INTERPRETASI PER HIPOTESIS
+Untuk setiap hipotesis yang diuji:
+- Jelaskan hasil statistik
+- Berikan interpretasi psikologis (mengapa hasilnya demikian)
+- Kaitkan dengan teori ({key_theories})
+- Dinamika psikologis: apa yang terjadi pada subjek?
+
+C. PERBANDINGAN DENGAN PENELITIAN TERDAHULU
+Untuk setiap temuan:
+- Bandingkan dengan minimal 3 penelitian sebelumnya
+- Jika konsisten: perkuat temuan dengan literature
+- Jika berbeda: jelaskan faktor penyebab (budaya, konteks, sampel, dll)
+
+D. IMPLIKASI TEORETIS
+- Kontribusi terhadap pengembangan teori
+- Model yang diperkaya/diperbarui
+- Gap yang berhasil dijawab
+
+E. IMPLIKASI PRAKTIS
+- Untuk praktisi (psikolog, konselor, guru)
+- Untuk pembuat kebijakan
+- Untuk keluarga/masyarakat
+
+F. LIMITASI & FUTURE RESEARCH
+- Keterbatasan metodologis (sampling, instrumen, desain)
+- Keterbatasan generalisasi
+- Saran penelitian selanjutnya
+
+═══════════════════════════════════
+==== VERSI 2: BAHASA INGGRIS ====
+═══════════════════════════════════
+
+[Struktur sama, academic English]
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+1. Setiap klaim harus didukung referensi (minimal 10-15 referensi di discussion)
+2. Sitasi APA 7th
+3. Diskusi harus KRITIS, bukan cuma ringkasan
+4. Kaitkan dengan konteks Indonesia/Asia jika relevan
+5. Limitasi harus jujur tapi konstruktif
+6. Panjang ~20% dari artikel full (2000-3000 kata)
+
+Markdown rapi.`
+            },
+            conclusion_section: {
+                id: 'conclusion_section',
+                icon: '🎯',
+                name: 'Conclusion & Recommendation',
+                desc: 'Generate prompt untuk Conclusion + Saran/Rekomendasi (max 1 halaman).',
+                color: '#d69e2e',
+                use_for: '✅ Section conclusion ringkas\n✅ Saran untuk peneliti selanjutnya\n✅ Saran praktis untuk stakeholder',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Conclusion 300-500 kata: ringkas temuan, kontribusi baru, saran teoretis & praktis.' }
+                ],
+                contoh_hasil_note: 'Gambaran output Conclusion:',
+                contoh_hasil: [
+                    { lbl: 'Ringkasan Jawaban Tujuan', txt: 'Jawab setiap tujuan penelitian secara ringkas.' },
+                    { lbl: 'Kontribusi Baru', txt: 'Apa yang baru dari penelitian ini (untuk ilmu).' },
+                    { lbl: 'Saran Teoretis', txt: 'Untuk peneliti selanjutnya.' },
+                    { lbl: 'Saran Praktis', txt: 'Untuk praktisi & pembuat kebijakan.' },
+                    { lbl: 'Format', txt: 'Paragraf mengalir (bukan list), max 1 halaman.' }
+                ],
+                fields: [
+                    { key: 'article_title', label: 'Judul Artikel', type: 'text', placeholder: 'Judul penelitian' },
+                    { key: 'journal_template', label: 'Template Jurnal', type: 'select', options: 'journal', placeholder: '' },
+                    { key: 'research_purpose', label: 'Tujuan Penelitian', type: 'textarea', placeholder: 'Tujuan utama & tujuan spesifik' },
+                    { key: 'key_findings', label: 'Temuan Utama', type: 'textarea', placeholder: 'Ringkas temuan yang menjawab tujuan' },
+                    { key: 'new_contribution', label: 'Kontribusi Baru', type: 'textarea', placeholder: 'Apa yang baru untuk pengembangan ilmu?' },
+                    { key: 'practical_recommendations', label: 'Rekomendasi Praktis', type: 'textarea', placeholder: 'Rekomendasi untuk praktisi' },
+                    { key: 'future_research', label: 'Saran Penelitian Selanjutnya', type: 'textarea', placeholder: 'Arah penelitian berikutnya' }
+                ],
+                prompt_template: `Anda adalah penulis artikel jurnal akademik profesional. Tulis CONCLUSION & RECOMMENDATION untuk artikel berikut.
+
+INFORMASI:
+- Judul: {article_title}
+- Template Jurnal: {journal_template}
+- Tujuan Penelitian: {research_purpose}
+- Temuan Utama: {key_findings}
+- Kontribusi Baru: {new_contribution}
+- Rekomendasi Praktis: {practical_recommendations}
+- Saran Future Research: {future_research}
+
+═══════════════════════════════════
+📎 DATA STATISTIK — PENTING!
+═══════════════════════════════════
+Saya akan MELAMPIRKAN file data hasil olah data ke chat SETELAH prompt ini.
+
+INSTRUKSI UNTUK AI:
+1. ❌ JANGAN mulai menulis sampai saya kirim data
+2. ⏳ Tunggu saya kirim file/tabel data
+3. ✅ Setelah data diterima, baru mulai menulis Conclusion
+4. 🔢 Gunakan HANYA data yang saya berikan
+
+Balas prompt ini dengan: "Baik, saya tunggu file data statistik Anda."
+
+═══════════════════════════════════
+STRUKTUR TEMPLATE
+═══════════════════════════════════
+{journal_structure}
+
+═══════════════════════════════════
+OUTPUT YANG DIBUTUHKAN (SETELAH DATA DITERIMA)
+═══════════════════════════════════
+
+═══════════════════════════════════
+==== VERSI 1: BAHASA INDONESIA ====
+═══════════════════════════════════
+
+A. KESIMPULAN (~300-400 kata)
+Paragraf mengalir (BUKAN bullet points) yang mencakup:
+1. Jawaban atas setiap tujuan penelitian
+2. Temuan utama yang menjadi sintesis hasil
+3. Kontribusi baru penelitian (untuk ilmu psikologi/bidang terkait)
+4. Kesimpulan umum yang mengikat seluruh artikel
+
+B. SARAN/REKOMENDASI (~200-300 kata)
+1. Saran teoretis untuk peneliti selanjutnya
+2. Saran praktis untuk praktisi (psikolog, konselor, guru, dsb)
+3. Saran kebijakan (jika relevan)
+
+═══════════════════════════════════
+==== VERSI 2: BAHASA INGGRIS ====
+═══════════════════════════════════
+
+[Struktur sama, academic English]
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+1. Kesimpulan HARUS dalam bentuk paragraf (bukan list bernomor)
+2. Jangan repetitif dengan Discussion — fokus pada SINTESIS
+3. Maksimal 1 halaman total
+4. Singkat, padat, jelas
+5. Soroti hal-hal BARU yang berkontribusi ke pengembangan ilmu
+6. Saran harus actionable, bukan normatif
+
+Markdown rapi.`
+            },
+            front_back_matter: {
+                id: 'front_back_matter',
+                icon: '📋',
+                name: 'Front & Back Matter',
+                desc: 'Generate prompt untuk Funding, Ethical Statement, Informed Consent, Acknowledgment, Conflicts, Data Availability.',
+                color: '#718096',
+                use_for: '✅ Section etika publikasi\n✅ Pernyataan funding & conflict of interest\n✅ Informasi data availability\n✅ Ucapan terima kasih',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Section lengkap: Funding (dari hibah X), Ethical Statement (Declaration of Helsinki), Informed Consent (dari semua partisipan), Acknowledgment, Conflicts (tidak ada), Data Availability (via Zenodo).' }
+                ],
+                contoh_hasil_note: 'Gambaran output Front & Back Matter:',
+                contoh_hasil: [
+                    { lbl: 'Funding', txt: 'Info sumber dana penelitian (hibah/institusi/mandiri).' },
+                    { lbl: 'Ethical Statement', txt: 'Pernyataan kepatuhan etika (Declaration of Helsinki, komite etik universitas).' },
+                    { lbl: 'Informed Consent', txt: 'Pernyataan persetujuan partisipan.' },
+                    { lbl: 'Acknowledgment', txt: 'Ucapan terima kasih (partisipan, pembimbing, dsb).' },
+                    { lbl: 'Conflicts of Interest', txt: 'Pernyataan tidak ada konflik kepentingan.' },
+                    { lbl: 'Data Availability', txt: 'Link/akses data (Zenodo, OSF, dsb).' }
+                ],
+                fields: [
+                    { key: 'article_title', label: 'Judul Artikel', type: 'text', placeholder: 'Judul penelitian' },
+                    { key: 'journal_template', label: 'Template Jurnal', type: 'select', options: 'journal', placeholder: '' },
+                    { key: 'funding_source', label: 'Sumber Dana', type: 'text', placeholder: 'Contoh: Hibah DRTPM 2024 / Mandiri / Universitas X' },
+                    { key: 'ethics_approval', label: 'Persetujuan Etik', type: 'text', placeholder: 'Contoh: Komite Etik Universitas X, No. 123/KE/2024' },
+                    { key: 'consent_info', label: 'Info Informed Consent', type: 'text', placeholder: 'Contoh: Diperoleh dari semua partisipan secara tertulis' },
+                    { key: 'acknowledgment_targets', label: 'Pihak yang Perlu Diucapkan Terima Kasih', type: 'textarea', placeholder: 'Contoh: 220 responden, pembimbing, kolega yang memberi feedback' },
+                    { key: 'conflicts', label: 'Konflik Kepentingan', type: 'text', placeholder: 'Contoh: Tidak ada / Penulis X adalah konsultan di Y' },
+                    { key: 'data_repository', label: 'Repositori Data', type: 'text', placeholder: 'Contoh: Zenodo / OSF / Mendeley Data / Tidak tersedia publik' }
+                ],
+                prompt_template: `Anda adalah editor jurnal akademik profesional. Tulis FRONT & BACK MATTER untuk artikel berikut.
+
+INFORMASI:
+- Judul: {article_title}
+- Template Jurnal: {journal_template}
+- Sumber Dana: {funding_source}
+- Persetujuan Etik: {ethics_approval}
+- Informed Consent: {consent_info}
+- Acknowledgment: {acknowledgment_targets}
+- Konflik Kepentingan: {conflicts}
+- Repositori Data: {data_repository}
+
+═══════════════════════════════════
+STRUKTUR TEMPLATE
+═══════════════════════════════════
+{journal_structure}
+
+═══════════════════════════════════
+OUTPUT YANG DIBUTUHKAN (2 BAHASA)
+═══════════════════════════════════
+
+═══════════════════════════════════
+==== VERSI 1: BAHASA INDONESIA ====
+═══════════════════════════════════
+
+**Funding**
+Pernyataan sumber dana (atau "Penelitian ini tidak didanai oleh institusi/lembaga mana pun.")
+
+**Ethical Statement**
+Pernyataan kepatuhan etika (Declaration of Helsinki, persetujuan komite etik).
+
+**Informed Consent Statement**
+Pernyataan bahwa informed consent diperoleh dari semua partisipan.
+
+**Acknowledgments**
+Ucapan terima kasih (partisipan, pembimbing, kolega, institusi).
+
+**Conflicts of Interest**
+Pernyataan konflik kepentingan (atau "tidak ada").
+
+**Data Availability**
+Pernyataan ketersediaan data (link repositori atau keterangan).
+
+═══════════════════════════════════
+==== VERSI 2: BAHASA INGGRIS ====
+═══════════════════════════════════
+
+[Struktur sama dengan format standar internasional]
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+1. Format ringkas, profesional, langsung pada inti
+2. Setiap section 1-3 kalimat saja
+3. Ikuti format template {journal_template}
+4. Gunakan bahasa formal akademik
+5. Pastikan konsisten antara versi Indonesia & Inggris
+
+Markdown rapi.`
+            },
+            references_apa: {
+                id: 'references_apa',
+                icon: '📖',
+                name: 'References (APA 7th)',
+                desc: 'Generate prompt untuk References APA 7th Edition berdasarkan referensi yang sudah ada.',
+                color: '#805ad5',
+                use_for: '✅ Daftar pustaka APA 7th\n✅ Rapi-kan referensi yang sudah ada\n✅ Generate referensi dari naskah\n✅ Verifikasi format sitasi',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Daftar pustaka lengkap APA 7th dari 20-30 referensi yang disusun alfabetis, dengan format standar (Author, A. A. (Year). Title. Publisher. DOI).' }
+                ],
+                contoh_hasil_note: 'Gambaran output References APA 7th:',
+                contoh_hasil: [
+                    { lbl: 'Format Standar', txt: 'Setiap referensi mengikuti format APA 7th: Author, A. A., & Author, B. B. (Year). Title of work. Source. DOI' },
+                    { lbl: 'Urutan Alfabetis', txt: 'Disusun berdasarkan nama belakang penulis pertama.' },
+                    { lbl: 'Jenis Sumber', txt: 'Jurnal, buku, bab buku, prosiding, website — semua formatnya benar.' },
+                    { lbl: 'Total', txt: '20-40 referensi, sesuai kebutuhan artikel.' }
+                ],
+                fields: [
+                    { key: 'article_title', label: 'Judul Artikel', type: 'text', placeholder: 'Judul penelitian' },
+                    { key: 'journal_template', label: 'Template Jurnal', type: 'select', options: 'journal', placeholder: '' },
+                    { key: 'references_raw', label: 'Daftar Referensi Mentah', type: 'textarea', placeholder: 'Paste daftar referensi Anda (format bebas). AI akan rapi-kan sesuai APA 7th. Contoh:\n- ONeil 1981 Gender role conflict\n- Peplau & Perlman 1982 Loneliness\n- Baron & Kenny 1986 Mediation' },
+                    { key: 'citation_style_notes', label: 'Catatan Sitasi Khusus', type: 'text', placeholder: 'Contoh: 30-40 referensi, minimal 60% dari 5 tahun terakhir' },
+                    { key: 'topic_keywords', label: 'Kata Kunci Topik', type: 'textarea', placeholder: 'Kata kunci untuk memverifikasi relevansi referensi' }
+                ],
+                prompt_template: `Anda adalah editor jurnal akademik yang ahli dalam format APA 7th Edition. Rapikan daftar referensi berikut sesuai standar APA 7th.
+
+INFORMASI:
+- Judul Artikel: {article_title}
+- Template Jurnal: {journal_template}
+- Kata Kunci Topik: {topic_keywords}
+- Catatan Sitasi: {citation_style_notes}
+
+DAFTAR REFERENSI MENTAH:
+═══════════════════════════════════
+{references_raw}
+═══════════════════════════════════
+
+OUTPUT YANG DIBUTUHKAN:
+
+═══════════════════════════════════
+==== VERSI 1: REFERENCES (APA 7th) ====
+═══════════════════════════════════
+
+Rapikan setiap referensi sesuai APA 7th. Format contoh:
+
+**Jurnal:**
+Author, A. A., & Author, B. B. (Year). Title of article. *Journal Name*, *Volume*(Issue), page-page. https://doi.org/xxxx
+
+**Buku:**
+Author, A. A. (Year). *Title of work: Capital letter also for subtitle*. Publisher.
+
+**Bab Buku:**
+Author, A. A. (Year). Title of chapter. In E. E. Editor (Ed.), *Title of book* (pp. xx-xx). Publisher.
+
+**Prosiding:**
+Author, A. A. (Year, Month). Title of paper. In E. E. Editor (Ed.), *Proceedings of Conference* (pp. xx-xx). Publisher.
+
+**Disertasi:**
+Author, A. A. (Year). *Title of dissertation* [Unpublished doctoral dissertation]. University Name.
+
+**Website:**
+Author, A. A. (Year, Month Day). *Title of page*. Site Name. URL
+
+Urutkan ALFABETIS berdasarkan nama belakang penulis pertama.
+
+═══════════════════════════════════
+==== VERSI 2: IN-TEXT CITATIONS CHEAT SHEET ====
+═══════════════════════════════════
+
+Beri contoh format sitasi dalam teks APA 7th:
+- 1 penulis: (Author, 2020)
+- 2 penulis: (Author & Author, 2020)
+- 3+ penulis: (Author et al., 2020)
+- Narrative: Author (2020) menjelaskan...
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+1. Setiap referensi WAJIB dirapikan sesuai APA 7th
+2. Jangan mengarang referensi — hanya rapikan yang saya berikan
+3. Jika ada referensi yang tidak lengkap, tandai dengan [DATA TIDAK LENGKAP: xxx]
+4. Berikan catatan jika ada referensi yang formatnya tidak biasa
+5. Urutan alfabetis ketat
+6. DOI harus disertakan untuk jurnal (jika ada)
+
+Markdown rapi.`
+            },
+            response_reviewer: {
+                id: 'response_reviewer',
+                icon: '✉️',
+                name: 'Response to Reviewer',
+                desc: 'Generate prompt untuk menjawab komentar reviewer jurnal (revisi minor/mayor).',
+                color: '#e53e3e',
+                use_for: '✅ Revisi minor\n✅ Revisi mayor\n✅ Response letter ke editor\n✅ Track changes review',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Response letter profesional: setiap komentar reviewer dijawab dengan (1) acknowledgement, (2) perubahan yang dilakukan, (3) lokasi perubahan di naskah.' }
+                ],
+                contoh_hasil_note: 'Gambaran output Response to Reviewer:',
+                contoh_hasil: [
+                    { lbl: 'Format Standar', txt: 'Komentar Reviewer → Acknowledgement → Perubahan → Lokasi di naskah.' },
+                    { lbl: 'Tone', txt: 'Profesional, sopan, tidak defensif.' },
+                    { lbl: 'Sitasi', txt: 'Kutip perubahan aktual (sebelum/sesudah).' },
+                    { lbl: 'Format Output', txt: 'Markdown dengan tabel per komentar.' }
+                ],
+                fields: [
+                    { key: 'article_title', label: 'Judul Artikel', type: 'text', placeholder: 'Judul penelitian' },
+                    { key: 'journal_name', label: 'Nama Jurnal', type: 'text', placeholder: 'Contoh: JEHCP' },
+                    { key: 'reviewer_comments', label: 'Komentar Reviewer', type: 'textarea', placeholder: 'Paste semua komentar reviewer di sini. Format: Reviewer 1: komentar... Reviewer 2: komentar...' },
+                    { key: 'revision_made', label: 'Revisi yang Sudah Dilakukan', type: 'textarea', placeholder: 'Untuk setiap komentar, jelaskan revisi yang sudah dilakukan' },
+                    { key: 'unable_revisions', label: 'Komentar yang Tidak Bisa Dipenuhi (opsional)', type: 'textarea', placeholder: 'Jika ada komentar yang tidak bisa dipenuhi, jelaskan alasannya' },
+                    { key: 'tone', label: 'Tone', type: 'text', placeholder: 'Contoh: Sopan & profesional / langsung / humble' }
+                ],
+                prompt_template: `Anda adalah penulis akademik yang berpengalaman menjawab reviewer jurnal. Bantu saya menulis RESPONSE TO REVIEWER LETTER profesional.
+
+INFORMASI:
+- Judul Artikel: {article_title}
+- Nama Jurnal: {journal_name}
+- Tone: {tone}
+
+KOMENTAR REVIEWER:
+═══════════════════════════════════
+{reviewer_comments}
+═══════════════════════════════════
+
+REVISI YANG SUDAH DILAKUKAN:
+═══════════════════════════════════
+{revision_made}
+═══════════════════════════════════
+
+KOMENTAR YANG TIDAK BISA DIPENUHI:
+═══════════════════════════════════
+{unable_revisions}
+═══════════════════════════════════
+
+OUTPUT YANG DIBUTUHKAN:
+
+═══════════════════════════════════
+==== RESPONSE LETTER ====
+═══════════════════════════════════
+
+Format response letter profesional:
+
+**Kepada Editor,**
+[Opening: terima kasih atas review, konfirmasi revisi]
+
+**Response to Reviewer 1:**
+
+Komentar 1.1: "[kutip komentar]"
+Response: [Acknowledgement] + [Perubahan yang dilakukan] + [Lokasi di naskah: "Hal. X, para Y"]
+
+Komentar 1.2: "..."
+Response: ...
+
+**Response to Reviewer 2:**
+[sama]
+
+**Catatan untuk Editor:**
+[jika ada catatan khusus]
+
+**Hormat saya,**
+[Nama penulis]
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+1. Setiap komentar reviewer harus dijawab
+2. Format: Komentar → Response → Lokasi perubahan
+3. Tone sopan, tidak defensif, profesional
+4. Jika tidak setuju, jelaskan dengan argumen ilmiah + referensi
+5. Jika tidak bisa memenuhi, jelaskan alasan dengan jujur
+6. Sertakan "sebelum → sesudah" untuk perubahan besar
+7. Letter ditulis dalam BAHASA INGGRIS (standar untuk submission internasional)
+
+Format markdown rapi.`
+            }
+        };
+
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'ai_journal_writer';
+        const USERS_TABLE = 'users';
+        const SECRET = 'admin';
+        const STORAGE_KEY = 'ai_journal_writer_user';
+
+        const ARTICLE_KEYS = Object.keys(ARTICLE_TYPES);
+
+        // ==================== STATE ====================
+        let allData = [];
+        let quillEditor = null;
+        let addAiEditor = null;
+        let viewData = null;
+        let currentPrompt = '';
+        let currentHistorySubTab = 'all';
+        let currentUser = null;
+        let isAdmin = false;
+
+        const COLUMNS = {
+            article_type: 'x_01',
+            title: 'x_02',
+            prompt: 'x_03',
+            field_values: 'x_04',
+            ai_source: 'x_05',
+            result: 'x_06',
+            created_by: 'x_07',
+            status: 'x_08',
+            notes: 'x_09',
+            created_date: 'x_10'
+        };
+
+        // ==================== LOGIN ====================
+        function getStoredUser() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    if (parsed.username && parsed.timestamp) {
+                        const days = (Date.now() - parsed.timestamp) / (1000 * 60 * 60 * 24);
+                        if (days < 7) return parsed.username;
+                    }
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function saveUserToStorage(username, remember) {
+            const data = JSON.stringify({ username, timestamp: Date.now() });
+            if (remember) localStorage.setItem(STORAGE_KEY, data);
+            else sessionStorage.setItem(STORAGE_KEY, data);
+        }
+
+        function clearUserStorage() {
+            localStorage.removeItem(STORAGE_KEY);
+            sessionStorage.removeItem(STORAGE_KEY);
+        }
+
+        function checkAutoLogin() {
+            const username = getStoredUser();
+            if (username) {
+                currentUser = username;
+                isAdmin = (username === 'admin');
+                showMainContent();
+                return true;
+            }
+            return false;
+        }
+
+        function showLogin() {
+            document.getElementById('loginOverlay').classList.add('active');
+            document.getElementById('mainContent').classList.remove('visible');
+        }
+
+        function showMainContent() {
+            document.getElementById('loginOverlay').classList.remove('active');
+            document.getElementById('mainContent').classList.add('visible');
+            document.getElementById('currentUser').textContent = currentUser;
+            const roleBadge = document.getElementById('userRole');
+            if (isAdmin) { roleBadge.textContent = '👑 Admin'; roleBadge.className = 'user-role admin'; }
+            else { roleBadge.textContent = '👤 User'; roleBadge.className = 'user-role user'; }
+            document.getElementById('createdBy').value = currentUser;
+            refreshData();
+        }
+
+        async function doLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const remember = document.getElementById('loginRemember').checked;
+            if (!username || !password) { showLoginError('Username dan password wajib diisi!'); return; }
+            const btn = document.getElementById('loginBtn');
+            const errorEl = document.getElementById('loginError');
+            const loadingEl = document.getElementById('loginLoading');
+            btn.disabled = true;
+            loadingEl.classList.add('show');
+            errorEl.classList.remove('show');
+            try {
+                const response = await fetch(`${API_URL}?table=${USERS_TABLE}`, {
+                    headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': USERS_TABLE, 'X-Role': 'admin' }
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const user = result.data.find(u => u.x_01 === username && u.x_02 === password);
+                    if (user) {
+                        currentUser = username;
+                        isAdmin = (username === 'admin');
+                        saveUserToStorage(username, remember);
+                        showMainContent();
+                        showToast('✅ Login berhasil! Selamat datang, ' + username, 'success');
+                    } else showLoginError('❌ Username atau password salah!');
+                } else showLoginError('❌ Gagal mengambil data user');
+            } catch (e) {
+                showLoginError('❌ Gagal login: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                loadingEl.classList.remove('show');
+            }
+        }
+
+        function showLoginError(message) {
+            const errorEl = document.getElementById('loginError');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+        }
+
+        function doLogout() {
+            if (!confirm('Yakin ingin logout?')) return;
+            clearUserStorage();
+            currentUser = null;
+            isAdmin = false;
+            showLogin();
+            showToast('👋 Logout berhasil', 'info');
+        }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!checkAutoLogin()) showLogin();
+            document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+            document.getElementById('loginUsername').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPassword').focus(); });
+
+            quillEditor = new Quill('#resultEditor', {
+                theme: 'snow', placeholder: 'Paste hasil AI di sini...',
+                modules: { toolbar: [[{ 'header': [1,2,3,4,5,6,false] }], ['bold','italic','underline','strike'], [{ 'list': 'ordered'},{ 'list': 'bullet' }], ['blockquote','code-block'], ['link','image'], ['clean']] }
+            });
+            addAiEditor = new Quill('#addAiEditor', {
+                theme: 'snow', placeholder: 'Paste hasil AI di sini...',
+                modules: { toolbar: [[{ 'header': [1,2,3,4,5,6,false] }], ['bold','italic','underline','strike'], [{ 'list': 'ordered'},{ 'list': 'bullet' }], ['blockquote','code-block'], ['link','image'], ['clean']] }
+            });
+
+            renderTools();
+            populateToolSelect();
+            updateFormFields();
+            if (currentUser) document.getElementById('createdBy').value = currentUser;
+        });
+
+        // ==================== API ====================
+        function getHeaders() {
+            return { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': TABLE, 'X-Role': 'admin' };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            const response = await fetch(url, { ...options, headers: { ...getHeaders(), ...(options.headers || {}) } });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || err.message || `HTTP ${response.status}`);
+            }
+            return await response.json();
+        }
+
+        async function fetchData() {
+            try {
+                const result = await apiFetch('');
+                if (result.success && result.data) {
+                    let data = result.data.map(row => parseRow(row));
+                    if (!isAdmin && currentUser) data = data.filter(d => d.created_by === currentUser);
+                    allData = data;
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            return {
+                id_x: row.id_x,
+                article_type: row.x_01 || '',
+                title: row.x_02 || '',
+                prompt: row.x_03 || '',
+                field_values: safeParseJSON(row.x_04),
+                ai_source: row.x_05 || '',
+                result: row.x_06 || '',
+                created_by: row.x_07 || '',
+                status: row.x_08 || 'published',
+                notes: row.x_09 || '',
+                created_date: row.x_10 || '',
+                _raw: row
+            };
+        }
+
+        function safeParseJSON(str) { if (!str) return {}; try { return JSON.parse(str); } catch (e) { return {}; } }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                if (key === 'field_values') row[col] = JSON.stringify(data[key] || {});
+                else row[col] = data[key] || '';
+            }
+            return row;
+        }
+
+        async function createResult(data) {
+            const row = buildRow(data);
+            return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function deleteResultApi(id) {
+            return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== RENDER ====================
+        function renderTools() {
+            const container = document.getElementById('toolsGrid');
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            let filtered = ARTICLE_KEYS;
+            if (search) filtered = filtered.filter(key => ARTICLE_TYPES[key].name.toLowerCase().includes(search) || ARTICLE_TYPES[key].desc.toLowerCase().includes(search));
+
+            container.innerHTML = filtered.map(key => {
+                const type = ARTICLE_TYPES[key];
+                const count = allData.filter(d => d.article_type === type.id).length;
+                return `
+                    <div class="tool-card" style="border-top:4px solid ${type.color};">
+                        <span class="tool-icon">${type.icon}</span>
+                        <div class="tool-name">${type.name}</div>
+                        <div class="tool-desc">${type.desc}</div>
+                        <div style="font-size:11px;color:#718096;margin-bottom:8px;">${count} proyek</div>
+                        <div class="tool-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openInfoModal('${key}')">📖 Info</button>
+                            <button class="btn btn-primary btn-xs" onclick="useTool('${key}')">✏️ Create</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('tab1Badge').textContent = filtered.length;
+        }
+
+        function populateToolSelect() {
+            const select = document.getElementById('selectedTool');
+            select.innerHTML = ARTICLE_KEYS.map(key => {
+                const type = ARTICLE_TYPES[key];
+                return `<option value="${key}">${type.icon} ${type.name}</option>`;
+            }).join('');
+        }
+
+        function updateFormFields() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = ARTICLE_TYPES[toolKey];
+            if (!type) return;
+            const container = document.getElementById('dynamicFields');
+            const values = getCurrentFieldValues();
+
+            let html = `<div class="section-label">📝 ${type.icon} ${type.name} - Form</div>`;
+            type.fields.forEach(field => {
+                const fieldId = `field_${field.key}`;
+                const val = values[field.key] || '';
+                const checkId = `ai_check_${field.key}`;
+
+                html += `<div class="field-header">
+                    <label for="${fieldId}">${field.label}</label>
+                    <div class="field-ai-check">
+                        <input type="checkbox" id="${checkId}" onchange="toggleFieldAi('${field.key}', this.checked)">
+                        <span>🤖 AI Cari</span>
+                    </div>
+                </div>`;
+
+                if (field.type === 'select' && field.options === 'journal') {
+                    html += `<div class="form-group"><select id="${fieldId}">`;
+                    Object.values(JOURNAL_TEMPLATES).forEach(t => {
+                        const sel = (values[field.key] === t.name || val === t.name) ? 'selected' : '';
+                        html += `<option value="${t.name}" ${sel}>${t.name}</option>`;
+                    });
+                    html += `</select></div>`;
+                } else if (field.type === 'radio_reference') {
+                    html += `<div class="reference-options" id="refOptions_${field.key}">`;
+                    Object.values(REFERENCE_MODES).forEach(mode => {
+                        const checked = (val === mode.id || (!val && mode.id === 'user_provided')) ? 'checked' : '';
+                        const selectedClass = checked ? 'selected' : '';
+                        html += `<label class="${selectedClass}" onclick="selectReference('${field.key}', '${mode.id}')">
+                            <input type="radio" name="refmode_${field.key}" value="${mode.id}" ${checked} onchange="selectReference('${field.key}', '${mode.id}')">
+                            <div>
+                                <span class="ref-title">${mode.name}</span>
+                                <span class="ref-desc">${mode.desc}</span>
+                                <div class="ref-warn">${mode.warn}</div>
+                            </div>
+                        </label>`;
+                    });
+                    html += `</div>`;
+                } else if (field.type === 'textarea') {
+                    html += `<div class="form-group"><textarea id="${fieldId}" placeholder="${field.placeholder}" rows="3">${escapeHtml(val)}</textarea></div>`;
+                } else {
+                    html += `<div class="form-group"><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function selectReference(fieldKey, modeId) {
+            const container = document.getElementById(`refOptions_${fieldKey}`);
+            if (!container) return;
+            container.querySelectorAll('label').forEach(lbl => {
+                const radio = lbl.querySelector('input[type="radio"]');
+                lbl.classList.toggle('selected', radio.value === modeId);
+            });
+        }
+
+        function toggleFieldAi(fieldKey, checked) {
+            const inputEl = document.getElementById(`field_${fieldKey}`);
+            if (!inputEl) return;
+            if (inputEl.tagName === 'SELECT') return;
+
+            if (checked) {
+                inputEl.dataset.originalValue = inputEl.value;
+                inputEl.value = '🤖 AI akan mencari yang cocok';
+                inputEl.readOnly = true;
+                inputEl.style.background = '#f0fff4';
+                inputEl.style.color = '#276749';
+                inputEl.style.fontWeight = '600';
+            } else {
+                inputEl.value = inputEl.dataset.originalValue || '';
+                inputEl.readOnly = false;
+                inputEl.style.background = '';
+                inputEl.style.color = '';
+                inputEl.style.fontWeight = '';
+            }
+        }
+
+        function getCurrentFieldValues() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = ARTICLE_TYPES[toolKey];
+            if (!type) return {};
+            const values = {};
+            type.fields.forEach(field => {
+                if (field.type === 'radio_reference') {
+                    const radioChecked = document.querySelector(`input[name="refmode_${field.key}"]:checked`);
+                    values[field.key] = radioChecked ? radioChecked.value : 'user_provided';
+                } else {
+                    const el = document.getElementById(`field_${field.key}`);
+                    if (el) {
+                        if (el.readOnly && el.value === '🤖 AI akan mencari yang cocok') {
+                            values[field.key] = '';
+                        } else {
+                            values[field.key] = el.value;
+                        }
+                    }
+                }
+            });
+            return values;
+        }
+
+        function setFieldValues(values) {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = ARTICLE_TYPES[toolKey];
+            if (!type) return;
+            type.fields.forEach(field => {
+                if (field.type === 'radio_reference') {
+                    const radio = document.querySelector(`input[name="refmode_${field.key}"][value="${values[field.key]}"]`);
+                    if (radio) {
+                        radio.checked = true;
+                        selectReference(field.key, values[field.key]);
+                    }
+                } else {
+                    const el = document.getElementById(`field_${field.key}`);
+                    if (el && values[field.key] !== undefined) el.value = values[field.key] || '';
+                }
+            });
+        }
+
+        function generatePrompt() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = ARTICLE_TYPES[toolKey];
+            if (!type) return;
+
+            const values = getCurrentFieldValues();
+
+            let allFilled = true;
+            let emptyFields = [];
+            const optionalFields = ['reference_list', 'additional_notes', 'comparison_studies', 'unable_revisions', 'keywords_draft', 'figures'];
+            type.fields.forEach(field => {
+                if (field.type === 'radio_reference') return;
+                const checkEl = document.getElementById(`ai_check_${field.key}`);
+                const isAiChecked = checkEl ? checkEl.checked : false;
+                if (optionalFields.includes(field.key)) return;
+                if (!isAiChecked && (!values[field.key] || !values[field.key].trim())) {
+                    allFilled = false;
+                    emptyFields.push(field.label);
+                }
+            });
+
+            if (!allFilled) {
+                showToast('❌ Field berikut wajib diisi: ' + emptyFields.join(', '), 'error');
+                return;
+            }
+
+            const template = Object.values(JOURNAL_TEMPLATES).find(t => t.name === values.journal_template) || JOURNAL_TEMPLATES.jehcp;
+            const refMode = REFERENCE_MODES[values.reference_mode] || REFERENCE_MODES.user_provided;
+
+            let referenceInstruction = '';
+            if (refMode.id === 'ai_search') {
+                referenceInstruction = `MODE: AI CARI SENDIRI
+Cari referensi dari pengetahuan Anda. ⚠️ WAJIB: Prioritaskan referensi yang Anda YAKIN ada. Jika tidak yakin, gunakan placeholder [REF: topik_tahun]. JANGAN mengarang detail (volume, halaman, DOI) yang tidak Anda ketahui.`;
+            } else if (refMode.id === 'user_provided') {
+                referenceInstruction = `MODE: USER MENYEDIAKAN DAFTAR REFERENSI
+Gunakan HANYA referensi dari daftar di bawah ini. JANGAN mengarang referensi baru.`;
+                if (values.reference_list && values.reference_list.trim()) {
+                    referenceInstruction += `\n\nDAFTAR REFERENSI YANG TERSEDIA:\n${values.reference_list}`;
+                } else {
+                    referenceInstruction += `\n\n[User akan mengirim daftar referensi setelah prompt ini.]`;
+                }
+            } else if (refMode.id === 'placeholder') {
+                referenceInstruction = `MODE: PLACEHOLDER
+Untuk setiap sitasi, gunakan format placeholder: [REF: topik_tahun] contoh [REF: fatherless_2020]. JANGAN mengarang referensi. User akan mengisi referensi manual setelahnya.`;
+            }
+
+            let prompt = type.prompt_template;
+            let hasAiField = false;
+
+            type.fields.forEach(field => {
+                const checkEl = document.getElementById(`ai_check_${field.key}`);
+                const isAiChecked = checkEl ? checkEl.checked : false;
+                if (field.type === 'radio_reference') return;
+
+                if (isAiChecked) {
+                    hasAiField = true;
+                    prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), `[AI CARI YANG COCOK UNTUK: ${field.label}]`);
+                } else {
+                    prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || '');
+                }
+            });
+
+            prompt = prompt.replace(/{journal_structure}/g, template.structure);
+            prompt = prompt.replace(/{journal_notes}/g, template.notes);
+            prompt = prompt.replace(/{reference_instruction}/g, referenceInstruction);
+
+            if (hasAiField) {
+                prompt = `INSTRUKSI KHUSUS: Untuk beberapa field di bawah ini, penulis meminta Anda (AI) untuk mencari dan menentukan sendiri elemen yang cocok (ditandai dengan [AI CARI YANG COCOK UNTUK: ...]). Silakan pilih elemen yang paling relevan.\n\n` + prompt;
+            }
+
+            currentPrompt = prompt;
+            document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+            addCopyButtonToPrompt('promptPreview');
+
+            const titleInput = document.getElementById('resultTitle');
+            if (!titleInput.value) {
+                titleInput.value = `${type.name} - ${values.article_title || values.title || ''}`;
+            }
+            showToast('✅ Prompt berhasil digenerate!', 'success');
+
+            // Tampilkan modal reminder upload data (Skenario B)
+            // Kecuali untuk model yang tidak butuh data statistik
+            if (toolKey !== 'response_reviewer' && toolKey !== 'references_apa' && toolKey !== 'front_back_matter') {
+                setTimeout(() => {
+                    document.getElementById('uploadReminderModal').classList.add('active');
+                }, 500);
+            }
+        }
+
+        function copyPromptAndClose() {
+            const container = document.getElementById('promptPreview');
+            const text = container.textContent.replace('📋 Copy', '').trim();
+            if (text && !text.includes('Pilih model')) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('✅ Prompt disalin! Paste ke AI sekarang.', 'success');
+                    closeModal('uploadReminderModal');
+                }).catch(() => {
+                    const ta = document.createElement('textarea');
+                    ta.value = text; document.body.appendChild(ta); ta.select();
+                    document.execCommand('copy'); document.body.removeChild(ta);
+                    showToast('✅ Prompt disalin!', 'success');
+                    closeModal('uploadReminderModal');
+                });
+            } else {
+                closeModal('uploadReminderModal');
+            }
+        }
+
+        function addCopyButtonToPrompt(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const existing = container.querySelector('.copy-prompt-btn');
+            if (existing) existing.remove();
+            const btn = document.createElement('button');
+            btn.className = 'copy-prompt-btn';
+            btn.textContent = '📋 Copy';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const text = container.textContent.replace('📋 Copy', '').trim();
+                if (!text || text.includes('Pilih model')) { showToast('❌ Tidak ada prompt', 'error'); return; }
+                navigator.clipboard.writeText(text).then(() => showToast('✅ Prompt disalin!', 'success')).catch(() => {
+                    const ta = document.createElement('textarea');
+                    ta.value = text; document.body.appendChild(ta); ta.select();
+                    document.execCommand('copy'); document.body.removeChild(ta);
+                    showToast('✅ Prompt disalin!', 'success');
+                });
+            };
+            container.style.position = 'relative';
+            container.appendChild(btn);
+        }
+
+        async function saveResult() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const title = document.getElementById('resultTitle').value.trim();
+            const createdBy = document.getElementById('createdBy').value.trim() || currentUser || 'User';
+            const prompt = document.getElementById('promptPreview').textContent.replace('📋 Copy', '').trim();
+            if (!title) { showToast('❌ Judul proyek wajib diisi', 'error'); return; }
+            if (!prompt || prompt.includes('Pilih model')) { showToast('❌ Generate prompt dulu', 'error'); return; }
+            const resultHtml = quillEditor.root.innerHTML;
+            if (!resultHtml || resultHtml === '<p><br></p>') { showToast('❌ Paste hasil AI dulu', 'error'); return; }
+            const values = getCurrentFieldValues();
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                article_type: toolKey, title, prompt, field_values: values,
+                ai_source: document.getElementById('aiSource').value,
+                result: resultHtml, created_by: createdBy,
+                status: 'published', notes: '', created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Artikel berhasil disimpan!', 'success');
+                await refreshData();
+                clearForm();
+                switchMainTab('tab3');
+            } catch (e) { showToast('❌ Gagal menyimpan: ' + e.message, 'error'); }
+        }
+
+        function clearForm() {
+            quillEditor.root.innerHTML = '';
+            document.getElementById('resultTitle').value = '';
+            document.getElementById('promptPreview').innerHTML = '<span class="placeholder">Pilih model dan isi form untuk menghasilkan prompt...</span>';
+            currentPrompt = '';
+            document.querySelectorAll('.field-ai-check input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+        }
+
+        function useTool(toolKey) {
+            document.getElementById('selectedTool').value = toolKey;
+            updateFormFields();
+            switchMainTab('tab2');
+            clearForm();
+            document.getElementById('createdBy').value = currentUser || '';
+            showToast(`✏️ Beralih ke ${ARTICLE_TYPES[toolKey].name}`, 'info');
+        }
+
+        // ==================== HISTORY ====================
+        function switchHistorySubTab(subtab) {
+            currentHistorySubTab = subtab;
+            document.querySelectorAll('.history-sub-tab').forEach(el => el.classList.toggle('active', el.dataset.subtab === subtab));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            const filterTool = document.getElementById('historyFilterTool').value;
+            const search = document.getElementById('historySearch').value.toLowerCase().trim();
+            let filtered = allData;
+            if (currentHistorySubTab === 'today') {
+                const today = new Date();
+                const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+                filtered = filtered.filter(d => d.created_date === todayStr);
+            }
+            if (filterTool !== 'all') filtered = filtered.filter(d => d.article_type === filterTool);
+            if (search) filtered = filtered.filter(d => d.title.toLowerCase().includes(search) || d.created_by.toLowerCase().includes(search) || d.prompt.toLowerCase().includes(search));
+
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            document.getElementById('subAll').textContent = allData.length;
+            document.getElementById('subToday').textContent = allData.filter(d => d.created_date === todayStr).length;
+            document.getElementById('tab3Badge').textContent = allData.length;
+            document.getElementById('historyCount').textContent = `${filtered.length} items`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">${allData.length === 0 ? '📚' : '🔍'}</div><h3>${allData.length === 0 ? 'Belum ada proyek artikel' : 'Tidak ditemukan'}</h3><p>${allData.length === 0 ? 'Pergi ke Tab "Article Studio" untuk mulai membuat artikel jurnal' : 'Coba kata kunci lain'}</p></div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => {
+                const type = ARTICLE_TYPES[item.article_type];
+                const typeLabel = type ? `${type.icon} ${type.name}` : item.article_type;
+                const date = item.created_date || item._raw?.created_at || '-';
+                const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+                const sourceClass = item.ai_source.toLowerCase();
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = item.result;
+                const plainResult = tempDiv.textContent.substring(0, 100) + (tempDiv.textContent.length > 100 ? '...' : '');
+                return `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <span class="history-title">${escapeHtml(item.title)}</span>
+                            <div class="history-meta">
+                                <span class="type-badge">${typeLabel}</span>
+                                ${item.ai_source ? `<span class="ai-badge ${sourceClass}">${item.ai_source}</span>` : ''}
+                                <span>📅 ${displayDate}</span>
+                                <span>👤 ${escapeHtml(item.created_by)}</span>
+                                ${isAdmin ? `<span style="font-size:10px;background:#c6f6d5;color:#276749;padding:1px 8px;border-radius:8px;">👑</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="history-prompt" onclick="togglePrompt(this)">${escapeHtml(item.prompt.substring(0, 120))}${item.prompt.length > 120 ? '...' : ''}</div>
+                        <div class="history-result">${escapeHtml(plainResult)}</div>
+                        <div class="history-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openAddAiModal(${item.id_x})">➕ Tambah AI</button>
+                            <button class="btn btn-primary btn-xs" onclick="openDuplicateModal(${item.id_x})">📋 Duplikat</button>
+                            <button class="btn btn-outline btn-xs" onclick="openViewModal(${item.id_x})">👁️ Detail</button>
+                            <button class="btn btn-danger btn-xs" onclick="deleteResult(${item.id_x})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function togglePrompt(el) { el.classList.toggle('expanded'); }
+
+        // ==================== ADD AI ====================
+        function openAddAiModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            document.getElementById('addAiId').value = id;
+            document.getElementById('addAiPromptDisplay').textContent = item.prompt;
+            document.getElementById('addAiCreatedBy').value = currentUser || '';
+            addAiEditor.root.innerHTML = '';
+            const display = document.getElementById('addAiPromptDisplay');
+            const existingBtn = display.querySelector('.copy-prompt-btn');
+            if (existingBtn) existingBtn.remove();
+            const btn = document.createElement('button');
+            btn.className = 'copy-prompt-btn';
+            btn.textContent = '📋 Copy';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const text = display.textContent.replace('📋 Copy', '').trim();
+                navigator.clipboard.writeText(text).then(() => showToast('✅ Prompt disalin!', 'success')).catch(() => {
+                    const ta = document.createElement('textarea'); ta.value = text;
+                    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                    document.body.removeChild(ta); showToast('✅ Prompt disalin!', 'success');
+                });
+            };
+            display.style.position = 'relative';
+            display.appendChild(btn);
+            document.getElementById('addAiModal').classList.add('active');
+        }
+
+        async function saveAddAiResult() {
+            const id = parseInt(document.getElementById('addAiId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) { showToast('Data tidak ditemukan', 'error'); return; }
+            const aiSource = document.getElementById('addAiSource').value;
+            const createdBy = document.getElementById('addAiCreatedBy').value.trim() || currentUser || 'User';
+            const resultHtml = addAiEditor.root.innerHTML;
+            if (!resultHtml || resultHtml === '<p><br></p>') { showToast('❌ Paste hasil AI dulu', 'error'); return; }
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                article_type: originalItem.article_type,
+                title: originalItem.title + ` (${aiSource})`,
+                prompt: originalItem.prompt,
+                field_values: originalItem.field_values || {},
+                ai_source: aiSource, result: resultHtml, created_by: createdBy,
+                status: 'published', notes: `Hasil tambahan dari ${aiSource}`, created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Hasil AI baru disimpan!', 'success');
+                closeModal('addAiModal');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal menyimpan: ' + e.message, 'error'); }
+        }
+
+        // ==================== DUPLICATE ====================
+        function openDuplicateModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            document.getElementById('dupId').value = id;
+            document.getElementById('dupToolType').value = item.article_type;
+            const type = ARTICLE_TYPES[item.article_type];
+            document.getElementById('dupFrameworkDisplay').value = type ? `${type.icon} ${type.name}` : item.article_type;
+            document.getElementById('dupTitle').value = item.title + ' (v2)';
+            document.getElementById('dupCreatedBy').value = currentUser || '';
+            renderDuplicateFields(item.article_type, item.field_values || {});
+            document.getElementById('dupPromptPreview').innerHTML = '<span class="placeholder">Generate prompt dari form di atas...</span>';
+            document.getElementById('duplicateModal').classList.add('active');
+        }
+
+        function renderDuplicateFields(typeKey, values) {
+            const type = ARTICLE_TYPES[typeKey];
+            if (!type) return;
+            const container = document.getElementById('dupDynamicFields');
+            let html = `<div class="section-label">📝 ${type.icon} ${type.name} - Edit Field</div>`;
+            type.fields.forEach(field => {
+                if (field.type === 'radio_reference') return;
+                const fieldId = `dup_field_${field.key}`;
+                const val = values[field.key] || '';
+                if (field.type === 'select' && field.options === 'journal') {
+                    html += `<div class="form-group"><label>${field.label}</label><select id="${fieldId}">`;
+                    Object.values(JOURNAL_TEMPLATES).forEach(t => {
+                        html += `<option value="${t.name}" ${val === t.name ? 'selected' : ''}>${t.name}</option>`;
+                    });
+                    html += `</select></div>`;
+                } else if (field.type === 'textarea') {
+                    html += `<div class="form-group"><label>${field.label}</label><textarea id="${fieldId}" rows="2">${escapeHtml(val)}</textarea></div>`;
+                } else {
+                    html += `<div class="form-group"><label>${field.label}</label><input type="text" id="${fieldId}" value="${escapeHtml(val)}"></div>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function getDuplicateFieldValues() {
+            const typeKey = document.getElementById('dupToolType').value;
+            const type = ARTICLE_TYPES[typeKey];
+            if (!type) return {};
+            const values = {};
+            type.fields.forEach(field => {
+                if (field.type === 'radio_reference') return;
+                const el = document.getElementById(`dup_field_${field.key}`);
+                if (el) values[field.key] = el.value;
+            });
+            return values;
+        }
+
+        function generateDuplicatePrompt() {
+            const typeKey = document.getElementById('dupToolType').value;
+            const type = ARTICLE_TYPES[typeKey];
+            if (!type) return;
+            const values = getDuplicateFieldValues();
+            const template = Object.values(JOURNAL_TEMPLATES).find(t => t.name === values.journal_template) || JOURNAL_TEMPLATES.jehcp;
+
+            let prompt = type.prompt_template;
+            type.fields.forEach(field => {
+                if (field.type === 'radio_reference') return;
+                prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || '');
+            });
+            prompt = prompt.replace(/{journal_structure}/g, template.structure);
+            prompt = prompt.replace(/{journal_notes}/g, template.notes);
+            prompt = prompt.replace(/{reference_instruction}/g, 'MODE: USER MENYEDIAKAN DAFTAR REFERENSI (user akan mengirim daftar)');
+
+            document.getElementById('dupPromptPreview').innerHTML = escapeHtml(prompt);
+            addCopyButtonToPrompt('dupPromptPreview');
+            showToast('✅ Prompt berhasil digenerate!', 'success');
+        }
+
+        async function saveDuplicate() {
+            const id = parseInt(document.getElementById('dupId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) { showToast('Data tidak ditemukan', 'error'); return; }
+            const typeKey = document.getElementById('dupToolType').value;
+            const newTitle = document.getElementById('dupTitle').value.trim();
+            const createdBy = document.getElementById('dupCreatedBy').value.trim() || currentUser || 'User';
+            const prompt = document.getElementById('dupPromptPreview').textContent.replace('📋 Copy', '').trim();
+            if (!newTitle) { showToast('❌ Judul baru wajib diisi', 'error'); return; }
+            if (!prompt || prompt.includes('Generate prompt')) { showToast('❌ Generate prompt dulu', 'error'); return; }
+            const values = getDuplicateFieldValues();
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                article_type: typeKey, title: newTitle, prompt, field_values: values,
+                ai_source: '', result: '', created_by: createdBy,
+                status: 'published', notes: 'Duplikat dari prompt sebelumnya', created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Duplikat berhasil dibuat!', 'success');
+                closeModal('duplicateModal');
+                document.getElementById('selectedTool').value = typeKey;
+                updateFormFields();
+                setFieldValues(values);
+                document.getElementById('resultTitle').value = newTitle;
+                document.getElementById('createdBy').value = createdBy;
+                document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+                addCopyButtonToPrompt('promptPreview');
+                currentPrompt = prompt;
+                switchMainTab('tab2');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal menduplikat: ' + e.message, 'error'); }
+        }
+
+        // ==================== DELETE ====================
+        async function deleteResult(id) {
+            if (!confirm('Hapus proyek artikel ini?')) return;
+            try {
+                await deleteResultApi(id);
+                showToast('✅ Proyek berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal hapus: ' + e.message, 'error'); }
+        }
+
+        async function clearHistory() {
+            if (allData.length === 0) { showToast('Tidak ada data', 'info'); return; }
+            if (!confirm('Hapus semua data history?')) return;
+            try {
+                for (const item of allData) await deleteResultApi(item.id_x);
+                showToast('✅ Semua data berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal hapus: ' + e.message, 'error'); }
+        }
+
+        // ==================== VIEW ====================
+        function openViewModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) { showToast('Data tidak ditemukan', 'error'); return; }
+            viewData = item;
+            const type = ARTICLE_TYPES[item.article_type];
+            const typeLabel = type ? `${type.icon} ${type.name}` : item.article_type;
+            const date = item.created_date || item._raw?.created_at || '-';
+            const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+            document.getElementById('viewModalTitle').textContent = `👁️ ${escapeHtml(item.title)}`;
+            document.getElementById('viewMeta').innerHTML = `<strong>Model:</strong> ${typeLabel} &nbsp;|&nbsp; <strong>AI:</strong> ${item.ai_source || '-'} &nbsp;|&nbsp; <strong>Dibuat:</strong> ${displayDate} &nbsp;|&nbsp; <strong>Oleh:</strong> ${escapeHtml(item.created_by)} ${isAdmin ? `&nbsp;|&nbsp; <span style="background:#c6f6d5;color:#276749;padding:1px 8px;border-radius:8px;font-size:11px;">👑</span>` : ''}`;
+            document.getElementById('viewPrompt').textContent = item.prompt;
+            document.getElementById('viewSource').textContent = item.ai_source || '-';
+            document.getElementById('viewResultWrapper').innerHTML = `<div class="ql-editor">${item.result}</div>`;
+            document.getElementById('viewModal').classList.add('active');
+        }
+
+        function copyViewResult() {
+            const resultHtml = document.getElementById('viewResultWrapper').innerHTML;
+            if (!resultHtml) { showToast('Tidak ada konten', 'error'); return; }
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = resultHtml;
+            const plainText = tempDiv.textContent;
+            navigator.clipboard.writeText(plainText).then(() => showToast('✅ Konten disalin!', 'success')).catch(() => {
+                const ta = document.createElement('textarea'); ta.value = plainText;
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                document.body.removeChild(ta); showToast('✅ Konten disalin!', 'success');
+            });
+        }
+
+        function downloadViewDoc() {
+            const title = viewData?.title || 'artikel-jurnal';
+            const content = document.getElementById('viewResultWrapper').innerHTML || '';
+            const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(title)}</title><style>body { font-family: 'Gill Sans MT', 'Segoe UI', Arial, sans-serif; padding: 40px; color: #2d3748; line-height: 1.9; max-width: 900px; margin: auto; } h1, h2, h3, h4 { color: #1a202c; font-family: 'Gill Sans MT', 'Segoe UI', Arial, sans-serif; } p { margin: 10px 0; text-align: justify; } table { border-collapse: collapse; width: 100%; margin: 12px 0; } td, th { border: 1px solid #cbd5e0; padding: 8px; text-align: left; } th { background: #f7fafc; } ul, ol { padding-left: 24px; } blockquote { border-left: 4px solid #6b46c1; padding-left: 16px; margin: 12px 0; color: #4a5568; }</style></head><body>${content}</body></html>`;
+            const blob = new Blob([htmlContent], { type: 'application/msword;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `${title}.doc`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('✅ File .doc berhasil didownload!', 'success');
+        }
+
+        // ==================== INFO ====================
+        function openInfoModal(toolKey) {
+            const type = ARTICLE_TYPES[toolKey];
+            if (!type) return;
+            const fieldsHtml = type.fields.map(f => `<li><strong>${f.label}</strong>${f.type === 'radio_reference' ? ' — pilih mode referensi' : f.placeholder ? ' — ' + f.placeholder : ''}</li>`).join('');
+            let useForHtml = '';
+            if (type.use_for) {
+                const lines = type.use_for.split('\n').filter(l => l.trim());
+                useForHtml = `<div style="background:#faf5ff;border-radius:8px;padding:12px 16px;margin-bottom:12px;border-left:4px solid #6b46c1;"><strong style="color:#553c9a;">🎯 Cocok Dipakai Untuk:</strong><ul style="margin:6px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">${lines.map(l => `<li>${l.replace('✅', '✔️')}</li>`).join('')}</ul></div>`;
+            }
+            let contohHtml = '';
+            if (type.contoh && type.contoh.length) {
+                const items = type.contoh.map(c => `<div class="contoh-item"><span class="lbl">${c.lbl}:</span> ${c.txt}</div>`).join('');
+                contohHtml = `<div class="contoh-box"><div class="contoh-title">💡 Contoh Nyata:</div>${items}</div>`;
+            }
+            let hasilHtml = '';
+            if (type.contoh_hasil && type.contoh_hasil.length) {
+                const rows = type.contoh_hasil.map(h => `<div class="hasil-item"><span class="h-lbl">${h.lbl}</span>${h.txt}</div>`).join('');
+                const note = type.contoh_hasil_note || 'Gambaran output yang dihasilkan AI:';
+                hasilHtml = `<div class="hasil-box"><div class="hasil-title">📄 Contoh Gambaran Hasil AI:</div><div class="hasil-note">${note}</div>${rows}<div class="hasil-foot">Penjelasan di atas hanya ilustrasi. Hasil sebenarnya dari AI akan jauh lebih detail dan panjang.</div></div>`;
+            }
+
+            const templatesHtml = `<div style="background:#ebf8ff;border-radius:8px;padding:12px 16px;margin-bottom:12px;border-left:4px solid #3182ce;">
+                <strong style="color:#2a69ac;">📚 Template Jurnal Tersedia:</strong>
+                <ul style="margin:6px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">
+                    ${Object.values(JOURNAL_TEMPLATES).map(t => `<li><strong>${t.short}</strong> — ${t.name}</li>`).join('')}
+                </ul>
+            </div>`;
+
+            const refModeHtml = `<div style="background:#fefcbf;border-radius:8px;padding:12px 16px;margin-bottom:12px;border-left:4px solid #d69e2e;">
+                <strong style="color:#7b341e;">📖 3 Mode Referensi:</strong>
+                <ul style="margin:6px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">
+                    <li><strong>AI Cari Sendiri</strong> ⚠️ — Risiko halusinasi, hanya untuk draft awal</li>
+                    <li><strong>User Kasih Daftar</strong> ✅ — Paling aman, AI hanya sitasi dari daftar Anda</li>
+                    <li><strong>Placeholder</strong> ✅ — AI buat [REF: topik_tahun], Anda isi manual</li>
+                </ul>
+            </div>`;
+
+            const scenarioHtml = `<div style="background:#fffaf0;border-radius:8px;padding:12px 16px;margin-bottom:12px;border-left:4px solid #ed8936;">
+                <strong style="color:#c05621;">📎 Skenario B — Upload Data ke AI:</strong>
+                <ol style="margin:6px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">
+                    <li>Isi field di form (data statistik TIDAK perlu di sini)</li>
+                    <li>Generate Prompt → copy</li>
+                    <li>Paste prompt ke AI</li>
+                    <li><strong>Upload file Word/PDF data Anda</strong> ke AI</li>
+                    <li>AI tulis artikel 2 bahasa</li>
+                </ol>
+            </div>`;
+
+            document.getElementById('infoModalTitle').textContent = `📋 ${type.icon} ${type.name}`;
+            document.getElementById('infoModalBody').innerHTML = `
+                <div style="text-align:center;margin-bottom:12px;">
+                    <span style="font-size:48px;display:block;">${type.icon}</span>
+                    <h3 style="font-size:20px;color:#2d3748;">${type.name}</h3>
+                    <p style="color:#718096;font-size:14px;">${type.desc}</p>
+                </div>
+                ${useForHtml}
+                ${contohHtml}
+                ${hasilHtml}
+                ${scenarioHtml}
+                ${templatesHtml}
+                ${refModeHtml}
+                <div style="background:#f7fafc;border-radius:8px;padding:16px;margin-bottom:12px;">
+                    <h4 style="font-size:14px;color:#2d3748;margin-bottom:8px;">📝 Field yang Diisi:</h4>
+                    <ul style="padding-left:20px;color:#4a5568;font-size:13px;line-height:1.8;">${fieldsHtml}</ul>
+                </div>
+                <div style="background:#f0fff4;border-radius:8px;padding:12px 16px;border-left:4px solid #48bb78;">
+                    <strong style="color:#276749;">💡 Cara Penggunaan:</strong>
+                    <ol style="margin:4px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">
+                        <li>Pilih model di Tab "Article Studio"</li>
+                        <li>Isi field (judul, penulis, template, variabel, dsb)</li>
+                        <li>Pilih template jurnal (JEHCP/JPI/IMRaD)</li>
+                        <li>Pilih mode referensi (recommended: "User Kasih Daftar")</li>
+                        <li>Klik "Generate Prompt"</li>
+                        <li>Copy prompt, paste ke AI</li>
+                        <li><strong>Upload file Word/PDF data statistik</strong> ke AI</li>
+                        <li>AI output artikel 2 bahasa (Indonesia + Inggris)</li>
+                        <li>Copy hasil AI, paste di editor → Simpan</li>
+                    </ol>
+                </div>
+            `;
+            document.getElementById('infoModal').classList.add('active');
+        }
+
+        // ==================== TAB ====================
+        function switchMainTab(tabId) {
+            document.querySelectorAll('.main-tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.main-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.main-tab-btn[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            if (tabId === 'tab3') renderHistory();
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // ==================== REFRESH ====================
+        async function refreshData() {
+            if (!currentUser) { showLogin(); return; }
+            showToast('🔄 Memuat data...', 'info');
+            await fetchData();
+            renderTools();
+            updateHistoryFilter();
+            renderHistory();
+            document.getElementById('tab3Badge').textContent = allData.length;
+            showToast(`✅ ${allData.length} proyek dimuat`, 'success');
+        }
+
+        function updateHistoryFilter() {
+            const select = document.getElementById('historyFilterTool');
+            const currentValue = select.value;
+            const types = {};
+            allData.forEach(item => { if (!types[item.article_type]) types[item.article_type] = 0; types[item.article_type]++; });
+            select.innerHTML = `<option value="all">📋 All Types (${allData.length})</option>`;
+            ARTICLE_KEYS.forEach(key => {
+                const type = ARTICLE_TYPES[key];
+                const count = types[key] || 0;
+                select.innerHTML += `<option value="${key}">${type.icon} ${type.name} (${count})</option>`;
+            });
+            if (currentValue) select.value = currentValue;
+        }
+
+        // ==================== TOAST & HELPER ====================
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+        });
+
+        window.debug = {
+            allData: () => allData,
+            refresh: refreshData,
+            ARTICLE_TYPES, ARTICLE_KEYS, JOURNAL_TEMPLATES, REFERENCE_MODES,
+            currentUser: () => currentUser,
+            isAdmin: () => isAdmin
+        };
+    </script>
+</body>
+</html>

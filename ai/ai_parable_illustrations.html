@@ -1,0 +1,2119 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Parable & Illustration Generator</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; padding: 20px; min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .login-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
+        .login-overlay.active { display: flex; }
+        .login-box { background: white; border-radius: 20px; padding: 40px; max-width: 420px; width: 100%; box-shadow: 0 24px 80px rgba(0,0,0,0.4); animation: fadeIn 0.3s ease; }
+        .login-box .login-icon { font-size: 48px; text-align: center; display: block; margin-bottom: 4px; }
+        .login-box h2 { text-align: center; font-size: 24px; color: #1a202c; margin-bottom: 4px; }
+        .login-box p { text-align: center; color: #718096; font-size: 14px; margin-bottom: 20px; }
+        .login-box .form-group { margin-bottom: 14px; }
+        .login-box .form-group label { font-weight: 600; font-size: 13px; color: #4a5568; display: block; margin-bottom: 4px; }
+        .login-box .form-group input { width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border 0.2s; }
+        .login-box .form-group input:focus { outline: none; border-color: #b7791f; }
+        .login-box .form-remember { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+        .login-box .form-remember input[type="checkbox"] { width: 18px; height: 18px; accent-color: #b7791f; }
+        .login-box .form-remember label { font-size: 13px; color: #4a5568; cursor: pointer; }
+        .login-box .btn-login { width: 100%; padding: 12px; background: #b7791f; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .login-box .btn-login:hover { background: #975a16; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(183,121,31,0.3); }
+        .login-box .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .login-box .login-error { color: #fc8181; font-size: 13px; text-align: center; margin-top: 10px; display: none; }
+        .login-box .login-error.show { display: block; }
+        .login-box .login-loading { display: none; text-align: center; margin-top: 10px; color: #718096; font-size: 13px; }
+        .login-box .login-loading.show { display: block; }
+        .header { background: white; padding: 20px 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .header h1 { font-size: 24px; color: #1a2332; display: flex; align-items: center; gap: 10px; }
+        .header h1 span { background: #2d3748; color: white; font-size: 12px; padding: 2px 10px; border-radius: 20px; }
+        .header-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4a5568; background: #f7fafc; padding: 4px 14px; border-radius: 20px; }
+        .user-info .user-role { font-weight: 600; padding: 1px 10px; border-radius: 10px; font-size: 10px; }
+        .user-info .user-role.admin { background: #c6f6d5; color: #276749; }
+        .user-info .user-role.user { background: #bee3f8; color: #2a69ac; }
+        .btn-logout { padding: 4px 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; background: #fc8181; color: white; transition: 0.2s; }
+        .btn-logout:hover { background: #f56565; }
+        .search-box { display: flex; gap: 8px; align-items: center; background: #f7fafc; padding: 0 15px; border-radius: 10px; border: 2px solid #e2e8f0; transition: border 0.2s; }
+        .search-box:focus-within { border-color: #b7791f; }
+        .search-box input { border: none; background: transparent; padding: 10px 0; font-size: 14px; outline: none; width: 200px; color: #2d3748; }
+        .search-box .icon { color: #a0aec0; font-size: 18px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: #b7791f; color: white; }
+        .btn-primary:hover { background: #975a16; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(183,121,31,0.4); }
+        .btn-success { background: #48bb78; color: white; }
+        .btn-success:hover { background: #38a169; }
+        .btn-danger { background: #fc8181; color: white; }
+        .btn-danger:hover { background: #f56565; }
+        .btn-warning { background: #ed8936; color: white; }
+        .btn-warning:hover { background: #dd6b20; }
+        .btn-outline { background: transparent; color: #4a5568; border: 2px solid #e2e8f0; }
+        .btn-outline:hover { background: #f7fafc; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
+        .btn-xs { padding: 3px 10px; font-size: 11px; border-radius: 4px; }
+        .main-tabs-container { background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 24px; }
+        .main-tabs-header { display: flex; border-bottom: 2px solid #edf2f7; background: #f7fafc; padding: 0 20px; overflow-x: auto; flex-wrap: nowrap; }
+        .main-tab-btn { padding: 14px 24px; border: none; background: transparent; font-weight: 700; font-size: 14px; color: #a0aec0; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent; margin-bottom: -2px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .main-tab-btn:hover { color: #2d3748; }
+        .main-tab-btn.active { color: #b7791f; border-bottom-color: #b7791f; }
+        .main-tab-btn .badge-main { background: #edf2f7; color: #4a5568; font-size: 11px; padding: 1px 10px; border-radius: 12px; font-weight: 600; }
+        .main-tab-btn.active .badge-main { background: #fefcbf; color: #744210; }
+        .main-tab-content { padding: 24px 30px; display: none; }
+        .main-tab-content.active { display: block; }
+        .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+        .tool-card { background: #f7fafc; border-radius: 12px; padding: 20px; border: 2px solid #e2e8f0; transition: all 0.2s; text-align: center; }
+        .tool-card:hover { border-color: #b7791f; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(183,121,31,0.12); }
+        .tool-card .tool-icon { font-size: 32px; display: block; margin-bottom: 4px; }
+        .tool-card .tool-name { font-weight: 700; font-size: 15px; color: #2d3748; }
+        .tool-card .tool-desc { font-size: 12px; color: #718096; margin: 4px 0 12px; min-height: 48px; }
+        .tool-card .tool-actions { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+        .tool-card .tool-actions .btn { padding: 4px 12px; font-size: 11px; }
+        .studio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .studio-left { display: flex; flex-direction: column; gap: 16px; }
+        .studio-right { display: flex; flex-direction: column; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-weight: 600; font-size: 13px; color: #4a5568; }
+        .form-group input, .form-group textarea, .form-group select { padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: border 0.2s; font-family: inherit; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #b7791f; }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .field-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 2px; }
+        .field-header label { font-weight: 600; font-size: 13px; color: #4a5568; margin: 0; }
+        .field-ai-check { display: flex; align-items: center; gap: 4px; background: #ebf8ff; padding: 2px 8px; border-radius: 6px; border: 1px solid #bee3f8; cursor: pointer; }
+        .field-ai-check input[type="checkbox"] { width: 14px; height: 14px; accent-color: #3182ce; cursor: pointer; margin: 0; }
+        .field-ai-check span { font-size: 10px; font-weight: 600; color: #2b6cb0; white-space: nowrap; }
+        .prompt-preview { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 2px solid #e2e8f0; min-height: 150px; white-space: pre-wrap; font-size: 13px; line-height: 1.7; color: #2d3748; max-height: 350px; overflow-y: auto; position: relative; }
+        .prompt-preview .placeholder { color: #a0aec0; font-style: italic; }
+        .prompt-preview .copy-prompt-btn { position: absolute; top: 8px; right: 8px; background: rgba(183,121,31,0.9); color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .prompt-preview .copy-prompt-btn:hover { background: #975a16; }
+        .quill-wrapper { background: white; border-radius: 12px; border: 2px solid #e2e8f0; overflow: hidden; }
+        .quill-wrapper .ql-toolbar { border: none; border-bottom: 2px solid #e2e8f0; background: #f7fafc; }
+        .quill-wrapper .ql-container { border: none; min-height: 200px; font-size: 14px; }
+        .quill-wrapper .ql-editor { min-height: 200px; }
+        .result-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+        .history-sub-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; }
+        .history-sub-tab { padding: 6px 16px; border: none; background: #f7fafc; border-radius: 8px; font-weight: 600; font-size: 13px; color: #4a5568; cursor: pointer; transition: all 0.2s; }
+        .history-sub-tab:hover { background: #edf2f7; }
+        .history-sub-tab.active { background: #b7791f; color: white; }
+        .history-sub-tab .sub-badge { background: rgba(255,255,255,0.3); color: white; font-size: 10px; padding: 1px 8px; border-radius: 10px; margin-left: 4px; }
+        .history-sub-tab:not(.active) .sub-badge { background: #edf2f7; color: #4a5568; }
+        .history-filters { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+        .history-filters select, .history-filters input { padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; }
+        .history-filters select:focus, .history-filters input:focus { outline: none; border-color: #b7791f; }
+        .history-list { display: flex; flex-direction: column; gap: 16px; }
+        .history-item { background: #f7fafc; border-radius: 12px; padding: 16px 20px; border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .history-item:hover { border-color: #b7791f; }
+        .history-item .history-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        .history-item .history-title { font-weight: 700; font-size: 15px; color: #2d3748; }
+        .history-item .history-meta { display: flex; gap: 12px; font-size: 12px; color: #718096; flex-wrap: wrap; align-items: center; }
+        .history-item .history-meta .type-badge { background: #fefcbf; color: #744210; padding: 2px 12px; border-radius: 12px; font-weight: 600; }
+        .history-item .history-meta .ai-badge { font-size: 10px; padding: 1px 8px; border-radius: 10px; font-weight: 600; }
+        .history-item .history-meta .ai-badge.chatgpt { background: #10a37f; color: white; }
+        .history-item .history-meta .ai-badge.claude { background: #d97757; color: white; }
+        .history-item .history-meta .ai-badge.gemini { background: #4285f4; color: white; }
+        .history-item .history-meta .ai-badge.deepseek { background: #4a6cf7; color: white; }
+        .history-item .history-meta .ai-badge.other { background: #718096; color: white; }
+        .history-item .history-prompt { font-size: 13px; color: #4a5568; background: white; padding: 8px 12px; border-radius: 6px; border-left: 3px solid #b7791f; margin-bottom: 10px; max-height: 60px; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+        .history-item .history-prompt:hover { background: #f7fafc; }
+        .history-item .history-prompt.expanded { max-height: none; white-space: pre-wrap; }
+        .history-item .history-result { font-size: 13px; color: #2d3748; margin-bottom: 8px; max-height: 80px; overflow: hidden; text-overflow: ellipsis; }
+        .history-item .history-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid #edf2f7; padding-top: 10px; }
+        .history-item .history-actions .btn { padding: 3px 12px; font-size: 11px; }
+        .empty-state { padding: 60px 20px; text-align: center; color: #a0aec0; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 15px; }
+        .empty-state h3 { color: #4a5568; margin-bottom: 8px; }
+        .empty-state p { font-size: 14px; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        .modal-overlay.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal { background: white; border-radius: 20px; max-width: 850px; width: 100%; max-height: 95vh; overflow-y: auto; padding: 30px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .modal-close { position: sticky; top: 0; float: right; background: #fc8181; border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; transition: 0.2s; z-index: 10; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: #f56565; transform: rotate(90deg); }
+        .modal-title { font-size: 22px; font-weight: 700; color: #1a2332; margin-bottom: 20px; padding-right: 50px; }
+        .modal-body { display: flex; flex-direction: column; gap: 16px; }
+        .contoh-box { background: linear-gradient(135deg, #fffaf0 0%, #fefcbf 100%); border-radius: 12px; padding: 16px 20px; border-left: 4px solid #b7791f; margin: 12px 0; }
+        .contoh-box .contoh-title { font-weight: 700; font-size: 13px; color: #744210; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+        .contoh-box .contoh-item { background: white; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; color: #2d3748; line-height: 1.7; }
+        .contoh-box .contoh-item:last-child { margin-bottom: 0; }
+        .contoh-box .contoh-item .lbl { font-weight: 700; color: #b7791f; display: inline-block; min-width: 90px; }
+        .hasil-box { background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%); border-radius: 12px; padding: 16px 20px; border-left: 4px solid #38a169; margin: 12px 0; }
+        .hasil-box .hasil-title { font-weight: 700; font-size: 13px; color: #22543d; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .hasil-box .hasil-note { font-size: 11.5px; color: #2f855a; margin-bottom: 10px; line-height: 1.5; }
+        .hasil-box .hasil-item { background: white; border-radius: 8px; padding: 9px 13px; margin-bottom: 6px; font-size: 12.5px; color: #2d3748; line-height: 1.6; }
+        .hasil-box .hasil-item:last-child { margin-bottom: 0; }
+        .hasil-box .hasil-item .h-lbl { display: block; font-weight: 700; color: #276749; font-size: 12px; margin-bottom: 2px; letter-spacing: .2px; }
+        .hasil-box .hasil-foot { font-size: 11px; color: #2f855a; margin-top: 9px; font-style: italic; line-height: 1.5; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 2px solid #edf2f7; flex-wrap: wrap; }
+        .toast { position: fixed; bottom: 30px; right: 30px; padding: 16px 28px; border-radius: 12px; color: white; font-weight: 600; z-index: 2000; animation: slideUp 0.3s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.2); max-width: 400px; }
+        .toast.success { background: #48bb78; }
+        .toast.error { background: #fc8181; }
+        .toast.info { background: #4299e1; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .section-label { font-weight: 700; font-size: 14px; color: #2d3748; margin-top: 4px; margin-bottom: 2px; padding-bottom: 4px; border-bottom: 2px solid #edf2f7; }
+        .view-result-wrapper { background: white; border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0; max-height: 400px; overflow-y: auto; }
+        .view-result-wrapper .ql-editor { padding: 0; }
+        .ai-source-select { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .ai-source-select select { padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; flex: 1; }
+        .ai-source-select select:focus { outline: none; border-color: #b7791f; }
+        .add-ai-modal .modal { max-width: 750px; }
+        .add-ai-modal .prompt-display { background: #f7fafc; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #4a5568; max-height: 120px; overflow-y: auto; white-space: pre-wrap; border-left: 3px solid #b7791f; position: relative; }
+        .add-ai-modal .prompt-display .copy-prompt-btn { position: absolute; top: 4px; right: 4px; background: rgba(183,121,31,0.9); color: white; border: none; padding: 2px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .add-ai-modal .prompt-display .copy-prompt-btn:hover { background: #975a16; }
+        .main-content { display: none; }
+        .main-content.visible { display: block; }
+        .info-tip { background: #fffaf0; border-left: 4px solid #b7791f; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; color: #744210; line-height: 1.6; margin-bottom: 12px; }
+        .mode-tip { background: #ebf8ff; border-left: 4px solid #3182ce; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; color: #2a4365; line-height: 1.6; margin-bottom: 12px; }
+        .format-tip { background: #faf5ff; border-left: 4px solid #805ad5; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; color: #44337a; line-height: 1.6; margin-bottom: 12px; }
+        @media (max-width: 992px) {
+            .studio-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .main-tabs-header { padding: 0 12px; }
+            .main-tab-btn { padding: 12px 16px; font-size: 13px; }
+            .main-tab-content { padding: 16px; }
+            .tools-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+            .header { flex-direction: column; align-items: stretch; }
+            .search-box input { width: 100%; }
+            .modal { padding: 20px; }
+            .history-item .history-header { flex-direction: column; align-items: flex-start; }
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .btn { padding: 8px 14px; font-size: 13px; }
+            .tools-grid { grid-template-columns: 1fr 1fr; }
+            .tool-card { padding: 14px; }
+            .tool-card .tool-icon { font-size: 28px; }
+            .main-tab-btn { padding: 10px 12px; font-size: 12px; }
+            .main-tab-content { padding: 12px; }
+            .history-filters { flex-direction: column; align-items: stretch; }
+            .login-box { padding: 24px 20px; }
+        }
+        .modal::-webkit-scrollbar { width: 6px; }
+        .modal::-webkit-scrollbar-track { background: #f7fafc; }
+        .modal::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="login-overlay active" id="loginOverlay">
+        <div class="login-box">
+            <span class="login-icon">🕯️</span>
+            <h2>Login</h2>
+            <p>Masuk untuk mengakses Parable & Illustration Generator</p>
+            <div class="form-group">
+                <label>👤 Username</label>
+                <input type="text" id="loginUsername" placeholder="Masukkan username" value="">
+            </div>
+            <div class="form-group">
+                <label>🔑 Password</label>
+                <input type="password" id="loginPassword" placeholder="Masukkan password" value="" onkeydown="if(event.key==='Enter') doLogin()">
+            </div>
+            <div class="form-remember">
+                <input type="checkbox" id="loginRemember" checked>
+                <label for="loginRemember">Ingat saya</label>
+            </div>
+            <button class="btn-login" id="loginBtn" onclick="doLogin()">Login</button>
+            <div class="login-error" id="loginError">❌ Username atau password salah!</div>
+            <div class="login-loading" id="loginLoading">⏳ Memeriksa...</div>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="container" id="app">
+            <div class="header">
+                <h1>🕯️ AI Parable & Illustration Generator <span>v1.3</span></h1>
+                <div class="header-actions">
+                    <span class="user-info" id="userInfo">
+                        👤 <span id="currentUser">-</span>
+                        <span class="user-role" id="userRole">user</span>
+                    </span>
+                    <button class="btn-logout" onclick="doLogout()">🚪 Logout</button>
+                    <div class="search-box">
+                        <span class="icon">🔍</span>
+                        <input type="text" id="searchInput" placeholder="Cari metode..." oninput="renderTools()">
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="refreshData()" title="Refresh">🔄</button>
+                </div>
+            </div>
+
+            <div class="main-tabs-container">
+                <div class="main-tabs-header">
+                    <button class="main-tab-btn active" data-tab="tab1" onclick="switchMainTab('tab1')">
+                        🕯️ Metode Ilustrasi
+                        <span class="badge-main" id="tab1Badge">8</span>
+                    </button>
+                    <button class="main-tab-btn" data-tab="tab2" onclick="switchMainTab('tab2')">
+                        ✏️ Illustration Studio
+                        <span class="badge-main">New</span>
+                    </button>
+                    <button class="main-tab-btn" data-tab="tab3" onclick="switchMainTab('tab3')">
+                        📋 History
+                        <span class="badge-main" id="tab3Badge">0</span>
+                    </button>
+                </div>
+
+                <div class="main-tab-content active" id="tab1">
+                    <div class="tools-grid" id="toolsGrid"></div>
+                </div>
+
+                <div class="main-tab-content" id="tab2">
+                    <div class="info-tip">
+                        💡 <strong>Tips:</strong> Pilih <strong>Metode</strong> + <strong>Mode Pencarian</strong> + <strong>Format Output</strong>. AI menghasilkan <strong>3 ilustrasi berbeda</strong>.
+                    </div>
+                    <div class="studio-grid">
+                        <div class="studio-left">
+                            <div class="form-group">
+                                <label>📂 Pilih Metode Ilustrasi</label>
+                                <select id="selectedTool" onchange="updateFormFields()"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>🎯 Mode Pencarian Cerita</label>
+                                <select id="searchMode" onchange="updateSearchModeInfo()">
+                                    <option value="internet">🌐 Cari dari Internet (yang sudah umum beredar)</option>
+                                    <option value="original">✨ Buat Sendiri (original, belum banyak beredar)</option>
+                                    <option value="kombinasi">🎨 Kombinasi (mix internet + original)</option>
+                                </select>
+                            </div>
+                            <div class="mode-tip" id="searchModeInfo">
+                                🌐 <strong>Mode Internet:</strong> AI akan mencari 3 ilustrasi yang sudah beredar di internet — <strong>TAPI dilarang pakai yang klise</strong> (kentang-wortel-kopi, kelinci-kura-kura, dll). AI harus cari yang lebih variatif.
+                            </div>
+                            <div class="form-group">
+                                <label>📏 Format Output</label>
+                                <select id="formatMode" onchange="updateFormatModeInfo()">
+                                    <option value="short">⚡ Versi Singkat (1-2 kalimat per ilustrasi)</option>
+                                    <option value="authentic">📜 Versi Asli (sesuai sumber aslinya)</option>
+                                    <option value="adaptation">🎭 Versi Adaptasi (disesuaikan audiens)</option>
+                                </select>
+                            </div>
+                            <div class="format-tip" id="formatModeInfo">
+                                ⚡ <strong>Versi Singkat:</strong> Setiap ilustrasi hanya <strong>1-2 kalimat</strong> langsung ke inti + pelajaran.
+                            </div>
+                            <div id="dynamicFields"></div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>📌 Judul Proyek</label>
+                                    <input type="text" id="resultTitle" placeholder="Judul proyek ilustrasi...">
+                                </div>
+                                <div class="form-group">
+                                    <label>👤 Dibuat Oleh</label>
+                                    <input type="text" id="createdBy" placeholder="Nama..." value="">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="generatePrompt()">📝 Generate Prompt</button>
+                        </div>
+                        <div class="studio-right">
+                            <div class="form-group">
+                                <label>📄 Prompt yang Dihasilkan</label>
+                                <div class="prompt-preview" id="promptPreview">
+                                    <span class="placeholder">Pilih metode, mode, dan format untuk menghasilkan prompt...</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>🤖 Pilih AI Source</label>
+                                <div class="ai-source-select">
+                                    <select id="aiSource">
+                                        <option value="ChatGPT">ChatGPT</option>
+                                        <option value="Claude">Claude</option>
+                                        <option value="Gemini">Gemini</option>
+                                        <option value="DeepSeek">DeepSeek</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>📝 Hasil AI (Paste di sini)</label>
+                                <div class="quill-wrapper">
+                                    <div id="resultEditor"></div>
+                                </div>
+                            </div>
+                            <div class="result-actions">
+                                <button class="btn btn-success" onclick="saveResult()">💾 Simpan Hasil</button>
+                                <button class="btn btn-warning" onclick="clearForm()">🗑️ Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="main-tab-content" id="tab3">
+                    <div class="history-sub-tabs" id="historySubTabs">
+                        <button class="history-sub-tab active" data-subtab="all" onclick="switchHistorySubTab('all')">
+                            📋 All <span class="sub-badge" id="subAll">0</span>
+                        </button>
+                        <button class="history-sub-tab" data-subtab="today" onclick="switchHistorySubTab('today')">
+                            📅 Hari Ini <span class="sub-badge" id="subToday">0</span>
+                        </button>
+                    </div>
+                    <div class="history-filters">
+                        <select id="historyFilterTool" onchange="renderHistory()">
+                            <option value="all">📋 All Types</option>
+                        </select>
+                        <input type="text" id="historySearch" placeholder="🔍 Cari..." oninput="renderHistory()">
+                        <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑️ Hapus Semua</button>
+                        <span style="font-size:13px;color:#718096;" id="historyCount">0 items</span>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <div class="empty-state">
+                            <div class="icon">🕯️</div>
+                            <h3>Belum ada proyek ilustrasi</h3>
+                            <p>Pergi ke Tab "Illustration Studio" untuk mulai membuat ilustrasi</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('infoModal')">✕</button>
+            <div class="modal-title" id="infoModalTitle">📋 Info</div>
+            <div class="modal-body" id="infoModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('infoModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+            <div class="modal-title" id="viewModalTitle">👁️ Detail Ilustrasi</div>
+            <div class="modal-body">
+                <div id="viewMeta" style="font-size:13px;color:#718096;margin-bottom:12px;padding:8px 12px;background:#f7fafc;border-radius:8px;"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt:</div>
+                <div style="background:#f7fafc;padding:12px 16px;border-radius:8px;font-size:13px;color:#4a5568;white-space:pre-wrap;max-height:150px;overflow-y:auto;border-left:3px solid #b7791f;" id="viewPrompt"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">🤖 Sumber AI:</div>
+                <div style="font-size:14px;color:#4a5568;margin-bottom:8px;" id="viewSource"></div>
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin:8px 0 4px;">📝 Hasil AI:</div>
+                <div class="view-result-wrapper" id="viewResultWrapper"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="copyViewResult()">📋 Copy</button>
+                <button class="btn btn-success" onclick="downloadViewDoc()">📥 Download .doc</button>
+                <button class="btn btn-outline" onclick="closeModal('viewModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay add-ai-modal" id="addAiModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('addAiModal')">✕</button>
+            <div class="modal-title">🤖 Tambah Hasil AI Baru</div>
+            <div class="modal-body">
+                <input type="hidden" id="addAiId">
+                <div style="font-weight:600;font-size:14px;color:#2d3748;margin-bottom:4px;">📄 Prompt (tidak bisa diedit):</div>
+                <div class="prompt-display" id="addAiPromptDisplay"></div>
+                <div class="form-group">
+                    <label>🤖 Pilih AI Source</label>
+                    <select id="addAiSource">
+                        <option value="ChatGPT">ChatGPT</option>
+                        <option value="Claude">Claude</option>
+                        <option value="Gemini">Gemini</option>
+                        <option value="DeepSeek">DeepSeek</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>📝 Hasil AI (Paste di sini)</label>
+                    <div class="quill-wrapper">
+                        <div id="addAiEditor"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>👤 Dibuat Oleh</label>
+                    <input type="text" id="addAiCreatedBy" placeholder="Nama...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addAiModal')">Batal</button>
+                <button class="btn btn-success" onclick="saveAddAiResult()">💾 Simpan Hasil</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="duplicateModal">
+        <div class="modal" style="max-width:850px;">
+            <button class="modal-close" onclick="closeModal('duplicateModal')">✕</button>
+            <div class="modal-title">📋 Duplikat Prompt</div>
+            <div class="modal-body">
+                <input type="hidden" id="dupId">
+                <input type="hidden" id="dupToolType">
+                <div class="form-group">
+                    <label>📂 Metode</label>
+                    <input type="text" id="dupFrameworkDisplay" disabled style="background:#f7fafc;font-weight:600;">
+                </div>
+                <div id="dupDynamicFields"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📌 Judul Baru</label>
+                        <input type="text" id="dupTitle" placeholder="Judul baru...">
+                    </div>
+                    <div class="form-group">
+                        <label>👤 Dibuat Oleh</label>
+                        <input type="text" id="dupCreatedBy" placeholder="Nama...">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>📄 Prompt yang Dihasilkan</label>
+                    <div class="prompt-preview" id="dupPromptPreview" style="min-height:100px;max-height:200px;">
+                        <span class="placeholder">Generate prompt dari form di atas...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('duplicateModal')">Batal</button>
+                <button class="btn btn-primary" onclick="generateDuplicatePrompt()">📝 Generate Prompt</button>
+                <button class="btn btn-success" onclick="saveDuplicate()">💾 Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== SEARCH MODES ====================
+        const SEARCH_MODES = {
+            internet: {
+                id: 'internet',
+                name: '🌐 Cari dari Internet',
+                tip: '🌐 <strong>Mode Internet:</strong> AI akan mencari <strong>3 ilustrasi yang sudah beredar di internet</strong> — TAPI <strong>DILARANG</strong> pakai yang klise (kentang-wortel-kopi, kelinci-kura-kura, pasir-kerikil-batu, garam-telaga, dll). AI harus cari yang lebih variatif.',
+                instruction: `MODE: CARI DARI INTERNET (yang sudah umum beredar)
+
+TUGAS: Cari 3 ILUSTRASI PARABEL yang SUDAH BEREDAR di internet/media sosial/buku.
+    ⚠️ DILARANG KERAS menggunakan ilustrasi yang paling klise:
+    ❌ Kentang, wortel, kopi (air mendidih) — kalau user minta contoh ini, boleh disebut SEKALI sebagai pembuka, tapi 2 lainnya harus variatif
+    ❌ Kelinci & kura-kura
+    ❌ Pasir, kerikil, batu dalam toples
+    ❌ Garam di gelas / garam di telaga
+    ❌ Perempuan di bandara & roti
+    ❌ Besi ditempa / tanah liat dibentuk
+    ❌ Bambu Cina / pohon ek
+    
+    ✅ CARILAH yang lebih variatif dan tetap beredar, misalnya:
+    - Cerita tentang tukang pos dan paku di pagar
+    - Cerita tentang kapal yang bocor dan pelaut
+    - Cerita tentang biji yang tumbuh di celah batu
+    - Legenda Dua Serigala (Cherokee)
+    - Cerita penggergaji kayu yang tidak pernah mengasah gergajinya
+    - Cerita tentang gelas yang retak tapi tetap indah
+    - Legenda/folklore daerah Indonesia (Timun Mas, Malin Kundang, dll)
+    - Cerita pendek viral dari media sosial (yang belum jadi template)
+    
+    Berikan VARIASI dari berbagai budaya dan sumber.
+    Untuk setiap cerita, sebutkan: dari mana asal-usulnya (negara/daerah/jenis cerita) supaya pembaca bisa verifikasi.`
+            },
+            original: {
+                id: 'original',
+                name: '✨ Buat Sendiri (Original)',
+                tip: '✨ <strong>Mode Original:</strong> AI akan membuat <strong>3 ilustrasi baru</strong> yang belum pernah beredar. Bebas berkreasi, tidak mengulang ilustrasi klasik atau yang sudah umum.',
+                instruction: `MODE: BUAT SENDIRI (original, belum banyak beredar)
+
+TUGAS: Ciptakan 3 ILUSTRASI ORIGINAL yang belum pernah beredar di internet.
+    ✅ Boleh pakai analogi benda/proses apa saja — bebas berkreasi
+    ✅ Wajib ada twist baru yang menyentuh
+    ❌ JANGAN mengulang ilustrasi yang sudah terkenal
+    ❌ JANGAN plagiat cerita yang sudah ada — ciptakan karakter & setting baru
+
+    Kreativitas bebas, tapi pastikan:
+    - Setiap cerita punya makna yang jelas
+    - Ada momen "aha!" yang membuat pembaca merenung
+    - Bisa diterapkan ke kehidupan nyata`
+            },
+            kombinasi: {
+                id: 'kombinasi',
+                name: '🎨 Kombinasi',
+                tip: '🎨 <strong>Mode Kombinasi:</strong> 2 cerita dari internet (yang variatif, bukan klise) + 1 cerita original buatan AI sendiri.',
+                instruction: `MODE: KOMBINASI (mix internet + original)
+
+TUGAS: Berikan 3 ilustrasi dengan komposisi:
+    📖 Cerita 1: Dari internet (yang sudah beredar TAPI bukan klise)
+    📖 Cerita 2: Dari internet (yang sudah beredar TAPI bukan klise)
+    ✨ Cerita 3: ORIGINAL — ciptakan sendiri, belum pernah beredar
+
+    Untuk Cerita 1 & 2:
+    - ❌ DILARANG pakai kentang-wortel-kopi, kelinci-kura-kura, pasir-kerikil-batu, garam-telaga, dll
+    - ✅ Cari yang lebih variatif dari berbagai budaya/sumber
+    - Sebutkan asal cerita (negara/daerah/folklore)
+
+    Untuk Cerita 3 (Original):
+    - Bebas berkreasi
+    - Wajib ada twist baru
+    - Karakter & setting baru`
+            }
+        };
+
+        // ==================== FORMAT MODES ====================
+        const FORMAT_MODES = {
+            short: {
+                id: 'short',
+                name: '⚡ Versi Singkat',
+                tip: '⚡ <strong>Versi Singkat:</strong> Setiap ilustrasi hanya <strong>1-2 kalimat</strong> langsung ke inti + pelajaran. Contoh: <em>"Kentang, wortel, dan kopi dalam air mendidih — kentang menjadi lunak, wortel menjadi lembut, kopi mengubah airnya. Pelajaran: respons kita terhadap tekanan hidup menentukan siapa kita."</em>',
+                output: `═══════════════════════════════════
+OUTPUT: 3 ILUSTRASI SINGKAT (format kilat)
+═══════════════════════════════════
+
+Setiap ilustrasi hanya 1-2 KALIMAT, langsung ke inti. Ikuti format ini PERSIS:
+
+═══════════════════════════
+📖 CONTOH FORMAT YANG HARUS DIIKUTI
+═══════════════════════════
+
+**1. [Judul Singkat]**
+[Ilustrasi 1-2 kalimat.] — Pelajaran: [1 kalimat pelajaran]. (sumber: asal budaya/negara, atau "Original")
+
+Contoh nyata:
+
+**1. Kentang, Wortel, & Kopi**
+Kentang, wortel, dan kopi dalam air mendidih — kentang menjadi lunak, wortel menjadi lembut, kopi mengubah airnya. — Pelajaran: respons kita terhadap tekanan hidup menentukan siapa kita. (cerita motivasi populer)
+
+**2. Garam di Gelas vs Garam di Telaga**
+Garam di gelas air vs garam di telaga — jumlah yang sama, tapi dampaknya berbeda. — Pelajaran: hati yang sempit membuat masalah kecil terasa besar. (cerita rakyat Timur Tengah)
+
+**3. Perempuan di Bandara**
+Perempuan di bandara mengira pria sebelahnya memakan rotinya — ternyata dia sendiri yang memakan roti pria itu. — Pelajaran: asumsi kita sering salah. (cerita viral)
+
+**4. Kapal di Pelabuhan**
+Kapal di pelabuhan aman, tapi bukan itu tujuan kapal dibuat. — Pelajaran: keluar dari zona nyaman. (motivasi populer)
+
+═══════════════════════════
+SEKARANG BUAT 3 ILUSTRASI BARU
+═══════════════════════════
+
+Buat 3 ilustrasi singkat DENGAN FORMAT SAMA seperti contoh di atas:
+
+**1. [Judul]**
+[Ilustrasi.] — Pelajaran: [pelajaran]. (sumber)
+
+**2. [Judul]**
+[Ilustrasi.] — Pelajaran: [pelajaran]. (sumber)
+
+**3. [Judul]**
+[Ilustrasi.] — Pelajaran: [pelajaran]. (sumber)
+
+═══════════════════════════════════
+🎯 BAGIAN PENUTUP
+═══════════════════════════════════
+
+**💬 QUOTE PENUTUP:**
+[1 kalimat bijak yang mengikat ketiga ilustrasi]
+
+**❓ PERTANYAAN REFLEKSI:**
+1. [Pertanyaan 1]
+2. [Pertanyaan 2]
+3. [Pertanyaan 3]
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+- SETIAP ilustrasi WAJIB hanya 1-2 kalimat, tidak lebih
+- Format: "[ilustrasi] — Pelajaran: [pelajaran]. (sumber)"
+- Jangan menulis narasi panjang, dialog, atau cerita lengkap
+- Langsung ke inti, seperti contoh
+- 3 ilustrasi HARUS BERBEDA dan VARIATIF
+- Tetap ikuti MODE PENCARIAN di atas`
+            },
+            authentic: {
+                id: 'authentic',
+                name: '📜 Versi Asli (Sesuai Sumber)',
+                tip: '📜 <strong>Versi Asli:</strong> Cerita ditulis <strong>SESUAI SUMBER ASLINYA</strong> — setting, tokoh, budaya, dan konteks <strong>TIDAK diubah</strong>. Kalau aslinya dari Cherokee ya tetap Cherokee, kalau dari Arab ya tetap Arab. <strong>HANYA pelajaran/refleksi</strong> di bagian akhir yang disesuaikan dengan audiens target.',
+                output: `═══════════════════════════════════
+OUTPUT: 3 CERITA VERSI ASLI (sesuai sumber asli)
+═══════════════════════════════════
+
+ATURAN UTAMA:
+✅ Cerita ditulis SESUAI SUMBER ASLINYA
+✅ Setting, tokoh, nama, budaya, konteks TIDAK diubah
+✅ Kalau aslinya dari Jepang → tetap Jepang, tokoh tetap orang Jepang dengan nama Jepang
+✅ Kalau aslinya dari Arab → tetap Arab, tokoh tetap orang Arab dengan nama Arab
+✅ Kalau aslinya dari Nusantara → tetap Nusantara, dengan nama & tempat lokal
+✅ Cerita disajikan sebagai "dokumentasi" sumber asli
+✅ HANYA bagian pelajaran/refleksi yang disesuaikan dengan audiens target
+
+Untuk SETIAP cerita, tulis dengan struktur:
+
+═══════════════════════════
+📖 CERITA [1/2/3]: [JUDUL ASLI ATAU JUDUL POPULER]
+═══════════════════════════
+
+**📍 Asal Cerita:**
+[Negara/daerah/etnis/spesifik — contoh: "Legenda Cherokee, Amerika Utara" atau "Fabel Aesop, Yunani Kuno" atau "Cerita Rakyat Jawa Tengah"]
+
+**🎬 Cerita Asli:**
+[Narasi lengkap {story_length}, TANPA mengubah setting/tokoh. Ceritakan seperti aslinya. Sertakan detail budaya: nama tokoh, tempat, pakaian, makanan, kebiasaan, jika relevan. Kalau ada versi berbeda, sebutkan versi yang paling dikenal.]
+
+**🔍 Simbolisme:**
+- [Elemen budaya 1] → [makna]
+- [Elemen budaya 2] → [makna]
+
+**💡 Pelajaran Universal:**
+[Pelajaran asli dari cerita ini — apa yang ingin disampaikan oleh budaya asalnya]
+
+═══════════════════════════════════
+🎯 PENUTUP (Disesuaikan Audiens)
+═══════════════════════════════════
+
+**📌 Untuk Audiens Kami:**
+[Disesuaikan dengan audiens target user. Bagaimana pelajaran asli cerita ini bisa relevan untuk audiens target spesifik — tanpa mengubah cerita aslinya. Berikan analogi ke situasi audiens.]
+
+**PENERAPAN PRAKTIS (5 langkah):**
+[5 langkah konkret bagaimana audiens target bisa menerapkan pelajaran]
+
+**QUOTE PENUTUP:**
+[1 kalimat bijak]
+
+**PERTANYAAN REFLEKSI:**
+1. [Pertanyaan untuk audiens target]
+2. [Pertanyaan untuk audiens target]
+3. [Pertanyaan untuk audiens target]
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+- JANGAN UBAH setting/tokoh/budaya cerita
+- Cerita disajikan sebagai warisan budaya yang otentik
+- Yang disesuaikan HANYA pelajaran & refleksi di bagian akhir
+- Keaslian cerita adalah KUNCI dari format ini
+- 3 cerita harus dari 3 budaya/sumber yang BERBEDA`
+            },
+            adaptation: {
+                id: 'adaptation',
+                name: '🎭 Versi Adaptasi (Sesuai Audiens)',
+                tip: '🎭 <strong>Versi Adaptasi:</strong> Cerita <strong>DIUBAH</strong> setting, tokoh, dan konteksnya <strong>sesuai audiens target</strong>. Contoh: cerita aslinya dari Cherokee tentang serigala → diubah jadi cerita tentang karyawan kantor. Pelajaran disesuaikan juga. Cocok untuk membuat cerita lebih relatable.',
+                output: `═══════════════════════════════════
+OUTPUT: 3 CERITA VERSI ADAPTASI (disesuaikan audiens)
+═══════════════════════════════════
+
+ATURAN UTAMA:
+✅ Cerita DIADAPTASI — setting, tokoh, konteks DIUBAH sesuai audiens target
+✅ Contoh: cerita aslinya tentang petani → diubah jadi tentang karyawan kantor
+✅ Nama tokoh disesuaikan konteks lokal audiens
+✅ Latar tempat, waktu, situasi disesuaikan
+✅ Pelajaran juga disesuaikan dengan kebutuhan audiens
+✅ Di setiap cerita WAJIB ada catatan "Diadaptasi dari: ..." untuk transparansi
+
+Untuk SETIAP cerita, tulis dengan struktur:
+
+═══════════════════════════
+📖 CERITA [1/2/3]: [JUDUL ADAPTASI]
+═══════════════════════════
+
+**🎭 Diadaptasi dari:**
+[Sebutkan cerita asal — contoh: "Diadaptasi dari Legenda Dua Serigala (Cherokee)" atau "Diadaptasi dari Fabel Aesop tentang Kura-kura & Kelinci"]
+
+**🎬 Cerita Adaptasi:**
+[Narasi lengkap {story_length}, TELAH DIUBAH sesuai audiens target. Tokoh, setting, dan konteks disesuaikan dengan realitas audiens. Contoh: kalau audiens karyawan, tokohnya bisa manager & staff; kalau audiens mahasiswa, tokohnya bisa mahasiswa & dosen; kalau audiens ibu-ibu, tokohnya bisa ibu rumah tangga.]
+
+**🔍 Simbolisme dalam Konteks Baru:**
+- [Elemen baru 1] → [makna]
+- [Elemen baru 2] → [makna]
+
+**💡 Pelajaran:**
+1. [Pelajaran 1 disesuaikan audiens]
+2. [Pelajaran 2 disesuaikan audiens]
+3. [Pelajaran 3 disesuaikan audiens]
+
+**🔄 Perbandingan:**
+- **Cerita asli:** [ringkasan 1 kalimat]
+- **Adaptasi kami:** [ringkasan 1 kalimat]
+- **Yang berubah:** [setting, tokoh, konteks]
+- **Yang tetap:** [inti pesan/moral]
+
+═══════════════════════════════════
+🎯 PENUTUP UNTUK KETIGA CERITA
+═══════════════════════════════════
+
+**PENERAPAN PRAKTIS (5 langkah):**
+[5 langkah konkret untuk audiens target]
+
+**QUOTE PENUTUP:**
+[1 kalimat bijak yang mengikat ketiga cerita]
+
+**PERTANYAAN REFLEKSI:**
+1. [Pertanyaan untuk audiens target]
+2. [Pertanyaan untuk audiens target]
+3. [Pertanyaan untuk audiens target]
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+- Cerita HARUS relatable dengan audiens target
+- Nama tokoh, tempat, waktu disesuaikan konteks lokal
+- Yang tetap: inti moral/pesan universal
+- Transparansi: selalu sebutkan cerita asal
+- 3 cerita adaptasi dengan setting yang BERBEDA`
+            }
+        };
+
+        // ==================== PARABLE MODEL DEFINITIONS ====================
+        const PARABLE_TYPES = {
+            everyday_objects: {
+                id: 'everyday_objects',
+                icon: '🥕',
+                name: 'Analogi Benda Sehari-hari',
+                desc: 'Ilustrasi menggunakan benda-benda sehari-hari sebagai simbol (kentang, wortel, kopi, telur, garam, gula, spons, dll).',
+                color: '#b7791f',
+                use_for: '✅ Ceramah & khotbah\n✅ Training motivasi\n✅ Konten sosial media\n✅ Renungan harian\n✅ Ice breaking & sharing',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Jika pilih "Mode Internet" + "Versi Singkat", AI akan cari 3 ilustrasi variatif seperti: "Paku di Pagar" (Jawa), "Dua Serigala Cherokee" (Native American), dan "Gergaji yang Tidak Diasah" (cerita viral).' }
+                ],
+                contoh_hasil_note: 'Gambaran output Analogi Benda:',
+                contoh_hasil: [
+                    { lbl: 'Versi Singkat', txt: 'Setiap ilustrasi 1-2 kalimat. Contoh: "Paku di pagar — meski dicabut, bekasnya tetap ada. Pelajaran: kata-kata menyakitkan meninggalkan luka."' },
+                    { lbl: 'Versi Asli', txt: 'Cerita sesuai budaya asli (Cherokee tetap Cherokee, Jawa tetap Jawa).' },
+                    { lbl: 'Versi Adaptasi', txt: 'Cerita diubah setting & tokohnya sesuai audiens target.' }
+                ],
+                fields: [
+                    { key: 'theme', label: 'Tema/Pesan Utama', type: 'text', placeholder: 'Contoh: Ketahanan menghadapi tekanan hidup' },
+                    { key: 'target_audience', label: 'Audiens Target', type: 'text', placeholder: 'Contoh: Karyawan muda, mahasiswa, jemaat umum' },
+                    { key: 'context', label: 'Konteks Penggunaan', type: 'text', placeholder: 'Contoh: Training motivasi / Khotbah / Konten IG' },
+                    { key: 'objects_available', label: 'Benda/Objek yang Bisa Dipakai', type: 'textarea', placeholder: 'Contoh: Kentang, wortel, kopi, telur, spons, sabun, kertas' },
+                    { key: 'tone', label: 'Tone', type: 'text', placeholder: 'Contoh: Reflektif / inspiratif / sederhana / puitis' },
+                    { key: 'story_length', label: 'Panjang Cerita (untuk Versi Asli & Adaptasi)', type: 'text', placeholder: 'Contoh: 300 kata / 500 kata / 800 kata' }
+                ],
+                prompt_template: `Anda adalah seorang pendongeng inspiratif & guru kebijaksanaan yang menguasai seni parable. Tugas Anda membuat 3 ILUSTRASI PARABEL dengan BENDA SEHARI-HARI.
+
+═══════════════════════════════════
+INFORMASI
+═══════════════════════════════════
+- Tema/Pesan Utama: {theme}
+- Audiens Target: {target_audience}
+- Konteks: {context}
+- Benda yang Bisa Dipakai: {objects_available}
+- Tone: {tone}
+
+═══════════════════════════════════
+MODE PENCARIAN
+═══════════════════════════════════
+{search_mode_instruction}
+
+{format_output}
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+1. Tone {tone} — konsisten di ketiga ilustrasi
+2. Ikuti MODE PENCARIAN di atas dengan KETAT
+3. Ikuti FORMAT OUTPUT di atas dengan PERSIS
+4. Ketiga ilustrasi harus BERBEDA sudut pandang
+
+Markdown rapi.`
+            },
+            priorities_container: {
+                id: 'priorities_container',
+                icon: '📦',
+                name: 'Analogi Prioritas & Urutan',
+                desc: 'Ilustrasi menggunakan wadah/kontainer (toples, gelas, koper, keranjang) sebagai simbol prioritas hidup.',
+                color: '#3182ce',
+                use_for: '✅ Manajemen waktu & prioritas\n✅ Coaching karier\n✅ Parenting\n✅ Team building\n✅ Hidup seimbang',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Versi Singkat: "Koper yang terlalu penuh — pakaian harus dikeluarkan untuk memasukkan yang lebih penting. Pelajaran: hidup butuh melepas untuk mendapat."' }
+                ],
+                contoh_hasil_note: 'Gambaran output Prioritas:',
+                contoh_hasil: [
+                    { lbl: 'Versi Singkat', txt: '1-2 kalimat per ilustrasi.' },
+                    { lbl: 'Versi Asli', txt: 'Cerita sesuai budaya asli.' },
+                    { lbl: 'Versi Adaptasi', txt: 'Disesuaikan audiens (koper → tas kerja, dst).' }
+                ],
+                fields: [
+                    { key: 'theme', label: 'Tema Prioritas', type: 'text', placeholder: 'Contoh: Menempatkan keluarga di atas karier' },
+                    { key: 'target_audience', label: 'Audiens Target', type: 'text', placeholder: 'Contoh: Profesional sibuk, orang tua muda' },
+                    { key: 'context', label: 'Konteks Penggunaan', type: 'text', placeholder: 'Contoh: Seminar manajemen waktu' },
+                    { key: 'container_type', label: 'Jenis Wadah/Media', type: 'text', placeholder: 'Contoh: Toples, koper, gelas, keranjang, rak buku' },
+                    { key: 'items_available', label: 'Item/Benda yang Bisa Dimasukkan', type: 'textarea', placeholder: 'Contoh: Batu besar, kerikil, pasir, air, kertas' },
+                    { key: 'tone', label: 'Tone', type: 'text', placeholder: 'Contoh: Praktis / reflektif / coaching' },
+                    { key: 'story_length', label: 'Panjang Cerita (untuk Versi Asli & Adaptasi)', type: 'text', placeholder: 'Contoh: 400 kata' }
+                ],
+                prompt_template: `Anda adalah coach & pendongeng yang menguasai analogi metafora. Buat 3 ILUSTRASI PARABEL dengan tema PRIORITAS & URUTAN.
+
+═══════════════════════════════════
+INFORMASI
+═══════════════════════════════════
+- Tema: {theme}
+- Audiens: {target_audience}
+- Konteks: {context}
+- Wadah/Media: {container_type}
+- Item/Benda: {items_available}
+- Tone: {tone}
+
+═══════════════════════════════════
+MODE PENCARIAN
+═══════════════════════════════════
+{search_mode_instruction}
+
+{format_output}
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+- Tone {tone}
+- Ikuti MODE PENCARIAN dengan KETAT
+- Ikuti FORMAT OUTPUT dengan PERSIS
+
+Markdown rapi.`
+            },
+            social_situations: {
+                id: 'social_situations',
+                icon: '👥',
+                name: 'Analogi Situasi Sosial',
+                desc: 'Ilustrasi berupa cerita interaksi antar manusia yang memuat pelajaran hidup (seperti cerita perempuan di bandara & roti).',
+                color: '#805ad5',
+                use_for: '✅ Ceramah & motivasi\n✅ Training komunikasi\n✅ Konseling\n✅ Parenting\n✅ Konten reflektif',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Versi Singkat: "Bos yang selalu tersenyum ternyata menyimpan beban berat — pelajaran: senyum sering menyembunyikan luka."' }
+                ],
+                contoh_hasil_note: 'Gambaran output Situasi Sosial:',
+                contoh_hasil: [
+                    { lbl: 'Versi Singkat', txt: '1-2 kalimat per ilustrasi.' },
+                    { lbl: 'Versi Asli', txt: 'Cerita sesuai setting & tokoh asli.' },
+                    { lbl: 'Versi Adaptasi', txt: 'Setting & tokoh diubah sesuai audiens.' }
+                ],
+                fields: [
+                    { key: 'theme', label: 'Tema/Pesan', type: 'text', placeholder: 'Contoh: Bahaya berasumsi tanpa klarifikasi' },
+                    { key: 'target_audience', label: 'Audiens', type: 'text', placeholder: 'Contoh: Remaja & dewasa muda' },
+                    { key: 'context', label: 'Konteks', type: 'text', placeholder: 'Contoh: Ceramah / konten TikTok / training' },
+                    { key: 'setting', label: 'Setting/Latar (untuk Adaptasi)', type: 'text', placeholder: 'Contoh: Bandara, kantor, kampus, warung' },
+                    { key: 'characters', label: 'Karakter yang Diinginkan (untuk Adaptasi)', type: 'textarea', placeholder: 'Contoh: Ibu-ibu & pemuda, guru & murid, bos & karyawan' },
+                    { key: 'tone', label: 'Tone', type: 'text', placeholder: 'Contoh: Hangat / reflektif / menohok' },
+                    { key: 'story_length', label: 'Panjang Cerita (untuk Versi Asli & Adaptasi)', type: 'text', placeholder: 'Contoh: 500 kata' }
+                ],
+                prompt_template: `Anda adalah penulis cerita pendek & storyteller profesional. Buat 3 ILUSTRASI PARABEL dari SITUASI SOSIAL.
+
+═══════════════════════════════════
+INFORMASI
+═══════════════════════════════════
+- Tema: {theme}
+- Audiens: {target_audience}
+- Konteks: {context}
+- Setting (untuk Adaptasi): {setting}
+- Karakter (untuk Adaptasi): {characters}
+- Tone: {tone}
+
+═══════════════════════════════════
+MODE PENCARIAN
+═══════════════════════════════════
+{search_mode_instruction}
+
+{format_output}
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+- Tone {tone}, dialog natural
+- Ikuti FORMAT OUTPUT dengan PERSIS
+
+Markdown rapi.`
+            },
+            nature_seasons: {
+                id: 'nature_seasons',
+                icon: '🌱',
+                name: 'Analogi Alam & Musim',
+                desc: 'Ilustrasi menggunakan elemen alam (bunga, pohon, benih, hujan, musim) sebagai simbol proses kehidupan.',
+                color: '#38a169',
+                use_for: '✅ Ceramah & khotbah\n✅ Renungan\n✅ Konseling\n✅ Konten medsos\n✅ Coaching pribadi',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Versi Singkat: "Bunga teratai tumbuh di lumpur tapi tetap bersih — pelajaran: lingkungan tidak menentukan kemurnian hati."' }
+                ],
+                contoh_hasil_note: 'Gambaran output Analogi Alam:',
+                contoh_hasil: [
+                    { lbl: 'Versi Singkat', txt: '1-2 kalimat puitis + pelajaran.' },
+                    { lbl: 'Versi Asli', txt: 'Legenda alam dari budaya aslinya.' },
+                    { lbl: 'Versi Adaptasi', txt: 'Elemen alam disesuaikan konteks audiens.' }
+                ],
+                fields: [
+                    { key: 'theme', label: 'Tema', type: 'text', placeholder: 'Contoh: Kesabaran dalam proses pertumbuhan' },
+                    { key: 'target_audience', label: 'Audiens', type: 'text', placeholder: 'Contoh: Pemuda, mahasiswa, profesional muda' },
+                    { key: 'context', label: 'Konteks', type: 'text', placeholder: 'Contoh: Renungan pagi / konten IG' },
+                    { key: 'nature_element', label: 'Elemen Alam Prioritas', type: 'text', placeholder: 'Contoh: Bambu, bunga, pohon, sungai, hujan, matahari' },
+                    { key: 'season_metaphor', label: 'Metafora Musim (opsional)', type: 'text', placeholder: 'Contoh: Musim semi, gugur, kemarau, hujan' },
+                    { key: 'tone', label: 'Tone', type: 'text', placeholder: 'Contoh: Puitis / reflektif / tenang' },
+                    { key: 'story_length', label: 'Panjang Cerita (untuk Versi Asli & Adaptasi)', type: 'text', placeholder: 'Contoh: 400 kata' }
+                ],
+                prompt_template: `Anda adalah penulis parabel alam yang menguasai bahasa puitis. Buat 3 ILUSTRASI PARABEL dari ALAM & MUSIM.
+
+═══════════════════════════════════
+INFORMASI
+═══════════════════════════════════
+- Tema: {theme}
+- Audiens: {target_audience}
+- Konteks: {context}
+- Elemen Alam: {nature_element}
+- Metafora Musim: {season_metaphor}
+- Tone: {tone}
+
+═══════════════════════════════════
+MODE PENCARIAN
+═══════════════════════════════════
+{search_mode_instruction}
+
+{format_output}
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+- Bahasa {tone} — metafora indah tapi tidak berlebihan
+- Ikuti FORMAT OUTPUT dengan PERSIS
+
+Markdown rapi.`
+            },
+            journey_direction: {
+                id: 'journey_direction',
+                icon: '🧭',
+                name: 'Analogi Perjalanan & Arah',
+                desc: 'Ilustrasi menggunakan metafora perjalanan (jalan, peta, kompas, kapal, kereta) sebagai simbol hidup & tujuan.',
+                color: '#dd6b20',
+                use_for: '✅ Coaching karier\n✅ Motivasi hidup\n✅ Ceramah\n✅ Training kepemimpinan\n✅ Konten inspiratif',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Versi Singkat: "Peta terbaik tak berguna tanpa keberanian untuk melangkah — pelajaran: action beats planning."' }
+                ],
+                contoh_hasil_note: 'Gambaran output Perjalanan:',
+                contoh_hasil: [
+                    { lbl: 'Versi Singkat', txt: '1-2 kalimat inspiratif.' },
+                    { lbl: 'Versi Asli', txt: 'Cerita sesuai aslinya.' },
+                    { lbl: 'Versi Adaptasi', txt: 'Setting perjalanan disesuaikan audiens.' }
+                ],
+                fields: [
+                    { key: 'theme', label: 'Tema', type: 'text', placeholder: 'Contoh: Keluar dari zona nyaman' },
+                    { key: 'target_audience', label: 'Audiens', type: 'text', placeholder: 'Contoh: Fresh graduate, karyawan muda' },
+                    { key: 'context', label: 'Konteks', type: 'text', placeholder: 'Contoh: Training kepemimpinan' },
+                    { key: 'journey_element', label: 'Elemen Perjalanan', type: 'text', placeholder: 'Contoh: Kapal, kompas, peta, kereta, pesawat' },
+                    { key: 'destination', label: 'Destinasi/Tujuan', type: 'text', placeholder: 'Contoh: Puncak karier, tujuan hidup, impian' },
+                    { key: 'obstacle', label: 'Hambatan yang Dihadapi', type: 'text', placeholder: 'Contoh: Badai, jalan bercabang, kegelapan' },
+                    { key: 'tone', label: 'Tone', type: 'text', placeholder: 'Contoh: Inspiratif / praktis / reflektif' },
+                    { key: 'story_length', label: 'Panjang Cerita (untuk Versi Asli & Adaptasi)', type: 'text', placeholder: 'Contoh: 400 kata' }
+                ],
+                prompt_template: `Anda adalah coach & penulis cerita perjalanan yang inspiratif. Buat 3 ILUSTRASI PARABEL dari PERJALANAN & ARAH.
+
+═══════════════════════════════════
+INFORMASI
+═══════════════════════════════════
+- Tema: {theme}
+- Audiens: {target_audience}
+- Konteks: {context}
+- Elemen Perjalanan: {journey_element}
+- Destinasi: {destination}
+- Hambatan: {obstacle}
+- Tone: {tone}
+
+═══════════════════════════════════
+MODE PENCARIAN
+═══════════════════════════════════
+{search_mode_instruction}
+
+{format_output}
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+- Tone {tone}
+- Ikuti FORMAT OUTPUT dengan PERSIS
+
+Markdown rapi.`
+            },
+            craft_process: {
+                id: 'craft_process',
+                icon: '🎨',
+                name: 'Analogi Proses & Kerajinan',
+                desc: 'Ilustrasi dari proses membuat/mengolah sesuatu (memasak, menenun, menempa, membangun) sebagai simbol pembentukan diri.',
+                color: '#9f7aea',
+                use_for: '✅ Training & workshop\n✅ Ceramah motivasi\n✅ Konten reflektif\n✅ Coaching',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Versi Singkat: "Keris yang baik butuh 1000 kali tempaan — pelajaran: karakter terbentuk dari ujian berulang."' }
+                ],
+                contoh_hasil_note: 'Gambaran output Proses:',
+                contoh_hasil: [
+                    { lbl: 'Versi Singkat', txt: '1-2 kalimat + pelajaran.' },
+                    { lbl: 'Versi Asli', txt: 'Kerajinan dari budaya aslinya.' },
+                    { lbl: 'Versi Adaptasi', txt: 'Kerajinan disesuaikan konteks audiens.' }
+                ],
+                fields: [
+                    { key: 'theme', label: 'Tema', type: 'text', placeholder: 'Contoh: Proses yang membentuk kita' },
+                    { key: 'target_audience', label: 'Audiens', type: 'text', placeholder: 'Contoh: Pengusaha muda, karyawan' },
+                    { key: 'context', label: 'Konteks', type: 'text', placeholder: 'Contoh: Workshop kewirausahaan' },
+                    { key: 'craft_type', label: 'Jenis Kerajinan/Proses', type: 'text', placeholder: 'Contoh: Menempa besi, membuat tembikar, menyeduh kopi' },
+                    { key: 'end_product', label: 'Hasil Akhir', type: 'text', placeholder: 'Contoh: Pisau tajam, vas bunga, espresso' },
+                    { key: 'tone', label: 'Tone', type: 'text', placeholder: 'Contoh: Reflektif / praktis' },
+                    { key: 'story_length', label: 'Panjang Cerita (untuk Versi Asli & Adaptasi)', type: 'text', placeholder: 'Contoh: 400 kata' }
+                ],
+                prompt_template: `Anda adalah storyteller yang menguasai metafora proses kreatif & kerajinan. Buat 3 ILUSTRASI PARABEL dari PROSES MEMBUAT.
+
+═══════════════════════════════════
+INFORMASI
+═══════════════════════════════════
+- Tema: {theme}
+- Audiens: {target_audience}
+- Konteks: {context}
+- Jenis Kerajinan: {craft_type}
+- Hasil Akhir: {end_product}
+- Tone: {tone}
+
+═══════════════════════════════════
+MODE PENCARIAN
+═══════════════════════════════════
+{search_mode_instruction}
+
+{format_output}
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+- Tone {tone}, detail sensorik (panas, bau, suara)
+- Ikuti FORMAT OUTPUT dengan PERSIS
+
+Markdown rapi.`
+            },
+            fable_parable: {
+                id: 'fable_parable',
+                icon: '🐾',
+                name: 'Fabel & Parable',
+                desc: 'Ilustrasi dengan tokoh binatang atau benda yang berperilaku manusia (seperti fabel Aesop).',
+                color: '#d69e2e',
+                use_for: '✅ Cerita anak\n✅ Khotbah & renungan\n✅ Konten inspiratif\n✅ Parenting\n✅ Pendidikan karakter',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Versi Singkat: "Katak yang sombong di sumur merasa dunia hanya selebar sumur — pelajaran: pikiran sempit membuat kita buta."' }
+                ],
+                contoh_hasil_note: 'Gambaran output Fabel:',
+                contoh_hasil: [
+                    { lbl: 'Versi Singkat', txt: '1-2 kalimat + moral.' },
+                    { lbl: 'Versi Asli', txt: 'Fabel dari budaya aslinya.' },
+                    { lbl: 'Versi Adaptasi', txt: 'Setting & tokoh disesuaikan audiens.' }
+                ],
+                fields: [
+                    { key: 'theme', label: 'Tema/Pesan Moral', type: 'text', placeholder: 'Contoh: Ketekunan mengalahkan bakat' },
+                    { key: 'target_audience', label: 'Audiens', type: 'text', placeholder: 'Contoh: Anak-anak / remaja / umum' },
+                    { key: 'context', label: 'Konteks', type: 'text', placeholder: 'Contoh: Cerita pengantar tidur / khotbah anak' },
+                    { key: 'animal_characters', label: 'Tokoh Binatang', type: 'text', placeholder: 'Contoh: Semut & belalang, kura-kura & kelinci' },
+                    { key: 'setting', label: 'Setting', type: 'text', placeholder: 'Contoh: Hutan, sawah, kebun, gunung' },
+                    { key: 'tone', label: 'Tone', type: 'text', placeholder: 'Contoh: Cerita anak / alegoris' },
+                    { key: 'story_length', label: 'Panjang Cerita (untuk Versi Asli & Adaptasi)', type: 'text', placeholder: 'Contoh: 400 kata' }
+                ],
+                prompt_template: `Anda adalah penulis fabel & parabel yang menguasai cerita alegoris. Buat 3 ILUSTRASI FABEL yang menyentuh.
+
+═══════════════════════════════════
+INFORMASI
+═══════════════════════════════════
+- Tema: {theme}
+- Audiens: {target_audience}
+- Konteks: {context}
+- Tokoh Binatang: {animal_characters}
+- Setting: {setting}
+- Tone: {tone}
+
+═══════════════════════════════════
+MODE PENCARIAN
+═══════════════════════════════════
+{search_mode_instruction}
+
+{format_output}
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+- Tone {tone}
+- Moral mengalir dari cerita
+- Ikuti FORMAT OUTPUT dengan PERSIS
+
+Markdown rapi.`
+            },
+            scientific_experiment: {
+                id: 'scientific_experiment',
+                icon: '🔬',
+                name: 'Analogi Ilmiah & Eksperimen',
+                desc: 'Ilustrasi dari fenomena ilmiah/eksperimen (reaksi kimia, fisika, biologi) sebagai simbol kehidupan.',
+                color: '#2b6cb0',
+                use_for: '✅ Ceramah edukatif\n✅ Konten sains populer\n✅ Training & workshop\n✅ Renungan ilmiah\n✅ Pendidikan karakter',
+                contoh: [
+                    { lbl: 'Contoh Output', txt: 'Versi Singkat: "Air garam di telaga — segelas garam di gelas membuat asin, di telaga tidak ada efek. Pelajaran: hati yang lapang membuat masalah kecil terasa ringan."' }
+                ],
+                contoh_hasil_note: 'Gambaran output Analogi Ilmiah:',
+                contoh_hasil: [
+                    { lbl: 'Versi Singkat', txt: '1-2 kalimat + pelajaran ilmiah.' },
+                    { lbl: 'Versi Asli', txt: 'Fenomena dengan konteks aslinya.' },
+                    { lbl: 'Versi Adaptasi', txt: 'Disesuaikan konteks audiens.' }
+                ],
+                fields: [
+                    { key: 'theme', label: 'Tema', type: 'text', placeholder: 'Contoh: Hati yang lapang menghadapi masalah' },
+                    { key: 'target_audience', label: 'Audiens', type: 'text', placeholder: 'Contoh: Mahasiswa, profesional, umum' },
+                    { key: 'context', label: 'Konteks', type: 'text', placeholder: 'Contoh: Konten edukasi / ceramah' },
+                    { key: 'phenomenon', label: 'Fenomena Ilmiah', type: 'text', placeholder: 'Contoh: Osmosis, reaksi kimia, efek kupu-kupu' },
+                    { key: 'tone', label: 'Tone', type: 'text', placeholder: 'Contoh: Edukatif-inspiratif / reflektif' },
+                    { key: 'story_length', label: 'Panjang Cerita (untuk Versi Asli & Adaptasi)', type: 'text', placeholder: 'Contoh: 400 kata' }
+                ],
+                prompt_template: `Anda adalah storyteller sains populer. Buat 3 ILUSTRASI PARABEL dari FENOMENA ILMIAH.
+
+═══════════════════════════════════
+INFORMASI
+═══════════════════════════════════
+- Tema: {theme}
+- Audiens: {target_audience}
+- Konteks: {context}
+- Fenomena Ilmiah: {phenomenon}
+- Tone: {tone}
+
+═══════════════════════════════════
+MODE PENCARIAN
+═══════════════════════════════════
+{search_mode_instruction}
+
+{format_output}
+
+═══════════════════════════════════
+PENTING
+═══════════════════════════════════
+- Sains harus AKURAT
+- Metafora pas dengan fenomena
+- Tone {tone}
+- Ikuti FORMAT OUTPUT dengan PERSIS
+
+Markdown rapi.`
+            }
+        };
+
+        // ==================== CONFIG ====================
+        const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+        const TABLE = 'ai_parable_illustrations';
+        const USERS_TABLE = 'users';
+        const SECRET = 'admin';
+        const STORAGE_KEY = 'ai_parable_illustrations_user';
+
+        const PARABLE_KEYS = Object.keys(PARABLE_TYPES);
+
+        // ==================== STATE ====================
+        let allData = [];
+        let quillEditor = null;
+        let addAiEditor = null;
+        let viewData = null;
+        let currentPrompt = '';
+        let currentHistorySubTab = 'all';
+        let currentUser = null;
+        let isAdmin = false;
+
+        const COLUMNS = {
+            parable_type: 'x_01',
+            title: 'x_02',
+            prompt: 'x_03',
+            field_values: 'x_04',
+            ai_source: 'x_05',
+            result: 'x_06',
+            created_by: 'x_07',
+            status: 'x_08',
+            notes: 'x_09',
+            created_date: 'x_10'
+        };
+
+        // ==================== LOGIN ====================
+        function getStoredUser() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    if (parsed.username && parsed.timestamp) {
+                        const days = (Date.now() - parsed.timestamp) / (1000 * 60 * 60 * 24);
+                        if (days < 7) return parsed.username;
+                    }
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function saveUserToStorage(username, remember) {
+            const data = JSON.stringify({ username, timestamp: Date.now() });
+            if (remember) localStorage.setItem(STORAGE_KEY, data);
+            else sessionStorage.setItem(STORAGE_KEY, data);
+        }
+
+        function clearUserStorage() {
+            localStorage.removeItem(STORAGE_KEY);
+            sessionStorage.removeItem(STORAGE_KEY);
+        }
+
+        function checkAutoLogin() {
+            const username = getStoredUser();
+            if (username) {
+                currentUser = username;
+                isAdmin = (username === 'admin');
+                showMainContent();
+                return true;
+            }
+            return false;
+        }
+
+        function showLogin() {
+            document.getElementById('loginOverlay').classList.add('active');
+            document.getElementById('mainContent').classList.remove('visible');
+        }
+
+        function showMainContent() {
+            document.getElementById('loginOverlay').classList.remove('active');
+            document.getElementById('mainContent').classList.add('visible');
+            document.getElementById('currentUser').textContent = currentUser;
+            const roleBadge = document.getElementById('userRole');
+            if (isAdmin) { roleBadge.textContent = '👑 Admin'; roleBadge.className = 'user-role admin'; }
+            else { roleBadge.textContent = '👤 User'; roleBadge.className = 'user-role user'; }
+            document.getElementById('createdBy').value = currentUser;
+            refreshData();
+        }
+
+        async function doLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const remember = document.getElementById('loginRemember').checked;
+            if (!username || !password) { showLoginError('Username dan password wajib diisi!'); return; }
+            const btn = document.getElementById('loginBtn');
+            const errorEl = document.getElementById('loginError');
+            const loadingEl = document.getElementById('loginLoading');
+            btn.disabled = true;
+            loadingEl.classList.add('show');
+            errorEl.classList.remove('show');
+            try {
+                const response = await fetch(`${API_URL}?table=${USERS_TABLE}`, {
+                    headers: { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': USERS_TABLE, 'X-Role': 'admin' }
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const user = result.data.find(u => u.x_01 === username && u.x_02 === password);
+                    if (user) {
+                        currentUser = username;
+                        isAdmin = (username === 'admin');
+                        saveUserToStorage(username, remember);
+                        showMainContent();
+                        showToast('✅ Login berhasil! Selamat datang, ' + username, 'success');
+                    } else showLoginError('❌ Username atau password salah!');
+                } else showLoginError('❌ Gagal mengambil data user');
+            } catch (e) {
+                showLoginError('❌ Gagal login: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                loadingEl.classList.remove('show');
+            }
+        }
+
+        function showLoginError(message) {
+            const errorEl = document.getElementById('loginError');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+        }
+
+        function doLogout() {
+            if (!confirm('Yakin ingin logout?')) return;
+            clearUserStorage();
+            currentUser = null;
+            isAdmin = false;
+            showLogin();
+            showToast('👋 Logout berhasil', 'info');
+        }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!checkAutoLogin()) showLogin();
+            document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+            document.getElementById('loginUsername').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPassword').focus(); });
+
+            quillEditor = new Quill('#resultEditor', {
+                theme: 'snow', placeholder: 'Paste hasil AI di sini...',
+                modules: { toolbar: [[{ 'header': [1,2,3,4,5,6,false] }], ['bold','italic','underline','strike'], [{ 'list': 'ordered'},{ 'list': 'bullet' }], ['blockquote','code-block'], ['link','image'], ['clean']] }
+            });
+            addAiEditor = new Quill('#addAiEditor', {
+                theme: 'snow', placeholder: 'Paste hasil AI di sini...',
+                modules: { toolbar: [[{ 'header': [1,2,3,4,5,6,false] }], ['bold','italic','underline','strike'], [{ 'list': 'ordered'},{ 'list': 'bullet' }], ['blockquote','code-block'], ['link','image'], ['clean']] }
+            });
+
+            renderTools();
+            populateToolSelect();
+            updateFormFields();
+            updateSearchModeInfo();
+            updateFormatModeInfo();
+            if (currentUser) document.getElementById('createdBy').value = currentUser;
+        });
+
+        // ==================== API ====================
+        function getHeaders() {
+            return { 'Content-Type': 'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': TABLE, 'X-Role': 'admin' };
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const url = `${API_URL}?table=${TABLE}${endpoint}`;
+            const response = await fetch(url, { ...options, headers: { ...getHeaders(), ...(options.headers || {}) } });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || err.message || `HTTP ${response.status}`);
+            }
+            return await response.json();
+        }
+
+        async function fetchData() {
+            try {
+                const result = await apiFetch('');
+                if (result.success && result.data) {
+                    let data = result.data.map(row => parseRow(row));
+                    if (!isAdmin && currentUser) data = data.filter(d => d.created_by === currentUser);
+                    allData = data;
+                    return allData;
+                }
+                allData = [];
+                return allData;
+            } catch (e) {
+                showToast('Gagal mengambil data: ' + e.message, 'error');
+                allData = [];
+                return allData;
+            }
+        }
+
+        function parseRow(row) {
+            return {
+                id_x: row.id_x,
+                parable_type: row.x_01 || '',
+                title: row.x_02 || '',
+                prompt: row.x_03 || '',
+                field_values: safeParseJSON(row.x_04),
+                ai_source: row.x_05 || '',
+                result: row.x_06 || '',
+                created_by: row.x_07 || '',
+                status: row.x_08 || 'published',
+                notes: row.x_09 || '',
+                created_date: row.x_10 || '',
+                _raw: row
+            };
+        }
+
+        function safeParseJSON(str) { if (!str) return {}; try { return JSON.parse(str); } catch (e) { return {}; } }
+
+        function buildRow(data) {
+            const row = {};
+            for (const [key, col] of Object.entries(COLUMNS)) {
+                if (key === 'field_values') row[col] = JSON.stringify(data[key] || {});
+                else row[col] = data[key] || '';
+            }
+            return row;
+        }
+
+        async function createResult(data) {
+            const row = buildRow(data);
+            return await apiFetch('', { method: 'POST', body: JSON.stringify(row) });
+        }
+
+        async function deleteResultApi(id) {
+            return await apiFetch(`&id_x=${id}`, { method: 'DELETE' });
+        }
+
+        // ==================== RENDER ====================
+        function renderTools() {
+            const container = document.getElementById('toolsGrid');
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            let filtered = PARABLE_KEYS;
+            if (search) filtered = filtered.filter(key => PARABLE_TYPES[key].name.toLowerCase().includes(search) || PARABLE_TYPES[key].desc.toLowerCase().includes(search));
+
+            container.innerHTML = filtered.map(key => {
+                const type = PARABLE_TYPES[key];
+                const count = allData.filter(d => d.parable_type === type.id).length;
+                return `
+                    <div class="tool-card" style="border-top:4px solid ${type.color};">
+                        <span class="tool-icon">${type.icon}</span>
+                        <div class="tool-name">${type.name}</div>
+                        <div class="tool-desc">${type.desc}</div>
+                        <div style="font-size:11px;color:#718096;margin-bottom:8px;">${count} ilustrasi</div>
+                        <div class="tool-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openInfoModal('${key}')">📖 Info</button>
+                            <button class="btn btn-primary btn-xs" onclick="useTool('${key}')">✏️ Create</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('tab1Badge').textContent = filtered.length;
+        }
+
+        function populateToolSelect() {
+            const select = document.getElementById('selectedTool');
+            select.innerHTML = PARABLE_KEYS.map(key => {
+                const type = PARABLE_TYPES[key];
+                return `<option value="${key}">${type.icon} ${type.name}</option>`;
+            }).join('');
+        }
+
+        function updateSearchModeInfo() {
+            const mode = document.getElementById('searchMode').value;
+            const info = SEARCH_MODES[mode];
+            if (info) {
+                document.getElementById('searchModeInfo').innerHTML = info.tip;
+            }
+        }
+
+        function updateFormatModeInfo() {
+            const mode = document.getElementById('formatMode').value;
+            const info = FORMAT_MODES[mode];
+            if (info) {
+                document.getElementById('formatModeInfo').innerHTML = info.tip;
+            }
+            // Hide story_length field if short format
+            const storyLengthHeader = document.getElementById('header_field_story_length');
+            const storyLengthGroup = document.querySelector('#dynamicFields #field_story_length')?.closest('.form-group');
+            const checkEl = document.getElementById('ai_check_story_length');
+            const checkParent = checkEl?.closest('.field-ai-check');
+            
+            if (mode === 'short') {
+                if (storyLengthHeader) storyLengthHeader.style.display = 'none';
+                if (storyLengthGroup) storyLengthGroup.style.display = 'none';
+                if (checkEl && checkEl.parentElement) checkEl.parentElement.style.display = 'none';
+            } else {
+                if (storyLengthHeader) storyLengthHeader.style.display = '';
+                if (storyLengthGroup) storyLengthGroup.style.display = '';
+                if (checkEl && checkEl.parentElement) checkEl.parentElement.style.display = '';
+            }
+        }
+
+        function updateFormFields() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = PARABLE_TYPES[toolKey];
+            if (!type) return;
+            const container = document.getElementById('dynamicFields');
+            const values = getCurrentFieldValues();
+
+            let html = `<div class="section-label">📝 ${type.icon} ${type.name} - Form</div>`;
+            type.fields.forEach(field => {
+                const fieldId = `field_${field.key}`;
+                const val = values[field.key] || '';
+                const checkId = `ai_check_${field.key}`;
+                const isStoryLength = field.key === 'story_length';
+
+                html += `<div class="field-header" id="header_${fieldId}">
+                    <label for="${fieldId}">${field.label}</label>
+                    <div class="field-ai-check">
+                        <input type="checkbox" id="${checkId}" onchange="toggleFieldAi('${field.key}', this.checked)">
+                        <span>🤖 AI Cari</span>
+                    </div>
+                </div>`;
+
+                if (field.type === 'textarea') {
+                    html += `<div class="form-group"><textarea id="${fieldId}" placeholder="${field.placeholder}" rows="2">${escapeHtml(val)}</textarea></div>`;
+                } else {
+                    html += `<div class="form-group"><input type="text" id="${fieldId}" placeholder="${field.placeholder}" value="${escapeHtml(val)}"></div>`;
+                }
+            });
+            container.innerHTML = html;
+
+            // Reapply visibility of story_length
+            updateFormatModeInfo();
+        }
+
+        function toggleFieldAi(fieldKey, checked) {
+            const inputEl = document.getElementById(`field_${fieldKey}`);
+            if (!inputEl) return;
+
+            if (checked) {
+                inputEl.dataset.originalValue = inputEl.value;
+                inputEl.value = '🤖 AI akan mencari yang cocok';
+                inputEl.readOnly = true;
+                inputEl.style.background = '#f0fff4';
+                inputEl.style.color = '#276749';
+                inputEl.style.fontWeight = '600';
+            } else {
+                inputEl.value = inputEl.dataset.originalValue || '';
+                inputEl.readOnly = false;
+                inputEl.style.background = '';
+                inputEl.style.color = '';
+                inputEl.style.fontWeight = '';
+            }
+        }
+
+        function getCurrentFieldValues() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = PARABLE_TYPES[toolKey];
+            if (!type) return {};
+            const values = {};
+            type.fields.forEach(field => {
+                const el = document.getElementById(`field_${field.key}`);
+                if (el) {
+                    if (el.readOnly && el.value === '🤖 AI akan mencari yang cocok') {
+                        values[field.key] = '';
+                    } else {
+                        values[field.key] = el.value;
+                    }
+                }
+            });
+            return values;
+        }
+
+        function setFieldValues(values) {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = PARABLE_TYPES[toolKey];
+            if (!type) return;
+            type.fields.forEach(field => {
+                const el = document.getElementById(`field_${field.key}`);
+                if (el && values[field.key] !== undefined) el.value = values[field.key] || '';
+            });
+        }
+
+        function generatePrompt() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const type = PARABLE_TYPES[toolKey];
+            if (!type) return;
+
+            const values = getCurrentFieldValues();
+            const searchMode = document.getElementById('searchMode').value;
+            const modeInfo = SEARCH_MODES[searchMode];
+            const formatMode = document.getElementById('formatMode').value;
+            const formatInfo = FORMAT_MODES[formatMode];
+
+            let allFilled = true;
+            let emptyFields = [];
+            const optionalFields = ['season_metaphor', 'obstacle', 'story_length', 'setting', 'characters'];
+            type.fields.forEach(field => {
+                const checkEl = document.getElementById(`ai_check_${field.key}`);
+                const isAiChecked = checkEl ? checkEl.checked : false;
+                if (optionalFields.includes(field.key)) return;
+                if (field.key === 'story_length' && formatMode === 'short') return;
+                if (!isAiChecked && (!values[field.key] || !values[field.key].trim())) {
+                    allFilled = false;
+                    emptyFields.push(field.label);
+                }
+            });
+
+            if (!allFilled) {
+                showToast('❌ Field berikut wajib diisi: ' + emptyFields.join(', '), 'error');
+                return;
+            }
+
+            let prompt = type.prompt_template;
+            let hasAiField = false;
+
+            type.fields.forEach(field => {
+                const checkEl = document.getElementById(`ai_check_${field.key}`);
+                const isAiChecked = checkEl ? checkEl.checked : false;
+                if (isAiChecked) {
+                    hasAiField = true;
+                    prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), `[AI CARI YANG COCOK UNTUK: ${field.label}]`);
+                } else {
+                    prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || '');
+                }
+            });
+
+            // Inject mode instructions
+            prompt = prompt.replace(/{search_mode_instruction}/g, modeInfo.instruction);
+            prompt = prompt.replace(/{format_output}/g, formatInfo.output);
+
+            // Handle story_length
+            if (formatMode === 'short') {
+                prompt = prompt.replace(/{story_length}/g, '(tidak perlu — versi singkat)');
+            } else {
+                prompt = prompt.replace(/{story_length}/g, values.story_length || '500 kata');
+            }
+
+            if (hasAiField) {
+                prompt = `INSTRUKSI KHUSUS: Untuk beberapa bagian di bawah ini, penulis meminta Anda (AI) untuk mencari dan menentukan sendiri elemen yang cocok (ditandai dengan [AI CARI YANG COCOK UNTUK: ...]). Silakan pilih elemen yang paling tepat dan relevan.\n\n` + prompt;
+            }
+
+            prompt += `\n\n═══════════════════════════════════\nCATATAN AKHIR\n═══════════════════════════════════\nSemua output dalam Bahasa Indonesia yang indah, mengalir, dan menyentuh hati. Hindari bahasa yang kaku atau terlalu formal. Tulisan harus membuat pembaca MERENUNG dan TERGERAK. Pastikan 3 cerita yang dihasilkan BERBEDA dan VARIATIF.`;
+
+            currentPrompt = prompt;
+            document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+            addCopyButtonToPrompt('promptPreview');
+
+            const titleInput = document.getElementById('resultTitle');
+            if (!titleInput.value) {
+                titleInput.value = `${type.name} [${modeInfo.name} | ${formatInfo.name}] - ${values.theme || ''}`;
+            }
+            showToast('✅ Prompt berhasil digenerate!', 'success');
+        }
+
+        function addCopyButtonToPrompt(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const existing = container.querySelector('.copy-prompt-btn');
+            if (existing) existing.remove();
+            const btn = document.createElement('button');
+            btn.className = 'copy-prompt-btn';
+            btn.textContent = '📋 Copy';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const text = container.textContent.replace('📋 Copy', '').trim();
+                if (!text || text.includes('Pilih metode')) { showToast('❌ Tidak ada prompt', 'error'); return; }
+                navigator.clipboard.writeText(text).then(() => showToast('✅ Prompt disalin!', 'success')).catch(() => {
+                    const ta = document.createElement('textarea');
+                    ta.value = text; document.body.appendChild(ta); ta.select();
+                    document.execCommand('copy'); document.body.removeChild(ta);
+                    showToast('✅ Prompt disalin!', 'success');
+                });
+            };
+            container.style.position = 'relative';
+            container.appendChild(btn);
+        }
+
+        async function saveResult() {
+            const toolKey = document.getElementById('selectedTool').value;
+            const title = document.getElementById('resultTitle').value.trim();
+            const createdBy = document.getElementById('createdBy').value.trim() || currentUser || 'User';
+            const prompt = document.getElementById('promptPreview').textContent.replace('📋 Copy', '').trim();
+            if (!title) { showToast('❌ Judul proyek wajib diisi', 'error'); return; }
+            if (!prompt || prompt.includes('Pilih metode')) { showToast('❌ Generate prompt dulu', 'error'); return; }
+            const resultHtml = quillEditor.root.innerHTML;
+            if (!resultHtml || resultHtml === '<p><br></p>') { showToast('❌ Paste hasil AI dulu', 'error'); return; }
+            const values = getCurrentFieldValues();
+            values.search_mode = document.getElementById('searchMode').value;
+            values.format_mode = document.getElementById('formatMode').value;
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                parable_type: toolKey, title, prompt, field_values: values,
+                ai_source: document.getElementById('aiSource').value,
+                result: resultHtml, created_by: createdBy,
+                status: 'published', notes: '', created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Ilustrasi berhasil disimpan!', 'success');
+                await refreshData();
+                clearForm();
+                switchMainTab('tab3');
+            } catch (e) { showToast('❌ Gagal menyimpan: ' + e.message, 'error'); }
+        }
+
+        function clearForm() {
+            quillEditor.root.innerHTML = '';
+            document.getElementById('resultTitle').value = '';
+            document.getElementById('promptPreview').innerHTML = '<span class="placeholder">Pilih metode, mode, dan format untuk menghasilkan prompt...</span>';
+            currentPrompt = '';
+            document.querySelectorAll('.field-ai-check input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+        }
+
+        function useTool(toolKey) {
+            document.getElementById('selectedTool').value = toolKey;
+            updateFormFields();
+            switchMainTab('tab2');
+            clearForm();
+            document.getElementById('createdBy').value = currentUser || '';
+            showToast(`✏️ Beralih ke ${PARABLE_TYPES[toolKey].name}`, 'info');
+        }
+
+        // ==================== HISTORY ====================
+        function switchHistorySubTab(subtab) {
+            currentHistorySubTab = subtab;
+            document.querySelectorAll('.history-sub-tab').forEach(el => el.classList.toggle('active', el.dataset.subtab === subtab));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            const filterTool = document.getElementById('historyFilterTool').value;
+            const search = document.getElementById('historySearch').value.toLowerCase().trim();
+            let filtered = allData;
+            if (currentHistorySubTab === 'today') {
+                const today = new Date();
+                const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+                filtered = filtered.filter(d => d.created_date === todayStr);
+            }
+            if (filterTool !== 'all') filtered = filtered.filter(d => d.parable_type === filterTool);
+            if (search) filtered = filtered.filter(d => d.title.toLowerCase().includes(search) || d.created_by.toLowerCase().includes(search) || d.prompt.toLowerCase().includes(search));
+
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            document.getElementById('subAll').textContent = allData.length;
+            document.getElementById('subToday').textContent = allData.filter(d => d.created_date === todayStr).length;
+            document.getElementById('tab3Badge').textContent = allData.length;
+            document.getElementById('historyCount').textContent = `${filtered.length} items`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">${allData.length === 0 ? '🕯️' : '🔍'}</div><h3>${allData.length === 0 ? 'Belum ada ilustrasi' : 'Tidak ditemukan'}</h3><p>${allData.length === 0 ? 'Pergi ke Tab "Illustration Studio" untuk mulai membuat ilustrasi' : 'Coba kata kunci lain'}</p></div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => {
+                const type = PARABLE_TYPES[item.parable_type];
+                const typeLabel = type ? `${type.icon} ${type.name}` : item.parable_type;
+                const date = item.created_date || item._raw?.created_at || '-';
+                const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+                const sourceClass = item.ai_source.toLowerCase();
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = item.result;
+                const plainResult = tempDiv.textContent.substring(0, 100) + (tempDiv.textContent.length > 100 ? '...' : '');
+                return `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <span class="history-title">${escapeHtml(item.title)}</span>
+                            <div class="history-meta">
+                                <span class="type-badge">${typeLabel}</span>
+                                ${item.ai_source ? `<span class="ai-badge ${sourceClass}">${item.ai_source}</span>` : ''}
+                                <span>📅 ${displayDate}</span>
+                                <span>👤 ${escapeHtml(item.created_by)}</span>
+                                ${isAdmin ? `<span style="font-size:10px;background:#c6f6d5;color:#276749;padding:1px 8px;border-radius:8px;">👑</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="history-prompt" onclick="togglePrompt(this)">${escapeHtml(item.prompt.substring(0, 120))}${item.prompt.length > 120 ? '...' : ''}</div>
+                        <div class="history-result">${escapeHtml(plainResult)}</div>
+                        <div class="history-actions">
+                            <button class="btn btn-outline btn-xs" onclick="openAddAiModal(${item.id_x})">➕ Tambah AI</button>
+                            <button class="btn btn-primary btn-xs" onclick="openDuplicateModal(${item.id_x})">📋 Duplikat</button>
+                            <button class="btn btn-outline btn-xs" onclick="openViewModal(${item.id_x})">👁️ Detail</button>
+                            <button class="btn btn-danger btn-xs" onclick="deleteResult(${item.id_x})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function togglePrompt(el) { el.classList.toggle('expanded'); }
+
+        // ==================== ADD AI ====================
+        function openAddAiModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            document.getElementById('addAiId').value = id;
+            document.getElementById('addAiPromptDisplay').textContent = item.prompt;
+            document.getElementById('addAiCreatedBy').value = currentUser || '';
+            addAiEditor.root.innerHTML = '';
+            const display = document.getElementById('addAiPromptDisplay');
+            const existingBtn = display.querySelector('.copy-prompt-btn');
+            if (existingBtn) existingBtn.remove();
+            const btn = document.createElement('button');
+            btn.className = 'copy-prompt-btn';
+            btn.textContent = '📋 Copy';
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                const text = display.textContent.replace('📋 Copy', '').trim();
+                navigator.clipboard.writeText(text).then(() => showToast('✅ Prompt disalin!', 'success')).catch(() => {
+                    const ta = document.createElement('textarea'); ta.value = text;
+                    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                    document.body.removeChild(ta); showToast('✅ Prompt disalin!', 'success');
+                });
+            };
+            display.style.position = 'relative';
+            display.appendChild(btn);
+            document.getElementById('addAiModal').classList.add('active');
+        }
+
+        async function saveAddAiResult() {
+            const id = parseInt(document.getElementById('addAiId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) { showToast('Data tidak ditemukan', 'error'); return; }
+            const aiSource = document.getElementById('addAiSource').value;
+            const createdBy = document.getElementById('addAiCreatedBy').value.trim() || currentUser || 'User';
+            const resultHtml = addAiEditor.root.innerHTML;
+            if (!resultHtml || resultHtml === '<p><br></p>') { showToast('❌ Paste hasil AI dulu', 'error'); return; }
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                parable_type: originalItem.parable_type,
+                title: originalItem.title + ` (${aiSource})`,
+                prompt: originalItem.prompt,
+                field_values: originalItem.field_values || {},
+                ai_source: aiSource, result: resultHtml, created_by: createdBy,
+                status: 'published', notes: `Hasil tambahan dari ${aiSource}`, created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Hasil AI baru disimpan!', 'success');
+                closeModal('addAiModal');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal menyimpan: ' + e.message, 'error'); }
+        }
+
+        // ==================== DUPLICATE ====================
+        function openDuplicateModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) return;
+            document.getElementById('dupId').value = id;
+            document.getElementById('dupToolType').value = item.parable_type;
+            const type = PARABLE_TYPES[item.parable_type];
+            document.getElementById('dupFrameworkDisplay').value = type ? `${type.icon} ${type.name}` : item.parable_type;
+            document.getElementById('dupTitle').value = item.title + ' (v2)';
+            document.getElementById('dupCreatedBy').value = currentUser || '';
+            renderDuplicateFields(item.parable_type, item.field_values || {});
+            document.getElementById('dupPromptPreview').innerHTML = '<span class="placeholder">Generate prompt dari form di atas...</span>';
+            document.getElementById('duplicateModal').classList.add('active');
+        }
+
+        function renderDuplicateFields(typeKey, values) {
+            const type = PARABLE_TYPES[typeKey];
+            if (!type) return;
+            const container = document.getElementById('dupDynamicFields');
+            let html = `<div class="section-label">📝 ${type.icon} ${type.name} - Edit Field</div>`;
+            type.fields.forEach(field => {
+                const fieldId = `dup_field_${field.key}`;
+                const val = values[field.key] || '';
+                if (field.type === 'textarea') {
+                    html += `<div class="form-group"><label>${field.label}</label><textarea id="${fieldId}" rows="2">${escapeHtml(val)}</textarea></div>`;
+                } else {
+                    html += `<div class="form-group"><label>${field.label}</label><input type="text" id="${fieldId}" value="${escapeHtml(val)}"></div>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function getDuplicateFieldValues() {
+            const typeKey = document.getElementById('dupToolType').value;
+            const type = PARABLE_TYPES[typeKey];
+            if (!type) return {};
+            const values = {};
+            type.fields.forEach(field => {
+                const el = document.getElementById(`dup_field_${field.key}`);
+                if (el) values[field.key] = el.value;
+            });
+            return values;
+        }
+
+        function generateDuplicatePrompt() {
+            const typeKey = document.getElementById('dupToolType').value;
+            const type = PARABLE_TYPES[typeKey];
+            if (!type) return;
+            const values = getDuplicateFieldValues();
+            let prompt = type.prompt_template;
+            type.fields.forEach(field => { prompt = prompt.replace(new RegExp(`{${field.key}}`, 'g'), values[field.key] || ''); });
+            prompt = prompt.replace(/{search_mode_instruction}/g, SEARCH_MODES[document.getElementById('searchMode').value].instruction);
+            prompt = prompt.replace(/{format_output}/g, FORMAT_MODES[document.getElementById('formatMode').value].output);
+            prompt = prompt.replace(/{story_length}/g, values.story_length || '500 kata');
+            document.getElementById('dupPromptPreview').innerHTML = escapeHtml(prompt);
+            addCopyButtonToPrompt('dupPromptPreview');
+            showToast('✅ Prompt berhasil digenerate!', 'success');
+        }
+
+        async function saveDuplicate() {
+            const id = parseInt(document.getElementById('dupId').value);
+            const originalItem = allData.find(d => d.id_x === id);
+            if (!originalItem) { showToast('Data tidak ditemukan', 'error'); return; }
+            const typeKey = document.getElementById('dupToolType').value;
+            const newTitle = document.getElementById('dupTitle').value.trim();
+            const createdBy = document.getElementById('dupCreatedBy').value.trim() || currentUser || 'User';
+            const prompt = document.getElementById('dupPromptPreview').textContent.replace('📋 Copy', '').trim();
+            if (!newTitle) { showToast('❌ Judul baru wajib diisi', 'error'); return; }
+            if (!prompt || prompt.includes('Generate prompt')) { showToast('❌ Generate prompt dulu', 'error'); return; }
+            const values = getDuplicateFieldValues();
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            const data = {
+                parable_type: typeKey, title: newTitle, prompt, field_values: values,
+                ai_source: '', result: '', created_by: createdBy,
+                status: 'published', notes: 'Duplikat dari prompt sebelumnya', created_date: todayStr
+            };
+            try {
+                await createResult(data);
+                showToast('✅ Duplikat berhasil dibuat!', 'success');
+                closeModal('duplicateModal');
+                document.getElementById('selectedTool').value = typeKey;
+                updateFormFields();
+                setFieldValues(values);
+                document.getElementById('resultTitle').value = newTitle;
+                document.getElementById('createdBy').value = createdBy;
+                document.getElementById('promptPreview').innerHTML = escapeHtml(prompt);
+                addCopyButtonToPrompt('promptPreview');
+                currentPrompt = prompt;
+                switchMainTab('tab2');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal menduplikat: ' + e.message, 'error'); }
+        }
+
+        // ==================== DELETE ====================
+        async function deleteResult(id) {
+            if (!confirm('Hapus ilustrasi ini?')) return;
+            try {
+                await deleteResultApi(id);
+                showToast('✅ Ilustrasi berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal hapus: ' + e.message, 'error'); }
+        }
+
+        async function clearHistory() {
+            if (allData.length === 0) { showToast('Tidak ada data', 'info'); return; }
+            if (!confirm('Hapus semua data history?')) return;
+            try {
+                for (const item of allData) await deleteResultApi(item.id_x);
+                showToast('✅ Semua data berhasil dihapus', 'success');
+                await refreshData();
+            } catch (e) { showToast('❌ Gagal hapus: ' + e.message, 'error'); }
+        }
+
+        // ==================== VIEW ====================
+        function openViewModal(id) {
+            const item = allData.find(d => d.id_x === id);
+            if (!item) { showToast('Data tidak ditemukan', 'error'); return; }
+            viewData = item;
+            const type = PARABLE_TYPES[item.parable_type];
+            const typeLabel = type ? `${type.icon} ${type.name}` : item.parable_type;
+            const date = item.created_date || item._raw?.created_at || '-';
+            const displayDate = date !== '-' ? new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+            document.getElementById('viewModalTitle').textContent = `👁️ ${escapeHtml(item.title)}`;
+            document.getElementById('viewMeta').innerHTML = `<strong>Metode:</strong> ${typeLabel} &nbsp;|&nbsp; <strong>AI:</strong> ${item.ai_source || '-'} &nbsp;|&nbsp; <strong>Dibuat:</strong> ${displayDate} &nbsp;|&nbsp; <strong>Oleh:</strong> ${escapeHtml(item.created_by)} ${isAdmin ? `&nbsp;|&nbsp; <span style="background:#c6f6d5;color:#276749;padding:1px 8px;border-radius:8px;font-size:11px;">👑</span>` : ''}`;
+            document.getElementById('viewPrompt').textContent = item.prompt;
+            document.getElementById('viewSource').textContent = item.ai_source || '-';
+            document.getElementById('viewResultWrapper').innerHTML = `<div class="ql-editor">${item.result}</div>`;
+            document.getElementById('viewModal').classList.add('active');
+        }
+
+        function copyViewResult() {
+            const resultHtml = document.getElementById('viewResultWrapper').innerHTML;
+            if (!resultHtml) { showToast('Tidak ada konten', 'error'); return; }
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = resultHtml;
+            const plainText = tempDiv.textContent;
+            navigator.clipboard.writeText(plainText).then(() => showToast('✅ Konten disalin!', 'success')).catch(() => {
+                const ta = document.createElement('textarea'); ta.value = plainText;
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                document.body.removeChild(ta); showToast('✅ Konten disalin!', 'success');
+            });
+        }
+
+        function downloadViewDoc() {
+            const title = viewData?.title || 'ilustrasi-parabel';
+            const content = document.getElementById('viewResultWrapper').innerHTML || '';
+            const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(title)}</title><style>body { font-family: 'Georgia', 'Times New Roman', serif; padding: 40px; color: #2d3748; line-height: 1.9; max-width: 800px; margin: auto; } h1, h2, h3, h4 { color: #1a202c; font-family: 'Segoe UI', Arial, sans-serif; } p { margin: 10px 0; text-align: justify; } blockquote { border-left: 4px solid #b7791f; padding-left: 16px; margin: 12px 0; color: #744210; font-style: italic; background: #fffaf0; padding: 12px 16px; border-radius: 8px; } ul, ol { padding-left: 24px; } hr { border: none; border-top: 2px dashed #e2e8f0; margin: 20px 0; }</style></head><body>${content}</body></html>`;
+            const blob = new Blob([htmlContent], { type: 'application/msword;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `${title}.doc`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('✅ File .doc berhasil didownload!', 'success');
+        }
+
+        // ==================== INFO ====================
+        function openInfoModal(toolKey) {
+            const type = PARABLE_TYPES[toolKey];
+            if (!type) return;
+            const fieldsHtml = type.fields.map(f => `<li><strong>${f.label}</strong> — ${f.placeholder}</li>`).join('');
+            let useForHtml = '';
+            if (type.use_for) {
+                const lines = type.use_for.split('\n').filter(l => l.trim());
+                useForHtml = `<div style="background:#fffaf0;border-radius:8px;padding:12px 16px;margin-bottom:12px;border-left:4px solid #b7791f;"><strong style="color:#744210;">🎯 Cocok Dipakai Untuk:</strong><ul style="margin:6px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">${lines.map(l => `<li>${l.replace('✅', '✔️')}</li>`).join('')}</ul></div>`;
+            }
+            let contohHtml = '';
+            if (type.contoh && type.contoh.length) {
+                const items = type.contoh.map(c => `<div class="contoh-item"><span class="lbl">${c.lbl}:</span> ${c.txt}</div>`).join('');
+                contohHtml = `<div class="contoh-box"><div class="contoh-title">💡 Contoh Nyata:</div>${items}</div>`;
+            }
+            let hasilHtml = '';
+            if (type.contoh_hasil && type.contoh_hasil.length) {
+                const rows = type.contoh_hasil.map(h => `<div class="hasil-item"><span class="h-lbl">${h.lbl}</span>${h.txt}</div>`).join('');
+                const note = type.contoh_hasil_note || 'Gambaran output yang dihasilkan AI:';
+                hasilHtml = `<div class="hasil-box"><div class="hasil-title">📄 Contoh Gambaran Hasil AI:</div><div class="hasil-note">${note}</div>${rows}<div class="hasil-foot">Penjelasan di atas hanya ilustrasi. Hasil sebenarnya dari AI akan jauh lebih detail dan menyentuh.</div></div>`;
+            }
+            const modeHtml = `<div style="background:#ebf8ff;border-radius:8px;padding:12px 16px;margin-bottom:12px;border-left:4px solid #3182ce;">
+                <strong style="color:#2a69ac;">🎯 3 Mode Pencarian Cerita:</strong>
+                <ul style="margin:6px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">
+                    <li><strong>🌐 Cari dari Internet</strong> — 3 ilustrasi terkenal (bukan yang klise) + asal sumber</li>
+                    <li><strong>✨ Buat Sendiri</strong> — 3 ilustrasi original, belum pernah beredar</li>
+                    <li><strong>🎨 Kombinasi</strong> — 2 dari internet + 1 original</li>
+                </ul>
+            </div>`;
+            const formatHtml = `<div style="background:#faf5ff;border-radius:8px;padding:12px 16px;margin-bottom:12px;border-left:4px solid #805ad5;">
+                <strong style="color:#553c9a;">📏 3 Format Output:</strong>
+                <ul style="margin:6px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">
+                    <li><strong>⚡ Versi Singkat</strong> — 1-2 kalimat langsung ke inti + pelajaran</li>
+                    <li><strong>📜 Versi Asli</strong> — Cerita sesuai sumber aslinya (setting/tokoh TIDAK diubah), hanya pelajaran yang disesuaikan</li>
+                    <li><strong>🎭 Versi Adaptasi</strong> — Cerita diubah setting & tokohnya sesuai audiens, pelajaran juga disesuaikan</li>
+                </ul>
+            </div>`;
+            document.getElementById('infoModalTitle').textContent = `📋 ${type.icon} ${type.name}`;
+            document.getElementById('infoModalBody').innerHTML = `
+                <div style="text-align:center;margin-bottom:12px;">
+                    <span style="font-size:48px;display:block;">${type.icon}</span>
+                    <h3 style="font-size:20px;color:#2d3748;">${type.name}</h3>
+                    <p style="color:#718096;font-size:14px;">${type.desc}</p>
+                </div>
+                ${useForHtml}
+                ${contohHtml}
+                ${hasilHtml}
+                ${modeHtml}
+                ${formatHtml}
+                <div style="background:#f7fafc;border-radius:8px;padding:16px;margin-bottom:12px;">
+                    <h4 style="font-size:14px;color:#2d3748;margin-bottom:8px;">📝 Field yang Diisi:</h4>
+                    <ul style="padding-left:20px;color:#4a5568;font-size:13px;line-height:1.8;">${fieldsHtml}</ul>
+                </div>
+                <div style="background:#f0fff4;border-radius:8px;padding:12px 16px;border-left:4px solid #48bb78;">
+                    <strong style="color:#276749;">💡 Cara Penggunaan:</strong>
+                    <ol style="margin:4px 0 0 20px;color:#2d3748;font-size:13px;line-height:1.8;">
+                        <li>Pilih metode ilustrasi di Tab "Illustration Studio"</li>
+                        <li>Pilih mode pencarian (🌐 / ✨ / 🎨)</li>
+                        <li>Pilih format output (⚡ Singkat / 📜 Asli / 🎭 Adaptasi)</li>
+                        <li>Isi field (tema, audiens, konteks, elemen)</li>
+                        <li>Klik "Generate Prompt"</li>
+                        <li>Copy prompt, paste ke AI (ChatGPT/Claude/Gemini/DeepSeek)</li>
+                        <li>AI akan menghasilkan <strong>3 cerita berbeda</strong> sesuai mode & format</li>
+                        <li>Copy hasil AI, paste di editor → Simpan</li>
+                    </ol>
+                </div>
+            `;
+            document.getElementById('infoModal').classList.add('active');
+        }
+
+        // ==================== TAB ====================
+        function switchMainTab(tabId) {
+            document.querySelectorAll('.main-tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.main-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.main-tab-btn[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            if (tabId === 'tab3') renderHistory();
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // ==================== REFRESH ====================
+        async function refreshData() {
+            if (!currentUser) { showLogin(); return; }
+            showToast('🔄 Memuat data...', 'info');
+            await fetchData();
+            renderTools();
+            updateHistoryFilter();
+            renderHistory();
+            document.getElementById('tab3Badge').textContent = allData.length;
+            showToast(`✅ ${allData.length} ilustrasi dimuat`, 'success');
+        }
+
+        function updateHistoryFilter() {
+            const select = document.getElementById('historyFilterTool');
+            const currentValue = select.value;
+            const types = {};
+            allData.forEach(item => { if (!types[item.parable_type]) types[item.parable_type] = 0; types[item.parable_type]++; });
+            select.innerHTML = `<option value="all">📋 All Types (${allData.length})</option>`;
+            PARABLE_KEYS.forEach(key => {
+                const type = PARABLE_TYPES[key];
+                const count = types[key] || 0;
+                select.innerHTML += `<option value="${key}">${type.icon} ${type.name} (${count})</option>`;
+            });
+            if (currentValue) select.value = currentValue;
+        }
+
+        // ==================== TOAST & HELPER ====================
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = '0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+        });
+
+        window.debug = {
+            allData: () => allData,
+            refresh: refreshData,
+            PARABLE_TYPES, PARABLE_KEYS, SEARCH_MODES, FORMAT_MODES,
+            currentUser: () => currentUser,
+            isAdmin: () => isAdmin
+        };
+    </script>
+</body>
+</html>
