@@ -86,7 +86,7 @@
                   border-left:4px solid transparent; transition: all 0.2s; }
   .history-item:hover { background:#334155; border-left-color:#38bdf8; }
   .history-item b { color:#38bdf8; }
-  .history-actions { display: flex; gap: 8px; margin-top: 8px; }
+  .history-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 
   .filter-bar {
     background:#1e293b; padding:12px 16px; border-radius:8px;
@@ -94,6 +94,83 @@
     gap: 12px; font-size: 13px;
   }
   .filter-bar label { color:#94a3b8; }
+
+  /* ============ TABS ============ */
+  .tabs { display:flex; gap:6px; margin-top:22px; border-bottom:2px solid #1e293b; }
+  .tab-btn {
+    background:transparent; color:#94a3b8; border:0; margin:0;
+    padding:11px 20px; border-radius:8px 8px 0 0; font-weight:bold;
+    cursor:pointer; font-size:13px; border-bottom:3px solid transparent;
+    transition: all .15s;
+  }
+  .tab-btn:hover { background:#1e293b; color:#e2e8f0; }
+  .tab-btn.active { color:#38bdf8; border-bottom-color:#38bdf8; background:#1e293b; }
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
+
+  /* ============ SCORE TABLE ============ */
+  .score-table-wrap { overflow-x:auto; margin-top:12px; border-radius:8px; }
+  .score-table { border-collapse: separate; border-spacing:0; min-width:100%; }
+  .score-table th, .score-table td { white-space:nowrap; text-align:center; }
+  .score-table th.score-th { min-width: 96px; }
+  .score-table th.score-th.newest { background:#0c4a6e; color:#7dd3fc; }
+  .th-sub { font-size:10px; font-weight:normal; color:#94a3b8; }
+  .score-table td.col-no, .score-table th.col-no {
+    position: sticky; left: 0; z-index: 2; width: 52px; min-width: 52px;
+    background:#0f172a; text-align:center;
+  }
+  .score-table th.col-no { background:#1e293b; z-index: 4; }
+  .score-table td.col-kode, .score-table th.col-kode {
+    position: sticky; left: 52px; z-index: 2; width: 92px; min-width: 92px;
+    background:#0f172a; text-align:left;
+  }
+  .score-table th.col-kode { background:#1e293b; z-index: 4; }
+  .score-table tr:hover td.col-no,
+  .score-table tr:hover td.col-kode { background:#1e293b; }
+  .score-table td.col-kode { border-right:2px solid #334155; }
+
+  .score-click {
+    display:inline-block; min-width: 46px; text-align:center;
+    padding: 5px 10px; border-radius: 6px; font-weight: bold;
+    cursor: pointer; border:1px solid transparent; transition: all .15s;
+    font-size: 13px;
+  }
+  .score-click:hover { transform: translateY(-1px); border-color:#38bdf8; filter:brightness(1.2); }
+  .sc-high { background:#14532d; color:#86efac; }
+  .sc-mid  { background:#78350f; color:#fcd34d; }
+  .sc-low  { background:#1e293b; color:#94a3b8; }
+  .score-empty { color:#475569; text-align:center; }
+
+  /* ============ MODAL ============ */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(2,6,23,0.78);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999; padding: 20px; backdrop-filter: blur(2px);
+  }
+  .modal-box {
+    background:#1e293b; border:1px solid #334155; border-radius:14px;
+    padding:24px; max-width:460px; width:100%; position:relative;
+    box-shadow: 0 24px 70px rgba(0,0,0,.7);
+    animation: modalIn .18s ease;
+    max-height: 90vh; overflow-y:auto;
+  }
+  @keyframes modalIn { from { opacity:0; transform: translateY(12px) scale(.97); } }
+  .modal-close {
+    position:absolute; top:12px; right:12px; background:#334155; color:#e2e8f0;
+    border:0; border-radius:8px; width:32px; height:32px; padding:0; margin:0;
+    font-size:14px; cursor:pointer; line-height:32px;
+  }
+  .modal-close:hover { background:#475569; }
+  .modal-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-right:36px; }
+  .modal-symbol { font-size:22px; font-weight:bold; color:#38bdf8; }
+  .modal-score { font-size:26px; font-weight:bold; padding:4px 16px; border-radius:8px; }
+  .modal-sub { color:#94a3b8; font-size:12px; margin-top:6px; }
+  .detail-list { margin-top:18px; border-top:1px solid #334155; }
+  .detail-row { display:flex; justify-content:space-between; padding:10px 0;
+                border-bottom:1px solid #334155; font-size:13px; }
+  .detail-label { color:#94a3b8; }
+  .detail-val { font-weight:bold; }
+  .modal-foot { margin-top:16px; font-size:11px; color:#64748b; line-height:1.6; font-style:italic; }
 </style>
 </head>
 <body>
@@ -121,7 +198,23 @@
   </div>
 </div>
 
-<div id="result"></div>
+<!-- ================= TABS ================= -->
+<div class="tabs">
+  <button class="tab-btn active" data-tab="live" onclick="switchTab('live')">📊 Hasil Scan</button>
+  <button class="tab-btn" data-tab="score" onclick="switchTab('score')">🎯 Tabel Skor</button>
+</div>
+
+<div id="tab-live" class="tab-panel active">
+  <div id="result"></div>
+</div>
+
+<div id="tab-score" class="tab-panel">
+  <div id="scoreResult"></div>
+</div>
+
+<!-- ================= MODAL DETAIL ================= -->
+<div id="detailModal" class="modal-overlay" style="display:none;"
+     onclick="if(event.target===this) closeDetailModal()"></div>
 
 <script>
 // ============================================================
@@ -155,7 +248,8 @@ const CONFIG = {
   defaultDisplayLimit: 25,
   cacheTTLMinutes: 5,
   historyMaxEntries: 10,
-  minDelayMs: 100
+  minDelayMs: 100,
+  defaultScoreColumns: 5
 };
 
 const LS_KEYS = {
@@ -173,10 +267,32 @@ let liveState = {
   mode: '',
   total: 0,
   done: 0,
-  isRunning: false
+  isRunning: false,
+  isSnapshot: false
 };
 
 let displayLimit = CONFIG.defaultDisplayLimit;
+let scoreColumnLimit = CONFIG.defaultScoreColumns;
+let activeTab = 'live';
+
+// ============================================================
+// UTIL
+// ============================================================
+const pad2 = n => String(n).padStart(2, '0');
+
+function fmtDateTime(ts) {
+  const d = new Date(ts);
+  return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+function fmtFull(ts) {
+  return new Date(ts).toLocaleString('id-ID');
+}
+function fileStamp() {
+  const d = getWIBTime();
+  return `${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}-${pad2(d.getHours())}${pad2(d.getMinutes())}`;
+}
+function toNum(v) { const n = parseFloat(v); return isFinite(n) ? n : v; }
+function r2(v) { return v == null ? '' : Math.round(v * 100) / 100; }
 
 // ============================================================
 // LOCALSTORAGE
@@ -224,6 +340,7 @@ function cleanExpiredCache() {
 }
 
 function showCacheStatus() {
+  switchTab('live');
   const cache = LS.get(LS_KEYS.cache, {});
   const history = LS.get(LS_KEYS.history, []);
   const keys = Object.keys(cache);
@@ -232,6 +349,7 @@ function showCacheStatus() {
 
   if (keys.length === 0 && history.length === 0) {
     status.textContent = '📦 Cache & riwayat kosong.';
+    result.innerHTML = '';
     return;
   }
 
@@ -270,7 +388,6 @@ function saveToHistory(mode, results, isIntraday) {
 
   const history = LS.get(LS_KEYS.history, []);
 
-  // Snapshot lengkap semua saham yang berhasil discan
   const snapshot = {
     timestamp: Date.now(),
     mode,
@@ -291,15 +408,12 @@ function saveToHistory(mode, results, isIntraday) {
   };
 
   history.unshift(snapshot);
-
-  // Batasi jumlah entri
   LS.set(LS_KEYS.history, history.slice(0, CONFIG.historyMaxEntries));
-
-  // Simpan juga sebagai snapshot terakhir (untuk tombol "Hasil Scan Terakhir")
   LS.set(LS_KEYS.lastSnapshot, snapshot);
 }
 
 function showHistory() {
+  switchTab('live');
   const history = LS.get(LS_KEYS.history, []);
   const result = document.getElementById('result');
   const status = document.getElementById('status');
@@ -329,6 +443,9 @@ function showHistory() {
         <button class="small secondary" onclick="event.stopPropagation();loadHistorySnapshot(${idx})">
           👁️ Tampilkan Tabel
         </button>
+        <button class="small secondary" onclick="event.stopPropagation();exportHistoryItem(${idx})">
+          ⬇️ Excel
+        </button>
         <button class="small danger" onclick="event.stopPropagation();deleteHistory(${idx})">
           🗑️ Hapus
         </button>
@@ -336,7 +453,12 @@ function showHistory() {
     </div>`;
   }).join('');
 
-  result.innerHTML = `<div class="info"><b>📜 Riwayat Scan</b> (${history.length} entri, klik untuk lihat detail)</div>${items}`;
+  result.innerHTML = `
+    <div class="info" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <span><b>📜 Riwayat Scan</b> (${history.length} entri, klik untuk lihat detail)</span>
+      <button class="small secondary" style="margin:0;" onclick="exportAllHistory()">⬇️ Download Semua Riwayat (Excel)</button>
+    </div>
+    ${items}`;
 }
 
 function loadHistorySnapshot(idx) {
@@ -344,25 +466,25 @@ function loadHistorySnapshot(idx) {
   const snapshot = history[idx];
   if (!snapshot) return;
 
-  // Muat ke liveState supaya bisa dirender dengan renderLiveTable
+  switchTab('live');
+
   liveState = {
     scored: snapshot.results.map(r => ({ ...r })),
     isIntraday: snapshot.isIntraday,
     mode: snapshot.mode,
     total: snapshot.count,
     done: snapshot.count,
-    isRunning: false
+    isRunning: false,
+    isSnapshot: true
   };
 
-  // Render tabel
-  renderLiveTable(true);  // true = mode snapshot (badge beda)
+  document.getElementById('result').innerHTML = '';
+  renderLiveTable();
 
-  // Scroll ke atas hasil
   document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
 
-  const tgl = new Date(snapshot.timestamp).toLocaleString('id-ID');
   document.getElementById('status').textContent =
-    `📜 Snapshot dari ${tgl} — ${snapshot.count} saham, mode ${snapshot.mode}.`;
+    `📜 Snapshot dari ${fmtFull(snapshot.timestamp)} — ${snapshot.count} saham, mode ${snapshot.mode}.`;
 }
 
 function deleteHistory(idx) {
@@ -370,16 +492,20 @@ function deleteHistory(idx) {
   const history = LS.get(LS_KEYS.history, []);
   history.splice(idx, 1);
   LS.set(LS_KEYS.history, history);
+  renderScoreTable();
   showHistory();
 }
 
 function loadLastSnapshot() {
   const snap = LS.get(LS_KEYS.lastSnapshot, null);
   if (!snap) {
+    switchTab('live');
     document.getElementById('status').textContent = '📂 Belum ada snapshot scan terakhir.';
     document.getElementById('result').innerHTML = `<div class="info">📂 Belum ada hasil scan tersimpan. Jalankan scan dulu.</div>`;
     return;
   }
+
+  switchTab('live');
 
   liveState = {
     scored: snap.results.map(r => ({ ...r })),
@@ -387,14 +513,15 @@ function loadLastSnapshot() {
     mode: snap.mode,
     total: snap.count,
     done: snap.count,
-    isRunning: false
+    isRunning: false,
+    isSnapshot: true
   };
 
-  renderLiveTable(true);
+  document.getElementById('result').innerHTML = '';
+  renderLiveTable();
   document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
 
-  const tgl = new Date(snap.timestamp).toLocaleString('id-ID');
-  document.getElementById('status').textContent = `📂 Snapshot terakhir dari ${tgl}.`;
+  document.getElementById('status').textContent = `📂 Snapshot terakhir dari ${fmtFull(snap.timestamp)}.`;
 }
 
 function clearAllCache() {
@@ -402,8 +529,23 @@ function clearAllCache() {
   LS.remove(LS_KEYS.cache);
   LS.remove(LS_KEYS.history);
   LS.remove(LS_KEYS.lastSnapshot);
+  switchTab('live');
   document.getElementById('status').textContent = '🗑️ Semua data dihapus.';
   document.getElementById('result').innerHTML = '';
+  document.getElementById('scoreResult').innerHTML =
+    `<div class="info">🎯 Belum ada data skor. Jalankan <b>Scan Sekarang</b> dulu.</div>`;
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.tab === tab));
+  document.getElementById('tab-live').classList.toggle('active', tab === 'live');
+  document.getElementById('tab-score').classList.toggle('active', tab === 'score');
+  if (tab === 'score') renderScoreTable();
 }
 
 // ============================================================
@@ -601,17 +743,16 @@ function scoreIntraday(d) {
 }
 
 // ============================================================
-// RENDER TABEL
+// RENDER TABEL LIVE (TAB 1)
 // ============================================================
-function renderLiveTable(isSnapshot = false) {
+function renderLiveTable() {
   const result = document.getElementById('result');
-  const { scored, isIntraday, mode, isRunning } = liveState;
+  const { scored, isIntraday, mode, isRunning, isSnapshot } = liveState;
 
   if (scored.length === 0) return;
 
   const sorted = [...scored].sort((a,b) => b.score - a.score);
 
-  // Tentukan berapa yang ditampilkan
   let limit = displayLimit === 'all' ? sorted.length : Math.min(displayLimit, sorted.length);
   const topN = sorted.slice(0, limit);
   const avgScore = scored.reduce((a,b) => a + b.score, 0) / scored.length;
@@ -650,14 +791,12 @@ function renderLiveTable(isSnapshot = false) {
     }
   }).join('');
 
-  // Badge status
   const badge = isSnapshot
     ? `<span class="live-badge" style="background:#78350f;color:#fde68a;">📜 SNAPSHOT</span>`
     : (isRunning
         ? `<span class="live-badge">⚡ LIVE</span>`
         : `<span class="live-badge">✅ SELESAI</span>`);
 
-  // Filter bar
   const filterBar = `
     <div class="filter-bar">
       <label>📊 Tampilkan:</label>
@@ -669,6 +808,7 @@ function renderLiveTable(isSnapshot = false) {
         <option value="all" ${displayLimit === 'all' ? 'selected' : ''}>Semua (${sorted.length})</option>
       </select>
       <span style="color:#94a3b8;">Menampilkan <b style="color:#38bdf8;">${topN.length}</b> dari <b style="color:#38bdf8;">${sorted.length}</b> saham</span>
+      <button class="small secondary" style="margin:0 0 0 auto;" onclick="exportLiveTab()">⬇️ Download Excel</button>
     </div>
   `;
 
@@ -696,7 +836,417 @@ function renderLiveTable(isSnapshot = false) {
 
 function changeDisplayLimit(val) {
   displayLimit = val === 'all' ? 'all' : parseInt(val);
-  renderLiveTable(liveState.isRunning === false);
+  renderLiveTable();
+}
+
+// ============================================================
+// TAB 2 — TABEL SKOR (MATRIKS SKOR PER SCAN)
+// ============================================================
+function buildScoreMatrix(snaps) {
+  const map = new Map();   // symbol -> { [snapIndex]: result }
+
+  snaps.forEach((snap, si) => {
+    (snap.results || []).forEach(r => {
+      if (!map.has(r.symbol)) map.set(r.symbol, {});
+      const entry = map.get(r.symbol);
+      // kalau duplikat dalam 1 snapshot, ambil skor tertinggi
+      if (!entry[si] || r.score > entry[si].score) entry[si] = r;
+    });
+  });
+
+  const rows = [];
+  map.forEach((bySnap, symbol) => {
+    const scores = snaps.map((_, i) => bySnap[i] ? bySnap[i].score : null);
+    rows.push({ symbol, scores, bySnap });
+  });
+
+  // Urutkan: kolom terbaru (index 0) skor tertinggi dulu.
+  // Baris yang gagal discan di snapshot terbaru (null) diletakkan di bawah,
+  // lalu diurutkan lagi berdasarkan snapshot berikutnya.
+  rows.sort((a, b) => {
+    for (let i = 0; i < snaps.length; i++) {
+      const av = a.scores[i], bv = b.scores[i];
+      if (av == null && bv == null) continue;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (bv !== av) return bv - av;
+    }
+    return a.symbol.localeCompare(b.symbol);
+  });
+
+  return { rows };
+}
+
+function renderScoreTable() {
+  const container = document.getElementById('scoreResult');
+  const history = LS.get(LS_KEYS.history, []);
+
+  if (!history.length) {
+    container.innerHTML = `<div class="info">🎯 Belum ada data skor. Jalankan <b>Scan Sekarang</b> dulu.</div>`;
+    return;
+  }
+
+  const snaps = scoreColumnLimit === 'all' ? history : history.slice(0, scoreColumnLimit);
+  const { rows } = buildScoreMatrix(snaps);
+
+  const headCells = snaps.map((s, i) =>
+    `<th class="score-th${i === 0 ? ' newest' : ''}">
+       ${i === 0 ? '⭐ ' : ''}${fmtDateTime(s.timestamp)}
+       <br><span class="th-sub">${s.mode} · ${s.count} saham</span>
+     </th>`
+  ).join('');
+
+  const bodyRows = rows.map((row, idx) => {
+    const cells = snaps.map((snap, i) => {
+      const r = row.bySnap[i];
+      if (!r) return `<td class="score-empty" title="Tidak berhasil discan pada snapshot ini">–</td>`;
+      const cls = r.score >= 60 ? 'sc-high' : r.score >= 30 ? 'sc-mid' : 'sc-low';
+      return `<td>
+        <span class="score-click ${cls}"
+              onclick="showScoreDetail(${i}, '${row.symbol}')"
+              title="Klik untuk lihat detail">${r.score}</span>
+      </td>`;
+    }).join('');
+
+    return `<tr>
+      <td class="col-no">${idx + 1}</td>
+      <td class="col-kode"><b>${row.symbol}</b></td>
+      ${cells}
+    </tr>`;
+  }).join('');
+
+  const latestScores = rows.map(r => r.scores[0]).filter(v => v != null);
+  const topNow = latestScores.length ? Math.max(...latestScores) : '-';
+  const avgNow = latestScores.length
+    ? (latestScores.reduce((a,b)=>a+b,0) / latestScores.length).toFixed(1) : '-';
+  const failedNow = rows.filter(r => r.scores[0] == null).length;
+
+  container.innerHTML = `
+    <div class="filter-bar">
+      <label>📊 Kolom skor:</label>
+      <select onchange="changeScoreColumnLimit(this.value)">
+        <option value="3" ${scoreColumnLimit == 3 ? 'selected' : ''}>3 scan terakhir</option>
+        <option value="5" ${scoreColumnLimit == 5 ? 'selected' : ''}>5 scan terakhir</option>
+        <option value="8" ${scoreColumnLimit == 8 ? 'selected' : ''}>8 scan terakhir</option>
+        <option value="all" ${scoreColumnLimit === 'all' ? 'selected' : ''}>Semua (${history.length})</option>
+      </select>
+      <span style="color:#94a3b8;">
+        <b style="color:#38bdf8;">${rows.length}</b> saham ·
+        kolom terbaru: <b style="color:#38bdf8;">${snaps.length}</b>
+      </span>
+      <button class="small secondary" style="margin:0 0 0 auto;" onclick="exportScoreTab()">⬇️ Download Excel</button>
+    </div>
+
+    <div class="success" style="margin-top:12px;">
+      ⭐ Kolom paling kiri = scan <b>terbaru</b>.
+      Klik angka skor untuk melihat detail (3D momentum, perubahan hari ini, volume, dll).<br>
+      Skor tertinggi sekarang: <b>${topNow}</b> · Rata-rata: <b>${avgNow}</b> ·
+      <span style="color:#fbbf24;">${failedNow} saham gagal discan</span> pada snapshot terbaru (ditampilkan dengan tanda "–").
+    </div>
+
+    <div class="score-table-wrap">
+      <table class="score-table">
+        <thead>
+          <tr>
+            <th class="col-no">#</th>
+            <th class="col-kode">Kode</th>
+            ${headCells}
+          </tr>
+        </thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function changeScoreColumnLimit(val) {
+  scoreColumnLimit = val === 'all' ? 'all' : parseInt(val);
+  renderScoreTable();
+}
+
+// ============================================================
+// MODAL DETAIL SKOR
+// ============================================================
+function showScoreDetail(snapIdx, symbol) {
+  const history = LS.get(LS_KEYS.history, []);
+  const snap = history[snapIdx];
+  if (!snap) return;
+
+  const r = (snap.results || []).find(x => x.symbol === symbol);
+  if (!r) return;
+
+  const scoreCls = r.score >= 60 ? 'sc-high' : r.score >= 30 ? 'sc-mid' : 'sc-low';
+
+  const metricRows = snap.isIntraday ? [
+    ['Gap %',            r.displayGap,      true],
+    ['Intraday %',       r.displayIntraday, true],
+    ['vs Prev Close %',  r.displayVsPrev,   true],
+    ['Vol Rasio',        r.volRatio != null ? r.volRatio.toFixed(2) + 'x' : '-', false],
+    ['Posisi Range',     r.rangePos != null ? (r.rangePos * 100).toFixed(0) + '%' : '-', false],
+    ['Harga',            r.displayPrice != null ? Number(r.displayPrice).toLocaleString('id-ID') : '-', false]
+  ] : [
+    ['3D Momentum %',       r.displayMomentum, true],
+    ['Perubahan Hari Ini %', r.displayChange,  true],
+    ['Vol Rasio',           r.volRatio != null ? r.volRatio.toFixed(2) + 'x' : '-', false],
+    ['Posisi Range',        r.rangePos != null ? (r.rangePos * 100).toFixed(0) + '%' : '-', false],
+    ['Harga',               r.displayPrice != null ? Number(r.displayPrice).toLocaleString('id-ID') : '-', false]
+  ];
+
+  const rowsHtml = metricRows.map(([label, val, isPct]) => {
+    let cls = '';
+    if (isPct && typeof val === 'string' && val !== '-') {
+      cls = val.trim().startsWith('-') ? 'negative' : 'positive';
+    }
+    return `<div class="detail-row">
+      <span class="detail-label">${label}</span>
+      <span class="detail-val ${cls}">${val ?? '-'}</span>
+    </div>`;
+  }).join('');
+
+  const modal = document.getElementById('detailModal');
+  modal.innerHTML = `
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+      <div class="modal-head">
+        <div class="modal-symbol">${r.symbol}</div>
+        <div class="modal-score ${scoreCls}">${r.score}</div>
+      </div>
+      <div class="modal-sub">
+        📅 ${fmtFull(snap.timestamp)} &nbsp;·&nbsp; Mode: <b>${snap.mode}</b>
+        ${snap.isIntraday ? ' · Data intraday' : ' · Data harian'}
+      </div>
+      <div class="detail-list">${rowsHtml}</div>
+      <div class="modal-foot">
+        Skor = kombinasi momentum, volume, dan posisi range.
+        Skor tinggi bukan jaminan profit — selalu pasang stop-loss.
+      </div>
+    </div>`;
+  modal.style.display = 'flex';
+}
+
+function closeDetailModal() {
+  document.getElementById('detailModal').style.display = 'none';
+  document.getElementById('detailModal').innerHTML = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeDetailModal();
+});
+
+// ============================================================
+// EXPORT EXCEL (SpreadsheetML — mendukung banyak sheet)
+// ============================================================
+function xmlEsc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function sheetNameSafe(name) {
+  const n = String(name).replace(/[\\\/\?\*\[\]:]/g, '-').trim();
+  return (n || 'Sheet').slice(0, 31);
+}
+
+function buildWorksheet(name, rows) {
+  const body = rows.map(row => {
+    const cells = row.map(v => {
+      if (v === null || v === undefined || v === '') return '<Cell/>';
+      if (typeof v === 'number' && isFinite(v)) {
+        return `<Cell><Data ss:Type="Number">${v}</Data></Cell>`;
+      }
+      return `<Cell><Data ss:Type="String">${xmlEsc(v)}</Data></Cell>`;
+    }).join('');
+    return `<Row>${cells}</Row>`;
+  }).join('');
+  return `<Worksheet ss:Name="${xmlEsc(sheetNameSafe(name))}"><Table>${body}</Table></Worksheet>`;
+}
+
+function downloadExcel(filename, sheets) {
+  const xml =
+    '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<?mso-application progid="Excel.Sheet"?>\n' +
+    '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ' +
+    'xmlns:o="urn:schemas-microsoft-com:office:office" ' +
+    'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
+    'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" ' +
+    'xmlns:html="http://www.w3.org/TR/REC-html40">' +
+    sheets.map(s => buildWorksheet(s.name, s.rows)).join('') +
+    '</Workbook>';
+
+  const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+/* ---------- Export Tab 1 (Hasil Scan) ---------- */
+function exportLiveTab() {
+  const { scored, isIntraday, mode, isSnapshot } = liveState;
+  if (!scored || scored.length === 0) {
+    alert('Belum ada data untuk diekspor. Jalankan scan dulu.');
+    return;
+  }
+
+  const sorted = [...scored].sort((a,b) => b.score - a.score);
+  const limit = displayLimit === 'all' ? sorted.length : Math.min(displayLimit, sorted.length);
+  const data = sorted.slice(0, limit);
+
+  const header = isIntraday
+    ? ['#','Kode','Skor','Gap %','Intraday %','vs Prev %','Vol Rasio','Posisi Range (%)','Harga']
+    : ['#','Kode','Skor','3D Momentum %','Perubahan Hari Ini %','Vol Rasio','Posisi Range (%)','Harga'];
+
+  const rows = [header];
+  data.forEach((s, i) => {
+    if (isIntraday) {
+      rows.push([i+1, s.symbol, s.score, toNum(s.displayGap), toNum(s.displayIntraday),
+                 toNum(s.displayVsPrev), r2(s.volRatio), Math.round(s.rangePos*100), s.displayPrice]);
+    } else {
+      rows.push([i+1, s.symbol, s.score, toNum(s.displayMomentum), toNum(s.displayChange),
+                 r2(s.volRatio), Math.round(s.rangePos*100), s.displayPrice]);
+    }
+  });
+
+  rows.push([]);
+  rows.push(['Mode', mode]);
+  rows.push(['Sumber', isSnapshot ? 'Snapshot riwayat' : 'Hasil scan langsung']);
+  rows.push(['Diekspor', new Date().toLocaleString('id-ID')]);
+  rows.push(['Jumlah ditampilkan', data.length]);
+  rows.push(['Total saham dianalisis', scored.length]);
+
+  downloadExcel(`screener-idx-hasil-scan-${fileStamp()}.xls`,
+    [{ name: 'Hasil Scan', rows }]);
+}
+
+/* ---------- Export Tab 2 (Tabel Skor) ---------- */
+function exportScoreTab() {
+  const history = LS.get(LS_KEYS.history, []);
+  if (!history.length) {
+    alert('Belum ada data skor untuk diekspor.');
+    return;
+  }
+
+  const snaps = scoreColumnLimit === 'all' ? history : history.slice(0, scoreColumnLimit);
+  const { rows } = buildScoreMatrix(snaps);
+
+  const header = ['#', 'Kode'];
+  snaps.forEach((s, i) => {
+    header.push(`Skor ${fmtDateTime(s.timestamp)} (${s.mode})${i === 0 ? ' - TERBARU' : ''}`);
+  });
+
+  const body = rows.map((r, i) => [
+    i + 1,
+    r.symbol,
+    ...r.scores.map(v => (v == null ? '' : v))
+  ]);
+
+  const info = [
+    [],
+    ['Keterangan', 'Kolom skor diurutkan dari scan TERBARU (paling kiri) ke terlama.'],
+    ['Tanda kosong', 'Saham tidak berhasil discan pada snapshot tersebut.'],
+    ['Jumlah kolom', snaps.length],
+    ['Jumlah saham', rows.length],
+    ['Diekspor', new Date().toLocaleString('id-ID')]
+  ];
+
+  downloadExcel(`screener-idx-tabel-skor-${fileStamp()}.xls`,
+    [{ name: 'Tabel Skor', rows: [header, ...body, ...info] }]);
+}
+
+/* ---------- Export Riwayat (1 snapshot) ---------- */
+function exportHistoryItem(idx) {
+  const history = LS.get(LS_KEYS.history, []);
+  const h = history[idx];
+  if (!h) return;
+
+  const header = h.isIntraday
+    ? ['#','Kode','Skor','Gap %','Intraday %','vs Prev %','Vol Rasio','Posisi Range (%)','Harga']
+    : ['#','Kode','Skor','3D Momentum %','Perubahan Hari Ini %','Vol Rasio','Posisi Range (%)','Harga'];
+
+  const rows = [header];
+  h.results.forEach((s, i) => {
+    if (h.isIntraday) {
+      rows.push([i+1, s.symbol, s.score, toNum(s.displayGap), toNum(s.displayIntraday),
+                 toNum(s.displayVsPrev), r2(s.volRatio),
+                 s.rangePos != null ? Math.round(s.rangePos*100) : '', s.displayPrice]);
+    } else {
+      rows.push([i+1, s.symbol, s.score, toNum(s.displayMomentum), toNum(s.displayChange),
+                 r2(s.volRatio),
+                 s.rangePos != null ? Math.round(s.rangePos*100) : '', s.displayPrice]);
+    }
+  });
+
+  rows.push([]);
+  rows.push(['Mode', h.mode]);
+  rows.push(['Waktu scan', fmtFull(h.timestamp)]);
+  rows.push(['Jumlah saham', h.count]);
+
+  downloadExcel(`screener-idx-riwayat-${fileStamp()}.xls`,
+    [{ name: `Riwayat ${fmtDateTime(h.timestamp)}`, rows }]);
+}
+
+/* ---------- Export Riwayat (semua, multi-sheet) ---------- */
+function exportAllHistory() {
+  const history = LS.get(LS_KEYS.history, []);
+  if (!history.length) {
+    alert('Belum ada riwayat untuk diekspor.');
+    return;
+  }
+
+  // Sheet ringkasan
+  const summaryRows = [
+    ['#', 'Waktu Scan', 'Mode', 'Jumlah Saham', 'Skor Tertinggi', 'Kode Tertinggi', 'Rata-rata Skor']
+  ];
+  history.forEach((h, i) => {
+    const sorted = [...h.results].sort((a,b) => b.score - a.score);
+    const avg = h.results.length
+      ? (h.results.reduce((a,b) => a + b.score, 0) / h.results.length).toFixed(1) : '-';
+    summaryRows.push([
+      i + 1,
+      fmtFull(h.timestamp),
+      h.mode,
+      h.count,
+      sorted[0] ? sorted[0].score : '',
+      sorted[0] ? sorted[0].symbol : '',
+      avg
+    ]);
+  });
+
+  const sheets = [{ name: 'Ringkasan', rows: summaryRows }];
+
+  history.forEach((h, i) => {
+    const header = h.isIntraday
+      ? ['#','Kode','Skor','Gap %','Intraday %','vs Prev %','Vol Rasio','Posisi Range (%)','Harga']
+      : ['#','Kode','Skor','3D Momentum %','Perubahan Hari Ini %','Vol Rasio','Posisi Range (%)','Harga'];
+
+    const rows = [header];
+    const sorted = [...h.results].sort((a,b) => b.score - a.score);
+    sorted.forEach((s, j) => {
+      if (h.isIntraday) {
+        rows.push([j+1, s.symbol, s.score, toNum(s.displayGap), toNum(s.displayIntraday),
+                   toNum(s.displayVsPrev), r2(s.volRatio),
+                   s.rangePos != null ? Math.round(s.rangePos*100) : '', s.displayPrice]);
+      } else {
+        rows.push([j+1, s.symbol, s.score, toNum(s.displayMomentum), toNum(s.displayChange),
+                   r2(s.volRatio),
+                   s.rangePos != null ? Math.round(s.rangePos*100) : '', s.displayPrice]);
+      }
+    });
+
+    sheets.push({
+      name: `${pad2(history.length - i)} ${fmtDateTime(h.timestamp)}`.replace(/[:]/g, '.'),
+      rows
+    });
+  });
+
+  downloadExcel(`screener-idx-semua-riwayat-${fileStamp()}.xls`, sheets);
 }
 
 // ============================================================
@@ -714,6 +1264,8 @@ async function scanStocks() {
   const progressSymbol = document.getElementById('progressSymbol');
   const modeInfo = getModeInfo();
 
+  switchTab('live');
+
   btn.disabled = true;
   result.innerHTML = '';
   progressWrap.style.display = 'block';
@@ -726,7 +1278,8 @@ async function scanStocks() {
     mode: modeInfo.mode,
     total: WATCHLIST.length,
     done: 0,
-    isRunning: true
+    isRunning: true,
+    isSnapshot: false
   };
 
   const removed = cleanExpiredCache();
@@ -768,17 +1321,18 @@ async function scanStocks() {
   }
 
   liveState.isRunning = false;
+  liveState.isSnapshot = false;
   renderLiveTable();
 
-  // Simpan snapshot
+  // Simpan snapshot ke riwayat & refresh tabel skor (tab 2)
   const sorted = [...liveState.scored].sort((a,b) => b.score - a.score);
   saveToHistory(modeInfo.mode, sorted, isIntraday);
+  renderScoreTable();
 
   const wib = getWIBTime();
-  status.textContent = `✅ Selesai. ${liveState.scored.length} berhasil, ${failedCount} gagal, dari ${WATCHLIST.length} saham. Waktu: ${wib.toLocaleTimeString('id-ID')}`;
+  status.textContent = `✅ Selesai. ${liveState.scored.length} berhasil, ${failedCount} gagal, dari ${WATCHLIST.length} saham. Waktu: ${wib.toLocaleTimeString('id-ID')} — cek tab 🎯 Tabel Skor untuk perbandingan antar scan.`;
   progressWrap.style.display = 'none';
 
-  // Info kenapa tidak semua berhasil
   if (failedCount > 0) {
     const infoDiv = document.createElement('div');
     infoDiv.className = 'info';
@@ -787,7 +1341,8 @@ async function scanStocks() {
       • Proxy CORS timeout atau diblokir sementara<br>
       • Yahoo tidak punya data lengkap untuk saham itu<br>
       • Data candle kurang dari 3 baris (saham tidak aktif)<br><br>
-      <i>Saham yang gagal otomatis dilewati. Ini normal terjadi 30–60% dari watchlist.</i>
+      <i>Saham yang gagal otomatis dilewati. Di <b>Tabel Skor</b>, baris saham ini tetap muncul
+      dengan tanda "–" pada kolom scan terbaru, sehingga riwayat skornya tidak hilang.</i>
     `;
     result.appendChild(infoDiv);
   }
@@ -801,6 +1356,8 @@ async function scanStocks() {
     • <b>Hari Ini %</b>: perubahan harga kemarin → terakhir.<br>
     • <b>Vol Rasio</b>: volume ÷ rata-rata 3 hari (>1.5x = minat besar).<br>
     • <b>Posisi Range</b>: posisi close di high-low (100% = di high).<br><br>
+    <b>🎯 Tab Tabel Skor:</b> menampilkan matriks skor lintas scan. Kolom paling kiri adalah
+    scan terbaru; klik angka skor untuk melihat detail lengkap saham tersebut.<br><br>
     <b>⚠️ Catatan:</b> Skor bukan jaminan profit. Pasang stop-loss 1–2%. Data Yahoo delay ±15 menit.
   `;
   result.appendChild(noteDiv);
