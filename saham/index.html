@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screener Saham Adaptif IDX</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    background:#0f172a; color:#e2e8f0; padding:20px; margin:0;
+    max-width: 1300px; margin: 0 auto;
+  }
+  h1 { color:#38bdf8; font-size: 22px; }
+  .mode-badge { display:inline-block; padding:5px 12px; border-radius:20px;
+                font-size:12px; font-weight:bold; margin-left:8px; vertical-align:middle; }
+  .mode-premarket { background:#a16207; color:#fff; }
+  .mode-preopening { background:#b45309; color:#fff; }
+  .mode-opening { background:#15803d; color:#fff; }
+  .mode-intraday { background:#0369a1; color:#fff; }
+  button {
+    background:#38bdf8; color:#0f172a; border:0; padding:12px 20px;
+    border-radius:6px; font-weight:bold; cursor:pointer; margin:10px 6px 0 0;
+    font-size: 13px;
+  }
+  button:hover:not(:disabled) { background:#7dd3fc; }
+  button:disabled { opacity:0.5; cursor:wait; }
+  button.secondary { background:#334155; color:#e2e8f0; }
+  button.secondary:hover { background:#475569; }
+  button.danger { background:#7f1d1d; color:#fecaca; }
+  button.danger:hover { background:#991b1b; }
+  button.small { padding: 6px 12px; font-size: 12px; }
+
+  select {
+    background:#1e293b; color:#e2e8f0; border:1px solid #475569;
+    padding:8px 12px; border-radius:6px; font-size:13px; cursor:pointer;
+    margin-left: 6px;
+  }
+
+  .progress-wrap { margin: 15px 0; }
+  .progress-bar { height: 8px; background: #1e293b; border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg,#38bdf8,#4ade80);
+                   width: 0%; transition: width 0.3s ease; }
+  .progress-text { display: flex; justify-content: space-between;
+                   font-size: 13px; color:#94a3b8; margin-top: 6px; }
+  .progress-text b { color: #38bdf8; }
+
+  #status { margin:15px 0; font-style:italic; color:#94a3b8; font-size: 13px; }
+  #clock { font-family:monospace; font-size:14px; color:#38bdf8; }
+
+  table { width:100%; border-collapse:collapse; margin-top:12px; font-size: 13px; }
+  th, td { padding:9px 8px; text-align:left; border-bottom:1px solid #334155; }
+  th { background:#1e293b; color:#38bdf8; font-weight:600; position: sticky; top: 0; }
+  tr:hover { background:#1e293b; }
+  tr.new-row { animation: highlight 1.2s ease; }
+  @keyframes highlight {
+    0% { background: #166534; }
+    100% { background: transparent; }
+  }
+
+  .positive { color:#4ade80; font-weight:bold; }
+  .negative { color:#f87171; font-weight:bold; }
+  .score { color:#fbbf24; font-weight:bold; font-size: 14px; }
+  .note { background:#1e293b; padding:15px; border-radius:8px; margin-top:20px;
+          font-size:13px; line-height:1.7; }
+  .warning { background:#7c2d12; padding:14px; border-radius:8px;
+             margin:15px 0; border-left:4px solid #fb923c; line-height: 1.6; }
+  .info { background:#0c4a6e; padding:14px; border-radius:8px;
+          margin:15px 0; border-left:4px solid #38bdf8; line-height: 1.6; }
+  .success { background:#14532d; padding:14px 16px; border-radius:8px;
+             margin:15px 0; border-left:4px solid #4ade80; line-height: 1.6; }
+  code { background:#334155; padding:2px 6px; border-radius:4px; font-size:12px; }
+
+  .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+              background: #4ade80; margin-right: 6px; animation: pulse 1.2s infinite; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.3); }
+  }
+  .live-badge { display: inline-block; background: #166534; color: #bbf7d0;
+                padding: 3px 10px; border-radius: 12px; font-size: 11px;
+                font-weight: bold; margin-left: 8px; }
+
+  .history-item { background:#1e293b; padding:14px; border-radius:8px;
+                  margin-bottom:10px; font-size:13px; cursor:pointer;
+                  border-left:4px solid transparent; transition: all 0.2s; }
+  .history-item:hover { background:#334155; border-left-color:#38bdf8; }
+  .history-item b { color:#38bdf8; }
+  .history-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+  .filter-bar {
+    background:#1e293b; padding:12px 16px; border-radius:8px;
+    margin-top:12px; display:flex; align-items:center; flex-wrap:wrap;
+    gap: 12px; font-size: 13px;
+  }
+  .filter-bar label { color:#94a3b8; }
+</style>
+</head>
+<body>
+
+<h1>📈 Screener Saham Adaptif IDX <span id="modeBadge" class="mode-badge">—</span></h1>
+<p style="color:#94a3b8; font-size:13px;">Waktu WIB: <span id="clock">--:--:--</span></p>
+
+<div>
+  <button id="scanBtn" onclick="scanStocks()">🔍 Scan Sekarang</button>
+  <button class="secondary" onclick="showHistory()">📜 Riwayat Scan</button>
+  <button class="secondary" onclick="loadLastSnapshot()">📂 Hasil Scan Terakhir</button>
+  <button class="secondary" onclick="showCacheStatus()">📦 Status Cache</button>
+  <button class="danger" onclick="clearAllCache()">🗑️ Hapus Semua</button>
+</div>
+
+<div id="status"></div>
+
+<div id="progressWrap" class="progress-wrap" style="display:none;">
+  <div class="progress-bar">
+    <div id="progressFill" class="progress-fill"></div>
+  </div>
+  <div class="progress-text">
+    <span><span class="live-dot"></span>Memproses: <b id="progressSymbol">—</b></span>
+    <span><b id="progressCount">0/0</b></span>
+  </div>
+</div>
+
+<div id="result"></div>
+
+<script>
+// ============================================================
+// WATCHLIST 100 SAHAM
+// ============================================================
+const WATCHLIST = [
+  'BBCA.JK','BBRI.JK','BMRI.JK','BBNI.JK','BBTN.JK','BRIS.JK','ARTO.JK',
+  'BNGA.JK','BDMN.JK','NISP.JK','PNLF.JK','BFIN.JK','ADMF.JK',
+  'ADRO.JK','AADI.JK','ADMR.JK','PTBA.JK','ITMG.JK','HRUM.JK','INDY.JK',
+  'MEDC.JK','PGAS.JK','PGEO.JK','ELSA.JK','ENRG.JK','PTRO.JK','RAJA.JK',
+  'AKRA.JK','DEWA.JK','ESSA.JK','RATU.JK',
+  'ANTM.JK','INCO.JK','MDKA.JK','MBMA.JK','NCKL.JK','AMMN.JK','BRMS.JK',
+  'TINS.JK','PSAB.JK','HRTA.JK',
+  'UNVR.JK','ICBP.JK','INDF.JK','MYOR.JK','CMRY.JK','GGRM.JK','HMSP.JK',
+  'AMRT.JK','MAPI.JK','MAPA.JK','ERAA.JK','ACES.JK','JPFA.JK','CPIN.JK',
+  'TLKM.JK','EXCL.JK','ISAT.JK','TOWR.JK','GOTO.JK','BUKA.JK','EMTK.JK',
+  'MTEL.JK','WIFI.JK',
+  'JSMR.JK','SMGR.JK','INTP.JK','UNTR.JK','ADHI.JK','WIKA.JK','PTPP.JK',
+  'BSDE.JK','CTRA.JK','PWON.JK','SMRA.JK','KIJA.JK','KPIG.JK','BKSL.JK',
+  'CBDK.JK','SSIA.JK','PANI.JK',
+  'AALI.JK','LSIP.JK','TAPG.JK','DSNG.JK','SGRO.JK','TBLA.JK',
+  'KLBF.JK','MIKA.JK','HEAL.JK','SIDO.JK','KAEF.JK',
+  'ASII.JK','BRPT.JK','TPIA.JK','INKP.JK','SCMA.JK','CUAN.JK','BUMI.JK',
+  'BNBR.JK','BREN.JK','SRTG.JK'
+];
+
+// ============================================================
+// KONFIGURASI
+// ============================================================
+const CONFIG = {
+  defaultDisplayLimit: 25,
+  cacheTTLMinutes: 5,
+  historyMaxEntries: 10,
+  minDelayMs: 100
+};
+
+const LS_KEYS = {
+  cache: 'screener_cache_v3',
+  history: 'screener_history_v3',
+  lastSnapshot: 'screener_last_snapshot_v3'
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let liveState = {
+  scored: [],
+  isIntraday: false,
+  mode: '',
+  total: 0,
+  done: 0,
+  isRunning: false
+};
+
+let displayLimit = CONFIG.defaultDisplayLimit;
+
+// ============================================================
+// LOCALSTORAGE
+// ============================================================
+const LS = {
+  get(key, fallback = null) {
+    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+    catch (e) { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+    catch (e) { console.warn('LS error:', e); return false; }
+  },
+  remove(key) { try { localStorage.removeItem(key); } catch (e) {} }
+};
+
+// ============================================================
+// CACHE DATA MENTAH (per saham)
+// ============================================================
+function getCachedStock(symbol, dataType) {
+  const cache = LS.get(LS_KEYS.cache, {});
+  const entry = cache[`${symbol}__${dataType}`];
+  if (!entry) return null;
+  const ageMin = (Date.now() - entry.timestamp) / 60000;
+  if (ageMin > CONFIG.cacheTTLMinutes) return null;
+  return entry.data;
+}
+
+function setCachedStock(symbol, dataType, data) {
+  const cache = LS.get(LS_KEYS.cache, {});
+  cache[`${symbol}__${dataType}`] = { data, timestamp: Date.now() };
+  LS.set(LS_KEYS.cache, cache);
+}
+
+function cleanExpiredCache() {
+  const cache = LS.get(LS_KEYS.cache, {});
+  const now = Date.now();
+  const ttlMs = CONFIG.cacheTTLMinutes * 60000;
+  let removed = 0;
+  for (const key in cache) {
+    if (now - cache[key].timestamp > ttlMs) { delete cache[key]; removed++; }
+  }
+  LS.set(LS_KEYS.cache, cache);
+  return removed;
+}
+
+function showCacheStatus() {
+  const cache = LS.get(LS_KEYS.cache, {});
+  const history = LS.get(LS_KEYS.history, []);
+  const keys = Object.keys(cache);
+  const result = document.getElementById('result');
+  const status = document.getElementById('status');
+
+  if (keys.length === 0 && history.length === 0) {
+    status.textContent = '📦 Cache & riwayat kosong.';
+    return;
+  }
+
+  const now = Date.now();
+  const ttlMs = CONFIG.cacheTTLMinutes * 60000;
+  let valid = 0, expired = 0;
+  keys.forEach(k => {
+    if (now - cache[k].timestamp <= ttlMs) valid++;
+    else expired++;
+  });
+
+  const cacheSize = new Blob([JSON.stringify(cache)]).size;
+  const historySize = new Blob([JSON.stringify(history)]).size;
+
+  status.textContent = `📦 Cache: ${keys.length} entri, Riwayat: ${history.length} scan`;
+
+  result.innerHTML = `<div class="info">
+    <b>📦 Status Penyimpanan localStorage</b><br><br>
+    <b>Cache data mentah:</b><br>
+    • Entri: <b>${keys.length}</b> (valid ${valid}, kadaluarsa ${expired})<br>
+    • Ukuran: <b>${(cacheSize/1024).toFixed(1)} KB</b><br>
+    • TTL: ${CONFIG.cacheTTLMinutes} menit<br><br>
+    <b>Riwayat snapshot:</b><br>
+    • Jumlah scan tersimpan: <b>${history.length}</b> (maks ${CONFIG.historyMaxEntries})<br>
+    • Ukuran: <b>${(historySize/1024).toFixed(1)} KB</b><br>
+    • Total localStorage: <b>${((cacheSize+historySize)/1024).toFixed(1)} KB</b><br><br>
+    <i>Kapasitas localStorage biasanya 5–10 MB per domain.</i>
+  </div>`;
+}
+
+// ============================================================
+// RIWAYAT — simpan snapshot lengkap
+// ============================================================
+function saveToHistory(mode, results, isIntraday) {
+  if (results.length === 0) return;
+
+  const history = LS.get(LS_KEYS.history, []);
+
+  // Snapshot lengkap semua saham yang berhasil discan
+  const snapshot = {
+    timestamp: Date.now(),
+    mode,
+    isIntraday,
+    count: results.length,
+    results: results.map(r => ({
+      symbol: r.symbol,
+      score: r.score,
+      displayPrice: r.displayPrice,
+      displayChange: r.displayChange,
+      displayMomentum: r.displayMomentum,
+      displayGap: r.displayGap,
+      displayIntraday: r.displayIntraday,
+      displayVsPrev: r.displayVsPrev,
+      volRatio: r.volRatio,
+      rangePos: r.rangePos
+    }))
+  };
+
+  history.unshift(snapshot);
+
+  // Batasi jumlah entri
+  LS.set(LS_KEYS.history, history.slice(0, CONFIG.historyMaxEntries));
+
+  // Simpan juga sebagai snapshot terakhir (untuk tombol "Hasil Scan Terakhir")
+  LS.set(LS_KEYS.lastSnapshot, snapshot);
+}
+
+function showHistory() {
+  const history = LS.get(LS_KEYS.history, []);
+  const result = document.getElementById('result');
+  const status = document.getElementById('status');
+
+  if (history.length === 0) {
+    status.textContent = '📜 Belum ada riwayat.';
+    result.innerHTML = `<div class="info">📜 Belum ada riwayat scan. Jalankan scan dulu.</div>`;
+    return;
+  }
+
+  status.textContent = `📜 ${history.length} riwayat scan tersimpan. Klik salah satu untuk lihat tabel lengkap.`;
+
+  const items = history.map((h, idx) => {
+    const tgl = new Date(h.timestamp).toLocaleString('id-ID');
+    const top5 = h.results.slice(0, 5).map(s =>
+      `<span style="background:#0f172a;padding:2px 8px;border-radius:4px;margin-right:4px;">
+        ${s.symbol} <b style="color:#fbbf24;">${s.score}</b>
+      </span>`
+    ).join('');
+
+    return `<div class="history-item">
+      <div onclick="loadHistorySnapshot(${idx})">
+        <b>📅 ${tgl}</b> — Mode: ${h.mode} — <b>${h.count} saham</b><br>
+        <div style="margin-top:6px;">Top 5: ${top5}</div>
+      </div>
+      <div class="history-actions">
+        <button class="small secondary" onclick="event.stopPropagation();loadHistorySnapshot(${idx})">
+          👁️ Tampilkan Tabel
+        </button>
+        <button class="small danger" onclick="event.stopPropagation();deleteHistory(${idx})">
+          🗑️ Hapus
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+
+  result.innerHTML = `<div class="info"><b>📜 Riwayat Scan</b> (${history.length} entri, klik untuk lihat detail)</div>${items}`;
+}
+
+function loadHistorySnapshot(idx) {
+  const history = LS.get(LS_KEYS.history, []);
+  const snapshot = history[idx];
+  if (!snapshot) return;
+
+  // Muat ke liveState supaya bisa dirender dengan renderLiveTable
+  liveState = {
+    scored: snapshot.results.map(r => ({ ...r })),
+    isIntraday: snapshot.isIntraday,
+    mode: snapshot.mode,
+    total: snapshot.count,
+    done: snapshot.count,
+    isRunning: false
+  };
+
+  // Render tabel
+  renderLiveTable(true);  // true = mode snapshot (badge beda)
+
+  // Scroll ke atas hasil
+  document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+
+  const tgl = new Date(snapshot.timestamp).toLocaleString('id-ID');
+  document.getElementById('status').textContent =
+    `📜 Snapshot dari ${tgl} — ${snapshot.count} saham, mode ${snapshot.mode}.`;
+}
+
+function deleteHistory(idx) {
+  if (!confirm('Hapus riwayat ini?')) return;
+  const history = LS.get(LS_KEYS.history, []);
+  history.splice(idx, 1);
+  LS.set(LS_KEYS.history, history);
+  showHistory();
+}
+
+function loadLastSnapshot() {
+  const snap = LS.get(LS_KEYS.lastSnapshot, null);
+  if (!snap) {
+    document.getElementById('status').textContent = '📂 Belum ada snapshot scan terakhir.';
+    document.getElementById('result').innerHTML = `<div class="info">📂 Belum ada hasil scan tersimpan. Jalankan scan dulu.</div>`;
+    return;
+  }
+
+  liveState = {
+    scored: snap.results.map(r => ({ ...r })),
+    isIntraday: snap.isIntraday,
+    mode: snap.mode,
+    total: snap.count,
+    done: snap.count,
+    isRunning: false
+  };
+
+  renderLiveTable(true);
+  document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+
+  const tgl = new Date(snap.timestamp).toLocaleString('id-ID');
+  document.getElementById('status').textContent = `📂 Snapshot terakhir dari ${tgl}.`;
+}
+
+function clearAllCache() {
+  if (!confirm('Hapus semua cache, riwayat, dan snapshot?')) return;
+  LS.remove(LS_KEYS.cache);
+  LS.remove(LS_KEYS.history);
+  LS.remove(LS_KEYS.lastSnapshot);
+  document.getElementById('status').textContent = '🗑️ Semua data dihapus.';
+  document.getElementById('result').innerHTML = '';
+}
+
+// ============================================================
+// WAKTU WIB
+// ============================================================
+function getWIBTime() {
+  const now = new Date();
+  const wibMs = now.getTime() + (now.getTimezoneOffset() * 60000) + (7 * 3600000);
+  return new Date(wibMs);
+}
+
+function getModeInfo() {
+  const wib = getWIBTime();
+  const totalMin = wib.getHours() * 60 + wib.getMinutes();
+  const day = wib.getDay();
+
+  if (day === 0 || day === 6)
+    return { mode:'PRE-MARKET', label:'🌙 Weekend', css:'mode-premarket', desc:'Pasar tutup.' };
+  if (totalMin < 8*60 + 45)
+    return { mode:'PRE-MARKET', label:'🌅 Pre-Market', css:'mode-premarket', desc:'Sebelum pre-opening.' };
+  if (totalMin < 9*60)
+    return { mode:'PRE-OPENING', label:'⚠️ Pre-Opening', css:'mode-preopening', desc:'Pre-opening.' };
+  if (totalMin < 9*60 + 15)
+    return { mode:'OPENING', label:'🚀 Opening', css:'mode-opening', desc:'Candle 5 menit pertama.' };
+  if (totalMin < 16*60)
+    return { mode:'INTRADAY', label:'📊 Intraday', css:'mode-intraday', desc:'Tren penuh.' };
+  return { mode:'PRE-MARKET', label:'🌆 Setelah Pasar', css:'mode-premarket', desc:'Analisis besok.' };
+}
+
+function updateClock() {
+  const wib = getWIBTime();
+  document.getElementById('clock').textContent = wib.toLocaleTimeString('id-ID');
+  const info = getModeInfo();
+  const badge = document.getElementById('modeBadge');
+  badge.textContent = info.label;
+  badge.className = 'mode-badge ' + info.css;
+}
+
+// ============================================================
+// FETCH
+// ============================================================
+const CORS_PROXIES = [
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://thingproxy.freeboard.io/fetch/${url}`
+];
+
+async function fetchWithFallback(url) {
+  for (const makeProxy of CORS_PROXIES) {
+    try {
+      const res = await fetch(makeProxy(url));
+      if (res.ok) return await res.json();
+    } catch (e) {}
+  }
+  throw new Error('Semua proxy gagal');
+}
+
+async function getHistoricalData(symbol) {
+  const cached = getCachedStock(symbol, 'historical');
+  if (cached) return cached;
+
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=5d`;
+  const json = await fetchWithFallback(url);
+  const r = json.chart.result?.[0];
+  if (!r) return null;
+
+  const q = r.indicators.quote[0];
+  const closes = q.close.filter(v => v != null);
+  const volumes = q.volume.filter(v => v != null);
+  const highs = q.high.filter(v => v != null);
+  const lows = q.low.filter(v => v != null);
+
+  if (closes.length < 3) return null;
+
+  const lastIdx = closes.length - 1;
+  const last = closes[lastIdx];
+  const prev = closes[lastIdx - 1];
+  const dayChange = (last - prev) / prev * 100;
+  const momentum3d = (last - closes[lastIdx - 2]) / closes[lastIdx - 2] * 100;
+
+  const avgVol = volumes.slice(Math.max(0, lastIdx-3), lastIdx)
+                         .reduce((a,b)=>a+b,0) / Math.min(3, lastIdx);
+  const volRatio = avgVol > 0 ? volumes[lastIdx] / avgVol : 1;
+  const rangePos = (last - lows[lastIdx]) / ((highs[lastIdx] - lows[lastIdx]) || 1);
+
+  const result = {
+    symbol: symbol.replace('.JK',''),
+    last, prev, dayChange, momentum3d, volRatio, rangePos
+  };
+
+  setCachedStock(symbol, 'historical', result);
+  return result;
+}
+
+async function getIntradayData(symbol) {
+  const cached = getCachedStock(symbol, 'intraday');
+  if (cached) return cached;
+
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=5m&range=1d`;
+  const json = await fetchWithFallback(url);
+  const r = json.chart.result?.[0];
+  if (!r) return null;
+
+  const meta = r.meta;
+  const quotes = r.indicators.quote[0];
+  const closes = quotes.close.filter(v => v != null);
+  const volumes = quotes.volume.filter(v => v != null);
+
+  if (closes.length < 3) return null;
+
+  const prevClose = meta.chartPreviousClose || meta.previousClose;
+  const openPrice = closes[0];
+  const lastPrice = closes[closes.length - 1];
+  const highOfDay = Math.max(...closes);
+  const lowOfDay  = Math.min(...closes);
+
+  const volFirst = volumes[0] || 0;
+  const volRest  = volumes.slice(1);
+  const avgVolRest = volRest.reduce((a,b)=>a+b,0) / (volRest.length || 1);
+  const volRatio = avgVolRest > 0 ? volFirst / avgVolRest : 1;
+
+  const result = {
+    symbol: symbol.replace('.JK',''),
+    prevClose, openPrice, lastPrice, highOfDay, lowOfDay, volRatio,
+    openingMomentum: closes.length >= 6 ? (closes[5] - closes[0]) / closes[0] * 100 : 0
+  };
+
+  setCachedStock(symbol, 'intraday', result);
+  return result;
+}
+
+// ============================================================
+// SCORING
+// ============================================================
+function scoreHistorical(d) {
+  if (!d) return null;
+  let score = 0;
+  if (d.momentum3d > 2) score += 25;
+  else if (d.momentum3d > 0) score += 15;
+  else if (d.momentum3d < -3) score -= 10;
+
+  if (d.dayChange > 1) score += 20;
+  else if (d.dayChange > 0) score += 10;
+  else if (d.dayChange < -2) score -= 15;
+
+  if (d.volRatio > 1.8) score += 20;
+  else if (d.volRatio > 1.2) score += 10;
+
+  if (d.rangePos > 0.7) score += 15;
+  else if (d.rangePos < 0.3) score -= 5;
+
+  return {
+    ...d, score,
+    displayChange: d.dayChange.toFixed(2),
+    displayMomentum: d.momentum3d.toFixed(2),
+    displayPrice: d.last
+  };
+}
+
+function scoreIntraday(d) {
+  if (!d || !d.prevClose) return null;
+  let score = 0;
+
+  const gapPct     = (d.openPrice - d.prevClose) / d.prevClose * 100;
+  const intradayPct= (d.lastPrice - d.openPrice) / d.openPrice * 100;
+  const vsPrevPct  = (d.lastPrice - d.prevClose) / d.prevClose * 100;
+  const rangePos   = (d.lastPrice - d.lowOfDay) / ((d.highOfDay - d.lowOfDay) || 1);
+
+  if (gapPct > 0.3 && gapPct < 3) score += 25;
+  else if (gapPct >= 3 && gapPct < 5) score += 10;
+  else if (gapPct > 5) score -= 5;
+  else if (gapPct < -1) score -= 15;
+
+  if (intradayPct > 0) score += 20;
+  else if (intradayPct < -1) score -= 10;
+
+  if (d.openingMomentum > 0.5) score += 20;
+  else if (d.openingMomentum > 0) score += 10;
+
+  if (d.volRatio > 2) score += 20;
+  else if (d.volRatio > 1.3) score += 10;
+
+  if (rangePos > 0.7) score += 15;
+  else if (rangePos < 0.3) score -= 5;
+
+  if (vsPrevPct > 1) score += 10;
+
+  return {
+    ...d, score, rangePos,
+    displayGap: gapPct.toFixed(2),
+    displayIntraday: intradayPct.toFixed(2),
+    displayVsPrev: vsPrevPct.toFixed(2),
+    displayPrice: d.lastPrice
+  };
+}
+
+// ============================================================
+// RENDER TABEL
+// ============================================================
+function renderLiveTable(isSnapshot = false) {
+  const result = document.getElementById('result');
+  const { scored, isIntraday, mode, isRunning } = liveState;
+
+  if (scored.length === 0) return;
+
+  const sorted = [...scored].sort((a,b) => b.score - a.score);
+
+  // Tentukan berapa yang ditampilkan
+  let limit = displayLimit === 'all' ? sorted.length : Math.min(displayLimit, sorted.length);
+  const topN = sorted.slice(0, limit);
+  const avgScore = scored.reduce((a,b) => a + b.score, 0) / scored.length;
+
+  const headers = isIntraday
+    ? ['#','Kode','Skor','Gap %','Intraday %','vs Prev %','Vol Rasio','Posisi Range','Harga']
+    : ['#','Kode','Skor','3D Mom %','Hari Ini %','Vol Rasio','Posisi Range','Harga'];
+
+  const rows = topN.map((s,i) => {
+    const isNew = s._isNew ? ' class="new-row"' : '';
+    s._isNew = false;
+
+    if (isIntraday) {
+      return `<tr${isNew}>
+        <td>${i+1}</td>
+        <td><b>${s.symbol}</b></td>
+        <td class="score">${s.score}</td>
+        <td class="${s.displayGap >= 0 ? 'positive':'negative'}">${s.displayGap}%</td>
+        <td class="${s.displayIntraday >= 0 ? 'positive':'negative'}">${s.displayIntraday}%</td>
+        <td class="${s.displayVsPrev >= 0 ? 'positive':'negative'}">${s.displayVsPrev}%</td>
+        <td>${s.volRatio.toFixed(2)}x</td>
+        <td>${(s.rangePos*100).toFixed(0)}%</td>
+        <td>${s.displayPrice.toLocaleString('id-ID')}</td>
+      </tr>`;
+    } else {
+      return `<tr${isNew}>
+        <td>${i+1}</td>
+        <td><b>${s.symbol}</b></td>
+        <td class="score">${s.score}</td>
+        <td class="${s.displayMomentum >= 0 ? 'positive':'negative'}">${s.displayMomentum}%</td>
+        <td class="${s.displayChange >= 0 ? 'positive':'negative'}">${s.displayChange}%</td>
+        <td>${s.volRatio.toFixed(2)}x</td>
+        <td>${(s.rangePos*100).toFixed(0)}%</td>
+        <td>${s.displayPrice.toLocaleString('id-ID')}</td>
+      </tr>`;
+    }
+  }).join('');
+
+  // Badge status
+  const badge = isSnapshot
+    ? `<span class="live-badge" style="background:#78350f;color:#fde68a;">📜 SNAPSHOT</span>`
+    : (isRunning
+        ? `<span class="live-badge">⚡ LIVE</span>`
+        : `<span class="live-badge">✅ SELESAI</span>`);
+
+  // Filter bar
+  const filterBar = `
+    <div class="filter-bar">
+      <label>📊 Tampilkan:</label>
+      <select id="displayLimitSelect" onchange="changeDisplayLimit(this.value)">
+        <option value="10" ${displayLimit == 10 ? 'selected' : ''}>10 teratas</option>
+        <option value="25" ${displayLimit == 25 ? 'selected' : ''}>25 teratas</option>
+        <option value="50" ${displayLimit == 50 ? 'selected' : ''}>50 teratas</option>
+        <option value="100" ${displayLimit == 100 ? 'selected' : ''}>100 teratas</option>
+        <option value="all" ${displayLimit === 'all' ? 'selected' : ''}>Semua (${sorted.length})</option>
+      </select>
+      <span style="color:#94a3b8;">Menampilkan <b style="color:#38bdf8;">${topN.length}</b> dari <b style="color:#38bdf8;">${sorted.length}</b> saham</span>
+    </div>
+  `;
+
+  let tableContainer = document.getElementById('liveTable');
+  if (!tableContainer) {
+    tableContainer = document.createElement('div');
+    tableContainer.id = 'liveTable';
+    result.appendChild(tableContainer);
+  }
+
+  tableContainer.innerHTML = `
+    <div class="success">
+      ${badge}
+      <b>${scored.length} saham sudah dianalisis</b> (mode: ${mode})<br>
+      Skor tertinggi: <b>${sorted[0]?.score || 0}</b> (${sorted[0]?.symbol || '-'}) &nbsp;|&nbsp;
+      Rata-rata: <b>${avgScore.toFixed(1)}</b>
+    </div>
+    ${filterBar}
+    <table>
+      <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+      ${rows}
+    </table>
+  `;
+}
+
+function changeDisplayLimit(val) {
+  displayLimit = val === 'all' ? 'all' : parseInt(val);
+  renderLiveTable(liveState.isRunning === false);
+}
+
+// ============================================================
+// SCAN UTAMA
+// ============================================================
+async function scanStocks() {
+  if (liveState.isRunning) { alert('Scan sedang berjalan.'); return; }
+
+  const btn = document.getElementById('scanBtn');
+  const status = document.getElementById('status');
+  const result = document.getElementById('result');
+  const progressWrap = document.getElementById('progressWrap');
+  const progressFill = document.getElementById('progressFill');
+  const progressCount = document.getElementById('progressCount');
+  const progressSymbol = document.getElementById('progressSymbol');
+  const modeInfo = getModeInfo();
+
+  btn.disabled = true;
+  result.innerHTML = '';
+  progressWrap.style.display = 'block';
+  progressFill.style.width = '0%';
+  progressCount.textContent = `0/${WATCHLIST.length}`;
+
+  liveState = {
+    scored: [],
+    isIntraday: (modeInfo.mode === 'OPENING' || modeInfo.mode === 'INTRADAY'),
+    mode: modeInfo.mode,
+    total: WATCHLIST.length,
+    done: 0,
+    isRunning: true
+  };
+
+  const removed = cleanExpiredCache();
+  if (removed > 0) {
+    result.innerHTML = `<div class="info">🧹 ${removed} entri cache kadaluarsa dibersihkan.</div>`;
+  }
+
+  const isIntraday = liveState.isIntraday;
+  let failedCount = 0;
+
+  for (let i = 0; i < WATCHLIST.length; i++) {
+    const sym = WATCHLIST[i];
+    progressSymbol.textContent = sym.replace('.JK','');
+
+    try {
+      const data = isIntraday
+        ? await getIntradayData(sym)
+        : await getHistoricalData(sym);
+
+      const s = isIntraday ? scoreIntraday(data) : scoreHistorical(data);
+      if (s) {
+        s._isNew = true;
+        liveState.scored.push(s);
+      } else {
+        failedCount++;
+      }
+    } catch (e) { failedCount++; }
+
+    liveState.done = i + 1;
+    const pct = (liveState.done / liveState.total) * 100;
+    progressFill.style.width = pct + '%';
+    progressCount.textContent = `${liveState.done}/${liveState.total} (berhasil: ${liveState.scored.length}, gagal: ${failedCount})`;
+
+    if (liveState.scored.length > 0) renderLiveTable();
+
+    if (i < WATCHLIST.length - 1) {
+      await new Promise(r => setTimeout(r, CONFIG.minDelayMs));
+    }
+  }
+
+  liveState.isRunning = false;
+  renderLiveTable();
+
+  // Simpan snapshot
+  const sorted = [...liveState.scored].sort((a,b) => b.score - a.score);
+  saveToHistory(modeInfo.mode, sorted, isIntraday);
+
+  const wib = getWIBTime();
+  status.textContent = `✅ Selesai. ${liveState.scored.length} berhasil, ${failedCount} gagal, dari ${WATCHLIST.length} saham. Waktu: ${wib.toLocaleTimeString('id-ID')}`;
+  progressWrap.style.display = 'none';
+
+  // Info kenapa tidak semua berhasil
+  if (failedCount > 0) {
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'info';
+    infoDiv.innerHTML = `
+      <b>ℹ️ Kenapa ${failedCount} saham gagal?</b><br>
+      • Proxy CORS timeout atau diblokir sementara<br>
+      • Yahoo tidak punya data lengkap untuk saham itu<br>
+      • Data candle kurang dari 3 baris (saham tidak aktif)<br><br>
+      <i>Saham yang gagal otomatis dilewati. Ini normal terjadi 30–60% dari watchlist.</i>
+    `;
+    result.appendChild(infoDiv);
+  }
+
+  const noteDiv = document.createElement('div');
+  noteDiv.className = 'note';
+  noteDiv.innerHTML = `
+    <b>📖 Panduan kolom:</b><br>
+    • <b>Skor</b>: total bobot momentum + volume + posisi range.<br>
+    • <b>3D Mom %</b>: perubahan harga dari 3 hari lalu.<br>
+    • <b>Hari Ini %</b>: perubahan harga kemarin → terakhir.<br>
+    • <b>Vol Rasio</b>: volume ÷ rata-rata 3 hari (>1.5x = minat besar).<br>
+    • <b>Posisi Range</b>: posisi close di high-low (100% = di high).<br><br>
+    <b>⚠️ Catatan:</b> Skor bukan jaminan profit. Pasang stop-loss 1–2%. Data Yahoo delay ±15 menit.
+  `;
+  result.appendChild(noteDiv);
+
+  btn.disabled = false;
+}
+
+// ============================================================
+// AUTO UPDATE CLOCK
+// ============================================================
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+</body>
+</html>
