@@ -47,11 +47,6 @@
 
   #status { margin:15px 0; font-style:italic; color:#94a3b8; font-size: 13px; }
   #clock { font-family:monospace; font-size:14px; color:#38bdf8; }
-  #syncStatus { margin-left:14px; font-size:12px; }
-  #syncStatus.ok      { color:#4ade80; }
-  #syncStatus.pending { color:#fbbf24; }
-  #syncStatus.error   { color:#f87171; }
-  #syncStatus.idle    { color:#94a3b8; }
 
   table { width:100%; border-collapse:collapse; margin-top:12px; font-size: 13px; }
   th, td { padding:9px 8px; text-align:left; border-bottom:1px solid #334155; }
@@ -181,17 +176,13 @@
 <body>
 
 <h1>📈 Screener Saham Adaptif IDX <span id="modeBadge" class="mode-badge">—</span></h1>
-<p style="color:#94a3b8; font-size:13px;">
-  Waktu WIB: <span id="clock">--:--:--</span>
-  <span id="syncStatus" class="idle">☁️ memuat…</span>
-</p>
+<p style="color:#94a3b8; font-size:13px;">Waktu WIB: <span id="clock">--:--:--</span></p>
 
 <div>
   <button id="scanBtn" onclick="scanStocks()">🔍 Scan Sekarang</button>
   <button class="secondary" onclick="showHistory()">📜 Riwayat Scan</button>
   <button class="secondary" onclick="loadLastSnapshot()">📂 Hasil Scan Terakhir</button>
   <button class="secondary" onclick="showCacheStatus()">📦 Status Cache</button>
-  <button class="secondary" onclick="manualSyncNow()">☁️ Sinkron Sekarang</button>
   <button class="danger" onclick="clearAllCache()">🗑️ Hapus Semua</button>
 </div>
 
@@ -268,26 +259,6 @@ const LS_KEYS = {
 };
 
 // ============================================================
-// KONFIGURASI SINKRONISASI DATABASE
-// ============================================================
-// Skema tabel `saham` (satu baris per hari):
-//   x_01 = tanggal WIB  YYYY-MM-DD       ← kunci idempoten
-//   x_02 = JSON screener_cache_v3
-//   x_03 = JSON screener_history_v3      (maks 10 snapshot)
-//   x_04 = JSON screener_last_snapshot_v3
-//   x_05 = Unix ms sinkronisasi terakhir (string)
-//   x_06 = versi skema (v1)
-//   x_07..x_10 = cadangan
-//   x_11..x_20 = kosong
-const DB_SYNC = {
-  apiBase: 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7',
-  table: 'saham',
-  secret: 'admin',
-  schemaVersion: 'v1',
-  debounceMs: 3000
-};
-
-// ============================================================
 // STATE
 // ============================================================
 let liveState = {
@@ -326,203 +297,17 @@ function r2(v) { return v == null ? '' : Math.round(v * 100) / 100; }
 // ============================================================
 // LOCALSTORAGE
 // ============================================================
-function lsGetRaw(key, fallback = null) {
-  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
-  catch (e) { return fallback; }
-}
-
-function lsSetRaw(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)); return true; }
-  catch (e) { console.warn('LS error:', e); return false; }
-}
-
 const LS = {
-  get: lsGetRaw,
+  get(key, fallback = null) {
+    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+    catch (e) { return fallback; }
+  },
   set(key, value) {
-    const ok = lsSetRaw(key, value);
-    // Setiap perubahan 3 key utama → jadwalkan sinkronisasi ke database.
-    // Tidak menandai sinkron kalau sedang hidrasi dari DB (biar tidak loop).
-    if (ok && !isHydrating &&
-        (key === LS_KEYS.cache || key === LS_KEYS.history || key === LS_KEYS.lastSnapshot)) {
-      scheduleSyncToDatabase();
-    }
-    return ok;
+    try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+    catch (e) { console.warn('LS error:', e); return false; }
   },
   remove(key) { try { localStorage.removeItem(key); } catch (e) {} }
 };
-
-// ============================================================
-// SINKRONISASI DATABASE
-// ============================================================
-let isHydrating = false;      // true saat menulis LS dari hasil GET DB
-let syncTimer = null;         // timer debounce
-let syncInFlight = false;     // sedang PUT/POST
-let syncPending = false;      // ada perubahan baru saat PUT/POST berjalan
-
-function getTodayWIB() {
-  const w = getWIBTime();
-  return `${w.getFullYear()}-${pad2(w.getMonth()+1)}-${pad2(w.getDate())}`;
-}
-
-function setSyncStatus(kind, text) {
-  const el = document.getElementById('syncStatus');
-  if (!el) return;
-  el.className = kind;
-  el.textContent = text;
-}
-
-async function apiFetch(method, { id, body, params } = {}) {
-  const url = new URL(DB_SYNC.apiBase);
-  url.searchParams.set('table', DB_SYNC.table);
-  if (id != null) url.searchParams.set('id_x', id);
-  if (params) for (const k in params) url.searchParams.set(k, params[k]);
-
-  const res = await fetch(url.toString(), {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Custom-Auth': DB_SYNC.secret,
-      'X-Table-Name': DB_SYNC.table
-    },
-    body: body ? JSON.stringify(body) : undefined
-  });
-
-  if (!res.ok) {
-    let msg = `HTTP ${res.status}`;
-    try { const j = await res.json(); if (j && j.error) msg = j.error; } catch (e) {}
-    throw new Error(msg);
-  }
-  return res.json();
-}
-
-function scheduleSyncToDatabase() {
-  if (syncTimer) clearTimeout(syncTimer);
-  setSyncStatus('pending', '⏳ menunggu sinkron…');
-  syncTimer = setTimeout(() => {
-    syncTimer = null;
-    syncToDatabase();
-  }, DB_SYNC.debounceMs);
-}
-
-async function syncToDatabase() {
-  if (syncInFlight) { syncPending = true; return; }
-  syncInFlight = true;
-  syncPending = false;
-
-  const today = getTodayWIB();
-  const now = Date.now();
-
-  const cache        = lsGetRaw(LS_KEYS.cache, {});
-  const history      = lsGetRaw(LS_KEYS.history, []);
-  const lastSnapshot = lsGetRaw(LS_KEYS.lastSnapshot, null);
-
-  const payload = {
-    x_01: today,
-    x_02: JSON.stringify(cache),
-    x_03: JSON.stringify(history),
-    x_04: JSON.stringify(lastSnapshot),
-    x_05: String(now),
-    x_06: DB_SYNC.schemaVersion
-  };
-
-  try {
-    // Cari baris hari ini. Jika tabel belum ada → error, anggap kosong.
-    let rows = [];
-    try {
-      const found = await apiFetch('GET', { params: { x_01_eq: today } });
-      rows = found.data || [];
-    } catch (e) {
-      rows = [];
-    }
-
-    if (rows.length > 0) {
-      await apiFetch('PUT', { id: rows[0].id_x, body: payload });
-    } else {
-      await apiFetch('POST', { body: payload });
-    }
-
-    const w = getWIBTime();
-    setSyncStatus('ok', `☁️ tersinkron ${pad2(w.getHours())}:${pad2(w.getMinutes())}`);
-  } catch (e) {
-    console.warn('Sync gagal:', e);
-    setSyncStatus('error', `⚠️ sinkron gagal: ${e.message}`);
-  } finally {
-    syncInFlight = false;
-    if (syncPending) scheduleSyncToDatabase();
-  }
-}
-
-async function loadFromDatabase() {
-  const today = getTodayWIB();
-  try {
-    const found = await apiFetch('GET', { params: { x_01_eq: today } });
-    const rows = found.data || [];
-    if (rows.length === 0) {
-      setSyncStatus('idle', '☁️ belum ada data server hari ini');
-      return { ok: true, empty: true };
-    }
-
-    const row = rows[0];
-    const dbTs = parseInt(row.x_05) || 0;
-
-    // Timestamp lokal terbaru (dari cache / history / lastSnapshot)
-    const localCache   = lsGetRaw(LS_KEYS.cache, {});
-    const localHistory = lsGetRaw(LS_KEYS.history, []);
-    const localSnap    = lsGetRaw(LS_KEYS.lastSnapshot, null);
-    const localTs = Math.max(
-      ...Object.values(localCache).map(e => (e && e.timestamp) || 0),
-      ...(Array.isArray(localHistory) ? localHistory.map(h => (h && h.timestamp) || 0) : [0]),
-      (localSnap && localSnap.timestamp) || 0,
-      0
-    );
-
-    if (dbTs >= localTs) {
-      // DB lebih baru → timpa LS (tanpa memicu sinkronisasi ulang)
-      isHydrating = true;
-      try {
-        if (row.x_02) { try { lsSetRaw(LS_KEYS.cache, JSON.parse(row.x_02)); } catch (e) {} }
-        if (row.x_03) { try { lsSetRaw(LS_KEYS.history, JSON.parse(row.x_03)); } catch (e) {} }
-        if (row.x_04) { try { lsSetRaw(LS_KEYS.lastSnapshot, JSON.parse(row.x_04)); } catch (e) {} }
-      } finally {
-        isHydrating = false;
-      }
-      const w = getWIBTime();
-      setSyncStatus('ok', `☁️ dimuat dari server ${pad2(w.getHours())}:${pad2(w.getMinutes())}`);
-      return { ok: true, source: 'db' };
-    } else {
-      // LS lebih baru → unggah
-      setSyncStatus('pending', '⏳ LS lebih baru, mengunggah…');
-      scheduleSyncToDatabase();
-      return { ok: true, source: 'local' };
-    }
-  } catch (e) {
-    // Kemungkinan besar tabel `saham` belum ada → bukan error fatal.
-    console.warn('Load dari DB gagal:', e);
-    setSyncStatus('idle', '☁️ server belum siap (tabel mungkin belum dibuat)');
-    return { ok: false, error: e.message };
-  }
-}
-
-async function deleteTodayRow() {
-  const today = getTodayWIB();
-  try {
-    const found = await apiFetch('GET', { params: { x_01_eq: today } });
-    const rows = found.data || [];
-    for (const r of rows) {
-      await apiFetch('DELETE', { id: r.id_x });
-    }
-    return rows.length;
-  } catch (e) {
-    console.warn('deleteTodayRow gagal:', e);
-    return 0;
-  }
-}
-
-function manualSyncNow() {
-  if (syncTimer) { clearTimeout(syncTimer); syncTimer = null; }
-  setSyncStatus('pending', '⏳ sinkron manual…');
-  syncToDatabase();
-}
 
 // ============================================================
 // CACHE DATA MENTAH (per saham)
@@ -582,7 +367,7 @@ function showCacheStatus() {
   status.textContent = `📦 Cache: ${keys.length} entri, Riwayat: ${history.length} scan`;
 
   result.innerHTML = `<div class="info">
-    <b>📦 Status Penyimpanan localStorage + Database</b><br><br>
+    <b>📦 Status Penyimpanan localStorage</b><br><br>
     <b>Cache data mentah:</b><br>
     • Entri: <b>${keys.length}</b> (valid ${valid}, kadaluarsa ${expired})<br>
     • Ukuran: <b>${(cacheSize/1024).toFixed(1)} KB</b><br>
@@ -591,10 +376,6 @@ function showCacheStatus() {
     • Jumlah scan tersimpan: <b>${history.length}</b> (maks ${CONFIG.historyMaxEntries})<br>
     • Ukuran: <b>${(historySize/1024).toFixed(1)} KB</b><br>
     • Total localStorage: <b>${((cacheSize+historySize)/1024).toFixed(1)} KB</b><br><br>
-    <b>Database (tabel <code>${DB_SYNC.table}</code>):</b><br>
-    • Endpoint: <code>${DB_SYNC.apiBase}</code><br>
-    • Baris per hari: satu baris, kunci <code>x_01 = ${getTodayWIB()}</code><br>
-    • Sinkronisasi: otomatis (debounce ${DB_SYNC.debounceMs/1000}s) setiap perubahan<br><br>
     <i>Kapasitas localStorage biasanya 5–10 MB per domain.</i>
   </div>`;
 }
@@ -743,21 +524,13 @@ function loadLastSnapshot() {
   document.getElementById('status').textContent = `📂 Snapshot terakhir dari ${fmtFull(snap.timestamp)}.`;
 }
 
-async function clearAllCache() {
-  if (!confirm('Hapus semua cache, riwayat, dan snapshot dari browser DAN dari database hari ini?')) return;
-
-  // 1) Bersihkan localStorage
+function clearAllCache() {
+  if (!confirm('Hapus semua cache, riwayat, dan snapshot?')) return;
   LS.remove(LS_KEYS.cache);
   LS.remove(LS_KEYS.history);
   LS.remove(LS_KEYS.lastSnapshot);
-
-  // 2) Hapus baris hari ini di database
-  setSyncStatus('pending', '⏳ menghapus data server…');
-  const n = await deleteTodayRow();
-  setSyncStatus('idle', n > 0 ? `☁️ ${n} baris server dihapus` : '☁️ tidak ada baris server hari ini');
-
   switchTab('live');
-  document.getElementById('status').textContent = '🗑️ Semua data dihapus (lokal + database hari ini).';
+  document.getElementById('status').textContent = '🗑️ Semua data dihapus.';
   document.getElementById('result').innerHTML = '';
   document.getElementById('scoreResult').innerHTML =
     `<div class="info">🎯 Belum ada data skor. Jalankan <b>Scan Sekarang</b> dulu.</div>`;
@@ -1070,12 +843,13 @@ function changeDisplayLimit(val) {
 // TAB 2 — TABEL SKOR (MATRIKS SKOR PER SCAN)
 // ============================================================
 function buildScoreMatrix(snaps) {
-  const map = new Map();
+  const map = new Map();   // symbol -> { [snapIndex]: result }
 
   snaps.forEach((snap, si) => {
     (snap.results || []).forEach(r => {
       if (!map.has(r.symbol)) map.set(r.symbol, {});
       const entry = map.get(r.symbol);
+      // kalau duplikat dalam 1 snapshot, ambil skor tertinggi
       if (!entry[si] || r.score > entry[si].score) entry[si] = r;
     });
   });
@@ -1086,6 +860,9 @@ function buildScoreMatrix(snaps) {
     rows.push({ symbol, scores, bySnap });
   });
 
+  // Urutkan: kolom terbaru (index 0) skor tertinggi dulu.
+  // Baris yang gagal discan di snapshot terbaru (null) diletakkan di bawah,
+  // lalu diurutkan lagi berdasarkan snapshot berikutnya.
   rows.sort((a, b) => {
     for (let i = 0; i < snaps.length; i++) {
       const av = a.scores[i], bv = b.scores[i];
@@ -1423,6 +1200,7 @@ function exportAllHistory() {
     return;
   }
 
+  // Sheet ringkasan
   const summaryRows = [
     ['#', 'Waktu Scan', 'Mode', 'Jumlah Saham', 'Skor Tertinggi', 'Kode Tertinggi', 'Rata-rata Skor']
   ];
@@ -1546,8 +1324,7 @@ async function scanStocks() {
   liveState.isSnapshot = false;
   renderLiveTable();
 
-  // Simpan snapshot ke riwayat & refresh tabel skor (tab 2).
-  // saveToHistory memanggil LS.set → otomatis trigger sinkronisasi DB.
+  // Simpan snapshot ke riwayat & refresh tabel skor (tab 2)
   const sorted = [...liveState.scored].sort((a,b) => b.score - a.score);
   saveToHistory(modeInfo.mode, sorted, isIntraday);
   renderScoreTable();
@@ -1581,8 +1358,6 @@ async function scanStocks() {
     • <b>Posisi Range</b>: posisi close di high-low (100% = di high).<br><br>
     <b>🎯 Tab Tabel Skor:</b> menampilkan matriks skor lintas scan. Kolom paling kiri adalah
     scan terbaru; klik angka skor untuk melihat detail lengkap saham tersebut.<br><br>
-    <b>☁️ Sinkronisasi:</b> cache, riwayat, dan snapshot otomatis diunggah ke tabel
-    <code>${DB_SYNC.table}</code> (satu baris per hari). Status terlihat di header.<br><br>
     <b>⚠️ Catatan:</b> Skor bukan jaminan profit. Pasang stop-loss 1–2%. Data Yahoo delay ±15 menit.
   `;
   result.appendChild(noteDiv);
@@ -1591,37 +1366,10 @@ async function scanStocks() {
 }
 
 // ============================================================
-// INIT — muat dari database sebelum UI aktif
+// AUTO UPDATE CLOCK
 // ============================================================
-async function initApp() {
-  updateClock();
-  setInterval(updateClock, 1000);
-
-  // Muat data hari ini dari server (jika ada & lebih baru → timpa LS)
-  await loadFromDatabase();
-
-  // Tampilkan snapshot terakhir jika ada
-  const snap = LS.get(LS_KEYS.lastSnapshot, null);
-  if (snap && Array.isArray(snap.results) && snap.results.length > 0) {
-    liveState = {
-      scored: snap.results.map(r => ({ ...r })),
-      isIntraday: snap.isIntraday,
-      mode: snap.mode,
-      total: snap.count,
-      done: snap.count,
-      isRunning: false,
-      isSnapshot: true
-    };
-    renderLiveTable();
-    document.getElementById('status').textContent =
-      `📂 Snapshot terakhir dari ${fmtFull(snap.timestamp)} — ${snap.count} saham, mode ${snap.mode}.`;
-  }
-
-  // Selalu render tabel skor (kalau ada history)
-  renderScoreTable();
-}
-
-initApp();
+setInterval(updateClock, 1000);
+updateClock();
 </script>
 </body>
 </html>
