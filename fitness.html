@@ -650,12 +650,26 @@
                 opt.textContent = name;
                 daySelect.appendChild(opt);
             });
+
+            // ==========================================
+            // LOGIKA BARU: Set Default ke Hari Ini
+            // ==========================================
+            // JavaScript getDay(): 0=Minggu, 1=Senin, ..., 6=Sabtu
+            const jsDay = new Date().getDay(); 
+            
+            // Konversi ke index dayNames kita: 0=Senin, ..., 6=Minggu
+            // Jika Minggu (0), ubah jadi 6. Jika Senin (1), ubah jadi 0. dst.
+            const todayIndex = (jsDay === 0) ? 6 : jsDay - 1; 
+            
+            // Set nilai dropdown ke hari ini
+            daySelect.value = todayIndex;
+            // ==========================================
         }
 
         function resetFilters() {
             document.getElementById("searchInput").value = "";
             document.getElementById("classFilter").value = "";
-            document.getElementById("dayFilter").value = "";
+            document.getElementById("dayFilter").value = ""; // Reset ke Semua Hari
             refreshInstructorDropdown();
             refreshTimeDropdown();
             renderTables();
@@ -686,7 +700,8 @@
 
         document.getElementById("timeFilter").addEventListener("change", renderTables);
 
-        populateStaticDropdowns();
+        // Inisialisasi Awal
+        populateStaticDropdowns(); // Di sini default hari ini di-set
         refreshInstructorDropdown();
         refreshTimeDropdown();
         renderTables();
