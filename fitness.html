@@ -1,711 +1,731 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jadwal New Life Gym Lippo Plaza Medan</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            padding: 20px;
-            margin: 0;
-        }
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 5px;
-            font-size: 18px;
-        }
-        .subtitle {
-            text-align: center;
-            color: #666;
-            font-size: 13px;
-            margin-bottom: 20px;
-        }
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            align-items: center;
-        }
-        .controls label {
-            font-weight: bold;
-            color: #333;
-            font-size: 13px;
-        }
-        .controls input, .controls select {
-            padding: 6px 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 13px;
-            outline: none;
-        }
-        .controls input:focus, .controls select:focus {
-            border-color: #2e7d32;
-        }
-        .controls input[type="text"] {
-            flex-grow: 1;
-            min-width: 150px;
-        }
-        .controls .btn-reset {
-            padding: 6px 14px;
-            background: #e53935;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: bold;
-        }
-        .controls .btn-reset:hover {
-            background: #c62828;
-        }
-        
-        /* Styling untuk pembagian tabel */
-        .schedule-section {
-            margin-bottom: 30px;
-        }
-        .schedule-section h3 {
-            color: #2e7d32;
-            font-size: 16px;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 2px solid #2e7d32;
-            display: inline-block;
-        }
-        .schedule-container {
-            overflow-x: auto;
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            max-width: 100%;
-        }
-        table {
-            width: 100%;
-            min-width: max-content;
-            border-collapse: collapse;
-            table-layout: auto;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 6px 8px;
-            text-align: center;
-            vertical-align: middle;
-            font-size: 12px;
-            max-width: 100px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-            color: #333;
-        }
-        td.class-name, th:first-child {
-            background-color: #e8f4f8;
-            font-weight: bold;
-            text-align: left;
-            max-width: 130px;
-        }
-        td.time, th:nth-child(2) {
-            background-color: #fff3e0;
-            font-weight: bold;
-            max-width: 60px;
-        }
-        td.day, th[data-day] {
-            max-width: 45px;
-        }
-        .check {
-            color: #2e7d32;
-            font-weight: bold;
-            font-size: 15px;
-            cursor: pointer;
-            display: inline-block;
-            transition: transform 0.15s ease;
-        }
-        .check:hover {
-            transform: scale(1.3);
-            color: #1b5e20;
-        }
-        tr:nth-child(even) {
-            background-color: #fafafa;
-        }
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-        .note {
-            font-size: 11px;
-            color: #666;
-            margin-top: 10px;
-            text-align: center;
-        }
-        .empty-message {
-            text-align: center;
-            padding: 20px;
-            color: #999;
-            font-style: italic;
-            background: white;
-            border-radius: 8px;
-        }
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 999;
-            justify-content: center;
-            align-items: center;
-            padding: 15px;
-        }
-        .modal-overlay.active {
-            display: flex;
-        }
-        .modal-box {
-            background: white;
-            padding: 22px 28px;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            text-align: center;
-            max-width: 320px;
-            width: 100%;
-            animation: popIn 0.2s ease;
-        }
-        @keyframes popIn {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        .modal-box h3 {
-            margin: 0 0 10px 0;
-            color: #2e7d32;
-            font-size: 17px;
-        }
-        .modal-box p {
-            margin: 5px 0;
-            color: #333;
-            font-size: 14px;
-        }
-        .modal-box .instruktur-name {
-            font-weight: bold;
-            font-size: 19px;
-            color: #1b5e20;
-            margin: 10px 0;
-        }
-        .modal-box button {
-            margin-top: 15px;
-            padding: 8px 20px;
-            background: #2e7d32;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 13px;
-        }
-        .modal-box button:hover {
-            background: #1b5e20;
-        }
-        .result-info {
-            font-size: 12px;
-            color: #555;
-            margin-bottom: 15px;
-            font-style: italic;
-        }
-        .highlight-day {
-            background-color: #fff9c4 !important;
-            font-weight: bold;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jadwal New Life Gym Lippo Plaza Medan</title>
+<style>
+    body { font-family: Arial, sans-serif; background:#f4f4f4; padding:20px; margin:0; }
+    h2 { text-align:center; color:#333; margin-bottom:5px; font-size:18px; }
+    .subtitle { text-align:center; color:#666; font-size:13px; margin-bottom:20px; }
 
-        /* ============================================
-           MEDIA QUERY: TAMPILAN HP (<= 600px)
-           ============================================ */
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-            h2 { font-size: 15px; }
-            .subtitle { font-size: 11px; }
+    .controls {
+        display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px;
+        background:#fff; padding:12px; border-radius:8px;
+        box-shadow:0 2px 4px rgba(0,0,0,.1); align-items:center;
+    }
+    .controls label { font-weight:bold; color:#333; font-size:13px; }
+    .controls input, .controls select {
+        padding:6px 10px; border:1px solid #ccc; border-radius:4px; font-size:13px; outline:none;
+    }
+    .controls input:focus, .controls select:focus { border-color:#2e7d32; }
+    .controls input[type="text"] { flex-grow:1; min-width:150px; }
+    .controls .btn-reset { padding:6px 14px; background:#e53935; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold; }
+    .controls .btn-reset:hover { background:#c62828; }
+    .controls .btn-add { padding:6px 14px; background:#2e7d32; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold; }
+    .controls .btn-add:hover { background:#1b5e20; }
+    .controls .btn-sync { padding:6px 12px; background:#1565c0; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold; }
+    .controls .btn-sync:hover { background:#0d47a1; }
 
-            .controls {
-                gap: 6px;
-                padding: 8px;
-            }
-            .controls label { font-size: 11px; }
-            .controls input, .controls select {
-                padding: 5px 8px;
-                font-size: 11px;
-            }
+    .status-bar { font-size:12px; margin-bottom:12px; color:#555; }
+    .status-bar.error { color:#c62828; font-weight:bold; }
 
-            .schedule-container {
-                padding: 6px;
-            }
-            th, td {
-                padding: 4px 5px;
-                font-size: 10px;
-                max-width: 70px;
-            }
-            td.class-name, th:first-child {
-                max-width: 85px;
-            }
-            td.time, th:nth-child(2) {
-                max-width: 45px;
-            }
-            td.day, th[data-day] {
-                max-width: 32px;
-            }
-            .check { font-size: 12px; }
-        }
-    </style>
+    .schedule-section { margin-bottom:30px; }
+    .schedule-section h3 {
+        color:#2e7d32; font-size:16px; margin-bottom:10px; padding-bottom:5px;
+        border-bottom:2px solid #2e7d32; display:inline-block;
+    }
+    .schedule-container {
+        overflow-x:auto; background:#fff; padding:12px; border-radius:8px;
+        box-shadow:0 4px 8px rgba(0,0,0,.1); max-width:100%;
+    }
+    table { width:100%; min-width:max-content; border-collapse:collapse; table-layout:auto; }
+    th, td {
+        border:1px solid #ddd; padding:6px 8px; text-align:center; vertical-align:middle;
+        font-size:12px; max-width:100px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    th { background:#f2f2f2; font-weight:bold; color:#333; }
+    td.class-name, th:first-child { background:#e8f4f8; font-weight:bold; text-align:left; max-width:130px; }
+    td.time, th:nth-child(2) { background:#fff3e0; font-weight:bold; max-width:60px; }
+    td.day, th[data-day] { max-width:45px; }
+    .check { color:#2e7d32; font-weight:bold; font-size:15px; cursor:pointer; display:inline-block; transition:transform .15s ease; }
+    .check:hover { transform:scale(1.3); color:#1b5e20; }
+    tr:nth-child(even) { background:#fafafa; }
+    tr:hover { background:#f1f1f1; }
+    .note { font-size:11px; color:#666; margin-top:10px; text-align:center; }
+    .empty-message { text-align:center; padding:20px; color:#999; font-style:italic; background:#fff; border-radius:8px; }
+
+    th.aksi-col, td.aksi { max-width:86px; white-space:nowrap; background:#f7f7f7; }
+    .icon-btn {
+        border:none; background:transparent; cursor:pointer; font-size:14px;
+        padding:2px 4px; border-radius:4px; transition:background .15s;
+    }
+    .icon-btn:hover { background:#e0e0e0; }
+
+    /* Modal */
+    .modal-overlay {
+        display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
+        z-index:999; justify-content:center; align-items:center; padding:15px;
+    }
+    .modal-overlay.active { display:flex; }
+    .modal-box {
+        background:#fff; padding:22px 28px; border-radius:10px;
+        box-shadow:0 10px 25px rgba(0,0,0,.2); text-align:center;
+        max-width:320px; width:100%; animation:popIn .2s ease;
+    }
+    @keyframes popIn { from { transform:scale(.8); opacity:0; } to { transform:scale(1); opacity:1; } }
+    .modal-box h3 { margin:0 0 10px; color:#2e7d32; font-size:17px; }
+    .modal-box p { margin:5px 0; color:#333; font-size:14px; }
+    .modal-box .instruktur-name { font-weight:bold; font-size:19px; color:#1b5e20; margin:10px 0; }
+    .modal-box button {
+        margin-top:15px; padding:8px 20px; background:#2e7d32; color:#fff;
+        border:none; border-radius:5px; cursor:pointer; font-size:13px;
+    }
+    .modal-box button:hover { background:#1b5e20; }
+
+    /* Form modal */
+    .form-box { max-width:420px; text-align:left; max-height:92vh; overflow-y:auto; }
+    .form-box h3 { text-align:center; }
+    .form-group { margin-bottom:12px; }
+    .form-group label { display:block; font-size:12px; font-weight:bold; color:#333; margin-bottom:4px; }
+    .form-group input[type="text"], .form-group input[type="time"] {
+        width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:4px;
+        font-size:13px; box-sizing:border-box; outline:none;
+    }
+    .form-group input:focus { border-color:#2e7d32; }
+    .day-checks { display:flex; flex-wrap:wrap; gap:8px; }
+    .day-check {
+        display:flex; align-items:center; gap:4px; font-size:12px;
+        background:#f1f1f1; padding:5px 9px; border-radius:20px; cursor:pointer; user-select:none;
+    }
+    .day-check input { cursor:pointer; }
+    .form-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; }
+    .form-actions button { margin-top:0; padding:8px 18px; border:none; border-radius:5px; cursor:pointer; font-size:13px; font-weight:bold; }
+    .btn-cancel { background:#bdbdbd; color:#333; }
+    .btn-cancel:hover { background:#9e9e9e; }
+    .btn-save { background:#2e7d32; color:#fff; }
+    .btn-save:hover { background:#1b5e20; }
+    .btn-save:disabled { opacity:.6; cursor:not-allowed; }
+    .form-error { color:#c62828; font-size:12px; margin-top:10px; min-height:16px; font-weight:bold; }
+
+    .result-info { font-size:12px; color:#555; margin-bottom:15px; font-style:italic; }
+    .highlight-day { background-color:#fff9c4 !important; font-weight:bold; }
+
+    @media (max-width:600px) {
+        body { padding:10px; }
+        h2 { font-size:15px; }
+        .subtitle { font-size:11px; }
+        .controls { gap:6px; padding:8px; }
+        .controls label { font-size:11px; }
+        .controls input, .controls select { padding:5px 8px; font-size:11px; }
+        .schedule-container { padding:6px; }
+        th, td { padding:4px 5px; font-size:10px; max-width:70px; }
+        td.class-name, th:first-child { max-width:85px; }
+        td.time, th:nth-child(2) { max-width:45px; }
+        td.day, th[data-day] { max-width:32px; }
+        .check { font-size:12px; }
+    }
+</style>
 </head>
 <body>
 
-    <h2>Jadwal Kelas New Life Gym - Lippo Plaza Medan</h2>
-    <div class="subtitle">Periode: Agustus - Oktober 2026</div>
+<h2>Jadwal Kelas New Life Gym - Lippo Plaza Medan</h2>
+<div class="subtitle">Periode: Agustus - Oktober 2026</div>
 
-    <div class="controls">
-        <label for="searchInput">🔍 Cari:</label>
-        <input type="text" id="searchInput" placeholder="Nama kelas...">
+<div class="controls">
+    <label for="searchInput">🔍 Cari:</label>
+    <input type="text" id="searchInput" placeholder="Nama kelas...">
 
-        <label for="classFilter">🏋️ Kelas:</label>
-        <select id="classFilter">
-            <option value="">-- Semua --</option>
-        </select>
+    <label for="classFilter">🏋️ Kelas:</label>
+    <select id="classFilter"><option value="">-- Semua --</option></select>
 
-        <label for="instructorFilter">👤 Instruktur:</label>
-        <select id="instructorFilter">
-            <option value="">-- Semua --</option>
-        </select>
+    <label for="instructorFilter">👤 Instruktur:</label>
+    <select id="instructorFilter"><option value="">-- Semua --</option></select>
 
-        <label for="timeFilter">🕐 Jam:</label>
-        <select id="timeFilter">
-            <option value="">-- Semua --</option>
-        </select>
+    <label for="timeFilter">🕐 Jam:</label>
+    <select id="timeFilter"><option value="">-- Semua --</option></select>
 
-        <label for="dayFilter">📅 Hari:</label>
-        <select id="dayFilter">
-            <option value="">-- Semua --</option>
-        </select>
+    <label for="dayFilter">📅 Hari:</label>
+    <select id="dayFilter"><option value="">-- Semua --</option></select>
 
-        <button class="btn-reset" onclick="resetFilters()">🔄 Reset</button>
+    <button class="btn-reset" onclick="resetFilters()">🔄 Reset</button>
+    <button class="btn-sync" onclick="loadData()">↻ Sinkron</button>
+    <button class="btn-add" onclick="openForm(null)">+ Tambah Jadwal</button>
+</div>
+
+<div id="statusBar" class="status-bar">Menghubungkan ke server...</div>
+<div id="resultInfo" class="result-info"></div>
+
+<div class="schedule-section" id="sectionPagi">
+    <h3>☀️ Kelas Pagi (Sebelum 12:00)</h3>
+    <div class="schedule-container">
+        <table id="scheduleTablePagi">
+            <thead>
+                <tr id="tableHeaderRowPagi">
+                    <th>Nama Kelas</th>
+                    <th>Jam</th>
+                    <th data-day="0">Senin</th>
+                    <th data-day="1">Selasa</th>
+                    <th data-day="2">Rabu</th>
+                    <th data-day="3">Kamis</th>
+                    <th data-day="4">Jumat</th>
+                    <th data-day="5">Sabtu</th>
+                    <th data-day="6">Minggu</th>
+                    <th class="aksi-col">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tableBodyPagi"></tbody>
+        </table>
     </div>
+</div>
 
-    <div id="resultInfo" class="result-info"></div>
+<div class="schedule-section" id="sectionSore">
+    <h3>🌙 Kelas Sore/Malam (12:00 ke atas)</h3>
+    <div class="schedule-container">
+        <table id="scheduleTableSore">
+            <thead>
+                <tr id="tableHeaderRowSore">
+                    <th>Nama Kelas</th>
+                    <th>Jam</th>
+                    <th data-day="0">Senin</th>
+                    <th data-day="1">Selasa</th>
+                    <th data-day="2">Rabu</th>
+                    <th data-day="3">Kamis</th>
+                    <th data-day="4">Jumat</th>
+                    <th data-day="5">Sabtu</th>
+                    <th data-day="6">Minggu</th>
+                    <th class="aksi-col">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tableBodySore"></tbody>
+        </table>
+    </div>
+</div>
 
-    <!-- TABEL PAGI -->
-    <div class="schedule-section" id="sectionPagi">
-        <h3>☀️ Kelas Pagi (Sebelum 12:00)</h3>
-        <div class="schedule-container">
-            <table id="scheduleTablePagi">
-                <thead>
-                    <tr id="tableHeaderRowPagi">
-                        <th>Nama Kelas</th>
-                        <th>Jam</th>
-                        <th data-day="0">Senin</th>
-                        <th data-day="1">Selasa</th>
-                        <th data-day="2">Rabu</th>
-                        <th data-day="3">Kamis</th>
-                        <th data-day="4">Jumat</th>
-                        <th data-day="5">Sabtu</th>
-                        <th data-day="6">Minggu</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBodyPagi"></tbody>
-            </table>
+<div id="emptyMessage" class="empty-message" style="display:none;">Tidak ada jadwal yang cocok dengan filter.</div>
+<div class="note">Klik tanda ✓ untuk melihat nama instruktur. Gunakan ✏️ / 🗑️ untuk ubah atau hapus.</div>
+
+<!-- Modal detail instruktur -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+        <h3>Detail Kelas</h3>
+        <p id="modalClass">-</p>
+        <p id="modalDayTime">-</p>
+        <div class="instruktur-name" id="modalInstructor">-</div>
+        <button onclick="closeModal()">Tutup</button>
+    </div>
+</div>
+
+<!-- Modal form tambah/edit -->
+<div class="modal-overlay" id="formOverlay">
+    <div class="modal-box form-box">
+        <h3 id="formTitle">Tambah Jadwal</h3>
+
+        <div class="form-group">
+            <label for="fClass">Nama Kelas *</label>
+            <input type="text" id="fClass" list="classList" placeholder="mis. Bodypump">
+            <datalist id="classList"></datalist>
         </div>
-    </div>
 
-    <!-- TABEL SORE/MALAM -->
-    <div class="schedule-section" id="sectionSore">
-        <h3>🌙 Kelas Sore/Malam (12:00 ke atas)</h3>
-        <div class="schedule-container">
-            <table id="scheduleTableSore">
-                <thead>
-                    <tr id="tableHeaderRowSore">
-                        <th>Nama Kelas</th>
-                        <th>Jam</th>
-                        <th data-day="0">Senin</th>
-                        <th data-day="1">Selasa</th>
-                        <th data-day="2">Rabu</th>
-                        <th data-day="3">Kamis</th>
-                        <th data-day="4">Jumat</th>
-                        <th data-day="5">Sabtu</th>
-                        <th data-day="6">Minggu</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBodySore"></tbody>
-            </table>
+        <div class="form-group">
+            <label for="fTime">Jam (HH:MM) *</label>
+            <input type="time" id="fTime">
         </div>
-    </div>
 
-    <div id="emptyMessage" class="empty-message" style="display:none;">Tidak ada jadwal yang cocok dengan filter.</div>
-    <div class="note">Klik tanda ✓ untuk melihat nama instruktur.</div>
-
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal-box">
-            <h3>Detail Kelas</h3>
-            <p id="modalClass">-</p>
-            <p id="modalDayTime">-</p>
-            <div class="instruktur-name" id="modalInstructor">-</div>
-            <button onclick="closeModal()">Tutup</button>
+        <div class="form-group">
+            <label for="fInstructor">Instruktur *</label>
+            <input type="text" id="fInstructor" list="instructorList" placeholder="mis. Andy">
+            <datalist id="instructorList"></datalist>
         </div>
+
+        <div class="form-group">
+            <label>Hari</label>
+            <div class="day-checks" id="fDays"></div>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn-cancel" onclick="closeForm()">Batal</button>
+            <button class="btn-save" id="btnSave" onclick="saveForm()">Simpan</button>
+        </div>
+        <div class="form-error" id="formError"></div>
     </div>
+</div>
 
-    <script>
-        // Data jadwal yang sudah disesuaikan dengan gambar
-        const scheduleData = [
-            // --- CX-CLASS ---
-            { class: "Bodypump", time: "08:00", instructor: "Yayang", days: [1,0,1,0,0,0,0] },
-            { class: "Zumba", time: "08:00", instructor: "Dillah", days: [0,1,0,0,0,0,0] },
-            { class: "Bali Dance", time: "08:00", instructor: "Dedy", days: [0,0,1,0,0,0,0] },
-            { class: "Line Dance", time: "08:00", instructor: "Citra", days: [0,0,0,1,0,0,0] },
-            { class: "Bodypump", time: "08:00", instructor: "Moks", days: [0,0,0,0,1,0,0] },
-            { class: "Bodycombat", time: "08:00", instructor: "Andy", days: [0,0,0,0,0,1,0] },
-            { class: "Bodypump", time: "09:15", instructor: "Andy", days: [0,0,0,0,0,0,1] },
+<script>
+/* ============================================================
+   KONFIGURASI API
+   ============================================================ */
+const API_BASE   = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+const TABLE_NAME = 'fitness';
+const API_HEADERS = {
+    'Content-Type': 'application/json',
+    'X-Custom-Auth': 'admin',
+    'X-Role': 'admin'
+};
 
-            { class: "Bodycombat", time: "09:00", instructor: "Andy", days: [1,0,0,0,0,0,0] },
-            { class: "Bodypump", time: "09:00", instructor: "Andy", days: [0,1,0,0,0,0,0] },
-            { class: "Bodycombat", time: "09:00", instructor: "Dedy", days: [0,0,1,0,0,0,0] },
-            { class: "Bodypump", time: "09:00", instructor: "Sean", days: [0,0,0,1,0,0,0] },
-            { class: "Bodycombat", time: "09:00", instructor: "Moks", days: [0,0,0,0,1,0,0] },
-            { class: "Bodypump", time: "09:00", instructor: "Sean", days: [0,0,0,0,0,1,0] },
+const dayNames = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
 
-            { class: "Bodybalance", time: "10:00", instructor: "Sean", days: [1,0,0,0,0,0,0] },
-            { class: "Bodycombat", time: "10:00", instructor: "Andy", days: [0,1,0,1,0,0,0] },
-            { class: "Bodypump", time: "10:00", instructor: "Sean", days: [0,0,1,0,0,0,0] },
-            { class: "Bodycombat", time: "10:00", instructor: "Sean", days: [0,0,0,0,1,0,0] },
-            { class: "Bodybalance", time: "10:00", instructor: "Sean", days: [0,0,0,0,0,1,0] },
-            { class: "Bodybalance", time: "10:15", instructor: "Andy", days: [0,0,0,0,0,0,1] },
+/* Data aktif di memori (hasil map dari API) */
+let scheduleData = [];
+let editingId = null;
+let loading = false;
 
-            { class: "Bali Dance", time: "16:00", instructor: "Dedy", days: [1,0,0,0,0,0,0] },
-            { class: "Aerobic", time: "16:00", instructor: "Dedy", days: [0,1,0,0,0,0,0] },
-            { class: "Zumba", time: "16:00", instructor: "Dedy", days: [0,0,1,0,0,0,0] },
-            { class: "Aerobic", time: "16:00", instructor: "Ridho", days: [0,0,0,1,0,0,0] },
-            { class: "Zumba", time: "16:00", instructor: "Veni", days: [0,0,0,0,1,0,0] },
+/* ============================================================
+   API HELPER
+   ============================================================ */
+async function apiRequest(method, extraParams = '', body = null) {
+    const url = `${API_BASE}?table=${encodeURIComponent(TABLE_NAME)}${extraParams}`;
+    const opts = { method, headers: API_HEADERS };
+    if (body !== null) opts.body = JSON.stringify(body);
 
-            { class: "Zumba", time: "17:00", instructor: "Dedy", days: [1,0,0,0,0,0,0] },
-            { class: "Bodycombat", time: "17:00", instructor: "Andy", days: [0,1,0,1,0,0,0] },
-            { class: "Bodypump", time: "17:00", instructor: "Andy", days: [0,0,1,0,0,0,0] },
-            { class: "Bodycombat", time: "17:00", instructor: "Dedy", days: [0,0,0,0,1,0,0] },
-            { class: "Aerobic", time: "14:00", instructor: "Janter", days: [0,0,0,0,0,1,0] },
+    const res  = await fetch(url, opts);
+    const text = await res.text();
+    let json;
+    try { json = JSON.parse(text); } catch (e) { json = { raw: text }; }
 
-            { class: "Bodypump", time: "18:00", instructor: "Sean", days: [1,0,0,0,1,0,0] },
-            { class: "Bodyjam", time: "18:00", instructor: "Sean", days: [0,1,0,1,0,0,0] },
-            { class: "Bodycombat", time: "18:00", instructor: "Toga", days: [0,0,1,0,0,0,0] },
-            { class: "Bodypump", time: "18:00", instructor: "Yayang", days: [0,0,0,0,0,1,0] },
+    if (!res.ok) {
+        throw new Error(json.error || json.message || ('HTTP ' + res.status));
+    }
+    return json;
+}
 
-            { class: "Bodycombat", time: "19:00", instructor: "Philip", days: [1,0,0,0,0,0,0] },
-            { class: "Bodypump", time: "19:00", instructor: "Hendra", days: [0,0,0,1,0,0,0] },
-            { class: "Bodycombat", time: "16:00", instructor: "Andy", days: [0,0,0,0,0,1,0] },
-
-            // --- CYCLING CLASS ---
-            { class: "RPM", time: "08:00", instructor: "Susiani", days: [1,0,0,0,0,0,0] },
-            { class: "RPM", time: "07:30", instructor: "Jhony", days: [0,1,0,0,0,0,0] },
-            { class: "RPM", time: "07:30", instructor: "Yayang", days: [0,0,1,0,0,0,0] },
-            { class: "RPM", time: "08:00", instructor: "Jhony", days: [0,0,0,1,1,0,0] },
-            { class: "RPM", time: "07:30", instructor: "Susiani", days: [0,0,0,0,0,1,0] },
-
-            { class: "RPM", time: "17:00", instructor: "April", days: [1,0,1,0,0,0,0] },
-            { class: "RPM", time: "17:00", instructor: "Susiani", days: [0,1,0,0,0,0,0] },
-            { class: "RPM", time: "17:00", instructor: "Hendra", days: [0,0,0,1,0,0,0] },
-            { class: "RPM", time: "17:00", instructor: "Veric", days: [0,0,0,0,1,0,0] },
-
-            // --- YOGA CLASS ---
-            { class: "Yoga", time: "08:00", instructor: "Fang", days: [1,0,0,0,0,0,0] },
-            { class: "Flow Yoga", time: "08:00", instructor: "Monica", days: [0,1,1,0,0,0,0] },
-            { class: "Yoga", time: "07:00", instructor: "Jhony", days: [0,0,0,1,0,0,0] },
-            { class: "Pilates", time: "08:00", instructor: "Dedy", days: [0,0,0,0,1,0,0] },
-
-            { class: "Yoga", time: "17:00", instructor: "Fanda", days: [1,0,0,0,0,0,0] },
-            { class: "Yoga", time: "09:00", instructor: "Fanda", days: [0,1,0,0,0,0,0] },
-            { class: "Pilates", time: "16:00", instructor: "Dedy", days: [0,0,1,0,0,0,0] },
-            { class: "Zumba", time: "09:00", instructor: "Dedy", days: [0,0,0,1,0,0,0] },
-
-            { class: "Zumba", time: "18:00", instructor: "Dedy", days: [1,0,0,0,0,0,0] },
-            { class: "Yoga", time: "18:00", instructor: "Dedy", days: [0,1,0,0,0,0,0] },
-            { class: "Yoga", time: "18:00", instructor: "Yung-Yung", days: [0,0,1,0,0,0,0] },
-            { class: "Yoga", time: "18:00", instructor: "Fanda", days: [0,0,0,1,0,0,0] },
-            { class: "Yoga", time: "18:00", instructor: "Randi", days: [0,0,0,0,1,0,0] }
-        ];
-
-        const dayNames = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
-
-        function getFilters() {
-            return {
-                text: document.getElementById("searchInput").value.toLowerCase(),
-                classFilter: document.getElementById("classFilter").value,
-                instructor: document.getElementById("instructorFilter").value,
-                time: document.getElementById("timeFilter").value,
-                day: document.getElementById("dayFilter").value
-            };
+/* x_04 disimpan sebagai JSON string: "[1,0,0,1,0,0,0]" */
+function parseDays(raw) {
+    const empty = [0,0,0,0,0,0,0];
+    if (!raw) return empty;
+    try {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) {
+            return empty.map((_, i) => (arr[i] ? 1 : 0));
         }
+    } catch (e) { /* fallback di bawah */ }
+    const s = String(raw).replace(/[^01]/g, '');
+    return empty.map((_, i) => (s[i] === '1' ? 1 : 0));
+}
 
-        function refreshTimeDropdown() {
-            const f = getFilters();
-            const currentTimeValue = f.time;
+function mapRow(r) {
+    return {
+        id_x:       r.id_x,
+        class:      r.x_01 || '',
+        time:       r.x_02 || '',
+        instructor: r.x_03 || '',
+        days:       parseDays(r.x_04)
+    };
+}
 
-            const availableTimes = new Set();
-            scheduleData.forEach(row => {
-                const matchText = row.class.toLowerCase().includes(f.text);
-                const matchClass = f.classFilter === "" || row.class === f.classFilter;
-                const matchInstructor = f.instructor === "" || row.instructor === f.instructor;
-                const matchDay = f.day === "" || row.days[parseInt(f.day)] === 1;
+/* ============================================================
+   LOAD DATA DARI API
+   ============================================================ */
+function setStatus(msg, isError) {
+    const el = document.getElementById('statusBar');
+    el.textContent = msg;
+    el.className = 'status-bar' + (isError ? ' error' : '');
+}
 
-                if (matchText && matchClass && matchInstructor && matchDay) {
-                    availableTimes.add(row.time);
-                }
-            });
+async function loadData() {
+    if (loading) return;
+    loading = true;
+    setStatus('Memuat data dari server...');
 
-            const sortedTimes = [...availableTimes].sort();
-            const timeSelect = document.getElementById("timeFilter");
-            timeSelect.innerHTML = '<option value="">-- Semua --</option>';
-            sortedTimes.forEach(t => {
-                const opt = document.createElement("option");
-                opt.value = t;
-                opt.textContent = t;
-                timeSelect.appendChild(opt);
-            });
-            timeSelect.value = sortedTimes.includes(currentTimeValue) ? currentTimeValue : "";
-        }
-
-        function refreshInstructorDropdown() {
-            const f = getFilters();
-            const currentValue = f.instructor;
-
-            const availableInstructors = new Set();
-            scheduleData.forEach(row => {
-                const matchText = row.class.toLowerCase().includes(f.text);
-                const matchClass = f.classFilter === "" || row.class === f.classFilter;
-                const matchDay = f.day === "" || row.days[parseInt(f.day)] === 1;
-
-                if (matchText && matchClass && matchDay) {
-                    availableInstructors.add(row.instructor);
-                }
-            });
-
-            const sorted = [...availableInstructors].sort();
-            const select = document.getElementById("instructorFilter");
-            select.innerHTML = '<option value="">-- Semua --</option>';
-            sorted.forEach(name => {
-                const opt = document.createElement("option");
-                opt.value = name;
-                opt.textContent = name;
-                select.appendChild(opt);
-            });
-            select.value = sorted.includes(currentValue) ? currentValue : "";
-        }
-
-        function renderTables() {
-            const f = getFilters();
-
-            const tbodyPagi = document.getElementById("tableBodyPagi");
-            const tbodySore = document.getElementById("tableBodySore");
-            const sectionPagi = document.getElementById("sectionPagi");
-            const sectionSore = document.getElementById("sectionSore");
-            const emptyMsg = document.getElementById("emptyMessage");
-            const resultInfo = document.getElementById("resultInfo");
-            
-            tbodyPagi.innerHTML = "";
-            tbodySore.innerHTML = "";
-
-            // Update Header untuk kedua tabel
-            const headerCellsPagi = document.querySelectorAll("#tableHeaderRowPagi th[data-day]");
-            const headerCellsSore = document.querySelectorAll("#tableHeaderRowSore th[data-day]");
-            
-            const updateHeaders = (cells) => {
-                cells.forEach(th => {
-                    if (f.day === "" || th.dataset.day === f.day) {
-                        th.style.display = "";
-                        if (f.day !== "") th.classList.add("highlight-day");
-                        else th.classList.remove("highlight-day");
-                    } else {
-                        th.style.display = "none";
-                    }
-                });
-            };
-            updateHeaders(headerCellsPagi);
-            updateHeaders(headerCellsSore);
-
-            // Filter Data
-            const filteredData = scheduleData.filter(row => {
-                const matchText = row.class.toLowerCase().includes(f.text);
-                const matchClass = f.classFilter === "" || row.class === f.classFilter;
-                const matchInstructor = f.instructor === "" || row.instructor === f.instructor;
-                const matchTime = f.time === "" || row.time === f.time;
-                const matchDay = f.day === "" || row.days[parseInt(f.day)] === 1;
-                return matchText && matchClass && matchInstructor && matchTime && matchDay;
-            });
-
-            // Urutkan Data berdasarkan Jam
-            filteredData.sort((a, b) => {
-                if (a.time !== b.time) return a.time.localeCompare(b.time);
-                return a.class.localeCompare(b.class);
-            });
-
-            // Pisahkan data menjadi Pagi dan Sore
-            // Perbandingan string "HH:MM" aman untuk format 24 jam
-            const pagiData = filteredData.filter(row => row.time < "12:00");
-            const soreData = filteredData.filter(row => row.time >= "12:00");
-
-            // Fungsi untuk merender baris ke dalam tabel
-            const renderRows = (data, tbody) => {
-                data.forEach(row => {
-                    const tr = document.createElement("tr");
-
-                    const tdClass = document.createElement("td");
-                    tdClass.className = "class-name";
-                    tdClass.textContent = row.class;
-                    tdClass.title = row.class;
-                    tr.appendChild(tdClass);
-
-                    const tdTime = document.createElement("td");
-                    tdTime.className = "time";
-                    tdTime.textContent = row.time;
-                    tr.appendChild(tdTime);
-
-                    row.days.forEach((available, idx) => {
-                        const tdDay = document.createElement("td");
-                        tdDay.className = "day";
-                        tdDay.dataset.day = idx;
-
-                        if (f.day !== "" && idx.toString() !== f.day) {
-                            tdDay.style.display = "none";
-                        } else {
-                            if (f.day !== "") tdDay.classList.add("highlight-day");
-                        }
-
-                        if (available) {
-                            const span = document.createElement("span");
-                            span.className = "check";
-                            span.textContent = "✓";
-                            span.title = "Klik untuk lihat instruktur";
-                            span.onclick = () => openModal(row.class, dayNames[idx], row.time, row.instructor);
-                            tdDay.appendChild(span);
-                        }
-                        tr.appendChild(tdDay);
-                    });
-
-                    tbody.appendChild(tr);
-                });
-            };
-
-            // Render ke masing-masing tabel
-            renderRows(pagiData, tbodyPagi);
-            renderRows(soreData, tbodySore);
-
-            // Logika Sembunyikan/Tampilkan Tabel dan Empty Message
-            if (filteredData.length === 0) {
-                emptyMsg.style.display = "block";
-                sectionPagi.style.display = "none";
-                sectionSore.style.display = "none";
-                resultInfo.textContent = "";
-            } else {
-                emptyMsg.style.display = "none";
-                
-                // Sembunyikan section jika tidak ada data di dalamnya
-                sectionPagi.style.display = pagiData.length > 0 ? "block" : "none";
-                sectionSore.style.display = soreData.length > 0 ? "block" : "none";
-
-                let info = `Menampilkan ${filteredData.length} baris jadwal.`;
-                if (f.day !== "") info += ` (Hari: ${dayNames[parseInt(f.day)]})`;
-                if (f.classFilter !== "") info += ` (Kelas: ${f.classFilter})`;
-                resultInfo.textContent = info;
-            }
-        }
-
-        function openModal(className, day, time, instructor) {
-            document.getElementById("modalClass").textContent = "Kelas: " + className;
-            document.getElementById("modalDayTime").textContent = day + ", " + time;
-            document.getElementById("modalInstructor").textContent = instructor;
-            document.getElementById("modalOverlay").classList.add("active");
-        }
-
-        function closeModal() {
-            document.getElementById("modalOverlay").classList.remove("active");
-        }
-
-        document.getElementById("modalOverlay").addEventListener("click", function(e) {
-            if (e.target === this) closeModal();
-        });
-
-        function populateStaticDropdowns() {
-            const classSelect = document.getElementById("classFilter");
-            const classes = [...new Set(scheduleData.map(d => d.class))].sort();
-            classes.forEach(name => {
-                const opt = document.createElement("option");
-                opt.value = name;
-                opt.textContent = name;
-                classSelect.appendChild(opt);
-            });
-
-            const daySelect = document.getElementById("dayFilter");
-            dayNames.forEach((name, idx) => {
-                const opt = document.createElement("option");
-                opt.value = idx;
-                opt.textContent = name;
-                daySelect.appendChild(opt);
-            });
-
-            // ==========================================
-            // LOGIKA BARU: Set Default ke Hari Ini
-            // ==========================================
-            // JavaScript getDay(): 0=Minggu, 1=Senin, ..., 6=Sabtu
-            const jsDay = new Date().getDay(); 
-            
-            // Konversi ke index dayNames kita: 0=Senin, ..., 6=Minggu
-            // Jika Minggu (0), ubah jadi 6. Jika Senin (1), ubah jadi 0. dst.
-            const todayIndex = (jsDay === 0) ? 6 : jsDay - 1; 
-            
-            // Set nilai dropdown ke hari ini
-            daySelect.value = todayIndex;
-            // ==========================================
-        }
-
-        function resetFilters() {
-            document.getElementById("searchInput").value = "";
-            document.getElementById("classFilter").value = "";
-            document.getElementById("dayFilter").value = ""; // Reset ke Semua Hari
-            refreshInstructorDropdown();
-            refreshTimeDropdown();
-            renderTables();
-        }
-
-        document.getElementById("searchInput").addEventListener("input", () => {
-            refreshInstructorDropdown();
-            refreshTimeDropdown();
-            renderTables();
-        });
-
-        document.getElementById("classFilter").addEventListener("change", () => {
-            refreshInstructorDropdown();
-            refreshTimeDropdown();
-            renderTables();
-        });
-
-        document.getElementById("dayFilter").addEventListener("change", () => {
-            refreshInstructorDropdown();
-            refreshTimeDropdown();
-            renderTables();
-        });
-
-        document.getElementById("instructorFilter").addEventListener("change", () => {
-            refreshTimeDropdown();
-            renderTables();
-        });
-
-        document.getElementById("timeFilter").addEventListener("change", renderTables);
-
-        // Inisialisasi Awal
-        populateStaticDropdowns(); // Di sini default hari ini di-set
+    try {
+        const json = await apiRequest('GET', '&limit=500&offset=0');
+        scheduleData = (json.data || []).map(mapRow);
+        setStatus(`Terhubung. ${scheduleData.length} jadwal dimuat dari tabel "${TABLE_NAME}".`);
+    } catch (e) {
+        setStatus('Gagal memuat data: ' + e.message, true);
+        console.error(e);
+    } finally {
+        loading = false;
+        refreshClassDropdown();
         refreshInstructorDropdown();
         refreshTimeDropdown();
         renderTables();
-    </script>
+    }
+}
+
+/* ============================================================
+   FILTER & DROPDOWN
+   ============================================================ */
+function getFilters() {
+    return {
+        text:       document.getElementById("searchInput").value.toLowerCase(),
+        classFilter:document.getElementById("classFilter").value,
+        instructor: document.getElementById("instructorFilter").value,
+        time:       document.getElementById("timeFilter").value,
+        day:        document.getElementById("dayFilter").value
+    };
+}
+
+function refreshClassDropdown() {
+    const sel = document.getElementById('classFilter');
+    const cur = sel.value;
+    const classes = [...new Set(scheduleData.map(d => d.class))].filter(Boolean).sort();
+
+    sel.innerHTML = '<option value="">-- Semua --</option>';
+    classes.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c; o.textContent = c; sel.appendChild(o);
+    });
+    sel.value = classes.includes(cur) ? cur : '';
+
+    const dl = document.getElementById('classList');
+    dl.innerHTML = '';
+    classes.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c; dl.appendChild(o);
+    });
+}
+
+function refreshInstructorDropdown() {
+    const f = getFilters();
+    const currentValue = f.instructor;
+
+    const available = new Set();
+    scheduleData.forEach(row => {
+        const matchText  = row.class.toLowerCase().includes(f.text);
+        const matchClass = f.classFilter === "" || row.class === f.classFilter;
+        const matchDay   = f.day === "" || row.days[parseInt(f.day)] === 1;
+        if (matchText && matchClass && matchDay) available.add(row.instructor);
+    });
+
+    const sorted = [...available].filter(Boolean).sort();
+    const select = document.getElementById("instructorFilter");
+    select.innerHTML = '<option value="">-- Semua --</option>';
+    sorted.forEach(name => {
+        const opt = document.createElement("option");
+        opt.value = name; opt.textContent = name;
+        select.appendChild(opt);
+    });
+    select.value = sorted.includes(currentValue) ? currentValue : '';
+
+    const allInstr = [...new Set(scheduleData.map(d => d.instructor))].filter(Boolean).sort();
+    const dl = document.getElementById('instructorList');
+    dl.innerHTML = '';
+    allInstr.forEach(n => {
+        const o = document.createElement('option');
+        o.value = n; dl.appendChild(o);
+    });
+}
+
+function refreshTimeDropdown() {
+    const f = getFilters();
+    const currentTimeValue = f.time;
+
+    const availableTimes = new Set();
+    scheduleData.forEach(row => {
+        const matchText       = row.class.toLowerCase().includes(f.text);
+        const matchClass      = f.classFilter === "" || row.class === f.classFilter;
+        const matchInstructor = f.instructor === "" || row.instructor === f.instructor;
+        const matchDay        = f.day === "" || row.days[parseInt(f.day)] === 1;
+        if (matchText && matchClass && matchInstructor && matchDay) availableTimes.add(row.time);
+    });
+
+    const sortedTimes = [...availableTimes].filter(Boolean).sort();
+    const timeSelect = document.getElementById("timeFilter");
+    timeSelect.innerHTML = '<option value="">-- Semua --</option>';
+    sortedTimes.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t; opt.textContent = t;
+        timeSelect.appendChild(opt);
+    });
+    timeSelect.value = sortedTimes.includes(currentTimeValue) ? currentTimeValue : "";
+}
+
+/* ============================================================
+   RENDER TABEL
+   ============================================================ */
+function renderTables() {
+    const f = getFilters();
+
+    const tbodyPagi   = document.getElementById("tableBodyPagi");
+    const tbodySore   = document.getElementById("tableBodySore");
+    const sectionPagi = document.getElementById("sectionPagi");
+    const sectionSore = document.getElementById("sectionSore");
+    const emptyMsg    = document.getElementById("emptyMessage");
+    const resultInfo  = document.getElementById("resultInfo");
+
+    tbodyPagi.innerHTML = "";
+    tbodySore.innerHTML = "";
+
+    const headerCellsPagi = document.querySelectorAll("#tableHeaderRowPagi th[data-day]");
+    const headerCellsSore = document.querySelectorAll("#tableHeaderRowSore th[data-day]");
+    const updateHeaders = (cells) => {
+        cells.forEach(th => {
+            if (f.day === "" || th.dataset.day === f.day) {
+                th.style.display = "";
+                th.classList.toggle("highlight-day", f.day !== "");
+            } else {
+                th.style.display = "none";
+            }
+        });
+    };
+    updateHeaders(headerCellsPagi);
+    updateHeaders(headerCellsSore);
+
+    const filteredData = scheduleData.filter(row => {
+        const matchText       = row.class.toLowerCase().includes(f.text);
+        const matchClass      = f.classFilter === "" || row.class === f.classFilter;
+        const matchInstructor = f.instructor === "" || row.instructor === f.instructor;
+        const matchTime       = f.time === "" || row.time === f.time;
+        const matchDay        = f.day === "" || row.days[parseInt(f.day)] === 1;
+        return matchText && matchClass && matchInstructor && matchTime && matchDay;
+    });
+
+    filteredData.sort((a, b) => {
+        if (a.time !== b.time) return a.time.localeCompare(b.time);
+        return a.class.localeCompare(b.class);
+    });
+
+    const pagiData = filteredData.filter(row => row.time < "12:00");
+    const soreData = filteredData.filter(row => row.time >= "12:00");
+
+    const renderRows = (data, tbody) => {
+        data.forEach(row => {
+            const tr = document.createElement("tr");
+
+            const tdClass = document.createElement("td");
+            tdClass.className = "class-name";
+            tdClass.textContent = row.class;
+            tdClass.title = row.class;
+            tr.appendChild(tdClass);
+
+            const tdTime = document.createElement("td");
+            tdTime.className = "time";
+            tdTime.textContent = row.time;
+            tr.appendChild(tdTime);
+
+            row.days.forEach((available, idx) => {
+                const tdDay = document.createElement("td");
+                tdDay.className = "day";
+                tdDay.dataset.day = idx;
+
+                if (f.day !== "" && idx.toString() !== f.day) {
+                    tdDay.style.display = "none";
+                } else if (f.day !== "") {
+                    tdDay.classList.add("highlight-day");
+                }
+
+                if (available) {
+                    const span = document.createElement("span");
+                    span.className = "check";
+                    span.textContent = "✓";
+                    span.title = "Klik untuk lihat instruktur";
+                    span.onclick = () => openModal(row.class, dayNames[idx], row.time, row.instructor);
+                    tdDay.appendChild(span);
+                }
+                tr.appendChild(tdDay);
+            });
+
+            const tdAksi = document.createElement("td");
+            tdAksi.className = "aksi";
+
+            const btnEdit = document.createElement("button");
+            btnEdit.className = "icon-btn";
+            btnEdit.textContent = "✏️";
+            btnEdit.title = "Edit jadwal";
+            btnEdit.onclick = () => openForm(row);
+            tdAksi.appendChild(btnEdit);
+
+            const btnDel = document.createElement("button");
+            btnDel.className = "icon-btn";
+            btnDel.textContent = "🗑️";
+            btnDel.title = "Hapus jadwal";
+            btnDel.onclick = () => deleteRow(row);
+            tdAksi.appendChild(btnDel);
+
+            tr.appendChild(tdAksi);
+            tbody.appendChild(tr);
+        });
+    };
+
+    renderRows(pagiData, tbodyPagi);
+    renderRows(soreData, tbodySore);
+
+    if (filteredData.length === 0) {
+        emptyMsg.style.display = "block";
+        sectionPagi.style.display = "none";
+        sectionSore.style.display = "none";
+        resultInfo.textContent = "";
+    } else {
+        emptyMsg.style.display = "none";
+        sectionPagi.style.display = pagiData.length > 0 ? "block" : "none";
+        sectionSore.style.display = soreData.length > 0 ? "block" : "none";
+
+        let info = `Menampilkan ${filteredData.length} baris jadwal.`;
+        if (f.day !== "") info += ` (Hari: ${dayNames[parseInt(f.day)]})`;
+        if (f.classFilter !== "") info += ` (Kelas: ${f.classFilter})`;
+        resultInfo.textContent = info;
+    }
+}
+
+/* ============================================================
+   MODAL DETAIL INSTRUKTUR
+   ============================================================ */
+function openModal(className, day, time, instructor) {
+    document.getElementById("modalClass").textContent = "Kelas: " + className;
+    document.getElementById("modalDayTime").textContent = day + ", " + time;
+    document.getElementById("modalInstructor").textContent = instructor;
+    document.getElementById("modalOverlay").classList.add("active");
+}
+function closeModal() {
+    document.getElementById("modalOverlay").classList.remove("active");
+}
+document.getElementById("modalOverlay").addEventListener("click", function(e) {
+    if (e.target === this) closeModal();
+});
+
+/* ============================================================
+   FORM TAMBAH / EDIT
+   ============================================================ */
+function buildDayChecks(days) {
+    const wrap = document.getElementById('fDays');
+    wrap.innerHTML = '';
+    dayNames.forEach((name, i) => {
+        const lbl = document.createElement('label');
+        lbl.className = 'day-check';
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.dataset.day = i;
+        cb.checked = !!(days && days[i]);
+
+        lbl.appendChild(cb);
+        lbl.appendChild(document.createTextNode(name));
+        wrap.appendChild(lbl);
+    });
+}
+
+function openForm(row) {
+    editingId = row ? row.id_x : null;
+    document.getElementById('formTitle').textContent = row ? 'Edit Jadwal' : 'Tambah Jadwal';
+    document.getElementById('fClass').value      = row ? row.class : '';
+    document.getElementById('fTime').value       = row ? row.time : '';
+    document.getElementById('fInstructor').value = row ? row.instructor : '';
+    buildDayChecks(row ? row.days : [0,0,0,0,0,0,0]);
+    document.getElementById('formError').textContent = '';
+    document.getElementById('btnSave').disabled = false;
+    document.getElementById('formOverlay').classList.add('active');
+    setTimeout(() => document.getElementById('fClass').focus(), 50);
+}
+
+function closeForm() {
+    document.getElementById('formOverlay').classList.remove('active');
+    editingId = null;
+}
+
+function showFormError(msg) {
+    document.getElementById('formError').textContent = msg;
+}
+
+async function saveForm() {
+    const cls  = document.getElementById('fClass').value.trim();
+    const time = document.getElementById('fTime').value.trim();
+    const inst = document.getElementById('fInstructor').value.trim();
+
+    const days = [...document.querySelectorAll('#fDays input')].map(cb => cb.checked ? 1 : 0);
+
+    if (!cls)  { showFormError('Nama kelas wajib diisi.'); return; }
+    if (!time) { showFormError('Jam wajib diisi.'); return; }
+    if (!inst) { showFormError('Instruktur wajib diisi.'); return; }
+    if (days.every(d => d === 0)) { showFormError('Pilih minimal satu hari.'); return; }
+
+    const payload = {
+        x_01: cls,
+        x_02: time,
+        x_03: inst,
+        x_04: JSON.stringify(days)
+    };
+
+    const btn = document.getElementById('btnSave');
+    btn.disabled = true;
+    showFormError('');
+
+    try {
+        if (editingId !== null) {
+            await apiRequest('PUT', `&id_x=${editingId}`, payload);
+        } else {
+            await apiRequest('POST', '', payload);
+        }
+        closeForm();
+        await loadData();
+    } catch (e) {
+        showFormError('Gagal menyimpan: ' + e.message);
+        btn.disabled = false;
+    }
+}
+
+/* ============================================================
+   HAPUS
+   ============================================================ */
+async function deleteRow(row) {
+    const label = `${row.class} — ${row.instructor} (${row.time})`;
+    if (!confirm(`Hapus jadwal:\n\n${label}\n\nLanjutkan?`)) return;
+
+    try {
+        setStatus('Menghapus jadwal...');
+        await apiRequest('DELETE', `&id_x=${row.id_x}`);
+        await loadData();
+    } catch (e) {
+        alert('Gagal menghapus: ' + e.message);
+        setStatus('Gagal menghapus: ' + e.message, true);
+    }
+}
+
+/* ============================================================
+   RESET FILTER
+   ============================================================ */
+function resetFilters() {
+    document.getElementById("searchInput").value = "";
+    document.getElementById("classFilter").value = "";
+    document.getElementById("dayFilter").value = "";
+    refreshInstructorDropdown();
+    refreshTimeDropdown();
+    renderTables();
+}
+
+/* ============================================================
+   EVENT LISTENER
+   ============================================================ */
+document.getElementById("searchInput").addEventListener("input", () => {
+    refreshInstructorDropdown(); refreshTimeDropdown(); renderTables();
+});
+document.getElementById("classFilter").addEventListener("change", () => {
+    refreshInstructorDropdown(); refreshTimeDropdown(); renderTables();
+});
+document.getElementById("dayFilter").addEventListener("change", () => {
+    refreshInstructorDropdown(); refreshTimeDropdown(); renderTables();
+});
+document.getElementById("instructorFilter").addEventListener("change", () => {
+    refreshTimeDropdown(); renderTables();
+});
+document.getElementById("timeFilter").addEventListener("change", renderTables);
+
+document.getElementById("formOverlay").addEventListener("click", function(e) {
+    if (e.target === this) closeForm();
+});
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { closeForm(); closeModal(); }
+});
+
+/* ============================================================
+   INISIALISASI
+   ============================================================ */
+function initDayDropdown() {
+    const daySelect = document.getElementById("dayFilter");
+    dayNames.forEach((name, idx) => {
+        const opt = document.createElement("option");
+        opt.value = idx; opt.textContent = name;
+        daySelect.appendChild(opt);
+    });
+
+    const jsDay = new Date().getDay();
+    const todayIndex = (jsDay === 0) ? 6 : jsDay - 1;
+    daySelect.value = todayIndex;
+}
+
+initDayDropdown();
+loadData();
+</script>
 
 </body>
 </html>
