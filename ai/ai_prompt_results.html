@@ -1732,9 +1732,36 @@
             const tool = TOOLS[toolKey];
             if (!tool) return;
             const fieldsHtml = tool.fields.map(f => `<li><strong>${f.label}</strong> — ${f.placeholder}</li>`).join('');
-            let contohHtml = '';
+            
+            // Pisahkan data contoh untuk "Contoh Kasus" dan "Cocok Untuk"
+            let useForText = '';
+            let contohItems = [];
             if (tool.contoh && tool.contoh.length) {
-                const items = tool.contoh.map(c => `<div class="contoh-item"><span class="lbl">${c.lbl}:</span> ${c.txt}</div>`).join('');
+                tool.contoh.forEach(c => {
+                    if (c.lbl.toLowerCase().includes('cocok')) {
+                        useForText = c.txt;
+                    } else {
+                        contohItems.push(c);
+                    }
+                });
+            }
+
+            // Kotak Baru: Deskripsi & Kegunaan (Sesuai request di kotak merah)
+            const infoBoxHtml = `
+                <div style="background:#f7fafc;border-radius:8px;padding:16px;margin-bottom:16px;border-left:4px solid #9f7aea;box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <p style="color:#2d3748;font-size:14px;margin-bottom:8px;line-height:1.6;">
+                        <strong style="color:#805ad5;">📝 Deskripsi Singkat:</strong><br>${tool.desc}
+                    </p>
+                    ${useForText ? `
+                    <p style="color:#2d3748;font-size:14px;line-height:1.6;margin-bottom:0;">
+                        <strong style="color:#805ad5;">🎯 Cocok Digunakan Untuk:</strong><br>${useForText}
+                    </p>` : ''}
+                </div>
+            `;
+
+            let contohHtml = '';
+            if (contohItems.length) {
+                const items = contohItems.map(c => `<div class="contoh-item"><span class="lbl">${c.lbl}:</span> ${c.txt}</div>`).join('');
                 contohHtml = `<div class="contoh-box"><div class="contoh-title">💡 Contoh Nyata:</div>${items}</div>`;
             }
 
@@ -1749,8 +1776,8 @@
                 <div style="text-align:center;margin-bottom:12px;">
                     <span style="font-size:48px;display:block;">${tool.icon}</span>
                     <h3 style="font-size:20px;color:#2d3748;">${tool.name}</h3>
-                    <p style="color:#718096;font-size:14px;">${tool.desc}</p>
                 </div>
+                ${infoBoxHtml}
                 ${contohHtml}
                 ${hasilHtml}
                 <div style="background:#f7fafc;border-radius:8px;padding:16px;margin-bottom:12px;">
