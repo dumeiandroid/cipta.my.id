@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Blueprint Bisnis - v3.4 (Teks Saja)</title>
+<title>Blueprint Bisnis - v3.5 (Loading Indicator)</title>
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 <style>
@@ -111,16 +111,43 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
 .stage-tab:hover{border-color:#c3b0ec;color:#6b46c1}
 .stage-tab.filled{border-color:#c6f6d5;background:#f0fff4;color:#276749}
 .stage-tab.active{border-color:#805ad5;background:#faf5ff;color:#6b46c1;box-shadow:0 2px 8px rgba(128,90,213,.18)}
+.stage-tab.disabled{opacity:.5;pointer-events:none}
 
 .stage-hint{background:#f7fafc;border:2px dashed #e2e8f0;border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.6;color:#4a5568;margin-bottom:12px}
 .stage-hint strong{color:#2d3748}
 .stage-hint .mini-copy{background:#805ad5;color:#fff;border:none;padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;display:inline-flex;align-items:center;gap:5px}
 .stage-hint .mini-copy:hover{background:#6b46c1}
 
-.quill-wrapper{background:#fff;border-radius:10px;border:2px solid #e2e8f0;overflow:hidden}
+/* QUILL WRAPPER & LOADING OVERLAY */
+.quill-wrapper{background:#fff;border-radius:10px;border:2px solid #e2e8f0;overflow:hidden;position:relative}
 .quill-wrapper .ql-toolbar{border:none;border-bottom:2px solid #e2e8f0;background:#f7fafc;padding:6px}
 .quill-wrapper .ql-container{border:none;min-height:280px;font-size:13px}
 .quill-wrapper .ql-editor{min-height:280px}
+
+.editor-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(2px);
+  display: none; /* hidden by default */
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+  border-radius: 8px;
+}
+.editor-loading-overlay.active { display: flex; }
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #805ad5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.loading-text { font-size: 13px; color: #4a5568; font-weight: 600; }
 
 .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border:none;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;font-family:inherit}
 .btn-primary{background:#805ad5;color:#fff}
@@ -187,7 +214,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
   <header class="app-header">
     <div class="header-left">
       <button class="back-btn" id="backBtn" onclick="backToList()">← Kembali</button>
-      <h1>💡 Blueprint Bisnis <span>v3.4</span></h1>
+      <h1>💡 Blueprint Bisnis <span>v3.5</span></h1>
     </div>
     <div class="header-actions">
       <button class="btn-new" onclick="openNewBlueprint()">＋ Blueprint Baru</button>
@@ -532,7 +559,6 @@ function backToList(){
 
 // ============================================================
 // MASTER PROMPT — BERTAHAP 9 TAHAP, TEKS SAJA
-// Tanpa tabel, tanpa gambar.
 // ============================================================
 function buildMasterPrompt(md){
   const idea_name = md.idea_name || '[Nama Ide]';
@@ -804,7 +830,13 @@ function renderWork(){
       <div class="stage-tabs" id="stageTabs"></div>
       <div class="stage-hint" id="stageHint"></div>
 
-      <div class="quill-wrapper"><div id="resultEditor"></div></div>
+      <div class="quill-wrapper">
+        <div class="editor-loading-overlay" id="editorLoading">
+          <div class="spinner"></div>
+          <div class="loading-text">Memuat konten tahap...</div>
+        </div>
+        <div id="resultEditor"></div>
+      </div>
 
       <div class="action-row" style="margin-top:14px">
         <button class="btn btn-success" onclick="saveResult()">💾 Simpan Semua Tahap</button>
@@ -848,7 +880,7 @@ function updatePromptPreview(){
 }
 
 // ============================================================
-// STAGE UI
+// STAGE UI & LOADING LOGIC
 // ============================================================
 function updateStageUI(){
   const tabs = document.getElementById('stageTabs');
@@ -874,10 +906,30 @@ function updateStageUI(){
 }
 
 function switchStage(key){
+  if(currentStage === key) return; // Jangan reload jika tab sama
+  
   if(quillEditor) stageBuffer[currentStage] = quillEditor.root.innerHTML;
+  
+  // Tampilkan loading overlay & disable tab sementara
+  const loader = document.getElementById('editorLoading');
+  if (loader) loader.classList.add('active');
+  
+  const tabs = document.querySelectorAll('.stage-tab');
+  tabs.forEach(t => t.classList.add('disabled'));
+
   currentStage = key;
-  if(quillEditor) quillEditor.root.innerHTML = stageBuffer[key] || '';
-  updateStageUI();
+
+  // Beri waktu browser untuk merender spinner sebelum update Quill (yang berat)
+  setTimeout(() => {
+    if(quillEditor) {
+      quillEditor.root.innerHTML = stageBuffer[key] || '';
+    }
+    updateStageUI();
+
+    // Sembunyikan loading overlay & aktifkan tab kembali
+    if (loader) loader.classList.remove('active');
+    tabs.forEach(t => t.classList.remove('disabled'));
+  }, 50);
 }
 
 function copyContinue(){
