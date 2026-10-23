@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Journal Article Writer - v2.0</title>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;min-height:100vh;color:#2d3748}
+
+/* LOGIN */
+.login-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:9999;justify-content:center;align-items:center;padding:20px}
+.login-overlay.active{display:flex}
+.login-box{background:#fff;border-radius:20px;padding:40px;max-width:420px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.4)}
+.login-box h2{text-align:center;font-size:22px;margin-bottom:4px}
+.login-box p{text-align:center;color:#718096;font-size:14px;margin-bottom:20px}
+.login-box .form-group{margin-bottom:14px}
+.login-box label{font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px}
+.login-box input{width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px}
+.login-box input:focus{outline:none;border-color:#6b46c1}
+.login-box .btn-login{width:100%;padding:12px;background:#6b46c1;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px}
+.login-box .btn-login:hover{background:#553c9a}
+.login-error{color:#fc8181;font-size:13px;text-align:center;margin-top:10px;display:none}
+.login-error.show{display:block}
+
+/* APP */
+.main-content{display:none}
+.main-content.visible{display:block}
+
+.app-header{background:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);flex-wrap:wrap;border-bottom:1px solid #edf2f7;position:sticky;top:0;z-index:100}
+.header-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.header-left h1{font-size:18px;color:#1a2332;display:flex;align-items:center;gap:8px}
+.header-left h1 span{background:#6b46c1;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px}
+.back-btn{background:#f7fafc;border:2px solid #e2e8f0;padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;color:#4a5568;display:none;align-items:center;gap:6px}
+.back-btn:hover{background:#edf2f7}
+.back-btn.show{display:inline-flex}
+.header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn-new{background:#6b46c1;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px}
+.btn-new:hover{background:#553c9a}
+.user-chip{display:flex;align-items:center;gap:8px;font-size:13px;background:#f7fafc;padding:4px 14px;border-radius:20px}
+.user-chip .role{font-size:10px;padding:1px 8px;border-radius:8px;font-weight:600;background:#c6f6d5;color:#276749}
+.user-chip .role.user{background:#bee3f8;color:#2a69ac}
+.btn-logout{background:#fc8181;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer}
+.btn-logout:hover{background:#f56565}
+
+.view-container{display:none}
+.view-container.active{display:block}
+
+/* LIST */
+.wrap{max-width:1100px;margin:0 auto;padding:24px}
+.list-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+.list-head h2{font-size:22px;color:#1a2332}
+.list-head .sub{font-size:13px;color:#718096;margin-top:2px}
+
+.blueprint-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.bp-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:2px solid transparent;transition:all .2s;cursor:pointer;position:relative}
+.bp-card:hover{border-color:#6b46c1;transform:translateY(-2px);box-shadow:0 8px 20px rgba(107,70,193,.12)}
+.bp-card .id{font-size:11px;color:#a0aec0;font-weight:600;margin-bottom:4px}
+.bp-card .name{font-size:16px;font-weight:700;color:#1a2332;margin-bottom:6px;line-height:1.3}
+.bp-card .desc{font-size:12px;color:#718096;line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bp-card .badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.bp-card .badge{font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px;text-transform:uppercase}
+.bp-card .badge.done{background:#c6f6d5;color:#276749}
+.bp-card .badge.pending{background:#feebc8;color:#9c4221}
+.bp-card .badge.progress{background:#e9d8fd;color:#6b46c1}
+.bp-card .meta{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#a0aec0;border-top:1px solid #edf2f7;padding-top:10px;margin-top:10px}
+.bp-card .actions{position:absolute;top:14px;right:14px;display:none;gap:4px}
+.bp-card:hover .actions{display:flex}
+.bp-card .actions button{background:#fff;border:1px solid #e2e8f0;border-radius:6px;width:26px;height:26px;font-size:12px;cursor:pointer;padding:0}
+.bp-card .actions button:hover{background:#f7fafc}
+
+.empty-state{text-align:center;padding:60px 20px;color:#a0aec0}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.empty-state h3{color:#4a5568;margin-bottom:6px;font-size:16px}
+.empty-state p{font-size:13px;margin-bottom:16px}
+
+/* WORK */
+.work-wrap{max-width:1100px;margin:0 auto;padding:20px}
+.work-header{background:linear-gradient(135deg,#6b46c1,#553c9a);border-radius:14px;padding:22px 26px;margin-bottom:18px;color:#fff}
+.work-header h2{font-size:20px;margin-bottom:4px}
+.work-header .id{font-size:12px;opacity:.85;font-weight:600}
+.work-header .status-line{font-size:12px;margin-top:8px;opacity:.95;display:flex;gap:12px;flex-wrap:wrap}
+.work-header .status-line span{display:inline-flex;align-items:center;gap:4px}
+
+.step-card{background:#fff;border-radius:14px;padding:22px 26px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.05);border-left:5px solid #6b46c1}
+.step-card.green{border-left-color:#48bb78}
+.step-card.orange{border-left-color:#ed8936}
+.step-card .step-tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 12px;border-radius:12px;background:#faf5ff;color:#553c9a;margin-bottom:8px;letter-spacing:.4px;text-transform:uppercase}
+.step-card.green .step-tag{background:#f0fff4;color:#276749}
+.step-card.orange .step-tag{background:#fffaf0;color:#9c4221}
+.step-card h3{font-size:17px;color:#1a2332;margin-bottom:4px}
+.step-card .sub{font-size:13px;color:#718096;margin-bottom:16px;line-height:1.5}
+.step-card .form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.step-card label{font-weight:600;font-size:12px;color:#4a5568}
+.step-card input,.step-card textarea,.step-card select{padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;width:100%}
+.step-card input:focus,.step-card textarea:focus,.step-card select:focus{outline:none;border-color:#6b46c1}
+.step-card textarea{resize:vertical;min-height:70px}
+
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+.info-tip{background:#faf5ff;border-left:4px solid #6b46c1;padding:10px 14px;border-radius:8px;font-size:12.5px;color:#44337a;line-height:1.6;margin-bottom:12px}
+.warn-tip{background:#fffaf0;border-left:4px solid #ed8936;padding:10px 14px;border-radius:8px;font-size:12.5px;color:#7b341e;line-height:1.6;margin-bottom:12px}
+
+.prompt-box{background:#f7fafc;border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;font-size:12px;line-height:1.6;color:#2d3748;white-space:pre-wrap;max-height:400px;overflow-y:auto;position:relative;font-family:'Courier New',monospace}
+.copy-btn{position:sticky;top:0;float:right;background:#6b46c1;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:700;margin-bottom:8px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.copy-btn:hover{background:#553c9a}
+
+/* STAGE TABS */
+.stage-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.stage-tab{padding:7px 12px;border-radius:9px;border:2px solid #e2e8f0;background:#fff;font-size:12px;font-weight:700;cursor:pointer;color:#718096;display:inline-flex;align-items:center;gap:5px;font-family:inherit;transition:all .15s}
+.stage-tab:hover{border-color:#d6bcfa;color:#6b46c1}
+.stage-tab.filled{border-color:#c6f6d5;background:#f0fff4;color:#276749}
+.stage-tab.active{border-color:#6b46c1;background:#faf5ff;color:#553c9a;box-shadow:0 2px 8px rgba(107,70,193,.18)}
+.stage-tab.disabled{opacity:.5;pointer-events:none}
+.stage-tab .data-req{font-size:9px;background:#feebc8;color:#9c4221;padding:1px 5px;border-radius:5px;margin-left:3px}
+
+.quill-wrapper{background:#fff;border-radius:10px;border:2px solid #e2e8f0;overflow:hidden;position:relative}
+.quill-wrapper .ql-toolbar{border:none;border-bottom:2px solid #e2e8f0;background:#f7fafc;padding:6px}
+.quill-wrapper .ql-container{border:none;min-height:320px;font-size:13px}
+.quill-wrapper .ql-editor{min-height:320px}
+.quill-wrapper .ql-editor h1,.quill-wrapper .ql-editor h2,.quill-wrapper .ql-editor h3{margin-top:1em;margin-bottom:.5em;font-weight:700}
+.quill-wrapper .ql-editor ul,.quill-wrapper .ql-editor ol{padding-left:20px;margin-bottom:10px}
+.quill-wrapper .ql-editor table{border-collapse:collapse;width:100%;margin:10px 0}
+.quill-wrapper .ql-editor table td,.quill-wrapper .ql-editor table th{border:1px solid #cbd5e0;padding:6px}
+
+.editor-loading-overlay{position:absolute;inset:0;background:rgba(255,255,255,.85);backdrop-filter:blur(2px);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:50}
+.editor-loading-overlay.active{display:flex}
+.spinner{width:40px;height:40px;border:4px solid #e2e8f0;border-top:4px solid #6b46c1;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:#4a5568;font-weight:600}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border:none;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;font-family:inherit}
+.btn-primary{background:#6b46c1;color:#fff}
+.btn-primary:hover{background:#553c9a}
+.btn-success{background:#48bb78;color:#fff}
+.btn-success:hover{background:#38a169}
+.btn-warning{background:#ed8936;color:#fff}
+.btn-warning:hover{background:#dd6b20}
+.btn-outline{background:transparent;color:#4a5568;border:2px solid #e2e8f0}
+.btn-outline:hover{background:#f7fafc}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.mini-copy{background:#ebf8ff;border:1px solid #bee3f8;color:#2b6cb0;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
+.mini-copy:hover{background:#bee3f8}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center;padding:20px;overflow-y:auto}
+.modal-overlay.active{display:flex}
+.modal{background:#fff;border-radius:18px;max-width:720px;width:100%;max-height:95vh;overflow-y:auto;padding:26px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-close{position:sticky;top:0;float:right;background:#fc8181;color:#fff;border:none;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center}
+.modal-title{font-size:19px;font-weight:700;color:#1a2332;margin-bottom:6px;padding-right:40px}
+.modal-sub{font-size:13px;color:#718096;margin-bottom:18px;padding-right:40px;line-height:1.5}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:14px 22px;border-radius:10px;color:#fff;font-weight:600;font-size:13px;z-index:2000;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:400px;animation:slideUp .3s}
+.toast.success{background:#48bb78}.toast.error{background:#fc8181}.toast.info{background:#4299e1}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:700px){
+  .wrap,.work-wrap{padding:14px}
+  .step-card{padding:18px}
+  .app-header{padding:10px 14px}
+  .header-left h1{font-size:15px}
+  .blueprint-grid{grid-template-columns:1fr}
+  .form-row-2,.form-row-3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-overlay active" id="loginOverlay">
+  <div class="login-box">
+    <span style="font-size:44px;display:block;text-align:center;margin-bottom:4px">📚</span>
+    <h2>AI Journal Writer</h2>
+    <p>Masukkan data riset → dapatkan artikel jurnal lengkap</p>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="loginUsername" placeholder="Username">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="Password">
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">Login</button>
+    <div class="login-error" id="loginError">❌ Username atau password salah!</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-content" id="mainContent">
+  <header class="app-header">
+    <div class="header-left">
+      <button class="back-btn" id="backBtn" onclick="backToList()">← Kembali</button>
+      <h1>📚 Journal Article Writer <span>v2.0</span></h1>
+    </div>
+    <div class="header-actions">
+      <button class="btn-new" onclick="openNewProject()">＋ Project Baru</button>
+      <span class="user-chip">
+        👤 <span id="headerUser">-</span>
+        <span class="role" id="headerRole">user</span>
+      </span>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </header>
+
+  <!-- LIST VIEW -->
+  <div class="view-container active" id="listView">
+    <div class="wrap">
+      <div class="list-head">
+        <div>
+          <h2>📁 Artikel Jurnal Saya</h2>
+          <div class="sub">Satu project = satu artikel jurnal, berisi 10 section</div>
+        </div>
+      </div>
+      <div class="blueprint-grid" id="blueprintGrid"></div>
+    </div>
+  </div>
+
+  <!-- WORK VIEW -->
+  <div class="view-container" id="workView">
+    <div class="work-wrap" id="workWrap"></div>
+  </div>
+</div>
+
+<!-- NEW PROJECT MODAL -->
+<div class="modal-overlay" id="newProjectModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('newProjectModal')">✕</button>
+    <div class="modal-title">📚 Project Artikel Jurnal Baru</div>
+    <div class="modal-sub">Cukup masukkan <strong>Judul Project</strong>. Setelah dibuat, Anda akan diminta melengkapi metadata riset dan dapat menulis 10 section artikel jurnal secara bertahap.</div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label style="font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px">📝 Judul Project <span style="color:#fc8181">*</span></label>
+      <input type="text" id="newProjectName" placeholder="Contoh: Pengaruh Fatherless terhadap Gender Role Conflict pada Remaja" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #edf2f7">
+      <button class="btn btn-outline" onclick="closeModal('newProjectModal')">Batal</button>
+      <button class="btn btn-primary" id="saveNewBtn" onclick="saveNewProject()">💾 Buat Project</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// KONFIGURASI
+// ============================================================
+const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+const TABLE = 'ai_journal_writer';
+const USERS_TABLE = 'users';
+const SECRET = 'admin';
+const STORAGE_KEY = 'ai_journal_writer_v2';
+
+const COLUMNS = {
+  id: 'x_01',
+  title: 'x_02',
+  prompt: 'x_03',
+  metadata: 'x_04',
+  status: 'x_05',
+  unused: 'x_06',
+  created_by: 'x_07',
+  unused2: 'x_08',
+  results: 'x_09',
+  created_date: 'x_10'
+};
+
+// Template Jurnal
+const JOURNAL_TEMPLATES = {
+  jehcp: {
+    id: 'jehcp',
+    name: 'JEHCP (Journal of Educational, Health and Community Psychology)',
+    short: 'JEHCP',
+    language: 'EN',
+    structure: `Title → Author's Name & Affiliation → Abstract (100-150 kata, past tense) → Keywords (3-5) → Introduction (dengan subsection literature review per variabel) → Method (Design, Respondents/Participants, Measurements, Procedures, Data Analysis) → Result (data + tabel/gambar) → Discussion → Conclusion → Funding → Ethical Statement → Informed Consent Statement → Acknowledgments → Conflicts of Interest → Data Availability → References (APA 7th)`,
+    notes: 'JEHCP berbahasa Inggris. Fokus pada psikologi pendidikan, kesehatan, dan komunitas. Abstract 100-150 kata, past tense. Referensi APA 7th.'
+  },
+  jpi: {
+    id: 'jpi',
+    name: 'Jurnal Psikologi Indonesia (JPI)',
+    short: 'JPI',
+    language: 'ID',
+    structure: `Judul → Nama Penulis & Afiliasi → Abstrak (150-250 kata) → Kata Kunci → Pendahuluan (latar belakang, gap, tujuan, manfaat) → Kajian Pustaka → Metode (Desain, Partisipan, Instrumen, Prosedur, Analisis Data) → Hasil → Diskusi → Kesimpulan → Saran → Daftar Pustaka (APA 7th)`,
+    notes: 'JPI berbahasa Indonesia. Struktur lebih fleksibel, biasanya ada Kajian Pustaka terpisah.'
+  },
+  generic_imrad: {
+    id: 'generic_imrad',
+    name: 'Generic IMRaD (International Standard)',
+    short: 'IMRaD',
+    language: 'EN',
+    structure: `Title → Authors & Affiliation → Abstract (150-250 kata) → Keywords → Introduction (background, gap, objective, hypothesis) → Method (Participants, Instruments, Procedure, Data Analysis) → Results → Discussion (findings, comparison with prior studies, limitations) → Conclusion → References`,
+    notes: 'Format IMRaD standar internasional. Cocok untuk jurnal internasional umum.'
+  }
+};
+
+// Mode Referensi
+const REFERENCE_MODES = {
+  ai_search: {
+    id: 'ai_search',
+    name: 'AI Cari Referensi Sendiri',
+    desc: 'AI mencari referensi dari pengetahuannya sendiri.',
+    warn: '⚠️ RISIKO TINGGI: AI bisa menciptakan referensi fiktif (halusinasi). Hanya untuk draft awal.',
+    instruction: `MODE: AI CARI SENDIRI
+Cari referensi dari pengetahuan Anda. ⚠️ WAJIB: Prioritaskan referensi yang Anda YAKIN ada. Jika tidak yakin, gunakan placeholder [REF: topik_tahun]. JANGAN mengarang detail (volume, halaman, DOI) yang tidak Anda ketahui.`
+  },
+  user_provided: {
+    id: 'user_provided',
+    name: 'Saya Kasih Daftar Referensi',
+    desc: 'AI hanya menyitasi dari daftar yang Anda berikan.',
+    warn: '✅ RECOMMENDED: Cara paling aman mencegah referensi fiktif.',
+    instruction: `MODE: USER MENYEDIAKAN DAFTAR REFERENSI
+Gunakan HANYA referensi dari daftar yang tersedia di metadata project. JANGAN mengarang referensi baru.`
+  },
+  placeholder: {
+    id: 'placeholder',
+    name: 'Buat Placeholder [REF: ...]',
+    desc: 'AI menulis placeholder [REF: topik_tahun] yang Anda isi manual.',
+    warn: '✅ AMAN: Cocok jika ingin mengisi referensi setelah draft selesai.',
+    instruction: `MODE: PLACEHOLDER
+Untuk setiap sitasi, gunakan format placeholder: [REF: topik_tahun], contoh [REF: fatherless_2020]. JANGAN mengarang referensi. User akan mengisi referensi manual setelahnya.`
+  }
+};
+
+// 10 Section Artikel Jurnal
+const SECTIONS = [
+  { key:'full_article', label:'1. Full Article', title:'Full Article (Semua Section)', needs_data: true },
+  { key:'abstract_keywords', label:'2. Abstract & Keywords', title:'Abstract & Keywords', needs_data: true },
+  { key:'introduction_litrev', label:'3. Intro & Lit Review', title:'Introduction & Literature Review', needs_data: true },
+  { key:'method_section', label:'4. Method', title:'Method Section', needs_data: true },
+  { key:'result_section', label:'5. Result', title:'Result Section', needs_data: true },
+  { key:'discussion_section', label:'6. Discussion', title:'Discussion Section', needs_data: true },
+  { key:'conclusion_section', label:'7. Conclusion', title:'Conclusion & Recommendation', needs_data: true },
+  { key:'front_back_matter', label:'8. Front & Back', title:'Front & Back Matter', needs_data: false },
+  { key:'references_apa', label:'9. References', title:'References (APA 7th)', needs_data: false },
+  { key:'response_reviewer', label:'10. Response Reviewer', title:'Response to Reviewer', needs_data: false }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let allProjects = [];
+let currentProject = null;
+let currentUser = null;
+let isAdmin = false;
+let quillEditor = null;
+let sectionBuffer = {};
+let currentSection = 'full_article';
+let preferredSection = null;
+
+// ============================================================
+// SESSION & LOGIN
+// ============================================================
+function getStoredUser(){try{const d=localStorage.getItem(STORAGE_KEY)||sessionStorage.getItem(STORAGE_KEY);if(d){const p=JSON.parse(d);if(p.username&&p.timestamp){const days=(Date.now()-p.timestamp)/(1000*60*60*24);if(days<7)return p.username;}}}catch(e){}return null;}
+function saveUserToStorage(u){const d=JSON.stringify({username:u,timestamp:Date.now()});localStorage.setItem(STORAGE_KEY,d);}
+function clearUserStorage(){localStorage.removeItem(STORAGE_KEY);sessionStorage.removeItem(STORAGE_KEY);}
+function checkAutoLogin(){const u=getStoredUser();if(u){currentUser=u;isAdmin=(u==='admin');showApp();return true;}return false;}
+function showApp(){document.getElementById('loginOverlay').classList.remove('active');document.getElementById('mainContent').classList.add('visible');document.getElementById('headerUser').textContent=currentUser;const r=document.getElementById('headerRole');if(isAdmin){r.textContent='👑 Admin';r.className='role';}else{r.textContent='👤 User';r.className='role user';}fetchData().then(renderList);}
+
+async function doLogin(){
+  const u = document.getElementById('loginUsername').value.trim();
+  const p = document.getElementById('loginPassword').value.trim();
+  const err = document.getElementById('loginError');
+  err.classList.remove('show');
+  if(!u||!p){err.textContent='❌ Username dan password wajib diisi!';err.classList.add('show');return;}
+  const btn = document.getElementById('loginBtn');
+  btn.disabled=true; btn.textContent='Memeriksa...';
+  try{
+    const r = await fetch(API_URL+'?table='+USERS_TABLE,{headers:{'Content-Type':'application/json','X-Custom-Auth':SECRET,'X-Table-Name':USERS_TABLE,'X-Role':'admin'}});
+    const res = await r.json();
+    if(res.success && res.data){
+      const user = res.data.find(x=>x.x_01===u && x.x_02===p);
+      if(user){
+        currentUser = u; isAdmin = (u==='admin');
+        saveUserToStorage(u); showApp(); showToast('✅ Login berhasil','success');
+      } else { err.textContent='❌ Username atau password salah!';err.classList.add('show'); }
+    } else { err.textContent='❌ Gagal ambil data user';err.classList.add('show'); }
+  }catch(e){err.textContent='❌ Gagal login: '+e.message;err.classList.add('show');}
+  finally{btn.disabled=false;btn.textContent='Login';}
+}
+
+function doLogout(){
+  if(!confirm('Yakin ingin logout?'))return;
+  clearUserStorage();
+  currentUser=null; isAdmin=false; currentProject=null;
+  document.getElementById('loginOverlay').classList.add('active');
+  document.getElementById('mainContent').classList.remove('visible');
+  showToast('👋 Logout berhasil','info');
+}
+
+// ============================================================
+// API & DATA
+// ============================================================
+function getHeaders(){return{'Content-Type':'application/json','X-Custom-Auth':SECRET,'X-Table-Name':TABLE,'X-Role':'admin'};}
+async function apiFetch(ep,opt={}){const r=await fetch(API_URL+'?table='+TABLE+ep,{...opt,headers:{...getHeaders(),...(opt.headers||{})}});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||e.message||'HTTP '+r.status);}return r.json();}
+
+async function fetchData(){
+  try{
+    const res = await apiFetch('');
+    if(res.success && res.data){
+      let data = res.data.map(parseRow);
+      if(!isAdmin && currentUser) data = data.filter(d=>d.created_by===currentUser);
+      allProjects = data;
+    } else { allProjects = []; }
+  }catch(e){ allProjects = []; }
+  return allProjects;
+}
+
+function parseRow(r){
+  let results = {};
+  try { results = r.x_09 ? JSON.parse(r.x_09) : {}; } catch(e){}
+  let metadata = {};
+  try { metadata = r.x_04 ? JSON.parse(r.x_04) : {}; } catch(e){}
+  return {
+    id_x: r.id_x,
+    project_id: r.x_01 || '',
+    title: r.x_02 || '',
+    prompt: r.x_03 || '',
+    metadata: metadata,
+    created_by: r.x_07 || '',
+    results: results,
+    created_date: r.x_10 || ''
+  };
+}
+
+function buildRow(d){
+  return {
+    x_01: d.project_id, x_02: d.title, x_03: d.prompt,
+    x_04: JSON.stringify(d.metadata || {}),
+    x_05: 'multi', x_07: d.created_by,
+    x_09: JSON.stringify(d.results || {}),
+    x_10: d.created_date
+  };
+}
+
+async function createProject(d){ return apiFetch('',{method:'POST',body:JSON.stringify(buildRow(d))}); }
+async function updateProject(id,d){ return apiFetch('&id_x='+id,{method:'PUT',body:JSON.stringify(buildRow(d))}); }
+async function deleteProjectApi(id){ return apiFetch('&id_x='+id,{method:'DELETE'}); }
+
+function generateProjectId(){
+  const today = new Date();
+  const datePart = today.getFullYear().toString() + String(today.getMonth()+1).padStart(2,'0') + String(today.getDate()).padStart(2,'0');
+  const prefix = 'JW-' + datePart + '-';
+  let maxNum = 0;
+  allProjects.forEach(p=>{
+    if(p.project_id.startsWith(prefix)){
+      const n = parseInt(p.project_id.split('-').pop());
+      if(n > maxNum) maxNum = n;
+    }
+  });
+  return prefix + String(maxNum+1).padStart(3,'0');
+}
+
+// ============================================================
+// LIST RENDER
+// ============================================================
+function isFilled(html){
+  if(!html) return false;
+  return html.replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').trim().length > 50;
+}
+function countFilled(project){
+  const res = project.results || {};
+  return SECTIONS.filter(s => isFilled(res[s.key])).length;
+}
+
+function renderList(){
+  const grid = document.getElementById('blueprintGrid');
+  if(!allProjects.length){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="icon">📚</div>
+      <h3>Belum ada project artikel jurnal</h3>
+      <p>Klik "＋ Project Baru" untuk mulai dari satu ide riset</p>
+    </div>`;
+    return;
+  }
+  const sorted = [...allProjects].sort((a,b)=>(b.created_date||'').localeCompare(a.created_date||''));
+  grid.innerHTML = sorted.map(p=>{
+    const filled = countFilled(p);
+    let badge;
+    if(filled === 0) badge = '<span class="badge pending">⏳ Belum dimulai</span>';
+    else if(filled >= 10) badge = `<span class="badge done">✅ Lengkap 10/10</span>`;
+    else badge = `<span class="badge progress">🔄 ${filled}/10 Section</span>`;
+    const meta = p.metadata || {};
+    const tpl = JOURNAL_TEMPLATES[Object.keys(JOURNAL_TEMPLATES).find(k => JOURNAL_TEMPLATES[k].name === meta.journal_template)] || null;
+    return `<div class="bp-card" onclick="openProject(${p.id_x})">
+      <div class="actions" onclick="event.stopPropagation()">
+        <button onclick="deleteProject(${p.id_x})" title="Hapus">🗑️</button>
+      </div>
+      <div class="id">${escapeHtml(p.project_id)}</div>
+      <div class="name">${escapeHtml(p.title)}</div>
+      <div class="desc">${escapeHtml(meta.article_title || meta.research_variables || 'Belum ada metadata riset')}</div>
+      <div class="badges">${badge}${tpl ? `<span class="badge progress" style="background:#bee3f8;color:#2a69ac">${tpl.short}</span>` : ''}</div>
+      <div class="meta">
+        <span>👤 ${escapeHtml(p.created_by||'-')}</span>
+        <span>${p.created_date || '-'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// NEW PROJECT
+// ============================================================
+function openNewProject(){
+  document.getElementById('newProjectName').value = '';
+  document.getElementById('newProjectModal').classList.add('active');
+  setTimeout(()=>document.getElementById('newProjectName').focus(),100);
+}
+
+async function saveNewProject(){
+  const name = document.getElementById('newProjectName').value.trim();
+  if(!name){ showToast('❌ Judul wajib diisi','error'); return; }
+  const btn = document.getElementById('saveNewBtn');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  const today = new Date();
+  const todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  try{
+    const data = {
+      project_id: generateProjectId(),
+      title: name,
+      prompt: '',
+      metadata: {
+        article_title: name,
+        authors: '',
+        journal_template: JOURNAL_TEMPLATES.jehcp.name,
+        field_of_study: '',
+        research_variables: '',
+        sample_size: '',
+        research_design: '',
+        hypothesis: '',
+        reference_mode: 'user_provided',
+        reference_list: '',
+        additional_notes: ''
+      },
+      results: {},
+      created_by: currentUser,
+      created_date: todayStr
+    };
+    await createProject(data);
+    showToast('✅ Project dibuat. Lengkapi metadata riset di bawah.','success');
+    closeModal('newProjectModal');
+    await fetchData();
+    const created = allProjects.find(x=>x.project_id===data.project_id);
+    if(created) openProject(created.id_x);
+    else renderList();
+  }catch(e){
+    showToast('❌ Gagal menyimpan: '+e.message,'error');
+  }finally{
+    btn.disabled = false; btn.textContent = '💾 Buat Project';
+  }
+}
+
+// ============================================================
+// WORK VIEW
+// ============================================================
+function openProject(id){
+  const p = allProjects.find(x=>x.id_x===id);
+  if(!p){ showToast('Tidak ditemukan','error'); return; }
+  currentProject = p;
+  preferredSection = null;
+  document.getElementById('backBtn').classList.add('show');
+  document.getElementById('listView').classList.remove('active');
+  document.getElementById('workView').classList.add('active');
+  renderWork();
+}
+
+function backToList(){
+  currentProject = null;
+  document.getElementById('backBtn').classList.remove('show');
+  document.getElementById('workView').classList.remove('active');
+  document.getElementById('listView').classList.add('active');
+  renderList();
+}
+
+// ============================================================
+// PROMPT BUILDER
+// ============================================================
+function buildMasterPrompt(meta){
+  const tpl = Object.values(JOURNAL_TEMPLATES).find(t => t.name === meta.journal_template) || JOURNAL_TEMPLATES.jehcp;
+  const refMode = REFERENCE_MODES[meta.reference_mode] || REFERENCE_MODES.user_provided;
+
+  let refInstruction = refMode.instruction;
+  if (refMode.id === 'user_provided' && meta.reference_list && meta.reference_list.trim()) {
+    refInstruction += `\n\nDAFTAR REFERENSI YANG TERSEDIA:\n${meta.reference_list}`;
+  }
+
+  const sectionsList = SECTIONS.map((s,i) => {
+    const dataTag = s.needs_data ? ' [butuh data statistik]' : ' [tidak butuh data]';
+    return `${i+1}. ${s.title}${dataTag}`;
+  }).join('\n');
+
+  const dataSections = SECTIONS.filter(s=>s.needs_data).map(s=>s.title).join(', ');
+  const noDataSections = SECTIONS.filter(s=>!s.needs_data).map(s=>s.title).join(', ');
+
+  return `Anda adalah penulis artikel jurnal akademik profesional berpengalaman dengan rekam jejak publikasi internasional bereputasi. Tugas Anda menulis artikel jurnal LENGKAP berdasarkan data dan informasi yang diberikan, SECARA BERTAHAP (satu section per balasan).
+
+═══════════════════════════════════
+INFORMASI ARTIKEL
+═══════════════════════════════════
+- Judul Artikel: ${meta.article_title || '-'}
+- Penulis & Afiliasi: ${meta.authors || '-'}
+- Template Jurnal: ${tpl.name}
+- Bahasa: ${tpl.language === 'ID' ? 'Bahasa Indonesia' : 'Bahasa Inggris'}
+- Bidang Ilmu: ${meta.field_of_study || '-'}
+- Variabel Penelitian: ${meta.research_variables || '-'}
+- Jumlah Sampel (N): ${meta.sample_size || '-'}
+- Desain Penelitian: ${meta.research_design || '-'}
+- Hipotesis: ${meta.hypothesis || '-'}
+- Catatan Tambahan: ${meta.additional_notes || '-'}
+
+═══════════════════════════════════
+STRUKTUR TEMPLATE ${tpl.short}
+═══════════════════════════════════
+${tpl.structure}
+
+CATATAN TEMPLATE: ${tpl.notes}
+
+═══════════════════════════════════
+INSTRUKSI REFERENSI
+═══════════════════════════════════
+${refInstruction}
+
+═══════════════════════════════════
+📎 SKENARIO B — DATA STATISTIK
+═══════════════════════════════════
+Section yang BUTUH data statistik (WAJIB menunggu upload): ${dataSections}
+Section yang TIDAK butuh data: ${noDataSections}
+
+Untuk section yang butuh data: JANGAN mulai menulis sampai user upload file Word/PDF atau paste tabel statistik ke chat. Balas dengan: "Baik, saya tunggu file data statistik Anda."
+Untuk section yang tidak butuh data: langsung tulis.
+
+═══════════════════════════════════
+DAFTAR SECTION (pilih nomor)
+═══════════════════════════════════
+${sectionsList}
+
+═══════════════════════════════════
+ATURAN KERJA (WAJIB DIPATUHI)
+═══════════════════════════════════
+1. Di balasan PERTAMA, Anda HANYA BOLEH bertanya dan menampilkan daftar di atas. JANGAN menulis section apapun di balasan pertama.
+2. Tunggu saya membalas dengan angka (1-10).
+3. Setelah saya membalas angka, tulis SATU section tersebut secara LENGKAP dan BERKUALITAS.
+   - Jika section butuh data: minta data dulu, tunggu, baru tulis.
+   - Jika tidak butuh data: langsung tulis.
+4. Setelah selesai menulis SATU section, WAJIB tulis status:
+---
+✅ SELESAI — [Nama Section]
+
+Section yang sudah dibuat: [sebutkan nomor & nama]
+Section yang tersisa: [sebutkan nomor & nama]
+
+Pilih nomor selanjutnya, atau ketik "STOP" jika sudah selesai.
+---
+5. BERHENTI setelah status itu. JANGAN lanjut ke section berikutnya sampai saya membalas lagi.
+6. Jika saya balas "STOP", ucapkan terima kasih dan akhiri.
+7. FORMAT OUTPUT:
+   - Gunakan format Markdown yang rapi (heading, bold, list, tabel).
+   - DILARANG membuat gambar. Cukup teks/tabel.
+   - Untuk referensi, gunakan format APA 7th.
+   - Untuk bahasa: ${tpl.language === 'ID' ? 'Bahasa Indonesia yang formal akademik (PUEBI)' : 'Academic English yang natural'}.
+
+═══════════════════════════════════
+MULAI
+═══════════════════════════════════
+Balas dengan: "Baik, saya siap. Silakan pilih nomor section yang ingin dibuat (1-10)."`;
+}
+
+function buildContinuePrompt(secKey){
+  const idx = SECTIONS.findIndex(s=>s.key===secKey);
+  const next = SECTIONS[idx+1];
+  if(!next) return '';
+  return `Ya, buatkan section nomor ${idx+2} (${next.title}). Setelah selesai, tampilkan status sisa section dan tanya lagi.`;
+}
+
+// ============================================================
+// RENDER WORK
+// ============================================================
+function renderWork(){
+  if(!currentProject) return;
+  const p = currentProject;
+  const filledCount = countFilled(p);
+  const meta = p.metadata || {};
+
+  sectionBuffer = {};
+  SECTIONS.forEach(s=>{ sectionBuffer[s.key] = p.results[s.key] || ''; });
+
+  currentSection = preferredSection || (SECTIONS.find(s=>isFilled(sectionBuffer[s.key])) || SECTIONS[0]).key;
+  preferredSection = null;
+
+  const tplOptions = Object.values(JOURNAL_TEMPLATES).map(t => 
+    `<option value="${t.name}" ${meta.journal_template===t.name?'selected':''}>${t.name}</option>`
+  ).join('');
+
+  const refOptions = Object.values(REFERENCE_MODES).map(m => 
+    `<option value="${m.id}" ${meta.reference_mode===m.id?'selected':''}>${m.name}</option>`
+  ).join('');
+
+  document.getElementById('workWrap').innerHTML = `
+    <div class="work-header">
+      <div class="id">${escapeHtml(p.project_id)}</div>
+      <h2>${escapeHtml(p.title)}</h2>
+      <div class="status-line">
+        <span>🔄 ${filledCount}/10 Section</span>
+        <span>📅 ${p.created_date || '-'}</span>
+        <span>👤 ${escapeHtml(p.created_by||'-')}</span>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <span class="step-tag">Langkah 1</span>
+      <h3>📝 Metadata Riset</h3>
+      <div class="sub">Lengkapi informasi riset. Data ini akan diinjeksi ke semua section artikel.</div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Judul Artikel</label>
+          <input type="text" id="meta_article_title" value="${escapeHtml(meta.article_title||'')}" placeholder="Pengaruh X terhadap Y...">
+        </div>
+        <div class="form-group">
+          <label>Penulis & Afiliasi</label>
+          <input type="text" id="meta_authors" value="${escapeHtml(meta.authors||'')}" placeholder="Andi (Univ X), Sari (Univ Y)">
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Template Jurnal</label>
+          <select id="meta_journal_template">${tplOptions}</select>
+        </div>
+        <div class="form-group">
+          <label>Bidang Ilmu</label>
+          <input type="text" id="meta_field_of_study" value="${escapeHtml(meta.field_of_study||'')}" placeholder="Psikologi Klinis / Pendidikan">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Variabel Penelitian</label>
+        <textarea id="meta_research_variables" rows="2" placeholder="IV1: ..., IV2: ..., DV: ...">${escapeHtml(meta.research_variables||'')}</textarea>
+      </div>
+
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>Jumlah Sampel (N)</label>
+          <input type="text" id="meta_sample_size" value="${escapeHtml(meta.sample_size||'')}" placeholder="220">
+        </div>
+        <div class="form-group">
+          <label>Desain Penelitian</label>
+          <input type="text" id="meta_research_design" value="${escapeHtml(meta.research_design||'')}" placeholder="Kuantitatif korelasional">
+        </div>
+        <div class="form-group">
+          <label>Mode Referensi</label>
+          <select id="meta_reference_mode" onchange="toggleRefList()">${refOptions}</select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Hipotesis</label>
+        <textarea id="meta_hypothesis" rows="2" placeholder="H1: ... ; H2: ...">${escapeHtml(meta.hypothesis||'')}</textarea>
+      </div>
+
+      <div class="form-group" id="ref_list_wrap" style="${meta.reference_mode==='user_provided'?'':'display:none'}">
+        <label>Daftar Referensi (opsional, jika mode = user_provided)</label>
+        <textarea id="meta_reference_list" rows="3" placeholder="Paste daftar referensi format APA 7th...">${escapeHtml(meta.reference_list||'')}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Catatan Tambahan</label>
+        <textarea id="meta_additional_notes" rows="2" placeholder="Fokus implikasi praktis untuk konselor remaja...">${escapeHtml(meta.additional_notes||'')}</textarea>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-success" onclick="saveMetadata(true)">💾 Simpan & Generate Prompt</button>
+        <button class="btn btn-outline" onclick="saveMetadata(false)">💾 Simpan Saja</button>
+      </div>
+    </div>
+
+    <div class="step-card green">
+      <span class="step-tag">Langkah 2</span>
+      <h3>📋 Copy Prompt ke AI</h3>
+      <div class="sub">Copy prompt di bawah, paste ke ChatGPT/Claude/Gemini. AI akan menampilkan 10 pilihan section. Ketik nomornya, AI akan menulis section tersebut secara bertahap.</div>
+      <div class="warn-tip">
+        📎 <strong>Alur Skenario B:</strong> Untuk section yang butuh data statistik (Full Article, Abstract, Intro, Method, Result, Discussion, Conclusion), AI akan meminta Anda <strong>upload file Word/PDF data</strong> ke chat AI sebelum mulai menulis.
+      </div>
+      <div style="position:relative">
+        <button class="copy-btn" onclick="copyMasterPrompt()">📋 Copy Prompt</button>
+        <div class="prompt-box" id="promptBox">${escapeHtml(p.prompt || 'Klik "Simpan & Generate Prompt" untuk membuat prompt...')}</div>
+      </div>
+    </div>
+
+    <div class="step-card orange">
+      <span class="step-tag">Langkah 3</span>
+      <h3>📝 Paste Hasil AI per Section</h3>
+      <div class="sub">Pilih tab section, paste hasil dari AI, lalu simpan. Sistem otomatis merapikan format Markdown.</div>
+      <div class="stage-tabs" id="stageTabs"></div>
+      <div class="stage-hint" id="stageHint"></div>
+      <div class="quill-wrapper">
+        <div class="editor-loading-overlay" id="editorLoading">
+          <div class="spinner"></div>
+          <div class="loading-text">Memuat konten...</div>
+        </div>
+        <div id="resultEditor"></div>
+      </div>
+      <div class="action-row" style="margin-top:14px">
+        <button class="btn btn-success" onclick="saveResult()">💾 Simpan Project</button>
+        <button class="btn btn-outline" onclick="manualConvertMarkdown()">✨ Rapikan Markdown</button>
+        <button class="btn btn-warning" onclick="clearCurrentSection()">🗑️ Kosongkan Section Ini</button>
+      </div>
+    </div>
+  `;
+
+  quillEditor = new Quill('#resultEditor', {
+    theme: 'snow',
+    placeholder: 'Paste hasil AI section ini di sini...',
+    modules: { toolbar: [[{header:[1,2,3,false]}],['bold','italic','underline'],[{list:'ordered'},{list:'bullet'}],['blockquote'],['clean']] }
+  });
+  quillEditor.root.innerHTML = sectionBuffer[currentSection] || '';
+  quillEditor.on('text-change', ()=>{ if(quillEditor) sectionBuffer[currentSection] = quillEditor.root.innerHTML; });
+
+  quillEditor.root.addEventListener('paste', function(e) {
+      let text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      if (text && /(?:^|\n)(#{1,6} |\* |- |\d+\. |\*\*|__)/.test(text)) {
+          e.preventDefault(); e.stopPropagation();
+          const loader = document.getElementById('editorLoading');
+          loader.classList.add('active');
+          setTimeout(() => {
+              let html = marked.parse(text.replace(/\\(\d+\.)/g, '$1'));
+              let range = quillEditor.getSelection(true);
+              quillEditor.clipboard.dangerouslyPasteHTML(range.index, html, 'user');
+              loader.classList.remove('active');
+              showToast('✨ Format Markdown otomatis dirapikan', 'success');
+          }, 50);
+      }
+  });
+
+  updateSectionUI();
+}
+
+function toggleRefList(){
+  const mode = document.getElementById('meta_reference_mode').value;
+  const wrap = document.getElementById('ref_list_wrap');
+  if(wrap) wrap.style.display = (mode === 'user_provided') ? '' : 'none';
+}
+
+function updateSectionUI(){
+  const tabs = document.getElementById('stageTabs');
+  if(tabs){
+    tabs.innerHTML = SECTIONS.map(s=>{
+      const filled = isFilled(sectionBuffer[s.key]);
+      const active = s.key===currentSection;
+      const dataTag = s.needs_data ? `<span class="data-req">📊</span>` : '';
+      return `<button class="stage-tab ${active?'active':''} ${filled?'filled':''}" onclick="switchSection('${s.key}')">${filled?'✅':'○'} ${s.label}${dataTag}</button>`;
+    }).join('');
+  }
+  const hint = document.getElementById('stageHint');
+  if(hint){
+    const s = SECTIONS.find(x=>x.key===currentSection);
+    const idx = SECTIONS.findIndex(x=>x.key===currentSection);
+    const cont = buildContinuePrompt(currentSection);
+    const remaining = SECTIONS.slice(idx+1);
+    const dataNote = s.needs_data ? '📊 Section ini butuh data statistik — upload file ke AI sebelum minta tulis.' : '✅ Section ini tidak butuh data — AI bisa langsung menulis.';
+    hint.style.cssText = 'font-size:12px;color:#718096;margin-bottom:10px;line-height:1.6;padding:8px 12px;background:#f7fafc;border-radius:8px;border-left:3px solid #6b46c1;';
+    hint.innerHTML = `
+      <strong>${escapeHtml(s.title)}</strong> — ${dataNote}
+      ${remaining.length ? `<br><em>Section tersisa setelah ini:</em> ${remaining.map(r=>escapeHtml(r.label)).join(' → ')}` : `<br><em>Ini section terakhir. 🎉</em>`}
+      ${cont ? `<br><button class="mini-copy" onclick="copyContinue()">📋 Copy prompt "lanjut ke section berikutnya"</button>` : ''}
+    `;
+  }
+}
+
+function switchSection(key){
+  if(currentSection === key) return;
+  if(quillEditor) sectionBuffer[currentSection] = quillEditor.root.innerHTML;
+  const loader = document.getElementById('editorLoading');
+  if (loader) loader.classList.add('active');
+  document.querySelectorAll('.stage-tab').forEach(t => t.classList.add('disabled'));
+  currentSection = key;
+  setTimeout(() => {
+    if(quillEditor) quillEditor.root.innerHTML = sectionBuffer[key] || '';
+    updateSectionUI();
+    if (loader) loader.classList.remove('active');
+    document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('disabled'));
+  }, 50);
+}
+
+function copyMasterPrompt(){ copyText(document.getElementById('promptBox').textContent, '✅ Prompt disalin — paste ke AI'); }
+function copyContinue(){ copyText(buildContinuePrompt(currentSection), '✅ Prompt lanjutan disalin'); }
+
+function copyText(text, okMsg){
+  navigator.clipboard.writeText(text).then(()=>showToast(okMsg,'success')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta); showToast(okMsg,'success');
+  });
+}
+
+function manualConvertMarkdown(){
+  if(!quillEditor) return;
+  let rawText = quillEditor.getText();
+  if(!rawText.trim()) return;
+  const loader = document.getElementById('editorLoading');
+  loader.classList.add('active');
+  setTimeout(() => {
+    quillEditor.root.innerHTML = marked.parse(rawText.replace(/\\(\d+\.)/g, '$1'));
+    loader.classList.remove('active');
+    showToast('✨ Teks berhasil dirapikan!', 'success');
+  }, 50);
+}
+
+// ============================================================
+// SAVE & CLEAR
+// ============================================================
+function collectMetadata(){
+  return {
+    article_title: document.getElementById('meta_article_title').value.trim(),
+    authors: document.getElementById('meta_authors').value.trim(),
+    journal_template: document.getElementById('meta_journal_template').value,
+    field_of_study: document.getElementById('meta_field_of_study').value.trim(),
+    research_variables: document.getElementById('meta_research_variables').value.trim(),
+    sample_size: document.getElementById('meta_sample_size').value.trim(),
+    research_design: document.getElementById('meta_research_design').value.trim(),
+    hypothesis: document.getElementById('meta_hypothesis').value.trim(),
+    reference_mode: document.getElementById('meta_reference_mode').value,
+    reference_list: document.getElementById('meta_reference_list') ? document.getElementById('meta_reference_list').value.trim() : '',
+    additional_notes: document.getElementById('meta_additional_notes').value.trim()
+  };
+}
+
+async function saveMetadata(alsoGenerate){
+  if(!currentProject) return;
+  const meta = collectMetadata();
+  if(!meta.article_title){ showToast('❌ Judul artikel wajib diisi','error'); return; }
+  if(quillEditor) sectionBuffer[currentSection] = quillEditor.root.innerHTML;
+
+  const updatedData = {
+    ...currentProject,
+    metadata: meta,
+    prompt: alsoGenerate ? buildMasterPrompt(meta) : currentProject.prompt,
+    results: {...sectionBuffer}
+  };
+
+  try{
+    await updateProject(currentProject.id_x, updatedData);
+    showToast(alsoGenerate ? '✅ Disimpan. Prompt siap di-copy!' : '✅ Disimpan','success');
+    await fetchData();
+    currentProject = allProjects.find(x=>x.id_x===currentProject.id_x);
+    preferredSection = currentSection;
+    renderWork();
+    if(alsoGenerate) document.getElementById('promptBox').scrollIntoView({behavior:'smooth', block:'center'});
+  }catch(e){ showToast('❌ Gagal: '+e.message,'error'); }
+}
+
+async function saveResult(){
+  if(!currentProject || !quillEditor) return;
+  sectionBuffer[currentSection] = quillEditor.root.innerHTML;
+  const filled = SECTIONS.filter(s=>isFilled(sectionBuffer[s.key])).length;
+  if(filled === 0){ showToast('❌ Paste hasil AI dulu','error'); return; }
+  const updatedData = { ...currentProject, results: {...sectionBuffer} };
+  try{
+    await updateProject(currentProject.id_x, updatedData);
+    showToast(`✅ Tersimpan — ${filled}/10 section terisi`,'success');
+    await fetchData();
+    currentProject = allProjects.find(x=>x.id_x===currentProject.id_x);
+    preferredSection = currentSection;
+    renderWork();
+  }catch(e){ showToast('❌ Gagal: '+e.message,'error'); }
+}
+
+function clearCurrentSection(){
+  if(!quillEditor) return;
+  const s = SECTIONS.find(x=>x.key===currentSection);
+  if(!confirm('Kosongkan isi section "'+s.title+'"? Section lain tetap tersimpan.')) return;
+  quillEditor.root.innerHTML = '';
+  sectionBuffer[currentSection] = '';
+  updateSectionUI();
+}
+
+async function deleteProject(id){
+  if(!confirm('Hapus project ini?')) return;
+  try{
+    await deleteProjectApi(id);
+    showToast('✅ Dihapus','success');
+    await fetchData();
+    if(currentProject && currentProject.id_x === id){ backToList(); }
+    else { renderList(); }
+  }catch(e){ showToast('❌ Gagal hapus: '+e.message,'error'); }
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function showToast(msg,type='info'){
+  const existing = document.querySelector('.toast'); if(existing) existing.remove();
+  const t = document.createElement('div'); t.className = 'toast '+type; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(20px)';t.style.transition='.3s';setTimeout(()=>t.remove(),300);},3500);
+}
+function escapeHtml(s){ if(s==null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', ()=>{
+  if(!checkAutoLogin()) document.getElementById('loginOverlay').classList.add('active');
+  document.getElementById('loginPassword').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+  document.getElementById('newProjectName').addEventListener('keydown', e=>{ if(e.key==='Enter') saveNewProject(); });
+  document.querySelectorAll('.modal-overlay').forEach(o=>{
+    o.addEventListener('click', e=>{ if(e.target===o) o.classList.remove('active'); });
+  });
+});
+</script>
+</body>
+</html>

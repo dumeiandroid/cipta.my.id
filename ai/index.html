@@ -14,6 +14,15 @@
         .header p { color: #a0aec0; font-size: 16px; margin-top: 8px; }
         .header .badge-container { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
         .header .badge-container .badge { background: rgba(255,255,255,0.1); padding: 6px 16px; border-radius: 20px; font-size: 13px; color: #bee3f8; border: 1px solid rgba(255,255,255,0.1); }
+
+        /* ===== TAB SWITCHER ===== */
+        .tab-switcher { display: flex; gap: 12px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { padding: 12px 28px; border: 2px solid #e2e8f0; border-radius: 14px; background: white; font-weight: 700; font-size: 15px; color: #4a5568; cursor: pointer; transition: all 0.25s; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .tab-btn:hover { border-color: #4299e1; color: #4299e1; transform: translateY(-2px); }
+        .tab-btn.active { background: linear-gradient(135deg, #4299e1, #3182ce); color: white; border-color: #3182ce; box-shadow: 0 6px 20px rgba(66,153,225,0.35); }
+        .tab-btn .tab-count { background: rgba(0,0,0,0.08); padding: 2px 10px; border-radius: 12px; font-size: 12px; }
+        .tab-btn.active .tab-count { background: rgba(255,255,255,0.25); color: white; }
+
         .category-filter { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px; padding: 16px; background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
         .category-btn { padding: 8px 18px; border: 2px solid #e2e8f0; border-radius: 20px; background: white; font-weight: 600; font-size: 13px; color: #4a5568; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
         .category-btn:hover { border-color: #4299e1; color: #4299e1; transform: translateY(-2px); }
@@ -90,6 +99,7 @@
             .tool-card .card-header .icon { font-size: 28px; width: 40px; }
             .tool-card .card-header .title-group .name { font-size: 15px; }
             .modal { padding: 20px; }
+            .tab-btn { padding: 10px 18px; font-size: 14px; }
         }
         @media (max-width: 480px) {
             body { padding: 10px; }
@@ -100,6 +110,8 @@
             .tool-card .card-footer .btn-group { justify-content: center; }
             .category-filter { padding: 12px; }
             .category-btn { padding: 6px 12px; font-size: 12px; }
+            .tab-switcher { gap: 8px; }
+            .tab-btn { padding: 8px 14px; font-size: 13px; flex: 1; justify-content: center; }
         }
         .toast { position: fixed; bottom: 30px; right: 30px; padding: 14px 24px; border-radius: 12px; color: white; font-weight: 600; z-index: 2000; animation: slideUp 0.3s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.2); max-width: 400px; }
         .toast.success { background: #48bb78; }
@@ -118,7 +130,7 @@
         <div class="header">
             <h1>
                 🏢 AI Business Tools Suite
-                <span>v3.6</span>
+                <span>v3.7</span>
             </h1>
             <p>Kumpulan lengkap tools berbasis AI untuk bisnis, pelayanan, konseling, penulisan, marketing, sales, akademik & inspirasi</p>
             <div class="badge-container">
@@ -129,10 +141,21 @@
             </div>
         </div>
 
+        <!-- TAB SWITCHER -->
+        <div class="tab-switcher" id="tabSwitcher">
+            <button class="tab-btn active" data-tab="v1" onclick="switchTab('v1')">
+                📦 Tools v1
+                <span class="tab-count" id="tabCountV1">0</span>
+            </button>
+            <button class="tab-btn" data-tab="v2" onclick="switchTab('v2')">
+                🚀 Tools v2 <span class="tab-count" id="tabCountV2">0</span>
+            </button>
+        </div>
+
         <!-- CATEGORY FILTER -->
         <div class="category-filter" id="categoryFilter">
             <button class="category-btn active" data-cat="all" onclick="filterCategory('all')">
-                📦 Semua <span class="cat-count" id="countAll">20</span>
+                📦 Semua <span class="cat-count" id="countAll">0</span>
             </button>
             <button class="category-btn" data-cat="bisnis" onclick="filterCategory('bisnis')">
                 🏢 Bisnis <span class="cat-count" id="countBisnis">0</span>
@@ -177,9 +200,21 @@
     </div>
 
     <script>
+        // ==================== CATEGORY LABELS (YANG HILANG DIPULIHKAN) ====================
+        const CATEGORY_LABELS = {
+            bisnis: 'Bisnis',
+            konten: 'Konten',
+            konseling: 'Konseling',
+            marketing: 'Marketing',
+            sales: 'Sales',
+            penulisan: 'Penulisan'
+        };
+
         // ==================== TOOL DATA ====================
+        // CATATAN: field `file` di sini adalah file untuk versi v1 (asli).
+        // File untuk tab v2 di-generate otomatis dengan menambahkan "-v2"
+        // sebelum ekstensi .html
         const TOOLS = [
-        // ↩️ RESTORED: Business Tools Suite (ai_prompt_results)
         {
             id: 'ai_prompt_results',
             icon: '🏢',
@@ -197,7 +232,6 @@
                 <div class="modal-body">
                     <h4>📌 Apa Itu Business Tools Suite?</h4>
                     <p><strong>Business Tools Suite</strong> adalah kumpulan 15 tools analisis bisnis yang didukung oleh AI Prompt. Tools ini membantu Anda menganalisis bisnis dari berbagai sudut pandang.</p>
-
                     <h4>🧩 Tools yang Tersedia</h4>
                     <ul>
                         <li><strong>SWOT</strong> - Analisis Strengths, Weaknesses, Opportunities, Threats</li>
@@ -216,14 +250,12 @@
                         <li><strong>Public Speaking</strong> - Materi presentasi/pidato</li>
                         <li><strong>Copywriting</strong> - Framework copywriting</li>
                     </ul>
-
                     <div class="highlight-box">
                         <p><strong>🎯 Fitur Utama:</strong> Generate Prompt otomatis, Multi AI Source (ChatGPT, Claude, Gemini, DeepSeek), WYSIWYG Editor, History, Duplikat Prompt.</p>
                     </div>
                 </div>
             `
         },
-        // 🆕 Blueprint Bisnis
         {
             id: 'ai_analisa_rencana_pelaksanaan',
             icon: '💡',
@@ -241,7 +273,6 @@
                 <div class="modal-body">
                     <h4>📌 Apa Itu Blueprint Bisnis?</h4>
                     <p><strong>Blueprint Bisnis</strong> adalah tools untuk menyusun rencana bisnis lengkap dari satu ide secara <strong>bertahap</strong>. AI akan memandu Anda menyelesaikan 8 tahap perencanaan — <strong>satu tahap per balasan</strong>, lalu menanyakan apakah lanjut ke tahap berikutnya.</p>
-
                     <h4>🧩 8 Tahap Perencanaan</h4>
                     <ol>
                         <li><strong>Analisa</strong> — Ide, pasar, target, kompetitor, model bisnis, ekonomi unit, kelayakan</li>
@@ -253,14 +284,12 @@
                         <li><strong>Rangkuman & Checklist 7 Hari</strong> — Ringkasan 1 halaman, checklist hari pertama, angka wajib pantau</li>
                         <li><strong>Lampiran</strong> — Contoh script roleplay sales + contoh konten media sosial siap posting</li>
                     </ol>
-
                     <div class="highlight-box">
                         <p><strong>🎯 Fitur Utama:</strong> Prompt bertahap (satu tahap per balasan), Multi AI Source, WYSIWYG Editor, Simpan per tahap, Download .doc gabungan semua tahap, Auto-save per tahap.</p>
                     </div>
                 </div>
             `
         },
-        // 🆕 Khotbah v2
         {
             id: 'ai_sermon_generator_v2',
             icon: '🕊️',
@@ -278,7 +307,6 @@
                 <div class="modal-body">
                     <h4>📌 Apa Itu Khotbah & Renungan Generator v2?</h4>
                     <p><strong>Khotbah & Renungan Generator v2</strong> adalah versi baru dari generator khotbah dengan <strong>struktur 3-bagian</strong> sesuai tradisi liturgi Reformed. Setiap khotbah disusun dari <strong>tiga perikop berbeda</strong> yang saling melengkapi dan terhubung ke satu tema.</p>
-
                     <h4>📐 Struktur 3-Bagian (Wajib Diikuti)</h4>
                     <ol>
                         <li><strong>Bagian 1 — Ayat Invocatio</strong> — Panggilan ibadah pembuka (mis. Mazmur 124:8)</li>
@@ -286,31 +314,6 @@
                         <li><strong>Bagian 3 — Bagian Ayat Kedua</strong> — Eksposisi perikop kedua</li>
                     </ol>
                     <p style="font-size:13px;color:#718096;font-style:italic;">Ketiganya dari perikop berbeda, saling melengkapi, terhubung ke tema.</p>
-
-                    <h4>🧩 11 Jenis Khotbah & Renungan</h4>
-                    <ul>
-                        <li><strong>📖 Khotbah Ekspositori</strong> — Berdasarkan satu perikop, ayat per ayat</li>
-                        <li><strong>🎯 Khotbah Topikal</strong> — Berdasarkan tema dengan ayat pendukung</li>
-                        <li><strong>📚 Khotbah Naratif</strong> — Menceritakan kisah Alkitab secara naratif</li>
-                        <li><strong>📝 Khotbah Tekstual</strong> — Berdasarkan satu ayat, dijabarkan mendalam</li>
-                        <li><strong>🌅 Renungan Harian</strong> — Devosi pribadi setiap hari</li>
-                        <li><strong>👨‍👩‍👧‍👦 Renungan Keluarga</strong> — Ibadah keluarga/mezbah keluarga</li>
-                        <li><strong>🔥 Khotbah Pemuda</strong> — Bahasa dan konteks anak muda</li>
-                        <li><strong>🎉 Khotbah Perayaan</strong> — Natal, Paskah, Pentakosta, dll</li>
-                        <li><strong>💐 Khotbah Penghiburan</strong> — Bagi keluarga yang berduka</li>
-                        <li><strong>💍 Khotbah Pernikahan</strong> — Pasangan menikah & orang tua</li>
-                        <li><strong>🏠 Khotbah Rumah Baru</strong> — Pemberkatan rumah baru</li>
-                    </ul>
-
-                    <h4>🎯 Fitur Khusus v2</h4>
-                    <ul>
-                        <li><strong>Struktur 3-Bagian</strong> — Invocatio → Ayat Pertama → Ayat Kedua</li>
-                        <li><strong>Data Terpisah</strong> — Tabel <code>ai_sermon_generator_v2</code>, tidak mengganggu v1</li>
-                        <li><strong>AI Cari Otomatis</strong> — Centang field untuk minta AI pilih perikop yang cocok</li>
-                        <li><strong>Info "Cocok Dipakai Untuk"</strong> di setiap jenis khotbah</li>
-                        <li><strong>Contoh Gambaran Hasil</strong> untuk preview struktur</li>
-                    </ul>
-
                     <div class="highlight-box">
                         <p><strong>🎯 Fitur Utama:</strong> Generate Prompt otomatis 3-bagian, Multi AI Source, WYSIWYG Editor, History, Duplikat Prompt, Download .doc.</p>
                     </div>
@@ -872,7 +875,7 @@
                         <li><strong>Generic IMRaD</strong> — Internasional standard</li>
                     </ul>
                     <div class="highlight-box">
-                        <p><strong>🎯 Fitur Utama:</strong> Output 2 bahasa, Scenarios Skenario B, Generate Prompt otomatis, Multi AI Source, WYSIWYG Editor.</p>
+                        <p><strong>🎯 Fitur Utama:</strong> Output 2 bahasa, Generate Prompt otomatis, Multi AI Source, WYSIWYG Editor.</p>
                     </div>
                 </div>
             `
@@ -918,23 +921,55 @@
         }
         ];
 
-        // ==================== CATEGORY LABELS ====================
-        const CATEGORY_LABELS = {
-            bisnis: 'Bisnis',
-            konten: 'Konten',
-            konseling: 'Konseling',
-            marketing: 'Marketing',
-            sales: 'Sales',
-            penulisan: 'Penulisan'
-        };
+        // ==================== HELPER: V2 FILE NAME ====================
+        // Menambahkan "-v2" sebelum ekstensi .html
+        function toV2File(file) {
+            if (!file) return file;
+            const idx = file.lastIndexOf('.html');
+            if (idx === -1) return file + '-v2';
+            return file.slice(0, idx) + '-v2' + file.slice(idx);
+        }
 
         // ==================== STATE ====================
+        let currentTab = 'v1';       // 'v1' | 'v2'
         let currentCategory = 'all';
+
+        // ==================== DATA PER TAB ====================
+        // Tab v1: hanya tool yang file-nya TIDAK berakhiran "-v2.html"
+        // Tab v2: SEMUA tool (file otomatis ditambahi "-v2")
+        function isV2File(file) {
+            return /-v2\.html$/.test(file || '');
+        }
+
+        function getV1Tools() {
+            return TOOLS.filter(t => !isV2File(t.file));
+        }
+
+        function getV2Tools() {
+            return TOOLS.map(t => ({ ...t, file: toV2File(t.file) }));
+        }
+
+        function getActiveTools() {
+            return currentTab === 'v1' ? getV1Tools() : getV2Tools();
+        }
 
         // ==================== RENDER TOOLS ====================
         function renderTools() {
             const container = document.getElementById('toolsGrid');
-            container.innerHTML = TOOLS.map(tool => {
+            const tools = getActiveTools();
+
+            if (tools.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="icon">📭</div>
+                        <h3>Belum ada tool di tab ini</h3>
+                    </div>
+                `;
+                updateCategoryCounts();
+                return;
+            }
+
+            container.innerHTML = tools.map(tool => {
                 const catLabel = CATEGORY_LABELS[tool.category] || tool.category;
                 return `
                 <div class="tool-card" data-category="${tool.category}">
@@ -966,19 +1001,47 @@
                 </div>
             `;
             }).join('');
+
             updateCategoryCounts();
             applyCategoryFilter();
         }
 
         // ==================== CATEGORY COUNTS ====================
         function updateCategoryCounts() {
-            document.getElementById('countAll').textContent = TOOLS.length;
+            const tools = getActiveTools();
+            const totalEl = document.getElementById('countAll');
+            if (totalEl) totalEl.textContent = tools.length;
+
             const counts = {};
-            TOOLS.forEach(t => { counts[t.category] = (counts[t.category] || 0) + 1; });
+            tools.forEach(t => { counts[t.category] = (counts[t.category] || 0) + 1; });
+
             ['bisnis', 'konten', 'konseling', 'marketing', 'sales', 'penulisan'].forEach(cat => {
                 const el = document.getElementById('count' + cat.charAt(0).toUpperCase() + cat.slice(1));
                 if (el) el.textContent = counts[cat] || 0;
             });
+        }
+
+        // ==================== TAB COUNTS ====================
+        function updateTabCounts() {
+            const v1CountEl = document.getElementById('tabCountV1');
+            const v2CountEl = document.getElementById('tabCountV2');
+            if (v1CountEl) v1CountEl.textContent = getV1Tools().length;
+            if (v2CountEl) v2CountEl.textContent = getV2Tools().length;
+        }
+
+        // ==================== TAB SWITCH ====================
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tab);
+            });
+            // reset category filter ke "all" saat ganti tab
+            currentCategory = 'all';
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.cat === 'all');
+            });
+            renderTools();
+            showToast(`Menampilkan ${tab === 'v1' ? 'Tools v1' : 'Tools v2'}`, 'info');
         }
 
         // ==================== CATEGORY FILTER ====================
@@ -1002,22 +1065,29 @@
                     card.classList.add('hidden');
                 }
             });
-            if (visible === 0) {
+            if (visible === 0 && cards.length > 0) {
                 showToast('Tidak ada tool di kategori ini', 'info');
             }
         }
 
         // ==================== MODAL INFO ====================
+        // Data untuk modal info harus tetap berdasarkan TOOLS asli (v1).
+        // Jika tab v2 aktif, tombol "Buka" mengarah ke file v2.
         function openInfoModal(toolId) {
             const tool = TOOLS.find(t => t.id === toolId);
             if (!tool) return;
+
+            // tentukan file yang akan dibuka sesuai tab aktif
+            const openFile = currentTab === 'v2' ? toV2File(tool.file) : tool.file;
+            const tabLabel = currentTab === 'v2' ? ' (v2)' : '';
+
             const modal = document.getElementById('infoModal');
             const content = document.getElementById('modalContent');
             content.innerHTML = `
                 ${tool.info}
                 <div class="modal-footer">
-                    <a href="${tool.file}" class="btn-open">
-                        🚀 Buka ${tool.icon}
+                    <a href="${openFile}" class="btn-open">
+                        🚀 Buka ${tool.icon}${tabLabel}
                     </a>
                     <button class="btn-close" onclick="closeModal('infoModal')">Tutup</button>
                 </div>
@@ -1065,11 +1135,12 @@
 
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', () => {
+            updateTabCounts();
             renderTools();
             console.log('🏢 AI Business Tools Suite Loaded!');
-            console.log(`📊 ${TOOLS.length} Tools siap pakai`);
-            console.log('📁 Tabel:', TOOLS.map(t => t.table).join(', '));
-            console.log('📂 Kategori:', Object.keys(CATEGORY_LABELS).join(', '));
+            console.log(`📊 Total master tools: ${TOOLS.length}`);
+            console.log(`📦 Tab v1: ${getV1Tools().length} tools (tanpa file -v2)`);
+            console.log(`🚀 Tab v2: ${getV2Tools().length} tools (semua file + -v2)`);
         });
     </script>
 </body>
