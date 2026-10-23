@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Blueprint Bisnis - v3.5 (Loading Indicator)</title>
+<title>Blueprint Bisnis - v3.6 (Auto Markdown)</title>
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<!-- Tambahan Library marked.js untuk konversi Markdown ke HTML -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -123,13 +125,15 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
 .quill-wrapper .ql-toolbar{border:none;border-bottom:2px solid #e2e8f0;background:#f7fafc;padding:6px}
 .quill-wrapper .ql-container{border:none;min-height:280px;font-size:13px}
 .quill-wrapper .ql-editor{min-height:280px}
+.quill-wrapper .ql-editor h1, .quill-wrapper .ql-editor h2, .quill-wrapper .ql-editor h3 { margin-top: 1em; margin-bottom: 0.5em; font-weight: 700; }
+.quill-wrapper .ql-editor ul, .quill-wrapper .ql-editor ol { padding-left: 20px; margin-bottom: 10px; }
 
 .editor-loading-overlay {
   position: absolute;
   inset: 0;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(2px);
-  display: none; /* hidden by default */
+  display: none;
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -159,7 +163,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
 .btn-danger{background:#fc8181;color:#fff}
 .btn-danger:hover{background:#f56565}
 .btn-outline{background:transparent;color:#4a5568;border:2px solid #e2e8f0}
-.btn-outline:hover{background:#f7fafc}
+.btn-outline:hover{background:#f7fafc; border-color: #cbd5e0; color:#1a202c}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 
 .action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
@@ -214,7 +218,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
   <header class="app-header">
     <div class="header-left">
       <button class="back-btn" id="backBtn" onclick="backToList()">← Kembali</button>
-      <h1>💡 Blueprint Bisnis <span>v3.5</span></h1>
+      <h1>💡 Blueprint Bisnis <span>v3.6</span></h1>
     </div>
     <div class="header-actions">
       <button class="btn-new" onclick="openNewBlueprint()">＋ Blueprint Baru</button>
@@ -758,6 +762,29 @@ function buildContinuePrompt(stageKey){
 }
 
 // ============================================================
+// FUNGSI KONVERSI MARKDOWN (FITUR BARU)
+// ============================================================
+function convertMarkdownToHTML(text) {
+    // Perbaiki format angka ter-escape dari AI seperti "1\." menjadi "1."
+    let cleanText = text.replace(/\\(\d+\.)/g, '$1'); 
+    // Konversi markdown ke HTML
+    return marked.parse(cleanText);
+}
+
+function manualConvertMarkdown() {
+    if(!quillEditor) return;
+    let rawText = quillEditor.getText(); // Ambil teks mentah
+    if(!rawText.trim()) {
+        showToast('❌ Editor kosong', 'error');
+        return;
+    }
+    // Ubah ke HTML dan timpa isi editor
+    let html = convertMarkdownToHTML(rawText);
+    quillEditor.root.innerHTML = html;
+    showToast('✨ Teks berhasil dirapikan!', 'success');
+}
+
+// ============================================================
 // RENDER WORK VIEW
 // ============================================================
 function renderWork(){
@@ -809,7 +836,7 @@ function renderWork(){
     <div class="step-card green">
       <span class="step-tag">Langkah 2</span>
       <h3>📋 Copy Prompt ke AI</h3>
-      <div class="sub">Copy prompt di bawah, paste ke ChatGPT / Claude / Gemini / DeepSeek. AI akan mulai dari <strong>Tahap 1 — Analisa</strong>, lalu berhenti dan menanyakan apakah lanjut. Cukup jawab <strong>"ya"</strong> untuk tahap berikutnya sampai Tahap 9 — Deskripsi Gambar Flyer &amp; Brosur. Prompt ini memaksa AI <strong>hanya menghasilkan teks — tanpa tabel, tanpa gambar</strong>.</div>
+      <div class="sub">Copy prompt di bawah, paste ke ChatGPT / Claude / Gemini / DeepSeek. AI akan mulai dari <strong>Tahap 1 — Analisa</strong>, lalu berhenti dan menanyakan apakah lanjut. Cukup jawab <strong>"ya"</strong> untuk tahap berikutnya sampai Tahap 9.</div>
       <div style="position:relative">
         <button class="copy-btn" onclick="copyMasterPrompt()">📋 Copy Prompt</button>
         <div class="prompt-box" id="promptBox"></div>
@@ -820,7 +847,7 @@ function renderWork(){
     <div class="step-card orange">
       <span class="step-tag">Langkah 3</span>
       <h3>📝 Paste Hasil AI per Tahap</h3>
-      <div class="sub">Setiap tahap punya tempatnya sendiri. Pilih tab tahap, paste hasil balasan AI yang sesuai, lalu simpan. Data lama tetap di posisinya; tahap Lampiran dan Flyer adalah tambahan baru.</div>
+      <div class="sub">Paste hasil dari AI di sini. <strong>Sistem akan otomatis merapikan format Markdown (#, **, 1.) menjadi teks cantik.</strong> Jika belum rapi, klik tombol "Rapikan Markdown".</div>
 
       <div class="form-group">
         <label>Judul Blueprint <span class="opt">(untuk nama file)</span></label>
@@ -841,7 +868,8 @@ function renderWork(){
       <div class="action-row" style="margin-top:14px">
         <button class="btn btn-success" onclick="saveResult()">💾 Simpan Semua Tahap</button>
         <button class="btn btn-primary" onclick="downloadBlueprint()">📥 Download .doc</button>
-        <button class="btn btn-warning" onclick="clearCurrentStage()">🗑️ Kosongkan Tahap Ini</button>
+        <button class="btn btn-outline" onclick="manualConvertMarkdown()">✨ Rapikan Markdown</button>
+        <button class="btn btn-warning" onclick="clearCurrentStage()">🗑️ Kosongkan</button>
       </div>
     </div>
   `;
@@ -853,6 +881,21 @@ function renderWork(){
   });
   quillEditor.root.innerHTML = stageBuffer[currentStage] || '';
   quillEditor.on('text-change', ()=>{ if(quillEditor) stageBuffer[currentStage] = quillEditor.root.innerHTML; });
+
+  // FITUR BARU: Tangkap event Paste untuk auto-convert markdown
+  quillEditor.root.addEventListener('paste', function(e) {
+      let text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      // Jika teks mengandung karakter khas Markdown
+      if (text && /(?:^|\n)(#{1,6} |\* |- |\d+\. |\*\*|__)/.test(text)) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          let html = convertMarkdownToHTML(text);
+          let range = quillEditor.getSelection(true);
+          quillEditor.clipboard.dangerouslyPasteHTML(range.index, html, 'user');
+          showToast('✨ Format Markdown otomatis dirapikan', 'success');
+      }
+  });
 
   updateStageUI();
   updatePromptPreview();
@@ -906,11 +949,10 @@ function updateStageUI(){
 }
 
 function switchStage(key){
-  if(currentStage === key) return; // Jangan reload jika tab sama
+  if(currentStage === key) return;
   
   if(quillEditor) stageBuffer[currentStage] = quillEditor.root.innerHTML;
   
-  // Tampilkan loading overlay & disable tab sementara
   const loader = document.getElementById('editorLoading');
   if (loader) loader.classList.add('active');
   
@@ -919,14 +961,12 @@ function switchStage(key){
 
   currentStage = key;
 
-  // Beri waktu browser untuk merender spinner sebelum update Quill (yang berat)
   setTimeout(() => {
     if(quillEditor) {
       quillEditor.root.innerHTML = stageBuffer[key] || '';
     }
     updateStageUI();
 
-    // Sembunyikan loading overlay & aktifkan tab kembali
     if (loader) loader.classList.remove('active');
     tabs.forEach(t => t.classList.remove('disabled'));
   }, 50);
