@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blueprint Bisnis - v3.2 (Bertahap + Lampiran + Flyer)</title>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;min-height:100vh;color:#2d3748}
+
+/* LOGIN */
+.login-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:9999;justify-content:center;align-items:center;padding:20px}
+.login-overlay.active{display:flex}
+.login-box{background:#fff;border-radius:20px;padding:40px;max-width:420px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.4)}
+.login-box h2{text-align:center;font-size:22px;margin-bottom:4px}
+.login-box p{text-align:center;color:#718096;font-size:14px;margin-bottom:20px}
+.login-box .form-group{margin-bottom:14px}
+.login-box label{font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px}
+.login-box input{width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px}
+.login-box input:focus{outline:none;border-color:#805ad5}
+.login-box .btn-login{width:100%;padding:12px;background:#805ad5;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px}
+.login-box .btn-login:hover{background:#6b46c1}
+.login-error{color:#fc8181;font-size:13px;text-align:center;margin-top:10px;display:none}
+.login-error.show{display:block}
+
+/* APP */
+.main-content{display:none}
+.main-content.visible{display:block}
+
+.app-header{background:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);flex-wrap:wrap;border-bottom:1px solid #edf2f7;position:sticky;top:0;z-index:100}
+.header-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.header-left h1{font-size:18px;color:#1a2332;display:flex;align-items:center;gap:8px}
+.header-left h1 span{background:#805ad5;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px}
+.back-btn{background:#f7fafc;border:2px solid #e2e8f0;padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;color:#4a5568;display:none;align-items:center;gap:6px}
+.back-btn:hover{background:#edf2f7}
+.back-btn.show{display:inline-flex}
+.header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn-new{background:#805ad5;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px}
+.btn-new:hover{background:#6b46c1}
+.user-chip{display:flex;align-items:center;gap:8px;font-size:13px;background:#f7fafc;padding:4px 14px;border-radius:20px}
+.user-chip .role{font-size:10px;padding:1px 8px;border-radius:8px;font-weight:600;background:#c6f6d5;color:#276749}
+.user-chip .role.user{background:#bee3f8;color:#2a69ac}
+.btn-logout{background:#fc8181;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer}
+.btn-logout:hover{background:#f56565}
+
+.view-container{display:none}
+.view-container.active{display:block}
+
+/* LIST */
+.wrap{max-width:1100px;margin:0 auto;padding:24px}
+.list-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+.list-head h2{font-size:22px;color:#1a2332}
+.list-head .sub{font-size:13px;color:#718096;margin-top:2px}
+
+.blueprint-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.bp-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:2px solid transparent;transition:all .2s;cursor:pointer;position:relative}
+.bp-card:hover{border-color:#805ad5;transform:translateY(-2px);box-shadow:0 8px 20px rgba(128,90,213,.12)}
+.bp-card .id{font-size:11px;color:#a0aec0;font-weight:600;margin-bottom:4px}
+.bp-card .name{font-size:16px;font-weight:700;color:#1a2332;margin-bottom:6px;line-height:1.3}
+.bp-card .desc{font-size:12px;color:#718096;line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bp-card .badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.bp-card .badge{font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px;text-transform:uppercase}
+.bp-card .badge.done{background:#c6f6d5;color:#276749}
+.bp-card .badge.pending{background:#feebc8;color:#9c4221}
+.bp-card .badge.progress{background:#e9d8fd;color:#6b46c1}
+.bp-card .meta{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#a0aec0;border-top:1px solid #edf2f7;padding-top:10px;margin-top:10px}
+.bp-card .actions{position:absolute;top:14px;right:14px;display:none;gap:4px}
+.bp-card:hover .actions{display:flex}
+.bp-card .actions button{background:#fff;border:1px solid #e2e8f0;border-radius:6px;width:26px;height:26px;font-size:12px;cursor:pointer;padding:0}
+.bp-card .actions button:hover{background:#f7fafc}
+
+.empty-state{text-align:center;padding:60px 20px;color:#a0aec0}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.empty-state h3{color:#4a5568;margin-bottom:6px;font-size:16px}
+.empty-state p{font-size:13px;margin-bottom:16px}
+
+/* WORK */
+.work-wrap{max-width:1100px;margin:0 auto;padding:20px}
+.work-header{background:linear-gradient(135deg,#805ad5,#6b46c1);border-radius:14px;padding:22px 26px;margin-bottom:18px;color:#fff}
+.work-header h2{font-size:20px;margin-bottom:4px}
+.work-header .id{font-size:12px;opacity:.85;font-weight:600}
+.work-header .status-line{font-size:12px;margin-top:8px;opacity:.95;display:flex;gap:12px;flex-wrap:wrap}
+.work-header .status-line span{display:inline-flex;align-items:center;gap:4px}
+
+.step-card{background:#fff;border-radius:14px;padding:22px 26px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.05);border-left:5px solid #805ad5}
+.step-card.green{border-left-color:#48bb78}
+.step-card.orange{border-left-color:#ed8936}
+.step-card .step-tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 12px;border-radius:12px;background:#faf5ff;color:#805ad5;margin-bottom:8px;letter-spacing:.4px;text-transform:uppercase}
+.step-card.green .step-tag{background:#f0fff4;color:#276749}
+.step-card.orange .step-tag{background:#fffaf0;color:#9c4221}
+.step-card h3{font-size:17px;color:#1a2332;margin-bottom:4px}
+.step-card .sub{font-size:13px;color:#718096;margin-bottom:16px;line-height:1.5}
+.step-card .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.step-card .form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.step-card label{font-weight:600;font-size:12px;color:#4a5568}
+.step-card label .req{color:#fc8181}
+.step-card label .opt{color:#a0aec0;font-weight:400}
+.step-card input,.step-card textarea{padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;width:100%}
+.step-card input:focus,.step-card textarea:focus{outline:none;border-color:#805ad5}
+.step-card textarea{resize:vertical;min-height:60px}
+
+.prompt-box{background:#f7fafc;border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;font-size:12px;line-height:1.6;color:#2d3748;white-space:pre-wrap;max-height:340px;overflow-y:auto;position:relative;font-family:'Courier New',monospace}
+.copy-btn{position:sticky;top:0;float:right;background:#805ad5;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:700;margin-bottom:8px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.copy-btn:hover{background:#6b46c1}
+
+/* STAGE TABS */
+.stage-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.stage-tab{padding:7px 12px;border-radius:9px;border:2px solid #e2e8f0;background:#fff;font-size:12px;font-weight:700;cursor:pointer;color:#718096;display:inline-flex;align-items:center;gap:5px;font-family:inherit;transition:all .15s}
+.stage-tab:hover{border-color:#c3b0ec;color:#6b46c1}
+.stage-tab.filled{border-color:#c6f6d5;background:#f0fff4;color:#276749}
+.stage-tab.active{border-color:#805ad5;background:#faf5ff;color:#6b46c1;box-shadow:0 2px 8px rgba(128,90,213,.18)}
+
+.stage-hint{background:#f7fafc;border:2px dashed #e2e8f0;border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.6;color:#4a5568;margin-bottom:12px}
+.stage-hint strong{color:#2d3748}
+.stage-hint .mini-copy{background:#805ad5;color:#fff;border:none;padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;display:inline-flex;align-items:center;gap:5px}
+.stage-hint .mini-copy:hover{background:#6b46c1}
+
+.quill-wrapper{background:#fff;border-radius:10px;border:2px solid #e2e8f0;overflow:hidden}
+.quill-wrapper .ql-toolbar{border:none;border-bottom:2px solid #e2e8f0;background:#f7fafc;padding:6px}
+.quill-wrapper .ql-container{border:none;min-height:280px;font-size:13px}
+.quill-wrapper .ql-editor{min-height:280px}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border:none;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;font-family:inherit}
+.btn-primary{background:#805ad5;color:#fff}
+.btn-primary:hover{background:#6b46c1}
+.btn-success{background:#48bb78;color:#fff}
+.btn-success:hover{background:#38a169}
+.btn-warning{background:#ed8936;color:#fff}
+.btn-warning:hover{background:#dd6b20}
+.btn-danger{background:#fc8181;color:#fff}
+.btn-danger:hover{background:#f56565}
+.btn-outline{background:transparent;color:#4a5568;border:2px solid #e2e8f0}
+.btn-outline:hover{background:#f7fafc}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center;padding:20px;overflow-y:auto}
+.modal-overlay.active{display:flex}
+.modal{background:#fff;border-radius:18px;max-width:720px;width:100%;max-height:95vh;overflow-y:auto;padding:26px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-close{position:sticky;top:0;float:right;background:#fc8181;color:#fff;border:none;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:#f56565}
+.modal-title{font-size:19px;font-weight:700;color:#1a2332;margin-bottom:6px;padding-right:40px}
+.modal-sub{font-size:13px;color:#718096;margin-bottom:18px;padding-right:40px;line-height:1.5}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:14px 22px;border-radius:10px;color:#fff;font-weight:600;font-size:13px;z-index:2000;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:400px;animation:slideUp .3s}
+.toast.success{background:#48bb78}.toast.error{background:#fc8181}.toast.info{background:#4299e1}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:700px){
+  .step-card .form-row{grid-template-columns:1fr}
+  .wrap,.work-wrap{padding:14px}
+  .step-card{padding:18px}
+  .app-header{padding:10px 14px}
+  .header-left h1{font-size:15px}
+  .blueprint-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-overlay active" id="loginOverlay">
+  <div class="login-box">
+    <span style="font-size:44px;display:block;text-align:center;margin-bottom:4px">💡</span>
+    <h2>Blueprint Bisnis</h2>
+    <p>Masukkan ide → blueprint disusun bertahap</p>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="loginUsername" placeholder="Username">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="Password">
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">Login</button>
+    <div class="login-error" id="loginError">❌ Username atau password salah!</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-content" id="mainContent">
+  <header class="app-header">
+    <div class="header-left">
+      <button class="back-btn" id="backBtn" onclick="backToList()">← Kembali</button>
+      <h1>💡 Blueprint Bisnis <span>v3.2</span></h1>
+    </div>
+    <div class="header-actions">
+      <button class="btn-new" onclick="openNewBlueprint()">＋ Blueprint Baru</button>
+      <span class="user-chip">
+        👤 <span id="headerUser">-</span>
+        <span class="role" id="headerRole">user</span>
+      </span>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </header>
+
+  <!-- LIST VIEW -->
+  <div class="view-container active" id="listView">
+    <div class="wrap">
+      <div class="list-head">
+        <div>
+          <h2>📁 Blueprint Saya</h2>
+          <div class="sub">Satu blueprint = satu ide bisnis, disusun bertahap oleh AI (9 tahap)</div>
+        </div>
+      </div>
+      <div class="blueprint-grid" id="blueprintGrid"></div>
+    </div>
+  </div>
+
+  <!-- WORK VIEW -->
+  <div class="view-container" id="workView">
+    <div class="work-wrap" id="workWrap"></div>
+  </div>
+</div>
+
+<!-- NEW BLUEPRINT MODAL -->
+<div class="modal-overlay" id="newBpModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('newBpModal')">✕</button>
+    <div class="modal-title">💡 Blueprint Baru</div>
+    <div class="modal-sub">Cukup isi <strong>Nama Ide</strong>. Setelah dibuat, Anda akan mendapat prompt siap-copy yang menyuruh AI bekerja <strong>bertahap</strong> — satu tahap per balasan, lalu bertanya apakah lanjut.</div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label style="font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px">📝 Nama Ide <span style="color:#fc8181">*</span></label>
+      <input type="text" id="newBpName" placeholder="Contoh: Kerja Sama Tes Minat Bakat dengan Bimbel" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #edf2f7">
+      <button class="btn btn-outline" onclick="closeModal('newBpModal')">Batal</button>
+      <button class="btn btn-primary" id="saveNewBtn" onclick="saveNewBlueprint()">💾 Buat Blueprint</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// KONFIGURASI
+// ============================================================
+const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+const TABLE = 'bd_journeys';
+const USERS_TABLE = 'users';
+const SECRET = 'admin';
+const STORAGE_KEY = 'bd_blueprint_user_v1';
+
+// ============================================================
+// KOLOM TABEL
+// ============================================================
+const COLUMNS = {
+  journey_id:'x_01', name:'x_02', scope:'x_03', master_data:'x_04',
+  fondasi_data:'x_05', kenali_data:'x_06', bicara_data:'x_07', jual_data:'x_08',
+  perjanjian_data:'x_09', tumbuh_data:'x_10', refleksi_data:'x_11',
+  progress:'x_12', status:'x_13', created_by:'x_14', created_date:'x_15', updated_date:'x_16'
+};
+function getHeaders(){return{'Content-Type':'application/json','X-Custom-Auth':SECRET,'X-Table-Name':TABLE,'X-Role':'admin'};}
+async function apiFetch(ep,opt={}){const r=await fetch(API_URL+'?table='+TABLE+ep,{...opt,headers:{...getHeaders(),...(opt.headers||{})}});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||e.message||'HTTP '+r.status);}return r.json();}
+
+// ============================================================
+// DAFTAR TAHAP (9 TAHAP)
+// Data lama dengan kunci analisa..lampiran tetap terbaca.
+// Tahap baru: flyer.
+// ============================================================
+const STAGES = [
+  { key:'analisa',      label:'1. Analisa',        title:'ANALISA',
+    desc:'Analisa ide, pasar, target, kompetitor, model bisnis & ekonomi unit, kelayakan.' },
+  { key:'perencanaan',  label:'2. Perencanaan',    title:'PERENCANAAN',
+    desc:'Tujuan & target terukur, strategi, harga & bagi hasil, roadmap, budget, KPI.' },
+  { key:'pelaksanaan',  label:'3. Pelaksanaan',    title:'CARA PELAKSANAAN',
+    desc:'Langkah per fase, SOP, script lapangan, tools, checklist harian/mingguan.' },
+  { key:'pengendalian', label:'4. Pengendalian',   title:'PENGENDALIAN & ANTISIPASI HAMBATAN',
+    desc:'Risk register, prediksi hambatan, Plan A/B/C, monitoring, trigger keputusan.' },
+  { key:'aftersales',   label:'5. After Sales',    title:'AFTER SALES',
+    desc:'Follow up, handling komplain, NPS, referral, upsell, retensi & reaktivasi.' },
+  { key:'proposal',     label:'6. Surat & Proposal', title:'SURAT PENGANTAR & PROPOSAL',
+    desc:'Surat pengantar resmi, email/WA pengantar, proposal lengkap + versi 1 halaman.' },
+  { key:'rangkuman',    label:'7. Rangkuman',      title:'RANGKUMAN & CHECKLIST 7 HARI',
+    desc:'Ringkasan 1 halaman, checklist 7 hari pertama, angka wajib dipantau.' },
+  { key:'lampiran',     label:'8. Lampiran',       title:'LAMPIRAN',
+    desc:'Contoh script percakapan roleplay untuk sales dan contoh konten media sosial siap posting.' },
+  { key:'flyer',        label:'9. Flyer',          title:'DESKRIPSI GAMBAR FLYER & BROSUR',
+    desc:'9 deskripsi gambar flyer/brosur lengkap dengan teks di dalamnya, siap copy ke AI image generator.' }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let allBlueprints = [];
+let currentBp = null;
+let currentUser = null;
+let isAdmin = false;
+let quillEditor = null;
+let stageBuffer = {};
+let currentStage = 'analisa';
+let preferredStage = null;
+
+// ============================================================
+// SESSION
+// ============================================================
+function getStoredUser(){try{const d=localStorage.getItem(STORAGE_KEY)||sessionStorage.getItem(STORAGE_KEY);if(d){const p=JSON.parse(d);if(p.username&&p.timestamp){const days=(Date.now()-p.timestamp)/(1000*60*60*24);if(days<7)return p.username;}}}catch(e){}return null;}
+function saveUserToStorage(u){const d=JSON.stringify({username:u,timestamp:Date.now()});localStorage.setItem(STORAGE_KEY,d);}
+function clearUserStorage(){localStorage.removeItem(STORAGE_KEY);sessionStorage.removeItem(STORAGE_KEY);}
+function checkAutoLogin(){const u=getStoredUser();if(u){currentUser=u;isAdmin=(u==='admin');showApp();return true;}return false;}
+function showApp(){document.getElementById('loginOverlay').classList.remove('active');document.getElementById('mainContent').classList.add('visible');document.getElementById('headerUser').textContent=currentUser;const r=document.getElementById('headerRole');if(isAdmin){r.textContent='👑 Admin';r.className='role';}else{r.textContent='👤 User';r.className='role user';}fetchBlueprints().then(renderList);}
+
+async function doLogin(){
+  const u = document.getElementById('loginUsername').value.trim();
+  const p = document.getElementById('loginPassword').value.trim();
+  const err = document.getElementById('loginError');
+  err.classList.remove('show');
+  if(!u||!p){err.textContent='❌ Username dan password wajib diisi!';err.classList.add('show');return;}
+  const btn = document.getElementById('loginBtn');
+  btn.disabled=true; btn.textContent='Memeriksa...';
+  try{
+    const r = await fetch(API_URL+'?table='+USERS_TABLE,{headers:{'Content-Type':'application/json','X-Custom-Auth':SECRET,'X-Table-Name':USERS_TABLE,'X-Role':'admin'}});
+    const res = await r.json();
+    if(res.success && res.data){
+      const user = res.data.find(x=>x.x_01===u && x.x_02===p);
+      if(user){
+        currentUser = u;
+        isAdmin = (u==='admin');
+        saveUserToStorage(u);
+        showApp();
+        showToast('✅ Login berhasil','success');
+      } else {
+        err.textContent='❌ Username atau password salah!';err.classList.add('show');
+      }
+    } else {
+      err.textContent='❌ Gagal ambil data user';err.classList.add('show');
+    }
+  }catch(e){err.textContent='❌ Gagal login: '+e.message;err.classList.add('show');}
+  finally{btn.disabled=false;btn.textContent='Login';}
+}
+
+function doLogout(){
+  if(!confirm('Yakin ingin logout?'))return;
+  clearUserStorage();
+  currentUser=null; isAdmin=false; currentBp=null;
+  document.getElementById('loginOverlay').classList.add('active');
+  document.getElementById('mainContent').classList.remove('visible');
+  showToast('👋 Logout berhasil','info');
+}
+
+// ============================================================
+// API: JOURNEY / BLUEPRINT
+// ============================================================
+async function fetchBlueprints(){
+  try{
+    const res = await apiFetch('');
+    if(res.success && res.data){
+      let data = res.data.map(parseRow);
+      if(!isAdmin && currentUser) data = data.filter(d=>d.created_by===currentUser);
+      allBlueprints = data;
+    } else {
+      allBlueprints = [];
+    }
+  }catch(e){ allBlueprints = []; }
+  return allBlueprints;
+}
+
+function parseRow(r){
+  return {
+    id_x: r.id_x,
+    journey_id: r.x_01 || '',
+    name: r.x_02 || '',
+    scope: safeParse(r.x_03) || [],
+    master_data: safeParse(r.x_04) || {},
+    progress: safeParse(r.x_12) || {},
+    status: r.x_13 || 'active',
+    created_by: r.x_14 || '',
+    created_date: r.x_15 || '',
+    updated_date: r.x_16 || ''
+  };
+}
+function safeParse(s){if(!s)return null;try{return JSON.parse(s);}catch(e){return null;}}
+
+function buildRow(d){
+  const r = {};
+  for(const [k,c] of Object.entries(COLUMNS)){
+    const v = d[k];
+    if(['scope','master_data','fondasi_data','kenali_data','bicara_data','jual_data','perjanjian_data','tumbuh_data','refleksi_data','progress'].includes(k)){
+      r[c] = JSON.stringify(v || {});
+    } else {
+      r[c] = v || '';
+    }
+  }
+  return r;
+}
+async function createBlueprint(d){ return apiFetch('',{method:'POST',body:JSON.stringify(buildRow(d))}); }
+async function updateBlueprint(id,d){ return apiFetch('&id_x='+id,{method:'PUT',body:JSON.stringify(buildRow(d))}); }
+async function deleteBlueprintApi(id){ return apiFetch('&id_x='+id,{method:'DELETE'}); }
+
+function generateJourneyId(){
+  const today = new Date();
+  const datePart = today.getFullYear().toString() + String(today.getMonth()+1).padStart(2,'0') + String(today.getDate()).padStart(2,'0');
+  const prefix = 'BP-' + datePart + '-';
+  let maxNum = 0;
+  allBlueprints.forEach(j=>{
+    if(j.journey_id.startsWith(prefix)){
+      const n = parseInt(j.journey_id.split('-').pop());
+      if(n > maxNum) maxNum = n;
+    }
+  });
+  return prefix + String(maxNum+1).padStart(3,'0');
+}
+
+// ============================================================
+// UTIL TAHAP
+// ============================================================
+function isFilled(html){
+  if(!html) return false;
+  return html.replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').trim().length > 20;
+}
+function getStageData(bp){
+  const md = (bp && bp.master_data) || {};
+  const bpData = md._blueprint || {};
+  const st = bpData.stages || {};
+  // migrasi dari versi lama (single result_html) — tidak menghapus result_html lama
+  if(!STAGES.some(s=>isFilled(st[s.key])) && bpData.result_html){
+    st.analisa = bpData.result_html;
+  }
+  return st;
+}
+function countFilledStages(bp){
+  const st = getStageData(bp);
+  return STAGES.filter(s=>isFilled(st[s.key])).length;
+}
+
+// ============================================================
+// LIST RENDER
+// ============================================================
+function renderList(){
+  const grid = document.getElementById('blueprintGrid');
+  if(!allBlueprints.length){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="icon">💡</div>
+      <h3>Belum ada blueprint</h3>
+      <p>Klik "＋ Blueprint Baru" untuk mulai dari satu ide</p>
+    </div>`;
+    return;
+  }
+  const sorted = [...allBlueprints].sort((a,b)=>(b.updated_date||'').localeCompare(a.updated_date||''));
+  grid.innerHTML = sorted.map(bp=>{
+    const md = bp.master_data || {};
+    const desc = md.idea_description || 'Belum ada deskripsi ide';
+    const filled = countFilledStages(bp);
+    let badge;
+    if(filled === 0) badge = '<span class="badge pending">⏳ Belum dimulai</span>';
+    else if(filled >= STAGES.length) badge = `<span class="badge done">✅ Lengkap ${STAGES.length}/${STAGES.length} tahap</span>`;
+    else badge = `<span class="badge progress">🔄 ${filled}/${STAGES.length} tahap</span>`;
+    return `<div class="bp-card" onclick="openBlueprint(${bp.id_x})">
+      <div class="actions" onclick="event.stopPropagation()">
+        <button onclick="deleteBlueprint(${bp.id_x})" title="Hapus">🗑️</button>
+      </div>
+      <div class="id">${escapeHtml(bp.journey_id)}</div>
+      <div class="name">${escapeHtml(bp.name)}</div>
+      <div class="desc">${escapeHtml(desc)}</div>
+      <div class="badges">${badge}</div>
+      <div class="meta">
+        <span>👤 ${escapeHtml(bp.created_by||'-')}</span>
+        <span>${bp.updated_date || bp.created_date || '-'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// NEW BLUEPRINT
+// ============================================================
+function openNewBlueprint(){
+  document.getElementById('newBpName').value = '';
+  document.getElementById('newBpModal').classList.add('active');
+  setTimeout(()=>document.getElementById('newBpName').focus(),100);
+}
+
+async function saveNewBlueprint(){
+  const name = document.getElementById('newBpName').value.trim();
+  if(!name){ showToast('❌ Nama ide wajib diisi','error'); return; }
+  const btn = document.getElementById('saveNewBtn');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  const today = new Date();
+  const todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  try{
+    const data = {
+      journey_id: generateJourneyId(),
+      name: name,
+      scope: [],
+      master_data: {
+        idea_name: name,
+        idea_description: '',
+        _blueprint: { prompt:'', title:'', updated:'', stages:{} }
+      },
+      progress: {},
+      status: 'active',
+      created_by: currentUser,
+      created_date: todayStr,
+      updated_date: todayStr
+    };
+    await createBlueprint(data);
+    showToast('✅ Blueprint dibuat. Isi deskripsi ide di bawah.','success');
+    closeModal('newBpModal');
+    await fetchBlueprints();
+    const created = allBlueprints.find(x=>x.journey_id===data.journey_id);
+    if(created) openBlueprint(created.id_x);
+    else renderList();
+  }catch(e){
+    showToast('❌ Gagal menyimpan: '+e.message,'error');
+  }finally{
+    btn.disabled = false; btn.textContent = '💾 Buat Blueprint';
+  }
+}
+
+// ============================================================
+// OPEN WORK VIEW
+// ============================================================
+function openBlueprint(id){
+  const bp = allBlueprints.find(x=>x.id_x===id);
+  if(!bp){ showToast('Tidak ditemukan','error'); return; }
+  currentBp = bp;
+  preferredStage = null;
+  document.getElementById('backBtn').classList.add('show');
+  document.getElementById('listView').classList.remove('active');
+  document.getElementById('workView').classList.add('active');
+  renderWork();
+}
+
+function backToList(){
+  currentBp = null;
+  document.getElementById('backBtn').classList.remove('show');
+  document.getElementById('workView').classList.remove('active');
+  document.getElementById('listView').classList.add('active');
+  renderList();
+}
+
+// ============================================================
+// MASTER PROMPT — BERTAHAP 9 TAHAP
+// ============================================================
+function buildMasterPrompt(md){
+  const idea_name = md.idea_name || '[Nama Ide]';
+  const idea_desc = md.idea_description || '[Deskripsi Ide]';
+
+  return `Anda adalah konsultan Business Development senior yang berpengalaman membangun bisnis dan kemitraan dari nol di Indonesia. Saya punya satu ide bisnis. Saya ingin Anda memandu saya menyusun rencana lengkapnya SECARA BERTAHAP.
+
+=== IDE SAYA ===
+Nama Ide: ${idea_name}
+Deskripsi Ide: ${idea_desc}
+
+=== ATURAN KERJA (WAJIB DIPATUHI) ===
+1. Kerjakan HANYA SATU TAHAP dalam satu balasan. Jangan pernah mengerjakan dua tahap sekaligus.
+2. Di akhir setiap balasan, WAJIB tulis blok penutup persis dengan pola ini:
+
+---
+✅ TAHAP [n] SELESAI — [Nama Tahap]
+
+Tahap yang sudah selesai: [daftar]
+Tahap yang masih tersisa:
+- Tahap [n+1]: [nama]
+- Tahap [n+2]: [nama]
+- (dan seterusnya)
+
+Lanjut ke Tahap [n+1]: [Nama Tahap]? (jawab: ya / lanjut)
+---
+
+3. BERHENTI setelah blok penutup itu. JANGAN mengerjakan tahap berikutnya sebelum saya menjawab "ya" atau "lanjut".
+4. Jika saya menjawab "ya" / "lanjut" / "ok", kerjakan tahap berikutnya dengan format yang sama, lalu berhenti dan tanya lagi. Begitu seterusnya sampai semua tahap selesai.
+5. Jika ada informasi yang kurang, JANGAN bertanya balik. Buat asumsi paling logis, tulis di bagian "Asumsi yang Saya Pakai", lalu lanjutkan.
+6. Semua angka dalam Rupiah realistis untuk pasar Indonesia 2026. Semua output harus konkret, terukur, dan bisa dieksekusi — bukan teori.
+7. Gunakan format Markdown: heading (##, ###), bullet points, dan tabel bila perlu.
+8. Bahasa Indonesia profesional tapi mudah dipahami.
+
+=== DAFTAR TAHAP ===
+TAHAP 1 — ANALISA
+TAHAP 2 — PERENCANAAN
+TAHAP 3 — CARA PELAKSANAAN
+TAHAP 4 — PENGENDALIAN & ANTISIPASI HAMBATAN
+TAHAP 5 — AFTER SALES
+TAHAP 6 — SURAT PENGANTAR & PROPOSAL
+TAHAP 7 — RANGKUMAN & CHECKLIST 7 HARI PERTAMA
+TAHAP 8 — LAMPIRAN
+TAHAP 9 — DESKRIPSI GAMBAR FLYER & BROSUR
+
+=== ISI WAJIB SETIAP TAHAP ===
+
+**TAHAP 1 — ANALISA**
+## Analisa Ide: ${idea_name}
+### 1. Pemahaman Ide (ringkas ulang ide dengan bahasa Anda, 3-5 baris)
+### 2. Asumsi yang Saya Pakai (daftar asumsi karena info terbatas)
+### 3. Analisa Pasar & Target (persona pembeli utama, persona mitra/pihak ketiga bila ada, ukuran pasar kasar, daya beli)
+### 4. Masalah Utama & Solusi yang Ditawarkan
+### 5. Analisa Kompetitor — 3 langsung + 3 tidak langsung, plus posisi kita
+### 6. Analisa Model Bisnis & Ekonomi Unit
+Tabel perhitungan: harga normal, harga diskon/promo, biaya langsung per unit, bagi hasil ke mitra, margin bersih per unit, berapa unit/transaksi untuk BEP. Tunjukkan rumusnya.
+### 7. Analisa Kelayakan — skor 1-10 per aspek (pasar, keuangan, operasional, legal, SDM) + kesimpulan layak/tidak layak
+### 8. Peluang & Ancaman Utama di pasar Indonesia
+### 9. Kesimpulan Tahap 1 + 3 hal paling kritis yang harus diputuskan
+
+**TAHAP 2 — PERENCANAAN**
+## Perencanaan
+### 1. Tujuan & Target Terukur (3 bulan, 6 bulan, 12 bulan — angka konkret)
+### 2. Strategi Inti & Positioning
+### 3. Struktur Penawaran, Harga & Skema Bagi Hasil (paket/tier, diskon, komisi/bagi hasil mitra + contoh hitungan per transaksi)
+### 4. Rencana Akuisisi Pelanggan & Mitra (channel, funnel, target jumlah per bulan)
+### 5. Rencana Operasional & SDM (peran, kualifikasi, beban kerja, estimasi gaji)
+### 6. Roadmap / Timeline (tabel: fase, bulan/minggu, aktivitas, output, PIC)
+### 7. Budget & Proyeksi Keuangan 6-12 bulan (setup cost, biaya operasional bulanan, proyeksi pendapatan, laba, BEP bulan ke berapa)
+### 8. KPI Utama & Target per KPI
+### 9. Prasyarat & Risiko Awal
+
+**TAHAP 3 — CARA PELAKSANAAN**
+## Cara Pelaksanaan
+### 1. Urutan Langkah per Fase (Persiapan minggu 1-2, Validasi minggu 3-4, Building bulan 2, Launch bulan 3, Stabilisasi bulan 4-6) — tabel: langkah, detail, PIC, output, deadline
+### 2. SOP Operasional Harian & Mingguan (7-10 poin, spesifik)
+### 3. Materi & Tools yang Wajib Disiapkan (daftar + estimasi biaya)
+### 4. Script Lapangan
+- Script approach ke mitra (30 detik)
+- Script presentasi (2 menit)
+- Script telepon/WA lengkap (opening, probing, presenting, handling objection, closing) — WAJIB pakai assumptive closing, DILARANG pakai kata "maaf"
+- 5 objection umum + cara menjawabnya
+### 5. Checklist Harian & Mingguan
+### 6. Simulasi Nyata 1 Transaksi (harga jual → bagi hasil → biaya → laba bersih)
+
+**TAHAP 4 — PENGENDALIAN & ANTISIPASI HAMBATAN**
+## Pengendalian & Antisipasi Hambatan
+### 1. Risk Register (tabel minimal 10 baris: hambatan, kemungkinan H/M/L, dampak H/M/L, tanda-tanda awal, mitigasi, contingency)
+### 2. 3 Risiko Terbesar + Alternatif Pengendalian (Plan A / Plan B / Plan C untuk masing-masing)
+### 3. Sistem Monitoring & Evaluasi (apa dipantau, alat, frekuensi, siapa penanggung jawab)
+### 4. Ambang Batas & Trigger Keputusan (kapan lanjut, kapan perbaiki, kapan stop/pivot)
+### 5. SOP Eskalasi Masalah
+### 6. Prediksi 3 Skenario: optimis / realistis / pesimis (dengan angka)
+
+**TAHAP 5 — AFTER SALES**
+## After Sales
+### 1. Perjalanan Pelanggan Setelah Membeli
+### 2. SOP Follow Up (H+1, H+7, H+30, H+90) + contoh pesan siap pakai
+### 3. SOP & Script Handling Komplain
+### 4. Survei Kepuasan & NPS (daftar pertanyaan + cara hitung)
+### 5. Program Testimoni & Referral (mekanisme insentif)
+### 6. Upsell, Cross-sell, dan Repeat Order
+### 7. Retensi & Reaktivasi Pelanggan Lama
+### 8. Metrik After Sales & Target
+
+**TAHAP 6 — SURAT PENGANTAR & PROPOSAL**
+## Surat Pengantar & Proposal
+### 1. Surat Pengantar Resmi (kop surat, nomor, tanggal, perihal, tujuan, isi 3-4 paragraf, tanda tangan) — siap pakai dengan [placeholder]
+### 2. Email / WhatsApp Pengantar (versi pendek)
+### 3. Proposal Lengkap: cover, ringkasan eksekutif, latar belakang calon mitra, masalah, solusi, layanan, alur kerja sama, skema harga & bagi hasil (dengan contoh perhitungan), timeline, syarat & ketentuan, penutup
+### 4. Proposal Versi 1 Halaman (ringkas untuk decision maker)
+### 5. Lampiran: daftar data/dokumen yang perlu disiapkan
+
+**TAHAP 7 — RANGKUMAN & CHECKLIST 7 HARI PERTAMA**
+## Rangkuman & Langkah Pertama
+### 1. Ringkasan 1 halaman dari seluruh blueprint
+### 2. Checklist 7 hari pertama (Hari 1 s/d Hari 7, masing-masing 1-3 aksi konkret yang bisa selesai dalam sehari)
+### 3. 5 angka yang wajib dipantau sejak hari pertama
+### 4. Pesan penutup: hal paling menentukan keberhasilan ide ini
+
+**TAHAP 8 — LAMPIRAN**
+## Lampiran
+### 1. Contoh Script Percakapan Roleplay untuk Sales
+Buat minimal 3 skenario roleplay dalam format percakapan (Sales: ... / Prospek: ...), lengkap dengan tujuan, handling objection, dan closing:
+- Skenario A: Approach ke pemilik/manager bimbel untuk kerja sama
+- Skenario B: Presentasi ke orang tua siswa / calon peserta
+- Skenario C: Follow up setelah prospek bilang "saya pikir-pikir dulu"
+Setiap skenario minimal 12-20 baris percakapan. Tandai bagian opening, probing, presenting, handling objection, dan closing.
+### 2. Contoh Konten Media Sosial
+Buat minimal 8 konten siap posting (Instagram/Facebook/TikTok/LinkedIn). Setiap konten berisi:
+- Tujuan konten
+- Format (carousel / reels / single post / story)
+- Hook (1 baris)
+- Isi/caption lengkap siap copy-paste
+- CTA
+- 5-10 hashtag relevan
+Komposisi: 3 konten edukasi, 2 konten promo/penawaran, 2 konten testimoni/studi kasus, 1 konten behind the scene.
+
+**TAHAP 9 — DESKRIPSI GAMBAR FLYER & BROSUR**
+## Deskripsi Gambar Flyer & Brosur
+Buat **9 deskripsi gambar flyer/brosur** untuk ide bisnis ini. Tujuan: user bisa copy-paste setiap deskripsi ke AI image generator (Midjourney, DALL·E, Ideogram, Canva AI, Adobe Firefly, dll) dan langsung menghasilkan gambar flyer/brosur yang siap dipakai.
+
+Setiap deskripsi WAJIB memuat:
+1. **Nomor & Nama Gaya** — mis. "Flyer 1 — Minimalis Profesional"
+2. **Tujuan Flyer** — mis. promosi ke bimbel, promo ke orang tua, open recruitment mitra, dll
+3. **Ukuran & Orientasi** — mis. A4 portrait, A5 portrait, Instagram 1080x1350, square 1080x1080
+4. **Gaya Visual** — modern, clean, bold, playful, elegan, edukatif, dll
+5. **Palet Warna** — sebutkan 3-5 warna dengan kode HEX bila perlu
+6. **Elemen Visual Utama** — ilustrasi/foto/ikon/background/pattern
+7. **Teks di Dalam Flyer** (WAJIB lengkap dan siap dibaca):
+   - Headline utama
+   - Subheadline
+   - 3-5 bullet benefit / penawaran
+   - Harga / promo (jika ada)
+   - CTA
+   - Info kontak / website / IG / WhatsApp
+   - Catatan kecil / syarat & ketentuan singkat
+8. **Tata Letak (Layout)** — posisi headline, gambar, CTA, kontak
+9. **Prompt Siap Copy ke AI Image Generator** — tulis satu paragraf prompt bahasa Inggris yang deskriptif, lengkap dengan aspect ratio, style, lighting, typography hint, dan teks yang harus muncul di gambar. Bungkus dalam blok kode agar mudah di-copy.
+
+Aturan tambahan:
+- Buat 9 variasi yang benar-benar berbeda gaya (minimal: minimalis, bold promo, edukatif, elegan premium, playful/fun, korporat, soft pastel, dark modern, dan satu gaya bebas).
+- Setiap flyer harus menyebutkan teks yang harus tampil di gambar (headline, subheadline, CTA, kontak) agar AI image generator bisa menuliskannya.
+- Gunakan bahasa Indonesia untuk teks flyer, tetapi prompt image generator dalam bahasa Inggris agar hasil maksimal.
+- Jika ada angka harga/promo dari ide, gunakan angka realistis yang konsisten.
+- Akhiri dengan tabel ringkasan: No | Nama Gaya | Ukuran | Tujuan | CTA Utama.
+
+=== MULAI SEKARANG ===
+Kerjakan TAHAP 1 — ANALISA saja. Setelah selesai, tampilkan blok penutup (tahap selesai, tahap tersisa) dan tanya apakah saya mau lanjut ke Tahap 2. JANGAN mengerjakan Tahap 2 di balasan ini.`;
+}
+
+function buildContinuePrompt(stageKey){
+  const idx = STAGES.findIndex(s=>s.key===stageKey);
+  const next = STAGES[idx+1];
+  if(!next) return '';
+  return `Ya, lanjut. Kerjakan Tahap ${idx+2} — ${next.title} sesuai ATURAN KERJA di awal. Setelah selesai, tampilkan blok penutup (tahap selesai + tahap tersisa) dan tanya apakah saya mau lanjut ke tahap berikutnya. Jangan kerjakan tahap lain.`;
+}
+
+// ============================================================
+// RENDER WORK VIEW
+// ============================================================
+function renderWork(){
+  if(!currentBp) return;
+  const md = currentBp.master_data || {};
+  const bpData = md._blueprint || {};
+  const saved = getStageData(currentBp);
+
+  stageBuffer = {};
+  STAGES.forEach(s=>{ stageBuffer[s.key] = saved[s.key] || ''; });
+
+  currentStage = preferredStage || (STAGES.find(s=>isFilled(stageBuffer[s.key])) || STAGES[0]).key;
+  preferredStage = null;
+
+  const filledCount = STAGES.filter(s=>isFilled(stageBuffer[s.key])).length;
+
+  document.getElementById('workWrap').innerHTML = `
+    <div class="work-header">
+      <div class="id">${escapeHtml(currentBp.journey_id)}</div>
+      <h2>${escapeHtml(currentBp.name)}</h2>
+      <div class="status-line">
+        <span>🔄 ${filledCount}/${STAGES.length} tahap terisi</span>
+        <span>📅 ${currentBp.updated_date || currentBp.created_date || '-'}</span>
+        <span>👤 ${escapeHtml(currentBp.created_by||'-')}</span>
+      </div>
+    </div>
+
+    <!-- STEP 1: IDE -->
+    <div class="step-card">
+      <span class="step-tag">Langkah 1</span>
+      <h3>📝 Isi Ide Bisnis</h3>
+      <div class="sub">Cukup <strong>Nama Ide</strong> dan <strong>Deskripsi Ide</strong>. AI akan menganalisa sendiri sisanya dan membuat asumsi yang wajar.</div>
+
+      <div class="form-group">
+        <label>Nama Ide <span class="req">*</span></label>
+        <input type="text" id="fld_idea_name" value="${escapeAttr(md.idea_name||currentBp.name)}" placeholder="Contoh: Kerja Sama Tes Minat Bakat dengan Bimbel">
+      </div>
+      <div class="form-group">
+        <label>Deskripsi Ide <span class="req">*</span> <span class="opt">(jelaskan sedetail mungkin: apa, siapa, harga, skema kerja sama, dll)</span></label>
+        <textarea id="fld_idea_description" rows="5" placeholder="Contoh: Menjalin kerja sama dengan bimbingan belajar untuk melaksanakan Tes Minat Bakat bagi siswa-siswanya. Harga normal Rp 350.000, diberikan diskon menjadi Rp 250.000 untuk siswa bimbel, dan dari harga Rp 250.000 tersebut 50%-nya (Rp 125.000) menjadi bagian bimbel sebagai komisi. Target: 10 bimbel di Jabodetabek dalam 3 bulan.">${escapeHtml(md.idea_description||'')}</textarea>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-success" onclick="saveIdeaFields(true)">💾 Simpan & Buat Prompt</button>
+        <button class="btn btn-outline" onclick="saveIdeaFields(false)">💾 Simpan Saja</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: PROMPT -->
+    <div class="step-card green">
+      <span class="step-tag">Langkah 2</span>
+      <h3>📋 Copy Prompt ke AI</h3>
+      <div class="sub">Copy prompt di bawah, paste ke ChatGPT / Claude / Gemini / DeepSeek. AI akan mulai dari <strong>Tahap 1 — Analisa</strong>, lalu berhenti dan menanyakan apakah lanjut. Cukup jawab <strong>"ya"</strong> untuk tahap berikutnya sampai Tahap 9 — Deskripsi Gambar Flyer & Brosur.</div>
+      <div style="position:relative">
+        <button class="copy-btn" onclick="copyMasterPrompt()">📋 Copy Prompt</button>
+        <div class="prompt-box" id="promptBox"></div>
+      </div>
+    </div>
+
+    <!-- STEP 3: HASIL PER TAHAP -->
+    <div class="step-card orange">
+      <span class="step-tag">Langkah 3</span>
+      <h3>📝 Paste Hasil AI per Tahap</h3>
+      <div class="sub">Setiap tahap punya tempatnya sendiri. Pilih tab tahap, paste hasil balasan AI yang sesuai, lalu simpan. Data lama tetap di posisinya; tahap Lampiran dan Flyer adalah tambahan baru.</div>
+
+      <div class="form-group">
+        <label>Judul Blueprint <span class="opt">(untuk nama file)</span></label>
+        <input type="text" id="fld_bp_title" value="${escapeAttr(bpData.title || currentBp.name)}" placeholder="Judul blueprint...">
+      </div>
+
+      <div class="stage-tabs" id="stageTabs"></div>
+      <div class="stage-hint" id="stageHint"></div>
+
+      <div class="quill-wrapper"><div id="resultEditor"></div></div>
+
+      <div class="action-row" style="margin-top:14px">
+        <button class="btn btn-success" onclick="saveResult()">💾 Simpan Semua Tahap</button>
+        <button class="btn btn-primary" onclick="downloadBlueprint()">📥 Download .doc</button>
+        <button class="btn btn-warning" onclick="clearCurrentStage()">🗑️ Kosongkan Tahap Ini</button>
+      </div>
+    </div>
+  `;
+
+  quillEditor = new Quill('#resultEditor', {
+    theme: 'snow',
+    placeholder: 'Paste hasil tahap ini dari AI di sini...',
+    modules: { toolbar: [[{header:[1,2,3,false]}],['bold','italic','underline'],[{list:'ordered'},{list:'bullet'}],['blockquote'],['clean']] }
+  });
+  quillEditor.root.innerHTML = stageBuffer[currentStage] || '';
+  quillEditor.on('text-change', ()=>{ if(quillEditor) stageBuffer[currentStage] = quillEditor.root.innerHTML; });
+
+  updateStageUI();
+  updatePromptPreview();
+  bindIdeaChangeListeners();
+}
+
+function bindIdeaChangeListeners(){
+  ['idea_name','idea_description'].forEach(k=>{
+    const el = document.getElementById('fld_'+k);
+    if(el) el.addEventListener('input', updatePromptPreview);
+  });
+}
+
+function getFormValues(){
+  return {
+    idea_name: (document.getElementById('fld_idea_name')?.value||'').trim(),
+    idea_description: (document.getElementById('fld_idea_description')?.value||'').trim()
+  };
+}
+
+function updatePromptPreview(){
+  const md = getFormValues();
+  const box = document.getElementById('promptBox');
+  if(box) box.textContent = buildMasterPrompt(md);
+}
+
+// ============================================================
+// STAGE UI
+// ============================================================
+function updateStageUI(){
+  const tabs = document.getElementById('stageTabs');
+  if(tabs){
+    tabs.innerHTML = STAGES.map(s=>{
+      const filled = isFilled(stageBuffer[s.key]);
+      const active = s.key===currentStage;
+      return `<button class="stage-tab ${active?'active':''} ${filled?'filled':''}" data-stage="${s.key}" onclick="switchStage('${s.key}')">${filled?'✅':'○'} ${s.label}</button>`;
+    }).join('');
+  }
+  const hint = document.getElementById('stageHint');
+  if(hint){
+    const s = STAGES.find(x=>x.key===currentStage);
+    const idx = STAGES.findIndex(x=>x.key===currentStage);
+    const cont = buildContinuePrompt(currentStage);
+    const remaining = STAGES.slice(idx+1);
+    hint.innerHTML = `
+      <strong>${escapeHtml(s.title)}</strong><br>${escapeHtml(s.desc)}
+      ${remaining.length ? `<br><br><em>Tahap tersisa setelah ini:</em> ${remaining.map(r=>escapeHtml(r.title)).join(' → ')}` : `<br><br><em>Ini tahap terakhir. 🎉</em>`}
+      ${cont ? `<br><button class="mini-copy" onclick="copyContinue()">📋 Copy prompt "lanjut ke tahap berikutnya"</button>` : ''}
+    `;
+  }
+}
+
+function switchStage(key){
+  if(quillEditor) stageBuffer[currentStage] = quillEditor.root.innerHTML;
+  currentStage = key;
+  if(quillEditor) quillEditor.root.innerHTML = stageBuffer[key] || '';
+  updateStageUI();
+}
+
+function copyContinue(){
+  const cont = buildContinuePrompt(currentStage);
+  if(!cont){ showToast('Ini tahap terakhir','info'); return; }
+  copyText(cont, '✅ Prompt lanjutan disalin — paste ke AI');
+}
+
+// ============================================================
+// COPY HELPERS
+// ============================================================
+function copyText(text, okMsg){
+  navigator.clipboard.writeText(text).then(()=>showToast(okMsg,'success')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');showToast(okMsg,'success');}catch(e){showToast('❌ Gagal menyalin','error');}
+    document.body.removeChild(ta);
+  });
+}
+function copyMasterPrompt(){
+  const prompt = document.getElementById('promptBox').textContent;
+  if(!prompt) return;
+  copyText(prompt, '✅ Prompt disalin — paste ke AI');
+}
+
+// ============================================================
+// SAVE IDEA FIELDS
+// ============================================================
+async function saveIdeaFields(alsoGenerate){
+  if(!currentBp) return;
+  const md = getFormValues();
+  if(!md.idea_name){ showToast('❌ Nama ide wajib diisi','error'); return; }
+  if(!md.idea_description){ showToast('❌ Deskripsi ide wajib diisi','error'); return; }
+
+  if(quillEditor) stageBuffer[currentStage] = quillEditor.root.innerHTML;
+
+  const masterData = {...(currentBp.master_data||{}), ...md};
+  masterData._blueprint = masterData._blueprint || {};
+  masterData._blueprint.stages = {...stageBuffer};
+  if(alsoGenerate) masterData._blueprint.prompt = buildMasterPrompt(md);
+
+  const today = new Date().toISOString().split('T')[0];
+  const updated = {...currentBp, name: md.idea_name, master_data: masterData, updated_date: today};
+
+  try{
+    await updateBlueprint(currentBp.id_x, updated);
+    showToast(alsoGenerate ? '✅ Disimpan. Prompt siap di-copy!' : '✅ Disimpan','success');
+    await fetchBlueprints();
+    currentBp = allBlueprints.find(x=>x.id_x===currentBp.id_x);
+    preferredStage = currentStage;
+    renderWork();
+    if(alsoGenerate){
+      const box = document.getElementById('promptBox');
+      if(box) box.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  }catch(e){ showToast('❌ Gagal: '+e.message,'error'); }
+}
+
+// ============================================================
+// SAVE RESULT (SEMUA TAHAP)
+// ============================================================
+async function saveResult(){
+  if(!currentBp || !quillEditor) return;
+  stageBuffer[currentStage] = quillEditor.root.innerHTML;
+
+  const filled = STAGES.filter(s=>isFilled(stageBuffer[s.key])).length;
+  if(filled === 0){ showToast('❌ Paste hasil AI dulu di salah satu tahap','error'); return; }
+
+  const title = (document.getElementById('fld_bp_title')?.value||'').trim() || currentBp.name;
+
+  const masterData = {...(currentBp.master_data||{})};
+  masterData._blueprint = masterData._blueprint || {};
+  masterData._blueprint.stages = {...stageBuffer};
+  masterData._blueprint.title = title;
+  masterData._blueprint.updated = new Date().toISOString();
+  if(!masterData._blueprint.prompt) masterData._blueprint.prompt = buildMasterPrompt(getFormValues());
+
+  const today = new Date().toISOString().split('T')[0];
+  const updated = {
+    ...currentBp,
+    master_data: masterData,
+    status: filled >= STAGES.length ? 'completed' : 'active',
+    updated_date: today
+  };
+
+  try{
+    await updateBlueprint(currentBp.id_x, updated);
+    showToast(`✅ Tersimpan — ${filled}/${STAGES.length} tahap terisi`,'success');
+    await fetchBlueprints();
+    currentBp = allBlueprints.find(x=>x.id_x===currentBp.id_x);
+    preferredStage = currentStage;
+    renderWork();
+  }catch(e){ showToast('❌ Gagal: '+e.message,'error'); }
+}
+
+function clearCurrentStage(){
+  if(!quillEditor) return;
+  const s = STAGES.find(x=>x.key===currentStage);
+  if(!confirm('Kosongkan isi tahap "'+s.title+'"? Tahap lain tetap tersimpan.')) return;
+  quillEditor.root.innerHTML = '';
+  stageBuffer[currentStage] = '';
+  updateStageUI();
+  showToast('🗑️ Tahap ini dikosongkan','info');
+}
+
+// ============================================================
+// DOWNLOAD .DOC (GABUNGAN SEMUA TAHAP)
+// ============================================================
+function downloadBlueprint(){
+  if(!currentBp) return;
+  if(quillEditor) stageBuffer[currentStage] = quillEditor.root.innerHTML;
+
+  const filledStages = STAGES.filter(s=>isFilled(stageBuffer[s.key]));
+  if(!filledStages.length){ showToast('❌ Belum ada hasil untuk diunduh','error'); return; }
+
+  const title = (document.getElementById('fld_bp_title')?.value||'').trim()
+    || (currentBp.master_data?._blueprint?.title) || currentBp.name;
+
+  const bodyHtml = STAGES.map((s,i)=>{
+    if(!isFilled(stageBuffer[s.key])) return '';
+    return `<h1 style="page-break-before:${i===0?'auto':'always'};font-size:20px;margin-top:28px">TAHAP ${i+1} — ${escapeHtml(s.title)}</h1>${stageBuffer[s.key]}`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(title)}</title>
+    <style>
+      body{font-family:'Segoe UI',Arial,sans-serif;padding:40px;color:#2d3748;line-height:1.8;max-width:820px;margin:auto}
+      h1{color:#1a202c;border-bottom:3px solid #805ad5;padding-bottom:8px}
+      h2{color:#2d3748;margin-top:24px;border-bottom:1px solid #e2e8f0;padding-bottom:4px}
+      h3{color:#4a5568;margin-top:16px}
+      p{margin:8px 0}
+      ul,ol{padding-left:24px}
+      blockquote{border-left:4px solid #805ad5;padding-left:16px;color:#4a5568;margin:12px 0}
+      table{border-collapse:collapse;width:100%;margin:12px 0}
+      th,td{border:1px solid #cbd5e0;padding:6px 10px;text-align:left;font-size:13px}
+      th{background:#f7fafc}
+      code{background:#f7fafc;padding:2px 6px;border-radius:4px;font-family:monospace;font-size:12px}
+      pre{background:#f7fafc;padding:10px;border-radius:8px;overflow-x:auto}
+    </style></head><body>
+    <h1 style="border-bottom:3px solid #805ad5">${escapeHtml(title)}</h1>
+    <p style="font-size:12px;color:#a0aec0">${escapeHtml(currentBp.journey_id)} · Dibuat ${escapeHtml(currentBp.created_date||'-')} · Oleh ${escapeHtml(currentBp.created_by||'-')} · ${filledStages.length}/${STAGES.length} tahap</p>
+    ${bodyHtml}
+    </body></html>`;
+
+  const blob = new Blob([html], {type:'application/msword;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = title.replace(/[^a-zA-Z0-9 \-]/g,'_') + '.doc';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✅ File .doc didownload','success');
+}
+
+// ============================================================
+// DELETE
+// ============================================================
+async function deleteBlueprint(id){
+  if(!confirm('Hapus blueprint ini?')) return;
+  try{
+    await deleteBlueprintApi(id);
+    showToast('✅ Dihapus','success');
+    await fetchBlueprints();
+    if(currentBp && currentBp.id_x === id){ backToList(); }
+    else { renderList(); }
+  }catch(e){ showToast('❌ Gagal hapus: '+e.message,'error'); }
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function showToast(msg,type='info'){
+  const existing = document.querySelector('.toast'); if(existing) existing.remove();
+  const t = document.createElement('div'); t.className = 'toast '+type; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(20px)';t.style.transition='.3s';setTimeout(()=>t.remove(),300);},3500);
+}
+function escapeHtml(s){ if(s==null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function escapeAttr(s){ if(s==null) return ''; return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', ()=>{
+  if(!checkAutoLogin()){ document.getElementById('loginOverlay').classList.add('active'); }
+  document.getElementById('loginPassword').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+  document.getElementById('newBpName').addEventListener('keydown', e=>{ if(e.key==='Enter') saveNewBlueprint(); });
+  document.querySelectorAll('.modal-overlay').forEach(o=>{
+    o.addEventListener('click', e=>{ if(e.target===o) o.classList.remove('active'); });
+  });
+});
+</script>
+</body>
+</html>

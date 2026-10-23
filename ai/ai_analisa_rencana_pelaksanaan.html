@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Blueprint Bisnis - v3.2 (Bertahap + Lampiran + Flyer)</title>
+<title>Blueprint Bisnis - v3.4 (Teks Saja)</title>
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 <style>
@@ -187,7 +187,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
   <header class="app-header">
     <div class="header-left">
       <button class="back-btn" id="backBtn" onclick="backToList()">← Kembali</button>
-      <h1>💡 Blueprint Bisnis <span>v3.2</span></h1>
+      <h1>💡 Blueprint Bisnis <span>v3.4</span></h1>
     </div>
     <div class="header-actions">
       <button class="btn-new" onclick="openNewBlueprint()">＋ Blueprint Baru</button>
@@ -205,7 +205,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
       <div class="list-head">
         <div>
           <h2>📁 Blueprint Saya</h2>
-          <div class="sub">Satu blueprint = satu ide bisnis, disusun bertahap oleh AI (9 tahap)</div>
+          <div class="sub">Satu blueprint = satu ide bisnis, disusun bertahap oleh AI (9 tahap · teks saja, tanpa tabel & tanpa gambar)</div>
         </div>
       </div>
       <div class="blueprint-grid" id="blueprintGrid"></div>
@@ -259,8 +259,6 @@ async function apiFetch(ep,opt={}){const r=await fetch(API_URL+'?table='+TABLE+e
 
 // ============================================================
 // DAFTAR TAHAP (9 TAHAP)
-// Data lama dengan kunci analisa..lampiran tetap terbaca.
-// Tahap baru: flyer.
 // ============================================================
 const STAGES = [
   { key:'analisa',      label:'1. Analisa',        title:'ANALISA',
@@ -280,7 +278,7 @@ const STAGES = [
   { key:'lampiran',     label:'8. Lampiran',       title:'LAMPIRAN',
     desc:'Contoh script percakapan roleplay untuk sales dan contoh konten media sosial siap posting.' },
   { key:'flyer',        label:'9. Flyer',          title:'DESKRIPSI GAMBAR FLYER & BROSUR',
-    desc:'9 deskripsi gambar flyer/brosur lengkap dengan teks di dalamnya, siap copy ke AI image generator.' }
+    desc:'9 deskripsi TEKS flyer/brosur lengkap dengan teks di dalamnya + prompt image generator. Tidak membuat gambar.' }
 ];
 
 // ============================================================
@@ -416,7 +414,6 @@ function getStageData(bp){
   const md = (bp && bp.master_data) || {};
   const bpData = md._blueprint || {};
   const st = bpData.stages || {};
-  // migrasi dari versi lama (single result_html) — tidak menghapus result_html lama
   if(!STAGES.some(s=>isFilled(st[s.key])) && bpData.result_html){
     st.analisa = bpData.result_html;
   }
@@ -534,7 +531,8 @@ function backToList(){
 }
 
 // ============================================================
-// MASTER PROMPT — BERTAHAP 9 TAHAP
+// MASTER PROMPT — BERTAHAP 9 TAHAP, TEKS SAJA
+// Tanpa tabel, tanpa gambar.
 // ============================================================
 function buildMasterPrompt(md){
   const idea_name = md.idea_name || '[Nama Ide]';
@@ -566,8 +564,22 @@ Lanjut ke Tahap [n+1]: [Nama Tahap]? (jawab: ya / lanjut)
 4. Jika saya menjawab "ya" / "lanjut" / "ok", kerjakan tahap berikutnya dengan format yang sama, lalu berhenti dan tanya lagi. Begitu seterusnya sampai semua tahap selesai.
 5. Jika ada informasi yang kurang, JANGAN bertanya balik. Buat asumsi paling logis, tulis di bagian "Asumsi yang Saya Pakai", lalu lanjutkan.
 6. Semua angka dalam Rupiah realistis untuk pasar Indonesia 2026. Semua output harus konkret, terukur, dan bisa dieksekusi — bukan teori.
-7. Gunakan format Markdown: heading (##, ###), bullet points, dan tabel bila perlu.
-8. Bahasa Indonesia profesional tapi mudah dipahami.
+7. FORMAT OUTPUT — TEKS SAJA:
+   - Gunakan Markdown: heading (##, ###), bullet points / numbered list, bold/italic, blockquote, dan blok kode bila perlu.
+   - DILARANG KERAS menggunakan TABEL dalam bentuk apapun. Jangan pernah menulis sintaks tabel Markdown (garis pemisah |---|, baris header dengan |, atau baris data dengan |). Alasan: tabel akan berantakan saat ditempel ke aplikasi.
+   - Sajikan SEMUA data perbandingan, perhitungan, roadmap, risk register, KPI, budget, proyeksi, jadwal, skor kelayakan, dan data multi-kolom lainnya dalam bentuk DAFTAR (bullet / numbered list) atau PARAGRAF NARATIF.
+   - Contoh format yang BENAR untuk data multi-kolom:
+     - **Item 1** — kolom A: ...; kolom B: ...; kolom C: ...
+     - **Item 2** — kolom A: ...; kolom B: ...; kolom C: ...
+   - Jika perlu merangkum banyak angka, gunakan sub-heading + daftar, bukan tabel.
+8. DILARANG MEMBUAT GAMBAR (SANGAT PENTING):
+   - JANGAN membuat, menghasilkan, menampilkan, atau menyisipkan gambar dalam bentuk apapun.
+   - JANGAN memanggil tool/fitur image generation (DALL·E, image creator, canvas, atau sejenisnya). Jika platform Anda punya fitur auto-generate gambar, ABAIKAN dan JANGAN aktifkan.
+   - JANGAN menempelkan URL gambar, markdown gambar (![ ]( )), base64, atau file gambar.
+   - JANGAN mendeskripsikan seolah-olah gambar sedang dibuat. Cukup TULIS TEKSNYA.
+   - Seluruh output WAJIB berupa TEKS yang bisa di-copy-paste ke aplikasi lain.
+   - Khusus Tahap 9: Anda HANYA menuliskan deskripsi flyer dan prompt teks untuk AI image generator. Gambar flyer TIDAK dibuat di sini — user akan memakai prompt tersebut di AI image generator lain.
+9. Bahasa Indonesia profesional tapi mudah dipahami.
 
 === DAFTAR TAHAP ===
 TAHAP 1 — ANALISA
@@ -578,7 +590,7 @@ TAHAP 5 — AFTER SALES
 TAHAP 6 — SURAT PENGANTAR & PROPOSAL
 TAHAP 7 — RANGKUMAN & CHECKLIST 7 HARI PERTAMA
 TAHAP 8 — LAMPIRAN
-TAHAP 9 — DESKRIPSI GAMBAR FLYER & BROSUR
+TAHAP 9 — DESKRIPSI GAMBAR FLYER & BROSUR (TEKS SAJA)
 
 === ISI WAJIB SETIAP TAHAP ===
 
@@ -586,59 +598,59 @@ TAHAP 9 — DESKRIPSI GAMBAR FLYER & BROSUR
 ## Analisa Ide: ${idea_name}
 ### 1. Pemahaman Ide (ringkas ulang ide dengan bahasa Anda, 3-5 baris)
 ### 2. Asumsi yang Saya Pakai (daftar asumsi karena info terbatas)
-### 3. Analisa Pasar & Target (persona pembeli utama, persona mitra/pihak ketiga bila ada, ukuran pasar kasar, daya beli)
+### 3. Analisa Pasar & Target (persona pembeli utama, persona mitra/pihak ketiga bila ada, ukuran pasar kasar, daya beli) — narasi + daftar
 ### 4. Masalah Utama & Solusi yang Ditawarkan
-### 5. Analisa Kompetitor — 3 langsung + 3 tidak langsung, plus posisi kita
+### 5. Analisa Kompetitor — 3 langsung + 3 tidak langsung, plus posisi kita. Sajikan per kompetitor sebagai paragraf singkat + daftar kekuatan/kelemahan.
 ### 6. Analisa Model Bisnis & Ekonomi Unit
-Tabel perhitungan: harga normal, harga diskon/promo, biaya langsung per unit, bagi hasil ke mitra, margin bersih per unit, berapa unit/transaksi untuk BEP. Tunjukkan rumusnya.
-### 7. Analisa Kelayakan — skor 1-10 per aspek (pasar, keuangan, operasional, legal, SDM) + kesimpulan layak/tidak layak
-### 8. Peluang & Ancaman Utama di pasar Indonesia
+Sajikan sebagai daftar (BUKAN tabel): harga normal, harga diskon/promo, biaya langsung per unit, bagi hasil ke mitra, margin bersih per unit, berapa unit/transaksi untuk BEP. Tulis rumus di setiap perhitungan.
+### 7. Analisa Kelayakan — beri skor 1-10 untuk tiap aspek (pasar, keuangan, operasional, legal, SDM) dalam bentuk daftar: nama aspek, skor, alasan singkat. Akhiri dengan kesimpulan layak/tidak layak.
+### 8. Peluang & Ancaman Utama di pasar Indonesia (daftar)
 ### 9. Kesimpulan Tahap 1 + 3 hal paling kritis yang harus diputuskan
 
 **TAHAP 2 — PERENCANAAN**
 ## Perencanaan
 ### 1. Tujuan & Target Terukur (3 bulan, 6 bulan, 12 bulan — angka konkret)
 ### 2. Strategi Inti & Positioning
-### 3. Struktur Penawaran, Harga & Skema Bagi Hasil (paket/tier, diskon, komisi/bagi hasil mitra + contoh hitungan per transaksi)
-### 4. Rencana Akuisisi Pelanggan & Mitra (channel, funnel, target jumlah per bulan)
-### 5. Rencana Operasional & SDM (peran, kualifikasi, beban kerja, estimasi gaji)
-### 6. Roadmap / Timeline (tabel: fase, bulan/minggu, aktivitas, output, PIC)
-### 7. Budget & Proyeksi Keuangan 6-12 bulan (setup cost, biaya operasional bulanan, proyeksi pendapatan, laba, BEP bulan ke berapa)
-### 8. KPI Utama & Target per KPI
+### 3. Struktur Penawaran, Harga & Skema Bagi Hasil (paket/tier, diskon, komisi/bagi hasil mitra + contoh hitungan per transaksi). Sajikan tiap paket sebagai daftar bernomor.
+### 4. Rencana Akuisisi Pelanggan & Mitra (channel, funnel, target jumlah per bulan) — daftar per channel
+### 5. Rencana Operasional & SDM (peran, kualifikasi, beban kerja, estimasi gaji) — daftar per peran
+### 6. Roadmap / Timeline. Sajikan per fase sebagai daftar bernomor — BUKAN tabel. Setiap fase memuat: nama fase, bulan/minggu, aktivitas, output, PIC.
+### 7. Budget & Proyeksi Keuangan 6-12 bulan. Sajikan dalam daftar bernomor atau paragraf per bulan: setup cost, biaya operasional bulanan, proyeksi pendapatan bulan 1-6 (per bulan), laba, BEP bulan ke berapa. JANGAN pakai tabel.
+### 8. KPI Utama & Target per KPI (daftar bernomor: nama KPI, target, cara ukur)
 ### 9. Prasyarat & Risiko Awal
 
 **TAHAP 3 — CARA PELAKSANAAN**
 ## Cara Pelaksanaan
-### 1. Urutan Langkah per Fase (Persiapan minggu 1-2, Validasi minggu 3-4, Building bulan 2, Launch bulan 3, Stabilisasi bulan 4-6) — tabel: langkah, detail, PIC, output, deadline
+### 1. Urutan Langkah per Fase (Persiapan minggu 1-2, Validasi minggu 3-4, Building bulan 2, Launch bulan 3, Stabilisasi bulan 4-6). Sajikan setiap fase sebagai daftar bernomor — BUKAN tabel — dengan detail: langkah, detail, PIC, output, deadline.
 ### 2. SOP Operasional Harian & Mingguan (7-10 poin, spesifik)
-### 3. Materi & Tools yang Wajib Disiapkan (daftar + estimasi biaya)
+### 3. Materi & Tools yang Wajib Disiapkan (daftar + estimasi biaya per item)
 ### 4. Script Lapangan
 - Script approach ke mitra (30 detik)
 - Script presentasi (2 menit)
 - Script telepon/WA lengkap (opening, probing, presenting, handling objection, closing) — WAJIB pakai assumptive closing, DILARANG pakai kata "maaf"
-- 5 objection umum + cara menjawabnya
-### 5. Checklist Harian & Mingguan
-### 6. Simulasi Nyata 1 Transaksi (harga jual → bagi hasil → biaya → laba bersih)
+- 5 objection umum + cara menjawabnya (daftar)
+### 5. Checklist Harian & Mingguan (daftar)
+### 6. Simulasi Nyata 1 Transaksi — tulis sebagai narasi bertahap: harga jual → bagi hasil → biaya → laba bersih. Tunjukkan angka di setiap langkah, BUKAN tabel.
 
 **TAHAP 4 — PENGENDALIAN & ANTISIPASI HAMBATAN**
 ## Pengendalian & Antisipasi Hambatan
-### 1. Risk Register (tabel minimal 10 baris: hambatan, kemungkinan H/M/L, dampak H/M/L, tanda-tanda awal, mitigasi, contingency)
+### 1. Risk Register (minimal 10 risiko). Sajikan sebagai daftar bernomor — BUKAN tabel. Setiap risiko memuat: nama hambatan, kemungkinan (H/M/L), dampak (H/M/L), tanda-tanda awal, mitigasi, contingency.
 ### 2. 3 Risiko Terbesar + Alternatif Pengendalian (Plan A / Plan B / Plan C untuk masing-masing)
-### 3. Sistem Monitoring & Evaluasi (apa dipantau, alat, frekuensi, siapa penanggung jawab)
-### 4. Ambang Batas & Trigger Keputusan (kapan lanjut, kapan perbaiki, kapan stop/pivot)
+### 3. Sistem Monitoring & Evaluasi (apa dipantau, alat, frekuensi, siapa penanggung jawab) — daftar
+### 4. Ambang Batas & Trigger Keputusan (kapan lanjut, kapan perbaiki, kapan stop/pivot) — daftar
 ### 5. SOP Eskalasi Masalah
-### 6. Prediksi 3 Skenario: optimis / realistis / pesimis (dengan angka)
+### 6. Prediksi 3 Skenario: optimis / realistis / pesimis — sajikan per skenario sebagai paragraf atau daftar, dengan angka. JANGAN pakai tabel.
 
 **TAHAP 5 — AFTER SALES**
 ## After Sales
-### 1. Perjalanan Pelanggan Setelah Membeli
-### 2. SOP Follow Up (H+1, H+7, H+30, H+90) + contoh pesan siap pakai
+### 1. Perjalanan Pelanggan Setelah Membeli (narasi tahapan)
+### 2. SOP Follow Up (H+1, H+7, H+30, H+90) + contoh pesan siap pakai. Sajikan per titik waktu sebagai daftar bernomor.
 ### 3. SOP & Script Handling Komplain
 ### 4. Survei Kepuasan & NPS (daftar pertanyaan + cara hitung)
 ### 5. Program Testimoni & Referral (mekanisme insentif)
 ### 6. Upsell, Cross-sell, dan Repeat Order
 ### 7. Retensi & Reaktivasi Pelanggan Lama
-### 8. Metrik After Sales & Target
+### 8. Metrik After Sales & Target (daftar: nama metrik, target, cara ukur)
 
 **TAHAP 6 — SURAT PENGANTAR & PROPOSAL**
 ## Surat Pengantar & Proposal
@@ -673,18 +685,24 @@ Buat minimal 8 konten siap posting (Instagram/Facebook/TikTok/LinkedIn). Setiap 
 - 5-10 hashtag relevan
 Komposisi: 3 konten edukasi, 2 konten promo/penawaran, 2 konten testimoni/studi kasus, 1 konten behind the scene.
 
-**TAHAP 9 — DESKRIPSI GAMBAR FLYER & BROSUR**
+**TAHAP 9 — DESKRIPSI GAMBAR FLYER & BROSUR (TEKS SAJA)**
 ## Deskripsi Gambar Flyer & Brosur
-Buat **9 deskripsi gambar flyer/brosur** untuk ide bisnis ini. Tujuan: user bisa copy-paste setiap deskripsi ke AI image generator (Midjourney, DALL·E, Ideogram, Canva AI, Adobe Firefly, dll) dan langsung menghasilkan gambar flyer/brosur yang siap dipakai.
+
+PENTING UNTUK TAHAP INI:
+- Anda TIDAK membuat gambar. Anda hanya menulis TEKS.
+- Jangan memanggil image generator, jangan menampilkan gambar, jangan menempelkan URL gambar, jangan memakai markdown gambar.
+- Semua hasil berupa teks yang bisa di-copy-paste.
+
+Buat **9 deskripsi teks flyer/brosur** untuk ide bisnis ini. Tujuan: user bisa copy-paste setiap prompt ke AI image generator (Midjourney, DALL·E, Ideogram, Canva AI, Adobe Firefly, dll) dan menghasilkan gambar flyer/brosur yang siap dipakai.
 
 Setiap deskripsi WAJIB memuat:
 1. **Nomor & Nama Gaya** — mis. "Flyer 1 — Minimalis Profesional"
 2. **Tujuan Flyer** — mis. promosi ke bimbel, promo ke orang tua, open recruitment mitra, dll
 3. **Ukuran & Orientasi** — mis. A4 portrait, A5 portrait, Instagram 1080x1350, square 1080x1080
 4. **Gaya Visual** — modern, clean, bold, playful, elegan, edukatif, dll
-5. **Palet Warna** — sebutkan 3-5 warna dengan kode HEX bila perlu
-6. **Elemen Visual Utama** — ilustrasi/foto/ikon/background/pattern
-7. **Teks di Dalam Flyer** (WAJIB lengkap dan siap dibaca):
+5. **Palet Warna** — sebutkan 3-5 warna dengan kode HEX bila perlu (tulis sebagai daftar, bukan tabel)
+6. **Elemen Visual Utama** — ilustrasi/foto/ikon/background/pattern (tulis sebagai teks)
+7. **Teks di Dalam Flyer** (WAJIB lengkap dan siap dibaca) — tulis sebagai daftar:
    - Headline utama
    - Subheadline
    - 3-5 bullet benefit / penawaran
@@ -692,25 +710,25 @@ Setiap deskripsi WAJIB memuat:
    - CTA
    - Info kontak / website / IG / WhatsApp
    - Catatan kecil / syarat & ketentuan singkat
-8. **Tata Letak (Layout)** — posisi headline, gambar, CTA, kontak
-9. **Prompt Siap Copy ke AI Image Generator** — tulis satu paragraf prompt bahasa Inggris yang deskriptif, lengkap dengan aspect ratio, style, lighting, typography hint, dan teks yang harus muncul di gambar. Bungkus dalam blok kode agar mudah di-copy.
+8. **Tata Letak (Layout)** — posisi headline, gambar, CTA, kontak. Tulis sebagai narasi/daftar, BUKAN tabel.
+9. **Prompt Siap Copy ke AI Image Generator** — tulis satu paragraf prompt bahasa Inggris yang deskriptif, lengkap dengan aspect ratio, style, lighting, typography hint, dan teks yang harus muncul di gambar. Bungkus dalam blok kode teks (code block) agar mudah di-copy. JANGAN menghasilkan gambarnya.
 
 Aturan tambahan:
 - Buat 9 variasi yang benar-benar berbeda gaya (minimal: minimalis, bold promo, edukatif, elegan premium, playful/fun, korporat, soft pastel, dark modern, dan satu gaya bebas).
 - Setiap flyer harus menyebutkan teks yang harus tampil di gambar (headline, subheadline, CTA, kontak) agar AI image generator bisa menuliskannya.
 - Gunakan bahasa Indonesia untuk teks flyer, tetapi prompt image generator dalam bahasa Inggris agar hasil maksimal.
 - Jika ada angka harga/promo dari ide, gunakan angka realistis yang konsisten.
-- Akhiri dengan tabel ringkasan: No | Nama Gaya | Ukuran | Tujuan | CTA Utama.
+- Akhiri dengan ringkasan 9 flyer dalam bentuk DAFTAR BERURUT (Nomor — Nama Gaya — Ukuran — Tujuan — CTA Utama). JANGAN pakai tabel.
 
 === MULAI SEKARANG ===
-Kerjakan TAHAP 1 — ANALISA saja. Setelah selesai, tampilkan blok penutup (tahap selesai, tahap tersisa) dan tanya apakah saya mau lanjut ke Tahap 2. JANGAN mengerjakan Tahap 2 di balasan ini.`;
+Kerjakan TAHAP 1 — ANALISA saja. Ingat: TEKS SAJA, tanpa tabel, tanpa gambar. Setelah selesai, tampilkan blok penutup (tahap selesai, tahap tersisa) dan tanya apakah saya mau lanjut ke Tahap 2. JANGAN mengerjakan Tahap 2 di balasan ini.`;
 }
 
 function buildContinuePrompt(stageKey){
   const idx = STAGES.findIndex(s=>s.key===stageKey);
   const next = STAGES[idx+1];
   if(!next) return '';
-  return `Ya, lanjut. Kerjakan Tahap ${idx+2} — ${next.title} sesuai ATURAN KERJA di awal. Setelah selesai, tampilkan blok penutup (tahap selesai + tahap tersisa) dan tanya apakah saya mau lanjut ke tahap berikutnya. Jangan kerjakan tahap lain.`;
+  return `Ya, lanjut. Kerjakan Tahap ${idx+2} — ${next.title} sesuai ATURAN KERJA di awal. Ingat: TEKS SAJA, tanpa tabel, tanpa gambar. Setelah selesai, tampilkan blok penutup (tahap selesai + tahap tersisa) dan tanya apakah saya mau lanjut ke tahap berikutnya. Jangan kerjakan tahap lain.`;
 }
 
 // ============================================================
@@ -765,7 +783,7 @@ function renderWork(){
     <div class="step-card green">
       <span class="step-tag">Langkah 2</span>
       <h3>📋 Copy Prompt ke AI</h3>
-      <div class="sub">Copy prompt di bawah, paste ke ChatGPT / Claude / Gemini / DeepSeek. AI akan mulai dari <strong>Tahap 1 — Analisa</strong>, lalu berhenti dan menanyakan apakah lanjut. Cukup jawab <strong>"ya"</strong> untuk tahap berikutnya sampai Tahap 9 — Deskripsi Gambar Flyer & Brosur.</div>
+      <div class="sub">Copy prompt di bawah, paste ke ChatGPT / Claude / Gemini / DeepSeek. AI akan mulai dari <strong>Tahap 1 — Analisa</strong>, lalu berhenti dan menanyakan apakah lanjut. Cukup jawab <strong>"ya"</strong> untuk tahap berikutnya sampai Tahap 9 — Deskripsi Gambar Flyer &amp; Brosur. Prompt ini memaksa AI <strong>hanya menghasilkan teks — tanpa tabel, tanpa gambar</strong>.</div>
       <div style="position:relative">
         <button class="copy-btn" onclick="copyMasterPrompt()">📋 Copy Prompt</button>
         <div class="prompt-box" id="promptBox"></div>
@@ -991,7 +1009,6 @@ function downloadBlueprint(){
       p{margin:8px 0}
       ul,ol{padding-left:24px}
       blockquote{border-left:4px solid #805ad5;padding-left:16px;color:#4a5568;margin:12px 0}
-      table{border-collapse:collapse;width:100%;margin:12px 0}
       th,td{border:1px solid #cbd5e0;padding:6px 10px;text-align:left;font-size:13px}
       th{background:#f7fafc}
       code{background:#f7fafc;padding:2px 6px;border-radius:4px;font-family:monospace;font-size:12px}
