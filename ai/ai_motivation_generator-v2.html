@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Motivation Generator - v2.0</title>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;min-height:100vh;color:#2d3748}
+
+/* LOGIN */
+.login-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:9999;justify-content:center;align-items:center;padding:20px}
+.login-overlay.active{display:flex}
+.login-box{background:#fff;border-radius:20px;padding:40px;max-width:420px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.4)}
+.login-box h2{text-align:center;font-size:22px;margin-bottom:4px}
+.login-box p{text-align:center;color:#718096;font-size:14px;margin-bottom:20px}
+.login-box .form-group{margin-bottom:14px}
+.login-box label{font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px}
+.login-box input{width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px}
+.login-box input:focus{outline:none;border-color:#e53e3e}
+.login-box .btn-login{width:100%;padding:12px;background:#e53e3e;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px}
+.login-box .btn-login:hover{background:#c53030}
+.login-error{color:#fc8181;font-size:13px;text-align:center;margin-top:10px;display:none}
+.login-error.show{display:block}
+
+/* APP */
+.main-content{display:none}
+.main-content.visible{display:block}
+
+.app-header{background:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);flex-wrap:wrap;border-bottom:1px solid #edf2f7;position:sticky;top:0;z-index:100}
+.header-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.header-left h1{font-size:18px;color:#1a2332;display:flex;align-items:center;gap:8px}
+.header-left h1 span{background:#e53e3e;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px}
+.back-btn{background:#f7fafc;border:2px solid #e2e8f0;padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;color:#4a5568;display:none;align-items:center;gap:6px}
+.back-btn:hover{background:#edf2f7}
+.back-btn.show{display:inline-flex}
+.header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn-new{background:#e53e3e;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px}
+.btn-new:hover{background:#c53030}
+.user-chip{display:flex;align-items:center;gap:8px;font-size:13px;background:#f7fafc;padding:4px 14px;border-radius:20px}
+.user-chip .role{font-size:10px;padding:1px 8px;border-radius:8px;font-weight:600;background:#c6f6d5;color:#276749}
+.user-chip .role.user{background:#bee3f8;color:#2a69ac}
+.btn-logout{background:#fc8181;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer}
+.btn-logout:hover{background:#f56565}
+
+.view-container{display:none}
+.view-container.active{display:block}
+
+/* LIST */
+.wrap{max-width:1100px;margin:0 auto;padding:24px}
+.list-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+.list-head h2{font-size:22px;color:#1a2332}
+.list-head .sub{font-size:13px;color:#718096;margin-top:2px}
+
+.blueprint-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.bp-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:2px solid transparent;transition:all .2s;cursor:pointer;position:relative}
+.bp-card:hover{border-color:#e53e3e;transform:translateY(-2px);box-shadow:0 8px 20px rgba(229,62,62,.12)}
+.bp-card .id{font-size:11px;color:#a0aec0;font-weight:600;margin-bottom:4px}
+.bp-card .name{font-size:16px;font-weight:700;color:#1a2332;margin-bottom:6px;line-height:1.3}
+.bp-card .desc{font-size:12px;color:#718096;line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bp-card .badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.bp-card .badge{font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px;text-transform:uppercase}
+.bp-card .badge.done{background:#c6f6d5;color:#276749}
+.bp-card .badge.pending{background:#feebc8;color:#9c4221}
+.bp-card .badge.progress{background:#fed7d7;color:#9b2c2c}
+.bp-card .meta{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#a0aec0;border-top:1px solid #edf2f7;padding-top:10px;margin-top:10px}
+.bp-card .actions{position:absolute;top:14px;right:14px;display:none;gap:4px}
+.bp-card:hover .actions{display:flex}
+.bp-card .actions button{background:#fff;border:1px solid #e2e8f0;border-radius:6px;width:26px;height:26px;font-size:12px;cursor:pointer;padding:0}
+.bp-card .actions button:hover{background:#f7fafc}
+
+.empty-state{text-align:center;padding:60px 20px;color:#a0aec0}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.empty-state h3{color:#4a5568;margin-bottom:6px;font-size:16px}
+.empty-state p{font-size:13px;margin-bottom:16px}
+
+/* WORK */
+.work-wrap{max-width:1100px;margin:0 auto;padding:20px}
+.work-header{background:linear-gradient(135deg,#e53e3e,#c53030);border-radius:14px;padding:22px 26px;margin-bottom:18px;color:#fff}
+.work-header h2{font-size:20px;margin-bottom:4px}
+.work-header .id{font-size:12px;opacity:.85;font-weight:600}
+.work-header .status-line{font-size:12px;margin-top:8px;opacity:.95;display:flex;gap:12px;flex-wrap:wrap}
+.work-header .status-line span{display:inline-flex;align-items:center;gap:4px}
+
+.step-card{background:#fff;border-radius:14px;padding:22px 26px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.05);border-left:5px solid #e53e3e}
+.step-card.green{border-left-color:#48bb78}
+.step-card.orange{border-left-color:#ed8936}
+.step-card .step-tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 12px;border-radius:12px;background:#fff5f5;color:#9b2c2c;margin-bottom:8px;letter-spacing:.4px;text-transform:uppercase}
+.step-card.green .step-tag{background:#f0fff4;color:#276749}
+.step-card.orange .step-tag{background:#fffaf0;color:#9c4221}
+.step-card h3{font-size:17px;color:#1a2332;margin-bottom:4px}
+.step-card .sub{font-size:13px;color:#718096;margin-bottom:16px;line-height:1.5}
+.step-card .form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.step-card label{font-weight:600;font-size:12px;color:#4a5568}
+.step-card input,.step-card textarea,.step-card select{padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;width:100%}
+.step-card input:focus,.step-card textarea:focus,.step-card select:focus{outline:none;border-color:#e53e3e}
+.step-card textarea{resize:vertical;min-height:70px}
+
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+.info-tip{background:#fff5f5;border-left:4px solid #e53e3e;padding:10px 14px;border-radius:8px;font-size:12.5px;color:#9b2c2c;line-height:1.6;margin-bottom:12px}
+.dynamic-section{background:#fff5f5;border-radius:12px;padding:14px 18px;border-left:4px solid #e53e3e;margin-bottom:10px}
+.dynamic-section .ds-title{font-weight:700;font-size:13px;color:#9b2c2c;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.feature-checkbox{display:flex;align-items:center;gap:6px;background:#fff;padding:8px 12px;border-radius:8px;border:2px solid #fed7d7;cursor:pointer;transition:all .2s;font-size:12px}
+.feature-checkbox:hover{border-color:#e53e3e}
+.feature-checkbox input[type="checkbox"]{width:15px;height:15px;accent-color:#e53e3e;cursor:pointer;margin:0;flex-shrink:0}
+.feature-checkbox span{font-size:11.5px;color:#2d3748;font-weight:600}
+.feature-checkbox.checked{background:#fed7d7;border-color:#e53e3e}
+
+.prompt-box{background:#f7fafc;border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;font-size:12px;line-height:1.6;color:#2d3748;white-space:pre-wrap;max-height:400px;overflow-y:auto;position:relative;font-family:'Courier New',monospace}
+.copy-btn{position:sticky;top:0;float:right;background:#e53e3e;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:700;margin-bottom:8px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.copy-btn:hover{background:#c53030}
+
+.stage-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.stage-tab{padding:7px 12px;border-radius:9px;border:2px solid #e2e8f0;background:#fff;font-size:12px;font-weight:700;cursor:pointer;color:#718096;display:inline-flex;align-items:center;gap:5px;font-family:inherit;transition:all .15s}
+.stage-tab:hover{border-color:#feb2b2;color:#c53030}
+.stage-tab.filled{border-color:#c6f6d5;background:#f0fff4;color:#276749}
+.stage-tab.active{border-color:#e53e3e;background:#fff5f5;color:#c53030;box-shadow:0 2px 8px rgba(229,62,62,.18)}
+.stage-tab.disabled{opacity:.5;pointer-events:none}
+
+.quill-wrapper{background:#fff;border-radius:10px;border:2px solid #e2e8f0;overflow:hidden;position:relative}
+.quill-wrapper .ql-toolbar{border:none;border-bottom:2px solid #e2e8f0;background:#f7fafc;padding:6px}
+.quill-wrapper .ql-container{border:none;min-height:320px;font-size:13px}
+.quill-wrapper .ql-editor{min-height:320px}
+.quill-wrapper .ql-editor h1,.quill-wrapper .ql-editor h2,.quill-wrapper .ql-editor h3{margin-top:1em;margin-bottom:.5em;font-weight:700}
+.quill-wrapper .ql-editor ul,.quill-wrapper .ql-editor ol{padding-left:20px;margin-bottom:10px}
+
+.editor-loading-overlay{position:absolute;inset:0;background:rgba(255,255,255,.85);backdrop-filter:blur(2px);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:50}
+.editor-loading-overlay.active{display:flex}
+.spinner{width:40px;height:40px;border:4px solid #e2e8f0;border-top:4px solid #e53e3e;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:#4a5568;font-weight:600}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border:none;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;font-family:inherit}
+.btn-primary{background:#e53e3e;color:#fff}
+.btn-primary:hover{background:#c53030}
+.btn-success{background:#48bb78;color:#fff}
+.btn-success:hover{background:#38a169}
+.btn-warning{background:#ed8936;color:#fff}
+.btn-warning:hover{background:#dd6b20}
+.btn-outline{background:transparent;color:#4a5568;border:2px solid #e2e8f0}
+.btn-outline:hover{background:#f7fafc}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.mini-copy{background:#ebf8ff;border:1px solid #bee3f8;color:#2b6cb0;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
+.mini-copy:hover{background:#bee3f8}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center;padding:20px;overflow-y:auto}
+.modal-overlay.active{display:flex}
+.modal{background:#fff;border-radius:18px;max-width:720px;width:100%;max-height:95vh;overflow-y:auto;padding:26px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-close{position:sticky;top:0;float:right;background:#fc8181;color:#fff;border:none;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center}
+.modal-title{font-size:19px;font-weight:700;color:#1a2332;margin-bottom:6px;padding-right:40px}
+.modal-sub{font-size:13px;color:#718096;margin-bottom:18px;padding-right:40px;line-height:1.5}
+
+.toast{position:fixed;bottom:24px;right:24px;padding:14px 22px;border-radius:10px;color:#fff;font-weight:600;font-size:13px;z-index:2000;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:400px;animation:slideUp .3s}
+.toast.success{background:#48bb78}.toast.error{background:#fc8181}.toast.info{background:#4299e1}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:700px){
+  .wrap,.work-wrap{padding:14px}
+  .step-card{padding:18px}
+  .app-header{padding:10px 14px}
+  .header-left h1{font-size:15px}
+  .blueprint-grid{grid-template-columns:1fr}
+  .form-row-2,.form-row-3{grid-template-columns:1fr}
+  .features-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-overlay active" id="loginOverlay">
+  <div class="login-box">
+    <span style="font-size:44px;display:block;text-align:center;margin-bottom:4px">🔥</span>
+    <h2>AI Motivation Generator</h2>
+    <p>Masukkan topik → dapatkan 14 konten motivasi</p>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="loginUsername" placeholder="Username">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="Password">
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">Login</button>
+    <div class="login-error" id="loginError">❌ Username atau password salah!</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-content" id="mainContent">
+  <header class="app-header">
+    <div class="header-left">
+      <button class="back-btn" id="backBtn" onclick="backToList()">← Kembali</button>
+      <h1>🔥 Motivation Generator <span>v2.0</span></h1>
+    </div>
+    <div class="header-actions">
+      <button class="btn-new" onclick="openNewProject()">＋ Project Baru</button>
+      <span class="user-chip">
+        👤 <span id="headerUser">-</span>
+        <span class="role" id="headerRole">user</span>
+      </span>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="view-container active" id="listView">
+    <div class="wrap">
+      <div class="list-head">
+        <div>
+          <h2>📁 Motivasi Saya</h2>
+          <div class="sub">Satu project = satu topik, berisi 14 model motivasi</div>
+        </div>
+      </div>
+      <div class="blueprint-grid" id="blueprintGrid"></div>
+    </div>
+  </div>
+
+  <div class="view-container" id="workView">
+    <div class="work-wrap" id="workWrap"></div>
+  </div>
+</div>
+
+<!-- NEW PROJECT MODAL -->
+<div class="modal-overlay" id="newProjectModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('newProjectModal')">✕</button>
+    <div class="modal-title">🔥 Project Motivasi Baru</div>
+    <div class="modal-sub">Cukup masukkan <strong>Judul Project</strong>. Setelah dibuat, Anda akan melengkapi topik + preferensi dinamis sekali saja, lalu bisa membuat 14 model motivasi secara bertahap.</div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label style="font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px">📝 Judul Project <span style="color:#fc8181">*</span></label>
+      <input type="text" id="newProjectName" placeholder="Contoh: Bangkit Setelah Kehilangan Pekerjaan" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #edf2f7">
+      <button class="btn btn-outline" onclick="closeModal('newProjectModal')">Batal</button>
+      <button class="btn btn-primary" id="saveNewBtn" onclick="saveNewProject()">💾 Buat Project</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// KONFIGURASI
+// ============================================================
+const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+const TABLE = 'ai_motivation_generator';
+const USERS_TABLE = 'users';
+const SECRET = 'admin';
+const STORAGE_KEY = 'ai_motivation_generator_v2';
+
+const COLUMNS = {
+  id: 'x_01',
+  title: 'x_02',
+  prompt: 'x_03',
+  metadata: 'x_04',
+  status: 'x_05',
+  unused: 'x_06',
+  created_by: 'x_07',
+  unused2: 'x_08',
+  results: 'x_09',
+  created_date: 'x_10'
+};
+
+// 14 Model Motivasi
+const MODELS = [
+  { key:'logotherapy', label:'1. Logoterapi', title:'Logoterapi', cat:'classic' },
+  { key:'stoicism', label:'2. Stoikisme', title:'Stoikisme', cat:'classic' },
+  { key:'ikigai', label:'3. Ikigai', title:'Ikigai', cat:'classic' },
+  { key:'hero_journey', label:"4. Hero's Journey", title:"Hero's Journey", cat:'classic' },
+  { key:'pep_talk', label:'5. Pep Talk', title:'Pep Talk', cat:'classic' },
+  { key:'growth_mindset', label:'6. Growth Mindset', title:'Growth Mindset', cat:'psychology' },
+  { key:'self_determination', label:'7. Self-Determination', title:'Self-Determination', cat:'psychology' },
+  { key:'grit', label:'8. Grit & Resilience', title:'Grit & Resilience', cat:'psychology' },
+  { key:'manifestation', label:'9. Manifestasi', title:'Manifestasi & Visualisasi', cat:'psychology' },
+  { key:'letter_to_self', label:'10. Surat Diri', title:'Surat untuk Diri Sendiri', cat:'narrative' },
+  { key:'inspiring_story', label:'11. Kisah Inspiratif', title:'Kisah Inspiratif', cat:'narrative' },
+  { key:'mentor_talk', label:'12. Mentor Talk', title:'Mentor Talk', cat:'narrative' },
+  { key:'spiritual', label:'13. Spiritual', title:'Motivasi Spiritual', cat:'special' },
+  { key:'wake_up_call', label:'14. Wake-Up Call', title:'Wake-Up Call', cat:'special' }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let allProjects = [];
+let currentProject = null;
+let currentUser = null;
+let isAdmin = false;
+let quillEditor = null;
+let modelBuffer = {};
+let currentModel = 'logotherapy';
+let preferredModel = null;
+
+// ============================================================
+// SESSION & LOGIN
+// ============================================================
+function getStoredUser(){try{const d=localStorage.getItem(STORAGE_KEY)||sessionStorage.getItem(STORAGE_KEY);if(d){const p=JSON.parse(d);if(p.username&&p.timestamp){const days=(Date.now()-p.timestamp)/(1000*60*60*24);if(days<7)return p.username;}}}catch(e){}return null;}
+function saveUserToStorage(u){const d=JSON.stringify({username:u,timestamp:Date.now()});localStorage.setItem(STORAGE_KEY,d);}
+function clearUserStorage(){localStorage.removeItem(STORAGE_KEY);sessionStorage.removeItem(STORAGE_KEY);}
+function checkAutoLogin(){const u=getStoredUser();if(u){currentUser=u;isAdmin=(u==='admin');showApp();return true;}return false;}
+function showApp(){document.getElementById('loginOverlay').classList.remove('active');document.getElementById('mainContent').classList.add('visible');document.getElementById('headerUser').textContent=currentUser;const r=document.getElementById('headerRole');if(isAdmin){r.textContent='👑 Admin';r.className='role';}else{r.textContent='👤 User';r.className='role user';}fetchData().then(renderList);}
+
+async function doLogin(){
+  const u = document.getElementById('loginUsername').value.trim();
+  const p = document.getElementById('loginPassword').value.trim();
+  const err = document.getElementById('loginError');
+  err.classList.remove('show');
+  if(!u||!p){err.textContent='❌ Username dan password wajib diisi!';err.classList.add('show');return;}
+  const btn = document.getElementById('loginBtn');
+  btn.disabled=true; btn.textContent='Memeriksa...';
+  try{
+    const r = await fetch(API_URL+'?table='+USERS_TABLE,{headers:{'Content-Type':'application/json','X-Custom-Auth':SECRET,'X-Table-Name':USERS_TABLE,'X-Role':'admin'}});
+    const res = await r.json();
+    if(res.success && res.data){
+      const user = res.data.find(x=>x.x_01===u && x.x_02===p);
+      if(user){currentUser = u; isAdmin = (u==='admin');saveUserToStorage(u); showApp(); showToast('✅ Login berhasil','success');}
+      else { err.textContent='❌ Username atau password salah!';err.classList.add('show'); }
+    } else { err.textContent='❌ Gagal ambil data user';err.classList.add('show'); }
+  }catch(e){err.textContent='❌ Gagal login: '+e.message;err.classList.add('show');}
+  finally{btn.disabled=false;btn.textContent='Login';}
+}
+
+function doLogout(){
+  if(!confirm('Yakin ingin logout?'))return;
+  clearUserStorage();
+  currentUser=null; isAdmin=false; currentProject=null;
+  document.getElementById('loginOverlay').classList.add('active');
+  document.getElementById('mainContent').classList.remove('visible');
+  showToast('👋 Logout berhasil','info');
+}
+
+// ============================================================
+// API & DATA
+// ============================================================
+function getHeaders(){return{'Content-Type':'application/json','X-Custom-Auth':SECRET,'X-Table-Name':TABLE,'X-Role':'admin'};}
+async function apiFetch(ep,opt={}){const r=await fetch(API_URL+'?table='+TABLE+ep,{...opt,headers:{...getHeaders(),...(opt.headers||{})}});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||e.message||'HTTP '+r.status);}return r.json();}
+
+async function fetchData(){
+  try{
+    const res = await apiFetch('');
+    if(res.success && res.data){
+      let data = res.data.map(parseRow);
+      if(!isAdmin && currentUser) data = data.filter(d=>d.created_by===currentUser);
+      allProjects = data;
+    } else { allProjects = []; }
+  }catch(e){ allProjects = []; }
+  return allProjects;
+}
+
+function parseRow(r){
+  let results = {};
+  try { results = r.x_09 ? JSON.parse(r.x_09) : {}; } catch(e){}
+  let metadata = {};
+  try { metadata = r.x_04 ? JSON.parse(r.x_04) : {}; } catch(e){}
+  return {
+    id_x: r.id_x,
+    project_id: r.x_01 || '',
+    title: r.x_02 || '',
+    prompt: r.x_03 || '',
+    metadata: metadata,
+    created_by: r.x_07 || '',
+    results: results,
+    created_date: r.x_10 || ''
+  };
+}
+
+function buildRow(d){
+  return {
+    x_01: d.project_id, x_02: d.title, x_03: d.prompt,
+    x_04: JSON.stringify(d.metadata || {}),
+    x_05: 'multi', x_07: d.created_by,
+    x_09: JSON.stringify(d.results || {}),
+    x_10: d.created_date
+  };
+}
+
+async function createProject(d){ return apiFetch('',{method:'POST',body:JSON.stringify(buildRow(d))}); }
+async function updateProject(id,d){ return apiFetch('&id_x='+id,{method:'PUT',body:JSON.stringify(buildRow(d))}); }
+async function deleteProjectApi(id){ return apiFetch('&id_x='+id,{method:'DELETE'}); }
+
+function generateProjectId(){
+  const today = new Date();
+  const datePart = today.getFullYear().toString() + String(today.getMonth()+1).padStart(2,'0') + String(today.getDate()).padStart(2,'0');
+  const prefix = 'MT-' + datePart + '-';
+  let maxNum = 0;
+  allProjects.forEach(p=>{
+    if(p.project_id.startsWith(prefix)){
+      const n = parseInt(p.project_id.split('-').pop());
+      if(n > maxNum) maxNum = n;
+    }
+  });
+  return prefix + String(maxNum+1).padStart(3,'0');
+}
+
+// ============================================================
+// LIST RENDER
+// ============================================================
+function isFilled(html){
+  if(!html) return false;
+  return html.replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').trim().length > 50;
+}
+function countFilled(project){
+  const res = project.results || {};
+  return MODELS.filter(m => isFilled(res[m.key])).length;
+}
+
+function renderList(){
+  const grid = document.getElementById('blueprintGrid');
+  if(!allProjects.length){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="icon">🔥</div>
+      <h3>Belum ada project motivasi</h3>
+      <p>Klik "＋ Project Baru" untuk mulai dari satu topik</p>
+    </div>`;
+    return;
+  }
+  const sorted = [...allProjects].sort((a,b)=>(b.created_date||'').localeCompare(a.created_date||''));
+  grid.innerHTML = sorted.map(p=>{
+    const filled = countFilled(p);
+    let badge;
+    if(filled === 0) badge = '<span class="badge pending">⏳ Belum dimulai</span>';
+    else if(filled >= 14) badge = `<span class="badge done">✅ Lengkap 14/14</span>`;
+    else badge = `<span class="badge progress">🔄 ${filled}/14 Model</span>`;
+    const meta = p.metadata || {};
+    const tone = meta.opt_tone || '';
+    return `<div class="bp-card" onclick="openProject(${p.id_x})">
+      <div class="actions" onclick="event.stopPropagation()">
+        <button onclick="deleteProject(${p.id_x})" title="Hapus">🗑️</button>
+      </div>
+      <div class="id">${escapeHtml(p.project_id)}</div>
+      <div class="name">${escapeHtml(p.title)}</div>
+      <div class="desc">${escapeHtml(meta.topic || 'Belum ada topik')}</div>
+      <div class="badges">${badge}${tone?`<span class="badge progress" style="background:#feebc8;color:#9c4221">🎨 ${escapeHtml(tone.split(' ')[0])}</span>`:''}</div>
+      <div class="meta">
+        <span>👤 ${escapeHtml(p.created_by||'-')}</span>
+        <span>${p.created_date || '-'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// NEW PROJECT
+// ============================================================
+function openNewProject(){
+  document.getElementById('newProjectName').value = '';
+  document.getElementById('newProjectModal').classList.add('active');
+  setTimeout(()=>document.getElementById('newProjectName').focus(),100);
+}
+
+async function saveNewProject(){
+  const name = document.getElementById('newProjectName').value.trim();
+  if(!name){ showToast('❌ Judul wajib diisi','error'); return; }
+  const btn = document.getElementById('saveNewBtn');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  const today = new Date();
+  const todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  try{
+    const data = {
+      project_id: generateProjectId(),
+      title: name,
+      prompt: '',
+      metadata: {
+        topic: name,
+        core_message: '',
+        personal_context: '',
+        opt_tone: 'Hangat & Personal',
+        opt_length: 'Menengah (4-6 paragraf)',
+        opt_audience: 'Umum (siapapun)',
+        opt_closing: 'Langkah Nyata',
+        feat_quote: false,
+        feat_affirmation: false,
+        feat_action: false,
+        feat_reflection: false,
+        feat_metaphor: false,
+        feat_story: false
+      },
+      results: {},
+      created_by: currentUser,
+      created_date: todayStr
+    };
+    await createProject(data);
+    showToast('✅ Project dibuat. Lengkapi topik & preferensi di bawah.','success');
+    closeModal('newProjectModal');
+    await fetchData();
+    const created = allProjects.find(x=>x.project_id===data.project_id);
+    if(created) openProject(created.id_x);
+    else renderList();
+  }catch(e){
+    showToast('❌ Gagal menyimpan: '+e.message,'error');
+  }finally{
+    btn.disabled = false; btn.textContent = '💾 Buat Project';
+  }
+}
+
+// ============================================================
+// WORK VIEW
+// ============================================================
+function openProject(id){
+  const p = allProjects.find(x=>x.id_x===id);
+  if(!p){ showToast('Tidak ditemukan','error'); return; }
+  currentProject = p;
+  preferredModel = null;
+  document.getElementById('backBtn').classList.add('show');
+  document.getElementById('listView').classList.remove('active');
+  document.getElementById('workView').classList.add('active');
+  renderWork();
+}
+
+function backToList(){
+  currentProject = null;
+  document.getElementById('backBtn').classList.remove('show');
+  document.getElementById('workView').classList.remove('active');
+  document.getElementById('listView').classList.add('active');
+  renderList();
+}
+
+// ============================================================
+// PROMPT BUILDER
+// ============================================================
+function buildDynamicOutput(meta){
+  const tone = meta.opt_tone || 'Hangat & Personal';
+  const length = meta.opt_length || 'Menengah (4-6 paragraf)';
+  const audience = meta.opt_audience || 'Umum (siapapun)';
+  const closing = meta.opt_closing || 'Langkah Nyata';
+
+  const features = [];
+  if(meta.feat_quote) features.push('💬 Quote Tokoh: sisipkan 1-2 kutipan dari tokoh terkenal yang relevan');
+  if(meta.feat_affirmation) features.push('✨ Afirmasi: tambahkan 3-5 afirmasi positif yang bisa diulang');
+  if(meta.feat_action) features.push('🎯 Action Steps: sertakan 3-5 langkah konkret yang bisa langsung dilakukan');
+  if(meta.feat_reflection) features.push('🤔 Refleksi: tambahkan 3-5 pertanyaan reflektif untuk merenung');
+  if(meta.feat_metaphor) features.push('🌈 Metafora: gunakan minimal 1 metafora visual yang kuat');
+  if(meta.feat_story) features.push('📖 Kisah Pendek: selipkan kisah pendek (2-3 paragraf) yang inspiratif');
+
+  let out = `INSTRUKSI DINAMIS:\n- 🎯 NADA/STYLE: ${tone}\n- 📏 PANJANG: ${length}\n- 👥 TARGET AUDIENS: ${audience}\n`;
+  if(features.length > 0){
+    out += `- ✨ FITUR TAMBAHAN:\n${features.map(f => `  • ${f}`).join('\n')}\n`;
+  } else {
+    out += `- ✨ FITUR TAMBAHAN: Tidak ada (fokus pada konten utama)\n`;
+  }
+
+  const closingInstructions = {
+    'Langkah Nyata': 'Sertakan bagian **🎯 Langkah Nyata** berisi 3-5 aksi konkret yang bisa langsung dilakukan pembaca hari ini.',
+    'Afirmasi Hari Ini': 'Sertakan bagian **✨ Afirmasi Hari Ini** berisi 3-5 afirmasi positif yang bisa diucapkan pembaca untuk menguatkan diri.',
+    'Refleksi': 'Sertakan bagian **🤔 Refleksi** berisi 3-5 pertanyaan reflektif untuk membantu pembaca merenungkan hidupnya.',
+    'Quote Penutup': 'Sertakan bagian **💬 Quote Penutup** berisi 1-2 kutipan inspiratif dari tokoh terkenal sebagai penutup yang menguatkan.',
+    'Pesan Terakhir': 'Sertakan bagian **💌 Pesan Terakhir** berisi 2-3 kalimat pesan personal yang menyentuh hati, seolah berbicara langsung ke pembaca.'
+  };
+
+  if(closing !== 'Tanpa Penutup'){
+    out += `- 💭 PENUTUP: ${closingInstructions[closing] || closingInstructions['Langkah Nyata']}\n`;
+  } else {
+    out += `- 💭 PENUTUP: Tidak perlu bagian penutup khusus. Langsung selesai di inti konten.\n`;
+  }
+
+  return out;
+}
+
+function buildMasterPrompt(meta){
+  const modelsList = MODELS.map(m => `${m.label}. ${m.title}`).join('\n');
+  const dynamicOutput = buildDynamicOutput(meta);
+
+  return `Anda adalah Penulis Motivasi Profesional & Coach Kehidupan yang menguasai 14 pendekatan motivasi. Saya ingin Anda membuat 14 KONTEN MOTIVASI SECARA BERTAHAP untuk topik berikut:
+
+═══════════════════════════════════
+INFORMASI TOPIK
+═══════════════════════════════════
+- Topik/Situasi: ${meta.topic || '-'}
+- Pesan Inti: ${meta.core_message || '-'}
+- Konteks Personal: ${meta.personal_context || '-'}
+
+═══════════════════════════════════
+INSTRUKSI DINAMIS (berlaku ke semua 14 model)
+═══════════════════════════════════
+${dynamicOutput}
+
+═══════════════════════════════════
+DAFTAR MODEL MOTIVASI (pilih nomor)
+═══════════════════════════════════
+${modelsList}
+
+═══════════════════════════════════
+ATURAN KERJA (WAJIB DIPATUHI)
+═══════════════════════════════════
+1. Di balasan PERTAMA, Anda HANYA BOLEH bertanya dan menampilkan daftar model di atas. JANGAN membuat konten motivasi apapun di balasan pertama.
+2. Tunggu saya membalas dengan angka (1-14).
+3. Setelah saya membalas angka, buatkan SATU konten motivasi dengan pendekatan model tersebut. Ikuti SEMUA instruksi dinamis di atas (tone, panjang, audiens, fitur tambahan, label penutup).
+4. Setelah selesai membuat SATU konten, WAJIB tulis status:
+---
+✅ SELESAI — [Nama Model]
+
+Model yang sudah dibuat: [sebutkan nomor & nama]
+Model yang tersisa: [sebutkan nomor & nama]
+
+Pilih nomor selanjutnya, atau ketik "STOP" jika sudah selesai.
+---
+5. BERHENTI setelah status itu. JANGAN membuat model berikutnya sampai saya membalas lagi.
+6. Jika saya balas "STOP", ucapkan terima kasih dan akhiri sesi.
+7. FORMAT OUTPUT:
+   - Gunakan format Markdown yang rapi (heading, bold, list, blockquote).
+   - DILARANG membuat gambar. Cukup teks saja.
+   - Gunakan Bahasa Indonesia yang indah, mengalir, dan menyentuh hati.
+   - Hindari bahasa kaku/terlalu formal.
+   - Tulisan harus membuat pembaca MERENUNG dan TERGERAK.
+
+═══════════════════════════════════
+MULAI
+═══════════════════════════════════
+Balas dengan: "Baik, saya siap. Silakan pilih nomor model motivasi yang ingin dibuat (1-14)."`;
+}
+
+function buildContinuePrompt(modKey){
+  const idx = MODELS.findIndex(m=>m.key===modKey);
+  const next = MODELS[idx+1];
+  if(!next) return '';
+  return `Ya, buatkan model motivasi nomor ${idx+2} (${next.title}). Setelah selesai, tampilkan status sisa model dan tanya lagi.`;
+}
+
+// ============================================================
+// RENDER WORK
+// ============================================================
+function renderWork(){
+  if(!currentProject) return;
+  const p = currentProject;
+  const filledCount = countFilled(p);
+  const meta = p.metadata || {};
+
+  modelBuffer = {};
+  MODELS.forEach(m=>{ modelBuffer[m.key] = p.results[m.key] || ''; });
+
+  currentModel = preferredModel || (MODELS.find(m=>isFilled(modelBuffer[m.key])) || MODELS[0]).key;
+  preferredModel = null;
+
+  const toneOpts = [
+    {v:'Hangat & Personal', l:'💗 Hangat & Personal'},
+    {v:'Tegas & Membakar', l:'🔥 Tegas & Membakar'},
+    {v:'Lembut & Menyentuh', l:'🕊️ Lembut & Menyentuh'},
+    {v:'Formal & Profesional', l:'💼 Formal & Profesional'},
+    {v:'Puitis & Reflektif', l:'🌸 Puitis & Reflektif'},
+    {v:'Santai & Relatable', l:'😊 Santai & Relatable'}
+  ];
+  const lengthOpts = [
+    {v:'Pendek (1-3 paragraf)', l:'Pendek (1-3 paragraf)'},
+    {v:'Menengah (4-6 paragraf)', l:'Menengah (4-6 paragraf)'},
+    {v:'Panjang (1 halaman penuh)', l:'Panjang (1 halaman penuh)'},
+    {v:'Quote Singkat (1-2 kalimat)', l:'Quote Singkat (1-2 kalimat)'}
+  ];
+  const audienceOpts = [
+    {v:'Umum (siapapun)', l:'🌍 Umum'},
+    {v:'Karyawan / Profesional', l:'💼 Karyawan'},
+    {v:'Pelajar / Mahasiswa', l:'🎓 Pelajar'},
+    {v:'Pemuda / Remaja', l:'🔥 Pemuda'},
+    {v:'Wirausaha / Pebisnis', l:'🚀 Wirausaha'},
+    {v:'Ibu Rumah Tangga', l:'🏠 Ibu Rumah Tangga'},
+    {v:'Jemaat / Rohani', l:'🙏 Jemaat'},
+    {v:'Sedang dalam Kesulitan', l:'💔 Sedang Kesulitan'}
+  ];
+  const closingOpts = [
+    {v:'Langkah Nyata', l:'🎯 Langkah Nyata'},
+    {v:'Afirmasi Hari Ini', l:'✨ Afirmasi Hari Ini'},
+    {v:'Refleksi', l:'🤔 Refleksi'},
+    {v:'Quote Penutup', l:'💬 Quote Penutup'},
+    {v:'Pesan Terakhir', l:'💌 Pesan Terakhir'},
+    {v:'Tanpa Penutup', l:'❌ Tanpa Penutup'}
+  ];
+
+  const mkOpts = (arr, cur) => arr.map(o=>`<option value="${o.v}" ${cur===o.v?'selected':''}>${o.l}</option>`).join('');
+
+  document.getElementById('workWrap').innerHTML = `
+    <div class="work-header">
+      <div class="id">${escapeHtml(p.project_id)}</div>
+      <h2>${escapeHtml(p.title)}</h2>
+      <div class="status-line">
+        <span>🔄 ${filledCount}/14 Model</span>
+        <span>📅 ${p.created_date || '-'}</span>
+        <span>👤 ${escapeHtml(p.created_by||'-')}</span>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <span class="step-tag">Langkah 1</span>
+      <h3>📝 Topik & Preferensi</h3>
+      <div class="sub">Isi topik motivasi + preferensi dinamis sekali saja. Berlaku untuk semua 14 model.</div>
+
+      <div class="form-group">
+        <label>Topik / Situasi</label>
+        <input type="text" id="meta_topic" value="${escapeHtml(meta.topic||'')}" placeholder="Bangkit setelah kehilangan pekerjaan">
+      </div>
+      <div class="form-group">
+        <label>Pesan Inti</label>
+        <textarea id="meta_core_message" rows="2" placeholder="Pesan utama yang ingin disampaikan...">${escapeHtml(meta.core_message||'')}</textarea>
+      </div>
+      <div class="form-group">
+        <label>Konteks Personal (opsional)</label>
+        <textarea id="meta_personal_context" rows="2" placeholder="Konteks spesifik penerima motivasi...">${escapeHtml(meta.personal_context||'')}</textarea>
+      </div>
+
+      <div class="dynamic-section">
+        <div class="ds-title">⚙️ Opsi Dinamis (berlaku ke semua 14 model)</div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>🎯 Nada / Style</label>
+            <select id="meta_opt_tone">${mkOpts(toneOpts, meta.opt_tone)}</select>
+          </div>
+          <div class="form-group">
+            <label>📏 Panjang Output</label>
+            <select id="meta_opt_length">${mkOpts(lengthOpts, meta.opt_length)}</select>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>👥 Target Audiens</label>
+            <select id="meta_opt_audience">${mkOpts(audienceOpts, meta.opt_audience)}</select>
+          </div>
+          <div class="form-group">
+            <label>💭 Label Penutup</label>
+            <select id="meta_opt_closing">${mkOpts(closingOpts, meta.opt_closing)}</select>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <label style="font-weight:600;font-size:11px;color:#4a5568;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;">✨ Fitur Tambahan</label>
+          <div class="features-grid">
+            <label class="feature-checkbox ${meta.feat_quote?'checked':''}">
+              <input type="checkbox" id="meta_feat_quote" ${meta.feat_quote?'checked':''} onchange="this.closest('.feature-checkbox').classList.toggle('checked', this.checked)">
+              <span>💬 Quote Tokoh</span>
+            </label>
+            <label class="feature-checkbox ${meta.feat_affirmation?'checked':''}">
+              <input type="checkbox" id="meta_feat_affirmation" ${meta.feat_affirmation?'checked':''} onchange="this.closest('.feature-checkbox').classList.toggle('checked', this.checked)">
+              <span>✨ Afirmasi</span>
+            </label>
+            <label class="feature-checkbox ${meta.feat_action?'checked':''}">
+              <input type="checkbox" id="meta_feat_action" ${meta.feat_action?'checked':''} onchange="this.closest('.feature-checkbox').classList.toggle('checked', this.checked)">
+              <span>🎯 Action Steps</span>
+            </label>
+            <label class="feature-checkbox ${meta.feat_reflection?'checked':''}">
+              <input type="checkbox" id="meta_feat_reflection" ${meta.feat_reflection?'checked':''} onchange="this.closest('.feature-checkbox').classList.toggle('checked', this.checked)">
+              <span>🤔 Refleksi</span>
+            </label>
+            <label class="feature-checkbox ${meta.feat_metaphor?'checked':''}">
+              <input type="checkbox" id="meta_feat_metaphor" ${meta.feat_metaphor?'checked':''} onchange="this.closest('.feature-checkbox').classList.toggle('checked', this.checked)">
+              <span>🌈 Metafora</span>
+            </label>
+            <label class="feature-checkbox ${meta.feat_story?'checked':''}">
+              <input type="checkbox" id="meta_feat_story" ${meta.feat_story?'checked':''} onchange="this.closest('.feature-checkbox').classList.toggle('checked', this.checked)">
+              <span>📖 Kisah Pendek</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-row" style="margin-top:10px">
+        <button class="btn btn-success" onclick="saveMetadata(true)">💾 Simpan & Generate Prompt</button>
+        <button class="btn btn-outline" onclick="saveMetadata(false)">💾 Simpan Saja</button>
+      </div>
+    </div>
+
+    <div class="step-card green">
+      <span class="step-tag">Langkah 2</span>
+      <h3>📋 Copy Prompt ke AI</h3>
+      <div class="sub">Copy prompt di bawah, paste ke ChatGPT/Claude/Gemini. AI akan menampilkan 14 pilihan model. Ketik nomornya, AI akan membuatkannya secara bertahap.</div>
+      <div style="position:relative">
+        <button class="copy-btn" onclick="copyMasterPrompt()">📋 Copy Prompt</button>
+        <div class="prompt-box" id="promptBox">${escapeHtml(p.prompt || 'Klik "Simpan & Generate Prompt" untuk membuat prompt...')}</div>
+      </div>
+    </div>
+
+    <div class="step-card orange">
+      <span class="step-tag">Langkah 3</span>
+      <h3>📝 Paste Hasil AI per Model</h3>
+      <div class="sub">Pilih tab model, paste hasil dari AI, lalu simpan. Sistem otomatis merapikan format Markdown.</div>
+      <div class="stage-tabs" id="stageTabs"></div>
+      <div class="stage-hint" id="stageHint"></div>
+      <div class="quill-wrapper">
+        <div class="editor-loading-overlay" id="editorLoading">
+          <div class="spinner"></div>
+          <div class="loading-text">Memuat konten...</div>
+        </div>
+        <div id="resultEditor"></div>
+      </div>
+      <div class="action-row" style="margin-top:14px">
+        <button class="btn btn-success" onclick="saveResult()">💾 Simpan Project</button>
+        <button class="btn btn-outline" onclick="manualConvertMarkdown()">✨ Rapikan Markdown</button>
+        <button class="btn btn-warning" onclick="clearCurrentModel()">🗑️ Kosongkan Model Ini</button>
+      </div>
+    </div>
+  `;
+
+  quillEditor = new Quill('#resultEditor', {
+    theme: 'snow',
+    placeholder: 'Paste hasil AI model ini di sini...',
+    modules: { toolbar: [[{header:[1,2,3,false]}],['bold','italic','underline'],[{list:'ordered'},{list:'bullet'}],['blockquote'],['clean']] }
+  });
+  quillEditor.root.innerHTML = modelBuffer[currentModel] || '';
+  quillEditor.on('text-change', ()=>{ if(quillEditor) modelBuffer[currentModel] = quillEditor.root.innerHTML; });
+
+  quillEditor.root.addEventListener('paste', function(e) {
+      let text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      if (text && /(?:^|\n)(#{1,6} |\* |- |\d+\. |\*\*|__|>)/.test(text)) {
+          e.preventDefault(); e.stopPropagation();
+          const loader = document.getElementById('editorLoading');
+          loader.classList.add('active');
+          setTimeout(() => {
+              let html = marked.parse(text.replace(/\\(\d+\.)/g, '$1'));
+              let range = quillEditor.getSelection(true);
+              quillEditor.clipboard.dangerouslyPasteHTML(range.index, html, 'user');
+              loader.classList.remove('active');
+              showToast('✨ Format Markdown otomatis dirapikan', 'success');
+          }, 50);
+      }
+  });
+
+  updateModelUI();
+}
+
+function updateModelUI(){
+  const tabs = document.getElementById('stageTabs');
+  if(tabs){
+    tabs.innerHTML = MODELS.map(m=>{
+      const filled = isFilled(modelBuffer[m.key]);
+      const active = m.key===currentModel;
+      return `<button class="stage-tab ${active?'active':''} ${filled?'filled':''}" onclick="switchModel('${m.key}')">${filled?'✅':'○'} ${m.label}</button>`;
+    }).join('');
+  }
+  const hint = document.getElementById('stageHint');
+  if(hint){
+    const m = MODELS.find(x=>x.key===currentModel);
+    const idx = MODELS.findIndex(x=>x.key===currentModel);
+    const cont = buildContinuePrompt(currentModel);
+    const remaining = MODELS.slice(idx+1);
+    hint.style.cssText = 'font-size:12px;color:#718096;margin-bottom:10px;line-height:1.6;padding:8px 12px;background:#f7fafc;border-radius:8px;border-left:3px solid #e53e3e;';
+    hint.innerHTML = `
+      <strong>${escapeHtml(m.title)}</strong>
+      ${remaining.length ? `<br><em>Model tersisa setelah ini:</em> ${remaining.map(r=>escapeHtml(r.label)).join(' → ')}` : `<br><em>Ini model terakhir. 🎉</em>`}
+      ${cont ? `<br><button class="mini-copy" onclick="copyContinue()">📋 Copy prompt "lanjut ke model berikutnya"</button>` : ''}
+    `;
+  }
+}
+
+function switchModel(key){
+  if(currentModel === key) return;
+  if(quillEditor) modelBuffer[currentModel] = quillEditor.root.innerHTML;
+  const loader = document.getElementById('editorLoading');
+  if (loader) loader.classList.add('active');
+  document.querySelectorAll('.stage-tab').forEach(t => t.classList.add('disabled'));
+  currentModel = key;
+  setTimeout(() => {
+    if(quillEditor) quillEditor.root.innerHTML = modelBuffer[key] || '';
+    updateModelUI();
+    if (loader) loader.classList.remove('active');
+    document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('disabled'));
+  }, 50);
+}
+
+function copyMasterPrompt(){ copyText(document.getElementById('promptBox').textContent, '✅ Prompt disalin — paste ke AI'); }
+function copyContinue(){ copyText(buildContinuePrompt(currentModel), '✅ Prompt lanjutan disalin'); }
+
+function copyText(text, okMsg){
+  navigator.clipboard.writeText(text).then(()=>showToast(okMsg,'success')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta); showToast(okMsg,'success');
+  });
+}
+
+function manualConvertMarkdown(){
+  if(!quillEditor) return;
+  let rawText = quillEditor.getText();
+  if(!rawText.trim()) return;
+  const loader = document.getElementById('editorLoading');
+  loader.classList.add('active');
+  setTimeout(() => {
+    quillEditor.root.innerHTML = marked.parse(rawText.replace(/\\(\d+\.)/g, '$1'));
+    loader.classList.remove('active');
+    showToast('✨ Teks berhasil dirapikan!', 'success');
+  }, 50);
+}
+
+// ============================================================
+// SAVE & CLEAR
+// ============================================================
+function collectMetadata(){
+  return {
+    topic: document.getElementById('meta_topic').value.trim(),
+    core_message: document.getElementById('meta_core_message').value.trim(),
+    personal_context: document.getElementById('meta_personal_context').value.trim(),
+    opt_tone: document.getElementById('meta_opt_tone').value,
+    opt_length: document.getElementById('meta_opt_length').value,
+    opt_audience: document.getElementById('meta_opt_audience').value,
+    opt_closing: document.getElementById('meta_opt_closing').value,
+    feat_quote: document.getElementById('meta_feat_quote').checked,
+    feat_affirmation: document.getElementById('meta_feat_affirmation').checked,
+    feat_action: document.getElementById('meta_feat_action').checked,
+    feat_reflection: document.getElementById('meta_feat_reflection').checked,
+    feat_metaphor: document.getElementById('meta_feat_metaphor').checked,
+    feat_story: document.getElementById('meta_feat_story').checked
+  };
+}
+
+async function saveMetadata(alsoGenerate){
+  if(!currentProject) return;
+  const meta = collectMetadata();
+  if(!meta.topic){ showToast('❌ Topik wajib diisi','error'); return; }
+  if(quillEditor) modelBuffer[currentModel] = quillEditor.root.innerHTML;
+
+  const updatedData = {
+    ...currentProject,
+    metadata: meta,
+    prompt: alsoGenerate ? buildMasterPrompt(meta) : currentProject.prompt,
+    results: {...modelBuffer}
+  };
+
+  try{
+    await updateProject(currentProject.id_x, updatedData);
+    showToast(alsoGenerate ? '✅ Disimpan. Prompt siap di-copy!' : '✅ Disimpan','success');
+    await fetchData();
+    currentProject = allProjects.find(x=>x.id_x===currentProject.id_x);
+    preferredModel = currentModel;
+    renderWork();
+    if(alsoGenerate) document.getElementById('promptBox').scrollIntoView({behavior:'smooth', block:'center'});
+  }catch(e){ showToast('❌ Gagal: '+e.message,'error'); }
+}
+
+async function saveResult(){
+  if(!currentProject || !quillEditor) return;
+  modelBuffer[currentModel] = quillEditor.root.innerHTML;
+  const filled = MODELS.filter(m=>isFilled(modelBuffer[m.key])).length;
+  if(filled === 0){ showToast('❌ Paste hasil AI dulu','error'); return; }
+  const updatedData = { ...currentProject, results: {...modelBuffer} };
+  try{
+    await updateProject(currentProject.id_x, updatedData);
+    showToast(`✅ Tersimpan — ${filled}/14 model terisi`,'success');
+    await fetchData();
+    currentProject = allProjects.find(x=>x.id_x===currentProject.id_x);
+    preferredModel = currentModel;
+    renderWork();
+  }catch(e){ showToast('❌ Gagal: '+e.message,'error'); }
+}
+
+function clearCurrentModel(){
+  if(!quillEditor) return;
+  const m = MODELS.find(x=>x.key===currentModel);
+  if(!confirm('Kosongkan isi model "'+m.title+'"? Model lain tetap tersimpan.')) return;
+  quillEditor.root.innerHTML = '';
+  modelBuffer[currentModel] = '';
+  updateModelUI();
+}
+
+async function deleteProject(id){
+  if(!confirm('Hapus project ini?')) return;
+  try{
+    await deleteProjectApi(id);
+    showToast('✅ Dihapus','success');
+    await fetchData();
+    if(currentProject && currentProject.id_x === id){ backToList(); }
+    else { renderList(); }
+  }catch(e){ showToast('❌ Gagal hapus: '+e.message,'error'); }
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function showToast(msg,type='info'){
+  const existing = document.querySelector('.toast'); if(existing) existing.remove();
+  const t = document.createElement('div'); t.className = 'toast '+type; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(20px)';t.style.transition='.3s';setTimeout(()=>t.remove(),300);},3500);
+}
+function escapeHtml(s){ if(s==null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', ()=>{
+  if(!checkAutoLogin()) document.getElementById('loginOverlay').classList.add('active');
+  document.getElementById('loginPassword').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+  document.getElementById('newProjectName').addEventListener('keydown', e=>{ if(e.key==='Enter') saveNewProject(); });
+  document.querySelectorAll('.modal-overlay').forEach(o=>{
+    o.addEventListener('click', e=>{ if(e.target===o) o.classList.remove('active'); });
+  });
+});
+</script>
+</body>
+</html>
