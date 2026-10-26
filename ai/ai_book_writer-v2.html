@@ -3,15 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Book Writer Studio - v2.0 (Bertahap)</title>
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<title>AI Book Generator - v2.0</title>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;min-height:100vh;color:#2d3748}
 
-/* LOGIN */
 .login-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:9999;justify-content:center;align-items:center;padding:20px}
 .login-overlay.active{display:flex}
 .login-box{background:#fff;border-radius:20px;padding:40px;max-width:420px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.4)}
@@ -20,26 +17,25 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
 .login-box .form-group{margin-bottom:14px}
 .login-box label{font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px}
 .login-box input{width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px}
-.login-box input:focus{outline:none;border-color:#0d9488}
-.login-box .btn-login{width:100%;padding:12px;background:#0d9488;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px}
-.login-box .btn-login:hover{background:#0f766e}
+.login-box input:focus{outline:none;border-color:#b7791f}
+.login-box .btn-login{width:100%;padding:12px;background:#b7791f;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px}
+.login-box .btn-login:hover{background:#975a16}
 .login-error{color:#fc8181;font-size:13px;text-align:center;margin-top:10px;display:none}
 .login-error.show{display:block}
 
-/* APP */
 .main-content{display:none}
 .main-content.visible{display:block}
 
 .app-header{background:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);flex-wrap:wrap;border-bottom:1px solid #edf2f7;position:sticky;top:0;z-index:100}
 .header-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .header-left h1{font-size:18px;color:#1a2332;display:flex;align-items:center;gap:8px}
-.header-left h1 span{background:#0d9488;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px}
+.header-left h1 span{background:#b7791f;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px}
 .back-btn{background:#f7fafc;border:2px solid #e2e8f0;padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;color:#4a5568;display:none;align-items:center;gap:6px}
 .back-btn:hover{background:#edf2f7}
 .back-btn.show{display:inline-flex}
 .header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.btn-new{background:#0d9488;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px}
-.btn-new:hover{background:#0f766e}
+.btn-new{background:#b7791f;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px}
+.btn-new:hover{background:#975a16}
 .user-chip{display:flex;align-items:center;gap:8px;font-size:13px;background:#f7fafc;padding:4px 14px;border-radius:20px}
 .user-chip .role{font-size:10px;padding:1px 8px;border-radius:8px;font-weight:600;background:#c6f6d5;color:#276749}
 .user-chip .role.user{background:#bee3f8;color:#2a69ac}
@@ -49,7 +45,6 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
 .view-container{display:none}
 .view-container.active{display:block}
 
-/* LIST */
 .wrap{max-width:1100px;margin:0 auto;padding:24px}
 .list-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:20px}
 .list-head h2{font-size:22px;color:#1a2332}
@@ -57,7 +52,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
 
 .blueprint-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
 .bp-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:2px solid transparent;transition:all .2s;cursor:pointer;position:relative}
-.bp-card:hover{border-color:#0d9488;transform:translateY(-2px);box-shadow:0 8px 20px rgba(13,148,136,.12)}
+.bp-card:hover{border-color:#b7791f;transform:translateY(-2px);box-shadow:0 8px 20px rgba(183,121,31,.12)}
 .bp-card .id{font-size:11px;color:#a0aec0;font-weight:600;margin-bottom:4px}
 .bp-card .name{font-size:16px;font-weight:700;color:#1a2332;margin-bottom:6px;line-height:1.3}
 .bp-card .desc{font-size:12px;color:#718096;line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -65,7 +60,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
 .bp-card .badge{font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px;text-transform:uppercase}
 .bp-card .badge.done{background:#c6f6d5;color:#276749}
 .bp-card .badge.pending{background:#feebc8;color:#9c4221}
-.bp-card .badge.progress{background:#b2f5ea;color:#234e52}
+.bp-card .badge.progress{background:#fefcbf;color:#744210}
 .bp-card .meta{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#a0aec0;border-top:1px solid #edf2f7;padding-top:10px;margin-top:10px}
 .bp-card .actions{position:absolute;top:14px;right:14px;display:none;gap:4px}
 .bp-card:hover .actions{display:flex}
@@ -77,61 +72,86 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
 .empty-state h3{color:#4a5568;margin-bottom:6px;font-size:16px}
 .empty-state p{font-size:13px;margin-bottom:16px}
 
-/* WORK */
 .work-wrap{max-width:1100px;margin:0 auto;padding:20px}
-.work-header{background:linear-gradient(135deg,#0d9488,#0f766e);border-radius:14px;padding:22px 26px;margin-bottom:18px;color:#fff}
+.work-header{background:linear-gradient(135deg,#b7791f,#975a16);border-radius:14px;padding:22px 26px;margin-bottom:18px;color:#fff}
 .work-header h2{font-size:20px;margin-bottom:4px}
 .work-header .id{font-size:12px;opacity:.85;font-weight:600}
 .work-header .status-line{font-size:12px;margin-top:8px;opacity:.95;display:flex;gap:12px;flex-wrap:wrap}
 .work-header .status-line span{display:inline-flex;align-items:center;gap:4px}
 
-.step-card{background:#fff;border-radius:14px;padding:22px 26px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.05);border-left:5px solid #0d9488}
+.step-card{background:#fff;border-radius:14px;padding:22px 26px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.05);border-left:5px solid #b7791f}
 .step-card.green{border-left-color:#48bb78}
 .step-card.orange{border-left-color:#ed8936}
-.step-card .step-tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 12px;border-radius:12px;background:#e6fffa;color:#0d9488;margin-bottom:8px;letter-spacing:.4px;text-transform:uppercase}
+.step-card .step-tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 12px;border-radius:12px;background:#fefcbf;color:#744210;margin-bottom:8px;letter-spacing:.4px;text-transform:uppercase}
 .step-card.green .step-tag{background:#f0fff4;color:#276749}
 .step-card.orange .step-tag{background:#fffaf0;color:#9c4221}
 .step-card h3{font-size:17px;color:#1a2332;margin-bottom:4px}
 .step-card .sub{font-size:13px;color:#718096;margin-bottom:16px;line-height:1.5}
-.step-card .form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.step-card .form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
 .step-card label{font-weight:600;font-size:12px;color:#4a5568}
 .step-card input,.step-card textarea{padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;width:100%}
-.step-card input:focus,.step-card textarea:focus{outline:none;border-color:#0d9488}
-.step-card textarea{resize:vertical;min-height:100px}
+.step-card input:focus,.step-card textarea:focus{outline:none;border-color:#b7791f}
+.step-card textarea{resize:vertical;min-height:100px;line-height:1.5}
 
-.prompt-box{background:#f7fafc;border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;font-size:12px;line-height:1.6;color:#2d3748;white-space:pre-wrap;max-height:340px;overflow-y:auto;position:relative;font-family:'Courier New',monospace}
-.copy-btn{position:sticky;top:0;float:right;background:#0d9488;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:700;margin-bottom:8px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-.copy-btn:hover{background:#0f766e}
+.prompt-box{background:#f7fafc;border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;font-size:12px;line-height:1.6;color:#2d3748;white-space:pre-wrap;max-height:400px;overflow-y:auto;position:relative;font-family:'Courier New',monospace}
+.copy-btn{position:sticky;top:0;float:right;background:#b7791f;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:700;margin-bottom:8px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.copy-btn:hover{background:#975a16}
 
-/* STAGE TABS */
-.stage-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.stage-tab{padding:7px 12px;border-radius:9px;border:2px solid #e2e8f0;background:#fff;font-size:12px;font-weight:700;cursor:pointer;color:#718096;display:inline-flex;align-items:center;gap:5px;font-family:inherit;transition:all .15s}
-.stage-tab:hover{border-color:#81e6d9;color:#0f766e}
-.stage-tab.filled{border-color:#c6f6d5;background:#f0fff4;color:#276749}
-.stage-tab.active{border-color:#0d9488;background:#e6fffa;color:#0f766e;box-shadow:0 2px 8px rgba(13,148,136,.18)}
-.stage-tab.disabled{opacity:.5;pointer-events:none}
+/* MODE TABS */
+.mode-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.mode-tab{padding:8px 13px;border-radius:9px;border:2px solid #e2e8f0;background:#fff;font-size:12px;font-weight:700;cursor:pointer;color:#718096;display:inline-flex;align-items:center;gap:5px;font-family:inherit;transition:all .15s}
+.mode-tab:hover{border-color:#f6e05e;color:#975a16}
+.mode-tab.filled{border-color:#c6f6d5;background:#f0fff4;color:#276749}
+.mode-tab.active{border-color:#b7791f;background:#fefcbf;color:#744210;box-shadow:0 2px 8px rgba(183,121,31,.18)}
+
+.chapter-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chapter-tab{padding:7px 12px;border-radius:9px;border:2px solid #e2e8f0;background:#fff;font-size:12px;font-weight:700;cursor:pointer;color:#718096;display:inline-flex;align-items:center;gap:5px;font-family:inherit;transition:all .15s}
+.chapter-tab:hover{border-color:#f6e05e;color:#975a16}
+.chapter-tab.filled{border-color:#c6f6d5;background:#f0fff4;color:#276749}
+.chapter-tab.active{border-color:#b7791f;background:#fefcbf;color:#744210;box-shadow:0 2px 8px rgba(183,121,31,.18)}
+.chapter-tab.disabled{opacity:.5;pointer-events:none}
 
 .stage-hint{background:#f7fafc;border:2px dashed #e2e8f0;border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.6;color:#4a5568;margin-bottom:12px}
 .stage-hint strong{color:#2d3748}
-.stage-hint .mini-copy{background:#0d9488;color:#fff;border:none;padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;display:inline-flex;align-items:center;gap:5px}
-.stage-hint .mini-copy:hover{background:#0f766e}
+.stage-hint .mini-copy{background:#b7791f;color:#fff;border:none;padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;margin-right:4px;font-family:inherit;display:inline-flex;align-items:center;gap:5px}
+.stage-hint .mini-copy:hover{background:#975a16}
 
-.quill-wrapper{background:#fff;border-radius:10px;border:2px solid #e2e8f0;overflow:hidden;position:relative}
-.quill-wrapper .ql-toolbar{border:none;border-bottom:2px solid #e2e8f0;background:#f7fafc;padding:6px}
-.quill-wrapper .ql-container{border:none;min-height:280px;font-size:13px}
-.quill-wrapper .ql-editor{min-height:280px}
-.quill-wrapper .ql-editor h1, .quill-wrapper .ql-editor h2, .quill-wrapper .ql-editor h3 { margin-top: 1em; margin-bottom: 0.5em; font-weight: 700; }
-.quill-wrapper .ql-editor ul, .quill-wrapper .ql-editor ol { padding-left: 20px; margin-bottom: 10px; }
+.editor-wrap{background:#fff;border-radius:10px;border:2px solid #e2e8f0;overflow:hidden;position:relative}
+.rich-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;border-bottom:2px solid #e2e8f0;background:#f7fafc}
+.rich-toolbar button{background:#fff;border:1px solid #e2e8f0;border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:inherit;color:#2d3748;font-weight:600;min-width:28px;transition:all .15s}
+.rich-toolbar button:hover{background:#fefcbf;border-color:#b7791f;color:#744210}
+.rich-editor{min-height:340px;padding:14px 18px;font-size:13px;line-height:1.7;outline:none;background:#fff;color:#2d3748;overflow-y:auto;max-height:70vh}
+.rich-editor:empty:before{content:attr(data-placeholder);color:#a0aec0;font-style:italic;pointer-events:none}
+.rich-editor h1{font-size:22px;margin:1em 0 .5em;font-weight:700;color:#1a2332}
+.rich-editor h2{font-size:18px;margin:1em 0 .5em;font-weight:700;color:#1a2332}
+.rich-editor h3{font-size:15px;margin:1em 0 .5em;font-weight:700;color:#1a2332}
+.rich-editor p{margin-bottom:10px}
+.rich-editor ul,.rich-editor ol{padding-left:24px;margin-bottom:10px}
+.rich-editor li{margin-bottom:4px}
+.rich-editor blockquote{border-left:4px solid #b7791f;padding:8px 16px;color:#4a5568;margin:12px 0;font-style:italic;background:#fefcbf;border-radius:0 6px 6px 0}
+.rich-editor strong{font-weight:700}
+.rich-editor em{font-style:italic}
+.rich-editor code{background:#edf2f7;padding:1px 6px;border-radius:4px;font-family:'Courier New',monospace;font-size:12px;color:#c53030}
+.rich-editor pre{background:#2d3748;color:#f7fafc;padding:12px;border-radius:8px;overflow-x:auto;margin:10px 0;font-size:12px}
+.rich-editor pre code{background:transparent;color:inherit;padding:0}
+.rich-editor hr{border:none;border-top:1px solid #e2e8f0;margin:16px 0}
+.rich-editor u{text-decoration:underline}
 
-.editor-loading-overlay { position: absolute; inset: 0; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(2px); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 50; }
-.editor-loading-overlay.active { display: flex; }
-.spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid #0d9488; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 12px; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.loading-text { font-size: 13px; color: #4a5568; font-weight: 600; }
+.rich-editor table{border-collapse:collapse;width:100%;margin:12px 0;font-size:12.5px;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.rich-editor table td,.rich-editor table th{border:1px solid #cbd5e0;padding:8px 10px;text-align:left;vertical-align:top;word-break:break-word}
+.rich-editor table th{background:#fefcbf;font-weight:700;color:#744210;border-color:#f6e05e}
+.rich-editor table tr:nth-child(even) td{background:#f7fafc}
+.rich-editor table tr:hover td{background:#fefcbf}
+
+.editor-loading-overlay{position:absolute;inset:0;background:rgba(255,255,255,.85);backdrop-filter:blur(2px);display:none;flex-direction:column;justify-content:center;align-items:center;z-index:50}
+.editor-loading-overlay.active{display:flex}
+.spinner{width:40px;height:40px;border:4px solid #e2e8f0;border-top:4px solid #b7791f;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:#4a5568;font-weight:600}
 
 .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border:none;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;font-family:inherit}
-.btn-primary{background:#0d9488;color:#fff}
-.btn-primary:hover{background:#0f766e}
+.btn-primary{background:#b7791f;color:#fff}
+.btn-primary:hover{background:#975a16}
 .btn-success{background:#48bb78;color:#fff}
 .btn-success:hover{background:#38a169}
 .btn-warning{background:#ed8936;color:#fff}
@@ -142,7 +162,6 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
 
 .action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 
-/* MODAL */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center;padding:20px;overflow-y:auto}
 .modal-overlay.active{display:flex}
 .modal{background:#fff;border-radius:18px;max-width:720px;width:100%;max-height:95vh;overflow-y:auto;padding:26px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.3)}
@@ -150,7 +169,6 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
 .modal-title{font-size:19px;font-weight:700;color:#1a2332;margin-bottom:6px;padding-right:40px}
 .modal-sub{font-size:13px;color:#718096;margin-bottom:18px;padding-right:40px;line-height:1.5}
 
-/* TOAST */
 .toast{position:fixed;bottom:24px;right:24px;padding:14px 22px;border-radius:10px;color:#fff;font-weight:600;font-size:13px;z-index:2000;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:400px;animation:slideUp .3s}
 .toast.success{background:#48bb78}.toast.error{background:#fc8181}.toast.info{background:#4299e1}
 @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
@@ -161,17 +179,19 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
   .app-header{padding:10px 14px}
   .header-left h1{font-size:15px}
   .blueprint-grid{grid-template-columns:1fr}
+  .rich-editor{padding:10px 12px}
+  .rich-editor table{font-size:11.5px}
+  .rich-editor table td,.rich-editor table th{padding:6px 7px}
 }
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div class="login-overlay active" id="loginOverlay">
   <div class="login-box">
     <span style="font-size:44px;display:block;text-align:center;margin-bottom:4px">📚</span>
-    <h2>Book Writer Studio</h2>
-    <p>Masukkan ide buku → dapatkan 11 blueprint penulisan</p>
+    <h2>AI Book Generator</h2>
+    <p>Ide buku → 11 mode penulisan → blueprint & bab</p>
     <div class="form-group">
       <label>Username</label>
       <input type="text" id="loginUsername" placeholder="Username">
@@ -185,12 +205,11 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="main-content" id="mainContent">
   <header class="app-header">
     <div class="header-left">
       <button class="back-btn" id="backBtn" onclick="backToList()">← Kembali</button>
-      <h1>📚 Book Writer <span>v2.0</span></h1>
+      <h1>📚 Book Generator <span>v2.0</span></h1>
     </div>
     <div class="header-actions">
       <button class="btn-new" onclick="openNewProject()">＋ Project Baru</button>
@@ -202,34 +221,31 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
     </div>
   </header>
 
-  <!-- LIST VIEW -->
   <div class="view-container active" id="listView">
     <div class="wrap">
       <div class="list-head">
         <div>
-          <h2>📁 Proyek Buku Saya</h2>
-          <div class="sub">Satu project = satu ide buku, berisi 11 blueprint penulisan</div>
+          <h2>📁 Buku Saya</h2>
+          <div class="sub">Satu project = satu ide buku · 11 mode penulisan tersedia</div>
         </div>
       </div>
       <div class="blueprint-grid" id="blueprintGrid"></div>
     </div>
   </div>
 
-  <!-- WORK VIEW -->
   <div class="view-container" id="workView">
     <div class="work-wrap" id="workWrap"></div>
   </div>
 </div>
 
-<!-- NEW PROJECT MODAL -->
 <div class="modal-overlay" id="newProjectModal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('newProjectModal')">✕</button>
     <div class="modal-title">📚 Project Buku Baru</div>
-    <div class="modal-sub">Cukup masukkan <strong>Judul Project</strong>. Setelah dibuat, Anda akan melihat prompt untuk AI guna membuat 11 blueprint buku secara bertahap.</div>
+    <div class="modal-sub">Cukup masukkan <strong>Judul Project</strong> (bisa judul buku atau nama ide). Setelah dibuat, Anda mengisi deskripsi buku, lalu AI akan menanyakan <strong>mode penulisan</strong> yang ingin dibuat blueprint-nya.</div>
     <div class="form-group" style="margin-bottom:14px">
-      <label style="font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px">📝 Judul Project <span style="color:#fc8181">*</span></label>
-      <input type="text" id="newProjectName" placeholder="Contoh: Rahasia UMKM Naik Kelas" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px">
+      <label style="font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px">📖 Judul Project <span style="color:#fc8181">*</span></label>
+      <input type="text" id="newProjectName" placeholder="Contoh: Seni Berpikir Jernih untuk Profesional Muda" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px">
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #edf2f7">
       <button class="btn btn-outline" onclick="closeModal('newProjectModal')">Batal</button>
@@ -243,37 +259,25 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
 // KONFIGURASI
 // ============================================================
 const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
-const TABLE = 'ai_book_writer';
+const TABLE = 'ai_book_generator';
 const USERS_TABLE = 'users';
 const SECRET = 'admin';
-const STORAGE_KEY = 'ai_book_writer_v2';
+const STORAGE_KEY = 'ai_book_generator_v2';
+const MAX_CHAPTERS = 20;
 
-const COLUMNS = {
-  id: 'x_01', // project_id
-  title: 'x_02',
-  prompt: 'x_03',
-  desc: 'x_04', // idea_context
-  status: 'x_05', // multi-type
-  unused: 'x_06',
-  created_by: 'x_07',
-  unused2: 'x_08',
-  results: 'x_09', // JSON of results
-  created_date: 'x_10'
-};
-
-// 11 Model Penulisan Buku
-const STAGES = [
-  { key:'research_to_book', label:'1. Hasil Riset', title:'Buku dari Hasil Penelitian', desc:'Mengubah skripsi/tesis/riset menjadi buku referensi yang layak terbit.' },
-  { key:'textbook', label:'2. Buku Ajar', title:'Buku Ajar / Textbook', desc:'Modul perkuliahan atau bahan ajar dengan struktur pedagogis lengkap.' },
-  { key:'nonfiction_idea', label:'3. Non-Fiksi', title:'Buku Non-Fiksi dari Ide', desc:'Mengubah ide/insight/keahlian menjadi buku non-fiksi populer.' },
-  { key:'howto_guide', label:'4. Panduan (How-To)', title:'Buku Panduan Praktis (How-To)', desc:'Buku step-by-step yang memandu pembaca menyelesaikan sesuatu.' },
-  { key:'fiction_novel', label:'5. Fiksi/Novel', title:'Buku Fiksi (Novel/Cerpen)', desc:'Membangun cerita fiksi dengan struktur naratif 3-act yang kuat.' },
-  { key:'biography_memoir', label:'6. Biografi', title:'Biografi & Memoar', desc:'Menulis perjalanan hidup, memoar, atau kisah inspiratif tokoh.' },
-  { key:'blueprint', label:'7. Book Blueprint', title:'Kerangka Buku (Blueprint)', desc:'Kerangka mendalam sebelum menulis, lengkap dengan research & roadmap.' },
-  { key:'book_proposal', label:'8. Proposal Penerbit', title:'Book Proposal untuk Penerbit', desc:'Proposal profesional untuk pitch ke penerbit atau crowdfunding.' },
-  { key:'humor_collection', label:'9. Kumpulan Humor', title:'Buku Kumpulan Humor', desc:'Kumpulan cerita lucu, joke, atau materi stand-up comedy.' },
-  { key:'icebreaker_games', label:'10. Ice Breaker', title:'Kumpulan Ice Breaker & Games', desc:'Kumpulan games untuk training, kelas, atau team building.' },
-  { key:'inspirational_stories', label:'11. Cerita Inspiratif', title:'Kumpulan Cerita Inspiratif', desc:'Kisah-kisah inspiratif dengan pelajaran hidup di setiap akhir cerita.' }
+// 11 Mode Penulisan Buku
+const MODES = [
+  { key:'research', icon:'🔬', short:'Penelitian', full:'Buku dari Hasil Penelitian' },
+  { key:'textbook', icon:'📚', short:'Textbook', full:'Buku Ajar / Textbook' },
+  { key:'nonfiction', icon:'💡', short:'Non-Fiksi', full:'Buku Non-Fiksi dari Ide/Insight' },
+  { key:'howto', icon:'🛠️', short:'How-To', full:'Buku Panduan Praktis (How-To)' },
+  { key:'fiction', icon:'📖', short:'Fiksi', full:'Buku Fiksi (Novel/Cerpen)' },
+  { key:'biography', icon:'👤', short:'Biografi', full:'Biografi & Memoar' },
+  { key:'blueprint', icon:'📋', short:'Blueprint', full:'Kerangka Buku (Book Blueprint)' },
+  { key:'proposal', icon:'📄', short:'Proposal', full:'Book Proposal untuk Penerbit' },
+  { key:'humor', icon:'😄', short:'Humor', full:'Buku Kumpulan Humor' },
+  { key:'games', icon:'🎮', short:'Games', full:'Buku Kumpulan Ice Breaker & Games' },
+  { key:'inspirational', icon:'✨', short:'Inspiratif', full:'Kumpulan Cerita Inspiratif & Pelajaran' }
 ];
 
 // ============================================================
@@ -283,10 +287,58 @@ let allProjects = [];
 let currentProject = null;
 let currentUser = null;
 let isAdmin = false;
-let quillEditor = null;
-let stageBuffer = {};
-let currentStage = 'research_to_book';
-let preferredStage = null;
+let editorEl = null;
+let results = {};          // flat map: {'research_blueprint':'...', 'research_bab_1':'...'}
+let currentMode = 'research';
+let currentTab = 'blueprint'; // 'blueprint' or 'bab_N'
+let parseDebounce = null;
+
+// ============================================================
+// KEY HELPERS
+// ============================================================
+function blueprintKey(mode){ return `${mode}_blueprint`; }
+function chapterKey(mode, n){ return `${mode}_bab_${n}`; }
+
+function getBlueprint(mode){ return results[blueprintKey(mode)] || ''; }
+function getChapter(mode, n){ return results[chapterKey(mode, n)] || ''; }
+function isModeStarted(mode){ return isFilled(getBlueprint(mode)); }
+
+function parseChapterCount(blueprintHtml){
+  if(!blueprintHtml) return 0;
+  const text = blueprintHtml.replace(/<[^>]*>/g,'\n').replace(/&nbsp;/g,' ');
+  const re = /(?:Bab|BAB|Bagian|BAGIAN|Chapter|CHAPTER)\s+(\d+)/g;
+  let m, max = 0;
+  while((m = re.exec(text)) !== null){
+    const n = parseInt(m[1]);
+    if(n > max) max = n;
+  }
+  return Math.min(max, MAX_CHAPTERS);
+}
+
+function parseChapterTitles(blueprintHtml){
+  if(!blueprintHtml) return {};
+  const text = blueprintHtml.replace(/<[^>]*>/g,'\n').replace(/&nbsp;/g,' ');
+  const titles = {};
+  const re = /(?:Bab|BAB|Bagian|BAGIAN|Chapter|CHAPTER)\s+(\d+)\s*[:.\-–—]?\s*([^\n<]{2,120})/g;
+  let m;
+  while((m = re.exec(text)) !== null){
+    const n = parseInt(m[1]);
+    let t = (m[2]||'').trim().replace(/^[*_#\s]+|[*_#\s]+$/g,'').trim();
+    t = t.split(/[\n\r]/)[0].trim();
+    if(n>=1 && n<=MAX_CHAPTERS && t && !titles[n]){
+      titles[n] = t.length>60 ? t.substring(0,60)+'…' : t;
+    }
+  }
+  return titles;
+}
+
+function getModeLabel(modeKey){
+  return MODES.find(x=>x.key===modeKey)?.full || modeKey;
+}
+function getModeShort(modeKey){
+  const m = MODES.find(x=>x.key===modeKey);
+  return m ? `${m.icon} ${m.short}` : modeKey;
+}
 
 // ============================================================
 // SESSION & LOGIN
@@ -310,10 +362,8 @@ async function doLogin(){
     const res = await r.json();
     if(res.success && res.data){
       const user = res.data.find(x=>x.x_01===u && x.x_02===p);
-      if(user){
-        currentUser = u; isAdmin = (u==='admin');
-        saveUserToStorage(u); showApp(); showToast('✅ Login berhasil','success');
-      } else { err.textContent='❌ Username atau password salah!';err.classList.add('show'); }
+      if(user){currentUser = u; isAdmin = (u==='admin');saveUserToStorage(u); showApp(); showToast('✅ Login berhasil','success');}
+      else { err.textContent='❌ Username atau password salah!';err.classList.add('show'); }
     } else { err.textContent='❌ Gagal ambil data user';err.classList.add('show'); }
   }catch(e){err.textContent='❌ Gagal login: '+e.message;err.classList.add('show');}
   finally{btn.disabled=false;btn.textContent='Login';}
@@ -347,17 +397,11 @@ async function fetchData(){
 }
 
 function parseRow(r){
-  let results = {};
-  try { results = r.x_09 ? JSON.parse(r.x_09) : {}; } catch(e){}
+  let res = {};
+  try { res = r.x_09 ? JSON.parse(r.x_09) : {}; } catch(e){}
   return {
-    id_x: r.id_x,
-    project_id: r.x_01 || '',
-    title: r.x_02 || '',
-    prompt: r.x_03 || '',
-    desc: r.x_04 || '',
-    created_by: r.x_07 || '',
-    results: results,
-    created_date: r.x_10 || ''
+    id_x: r.id_x, project_id: r.x_01 || '', title: r.x_02 || '', prompt: r.x_03 || '',
+    desc: r.x_04 || '', created_by: r.x_07 || '', results: res, created_date: r.x_10 || ''
   };
 }
 
@@ -394,9 +438,20 @@ function isFilled(html){
   if(!html) return false;
   return html.replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').trim().length > 20;
 }
-function countFilled(project){
-  const res = project.results || {};
-  return STAGES.filter(f => isFilled(res[f.key])).length;
+
+function countModesStarted(project){
+  const r = project.results || {};
+  return MODES.filter(m => isFilled(r[blueprintKey(m.key)])).length;
+}
+function countTotalChapters(project){
+  const r = project.results || {};
+  let c = 0;
+  MODES.forEach(m => {
+    for(let i=1; i<=MAX_CHAPTERS; i++){
+      if(isFilled(r[chapterKey(m.key, i)])) c++;
+    }
+  });
+  return c;
 }
 
 function renderList(){
@@ -404,25 +459,25 @@ function renderList(){
   if(!allProjects.length){
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
       <div class="icon">📚</div>
-      <h3>Belum ada proyek buku</h3>
-      <p>Klik "＋ Project Baru" untuk mulai dari satu ide</p>
+      <h3>Belum ada project buku</h3>
+      <p>Klik "＋ Project Baru" untuk mulai menulis buku pertamamu</p>
     </div>`;
     return;
   }
   const sorted = [...allProjects].sort((a,b)=>(b.created_date||'').localeCompare(a.created_date||''));
   grid.innerHTML = sorted.map(p=>{
-    const filled = countFilled(p);
+    const modesCount = countModesStarted(p);
+    const chapCount = countTotalChapters(p);
     let badge;
-    if(filled === 0) badge = '<span class="badge pending">⏳ Belum dimulai</span>';
-    else if(filled >= 11) badge = `<span class="badge done">✅ Lengkap 11/11</span>`;
-    else badge = `<span class="badge progress">🔄 ${filled}/11 Model</span>`;
+    if(modesCount === 0) badge = '<span class="badge pending">⏳ Belum dimulai</span>';
+    else badge = `<span class="badge progress">📖 ${modesCount}/11 mode · ${chapCount} bab</span>`;
     return `<div class="bp-card" onclick="openProject(${p.id_x})">
       <div class="actions" onclick="event.stopPropagation()">
         <button onclick="deleteProject(${p.id_x})" title="Hapus">🗑️</button>
       </div>
       <div class="id">${escapeHtml(p.project_id)}</div>
       <div class="name">${escapeHtml(p.title)}</div>
-      <div class="desc">${escapeHtml(p.desc || 'Belum ada ide buku')}</div>
+      <div class="desc">${escapeHtml(p.desc || 'Belum ada deskripsi buku')}</div>
       <div class="badges">${badge}</div>
       <div class="meta">
         <span>👤 ${escapeHtml(p.created_by||'-')}</span>
@@ -451,15 +506,12 @@ async function saveNewProject(){
   try{
     const data = {
       project_id: generateProjectId(),
-      title: name,
-      prompt: '',
-      desc: '',
+      title: name, prompt: '', desc: '',
       results: {},
-      created_by: currentUser,
-      created_date: todayStr
+      created_by: currentUser, created_date: todayStr
     };
     await createProject(data);
-    showToast('✅ Project dibuat. Isi ide buku di bawah.','success');
+    showToast('✅ Project dibuat. Isi deskripsi buku di bawah.','success');
     closeModal('newProjectModal');
     await fetchData();
     const created = allProjects.find(x=>x.project_id===data.project_id);
@@ -479,7 +531,8 @@ function openProject(id){
   const p = allProjects.find(x=>x.id_x===id);
   if(!p){ showToast('Tidak ditemukan','error'); return; }
   currentProject = p;
-  preferredStage = null;
+  currentMode = 'research';
+  currentTab = 'blueprint';
   document.getElementById('backBtn').classList.add('show');
   document.getElementById('listView').classList.remove('active');
   document.getElementById('workView').classList.add('active');
@@ -495,57 +548,85 @@ function backToList(){
 }
 
 // ============================================================
-// PROMPT BUILDER
+// PROMPT BUILDERS
 // ============================================================
-function buildMasterPrompt(context){
-  return `Anda adalah Penulis Buku Profesional dan Book Coach berpengalaman. Saya ingin Anda menyusun BLUEPRINT BUKU SECARA BERTAHAP untuk ide/tema berikut:
+function buildMasterPrompt(desc){
+  const modeList = MODES.map((m,i) => `${i+1}. ${m.full}`).join('\n');
+  return `Anda adalah Penulis Buku Profesional & Editor Berpengalaman. Saya ingin Anda membuat BUKU SECARA BERTAHAP untuk ide berikut:
 
-=== KONTEKS BUKU ===
-${context}
+=== DESKRIPSI BUKU/IDE ===
+${desc}
 
-=== ATURAN KERJA (WAJIB DIPATUHI) ===
-1. Di balasan PERTAMA, Anda HANYA BOLEH bertanya dan menampilkan daftar pilihan berikut:
+═══════════════════════════════════
+ATURAN KERJA (WAJIB DIPATUHI)
+═══════════════════════════════════
+
+1. DI BALASAN PERTAMA, Anda HANYA BOLEH menampilkan daftar pilihan mode penulisan buku berikut:
    "Silakan pilih nomor model penulisan buku yang ingin Anda buatkan blueprint-nya:
-   1. Buku dari Hasil Penelitian
-   2. Buku Ajar / Textbook
-   3. Buku Non-Fiksi dari Ide/Insight
-   4. Buku Panduan Praktis (How-To)
-   5. Buku Fiksi (Novel/Cerpen)
-   6. Biografi & Memoar
-   7. Kerangka Buku (Book Blueprint)
-   8. Book Proposal untuk Penerbit
-   9. Buku Kumpulan Humor
-   10. Buku Kumpulan Ice Breaker & Games
-   11. Kumpulan Cerita Inspiratif & Pelajaran
-   
-   Ketik nomornya (misal: 1)."
-   
-   JANGAN membuat blueprint apapun di balasan pertama.
-2. Tunggu saya membalas dengan angka.
-3. Setelah saya membalas angka, buatkan blueprint/sample bab sesuai model nomor tersebut. Buat yang sangat detail, aplikatif, dan siap dikembangkan penulis.
-4. Setelah selesai membuat SATU blueprint, Anda WAJIB menulis status seperti ini:
----
-✅ SELESAI — [Nama Model yang dibuat]
 
-Model yang sudah dibuat: [Sebutkan nomornya dan namanya]
-Model yang tersisa: [Sebutkan nomor dan nama yang belum dibuat]
+${modeList.split('\n').map(l=>'   '+l).join('\n')}
 
-Pilih nomor selanjutnya, atau ketik "STOP" jika sudah selesai.
+   Ketik nomornya (misal: 3)."
+
+   JANGAN membuat judul, pengantar, atau daftar isi apapun di balasan pertama.
+
+2. Setelah saya membalas dengan angka (1-11), buatkan UNTUK MODE TERSEBUT:
+   a. 📖 JUDUL BUKU — berikan 3-5 pilihan judul menarik + 1 rekomendasi utama
+   b. ✍️ PENGANTAR / KATA PENGANTAR — latar belakang, tujuan, pembaca, cara pakai
+   c. 📋 DAFTAR ISI — 5-15 bab sesuai kompleksitas topik
+      Format WAJIB: "Bab [N]: [Judul Bab]" — satu baris per bab
+
+3. Setelah selesai blueprint (judul+pengantar+daftar isi), WAJIB tulis status:
 ---
-5. BERHENTI setelah status itu. JANGAN membuat model berikutnya sampai saya membalas lagi.
-6. Jika saya membalas "STOP", ucapkan terima kasih dan akhiri sesi.
+✅ SELESAI — Blueprint Mode: [Nama Mode]
+
+Mau lanjut ke Bab 1, atau pilih mode buku lain (ketik "mode" + nomor mode), atau ketik "STOP"?
+---
+
+4. Tunggu saya membalas:
+   - "lanjut" / "ya" / "bab berikutnya" → buat Bab berikutnya
+   - "bab N" / angka → buat Bab N
+   - "mode X" → buat blueprint baru untuk mode X (11 mode di atas)
+   - "STOP" → ucapkan terima kasih & akhiri
+
+5. Setelah selesai SATU bab, WAJIB tulis status:
+---
+✅ SELESAI — Bab N: [Judul]
+
+Bab tersisa: [sebutkan]
+
+Mau lanjut ke bab berikutnya, pilih mode buku lain, atau ketik "STOP"?
+---
+
+6. BERHENTI setelah status. JANGAN buat bab berikutnya sampai saya balas lagi.
+
 7. FORMAT OUTPUT:
-   - Gunakan format Markdown yang rapi (heading, bold, bullet points).
-   - DILARANG KERAS menggunakan Tabel (jangan pakai karakter |).
-   - DILARANG membuat gambar. Cukup teks saja.
-   - Gunakan bahasa Indonesia yang indah, mengalir, dan profesional.`;
+   - Markdown rapi (heading, bold, italic, bullet, blockquote, numbered list).
+   - Tabel DIIZINKAN (GFM pipe table) untuk data, checklist, perbandingan.
+   - DILARANG gambar.
+   - Daftar Isi WAJIB pakai format "Bab [N]: [Judul]" agar mudah di-parse.
+   - Isi bab WAJIB pakai sub-heading, paragraf naratif, contoh konkret, kesimpulan.
+   - Bahasa Indonesia enak dibaca — tidak kaku, hangat, informatif.
+   - Setiap bab ~1500-3000 kata sesuai kompleksitas.
+
+8. MULAI SEKARANG — tampilkan daftar 11 mode penulisan buku.`;
 }
 
-function buildContinuePrompt(stageKey){
-  const idx = STAGES.findIndex(s=>s.key===stageKey);
-  const next = STAGES[idx+1];
-  if(!next) return '';
-  return `Ya, buatkan model nomor ${idx+2} (${next.title}). Setelah selesai, tampilkan status sisa model dan tanya lagi.`;
+function buildSwitchModePrompt(modeKey){
+  const full = getModeLabel(modeKey);
+  return `Sekarang buatkan blueprint untuk MODE: "${full}".
+Berikan:
+a. 📖 JUDUL BUKU (3-5 pilihan + 1 rekomendasi)
+b. ✍️ PENGANTAR
+c. 📋 DAFTAR ISI (5-15 bab, format "Bab N: [Judul]")
+
+Setelah selesai, tampilkan status & tanya lagi.`;
+}
+
+function buildChapterPrompt(modeKey, n){
+  const titles = parseChapterTitles(getBlueprint(modeKey));
+  const t = titles[n];
+  return t ? `Lanjut ke Bab ${n}: ${t}.` : `Lanjut ke Bab ${n}.`;
 }
 
 // ============================================================
@@ -554,34 +635,36 @@ function buildContinuePrompt(stageKey){
 function renderWork(){
   if(!currentProject) return;
   const p = currentProject;
-  const filledCount = countFilled(p);
+  results = { ...(p.results || {}) };
 
-  stageBuffer = {};
-  STAGES.forEach(f=>{ stageBuffer[f.key] = p.results[f.key] || ''; });
+  // Auto-pick first started mode if any, else research
+  const firstStarted = MODES.find(m => isModeStarted(m.key));
+  if(firstStarted && !isModeStarted(currentMode)) currentMode = firstStarted.key;
 
-  currentStage = preferredStage || (STAGES.find(f=>isFilled(stageBuffer[f.key])) || STAGES[0]).key;
-  preferredStage = null;
+  const modeStarted = isModeStarted(currentMode);
+  const chapterCount = parseChapterCount(getBlueprint(currentMode));
+  const filled = MODES.filter(m=>isModeStarted(m.key)).length;
+  const totalChapters = MODES.reduce((acc,m)=>acc + countFilledChapters(m.key),0);
 
   document.getElementById('workWrap').innerHTML = `
     <div class="work-header">
       <div class="id">${escapeHtml(p.project_id)}</div>
-      <h2>${escapeHtml(p.title)}</h2>
+      <h2>📖 ${escapeHtml(p.title)}</h2>
       <div class="status-line">
-        <span>🔄 ${filledCount}/11 Model</span>
+        <span>📚 ${filled}/11 mode dimulai</span>
+        <span>✍️ ${totalChapters} bab terisi</span>
         <span>📅 ${p.created_date || '-'}</span>
         <span>👤 ${escapeHtml(p.created_by||'-')}</span>
       </div>
     </div>
 
-    <!-- STEP 1: IDE -->
     <div class="step-card">
       <span class="step-tag">Langkah 1</span>
-      <h3>📝 Isi Ide Buku</h3>
-      <div class="sub">Isi ide, tema, atau konteks buku secara detail. AI akan membuatkan 11 blueprint penulisan secara bertahap.</div>
-
+      <h3>📖 Isi Deskripsi Buku</h3>
+      <div class="sub">Jelaskan ide bukumu — topik, target pembaca, tujuan, tone, panjang, referensi gaya. AI akan menanyakan <strong>mode penulisan</strong>, lalu membuat blueprint (Judul + Pengantar + Daftar Isi).</div>
       <div class="form-group">
-        <label>Ide / Konteks Buku <span class="req">*</span></label>
-        <textarea id="fld_desc" rows="5" placeholder="Contoh: Buku panduan praktis tentang 'Cara Membangun Personal Branding di LinkedIn' untuk profesional muda dan job seeker. Target pembaca: Gen Z & Milenial.">${escapeHtml(p.desc||'')}</textarea>
+        <label>Deskripsi Buku <span style="color:#fc8181">*</span></label>
+        <textarea id="fld_desc" rows="6" placeholder="Contoh: Ide buku tentang cara berpikir jernih untuk profesional muda (25-35 tahun). Gaya santai tapi berbobot, tidak menggurui, banyak contoh nyata. Tujuan: membantu mengenali bias kognitif dan mengelola overthinking. Tone: hangat, empatik, praktis. Referensi: Malcolm Gladwell, James Clear.">${escapeHtml(p.desc||'')}</textarea>
       </div>
       <div class="action-row">
         <button class="btn btn-success" onclick="saveIdeaFields(true)">💾 Simpan & Buat Prompt</button>
@@ -589,122 +672,276 @@ function renderWork(){
       </div>
     </div>
 
-    <!-- STEP 2: PROMPT -->
     <div class="step-card green">
       <span class="step-tag">Langkah 2</span>
       <h3>📋 Copy Prompt ke AI</h3>
-      <div class="sub">Copy prompt di bawah, paste ke ChatGPT/Claude/Gemini. AI akan menampilkan 11 pilihan model. Ketik nomornya, dan AI akan membuatkannya secara bertahap.</div>
+      <div class="sub">Copy master prompt → paste ke ChatGPT/Claude/Gemini. AI akan menampilkan <strong>11 mode penulisan</strong>. Pilih nomor, lalu AI membuat blueprint (Judul + Pengantar + Daftar Isi).</div>
       <div style="position:relative">
-        <button class="copy-btn" onclick="copyMasterPrompt()">📋 Copy Prompt</button>
+        <button class="copy-btn" onclick="copyMasterPrompt()">📋 Copy Master Prompt</button>
         <div class="prompt-box" id="promptBox"></div>
       </div>
     </div>
 
-    <!-- STEP 3: HASIL -->
     <div class="step-card orange">
       <span class="step-tag">Langkah 3</span>
-      <h3>📝 Paste Hasil AI per Model</h3>
-      <div class="sub">Pilih tab model, paste hasil dari AI, lalu simpan. Sistem otomatis merapikan format Markdown.</div>
+      <h3>📝 Mode & Hasil per Mode</h3>
+      <div class="sub">Pilih mode di bawah, paste blueprint + bab per bab. Setiap mode punya blueprint (Judul + Pengantar + Daftar Isi) dan babnya sendiri.</div>
 
-      <div class="stage-tabs" id="stageTabs"></div>
-      <div class="stage-hint" id="stageHint"></div>
+      <div style="font-size:12px;font-weight:700;color:#744210;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px">🎨 Mode Penulisan Buku</div>
+      <div class="mode-tabs" id="modeTabs"></div>
 
-      <div class="quill-wrapper">
+      <div id="chapterArea"></div>
+
+      <div class="editor-wrap">
         <div class="editor-loading-overlay" id="editorLoading">
           <div class="spinner"></div>
           <div class="loading-text">Memuat konten...</div>
         </div>
-        <div id="resultEditor"></div>
+        <div class="rich-toolbar">
+          <button type="button" onmousedown="event.preventDefault()" onclick="fmt('formatBlock','<h1>')">H1</button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="fmt('formatBlock','<h2>')">H2</button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="fmt('formatBlock','<h3>')">H3</button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="fmt('formatBlock','<p>')">¶</button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="fmt('bold')"><b>B</b></button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="fmt('italic')"><i>I</i></button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="fmt('underline')"><u>U</u></button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="fmt('insertUnorderedList')">• List</button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="fmt('insertOrderedList')">1. List</button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="fmt('formatBlock','<blockquote>')">❝</button>
+          <button type="button" onmousedown="event.preventDefault()" onclick="fmt('removeFormat')">Clear</button>
+        </div>
+        <div id="resultEditor" class="rich-editor" contenteditable="true" spellcheck="false" data-placeholder="Paste hasil dari AI di sini..."></div>
       </div>
 
       <div class="action-row" style="margin-top:14px">
         <button class="btn btn-success" onclick="saveResult()">💾 Simpan Project</button>
         <button class="btn btn-outline" onclick="manualConvertMarkdown()">✨ Rapikan Markdown</button>
-        <button class="btn btn-warning" onclick="clearCurrentStage()">🗑️ Kosongkan Model Ini</button>
+        <button class="btn btn-warning" onclick="clearCurrentTab()">🗑️ Kosongkan Tab Ini</button>
       </div>
     </div>
   `;
 
-  quillEditor = new Quill('#resultEditor', {
-    theme: 'snow',
-    placeholder: 'Paste hasil blueprint dari AI di sini...',
-    modules: { toolbar: [[{header:[1,2,3,false]}],['bold','italic','underline'],[{list:'ordered'},{list:'bullet'}],['blockquote'],['clean']] }
-  });
-  quillEditor.root.innerHTML = stageBuffer[currentStage] || '';
-  quillEditor.on('text-change', ()=>{ if(quillEditor) stageBuffer[currentStage] = quillEditor.root.innerHTML; });
+  editorEl = document.getElementById('resultEditor');
+  loadCurrentTabIntoEditor();
+  editorEl.addEventListener('input', onEditorInput);
+  editorEl.addEventListener('paste', handleEditorPaste);
 
-  // Auto Convert Markdown
-  quillEditor.root.addEventListener('paste', function(e) {
-      let text = (e.clipboardData || window.clipboardData).getData('text/plain');
-      if (text && /(?:^|\n)(#{1,6} |\* |- |\d+\. |\*\*|__)/.test(text)) {
-          e.preventDefault(); e.stopPropagation();
-          const loader = document.getElementById('editorLoading');
-          loader.classList.add('active');
-          
-          setTimeout(() => {
-              let html = marked.parse(text.replace(/\\(\d+\.)/g, '$1'));
-              let range = quillEditor.getSelection(true);
-              quillEditor.clipboard.dangerouslyPasteHTML(range.index, html, 'user');
-              loader.classList.remove('active');
-              showToast('✨ Format Markdown otomatis dirapikan', 'success');
-          }, 50);
-      }
-  });
-
-  updateStageUI();
+  updateModeTabs();
+  updateChapterArea();
   updatePromptPreview();
   document.getElementById('fld_desc').addEventListener('input', updatePromptPreview);
 }
 
+function countFilledChapters(modeKey){
+  let c = 0;
+  for(let i=1; i<=MAX_CHAPTERS; i++){
+    if(isFilled(getChapter(modeKey, i))) c++;
+  }
+  return c;
+}
+
+function loadCurrentTabIntoEditor(){
+  if(!editorEl) return;
+  const key = currentTab === 'blueprint' ? blueprintKey(currentMode) : chapterKey(currentMode, parseInt(currentTab.replace('bab_','')));
+  editorEl.innerHTML = results[key] || '';
+}
+
+function updateModeTabs(){
+  const el = document.getElementById('modeTabs');
+  if(!el) return;
+  el.innerHTML = MODES.map(m=>{
+    const started = isModeStarted(m.key);
+    const active = currentMode === m.key;
+    const chCount = countFilledChapters(m.key);
+    return `<button class="mode-tab ${active?'active':''} ${started?'filled':''}" onclick="switchMode('${m.key}')">${started?'✅':'○'} ${m.icon} ${escapeHtml(m.short)}${started&&chCount>0?` (${chCount})`:''}</button>`;
+  }).join('');
+}
+
+function updateChapterArea(){
+  const el = document.getElementById('chapterArea');
+  if(!el) return;
+
+  const started = isModeStarted(currentMode);
+  const fullName = getModeLabel(currentMode);
+  const bp = getBlueprint(currentMode);
+  const chapterCount = parseChapterCount(bp);
+  const chapterTitles = parseChapterTitles(bp);
+
+  if(!started){
+    el.innerHTML = `
+      <div class="stage-hint" style="margin-bottom:12px">
+        <strong>${escapeHtml(fullName)}</strong>
+        <br><em>Mode ini belum dimulai. Copy prompt di bawah untuk meminta AI membuat blueprint, atau ketik nomornya di AI kalau AI sudah menampilkan daftar mode.</em>
+        <br>
+        <button class="mini-copy" onclick="copySwitchModePrompt()">📋 Copy Prompt Mode "${escapeHtml(fullName.split('/')[0].trim())}"</button>
+        ${currentMode !== 'research' ? `<button class="mini-copy" onclick="copyMasterPrompt()">📋 Copy Master Prompt (11 Mode)</button>` : ''}
+      </div>`;
+    return;
+  }
+
+  // Show blueprint + chapter tabs
+  let chapterTabs = `<button class="chapter-tab ${currentTab==='blueprint'?'active':''} filled" onclick="switchTab('blueprint')">📖 Blueprint</button>`;
+  for(let i=1; i<=chapterCount; i++){
+    const filled = isFilled(getChapter(currentMode, i));
+    const active = currentTab === `bab_${i}`;
+    const title = chapterTitles[i];
+    const label = title ? `Bab ${i}: ${title}` : `Bab ${i}`;
+    chapterTabs += `<button class="chapter-tab ${active?'active':''} ${filled?'filled':''}" onclick="switchTab('bab_${i}')">${filled?'✅':'○'} ${escapeHtml(label)}</button>`;
+  }
+
+  let hint = '';
+  if(currentTab === 'blueprint'){
+    hint = `
+      <strong>📖 Blueprint — ${escapeHtml(fullName)}</strong>
+      <br><em>${chapterCount} bab terdeteksi dari Daftar Isi.</em>
+      ${chapterCount > 0 ? `<br><button class="mini-copy" onclick="copyNextChapter()">📋 Copy Prompt Bab 1</button>` : ''}
+      <button class="mini-copy" onclick="copySwitchModePrompt()">📋 Copy Prompt Mode Lain</button>
+    `;
+  } else {
+    const n = parseInt(currentTab.replace('bab_',''));
+    const title = chapterTitles[n] || `Bab ${n}`;
+    const hasNext = n < chapterCount;
+    hint = `
+      <strong>Bab ${n}: ${escapeHtml(title)}</strong>
+      <br><em>Bab ${n} dari ${chapterCount}</em>
+      ${hasNext ? `<br><button class="mini-copy" onclick="copyNextChapter()">📋 Copy Prompt Bab ${n+1}</button>` : `<br><em style="color:#48bb78">🎉 Ini bab terakhir!</em>`}
+      <button class="mini-copy" onclick="copySwitchModePrompt()">📋 Copy Prompt Mode Lain</button>
+    `;
+  }
+
+  el.innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:#744210;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px">📑 Bagian di Mode Ini</div>
+    <div class="chapter-tabs" id="chapterTabs">${chapterTabs}</div>
+    <div class="stage-hint" id="stageHint">${hint}</div>
+  `;
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function switchMode(key){
+  if(currentMode === key) return;
+  if(editorEl){
+    const oldKey = currentTab === 'blueprint' ? blueprintKey(currentMode) : chapterKey(currentMode, parseInt(currentTab.replace('bab_','')));
+    results[oldKey] = editorEl.innerHTML;
+  }
+  currentMode = key;
+  currentTab = 'blueprint';
+  updateModeTabs();
+  updateChapterArea();
+  loadCurrentTabIntoEditor();
+  updatePromptPreview();
+}
+
+function switchTab(tab){
+  if(currentTab === tab) return;
+  if(editorEl){
+    const oldKey = currentTab === 'blueprint' ? blueprintKey(currentMode) : chapterKey(currentMode, parseInt(currentTab.replace('bab_','')));
+    results[oldKey] = editorEl.innerHTML;
+  }
+  const loader = document.getElementById('editorLoading');
+  if(loader) loader.classList.add('active');
+  document.querySelectorAll('.chapter-tab').forEach(t => t.classList.add('disabled'));
+
+  currentTab = tab;
+  setTimeout(()=>{
+    loadCurrentTabIntoEditor();
+    updateChapterArea();
+    updatePromptPreview();
+    if(loader) loader.classList.remove('active');
+    document.querySelectorAll('.chapter-tab').forEach(t => t.classList.remove('disabled'));
+  }, 50);
+}
+
+// ============================================================
+// EDITOR HANDLERS
+// ============================================================
+function fmt(cmd, val){
+  if(!editorEl) return;
+  editorEl.focus();
+  try { document.execCommand(cmd, false, val || null); } catch(e){}
+  saveCurrentToBuffer();
+}
+
+function saveCurrentToBuffer(){
+  if(!editorEl) return;
+  const key = currentTab === 'blueprint' ? blueprintKey(currentMode) : chapterKey(currentMode, parseInt(currentTab.replace('bab_','')));
+  results[key] = editorEl.innerHTML;
+}
+
+function onEditorInput(){
+  if(!editorEl) return;
+  saveCurrentToBuffer();
+  // Re-parse chapter count from blueprint
+  if(currentTab === 'blueprint'){
+    clearTimeout(parseDebounce);
+    parseDebounce = setTimeout(() => {
+      updateChapterArea();
+    }, 400);
+  }
+}
+
+function handleEditorPaste(e){
+  const cd = e.clipboardData || window.clipboardData;
+  const plainText = cd.getData('text/plain') || '';
+  const htmlText = cd.getData('text/html') || '';
+
+  if (/<table[\s>]/i.test(htmlText)) {
+    showToast('📊 Tabel terdeteksi — dipaste secara native', 'success');
+    setTimeout(() => {
+      saveCurrentToBuffer();
+      if(currentTab === 'blueprint') updateChapterArea();
+    }, 100);
+    return;
+  }
+
+  const mdPattern = /(?:^|\n)(#{1,6}\s|\*\s|-\s|\d+\.\s|\*\*|__|\|)/;
+  if (plainText && mdPattern.test(plainText)) {
+    e.preventDefault();
+    const loader = document.getElementById('editorLoading');
+    if (loader) loader.classList.add('active');
+    setTimeout(() => {
+      let html = marked.parse(plainText.replace(/\\(\d+\.)/g, '$1'));
+      try { document.execCommand('insertHTML', false, html); }
+      catch(err) { editorEl.innerHTML += html; }
+      saveCurrentToBuffer();
+      if (loader) loader.classList.remove('active');
+      if(currentTab === 'blueprint') updateChapterArea();
+      showToast('✨ Markdown & tabel dirapikan', 'success');
+    }, 50);
+    return;
+  }
+}
+
+// ============================================================
+// PROMPT PREVIEW & COPY
+// ============================================================
 function updatePromptPreview(){
-  const desc = document.getElementById('fld_desc')?.value.trim() || '[Ide / Konteks Buku]';
+  const desc = document.getElementById('fld_desc')?.value.trim() || '[Deskripsi Buku]';
   const box = document.getElementById('promptBox');
   if(box) box.textContent = buildMasterPrompt(desc);
 }
 
-function updateStageUI(){
-  const tabs = document.getElementById('stageTabs');
-  if(tabs){
-    tabs.innerHTML = STAGES.map(f=>{
-      const filled = isFilled(stageBuffer[f.key]);
-      const active = f.key===currentStage;
-      return `<button class="stage-tab ${active?'active':''} ${filled?'filled':''}" data-stage="${f.key}" onclick="switchStage('${f.key}')">${filled?'✅':'○'} ${f.label}</button>`;
-    }).join('');
-  }
-  const hint = document.getElementById('stageHint');
-  if(hint){
-    const s = STAGES.find(x=>x.key===currentStage);
-    const idx = STAGES.findIndex(x=>x.key===currentStage);
-    const cont = buildContinuePrompt(currentStage);
-    const remaining = STAGES.slice(idx+1);
-    hint.innerHTML = `
-      <strong>${escapeHtml(s.title)}</strong><br>${escapeHtml(s.desc)}
-      ${remaining.length ? `<br><br><em>Model tersisa setelah ini:</em> ${remaining.map(r=>escapeHtml(r.label)).join(' → ')}` : `<br><br><em>Ini model terakhir. 🎉</em>`}
-      ${cont ? `<br><button class="mini-copy" onclick="copyContinue()">📋 Copy prompt "lanjut ke model berikutnya"</button>` : ''}
-    `;
-  }
+function copyMasterPrompt(){
+  const text = document.getElementById('promptBox').textContent;
+  if(!text || text.includes('[Deskripsi Buku]')){ showToast('❌ Isi deskripsi buku dulu','error'); return; }
+  copyText(text, '✅ Master prompt disalin — paste ke AI');
 }
 
-function switchStage(key){
-  if(currentStage === key) return;
-  if(quillEditor) stageBuffer[currentStage] = quillEditor.root.innerHTML;
-  
-  const loader = document.getElementById('editorLoading');
-  if (loader) loader.classList.add('active');
-  document.querySelectorAll('.stage-tab').forEach(t => t.classList.add('disabled'));
-
-  currentStage = key;
-
-  setTimeout(() => {
-    if(quillEditor) quillEditor.root.innerHTML = stageBuffer[key] || '';
-    updateStageUI();
-    if (loader) loader.classList.remove('active');
-    document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('disabled'));
-  }, 50);
+function copySwitchModePrompt(){
+  const full = getModeLabel(currentMode);
+  copyText(buildSwitchModePrompt(currentMode), `✅ Prompt mode "${full.split('/')[0].trim()}" disalin`);
 }
 
-function copyMasterPrompt(){ copyText(document.getElementById('promptBox').textContent, '✅ Prompt disalin — paste ke AI'); }
-function copyContinue(){ copyText(buildContinuePrompt(currentStage), '✅ Prompt lanjutan disalin'); }
+function copyNextChapter(){
+  let n;
+  if(currentTab === 'blueprint') n = 1;
+  else n = parseInt(currentTab.replace('bab_','')) + 1;
+  const maxCount = parseChapterCount(getBlueprint(currentMode));
+  if(n > maxCount){ showToast('❌ Semua bab sudah dibuat','error'); return; }
+  const prompt = buildChapterPrompt(currentMode, n);
+  copyText(prompt, `✅ Prompt Bab ${n} disalin`);
+}
 
 function copyText(text, okMsg){
   navigator.clipboard.writeText(text).then(()=>showToast(okMsg,'success')).catch(()=>{
@@ -714,15 +951,17 @@ function copyText(text, okMsg){
 }
 
 function manualConvertMarkdown(){
-  if(!quillEditor) return;
-  let rawText = quillEditor.getText();
+  if(!editorEl) return;
+  let rawText = editorEl.innerText;
   if(!rawText.trim()) return;
   const loader = document.getElementById('editorLoading');
-  loader.classList.add('active');
+  if(loader) loader.classList.add('active');
   setTimeout(() => {
-    quillEditor.root.innerHTML = marked.parse(rawText.replace(/\\(\d+\.)/g, '$1'));
-    loader.classList.remove('active');
-    showToast('✨ Teks berhasil dirapikan!', 'success');
+    editorEl.innerHTML = marked.parse(rawText.replace(/\\(\d+\.)/g, '$1'));
+    saveCurrentToBuffer();
+    if(loader) loader.classList.remove('active');
+    if(currentTab === 'blueprint') updateChapterArea();
+    showToast('✨ Teks & tabel berhasil dirapikan!', 'success');
   }, 50);
 }
 
@@ -732,15 +971,15 @@ function manualConvertMarkdown(){
 async function saveIdeaFields(alsoGenerate){
   if(!currentProject) return;
   const desc = document.getElementById('fld_desc').value.trim();
-  if(!desc){ showToast('❌ Ide / konteks buku wajib diisi','error'); return; }
+  if(!desc){ showToast('❌ Deskripsi buku wajib diisi','error'); return; }
 
-  if(quillEditor) stageBuffer[currentStage] = quillEditor.root.innerHTML;
+  saveCurrentToBuffer();
 
   const updatedData = {
     ...currentProject,
     desc: desc,
     prompt: alsoGenerate ? buildMasterPrompt(desc) : currentProject.prompt,
-    results: {...stageBuffer}
+    results: {...results}
   };
 
   try{
@@ -748,38 +987,51 @@ async function saveIdeaFields(alsoGenerate){
     showToast(alsoGenerate ? '✅ Disimpan. Prompt siap di-copy!' : '✅ Disimpan','success');
     await fetchData();
     currentProject = allProjects.find(x=>x.id_x===currentProject.id_x);
-    preferredStage = currentStage;
+    const keepMode = currentMode, keepTab = currentTab;
     renderWork();
+    currentMode = keepMode;
+    currentTab = keepTab;
+    updateModeTabs();
+    updateChapterArea();
+    loadCurrentTabIntoEditor();
     if(alsoGenerate) document.getElementById('promptBox').scrollIntoView({behavior:'smooth', block:'center'});
   }catch(e){ showToast('❌ Gagal: '+e.message,'error'); }
 }
 
 async function saveResult(){
-  if(!currentProject || !quillEditor) return;
-  stageBuffer[currentStage] = quillEditor.root.innerHTML;
+  if(!currentProject || !editorEl) return;
+  saveCurrentToBuffer();
 
-  const filled = STAGES.filter(f=>isFilled(stageBuffer[f.key])).length;
-  if(filled === 0){ showToast('❌ Paste hasil AI dulu','error'); return; }
+  if(!isModeStarted(currentMode)){
+    showToast('❌ Paste blueprint minimal dulu untuk mode ini','error'); return;
+  }
 
-  const updatedData = { ...currentProject, results: {...stageBuffer} };
+  const updatedData = { ...currentProject, results: {...results} };
 
   try{
     await updateProject(currentProject.id_x, updatedData);
-    showToast(`✅ Tersimpan — ${filled}/11 model terisi`,'success');
+    const modesCount = MODES.filter(m=>isFilled(results[blueprintKey(m.key)])).length;
+    const chCount = countFilledChapters(currentMode);
+    showToast(`✅ Tersimpan — ${modesCount}/11 mode, mode ini ${chCount} bab`,'success');
     await fetchData();
     currentProject = allProjects.find(x=>x.id_x===currentProject.id_x);
-    preferredStage = currentStage;
+    const keepMode = currentMode, keepTab = currentTab;
     renderWork();
+    currentMode = keepMode;
+    currentTab = keepTab;
+    updateModeTabs();
+    updateChapterArea();
+    loadCurrentTabIntoEditor();
   }catch(e){ showToast('❌ Gagal: '+e.message,'error'); }
 }
 
-function clearCurrentStage(){
-  if(!quillEditor) return;
-  const s = STAGES.find(x=>x.key===currentStage);
-  if(!confirm('Kosongkan isi model "'+s.title+'"? Model lain tetap tersimpan.')) return;
-  quillEditor.root.innerHTML = '';
-  stageBuffer[currentStage] = '';
-  updateStageUI();
+function clearCurrentTab(){
+  if(!editorEl) return;
+  const label = currentTab === 'blueprint' ? `Blueprint ${getModeLabel(currentMode)}` : `Bab ${currentTab.replace('bab_','')} (${getModeLabel(currentMode)})`;
+  if(!confirm('Kosongkan "'+label+'"?')) return;
+  editorEl.innerHTML = '';
+  saveCurrentToBuffer();
+  if(currentTab === 'blueprint') updateChapterArea();
 }
 
 async function deleteProject(id){
