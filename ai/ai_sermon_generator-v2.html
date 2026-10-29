@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Khotbah & Renungan Generator - v2.0 (Bertahap)</title>
+<title>Khotbah & Renungan Generator - v2.1 (Naskah + Phrase Outline)</title>
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
@@ -115,6 +115,9 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
 .stage-hint strong{color:#2d3748}
 .stage-hint .mini-copy{background:#805ad5;color:#fff;border:none;padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;display:inline-flex;align-items:center;gap:5px}
 .stage-hint .mini-copy:hover{background:#6b46c1}
+.stage-hint .outline-note{display:block;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin-top:8px;font-size:11px;line-height:1.6;color:#2d3748}
+.stage-hint .outline-note .badge-outline{display:inline-block;background:#805ad5;color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:6px;margin-right:4px;letter-spacing:.4px}
+.stage-hint .outline-note .rule-line{color:#2d3748;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.7;display:block;margin-top:2px;white-space:pre-wrap}
 
 .quill-wrapper{background:#fff;border-radius:10px;border:2px solid #e2e8f0;overflow:hidden;position:relative}
 .quill-wrapper .ql-toolbar{border:none;border-bottom:2px solid #e2e8f0;background:#f7fafc;padding:6px}
@@ -171,7 +174,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
   <div class="login-box">
     <span style="font-size:44px;display:block;text-align:center;margin-bottom:4px">🕊️</span>
     <h2>Khotbah & Renungan</h2>
-    <p>Masukkan tema → dapatkan naskah khotbah lengkap</p>
+    <p>Naskah lengkap + Phrase Outline (talking points)</p>
     <div class="form-group">
       <label>Username</label>
       <input type="text" id="loginUsername" placeholder="Username">
@@ -190,7 +193,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
   <header class="app-header">
     <div class="header-left">
       <button class="back-btn" id="backBtn" onclick="backToList()">← Kembali</button>
-      <h1>🕊️ Khotbah & Renungan <span>v2.0</span></h1>
+      <h1>🕊️ Khotbah & Renungan <span>v2.1 · Phrase Outline</span></h1>
     </div>
     <div class="header-actions">
       <button class="btn-new" onclick="openNewProject()">＋ Project Baru</button>
@@ -208,7 +211,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
       <div class="list-head">
         <div>
           <h2>📁 Materi Khotbah Saya</h2>
-          <div class="sub">Satu project = satu tema/topik, berisi 11 jenis khotbah & renungan</div>
+          <div class="sub">Satu project = satu tema, berisi 11 jenis khotbah (naskah + phrase outline)</div>
         </div>
       </div>
       <div class="blueprint-grid" id="blueprintGrid"></div>
@@ -226,7 +229,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;
   <div class="modal">
     <button class="modal-close" onclick="closeModal('newProjectModal')">✕</button>
     <div class="modal-title">🕊️ Project Khotbah Baru</div>
-    <div class="modal-sub">Cukup masukkan <strong>Judul Project</strong>. Setelah dibuat, Anda akan melihat prompt untuk AI guna membuat 11 jenis khotbah secara bertahap.</div>
+    <div class="modal-sub">Cukup masukkan <strong>Judul Project</strong>. Setelah dibuat, Anda akan melihat prompt untuk AI guna membuat 11 jenis khotbah — tiap khotbah dilengkapi <strong>naskah lengkap + phrase outline</strong>.</div>
     <div class="form-group" style="margin-bottom:14px">
       <label style="font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px">📝 Judul Project <span style="color:#fc8181">*</span></label>
       <input type="text" id="newProjectName" placeholder="Contoh: Tema Kasih & Pengampunan" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px">
@@ -249,16 +252,9 @@ const SECRET = 'admin';
 const STORAGE_KEY = 'ai_sermon_generator_v2';
 
 const COLUMNS = {
-  id: 'x_01', // project_id
-  title: 'x_02',
-  prompt: 'x_03',
-  desc: 'x_04', // theme_topic
-  status: 'x_05', // multi-sermon
-  unused: 'x_06',
-  created_by: 'x_07',
-  unused2: 'x_08',
-  results: 'x_09', // JSON of results
-  created_date: 'x_10'
+  id: 'x_01', title: 'x_02', prompt: 'x_03', desc: 'x_04',
+  status: 'x_05', unused: 'x_06', created_by: 'x_07',
+  unused2: 'x_08', results: 'x_09', created_date: 'x_10'
 };
 
 // 11 Jenis Khotbah
@@ -364,7 +360,7 @@ function parseRow(r){
 function buildRow(d){
   return {
     x_01: d.project_id, x_02: d.title, x_03: d.prompt, x_04: d.desc,
-    x_05: 'multi', x_07: d.created_by, x_09: JSON.stringify(d.results || {}),
+    x_05: 'multi-sermon-phrase', x_07: d.created_by, x_09: JSON.stringify(d.results || {}),
     x_10: d.created_date
   };
 }
@@ -409,13 +405,14 @@ function renderList(){
     </div>`;
     return;
   }
+  const total = STAGES.length;
   const sorted = [...allProjects].sort((a,b)=>(b.created_date||'').localeCompare(a.created_date||''));
   grid.innerHTML = sorted.map(p=>{
     const filled = countFilled(p);
     let badge;
     if(filled === 0) badge = '<span class="badge pending">⏳ Belum dimulai</span>';
-    else if(filled >= 11) badge = `<span class="badge done">✅ Lengkap 11/11</span>`;
-    else badge = `<span class="badge progress">🔄 ${filled}/11 Jenis</span>`;
+    else if(filled >= total) badge = `<span class="badge done">✅ Lengkap ${filled}/${total}</span>`;
+    else badge = `<span class="badge progress">🔄 ${filled}/${total} Jenis</span>`;
     return `<div class="bp-card" onclick="openProject(${p.id_x})">
       <div class="actions" onclick="event.stopPropagation()">
         <button onclick="deleteProject(${p.id_x})" title="Hapus">🗑️</button>
@@ -495,6 +492,37 @@ function backToList(){
 }
 
 // ============================================================
+// PHRASE OUTLINE RULES (dipakai di prompt)
+// ============================================================
+function getPhraseOutlineRules(){
+  return `=== BAGIAN 2 — PHRASE OUTLINE / TALKING POINTS ===
+Setelah naskah khotbah (BAGIAN 1) selesai, WAJIB menambahkan bagian PHRASE OUTLINE / TALKING POINTS untuk dibawa ke mimbar.
+
+ATURAN PHRASE OUTLINE (WAJIB DIPATUHI):
+- Berupa 5–7 baris bernomor (1., 2., 3., dst.)
+- Setiap baris adalah FRASA KERJA (verb phrase) — KATA KERJA DI DEPAN
+- Kata kerja yang dianjurkan: "Buka dengan…", "Ceritakan…", "Bandingkan…", "Jelaskan…", "Tunjukkan…", "Uraikan…", "Sebutkan…", "Tawarkan…", "Tutup dengan…", "Ajukan…", "Minta…"
+- MAKSIMAL 10 kata per baris
+- Runut dari awal sampai akhir khotbah
+
+LARANGAN KERAS untuk Phrase Outline:
+- DILARANG menulis kalimat lengkap
+- DILARANG menulis pertanyaan retoris (contoh SALAH: "Pernahkah kita merasa sudah berbuat benar tapi badai tetap datang?")
+- DILARANG menulis kalimat puitis/naratif (contoh SALAH: "Puncak kerinduan: Mengenal kuasa kebangkitan")
+- DILARANG menulis kata benda telanjang (contoh SALAH: "Paulus: manusia super secara agama")
+- DILARANG menulis label/ilustrasi sebagai kata benda (contoh SALAH: "Ilustrasi pendaki melepas ransel berat")
+
+CONTOH FORMAT YANG BENAR:
+1. Buka dengan kisah kecelakaan pagi itu
+2. Bandingkan biaya perawatan vs pencegahan
+3. Jelaskan tiga penyebab utama kelalaian
+4. Tawarkan solusi: checklist harian
+5. Tutup dengan ajakan tanda tangan komitmen
+
+PENTING: Kedua bagian (BAGIAN 1 — naskah lengkap dan BAGIAN 2 — phrase outline) harus ada dalam satu balasan, dipisahkan dengan heading Markdown. Jangan hanya menampilkan salah satunya.`;
+}
+
+// ============================================================
 // PROMPT BUILDER
 // ============================================================
 function buildMasterPrompt(desc){
@@ -522,8 +550,14 @@ ${desc}
    
    JANGAN membuat khotbah apapun di balasan pertama.
 2. Tunggu saya membalas dengan angka.
-3. Setelah saya membalas angka, buatkan naskah khotbah sesuai jenis nomor tersebut. Buat yang sangat menyentuh, berdasarkan Alkitab, dan siap dibawakan.
-4. Setelah selesai membuat SATU khotbah, Anda WAJIB menulis status seperti ini:
+3. Setelah saya membalas angka, buatkan materi LENGKAP dengan SUSUNAN DUA BAGIAN berikut. Kedua bagian harus tampil dalam SATU balasan (bukan dipisah).
+
+   === BAGIAN 1 — NASKAH KHOTBAH LENGKAP ===
+   Tulis naskah khotbah utuh sesuai jenis nomor yang dipilih. Buat yang sangat menyentuh, berdasarkan Alkitab, dan siap dibawakan.
+
+${getPhraseOutlineRules()}
+
+4. Setelah selesai membuat SATU khotbah (naskah + phrase outline), Anda WAJIB menulis status seperti ini:
 ---
 ✅ SELESAI — [Nama Jenis Khotbah yang dibuat]
 
@@ -545,7 +579,7 @@ function buildContinuePrompt(stageKey){
   const idx = STAGES.findIndex(s=>s.key===stageKey);
   const next = STAGES[idx+1];
   if(!next) return '';
-  return `Ya, buatkan khotbah nomor ${idx+2} (${next.title}). Setelah selesai, tampilkan status sisa khotbah dan tanya lagi.`;
+  return `Ya, buatkan khotbah nomor ${idx+2} (${next.title}). Sertakan BAGIAN 1 (Naskah Lengkap) dan BAGIAN 2 (Phrase Outline / Talking Points — frasa kerja, kata kerja di depan, maksimal 10 kata per baris, 5–7 baris, runut dari awal sampai akhir). Setelah selesai, tampilkan status sisa khotbah dan tanya lagi.`;
 }
 
 // ============================================================
@@ -555,6 +589,7 @@ function renderWork(){
   if(!currentProject) return;
   const p = currentProject;
   const filledCount = countFilled(p);
+  const total = STAGES.length;
 
   stageBuffer = {};
   STAGES.forEach(f=>{ stageBuffer[f.key] = p.results[f.key] || ''; });
@@ -567,7 +602,7 @@ function renderWork(){
       <div class="id">${escapeHtml(p.project_id)}</div>
       <h2>${escapeHtml(p.title)}</h2>
       <div class="status-line">
-        <span>🔄 ${filledCount}/11 Jenis</span>
+        <span>🔄 ${filledCount}/${total} Jenis</span>
         <span>📅 ${p.created_date || '-'}</span>
         <span>👤 ${escapeHtml(p.created_by||'-')}</span>
       </div>
@@ -577,7 +612,7 @@ function renderWork(){
     <div class="step-card">
       <span class="step-tag">Langkah 1</span>
       <h3>📝 Isi Detail Tema</h3>
-      <div class="sub">Isi detail tema/topik, ayat dasar (jika ada), dan target audiens agar AI bisa menyusun khotbah yang tepat sasaran.</div>
+      <div class="sub">Isi detail tema/topik, ayat dasar (jika ada), dan target audiens. AI akan membuatkan 11 jenis khotbah secara bertahap — tiap jenis dilengkapi <strong>naskah lengkap + phrase outline</strong>.</div>
 
       <div class="form-group">
         <label>Detail Tema <span class="req">*</span></label>
@@ -593,7 +628,7 @@ function renderWork(){
     <div class="step-card green">
       <span class="step-tag">Langkah 2</span>
       <h3>📋 Copy Prompt ke AI</h3>
-      <div class="sub">Copy prompt di bawah, paste ke ChatGPT/Claude/Gemini. AI akan menampilkan 11 pilihan jenis khotbah. Ketik nomornya, dan AI akan membuatkannya secara bertahap.</div>
+      <div class="sub">Copy prompt di bawah, paste ke ChatGPT/Claude/Gemini. AI akan menampilkan 11 pilihan jenis khotbah. Ketik nomornya, dan AI akan membuat <strong>naskah lengkap + phrase outline (talking points)</strong> dalam satu balasan.</div>
       <div style="position:relative">
         <button class="copy-btn" onclick="copyMasterPrompt()">📋 Copy Prompt</button>
         <div class="prompt-box" id="promptBox"></div>
@@ -604,7 +639,7 @@ function renderWork(){
     <div class="step-card orange">
       <span class="step-tag">Langkah 3</span>
       <h3>📝 Paste Hasil AI per Jenis</h3>
-      <div class="sub">Pilih tab jenis khotbah, paste hasil dari AI, lalu simpan. Sistem otomatis merapikan format Markdown.</div>
+      <div class="sub">Pilih tab jenis khotbah, paste hasil lengkap dari AI (Bagian 1 — Naskah + Bagian 2 — Phrase Outline), lalu simpan. Sistem otomatis merapikan format Markdown.</div>
 
       <div class="stage-tabs" id="stageTabs"></div>
       <div class="stage-hint" id="stageHint"></div>
@@ -640,7 +675,7 @@ function renderWork(){
           e.preventDefault(); e.stopPropagation();
           const loader = document.getElementById('editorLoading');
           loader.classList.add('active');
-          
+
           setTimeout(() => {
               let html = marked.parse(text.replace(/\\(\d+\.)/g, '$1'));
               let range = quillEditor.getSelection(true);
@@ -679,7 +714,15 @@ function updateStageUI(){
     const remaining = STAGES.slice(idx+1);
     hint.innerHTML = `
       <strong>${escapeHtml(s.title)}</strong><br>${escapeHtml(s.desc)}
-      ${remaining.length ? `<br><br><em>Jenis tersisa setelah ini:</em> ${remaining.map(r=>escapeHtml(r.label)).join(' → ')}` : `<br><br><em>Ini jenis terakhir. 🎉</em>`}
+      <span class="outline-note">
+        <span class="badge-outline">PHRASE OUTLINE</span> Wajib ikut dipaste bersama naskah. Format:
+        <span class="rule-line">1. Buka dengan kisah kecelakaan pagi itu
+2. Bandingkan biaya perawatan vs pencegahan
+3. Jelaskan tiga penyebab utama kelalaian
+4. Tawarkan solusi: checklist harian
+5. Tutup dengan ajakan tanda tangan komitmen</span>
+      </span>
+      ${remaining.length ? `<br><em>Jenis tersisa setelah ini:</em> ${remaining.map(r=>escapeHtml(r.label)).join(' → ')}` : `<br><em>Ini jenis terakhir. 🎉</em>`}
       ${cont ? `<br><button class="mini-copy" onclick="copyContinue()">📋 Copy prompt "lanjut ke jenis berikutnya"</button>` : ''}
     `;
   }
@@ -688,7 +731,7 @@ function updateStageUI(){
 function switchStage(key){
   if(currentStage === key) return;
   if(quillEditor) stageBuffer[currentStage] = quillEditor.root.innerHTML;
-  
+
   const loader = document.getElementById('editorLoading');
   if (loader) loader.classList.add('active');
   document.querySelectorAll('.stage-tab').forEach(t => t.classList.add('disabled'));
@@ -765,7 +808,7 @@ async function saveResult(){
 
   try{
     await updateProject(currentProject.id_x, updatedData);
-    showToast(`✅ Tersimpan — ${filled}/11 jenis terisi`,'success');
+    showToast(`✅ Tersimpan — ${filled}/${STAGES.length} jenis terisi`,'success');
     await fetchData();
     currentProject = allProjects.find(x=>x.id_x===currentProject.id_x);
     preferredStage = currentStage;

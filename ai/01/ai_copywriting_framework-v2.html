@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Copywriting Framework - v3.3 (Gambar & Caption)</title>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;min-height:100vh;color:#2d3748}
+
+/* LOGIN */
+.login-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:9999;justify-content:center;align-items:center;padding:20px}
+.login-overlay.active{display:flex}
+.login-box{background:#fff;border-radius:20px;padding:40px;max-width:420px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.4)}
+.login-box h2{text-align:center;font-size:22px;margin-bottom:4px}
+.login-box p{text-align:center;color:#718096;font-size:14px;margin-bottom:20px}
+.login-box .form-group{margin-bottom:14px}
+.login-box label{font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px}
+.login-box input{width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px}
+.login-box input:focus{outline:none;border-color:#ed64a6}
+.login-box .btn-login{width:100%;padding:12px;background:#ed64a6;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px}
+.login-box .btn-login:hover{background:#d53f8c}
+.login-error{color:#fc8181;font-size:13px;text-align:center;margin-top:10px;display:none}
+.login-error.show{display:block}
+
+/* APP */
+.main-content{display:none}
+.main-content.visible{display:block}
+
+.app-header{background:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);flex-wrap:wrap;border-bottom:1px solid #edf2f7;position:sticky;top:0;z-index:100}
+.header-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.header-left h1{font-size:18px;color:#1a2332;display:flex;align-items:center;gap:8px}
+.header-left h1 span{background:#ed64a6;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px}
+.back-btn{background:#f7fafc;border:2px solid #e2e8f0;padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;color:#4a5568;display:none;align-items:center;gap:6px}
+.back-btn:hover{background:#edf2f7}
+.back-btn.show{display:inline-flex}
+.header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn-new{background:#ed64a6;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px}
+.btn-new:hover{background:#d53f8c}
+.user-chip{display:flex;align-items:center;gap:8px;font-size:13px;background:#f7fafc;padding:4px 14px;border-radius:20px}
+.user-chip .role{font-size:10px;padding:1px 8px;border-radius:8px;font-weight:600;background:#c6f6d5;color:#276749}
+.user-chip .role.user{background:#bee3f8;color:#2a69ac}
+.btn-logout{background:#fc8181;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer}
+.btn-logout:hover{background:#f56565}
+
+.view-container{display:none}
+.view-container.active{display:block}
+
+/* LIST */
+.wrap{max-width:1100px;margin:0 auto;padding:24px}
+.list-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+.list-head h2{font-size:22px;color:#1a2332}
+.list-head .sub{font-size:13px;color:#718096;margin-top:2px}
+
+.blueprint-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.bp-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:2px solid transparent;transition:all .2s;cursor:pointer;position:relative}
+.bp-card:hover{border-color:#ed64a6;transform:translateY(-2px);box-shadow:0 8px 20px rgba(237,100,166,.12)}
+.bp-card .id{font-size:11px;color:#a0aec0;font-weight:600;margin-bottom:4px}
+.bp-card .name{font-size:16px;font-weight:700;color:#1a2332;margin-bottom:6px;line-height:1.3}
+.bp-card .desc{font-size:12px;color:#718096;line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bp-card .badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.bp-card .badge{font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px;text-transform:uppercase}
+.bp-card .badge.done{background:#c6f6d5;color:#276749}
+.bp-card .badge.pending{background:#feebc8;color:#9c4221}
+.bp-card .badge.progress{background:#e9d8fd;color:#6b46c1}
+.bp-card .meta{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#a0aec0;border-top:1px solid #edf2f7;padding-top:10px;margin-top:10px}
+.bp-card .actions{position:absolute;top:14px;right:14px;display:none;gap:4px}
+.bp-card:hover .actions{display:flex}
+.bp-card .actions button{background:#fff;border:1px solid #e2e8f0;border-radius:6px;width:26px;height:26px;font-size:12px;cursor:pointer;padding:0}
+.bp-card .actions button:hover{background:#f7fafc}
+
+.empty-state{text-align:center;padding:60px 20px;color:#a0aec0}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.empty-state h3{color:#4a5568;margin-bottom:6px;font-size:16px}
+.empty-state p{font-size:13px;margin-bottom:16px}
+
+/* WORK */
+.work-wrap{max-width:1100px;margin:0 auto;padding:20px}
+.work-header{background:linear-gradient(135deg,#ed64a6,#d53f8c);border-radius:14px;padding:22px 26px;margin-bottom:18px;color:#fff}
+.work-header h2{font-size:20px;margin-bottom:4px}
+.work-header .id{font-size:12px;opacity:.85;font-weight:600}
+.work-header .status-line{font-size:12px;margin-top:8px;opacity:.95;display:flex;gap:12px;flex-wrap:wrap}
+.work-header .status-line span{display:inline-flex;align-items:center;gap:4px}
+
+.step-card{background:#fff;border-radius:14px;padding:22px 26px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.05);border-left:5px solid #ed64a6}
+.step-card.green{border-left-color:#48bb78}
+.step-card.orange{border-left-color:#ed8936}
+.step-card .step-tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 12px;border-radius:12px;background:#fff5f7;color:#d53f8c;margin-bottom:8px;letter-spacing:.4px;text-transform:uppercase}
+.step-card.green .step-tag{background:#f0fff4;color:#276749}
+.step-card.orange .step-tag{background:#fffaf0;color:#9c4221}
+.step-card h3{font-size:17px;color:#1a2332;margin-bottom:4px}
+.step-card .sub{font-size:13px;color:#718096;margin-bottom:16px;line-height:1.5}
+.step-card .form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.step-card label{font-weight:600;font-size:12px;color:#4a5568}
+.step-card input,.step-card textarea{padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;width:100%}
+.step-card input:focus,.step-card textarea:focus{outline:none;border-color:#ed64a6}
+.step-card textarea{resize:vertical;min-height:80px}
+
+.prompt-box{background:#f7fafc;border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;font-size:12px;line-height:1.6;color:#2d3748;white-space:pre-wrap;max-height:340px;overflow-y:auto;position:relative;font-family:'Courier New',monospace}
+.copy-btn{position:sticky;top:0;float:right;background:#ed64a6;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:700;margin-bottom:8px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.copy-btn:hover{background:#d53f8c}
+
+/* STAGE TABS */
+.stage-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.stage-tab{padding:7px 12px;border-radius:9px;border:2px solid #e2e8f0;background:#fff;font-size:12px;font-weight:700;cursor:pointer;color:#718096;display:inline-flex;align-items:center;gap:5px;font-family:inherit;transition:all .15s}
+.stage-tab:hover{border-color:#fbb6ce;color:#d53f8c}
+.stage-tab.filled{border-color:#c6f6d5;background:#f0fff4;color:#276749}
+.stage-tab.active{border-color:#ed64a6;background:#fff5f7;color:#d53f8c;box-shadow:0 2px 8px rgba(237,100,166,.18)}
+.stage-tab.disabled{opacity:.5;pointer-events:none}
+
+.quill-wrapper{background:#fff;border-radius:10px;border:2px solid #e2e8f0;overflow:hidden;position:relative}
+.quill-wrapper .ql-toolbar{border:none;border-bottom:2px solid #e2e8f0;background:#f7fafc;padding:6px}
+.quill-wrapper .ql-container{border:none;min-height:280px;font-size:13px}
+.quill-wrapper .ql-editor{min-height:280px}
+.quill-wrapper .ql-editor h1, .quill-wrapper .ql-editor h2, .quill-wrapper .ql-editor h3 { margin-top: 1em; margin-bottom: 0.5em; font-weight: 700; }
+.quill-wrapper .ql-editor ul, .quill-wrapper .ql-editor ol { padding-left: 20px; margin-bottom: 10px; }
+
+.editor-loading-overlay { position: absolute; inset: 0; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(2px); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 50; }
+.editor-loading-overlay.active { display: flex; }
+.spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid #ed64a6; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 12px; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.loading-text { font-size: 13px; color: #4a5568; font-weight: 600; }
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border:none;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;font-family:inherit}
+.btn-primary{background:#ed64a6;color:#fff}
+.btn-primary:hover{background:#d53f8c}
+.btn-success{background:#48bb78;color:#fff}
+.btn-success:hover{background:#38a169}
+.btn-warning{background:#ed8936;color:#fff}
+.btn-warning:hover{background:#dd6b20}
+.btn-outline{background:transparent;color:#4a5568;border:2px solid #e2e8f0}
+.btn-outline:hover{background:#f7fafc}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center;padding:20px;overflow-y:auto}
+.modal-overlay.active{display:flex}
+.modal{background:#fff;border-radius:18px;max-width:720px;width:100%;max-height:95vh;overflow-y:auto;padding:26px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-close{position:sticky;top:0;float:right;background:#fc8181;color:#fff;border:none;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center}
+.modal-title{font-size:19px;font-weight:700;color:#1a2332;margin-bottom:6px;padding-right:40px}
+.modal-sub{font-size:13px;color:#718096;margin-bottom:18px;padding-right:40px;line-height:1.5}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:14px 22px;border-radius:10px;color:#fff;font-weight:600;font-size:13px;z-index:2000;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:400px;animation:slideUp .3s}
+.toast.success{background:#48bb78}.toast.error{background:#fc8181}.toast.info{background:#4299e1}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:700px){
+  .wrap,.work-wrap{padding:14px}
+  .step-card{padding:18px}
+  .app-header{padding:10px 14px}
+  .header-left h1{font-size:15px}
+  .blueprint-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-overlay active" id="loginOverlay">
+  <div class="login-box">
+    <span style="font-size:44px;display:block;text-align:center;margin-bottom:4px">✍️</span>
+    <h2>Copywriting Framework</h2>
+    <p>Masukkan ide → dapatkan copywriting lengkap</p>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="loginUsername" placeholder="Username">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="Password">
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">Login</button>
+    <div class="login-error" id="loginError">❌ Username atau password salah!</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-content" id="mainContent">
+  <header class="app-header">
+    <div class="header-left">
+      <button class="back-btn" id="backBtn" onclick="backToList()">← Kembali</button>
+      <h1>✍️ Copywriting <span>v3.3 · Gambar & Caption</span></h1>
+    </div>
+    <div class="header-actions">
+      <button class="btn-new" onclick="openNewProject()">＋ Project Baru</button>
+      <span class="user-chip">
+        👤 <span id="headerUser">-</span>
+        <span class="role" id="headerRole">user</span>
+      </span>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </header>
+
+  <!-- LIST VIEW -->
+  <div class="view-container active" id="listView">
+    <div class="wrap">
+      <div class="list-head">
+        <div>
+          <h2>📁 Copywriting Saya</h2>
+          <div class="sub">Satu project = satu ide, berisi 11 framework copywriting</div>
+        </div>
+      </div>
+      <div class="blueprint-grid" id="blueprintGrid"></div>
+    </div>
+  </div>
+
+  <!-- WORK VIEW -->
+  <div class="view-container" id="workView">
+    <div class="work-wrap" id="workWrap"></div>
+  </div>
+</div>
+
+<!-- NEW PROJECT MODAL -->
+<div class="modal-overlay" id="newProjectModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('newProjectModal')">✕</button>
+    <div class="modal-title">✍️ Project Copywriting Baru</div>
+    <div class="modal-sub">Cukup masukkan <strong>Judul Project</strong>. Setelah dibuat, Anda akan melihat prompt untuk AI guna membuat 11 framework copywriting secara bertahap.</div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label style="font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px">📝 Judul Project <span style="color:#fc8181">*</span></label>
+      <input type="text" id="newProjectName" placeholder="Contoh: Promosi Tes Minat Bakat Anak" style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #edf2f7">
+      <button class="btn btn-outline" onclick="closeModal('newProjectModal')">Batal</button>
+      <button class="btn btn-primary" id="saveNewBtn" onclick="saveNewProject()">💾 Buat Project</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// KONFIGURASI
+// ============================================================
+const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+const TABLE = 'ai_copywriting_framework';
+const USERS_TABLE = 'users';
+const SECRET = 'admin';
+const STORAGE_KEY = 'ai_tools_user_v3';
+
+const COLUMNS = {
+  id: 'x_01', // project_id
+  title: 'x_02',
+  prompt: 'x_03',
+  desc: 'x_04', // idea_description
+  status: 'x_05', // multi-framework
+  unused: 'x_06',
+  created_by: 'x_07',
+  unused2: 'x_08',
+  results: 'x_09', // JSON of results
+  created_date: 'x_10'
+};
+
+// 11 Framework
+const FRAMEWORKS = [
+  { key:'hbt', label:'1. HBT', title:'HBT (Hook-Book-Look-Took)' },
+  { key:'aida', label:'2. AIDA', title:'AIDA (Attention-Interest-Desire-Action)' },
+  { key:'pas', label:'3. PAS', title:'PAS (Problem-Agitate-Solution)' },
+  { key:'4p', label:'4. 4P', title:'4P (Promise-Picture-Proof-Push)' },
+  { key:'app', label:'5. APP', title:'APP (Aware-Promise-Prove-Push)' },
+  { key:'pastor', label:'6. PASTOR', title:'PASTOR (Problem-Agitate-Solution-Testimonial-Offer-Response)' },
+  { key:'bab', label:'7. BAB', title:'BAB (Before-After-Bridge)' },
+  { key:'fab', label:'8. FAB', title:'FAB (Features-Advantages-Benefits)' },
+  { key:'quest', label:'9. QUEST', title:'QUEST (Question-Understand-Educate-Stimulate-Transition)' },
+  { key:'scqa', label:'10. SCQA', title:'SCQA (Situation-Complication-Question-Answer)' },
+  { key:'4u', label:'11. 4U', title:'4U (Useful-Urgent-Unique-Ultra-specific)' }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let allProjects = [];
+let currentProject = null;
+let currentUser = null;
+let isAdmin = false;
+let quillEditor = null;
+let frameworkBuffer = {};
+let currentFramework = 'hbt';
+let preferredFramework = null;
+
+// ============================================================
+// SESSION & LOGIN
+// ============================================================
+function getStoredUser(){try{const d=localStorage.getItem(STORAGE_KEY)||sessionStorage.getItem(STORAGE_KEY);if(d){const p=JSON.parse(d);if(p.username&&p.timestamp){const days=(Date.now()-p.timestamp)/(1000*60*60*24);if(days<7)return p.username;}}}catch(e){}return null;}
+function saveUserToStorage(u){const d=JSON.stringify({username:u,timestamp:Date.now()});localStorage.setItem(STORAGE_KEY,d);}
+function clearUserStorage(){localStorage.removeItem(STORAGE_KEY);sessionStorage.removeItem(STORAGE_KEY);}
+function checkAutoLogin(){const u=getStoredUser();if(u){currentUser=u;isAdmin=(u==='admin');showApp();return true;}return false;}
+function showApp(){document.getElementById('loginOverlay').classList.remove('active');document.getElementById('mainContent').classList.add('visible');document.getElementById('headerUser').textContent=currentUser;const r=document.getElementById('headerRole');if(isAdmin){r.textContent='👑 Admin';r.className='role';}else{r.textContent='👤 User';r.className='role user';}fetchData().then(renderList);}
+
+async function doLogin(){
+  const u = document.getElementById('loginUsername').value.trim();
+  const p = document.getElementById('loginPassword').value.trim();
+  const err = document.getElementById('loginError');
+  err.classList.remove('show');
+  if(!u||!p){err.textContent='❌ Username dan password wajib diisi!';err.classList.add('show');return;}
+  const btn = document.getElementById('loginBtn');
+  btn.disabled=true; btn.textContent='Memeriksa...';
+  try{
+    const r = await fetch(API_URL+'?table='+USERS_TABLE,{headers:{'Content-Type':'application/json','X-Custom-Auth':SECRET,'X-Table-Name':USERS_TABLE,'X-Role':'admin'}});
+    const res = await r.json();
+    if(res.success && res.data){
+      const user = res.data.find(x=>x.x_01===u && x.x_02===p);
+      if(user){
+        currentUser = u; isAdmin = (u==='admin');
+        saveUserToStorage(u); showApp(); showToast('✅ Login berhasil','success');
+      } else { err.textContent='❌ Username atau password salah!';err.classList.add('show'); }
+    } else { err.textContent='❌ Gagal ambil data user';err.classList.add('show'); }
+  }catch(e){err.textContent='❌ Gagal login: '+e.message;err.classList.add('show');}
+  finally{btn.disabled=false;btn.textContent='Login';}
+}
+
+function doLogout(){
+  if(!confirm('Yakin ingin logout?'))return;
+  clearUserStorage();
+  currentUser=null; isAdmin=false; currentProject=null;
+  document.getElementById('loginOverlay').classList.add('active');
+  document.getElementById('mainContent').classList.remove('visible');
+  showToast('👋 Logout berhasil','info');
+}
+
+// ============================================================
+// API & DATA
+// ============================================================
+function getHeaders(){return{'Content-Type':'application/json','X-Custom-Auth':SECRET,'X-Table-Name':TABLE,'X-Role':'admin'};}
+async function apiFetch(ep,opt={}){const r=await fetch(API_URL+'?table='+TABLE+ep,{...opt,headers:{...getHeaders(),...(opt.headers||{})}});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||e.message||'HTTP '+r.status);}return r.json();}
+
+async function fetchData(){
+  try{
+    const res = await apiFetch('');
+    if(res.success && res.data){
+      let data = res.data.map(parseRow);
+      if(!isAdmin && currentUser) data = data.filter(d=>d.created_by===currentUser);
+      allProjects = data;
+    } else { allProjects = []; }
+  }catch(e){ allProjects = []; }
+  return allProjects;
+}
+
+function parseRow(r){
+  let results = {};
+  try { results = r.x_09 ? JSON.parse(r.x_09) : {}; } catch(e){}
+  return {
+    id_x: r.id_x,
+    project_id: r.x_01 || '',
+    title: r.x_02 || '',
+    prompt: r.x_03 || '',
+    desc: r.x_04 || '',
+    created_by: r.x_07 || '',
+    results: results,
+    created_date: r.x_10 || ''
+  };
+}
+
+function buildRow(d){
+  return {
+    x_01: d.project_id, x_02: d.title, x_03: d.prompt, x_04: d.desc,
+    x_05: 'multi', x_07: d.created_by, x_09: JSON.stringify(d.results || {}),
+    x_10: d.created_date
+  };
+}
+
+async function createProject(d){ return apiFetch('',{method:'POST',body:JSON.stringify(buildRow(d))}); }
+async function updateProject(id,d){ return apiFetch('&id_x='+id,{method:'PUT',body:JSON.stringify(buildRow(d))}); }
+async function deleteProjectApi(id){ return apiFetch('&id_x='+id,{method:'DELETE'}); }
+
+function generateProjectId(){
+  const today = new Date();
+  const datePart = today.getFullYear().toString() + String(today.getMonth()+1).padStart(2,'0') + String(today.getDate()).padStart(2,'0');
+  const prefix = 'CW-' + datePart + '-';
+  let maxNum = 0;
+  allProjects.forEach(p=>{
+    if(p.project_id.startsWith(prefix)){
+      const n = parseInt(p.project_id.split('-').pop());
+      if(n > maxNum) maxNum = n;
+    }
+  });
+  return prefix + String(maxNum+1).padStart(3,'0');
+}
+
+// ============================================================
+// LIST RENDER
+// ============================================================
+function isFilled(html){
+  if(!html) return false;
+  return html.replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').trim().length > 20;
+}
+function countFilled(project){
+  const res = project.results || {};
+  return FRAMEWORKS.filter(f => isFilled(res[f.key])).length;
+}
+
+function renderList(){
+  const grid = document.getElementById('blueprintGrid');
+  if(!allProjects.length){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="icon">✍️</div>
+      <h3>Belum ada project copywriting</h3>
+      <p>Klik "＋ Project Baru" untuk mulai dari satu ide</p>
+    </div>`;
+    return;
+  }
+  const sorted = [...allProjects].sort((a,b)=>(b.created_date||'').localeCompare(a.created_date||''));
+  grid.innerHTML = sorted.map(p=>{
+    const filled = countFilled(p);
+    let badge;
+    if(filled === 0) badge = '<span class="badge pending">⏳ Belum dimulai</span>';
+    else if(filled >= 11) badge = `<span class="badge done">✅ Lengkap 11/11</span>`;
+    else badge = `<span class="badge progress">🔄 ${filled}/11 Framework</span>`;
+    return `<div class="bp-card" onclick="openProject(${p.id_x})">
+      <div class="actions" onclick="event.stopPropagation()">
+        <button onclick="deleteProject(${p.id_x})" title="Hapus">🗑️</button>
+      </div>
+      <div class="id">${escapeHtml(p.project_id)}</div>
+      <div class="name">${escapeHtml(p.title)}</div>
+      <div class="desc">${escapeHtml(p.desc || 'Belum ada deskripsi ide')}</div>
+      <div class="badges">${badge}</div>
+      <div class="meta">
+        <span>👤 ${escapeHtml(p.created_by||'-')}</span>
+        <span>${p.created_date || '-'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// NEW PROJECT
+// ============================================================
+function openNewProject(){
+  document.getElementById('newProjectName').value = '';
+  document.getElementById('newProjectModal').classList.add('active');
+  setTimeout(()=>document.getElementById('newProjectName').focus(),100);
+}
+
+async function saveNewProject(){
+  const name = document.getElementById('newProjectName').value.trim();
+  if(!name){ showToast('❌ Judul wajib diisi','error'); return; }
+  const btn = document.getElementById('saveNewBtn');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  const today = new Date();
+  const todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  try{
+    const data = {
+      project_id: generateProjectId(),
+      title: name,
+      prompt: '',
+      desc: '',
+      results: {},
+      created_by: currentUser,
+      created_date: todayStr
+    };
+    await createProject(data);
+    showToast('✅ Project dibuat. Isi deskripsi ide di bawah.','success');
+    closeModal('newProjectModal');
+    await fetchData();
+    const created = allProjects.find(x=>x.project_id===data.project_id);
+    if(created) openProject(created.id_x);
+    else renderList();
+  }catch(e){
+    showToast('❌ Gagal menyimpan: '+e.message,'error');
+  }finally{
+    btn.disabled = false; btn.textContent = '💾 Buat Project';
+  }
+}
+
+// ============================================================
+// WORK VIEW
+// ============================================================
+function openProject(id){
+  const p = allProjects.find(x=>x.id_x===id);
+  if(!p){ showToast('Tidak ditemukan','error'); return; }
+  currentProject = p;
+  preferredFramework = null;
+  document.getElementById('backBtn').classList.add('show');
+  document.getElementById('listView').classList.remove('active');
+  document.getElementById('workView').classList.add('active');
+  renderWork();
+}
+
+function backToList(){
+  currentProject = null;
+  document.getElementById('backBtn').classList.remove('show');
+  document.getElementById('workView').classList.remove('active');
+  document.getElementById('listView').classList.add('active');
+  renderList();
+}
+
+// ============================================================
+// GAMBAR & CAPTION RULES (BAGIAN 2)
+// ============================================================
+function getImageCaptionRules(){
+  return `=== BAGIAN 2 — DESKRIPSI GAMBAR & CAPTION ===
+Setelah BAGIAN 1 selesai, WAJIB menambahkan BAGIAN 2 berisi TIGA deskripsi gambar dan TIGA caption (satu caption untuk tiap gambar). Semuanya harus ada dalam SATU balasan bersama BAGIAN 1 dan BAGIAN 3, dipisahkan heading Markdown ## BAGIAN 2 — DESKRIPSI GAMBAR & CAPTION. Anda TIDAK membuat gambarnya: cukup tulis deskripsi teks yang nanti saya salin dan tempel ke AI pembuat gambar.
+
+### 2A — TIGA DESKRIPSI GAMBAR
+- Tulis tepat 3 deskripsi berlabel "Gambar 1", "Gambar 2", "Gambar 3"
+- Ketiganya mewakili tiga momen berbeda dari copywriting di BAGIAN 1: Gambar 1 = pembuka/masalah (hook), Gambar 2 = solusi/inti pesan, Gambar 3 = hasil/ajakan bertindak
+- Tiap deskripsi SATU paragraf utuh, 50–90 kata, siap ditempel tanpa diedit lagi
+- Tiap deskripsi WAJIB memuat: subjek utama beserta ekspresi/aksinya, latar tempat, suasana/emosi, gaya visual (misal foto realistis, ilustrasi flat, 3D), pencahayaan, sudut/komposisi kamera, warna dominan, dan TEKS DI DALAM GAMBAR (aturan di bawah)
+- Tiap deskripsi harus berdiri sendiri (jangan menulis "seperti gambar sebelumnya"), tetapi ketiganya memakai gaya visual dan palet warna yang SAMA agar serasi sebagai satu set
+- Akhiri tiap deskripsi dengan rasio gambar 4:5
+- ATURAN TEKS DI DALAM GAMBAR: tiap gambar WAJIB memuat tulisan yang tampil di dalam gambar
+  - Satu teks utama (headline) MAKSIMAL 7 kata, diambil dari inti pesan BAGIAN 1, ditulis PERSIS dalam tanda kutip agar tidak berubah oleh AI pembuat gambar; boleh ditambah satu teks pendukung MAKSIMAL 5 kata
+  - Sebutkan posisi teks (misal di bagian atas, di tengah bawah), gaya huruf (misal sans-serif tebal, huruf kapital), dan warna teks yang kontras dengan latar
+  - Teks tidak boleh menutupi subjek utama dan harus terbaca jelas
+  - Gunakan ejaan Bahasa Indonesia yang benar, tanpa singkatan aneh, dan jangan memakai teks yang panjang
+  - Teks ketiga gambar berbeda dan berurutan sebagai satu alur pesan (Gambar 1 memancing, Gambar 2 menjawab, Gambar 3 mengajak)
+- LARANGAN: DILARANG memasukkan logo atau watermark; DILARANG menyebut nama orang nyata, tokoh publik, atau merek; DILARANG bahasa abstrak tanpa wujud visual (contoh SALAH: "Gambar yang melambangkan kesuksesan")
+Contoh FORMAT (isi harus disesuaikan dengan ide saya, jangan menyalin contoh ini):
+**Gambar 1 — Hook**
+Foto realistis seorang ibu muda duduk di meja makan dengan wajah lelah, menatap tumpukan tagihan dan laptop yang menyala. Latar dapur rumah sederhana di pagi hari, suasana sunyi dan tegang. Cahaya alami lembut dari jendela samping, sudut kamera setinggi mata, komposisi close-up setengah badan. Warna dominan abu-biru yang redup. Di bagian atas gambar tertulis teks utama "Sudah Berusaha, Tapi Kok Begini?" dengan huruf sans-serif tebal berwarna putih, dan di bawahnya teks kecil "Kamu Tidak Sendirian". Rasio 4:5.
+
+### 2B — TIGA CAPTION GAMBAR
+- Tulis tepat 3 caption: "Caption 1" untuk Gambar 1, "Caption 2" untuk Gambar 2, "Caption 3" untuk Gambar 3
+- Tiap caption 2–3 kalimat pendek (MAKSIMAL 40 kata di luar tagar); kalimat pertama harus langsung menarik perhatian
+- Isi caption sejalan dengan adegan pada gambarnya dan dengan pesan inti BAGIAN 1; Caption 3 WAJIB ditutup ajakan bertindak yang jelas
+- Bahasa Indonesia santai-persuasif, siap diposting; emoji secukupnya (MAKSIMAL 2 per caption)
+- Setelah caption, di BARIS BARU tulis 5–8 TAGAR: campuran tagar luas (topik besar), tagar spesifik (sesuai ide), dan tagar komunitas/ajakan. Tulis tanpa spasi dan tanpa tanda baca (contoh: #TesMinatBakat), dan jangan memakai kumpulan tagar yang persis sama di ketiga caption
+- DILARANG menaruh tagar di tengah kalimat caption
+Contoh FORMAT (isi harus disesuaikan dengan ide saya):
+**Caption 1 (untuk Gambar 1)**
+Capek merasa sudah berusaha, tapi hasilnya tak kunjung terlihat? Kamu tidak sendirian, dan ada jalan keluarnya.
+#ParentingIndonesia #TipsOrangTua #AnakBerprestasi #MinatBakatAnak #KenaliPotensiAnak`;
+}
+
+// ============================================================
+// ============================================================
+// PHRASE OUTLINE RULES (BAGIAN 3)
+// ============================================================
+function getPhraseOutlineRules(){
+  return `=== BAGIAN 3 — TALKING POINTS (5 VARIAN) ===
+Setelah BAGIAN 2 selesai, WAJIB menambahkan BAGIAN 3 berisi LIMA varian talking points (3A sampai 3E) di bawah ini, ditulis berurutan dengan sub-heading masing-masing. Kelima varian meringkas naskah yang SAMA dengan urutan yang SAMA, dan semuanya harus ada dalam SATU balasan bersama BAGIAN 1 dan BAGIAN 2, dipisahkan heading Markdown (## BAGIAN 1 — COPYWRITING LENGKAP, ## BAGIAN 2 — DESKRIPSI GAMBAR & CAPTION, dan ## BAGIAN 3 — TALKING POINTS (5 VARIAN)). Jangan hanya menampilkan sebagian varian.
+
+ATURAN UMUM semua varian:
+- Berfungsi sebagai pemicu saat tampil, BUKAN ringkasan isi dan BUKAN naskah mini
+- Runut dari awal sampai akhir
+- Tanpa tabel
+
+### 3A — PHRASE OUTLINE
+- 5–7 baris bernomor (1., 2., 3., dst.)
+- Setiap baris adalah FRASA KERJA — KATA KERJA DI DEPAN
+- Kata kerja yang dianjurkan: "Buka dengan…", "Ceritakan…", "Bandingkan…", "Jelaskan…", "Tunjukkan…", "Uraikan…", "Sebutkan…", "Tawarkan…", "Tutup dengan…", "Ajukan…", "Minta…"
+- MAKSIMAL 10 kata per baris
+- LARANGAN KERAS khusus 3A: DILARANG kalimat lengkap; DILARANG pertanyaan retoris (contoh SALAH: "Pernahkah kita merasa sudah berbuat benar tapi badai tetap datang?"); DILARANG kalimat puitis/naratif (contoh SALAH: "Puncak kerinduan: Mengenal kuasa kebangkitan"); DILARANG kata benda telanjang (contoh SALAH: "Paulus: manusia super secara agama"); DILARANG label/ilustrasi sebagai kata benda (contoh SALAH: "Ilustrasi pendaki melepas ransel berat")
+Contoh BENAR:
+1. Buka dengan kisah kecelakaan pagi itu
+2. Bandingkan biaya perawatan vs pencegahan
+3. Jelaskan tiga penyebab utama kelalaian
+4. Tawarkan solusi: checklist harian
+5. Tutup dengan ajakan tanda tangan komitmen
+
+### 3B — TRIGGER SENTENCE / STARTER LINE
+- Tulis HANYA KALIMAT PERTAMA yang akan diucapkan di tiap blok, sisanya dibiarkan mengalir
+- 5–7 baris bernomor, tiap baris satu kalimat pembuka dalam tanda kutip, MAKSIMAL 15 kata
+- Boleh berupa kalimat langsung, pertanyaan, atau data; JANGAN menulis lanjutannya
+Contoh BENAR:
+1. "Pagi itu saya melihat seorang anak terjatuh dari sepeda..."
+2. "Tahukah Anda, 68% kecelakaan kerja terjadi karena hal sepele?"
+3. "Ada tiga hal yang bisa kita lakukan mulai besok."
+
+### 3C — STORY SPINE / BEAT SHEET
+- 5–7 beat bernomor, tiap beat SATU kalimat pendek (MAKSIMAL 12 kata)
+- Beat bersambung secara sebab-akibat (Dulu… Suatu hari… Akibatnya… Sampai akhirnya… Yang berubah adalah…)
+- Untuk materi non-cerita, susun alur argumen sebagai rangkaian sebab-akibat yang sama
+Contoh BENAR:
+1. Dulu saya selalu gugup di depan orang.
+2. Suatu hari saya diminta memimpin rapat mendadak.
+3. Saya gagal total — suara hilang, tangan gemetar.
+4. Malam itu saya memutuskan belajar serius.
+5. Setahun kemudian saya berdiri di panggung 500 orang.
+6. Yang berubah bukan bakat saya, tapi cara saya berlatih.
+
+### 3D — SIGNPOST OUTLINE
+- 4–6 poin bernomor; tiap poin berisi frasa pendek (MAKSIMAL 6 kata)
+- Di baris berikutnya tulis penanda transisi diawali "→" berisi kalimat transisi pendek dalam tanda kutip (MAKSIMAL 10 kata) menuju poin berikutnya
+- Poin terakhir TANPA transisi
+Contoh BENAR:
+1. Pembuka — kisah
+   → "Itu sebabnya..."
+2. Data — kenapa penting
+   → "Lalu apa solusinya?"
+3. Tiga solusi
+   → "Mari kita mulai dari yang paling mudah."
+4. Penutup — ajakan
+
+### 3E — ONE-LINE-PER-IDEA
+- Aturan keras: SATU baris = SATU ide; DILARANG dua ide dalam satu baris (jangan menggabung dengan "dan", koma, atau titik dua + ide kedua)
+- 5–7 baris bernomor, MAKSIMAL 10 kata per baris, boleh frasa atau klausa pendek
+- Cocok untuk presentasi bisnis/pitch
+Contoh BENAR:
+1. Kecelakaan terjadi karena hal sepele
+2. Pencegahan lebih murah daripada perawatan
+3. Penyebab utamanya kelalaian harian
+4. Checklist harian menutup celah itu
+5. Komitmen tertulis menjaga konsistensi`;
+}
+
+// ============================================================
+// PROMPT BUILDER
+// ============================================================
+function buildMasterPrompt(desc){
+  return `Anda adalah Copywriter Senior dan Pakar Marketing. Saya ingin Anda membuat copywriting SECARA BERTAHAP untuk ide/produk berikut:
+
+=== DESKRIPSI IDE ===
+${desc}
+
+=== ATURAN KERJA (WAJIB DIPATUHI) ===
+1. Di balasan PERTAMA, Anda HANYA BOLEH bertanya dan menampilkan daftar pilihan berikut:
+   "Silakan pilih nomor framework yang ingin Anda buatkan copywriting-nya:
+   1. HBT (Hook-Book-Look-Took)
+   2. AIDA (Attention-Interest-Desire-Action)
+   3. PAS (Problem-Agitate-Solution)
+   4. 4P (Promise-Picture-Proof-Push)
+   5. APP (Aware-Promise-Prove-Push)
+   6. PASTOR (Problem-Agitate-Solution-Testimonial-Offer-Response)
+   7. BAB (Before-After-Bridge)
+   8. FAB (Features-Advantages-Benefits)
+   9. QUEST (Question-Understand-Educate-Stimulate-Transition)
+   10. SCQA (Situation-Complication-Question-Answer)
+   11. 4U (Useful-Urgent-Unique-Ultra-specific)
+   
+   Ketik nomornya (misal: 1)."
+   
+   JANGAN membuat copywriting apapun di balasan pertama.
+2. Tunggu saya membalas dengan angka.
+3. Setelah saya membalas angka, buatkan materi dengan SUSUNAN TIGA BAGIAN berikut. Ketiga bagian harus tampil dalam SATU balasan (bukan dipisah).
+
+   === BAGIAN 1 — COPYWRITING LENGKAP ===
+   Tulis copywriting menggunakan framework nomor tersebut. Buat yang sangat menjual, persuasif, dan siap pakai.
+
+${getImageCaptionRules()}
+
+${getPhraseOutlineRules()}
+4. Setelah selesai membuat SATU copywriting (copywriting + gambar & caption + talking points), Anda WAJIB menulis status seperti ini:
+---
+✅ SELESAI — [Nama Framework yang dibuat]
+
+Framework yang sudah dibuat: [Sebutkan nomornya dan namanya]
+Framework yang tersisa: [Sebutkan nomor dan nama yang belum dibuat]
+
+Pilih nomor selanjutnya, atau ketik "STOP" jika sudah selesai.
+---
+5. BERHENTI setelah status itu. JANGAN membuat framework berikutnya sampai saya membalas lagi.
+6. Jika saya membalas "STOP", ucapkan terima kasih dan akhiri sesi.
+7. FORMAT OUTPUT:
+   - Gunakan format Markdown yang rapi (heading, bold, bullet points).
+   - DILARANG KERAS menggunakan Tabel (jangan pakai karakter |).
+   - DILARANG membuat atau menghasilkan gambar sungguhan. Anda hanya menulis DESKRIPSI gambar dalam bentuk teks (BAGIAN 2). Seluruh output berupa teks saja.
+   - Gunakan bahasa Indonesia yang persuasif dan profesional.`;
+}
+
+function buildContinuePrompt(fwKey){
+  const idx = FRAMEWORKS.findIndex(f=>f.key===fwKey);
+  const next = FRAMEWORKS[idx+1];
+  if(!next) return '';
+  return `Ya, buatkan framework nomor ${idx+2} (${next.title}). Sertakan BAGIAN 1 (Copywriting Lengkap), BAGIAN 2 (3 Deskripsi Gambar + 3 Caption lengkap dengan tagar), dan BAGIAN 3 (Talking Points 5 varian: 3A Phrase Outline, 3B Trigger Sentence, 3C Story Spine, 3D Signpost Outline, 3E One-Line-Per-Idea). Setelah selesai, tampilkan status sisa framework dan tanya lagi.`;
+}
+
+// ============================================================
+// RENDER WORK
+// ============================================================
+function renderWork(){
+  if(!currentProject) return;
+  const p = currentProject;
+  const filledCount = countFilled(p);
+
+  frameworkBuffer = {};
+  FRAMEWORKS.forEach(f=>{ frameworkBuffer[f.key] = p.results[f.key] || ''; });
+
+  currentFramework = preferredFramework || (FRAMEWORKS.find(f=>isFilled(frameworkBuffer[f.key])) || FRAMEWORKS[0]).key;
+  preferredFramework = null;
+
+  document.getElementById('workWrap').innerHTML = `
+    <div class="work-header">
+      <div class="id">${escapeHtml(p.project_id)}</div>
+      <h2>${escapeHtml(p.title)}</h2>
+      <div class="status-line">
+        <span>🔄 ${filledCount}/11 Framework</span>
+        <span>📅 ${p.created_date || '-'}</span>
+        <span>👤 ${escapeHtml(p.created_by||'-')}</span>
+      </div>
+    </div>
+
+    <!-- STEP 1: IDE -->
+    <div class="step-card">
+      <span class="step-tag">Langkah 1</span>
+      <h3>📝 Isi Deskripsi Ide</h3>
+      <div class="sub">Cukup isi deskripsi ide secara detail. AI akan membuatkan 11 framework copywriting secara bertahap, masing-masing berisi Copywriting Lengkap + 3 Deskripsi Gambar & 3 Caption (dengan tagar) + Talking Points untuk menyampaikan copy.</div>
+
+      <div class="form-group">
+        <label>Deskripsi Ide <span class="req">*</span></label>
+        <textarea id="fld_desc" rows="4" placeholder="Contoh: Tes minat bakat anak yang ditujukan untuk audiens orang tua...">${escapeHtml(p.desc||'')}</textarea>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-success" onclick="saveIdeaFields(true)">💾 Simpan & Buat Prompt</button>
+        <button class="btn btn-outline" onclick="saveIdeaFields(false)">💾 Simpan Saja</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: PROMPT -->
+    <div class="step-card green">
+      <span class="step-tag">Langkah 2</span>
+      <h3>📋 Copy Prompt ke AI</h3>
+      <div class="sub">Copy prompt di bawah, paste ke ChatGPT/Claude/Gemini. AI akan menampilkan 11 pilihan framework. Ketik nomornya, dan AI akan membuatkannya secara bertahap.</div>
+      <div style="position:relative">
+        <button class="copy-btn" onclick="copyMasterPrompt()">📋 Copy Prompt</button>
+        <div class="prompt-box" id="promptBox"></div>
+      </div>
+    </div>
+
+    <!-- STEP 3: HASIL -->
+    <div class="step-card orange">
+      <span class="step-tag">Langkah 3</span>
+      <h3>📝 Paste Hasil AI per Framework</h3>
+      <div class="sub">Pilih tab framework, paste hasil dari AI (Copywriting + Gambar & Caption + Talking Points sekaligus), lalu simpan. Sistem otomatis merapikan format Markdown.</div>
+
+      <div class="stage-tabs" id="stageTabs"></div>
+      <div class="stage-hint" id="stageHint"></div>
+
+      <div class="quill-wrapper">
+        <div class="editor-loading-overlay" id="editorLoading">
+          <div class="spinner"></div>
+          <div class="loading-text">Memuat konten...</div>
+        </div>
+        <div id="resultEditor"></div>
+      </div>
+
+      <div class="action-row" style="margin-top:14px">
+        <button class="btn btn-success" onclick="saveResult()">💾 Simpan Project</button>
+        <button class="btn btn-outline" onclick="manualConvertMarkdown()">✨ Rapikan Markdown</button>
+        <button class="btn btn-warning" onclick="clearCurrentStage()">🗑️ Kosongkan Framework Ini</button>
+      </div>
+    </div>
+  `;
+
+  quillEditor = new Quill('#resultEditor', {
+    theme: 'snow',
+    placeholder: 'Paste hasil copywriting framework ini di sini...',
+    modules: { toolbar: [[{header:[1,2,3,false]}],['bold','italic','underline'],[{list:'ordered'},{list:'bullet'}],['blockquote'],['clean']] }
+  });
+  quillEditor.root.innerHTML = frameworkBuffer[currentFramework] || '';
+  quillEditor.on('text-change', ()=>{ if(quillEditor) frameworkBuffer[currentFramework] = quillEditor.root.innerHTML; });
+
+  // Auto Convert Markdown
+  quillEditor.root.addEventListener('paste', function(e) {
+      let text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      if (text && /(?:^|\n)(#{1,6} |\* |- |\d+\. |\*\*|__)/.test(text)) {
+          e.preventDefault(); e.stopPropagation();
+          const loader = document.getElementById('editorLoading');
+          loader.classList.add('active');
+          
+          setTimeout(() => {
+              let html = marked.parse(text.replace(/\\(\d+\.)/g, '$1'));
+              let range = quillEditor.getSelection(true);
+              quillEditor.clipboard.dangerouslyPasteHTML(range.index, html, 'user');
+              loader.classList.remove('active');
+              showToast('✨ Format Markdown otomatis dirapikan', 'success');
+          }, 50);
+      }
+  });
+
+  updateStageUI();
+  updatePromptPreview();
+  document.getElementById('fld_desc').addEventListener('input', updatePromptPreview);
+}
+
+function updatePromptPreview(){
+  const desc = document.getElementById('fld_desc')?.value.trim() || '[Deskripsi Ide]';
+  const box = document.getElementById('promptBox');
+  if(box) box.textContent = buildMasterPrompt(desc);
+}
+
+function updateStageUI(){
+  const tabs = document.getElementById('stageTabs');
+  if(tabs){
+    tabs.innerHTML = FRAMEWORKS.map(f=>{
+      const filled = isFilled(frameworkBuffer[f.key]);
+      const active = f.key===currentFramework;
+      return `<button class="stage-tab ${active?'active':''} ${filled?'filled':''}" data-stage="${f.key}" onclick="switchFramework('${f.key}')">${filled?'✅':'○'} ${f.label}</button>`;
+    }).join('');
+  }
+  const hint = document.getElementById('stageHint');
+  if(hint){
+    const f = FRAMEWORKS.find(x=>x.key===currentFramework);
+    const idx = FRAMEWORKS.findIndex(x=>x.key===currentFramework);
+    const cont = buildContinuePrompt(currentFramework);
+    const remaining = FRAMEWORKS.slice(idx+1);
+    hint.innerHTML = `
+      <strong>${escapeHtml(f.title)}</strong>
+      ${remaining.length ? `<br><em>Framework tersisa setelah ini:</em> ${remaining.map(r=>escapeHtml(r.label)).join(' → ')}` : `<br><em>Ini framework terakhir. 🎉</em>`}
+      <div style="margin-top:10px;padding:8px 10px;border-left:3px solid #0d9488;background:rgba(13,148,136,.08);border-radius:6px;font-size:.82rem;line-height:1.5"><strong>🎯 ISI HASIL AI:</strong> terdiri dari <strong>BAGIAN 1 (copywriting)</strong> + <strong>BAGIAN 2 (3 Deskripsi Gambar + 3 Caption &amp; tagar)</strong> + <strong>BAGIAN 3 (5 varian Talking Points)</strong>. Paste <strong>ketiganya sekaligus</strong>. Talking Points: 3A Phrase Outline, 3B Trigger Sentence, 3C Story Spine, 3D Signpost Outline, 3E One-Line-Per-Idea.</div>
+      ${cont ? `<br><button class="mini-copy" onclick="copyContinue()">📋 Copy prompt "lanjut ke framework berikutnya"</button>` : ''}
+    `;
+  }
+}
+
+function switchFramework(key){
+  if(currentFramework === key) return;
+  if(quillEditor) frameworkBuffer[currentFramework] = quillEditor.root.innerHTML;
+  
+  const loader = document.getElementById('editorLoading');
+  if (loader) loader.classList.add('active');
+  document.querySelectorAll('.stage-tab').forEach(t => t.classList.add('disabled'));
+
+  currentFramework = key;
+
+  setTimeout(() => {
+    if(quillEditor) quillEditor.root.innerHTML = frameworkBuffer[key] || '';
+    updateStageUI();
+    if (loader) loader.classList.remove('active');
+    document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('disabled'));
+  }, 50);
+}
+
+function copyMasterPrompt(){ copyText(document.getElementById('promptBox').textContent, '✅ Prompt disalin — paste ke AI'); }
+function copyContinue(){ copyText(buildContinuePrompt(currentFramework), '✅ Prompt lanjutan disalin'); }
+
+function copyText(text, okMsg){
+  navigator.clipboard.writeText(text).then(()=>showToast(okMsg,'success')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta); showToast(okMsg,'success');
+  });
+}
+
+function manualConvertMarkdown(){
+  if(!quillEditor) return;
+  let rawText = quillEditor.getText();
+  if(!rawText.trim()) return;
+  const loader = document.getElementById('editorLoading');
+  loader.classList.add('active');
+  setTimeout(() => {
+    quillEditor.root.innerHTML = marked.parse(rawText.replace(/\\(\d+\.)/g, '$1'));
+    loader.classList.remove('active');
+    showToast('✨ Teks berhasil dirapikan!', 'success');
+  }, 50);
+}
+
+// ============================================================
+// SAVE & CLEAR
+// ============================================================
+async function saveIdeaFields(alsoGenerate){
+  if(!currentProject) return;
+  const desc = document.getElementById('fld_desc').value.trim();
+  if(!desc){ showToast('❌ Deskripsi ide wajib diisi','error'); return; }
+
+  if(quillEditor) frameworkBuffer[currentFramework] = quillEditor.root.innerHTML;
+
+  const updatedData = {
+    ...currentProject,
+    desc: desc,
+    prompt: alsoGenerate ? buildMasterPrompt(desc) : currentProject.prompt,
+    results: {...frameworkBuffer}
+  };
+
+  try{
+    await updateProject(currentProject.id_x, updatedData);
+    showToast(alsoGenerate ? '✅ Disimpan. Prompt siap di-copy!' : '✅ Disimpan','success');
+    await fetchData();
+    currentProject = allProjects.find(x=>x.id_x===currentProject.id_x);
+    preferredFramework = currentFramework;
+    renderWork();
+    if(alsoGenerate) document.getElementById('promptBox').scrollIntoView({behavior:'smooth', block:'center'});
+  }catch(e){ showToast('❌ Gagal: '+e.message,'error'); }
+}
+
+async function saveResult(){
+  if(!currentProject || !quillEditor) return;
+  frameworkBuffer[currentFramework] = quillEditor.root.innerHTML;
+
+  const filled = FRAMEWORKS.filter(f=>isFilled(frameworkBuffer[f.key])).length;
+  if(filled === 0){ showToast('❌ Paste hasil AI dulu','error'); return; }
+
+  const updatedData = { ...currentProject, results: {...frameworkBuffer} };
+
+  try{
+    await updateProject(currentProject.id_x, updatedData);
+    showToast(`✅ Tersimpan — ${filled}/11 framework terisi`,'success');
+    await fetchData();
+    currentProject = allProjects.find(x=>x.id_x===currentProject.id_x);
+    preferredFramework = currentFramework;
+    renderWork();
+  }catch(e){ showToast('❌ Gagal: '+e.message,'error'); }
+}
+
+function clearCurrentStage(){
+  if(!quillEditor) return;
+  const f = FRAMEWORKS.find(x=>x.key===currentFramework);
+  if(!confirm('Kosongkan isi framework "'+f.title+'"? Framework lain tetap tersimpan.')) return;
+  quillEditor.root.innerHTML = '';
+  frameworkBuffer[currentFramework] = '';
+  updateStageUI();
+}
+
+async function deleteProject(id){
+  if(!confirm('Hapus project ini?')) return;
+  try{
+    await deleteProjectApi(id);
+    showToast('✅ Dihapus','success');
+    await fetchData();
+    if(currentProject && currentProject.id_x === id){ backToList(); }
+    else { renderList(); }
+  }catch(e){ showToast('❌ Gagal hapus: '+e.message,'error'); }
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function showToast(msg,type='info'){
+  const existing = document.querySelector('.toast'); if(existing) existing.remove();
+  const t = document.createElement('div'); t.className = 'toast '+type; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(20px)';t.style.transition='.3s';setTimeout(()=>t.remove(),300);},3500);
+}
+function escapeHtml(s){ if(s==null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', ()=>{
+  if(!checkAutoLogin()) document.getElementById('loginOverlay').classList.add('active');
+  document.getElementById('loginPassword').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+  document.getElementById('newProjectName').addEventListener('keydown', e=>{ if(e.key==='Enter') saveNewProject(); });
+  document.querySelectorAll('.modal-overlay').forEach(o=>{
+    o.addEventListener('click', e=>{ if(e.target===o) o.classList.remove('active'); });
+  });
+});
+</script>
+</body>
+</html>
