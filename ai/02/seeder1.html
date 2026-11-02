@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seeder 2 — Lengkap (20 Kategori)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4f8;min-height:100vh;padding:20px;color:#2d3748}
+.container{max-width:800px;margin:0 auto}
+.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,.08);margin-bottom:16px}
+h1{font-size:22px;margin-bottom:4px;color:#1a2332}
+.subtitle{color:#718096;font-size:13px;margin-bottom:20px}
+h2{font-size:16px;margin-bottom:12px;color:#2d3748}
+input,textarea{padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;width:100%;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:#e53e3e}
+.btn{padding:10px 20px;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;transition:.15s}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#e53e3e;color:#fff}
+.btn-primary:hover:not(:disabled){background:#c53030}
+.btn-success{background:#48bb78;color:#fff}
+.btn-success:hover:not(:disabled){background:#38a169}
+.btn-danger{background:#fc8181;color:#fff}
+.btn-danger:hover:not(:disabled){background:#f56565}
+.btn-outline{background:transparent;color:#4a5568;border:2px solid #e2e8f0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+label{font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px}
+.form-group{margin-bottom:12px}
+.status{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:12px;display:none;line-height:1.5}
+.status.show{display:block}
+.status.ok{background:#f0fff4;color:#22543d;border-left:4px solid #48bb78}
+.status.err{background:#fff5f5;color:#c53030;border-left:4px solid #fc8181}
+.status.info{background:#ebf8ff;color:#2c5282;border-left:4px solid #4299e1}
+.info-box{background:#f7fafc;padding:14px 16px;border-radius:10px;font-size:12px;line-height:1.7;color:#4a5568;border-left:4px solid #e53e3e;margin-bottom:16px}
+.code{background:#edf2f7;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:11px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>🌱 Seeder Sistem ke-2 (Lengkap)</h1>
+    <p class="subtitle">Seed default config ke tabel <code class="code">kontrol_admin</code> baris <code class="code">id_x = 10</code></p>
+    <div class="info-box">
+      <strong>⚙️ File ini hanya dijalankan SEKALI.</strong><br>
+      Berisi 20 Kategori (5 Grup x 4 Kategori) khusus untuk Problem Solving, Negosiasi, Manajemen Konflik, dll.
+    </div>
+
+    <h2>🔐 Login Admin</h2>
+    <div class="form-group"><label>Username</label><input type="text" id="u" placeholder="admin"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="p" placeholder="password"></div>
+    <div class="row">
+      <button class="btn btn-primary" id="btnCheck" onclick="checkCurrent()">🔍 Cek Config</button>
+      <button class="btn btn-success" id="btnSeed" onclick="doSeed()" disabled>🌱 Seed ke id_x=10</button>
+      <button class="btn btn-danger" id="btnDelete" onclick="doDelete()" disabled>🗑️ Hapus Row id_x=10</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+const USERS_TABLE = 'users';
+const KONTROL_TABLE = 'kontrol_admin';
+const KONTROL_ID = 10; // ID BERBEDA DARI SISTEM 1
+const SECRET = 'admin';
+
+const DEFAULT_MODULES = {
+  analisis_utama:   { title:'ANALISIS & FRAMEWORK', desc:'Berisi analisis mendalam dan penerapan framework {pickLabel}.' },
+  naskah_utama:     { title:'NASKAH / PANDUAN', desc:'Berisi naskah lengkap, panduan praktis, atau strategi.' },
+  script_komunikasi:{ title:'SCRIPT PERCAKAPAN', desc:'Draft percakapan siap pakai (dialog [Anda] & [Lawan Bicara]).' },
+  action_plan:      { title:'ACTION PLAN', desc:'Langkah-langkah konkret yang harus diambil (To-Do List).' }
+};
+
+const DEFAULT_CATEGORIES = {
+  // ================= GRUP 1: IDEA & INNOVATION =================
+  idea_incubator: {
+    group: 'Idea & Innovation',
+    aktif: true, theme: { icon:'💡', color:'#d69e2e' },
+    ui: { label:'Idea Incubator', placeholder:`Tuliskan ide mentah Anda di sini, sekasar apapun itu...\n\nContoh:\n- Ide: Bikin aplikasi pengingat minum air putih tapi ada unsur game-nya.\n- Masalah: Banyak orang malas minum air.\n- Target: Pekerja kantoran.` },
+    prompt: { role:'Innovation Strategist & Product Ideator', outputName:'PENGEMBANGAN IDE', pickLabel:'metode ideasi', extraRules:'Olah ide mentah user menjadi konsep yang lebih matang. Gunakan metode yang dipilih untuk mengeksplorasi ide dari berbagai sudut pandang. Berikan ide yang out-of-the-box namun tetap realistis.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }],
+    menu: [
+      { label:'SCAMPER Technique', desc:'Substitute, Combine, Adapt, Modify, Put to another use, Eliminate, Reverse. Memodifikasi ide yang sudah ada.' },
+      { label:'Reverse Brainstorming', desc:'Mencari cara membuat masalah menjadi lebih buruk, lalu membaliknya menjadi solusi.' },
+      { label:'Lean Startup Validation', desc:'Merancang asumsi, MVP, dan cara validasi ide ke pasar sebelum membangun produk.' }
+    ]
+  },
+  design_thinking: {
+    group: 'Idea & Innovation',
+    aktif: true, theme: { icon:'⚙️', color:'#dd6b20' },
+    ui: { label:'Design Thinking', placeholder:`Tuliskan masalah pengguna atau ide produk/layanan...\n\nContoh:\n- Masalah: Pasien lansia kesulitan mendaftar online di rumah sakit.\n- Target: Lansia 60+ tahun.\n- Tujuan: Membuat alur pendaftaran yang ramah lansia.` },
+    prompt: { role:'Design Thinking Facilitator', outputName:'PANDUAN DESIGN THINKING', pickLabel:'tahapan', extraRules:'Bantu user melalui proses desain yang berpusat pada manusia (human-centered design). Fokus pada empati dan iterasi cepat.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }, { key:'action_plan', enabled:true }],
+    menu: [
+      { label:'Empathize & Define', desc:'Menggali kebutuhan pengguna secara mendalam dan merumuskan masalah (Problem Statement).' },
+      { label:'Ideate (Brainstorming)', desc:'Menghasilkan sebanyak mungkin solusi kreatif tanpa menghakimi ide.' },
+      { label:'Prototype & Test', desc:'Membuat model sederhana (MVP) dan mengujinya ke pengguna nyata untuk mendapat feedback.' }
+    ]
+  },
+  triz_method: {
+    group: 'Idea & Innovation',
+    aktif: true, theme: { icon:'🧗', color:'#2b6cb0' },
+    ui: { label:'TRIZ Method', placeholder:`Tuliskan masalah teknis atau kontradiksi yang ingin dipecahkan...\n\nContoh:\n- Kontradiksi: Saya ingin produk lebih kuat (tidak mudah pecah), TAPI juga harus lebih ringan dan tipis.` },
+    prompt: { role:'TRIZ (Theory of Inventive Problem Solving) Specialist', outputName:'ANALISIS TRIZ', pickLabel:'prinsip TRIZ', extraRules:'Gunakan matriks kontradiksi TRIZ atau 40 Prinsip Inventif untuk memberikan solusi inovatif atas masalah teknis user.', formatRules:[] },
+    modules: [{ key:'analisis_utama', enabled:true }],
+    menu: [
+      { label:'Contradiction Matrix', desc:'Memetakan parameter yang bertentangan (misal: kecepatan vs kekuatan) untuk menemukan solusi.' },
+      { label:'40 Inventive Principles', desc:'Prinsip-prinsip inovasi yang sudah teruji (seperti Segmentasi, Asimetri, Mekanika Fluida).' },
+      { label:'Ideal Final Result (IFR)', desc:'Membayangkan solusi sempurna di mana masalah terselesaikan tanpa menambah biaya/kompleksitas.' }
+    ]
+  },
+  mind_mapping: {
+    group: 'Idea & Innovation',
+    aktif: true, theme: { icon:'🕸️', color:'#805ad5' },
+    ui: { label:'Mind Mapping & Brainwriting', placeholder:`Tuliskan topik besar atau masalah yang ingin dieksplorasi...\n\nContoh:\n- Topik: Strategi meningkatkan penjualan toko online.\n- Masalah: Penjualan stagnan di angka 10 juta/bulan.` },
+    prompt: { role:'Creative Facilitator', outputName:'PETA IDE', pickLabel:'metode visual', extraRules:'Bantu user memecah topik besar menjadi cabang-cabang ide kecil yang spesifik dan bisa dieksekusi.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }],
+    menu: [
+      { label:'Buzan Mind Mapping', desc:'Memetakan ide dari pusat (tema utama) ke cabang-cabang (sub-tema) secara visual dan asosiatif.' },
+      { label:'Brainwriting 6-3-5', desc:'Teknik brainstorming tertulis di mana 6 orang menulis 3 ide dalam 5 menit, lalu saling menambahkan ide.' },
+      { label:'Starbursting', desc:'Teknik bertanya (Who, What, Where, When, Why, How) untuk meledakkan sebuah ide dari segala arah.' }
+    ]
+  },
+
+  // ================= GRUP 2: PROBLEM SOLVING =================
+  problem_solving: {
+    group: 'Problem Solving',
+    aktif: true, theme: { icon:'🧩', color:'#3182ce' },
+    ui: { label:'Core Problem Solving', placeholder:`Tuliskan masalah yang sedang Anda hadapi secara detail...\n\nContoh:\n- Masalah: Tim saya sering telat mengumpulkan laporan bulanan.\n- Dampak: Manajemen tidak bisa mengambil keputusan cepat.\n- Sudah dicoba: Ditegur, tapi hanya 2 minggu lancar lalu kambuh lagi.` },
+    prompt: { role:'Problem Solving Expert & Root Cause Analyst', outputName:'SOLUSI & ANALISIS MASALAH', pickLabel:'metode problem solving', extraRules:'Gali akar masalah sedalam mungkin. Jangan hanya memberikan solusi permukaan (band-aid). Gunakan metode yang dipilih dengan tepat.', formatRules:[] },
+    modules: [{ key:'analisis_utama', enabled:true }, { key:'action_plan', enabled:true }],
+    menu: [
+      { label:'The 5 Whys', desc:'Menanyakan "Mengapa" sebanyak 5 kali berturut-turut untuk menemukan akar masalah sebenarnya.' },
+      { label:'Fishbone Diagram (Ishikawa)', desc:'Menganalisis masalah dari 6 aspek: Man, Method, Machine, Material, Measurement, Environment.' },
+      { label:'First Principles Thinking', desc:'Membongkar masalah hingga ke fakta paling dasar (seperti sains), lalu membangun solusi dari nol.' },
+      { label:'Six Thinking Hats', desc:'Melihat masalah dari 6 sudut pandang: Fakta (Putih), Emosi (Merah), Kritis (Hitam), Optimis (Kuning), Kreatif (Hijau), Kontrol (Biru).' }
+    ]
+  },
+  pdca_cycle: {
+    group: 'Problem Solving',
+    aktif: true, theme: { icon:'🔄', color:'#38a169' },
+    ui: { label:'PDCA & Continuous Improvement', placeholder:`Tuliskan proses bisnis atau kualitas produk yang ingin ditingkatkan...\n\nContoh:\n- Proses: Pengiriman paket dari gudang ke customer.\n- Masalah: 15% paket sering terlambat sampai.` },
+    prompt: { role:'Quality Management & Lean Expert', outputName:'RENCANA PERBAIKAN KUALITAS', pickLabel:'siklus perbaikan', extraRules:'Fokus pada perbaikan berkelanjutan (Kaizen). Berikan langkah-langkah terukur untuk setiap siklus.', formatRules:[] },
+    modules: [{ key:'analisis_utama', enabled:true }, { key:'action_plan', enabled:true }],
+    menu: [
+      { label:'PDCA Cycle (Deming)', desc:'Plan (Rencana), Do (Lakukan), Check (Evaluasi), Act (Tindak lanjut) untuk perbaikan berkelanjutan.' },
+      { label:'DMAIC (Six Sigma)', desc:'Define, Measure, Analyze, Improve, Control. Metode ketat untuk mengurangi cacat/kesalahan hingga mendekati nol.' },
+      { label:'Kaizen (Perbaikan Berkelanjutan)', desc:'Perbaikan kecil yang dilakukan terus-menerus oleh semua anggota tim, bukan hanya proyek besar sekali jadi.' }
+    ]
+  },
+  a3_problem_solving: {
+    group: 'Problem Solving',
+    aktif: true, theme: { icon:'📄', color:'#e53e3e' },
+    ui: { label:'A3 Problem Solving', placeholder:`Tuliskan latar belakang masalah yang ingin diselesaikan dalam format ringkas...\n\nContoh:\n- Latar Belakang: Cost produksi naik 20% dalam 3 bulan terakhir.\n- Kondisi Saat Ini: Banyak material terbuang (waste 15%).` },
+    prompt: { role:'Lean Coach & Toyota Production System (TPS) Expert', outputName:'A3 REPORT', pickLabel:'fokus analisis', extraRules:'Buat laporan A3 yang ringkas, visual, dan berfokus pada fakta (Gemba). Jangan berasumsi tanpa data.', formatRules:[] },
+    modules: [{ key:'analisis_utama', enabled:true }],
+    menu: [
+      { label:'A3 Report (Toyota)', desc:'Laporan 1 halaman yang mencakup: Latar Belakang, Kondisi Saat Ini, Tujuan, Analisis Akar Masalah, Rencana Penanggulangan, dan Tindak Lanjut.' },
+      { label:'Gemba Walk', desc:'Pergi langsung ke tempat kejadian (lapangan) untuk melihat proses yang sebenarnya dan berbicara dengan pekerja.' },
+      { label:'Value Stream Mapping (VSM)', desc:'Memetakan alur proses dari awal hingga akhir untuk menemukan pemborosan (waste) waktu dan biaya.' }
+    ]
+  },
+  cynefin_framework: {
+    group: 'Problem Solving',
+    aktif: true, theme: { icon:'🌀', color:'#805ad5' },
+    ui: { label:'Cynefin Framework', placeholder:`Tuliskan situasi kompleks atau krisis yang sedang dihadapi...\n\nContoh:\n- Situasi: Pasar tiba-tiba berubah karena teknologi baru muncul dari kompetitor.\n- Kebingungan: Harus inovasi cepat atau tetap fokus ke produk lama?` },
+    prompt: { role:'Complexity Strategist & Systems Thinker', outputName:'PEMETAAN CYNEFIN', pickLabel:'domain masalah', extraRules:'Bantu user mengenali tipe masalah dan memberikan pendekatan pengambilan keputusan yang tepat sesuai domainnya.', formatRules:[] },
+    modules: [{ key:'analisis_utama', enabled:true }],
+    menu: [
+      { label:'Cynefin Framework (5 Domain)', desc:'Memilah masalah menjadi: Simple (Best Practice), Complicated (Analisis Ahli), Complex (Eksperimen), Chaotic (Tindakan Cepat), Disorder.' },
+      { label:'OODA Loop', desc:'Observe, Orient, Decide, Act. Siklus pengambilan keputusan cepat untuk situasi yang bergerak dinamis.' },
+      { label:'VUCA Analysis', desc:'Menganalisis Volatility, Uncertainty, Complexity, Ambiguity untuk menyiapkan strategi adaptif.' }
+    ]
+  },
+
+  // ================= GRUP 3: NEGOTIATION =================
+  negotiation: {
+    group: 'Negotiation',
+    aktif: true, theme: { icon:'🤝', color:'#38a169' },
+    ui: { label:'Core Negotiation', placeholder:`Tuliskan situasi negosiasi yang akan Anda hadapi...\n\nContoh:\n- Situasi: Negosiasi gaji dengan atasan.\n- Posisi Saya: Minta naik 30%.\n- Kondisi: Saya baru selesai membawa proyek besar yang sukses.\n- Lawan: Atasan yang dikenal sangat ketat soal budget.` },
+    prompt: { role:'Master Negotiator & Deal-Maker', outputName:'STRATEGI NEGOSIASI', pickLabel:'teknik negosiasi', extraRules:'Berikan taktik negosiasi yang taktis dan psikologis. Siapkan skrip apa yang harus dikatakan, antisipasi jawaban lawan, dan cara mengatasinya.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }, { key:'script_komunikasi', enabled:true }],
+    menu: [
+      { label:'Harvard Principled Negotiation', desc:'Fokus pada kepentingan (interests), bukan posisi. Mencari solusi win-win.' },
+      { label:'Tactical Empathy (Chris Voss)', desc:'Teknik negosiator FBI: Mirroring, Labeling emosi, dan Calibrated Questions untuk mengendalikan percakapan.' },
+      { label:'BATNA & ZOPA Analysis', desc:'Menentukan Best Alternative to a Negotiated Agreement (cadangan terbaik) dan Zone of Possible Agreement.' }
+    ]
+  },
+  integrative_negotiation: {
+    group: 'Negotiation',
+    aktif: true, theme: { icon:'🧩', color:'#38b2ac' },
+    ui: { label:'Integrative Negotiation', placeholder:`Tuliskan negosiasi yang butuh solusi kreatif karena sumber daya terbatas...\n\nContoh:\n- Konflik: Tim Sales minta budget iklan besar, Tim Produk minta budget R&D besar.\n- Kondisi: Budget perusahaan terbatas.` },
+    prompt: { role:'Win-Win Negotiator & Value Creator', outputName:'STRATEGI NEGOSIASI INTEGRATIF', pickLabel:'teknik ekspansi nilai', extraRules:'Fokus pada bagaimana "memperbesar kue" sebelum membaginya. Cari variabel baru yang bisa memuaskan kedua pihak.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }, { key:'script_komunikasi', enabled:true }],
+    menu: [
+      { label:'Expanding the Pie', desc:'Mencari sumber daya tambahan atau alternatif baru sehingga kedua pihak bisa menang tanpa harus berebut.' },
+      { label:'Logrolling (Trading Issues)', desc:'Saling menukar prioritas. Anda menang di isu A, saya menang di isu B. Menghindari kompromi di tengah-tengah.' },
+      { label:'MESOs (Multiple Equivalent Simultaneous Offers)', desc:'Menawarkan 3 paket opsi sekaligus (misal: Paket Fokus Harga, Paket Fokus Waktu, Paket Fokus Kualitas).' }
+    ]
+  },
+  distributive_negotiation: {
+    group: 'Negotiation',
+    aktif: true, theme: { icon:'⚖️', color:'#ed8936' },
+    ui: { label:'Distributive Negotiation', placeholder:`Tuliskan negosiasi yang bersifat zero-sum (untung-rugutan, seperti jual beli aset)...\n\nContoh:\n- Situasi: Jual beli mobil bekas.\n- Posisi Saya: Penjual, ingin harga tinggi.\n- Lawan: Pembeli, sudah menawar sangat rendah.` },
+    prompt: { role:'Hard Bargainer & Tactical Negotiator', outputName:'STRATEGI NEGOSIASI DISTRIBUTIF', pickLabel:'taktik klaim nilai', extraRules:'Fokus pada bagaimana mendapatkan porsi terbesar dari kue yang ada. Gunakan taktik psikologis dan anchoring.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }, { key:'script_komunikasi', enabled:true }],
+    menu: [
+      { label:'Anchoring Strategy', desc:'Menetapkan harga/penawaran pertama yang ekstrem untuk menjangkar persepsi nilai lawan.' },
+      { label:'Concession Planning', desc:'Merencanakan kapan dan berapa banyak memberi konsesi (mundur) agar tidak terlihat putus asa.' },
+      { label:'Hardball Tactics', desc:'Cara menghadapi taktik kotor seperti "Good Cop, Bad Cop", "Nibbling" (minta tambahan di akhir), atau "Exploding Offers".' }
+    ]
+  },
+  anchoring_framing: {
+    group: 'Negotiation',
+    aktif: true, theme: { icon:'🎯', color:'#3182ce' },
+    ui: { label:'Anchoring & Framing', placeholder:`Tuliskan proposal atau penawaran yang ingin Anda ajukan...\n\nContoh:\n- Situasi: Menawarkan jasa konsultan ke klien baru.\n- Harga: Rp 50 juta.\n- Masalah: Klien mungkin akan merasa ini mahal.` },
+    prompt: { role:'Behavioral Negotiator', outputName:'STRATEGI FRAMING', pickLabel:'teknik framing', extraRules:'Gunakan prinsip psikologi kognitif untuk membingkai penawaran agar terlihat sangat bernilai (high value).', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }, { key:'script_komunikasi', enabled:true }],
+    menu: [
+      { label:'Contrast Principle', desc:'Menyajikan opsi termahal terlebih dahulu agar opsi yang Anda inginkan terlihat murah.' },
+      { label:'Loss Aversion Framing', desc:'Membingkai penawaran bukan sebagai "keuntungan yang didapat", tapi "kerugian yang dihindari" jika tidak membeli.' },
+      { label:'Pre-suasion (Cialdini)', desc:'Menyiapkan kondisi pikiran lawan sebelum negosiasi dimulai agar mereka lebih mudah menerima tawaran.' }
+    ]
+  },
+
+  // ================= GRUP 4: CONFLICT MANAGEMENT =================
+  conflict_management: {
+    group: 'Conflict Management',
+    aktif: true, theme: { icon:'🕊️', color:'#805ad5' },
+    ui: { label:'Core Conflict Management', placeholder:`Tuliskan konflik yang sedang terjadi beserta latar belakangnya...\n\nContoh:\n- Konflik: Dua anggota tim saling tidak mau bicara karena perbedaan pendapat soal desain.\n- Peran Saya: Sebagai Project Manager.\n- Tujuan: Mendamaikan mereka tanpa memihak agar proyek jalan.` },
+    prompt: { role:'Conflict Resolution Specialist & Mediator', outputName:'STRATEGI RESOLUSI KONFLIK', pickLabel:'pendekatan penyelesaian konflik', extraRules:'Bantu user memetakan konflik secara objektif. Berikan langkah mediasi yang adil, serta skrip komunikasi untuk meredakan ketegangan.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }, { key:'script_komunikasi', enabled:true }],
+    menu: [
+      { label:'Thomas-Kilmann Conflict Mode', desc:'Memetakan gaya penanganan konflik: Competing, Collaborating, Compromising, Avoiding, Accommodating.' },
+      { label:'Interest-Based Relational (IBR) Approach', desc:'Memisahkan orang dari masalah, fokus pada emosi, lalu mencari solusi berdasarkan kepentingan bersama.' }
+    ]
+  },
+  crucial_conversations: {
+    group: 'Conflict Management',
+    aktif: true, theme: { icon:'💬', color:'#4299e1' },
+    ui: { label:'Crucial Conversations', placeholder:`Tuliskan percakapan berisiko tinggi yang ingin Anda persiapkan...\n\nContoh:\n- Situasi: Harus menegur rekan kerja yang kinerjanya buruk, tapi dia orang yang sensitif dan mudah tersinggung.\n- Tujuan: Menyampaikan kritik tanpa merusak hubungan.` },
+    prompt: { role:'Communication Expert & High-Stakes Dialogue Coach', outputName:'PANDUAN PERCAKAPAN KRUSIAL', pickLabel:'framework komunikasi', extraRules:'Bantu user menyampaikan pesan sulit dengan jujur namun tetap menjaga rasa aman (psychological safety) lawan bicara.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }, { key:'script_komunikasi', enabled:true }],
+    menu: [
+      { label:'STATE Framework', desc:'Share facts, Tell story, Ask, Talk tentatively, Encourage testing. Kerangka menyampaikan hal sensitif.' },
+      { label:'Creating Safety (Mutual Purpose)', desc:'Membangun kembali rasa aman jika percakapan mulai memanas (misal: "Saya rasa kita punya tujuan yang sama...").' },
+      { label:'AMPP (Active Listening)', desc:'Ask, Mirror, Paraphrase, Prime. Teknik mendengarkan secara aktif untuk memancing orang bicara.' }
+    ]
+  },
+  mediation_strategy: {
+    group: 'Conflict Management',
+    aktif: true, theme: { icon:'⚖️', color:'#38a169' },
+    ui: { label:'Mediation Strategy', placeholder:`Tuliskan sengketa antara dua pihak yang Anda tengahi...\n\nContoh:\n- Pihak A: Pemilik tanah.\n- Pihak B: Pengembang properti.\n- Sengketa: Batas tanah dan ganti rugi yang tidak sepakat.` },
+    prompt: { role:'Professional Mediator & Negotiator', outputName:'STRATEGI MEDIASI', pickLabel:'gaya mediasi', extraRules:'Rancang proses mediasi yang netral. Berikan cara membuka sesi, aturan main, dan cara mempertemukan dua pihak yang berseteru.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }, { key:'script_komunikasi', enabled:true }],
+    menu: [
+      { label:'Facilitative Mediation', desc:'Mediator hanya memandu komunikasi, keputusan sepenuhnya di tangan pihak yang bersengketa.' },
+      { label:'Transformative Mediation', desc:'Fokus pada pemberdayaan pihak yang lemah dan pengakuan (recognition) antar pihak, bukan sekadar kesepakatan.' },
+      { label:'Caucus (Sesi Terpisah)', desc:'Strategi memisahkan kedua pihak ke ruangan berbeda untuk menggali kepentingan mereka secara rahasia (confidential).' }
+    ]
+  },
+  emotional_intelligence_conflict: {
+    group: 'Conflict Management',
+    aktif: true, theme: { icon:'🧘', color:'#ed64a6' },
+    ui: { label:'EQ in Conflict', placeholder:`Tuliskan konflik yang melibatkan emosi tinggi (amarah, kekecewaan)...\n\nContoh:\n- Situasi: Klien sangat marah karena proyek telat 2 minggu.\n- Kondisi: Klien mengancam akan membatalkan kontrak dan menuntut.` },
+    prompt: { role:'Emotional Intelligence Coach & De-escalation Expert', outputName:'PANDUAN DE-ESKALASI', pickLabel:'teknik EQ', extraRules:'Fokus pada bagaimana mendinginkan emosi sebelum mencari solusi logis. Jangan menanggapi emosi dengan logika, tanggapilah dengan empati.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }, { key:'script_komunikasi', enabled:true }],
+    menu: [
+      { label:'Empathy Mapping', desc:'Memetakan apa yang lawan bicara Pikirkan, Rasakan, Lihat, Dengar, dan Lakukan untuk memahami akar emosinya.' },
+      { label:'De-escalation Techniques', desc:'Teknik menurunkan tensi: Menurunkan volume suara, menggunakan bahasa tubuh terbuka, dan memberikan validasi emosi.' },
+      { label:'Self-Regulation (STOP)', desc:'Stop, Take a breath, Observe, Proceed. Teknik menenangkan diri sendiri saat terpicu emosi.' }
+    ]
+  },
+
+  // ================= GRUP 5: OBJECTION HANDLING =================
+  objection_handling: {
+    group: 'Objection Handling',
+    aktif: true, theme: { icon:'🛡️', color:'#e53e3e' },
+    ui: { label:'Core Objection Handling', placeholder:`Tuliskan objeksi atau bantahan yang sering Anda terima...\n\nContoh:\n- Objeksi: "Produk Anda terlalu mahal dibanding kompetitor."\n- Konteks: Menjual software B2B ke korporat.\n- Keunggulan Produk: Layanan after-sales 24/7 dan keamanan data tingkat bank.` },
+    prompt: { role:'Sales/Objection Handling Expert', outputName:'PENANGANAN OBJEKSI', pickLabel:'framework handling', extraRules:'Berikan respons yang empatik, tidak defensif, dan berfokus pada nilai (value). Sertakan contoh skrip dialog langsung.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }, { key:'script_komunikasi', enabled:true }],
+    menu: [
+      { label:'LAER Method', desc:'Listen, Acknowledge, Explore, Respond. Kerangka mendengar dan menjawab keberatan secara sistematis.' },
+      { label:'Feel, Felt, Found', desc:'"Saya mengerti perasaan Anda... Orang lain juga pernah merasa begitu... Namun mereka menemukan bahwa..."' },
+      { label:'Reframing Technique', desc:'Mengubah cara pandang klien terhadap kelemahan produk menjadi sebuah keunggulan atau alasan logis.' }
+    ]
+  },
+  price_objection: {
+    group: 'Objection Handling',
+    aktif: true, theme: { icon:'💰', color:'#d69e2e' },
+    ui: { label:'Price Objection', placeholder:`Tuliskan situasi ketika klien mengeluh harga Anda terlalu mahal...\n\nContoh:\n- Produk: Jasa desain interior premium.\n- Harga: Rp 500rb/m2.\n- Kompetitor: Rp 250rb/m2.\n- Objeksi: "Kok selisihnya jauh banget? Bisa kurang?"` },
+    prompt: { role:'Pricing & Value Expert', outputName:'STRATEGI PRICE OBJECTION', pickLabel:'teknik penanganan harga', extraRules:'Jangan pernah langsung menurunkan harga. Alihkan percakapan dari "harga" (cost) ke "investasi" (value) dan "biaya kegagalan" (cost of inaction).', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }, { key:'script_komunikasi', enabled:true }],
+    menu: [
+      { label:'Cost of Inaction (CoI)', desc:'Membandingkan harga Anda dengan kerugian yang akan dialami klien jika TIDAK membeli produk Anda.' },
+      { label:'ROI Shifting', desc:'Memecah harga menjadi nilai harian (misal: "Hanya Rp 10rb per hari, lebih murah dari kopi").' },
+      { label:'Payment Terms Flexibility', desc:'Menawarkan opsi cicilan atau termin pembayaran alih-alih memotong harga dasar.' }
+    ]
+  },
+  timing_objection: {
+    group: 'Objection Handling',
+    aktif: true, theme: { icon:'⏳', color:'#3182ce' },
+    ui: { label:'Timing Objection', placeholder:`Tuliskan situasi ketika klien menunda pembelian...\n\nContoh:\n- Objeksi: "Nanti saja deh, tunggu tahun depan pas budget baru cair."\n- Produk: Software akuntansi.\n- Masalah Klien: Pencatatan keuangan masih manual dan berantakan.` },
+    prompt: { role:'Urgency & Closing Expert', outputName:'STRATEGI MENANGANI PENUNDAAN', pickLabel:'teknik urgensi', extraRules:'Ciptakan urgensi yang jujur tanpa terkesan memaksa (no fake scarcity). Fokus pada "biaya penundaan" yang ditanggung klien setiap harinya.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }, { key:'script_komunikasi', enabled:true }],
+    menu: [
+      { label:'Trigger Events', desc:'Mencari pemicu (misal: akhir tahun fiskal, regulasi baru) yang membuat klien HARUS bertindak sekarang.' },
+      { label:'Cost of Delay', desc:'Menghitung berapa uang yang terbuang setiap hari/bulan jika klien menunda menggunakan solusi Anda.' },
+      { label:'Conditional Close', desc:'"Jika saya bisa menyelesaikan masalah X dan Y Anda hari ini, apakah masih ada alasan untuk menunda?"' }
+    ]
+  },
+  competitor_objection: {
+    group: 'Objection Handling',
+    aktif: true, theme: { icon:'🥊', color:'#805ad5' },
+    ui: { label:'Competitor Objection', placeholder:`Tuliskan situasi ketika klien membandingkan Anda dengan kompetitor...\n\nContoh:\n- Objeksi: "Vendor sebelah harganya sama, tapi fiturnya lebih banyak."\n- Produk Anda: Software HRIS.\n- Keunggulan Anda: Layanan implementasi dan training tim yang sangat personal.` },
+    prompt: { role:'Competitive Strategy Expert', outputName:'STRATEGI MELAWAN KOMPETITOR', pickLabel:'teknik positioning', extraRules:'Jangan pernah menjelekkan kompetitor. Gunakan taktik "Apples-to-Apples" untuk menunjukkan di mana produk Anda unggul secara fundamental.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }, { key:'script_komunikasi', enabled:true }],
+    menu: [
+      { label:'FUD Handling (Fear, Uncertainty, Doubt)', desc:'Menghilangkan keraguan klien terhadap kompetitor dengan menanyakan detail teknis yang biasanya tidak bisa dipenuhi kompetitor.' },
+      { label:'Switching Cost Analysis', desc:'Membantu klien menghitung biaya tersembunyi (waktu, training ulang, migrasi data) jika harus tetap dengan kompetitor lama.' },
+      { label:'Differentiation Matrix', desc:'Membuat tabel perbandingan fitur (Apple-to-Apple) yang menyoroti keunikan dan keunggulan inti produk Anda.' }
+    ]
+  }
+};
+
+const DEFAULT_MASTER_TOGGLES = { analisis_utama: true, naskah_utama: true, script_komunikasi: true, action_plan: true };
+
+function status(msg, type='info'){
+  const el = document.getElementById('status');
+  el.textContent = msg; el.className = 'status show ' + type;
+}
+function getHeaders(table){
+  return { 'Content-Type':'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': table, 'X-Role': 'admin' };
+}
+
+async function checkCurrent(){
+  const u = document.getElementById('u').value.trim();
+  const p = document.getElementById('p').value.trim();
+  if(!u || !p){ status('❌ Isi username & password dulu', 'err'); return; }
+  const btn = document.getElementById('btnCheck');
+  btn.disabled = true; btn.textContent = 'Memeriksa...';
+  status('⏳ Memeriksa user...', 'info');
+  try{
+    const r = await fetch(`${API_URL}?table=${USERS_TABLE}`, { headers: getHeaders(USERS_TABLE) });
+    const res = await r.json();
+    if(!res.success || !res.data){ status('❌ Gagal ambil data user', 'err'); return; }
+    const user = res.data.find(x => x.x_01 === u && x.x_02 === p);
+    if(!user){ status('❌ Username atau password salah', 'err'); return; }
+    if(u !== 'admin'){ status('❌ Hanya admin yang bisa seed', 'err'); return; }
+
+    status('✅ Login OK. Mengambil config...', 'ok');
+    document.getElementById('btnSeed').disabled = false;
+    document.getElementById('btnDelete').disabled = false;
+
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res2 = await r2.json();
+    if(res2.success && res2.data){
+      const row = res2.data.find(x => x.id_x == KONTROL_ID);
+      if(row){
+        status(`✅ Row id_x=${KONTROL_ID} sudah ada. Klik "Seed" untuk MENGGANTI.`, 'ok');
+      } else {
+        status(`ℹ️ Row id_x=${KONTROL_ID} belum ada. Klik "Seed".`, 'info');
+      }
+    }
+  } catch(e){ status('❌ Error: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '🔍 Cek Config'; }
+}
+
+async function doSeed(){
+  if(!confirm(`⚠️ Seed akan MENGGANTI seluruh config di id_x=${KONTROL_ID}. Lanjut?`)) return;
+  const btn = document.getElementById('btnSeed');
+  btn.disabled = true; btn.textContent = '⏳ Menyimpan...';
+  status('⏳ Menyimpan config ke DB...', 'info');
+  try{
+    const payload = {
+      x_01: JSON.stringify({ categories: DEFAULT_CATEGORIES, outputModules: DEFAULT_MODULES }),
+      x_02: new Date().toISOString(),
+      x_03: document.getElementById('u').value.trim() || 'seeder',
+      x_04: '1.0',
+      x_05: '1', x_06: '1', x_07: '1', x_08: '1', x_09: '1', x_10: '1'
+    };
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    const exists = res.success && res.data && res.data.some(x => x.id_x == KONTROL_ID);
+    const method = exists ? 'PUT' : 'POST';
+    const endpoint = exists ? `&id_x=${KONTROL_ID}` : '';
+    
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}${endpoint}`, {
+      method, headers: getHeaders(KONTROL_TABLE), body: JSON.stringify(payload)
+    });
+    const res2 = await r2.json();
+    if(!res2.success && !res2.id_x) throw new Error(res2.error || res2.message || 'Gagal simpan');
+    status(`✅ BERHASIL! Config ter-${exists ? 'update' : 'buat'} di id_x=${KONTROL_ID}.\n\nSilakan buka index1.html.`, 'ok');
+  } catch(e){ status('❌ Gagal seed: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '🌱 Seed ke id_x=10'; }
+}
+
+async function doDelete(){
+  if(!confirm(`⚠️ Hapus row id_x=${KONTROL_ID}?`)) return;
+  const btn = document.getElementById('btnDelete');
+  btn.disabled = true; btn.textContent = '⏳ Menghapus...';
+  try{
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x=${KONTROL_ID}`, { method: 'DELETE', headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    if(res.success || res.deleted) status('✅ Row terhapus', 'ok');
+    else throw new Error(res.error || res.message || 'Gagal hapus');
+  } catch(e){ status('❌ Gagal hapus: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '🗑️ Hapus Row id_x=10'; }
+}
+</script>
+</body>
+</html>
