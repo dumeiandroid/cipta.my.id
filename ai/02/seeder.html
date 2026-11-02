@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seeder Lengkap — Kontrol Admin</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4f8;min-height:100vh;padding:20px;color:#2d3748}
+.container{max-width:800px;margin:0 auto}
+.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,.08);margin-bottom:16px}
+h1{font-size:22px;margin-bottom:4px;color:#1a2332}
+.subtitle{color:#718096;font-size:13px;margin-bottom:20px}
+h2{font-size:16px;margin-bottom:12px;color:#2d3748}
+input,textarea{padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;width:100%;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:#805ad5}
+.btn{padding:10px 20px;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;transition:.15s}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#805ad5;color:#fff}
+.btn-primary:hover:not(:disabled){background:#6b46c1}
+.btn-success{background:#48bb78;color:#fff}
+.btn-success:hover:not(:disabled){background:#38a169}
+.btn-danger{background:#fc8181;color:#fff}
+.btn-danger:hover:not(:disabled){background:#f56565}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+label{font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px}
+.form-group{margin-bottom:12px}
+.status{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:12px;display:none;line-height:1.5}
+.status.show{display:block}
+.status.ok{background:#f0fff4;color:#22543d;border-left:4px solid #48bb78}
+.status.err{background:#fff5f5;color:#c53030;border-left:4px solid #fc8181}
+.status.info{background:#ebf8ff;color:#2c5282;border-left:4px solid #4299e1}
+.info-box{background:#f7fafc;padding:14px 16px;border-radius:10px;font-size:12px;line-height:1.7;color:#4a5568;border-left:4px solid #ed8936;margin-bottom:16px}
+.info-box strong{color:#2d3748}
+.code{background:#edf2f7;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:11px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>🌱 Seeder Lengkap (17 Kategori)</h1>
+    <p class="subtitle">Seed default config ke tabel <code class="code">kontrol_admin</code> baris <code class="code">id_x = 9</code></p>
+    <div class="info-box">
+      <strong>⚙️ File ini hanya dijalankan SEKALI.</strong><br>
+      Pastikan Anda sudah MENGOSONGKAN data id_x=9 di database sebelum menjalankan ini. Data lama akan tertimpa.
+    </div>
+
+    <h2>🔐 Login Admin</h2>
+    <div class="form-group"><label>Username</label><input type="text" id="u" placeholder="admin"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="p" placeholder="password"></div>
+    <div class="row">
+      <button class="btn btn-primary" id="btnCheck" onclick="checkCurrent()">🔍 Cek Config</button>
+      <button class="btn btn-success" id="btnSeed" onclick="doSeed()" disabled>🌱 Seed ke id_x=9</button>
+      <button class="btn btn-danger" id="btnDelete" onclick="doDelete()" disabled>🗑️ Hapus Row id_x=9</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+const USERS_TABLE = 'users';
+const KONTROL_TABLE = 'kontrol_admin';
+const KONTROL_ID = 9;
+const SECRET = 'admin';
+
+const DEFAULT_MODULES = {
+  analisis_utama:   { title:'ANALISIS UTAMA', desc:'Berisi analisis {pickLabel} secara mendalam sesuai format baku untuk tool tersebut.' },
+  naskah_utama:     { title:'NASKAH UTAMA', desc:'Berisi naskah lengkap sesuai standar terbaik untuk {pickLabel} yang dipilih.' },
+  artikel:          { title:'ARTIKEL (Kesimpulan & Saran)', desc:'Artikel mengalir 500-800 kata yang merangkum hasil bagian sebelumnya. Wajib memuat sub-judul: Pendahuluan, Pembahasan, Kesimpulan, dan Saran tindakan konkret.' },
+  surat_proposal:   { title:'SURAT PENGANTAR & PROPOSAL KERJASAMA', desc:'Draft surat pengantar resmi + ringkasan proposal kerjasama yang disesuaikan dengan hasil di bagian sebelumnya.' },
+  deskripsi_gambar: { title:'DESKRIPSI GAMBAR + TEKS OVERLAY (3 Varian)', desc:'Tiga deskripsi visual detail siap di-copy ke AI pembuat gambar (Midjourney/DALL-E). Setiap gambar WAJIB menyertakan teks overlay/tulisan di dalam gambar yang relevan. Format: "Gambar 1 — deskripsi visual + teks overlay: ...". Tulis sebagai TEKS deskripsi, bukan gambar asli.' },
+  caption_tagar:    { title:'CAPTION & TAGAR', desc:'Tiga caption media sosial dengan tone berbeda + tagar relevan. Siap copy-paste.' }
+};
+
+const DEFAULT_CATEGORIES = {
+  // ================= RUMPUN 1: ROHANI =================
+  khotbah: {
+    group: 'Rohani',
+    aktif: true, theme: { icon:'🕊️', color:'#805ad5' },
+    ui: { label:'Khotbah & Renungan', placeholder:`Tulis ide/topik khotbah di sini...\nContoh: Tema Kasih dan Pengampunan berdasarkan Matius 18:21-35.` },
+    prompt: { role:'Pengkhotbah & Penulis Khotbah Profesional berpengalaman', outputName:'NASKAH KHOTBAH LENGKAP', pickLabel:'jenis khotbah', extraRules:'Buat naskah khotbah yang sangat menyentuh, berdasarkan Alkitab, dan siap dibawakan.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }],
+    menu: [
+      { label:'Khotbah Ekspositori', desc:'Fokus satu perikop, eksegesis ayat per ayat.' },
+      { label:'Khotbah Topikal', desc:'Satu tema lintas ayat, kumpulkan referensi dari beberapa kitab.' },
+      { label:'Khotbah Naratif', desc:'Bercerita mengikuti alur kisah Alkitab.' },
+      { label:'Khotbah Tekstual', desc:'Satu ayat kunci, uraikan setiap frasa.' },
+      { label:'Renungan Harian', desc:'Singkat, reflektif, satu kebenaran rohani.' },
+      { label:'Renungan Keluarga', desc:'Praktis, hangat, untuk ibadah keluarga.' },
+      { label:'Khotbah Pemuda', desc:'Bahasa relevan, ilustrasi modern.' },
+      { label:'Khotbah Perayaan', desc:'Nada sukacita — Natal, Paskah, HUT.' },
+      { label:'Khotbah Penghiburan', desc:'Nada menenangkan untuk ibadah duka.' },
+      { label:'Khotbah Pernikahan', desc:'Teologis & hangat.' },
+      { label:'Khotbah Rumah Baru', desc:'Ucapan syukur & doa berkat rumah/usaha baru.' }
+    ]
+  },
+  khotbah_liturgi: {
+    group: 'Rohani',
+    aktif: true, theme: { icon:'🕊️', color:'#805ad5' },
+    ui: { label:'Khotbah Liturgi Calvinis', placeholder:`Tulis ide/topik khotbah liturgi Calvinis...` },
+    prompt: { role:'Pengkhotbah & Penulis Khotbah Profesional berpengalaman', outputName:'NASKAH KHOTBAH LENGKAP', pickLabel:'jenis khotbah', extraRules:'Buat naskah khotbah liturgi Calvinis yang menyentuh.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true, desc:`Naskah khotbah liturgi Calvinis lengkap dengan URUTAN WAJIB:\n- Pendahuluan\n- Invocatio (ayat panggilan + penjelasan, TANPA doa/ajakan)\n- Pembacaan Kedua (PB) : Latar Belakang + Pembahasan\n- Pembacaan Pertama (PL) : Latar Belakang + Pembahasan\n- Benang Merah & Aplikasi\n- Penutup & tantangan` }],
+    menu: [
+      { label:'Khotbah Ekspositori', desc:'Fokus satu perikop.' },
+      { label:'Khotbah Topikal', desc:'Satu tema lintas ayat.' },
+      { label:'Khotbah Tematik', desc:'Satu tema besar + dua bacaan PL & PB/Injil.' },
+      { label:'Khotbah Naratif', desc:'Bercerita mengikuti alur kisah.' },
+      { label:'Khotbah Tekstual', desc:'Satu ayat kunci.' },
+      { label:'Renungan Harian', desc:'Singkat reflektif.' },
+      { label:'Renungan Keluarga', desc:'Praktis untuk keluarga.' },
+      { label:'Khotbah Pemuda', desc:'Bahasa relevan.' },
+      { label:'Khotbah Perayaan', desc:'Nada sukacita.' },
+      { label:'Khotbah Penghiburan', desc:'Nada menenangkan.' },
+      { label:'Khotbah Pernikahan', desc:'Teologis & hangat.' },
+      { label:'Khotbah Rumah Baru', desc:'Doa berkat rumah baru.' }
+    ]
+  },
+
+  // ================= RUMPUN 2: PUBLIC SPEAKING =================
+  ps_v2: {
+    group: 'Public Speaking',
+    aktif: true, theme: { icon:'🎤', color:'#38b2ac' },
+    ui: { label:'Public Speaking v2', placeholder:`Tulis ide/topik public speaking...` },
+    prompt: { role:'Pakar Public Speaking dan Speechwriter Senior', outputName:'NASKAH PUBLIC SPEAKING LENGKAP', pickLabel:'framework', extraRules:'Buat naskah yang sangat menjual, inspiratif, dan siap pakai.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }],
+    menu: [
+      { label:'IBC (Introduction-Body-Conclusion)', desc:'Struktur klasik tiga bagian.' },
+      { label:'PREP (Point-Reason-Example-Point)', desc:'Poin → alasan → contoh.' },
+      { label:'TED Talk (Storytelling & Inspiratif)', desc:'Alur naratif, hook emosional.' },
+      { label:"Monroe's Motivated Sequence", desc:'Attention → Action.' },
+      { label:"Storytelling (Hero's Journey)", desc:'Perjalanan pahlawan.' },
+      { label:'PSB (Problem-Solution-Benefit)', desc:'Masalah → solusi → manfaat.' }
+    ]
+  },
+  ps_v3: {
+    group: 'Public Speaking',
+    aktif: true, theme: { icon:'🎤', color:'#4299e1' },
+    ui: { label:'Public Speaking v3', placeholder:`Tulis ide/topik public speaking...` },
+    prompt: { role:'Pakar Public Speaking dan Speechwriter Senior', outputName:'NASKAH PUBLIC SPEAKING LENGKAP', pickLabel:'paket framework', extraRules:'Struktur wajib: OPENING → BODY → CLOSING.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true }],
+    menu: [
+      { label:'Motivasi-Inspiratif', desc:'Story → Body → Cerita.' },
+      { label:'Edukasi/Training', desc:'Question → Body → Review.' },
+      { label:'Persuasif/Sales', desc:'Impact → Body → Komitmen.' },
+      { label:'Korporat/Bisnis', desc:'Kutipan → Body → Ajakan.' },
+      { label:'Formal/Sambutan', desc:'Pujian → Body → Pantun.' },
+      { label:'Workshop Interaktif', desc:'Participation → Body → Ikrar.' },
+      { label:'Impromptu', desc:'Definisi → Body → Kutipan.' }
+    ]
+  },
+
+  // ================= RUMPUN 3: BISNIS & MARKETING =================
+  business: {
+    group: 'Bisnis & Marketing',
+    aktif: true, theme: { icon:'🏢', color:'#9f7aea' },
+    ui: { label:'Business Tools', placeholder:`Tulis deskripsi bisnis...` },
+    prompt: { role:'Business Consultant & Analis Bisnis profesional', outputName:'DOKUMEN BISNIS LENGKAP', pickLabel:'tool analisis', extraRules:'Buat analisis tajam, actionable, realistis untuk pasar Indonesia. Tabel GFM markdown dianjurkan.', formatRules:[] },
+    modules: [
+      { key:'analisis_utama', enabled:true },
+      { key:'artikel', enabled:true },
+      { key:'surat_proposal', enabled:true },
+      { key:'deskripsi_gambar', enabled:false },
+      { key:'caption_tagar', enabled:false }
+    ],
+    menu: [
+      { label:'SWOT Analysis', desc:'4 kuadran.' },
+      { label:'PESTEL Analysis', desc:'6 faktor makro.' },
+      { label:'Business Model Canvas (BMC)', desc:'9 blok.' },
+      { label:'Lean Canvas', desc:'9 blok lean.' },
+      { label:"Porter's Five Forces", desc:'5 kekuatan industri.' },
+      { label:'Marketing Mix (4P/7P)', desc:'Product, Price, Place, Promotion.' },
+      { label:'OKR (Objectives & Key Results)', desc:'Tujuan + key results.' },
+      { label:'Value Proposition Canvas (VPC)', desc:'Customer Profile vs Value Map.' },
+      { label:'Competitive Analysis', desc:'Bandingkan kompetitor.' },
+      { label:'Risk Assessment', desc:'Risiko + mitigasi.' },
+      { label:'KPI Dashboard', desc:'Rancang KPI per fungsi.' },
+      { label:'Customer Journey Map', desc:'Peta perjalanan pelanggan.' },
+      { label:'Brainstorming Board', desc:'Ide liar & terstruktur.' },
+      { label:'Public Speaking (Business Context)', desc:'Naskah presentasi bisnis.' }
+    ]
+  },
+  marketing_plan: {
+    group: 'Bisnis & Marketing',
+    aktif: true, theme: { icon:'📊', color:'#d53f8c' },
+    ui: { label:'Marketing Plan', placeholder:`Tulis PROFIL BISNIS/PRODUK:\n- Nama Brand: ...\n- Target: ...` },
+    prompt: { role:'Marketing Strategist profesional berpengalaman', outputName:'DOKUMEN MARKETING PLAN LENGKAP', pickLabel:'model marketing', extraRules:'Ekstrak dari deskripsi user. Output Bahasa Indonesia profesional, angka realistis, actionable.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true, desc:`Buat DOKUMEN MARKETING PLAN LENGKAP:\n1. Executive Summary\n2. Analisis Situasi\n3. Strategi Utama\n4. Timeline & Roadmap\n5. Budget Breakdown\n6. KPI & Metrics\n7. Risk & Mitigation\n8. Action Plan` }],
+    menu: [
+      { label:'Marketing Plan 4P / 7P', desc:'Framework klasik lengkap.' },
+      { label:'STP (Segmenting, Targeting, Positioning)', desc:'Segmentasi + positioning.' },
+      { label:'Digital Marketing Plan', desc:'Funnel TOFU/MOFU/BOFU, SEO, Ads.' },
+      { label:'Content Marketing Plan', desc:'Content pillar, kalender.' },
+      { label:'Social Media Marketing Plan', desc:'Platform strategy, growth hacks.' },
+      { label:'Product Launch Plan', desc:'Pre-launch, launch day, post-launch.' },
+      { label:'AIDA Marketing Funnel', desc:'Attention → Action.' },
+      { label:'Brand Strategy Plan', desc:'Foundation, identity, positioning.' },
+      { label:'Customer Journey Marketing', desc:'Journey, emotion curve.' },
+      { label:'Growth Hacking Plan', desc:'North Star Metric, AARRR.' }
+    ]
+  },
+  sales_strategy: {
+    group: 'Bisnis & Marketing',
+    aktif: true, theme: { icon:'📈', color:'#2b6cb0' },
+    ui: { label:'Sales Strategy', placeholder:`Tulis KONTEKS PENJUALAN:\n- Layanan: ...\n- Target: ...` },
+    prompt: { role:'Sales Strategist profesional', outputName:'DOKUMEN SALES STRATEGY LENGKAP', pickLabel:'model sales strategy', extraRules:'Ekstrak dari deskripsi user. Output actionable, sertakan script percakapan nyata.', formatRules:[] },
+    modules: [{ key:'naskah_utama', enabled:true, desc:`Buat DOKUMEN SALES STRATEGY LENGKAP:\n1. Filosofi Model\n2. Framework\n3. Script Percakapan Lengkap\n4. 20+ Pertanyaan Discovery\n5. Objection Handling\n6. Tools & Resources\n7. KPI & Metrics\n8. Roadmap Implementasi` }],
+    menu: [
+      { label:'Consultative Selling', desc:'Framework 5 tahap.' },
+      { label:'SPIN Selling', desc:'Metode 4 pertanyaan.' },
+      { label:'Solution Selling', desc:'Diagnosa 5 step.' },
+      { label:'The Challenger Sale', desc:'Teach, Tailor, Take Control.' },
+      { label:'MEDDIC Framework', desc:'Enterprise qualification.' },
+      { label:'BANT Qualification', desc:'Budget, Authority, Need, Timeline.' },
+      { label:'Account-Based Selling', desc:'Fokus akun besar.' },
+      { label:'Value-Based Selling', desc:'Jual value & ROI.' }
+    ]
+  },
+
+  // ================= RUMPUN 4: KREATIF & KONTEN =================
+  copywriting: {
+    group: 'Kreatif & Konten',
+    aktif: true, theme: { icon:'✍️', color:'#ed64a6' },
+    ui: { label:'Copywriting', placeholder:`Tulis ide copywriting...` },
+    prompt: { role:'Copywriter Senior dan Pakar Marketing', outputName:'PAKET KONTEN COPYWRITING', pickLabel:'framework copywriting', extraRules:'Buat copywriting yang sangat menjual.', formatRules:[] },
+    modules: [
+      { key:'naskah_utama', enabled:true },
+      { key:'deskripsi_gambar', enabled:true },
+      { key:'caption_tagar', enabled:true },
+      { key:'artikel', enabled:false },
+      { key:'surat_proposal', enabled:false }
+    ],
+    menu: [
+      { label:'HBT (Hook-Book-Look-Took)', desc:'Hook → Book → Look → Took.' },
+      { label:'AIDA (Attention-Interest-Desire-Action)', desc:'Attention → Action.' },
+      { label:'PAS (Problem-Agitate-Solution)', desc:'Masalah → solusi.' },
+      { label:'4P (Promise-Picture-Proof-Push)', desc:'Janji → dorong aksi.' },
+      { label:'APP (Aware-Promise-Prove-Push)', desc:'Sadarkan → dorong.' },
+      { label:'PASTOR (Problem-Agitate-Solution-Testimonial-Offer-Response)', desc:'Versi panjang PAS.' },
+      { label:'BAB (Before-After-Bridge)', desc:'Sebelum → sesudah.' },
+      { label:'FAB (Features-Advantages-Benefits)', desc:'Fitur → manfaat.' },
+      { label:'QUEST (Question-Understand-Educate-Stimulate-Transition)', desc:'Tanya → transisi.' },
+      { label:'SCQA (Situation-Complication-Question-Answer)', desc:'Situasi → jawaban.' },
+      { label:'4U (Useful-Urgent-Unique-Ultra-specific)', desc:'Checklist headline.' }
+    ]
+  },
+
+  // ================= RUMPUN 5: PRODUKTIVITAS =================
+  gtd: {
+    group: 'Produktivitas & Manajemen Diri',
+    aktif: true,
+    theme: { icon: "🧠", color: "#4c51bf" },
+    ui: { label: "GTD (Getting Things Done)", placeholder: "Tuliskan beban pikiran, tugas yang menumpuk, dan hambatan produktivitas Anda saat ini..." },
+    prompt: { role: "Pakar Produktivitas dan Manajemen Waktu (Metode GTD David Allen)", outputName: "PANDUAN SISTEM GTD", pickLabel: "fokus area", extraRules: "Rancang sistem GTD yang sangat praktis dan langsung bisa diterapkan besok pagi. Berikan contoh konkret untuk fase Capture, Clarify, Organize, Reflect, dan Engage.", formatRules: [] },
+    modules: [{ key: "naskah_utama", enabled: true, desc: "Buat PANDUAN GTD LENGKAP dengan struktur:\n1. Brain Dump (Cara mengeluarkan semua isi kepala)\n2. Clarify & Organize (Memilah tugas dan menempatkannya di list yang tepat)\n3. Setup Tools (Rekomendasi aplikasi/tools GTD)\n4. Weekly Review (Checklist rutinitas evaluasi mingguan)\n5. Contoh Penerapan Nyata (Skenario 1 hari menggunakan GTD)" }],
+    menu: [{ label: "Sistem Lengkap GTD", desc: "Manajemen waktu komprehensif: Capture, Clarify, Organize, Reflect, Engage." }]
+  },
+  deep_work: {
+    group: 'Produktivitas & Manajemen Diri',
+    aktif: true,
+    theme: { icon: "🎯", color: "#2c5282" },
+    ui: { label: "Deep Work Schedule", placeholder: "Tuliskan pekerjaan yang butuh fokus tinggi, dan apa saja distraksi terbesar Anda..." },
+    prompt: { role: "Pakar High-Performance & Fokus (Metode Deep Work Cal Newport)", outputName: "JADWAL DEEP WORK & FOKUS", pickLabel: "fokus area", extraRules: "Rancang jadwal dan aturan Deep Work yang ketat namun realistis. Bantu user mengidentifikasi shallow work yang harus dikurangi.", formatRules: [] },
+    modules: [{ key: "naskah_utama", enabled: true, desc: "Buat PANDUAN DEEP WORK dengan struktur:\n1. Analisis Shallow vs Deep Work (Identifikasi tugas user)\n2. Strategi Penjadwalan (Monastic, Bimodal, Rhythmic, atau Journalistic)\n3. Ritual Fokus (Persiapan sebelum mulai, aturan saat bekerja, cara mengakhiri)\n4. Eliminasi Distraksi (Aturan untuk HP, email, dan lingkungan kerja)\n5. Contoh Jadwal Harian (Time-blocking untuk Deep Work)" }],
+    menu: [{ label: "Jadwal Deep Work", desc: "Pendekatan fokus tanpa gangguan untuk tugas kognitif berat." }]
+  },
+  time_blocking: {
+    group: 'Produktivitas & Manajemen Diri',
+    aktif: true,
+    theme: { icon: "⏱️", color: "#276749" },
+    ui: { label: "Time Blocking", placeholder: "Tuliskan aktivitas harian Anda, jam kerja, dan masalah yang sering membuat waktu terbuang..." },
+    prompt: { role: "Pakar Manajemen Waktu (Metode Time Blocking)", outputName: "JADWAL TIME BLOCKING", pickLabel: "fokus area", extraRules: "Buat jadwal harian atau mingguan yang membagi waktu ke dalam blok-blok spesifik. Sertakan blok untuk tugas utama, buffer time, dan istirahat.", formatRules: [] },
+    modules: [{ key: "naskah_utama", enabled: true, desc: "Buat PANDUAN TIME BLOCKING dengan struktur:\n1. Kategorisasi Tugas (Penting vs Mendesak, Deep vs Shallow)\n2. Cara Membuat Blok (Estimasi durasi, menyisipkan buffer time)\n3. Contoh Time Block Harian (Jadwal detail dari bangun sampai tidur)\n4. Aturan Eksekusi (Apa yang dilakukan jika ada gangguan saat blok berjalan)\n5. Evaluasi (Cara menyesuaikan blok jika sering meleset)" }],
+    menu: [{ label: "Jadwal Time Blocking", desc: "Membagi hari menjadi blok-blok waktu spesifik untuk setiap tugas." }]
+  },
+  pomodoro: {
+    group: 'Produktivitas & Manajemen Diri',
+    aktif: true,
+    theme: { icon: "🍅", color: "#c53030" },
+    ui: { label: "Pomodoro Technique", placeholder: "Tuliskan pekerjaan yang sering Anda tunda, dan berapa lama biasanya Anda bisa fokus..." },
+    prompt: { role: "Pakar Manajemen Waktu (Metode Pomodoro Francesco Cirillo)", outputName: "PANDUAN POMODORO", pickLabel: "fokus area", extraRules: "Jelaskan siklus Pomodoro dengan sangat detail (25 menit kerja, 5 menit istirahat, long break). Sesuaikan teknik ini dengan pekerjaan user.", formatRules: [] },
+    modules: [{ key: "naskah_utama", enabled: true, desc: "Buat PANDUAN POMODORO dengan struktur:\n1. Konsep Dasar (Kenapa 25 menit?)\n2. Aturan Main (Apa yang tidak boleh dilakukan saat Pomodoro berjalan)\n3. Rencana Siklus (Berapa set Pomodoro per hari yang realistis)\n4. Aktivitas Istirahat (Apa yang harus dilakukan saat 5 menit jeda)\n5. Tools Pendukung (Aplikasi timer Pomodoro terbaik)" }],
+    menu: [{ label: "Siklus Pomodoro", desc: "Bekerja dalam siklus 25 menit fokus penuh diikuti 5 menit istirahat." }]
+  },
+  eat_that_frog: {
+    group: 'Produktivitas & Manajemen Diri',
+    aktif: true,
+    theme: { icon: "🐸", color: "#2f855a" },
+    ui: { label: "Eat That Frog", placeholder: "Tuliskan tugas yang paling Anda takuti atau tunda, dan kapan waktu paling produktif Anda..." },
+    prompt: { role: "Pakar Produktivitas (Metode Eat That Frog Brian Tracy)", outputName: "STRATEGI EAT THAT FROG", pickLabel: "fokus area", extraRules: "Fokus pada bagaimana mengidentifikasi 'kodok' (tugas terberat) dan menyelesaikannya di jam-jam emas. Berikan tips psikologis untuk mengatasi rasa malas di awal.", formatRules: [] },
+    modules: [{ key: "naskah_utama", enabled: true, desc: "Buat PANDUAN EAT THAT FROG dengan struktur:\n1. Identifikasi Kodok (Cara memilah tugas berdasarkan dampak, bukan kemudahan)\n2. Rencana Pagi Hari (Rutinitas 2 jam pertama untuk mengalahkan kodok)\n3. Aturan 80/20 (Fokus pada 20% tugas yang memberi 80% hasil)\n4. Manajemen Energi (Memastikan energi penuh saat mengerjakan kodok)\n5. Mengatasi Resistensi (Tips jika tiba-tiba ingin menunda)" }],
+    menu: [{ label: "Strategi Eat That Frog", desc: "Kerjakan tugas paling sulit di pagi hari saat energi masih 100%." }]
+  },
+  eisenhower_matrix: {
+    group: 'Produktivitas & Manajemen Diri',
+    aktif: true,
+    theme: { icon: "🧩", color: "#805ad5" },
+    ui: { label: "Eisenhower Matrix", placeholder: "Daftarkan semua tugas Anda saat ini, dan bingung mana yang harus dikerjakan dulu..." },
+    prompt: { role: "Pakar Manajemen Waktu (Eisenhower Matrix)", outputName: "MATRIKS EISENHOWER", pickLabel: "fokus area", extraRules: "Bantu user memilah tugas ke dalam 4 kuadran (Do, Schedule, Delegate, Delete). Berikan alasan logis mengapa tugas tersebut masuk ke kuadran tertentu.", formatRules: [] },
+    modules: [{ key: "naskah_utama", enabled: true, desc: "Buat MATRIKS EISENHOWER dengan struktur:\n1. Kuadran 1: Do (Penting & Mendesak)\n2. Kuadran 2: Schedule (Penting, Tidak Mendesak)\n3. Kuadran 3: Delegate (Tidak Penting, Mendesak)\n4. Kuadran 4: Delete (Tidak Penting, Tidak Mendesak)\n5. Contoh Penerapan (Tabel tugas user diletakkan di kuadran mana)\n6. Rencana Aksi (Apa yang harus dilakukan minggu ini)" }],
+    menu: [{ label: "Matriks Eisenhower", desc: "Matriks 4 kuadran untuk memilah tugas berdasarkan urgensi dan kepentingan." }]
+  },
+  para_method: {
+    group: 'Produktivitas & Manajemen Diri',
+    aktif: true,
+    theme: { icon: "🗂️", color: "#4299e1" },
+    ui: { label: "PARA Method (Second Brain)", placeholder: "Tuliskan bagaimana Anda menyimpan catatan, file, dan proyek saat ini..." },
+    prompt: { role: "Pakar Manajemen Pengetahuan (Metode PARA Tiago Forte)", outputName: "SISTEM PARA & SECOND BRAIN", pickLabel: "fokus area", extraRules: "Bantu user membangun Second Brain dengan membagi semua aset digitalnya ke dalam 4 folder: Projects, Areas, Resources, Archives.", formatRules: [] },
+    modules: [{ key: "naskah_utama", enabled: true, desc: "Buat PANDUAN PARA METHOD dengan struktur:\n1. Konsep Projects (Proyek dengan tenggat waktu)\n2. Konsep Areas (Tanggung jawab berkelanjutan)\n3. Konsep Resources (Materi referensi menarik)\n4. Konsep Archives (Proyek/area yang sudah selesai)\n5. Struktur Folder yang Disarankan\n6. Workflow Memasukkan Data" }],
+    menu: [{ label: "Sistem PARA & Second Brain", desc: "Pengorganisasian file digital: Projects, Areas, Resources, Archives." }]
+  },
+  atomic_habits: {
+    group: 'Produktivitas & Manajemen Diri',
+    aktif: true,
+    theme: { icon: "⚛️", color: "#dd6b20" },
+    ui: { label: "Atomic Habits", placeholder: "Tuliskan kebiasaan buruk yang ingin dihentikan dan kebiasaan baik yang ingin dibangun..." },
+    prompt: { role: "Pakar Perubahan Perilaku (Metode Atomic Habits James Clear)", outputName: "PANDUAN ATOMIC HABITS", pickLabel: "fokus area", extraRules: "Fokus pada sistem, bukan tujuan. Gunakan 4 Hukum Perubahan Perilaku: Make it Obvious, Attractive, Easy, Satisfying (atau kebalikannya untuk kebiasaan buruk).", formatRules: [] },
+    modules: [{ key: "naskah_utama", enabled: true, desc: "Buat PANDUAN ATOMIC HABITS dengan struktur:\n1. Identitas Baru\n2. Make it Obvious (Desain lingkungan & habit stacking)\n3. Make it Attractive (Temptation bundling)\n4. Make it Easy (Aturan 2 menit)\n5. Make it Satisfying (Reward langsung)\n6. Strategi Mematahkan Kebiasaan Buruk" }],
+    menu: [{ label: "Pembentukan Kebiasaan", desc: "Membangun kebiasaan produktif dengan 4 Hukum Perubahan Perilaku." }]
+  },
+  bullet_journal: {
+    group: 'Produktivitas & Manajemen Diri',
+    aktif: true,
+    theme: { icon: "📓", color: "#4a5568" },
+    ui: { label: "Bullet Journal (BuJo)", placeholder: "Tuliskan ketertarikan Anda pada sistem analog (buku tulis), dan apa yang ingin Anda lacak..." },
+    prompt: { role: "Pakar Perencanaan Analog (Metode Bullet Journal Ryder Carroll)", outputName: "SISTEM BULLET JOURNAL", pickLabel: "fokus area", extraRules: "Rancang setup Bullet Journal yang tidak ribet. Fokus pada fungsi inti (Rapid Logging, Migrasi, Koleksi) tanpa terjebak pada sisi artistik/estetika yang memakan waktu.", formatRules: [] },
+    modules: [{ key: "naskah_utama", enabled: true, desc: "Buat PANDUAN BULLET JOURNAL dengan struktur:\n1. Key / Legenda\n2. Index\n3. Future Log\n4. Monthly Log\n5. Daily Log (Rapid logging harian)\n6. Koleksi (Halaman khusus)\n7. Migrasi (Cara memindahkan tugas)" }],
+    menu: [{ label: "Sistem Bullet Journal", desc: "Sistem perencanaan analog menggabungkan to-do list, jurnal, dan kalender." }]
+  }
+};
+
+const DEFAULT_MASTER_TOGGLES = {
+  analisis_utama: true, naskah_utama: true, artikel: true,
+  surat_proposal: true, deskripsi_gambar: true, caption_tagar: true
+};
+
+function status(msg, type='info'){
+  const el = document.getElementById('status');
+  el.textContent = msg; el.className = 'status show ' + type;
+}
+function getHeaders(table){
+  return { 'Content-Type':'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': table, 'X-Role': 'admin' };
+}
+
+async function checkCurrent(){
+  const u = document.getElementById('u').value.trim();
+  const p = document.getElementById('p').value.trim();
+  if(!u || !p){ status('❌ Isi username & password dulu', 'err'); return; }
+  const btn = document.getElementById('btnCheck');
+  btn.disabled = true; btn.textContent = 'Memeriksa...';
+  status('⏳ Memeriksa user...', 'info');
+  try{
+    const r = await fetch(`${API_URL}?table=${USERS_TABLE}`, { headers: getHeaders(USERS_TABLE) });
+    const res = await r.json();
+    if(!res.success || !res.data){ status('❌ Gagal ambil data user', 'err'); return; }
+    const user = res.data.find(x => x.x_01 === u && x.x_02 === p);
+    if(!user){ status('❌ Username atau password salah', 'err'); return; }
+    if(u !== 'admin'){ status('❌ Hanya admin yang bisa seed', 'err'); return; }
+
+    status('✅ Login OK. Mengambil config...', 'ok');
+    document.getElementById('btnSeed').disabled = false;
+    document.getElementById('btnDelete').disabled = false;
+
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res2 = await r2.json();
+    if(res2.success && res2.data){
+      const row = res2.data.find(x => x.id_x == KONTROL_ID);
+      if(row){
+        status(`✅ Row id_x=${KONTROL_ID} sudah ada. Klik "Seed" untuk MENGGANTI.`, 'ok');
+      } else {
+        status(`ℹ️ Row id_x=${KONTROL_ID} belum ada. Klik "Seed".`, 'info');
+      }
+    }
+  } catch(e){ status('❌ Error: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '🔍 Cek Config'; }
+}
+
+async function doSeed(){
+  if(!confirm(`⚠️ Seed akan MENGGANTI seluruh config di id_x=${KONTROL_ID}. Lanjut?`)) return;
+  const btn = document.getElementById('btnSeed');
+  btn.disabled = true; btn.textContent = '⏳ Menyimpan...';
+  status('⏳ Menyimpan config ke DB...', 'info');
+  try{
+    const payload = {
+      x_01: JSON.stringify({ categories: DEFAULT_CATEGORIES, outputModules: DEFAULT_MODULES }),
+      x_02: new Date().toISOString(),
+      x_03: document.getElementById('u').value.trim() || 'seeder',
+      x_04: '1.0',
+      x_05: '1', x_06: '1', x_07: '1', x_08: '1', x_09: '1', x_10: '1'
+    };
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    const exists = res.success && res.data && res.data.some(x => x.id_x == KONTROL_ID);
+    const method = exists ? 'PUT' : 'POST';
+    const endpoint = exists ? `&id_x=${KONTROL_ID}` : '';
+    
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}${endpoint}`, {
+      method, headers: getHeaders(KONTROL_TABLE), body: JSON.stringify(payload)
+    });
+    const res2 = await r2.json();
+    if(!res2.success && !res2.id_x) throw new Error(res2.error || res2.message || 'Gagal simpan');
+    status(`✅ BERHASIL! Config ter-${exists ? 'update' : 'buat'} di id_x=${KONTROL_ID}.\n\nSilakan buka index_simple.html (hard refresh Ctrl+Shift+R).`, 'ok');
+  } catch(e){ status('❌ Gagal seed: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '🌱 Seed ke id_x=9'; }
+}
+
+async function doDelete(){
+  if(!confirm(`⚠️ Hapus row id_x=${KONTROL_ID}?`)) return;
+  const btn = document.getElementById('btnDelete');
+  btn.disabled = true; btn.textContent = '⏳ Menghapus...';
+  try{
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x=${KONTROL_ID}`, { method: 'DELETE', headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    if(res.success || res.deleted) status('✅ Row terhapus', 'ok');
+    else throw new Error(res.error || res.message || 'Gagal hapus');
+  } catch(e){ status('❌ Gagal hapus: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '🗑️ Hapus Row id_x=9'; }
+}
+</script>
+</body>
+</html>

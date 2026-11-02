@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Prompt Tools — Simple</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;min-height:100vh;color:#2d3748;padding:16px}
+
+/* LOGIN */
+.login-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:9999;justify-content:center;align-items:center;padding:20px}
+.login-overlay.active{display:flex}
+.login-box{background:#fff;border-radius:20px;padding:36px;max-width:400px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.4)}
+.login-box h2{text-align:center;font-size:22px;margin-bottom:4px}
+.login-box p{text-align:center;color:#718096;font-size:13px;margin-bottom:20px}
+.login-box .form-group{margin-bottom:12px}
+.login-box label{font-weight:600;font-size:12px;color:#4a5568;display:block;margin-bottom:4px}
+.login-box input{width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px}
+.login-box input:focus{outline:none;border-color:#805ad5}
+.login-box .btn-login{width:100%;padding:12px;background:#805ad5;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
+.login-box .btn-login:hover{background:#6b46c1}
+.login-box .btn-login:disabled{opacity:.6;cursor:not-allowed}
+.login-error{color:#fc8181;font-size:12px;text-align:center;margin-top:10px;display:none}
+.login-error.show{display:block}
+
+/* MAIN */
+.main-content{display:none;max-width:1100px;margin:0 auto}
+.main-content.visible{display:block}
+header{background:#fff;padding:14px 22px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+header h1{font-size:18px;color:#1a2332;display:flex;align-items:center;gap:8px;flex-shrink:0}
+header h1 span{background:#805ad5;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px}
+
+/* SEARCH BOX */
+.search-container{flex:1;max-width:400px;margin:0 20px;position:relative;display:flex;align-items:center}
+.search-container input{width:100%;padding:9px 14px 9px 34px;border:2px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s}
+.search-container input:focus{border-color:#805ad5}
+.search-container::before{content:"🔍";position:absolute;left:12px;font-size:14px;pointer-events:none}
+
+.header-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.user-chip{display:flex;align-items:center;gap:6px;font-size:12px;background:#f7fafc;padding:4px 12px;border-radius:16px;font-weight:600}
+.btn-logout{background:#fc8181;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer}
+.btn-logout:hover{background:#f56565}
+
+/* CATEGORY CARD — RINGKAS & KLIKABLE */
+.category-card{
+  background:#fff;border-radius:14px;padding:18px 22px;margin-bottom:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);border-left:5px solid #805ad5;
+  transition:all .2s;cursor:pointer;display:flex;align-items:center;gap:16px;
+}
+.category-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 28px rgba(0,0,0,.12);
+}
+.category-card:active{transform:translateY(0)}
+.category-card.hidden{display:none !important}
+
+.cat-icon-large{font-size:32px;flex-shrink:0;line-height:1}
+.cat-info{flex:1;min-width:0}
+.cat-title{font-size:16px;font-weight:700;color:#1a2332;margin-bottom:4px}
+.cat-meta{font-size:11px;color:#718096}
+.cat-count{
+  background:#ed8936;color:#fff;padding:6px 12px;border-radius:20px;
+  font-size:12px;font-weight:700;white-space:nowrap;flex-shrink:0;
+  box-shadow:0 2px 6px rgba(237,137,54,.3);
+}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);justify-content:center;align-items:flex-start;padding:20px;overflow-y:auto}
+.modal-overlay.active{display:flex}
+
+/* Z-INDEX BERTUMPUK: form < history < edit */
+#categoryModal{z-index:1000}
+#historyModal{z-index:1100}
+#editPromptModal{z-index:1200}
+
+.modal{background:#fff;border-radius:16px;max-width:850px;width:100%;margin-top:40px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:90vh;display:flex;flex-direction:column}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #edf2f7}
+.modal-header h2{font-size:18px;color:#1a2332;display:flex;align-items:center;gap:10px}
+.cat-icon-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:38px;height:38px;border-radius:10px;font-size:20px;flex-shrink:0;
+}
+.modal-close{background:#fc8181;color:#fff;border:none;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:#f56565}
+.modal-body{overflow-y:auto;flex:1}
+
+/* CATEGORY MODAL */
+#categoryModal .modal{max-width:700px}
+.cat-textarea{
+  width:100%;padding:11px 14px;border:2px solid #e2e8f0;border-radius:10px;
+  font-size:13px;font-family:inherit;resize:vertical;min-height:130px;line-height:1.5;
+  transition:border .15s;
+}
+.cat-textarea:focus{outline:none;border-color:#805ad5}
+.cat-textarea::placeholder{color:#a0aec0}
+
+.cat-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border:none;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-copy{background:#805ad5;color:#fff}
+.btn-copy:hover:not(:disabled){background:#6b46c1}
+.btn-save{background:#48bb78;color:#fff}
+.btn-save:hover:not(:disabled){background:#38a169}
+.btn-history{background:#ed8936;color:#fff}
+.btn-history:hover:not(:disabled){background:#dd6b20}
+
+#editPromptModal .modal { max-width: 800px; }
+.edit-textarea { width:100%; min-height:400px; padding:12px; border:2px solid #e2e8f0; border-radius:8px; font-family:monospace; font-size:12px; line-height:1.5; resize:vertical; }
+.edit-textarea:focus { outline:none; border-color:#805ad5; }
+.edit-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+
+/* HISTORY ITEM */
+.history-item{background:#f7fafc;border-radius:10px;padding:14px 16px;margin-bottom:10px;border:1px solid #e2e8f0}
+.history-item:hover{border-color:#805ad5}
+.hi-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px}
+.hi-meta{font-size:11px;color:#718096;display:flex;gap:10px;align-items:center}
+
+.hi-ide-row{display:flex;gap:8px;margin-bottom:10px;align-items:stretch;flex-wrap:wrap}
+.hi-ide{flex:1;font-size:13px;color:#2d3748;background:#fff;padding:8px 12px;border-radius:6px;border-left:3px solid #805ad5;line-height:1.5;max-height:60px;overflow:hidden;cursor:pointer;display:flex;align-items:center;min-width:200px}
+.hi-ide.expanded{max-height:none;display:block;}
+
+.hi-btn-group { display:flex; gap:6px; }
+.hi-btn-copy{background:#805ad5;color:#fff;padding:8px 14px;border:none;border-radius:6px;font-weight:600;font-size:12px;cursor:pointer;display:flex;align-items:center;white-space:nowrap;transition:all .15s}
+.hi-btn-copy:hover{background:#6b46c1}
+.hi-btn-edit{background:#ed8936;color:#fff;padding:8px 14px;border:none;border-radius:6px;font-weight:600;font-size:12px;cursor:pointer;display:flex;align-items:center;white-space:nowrap;transition:all .15s}
+.hi-btn-edit:hover{background:#dd6b20}
+
+.hi-link-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.hi-link-input{flex:1;padding:7px 11px;border:2px solid #e2e8f0;border-radius:6px;font-size:12px;font-family:inherit;transition:border .15s;min-width:150px}
+.hi-link-input:focus{outline:none;border-color:#805ad5}
+
+.hi-btn{padding:7px 12px;border:none;border-radius:6px;font-weight:600;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s}
+.hi-btn-save{background:#48bb78;color:#fff}
+.hi-btn-save:hover{background:#38a169}
+.hi-btn-open{background:#4299e1;color:#fff}
+.hi-btn-open:hover{background:#3182ce}
+.hi-btn-open:disabled{opacity:.4;cursor:not-allowed;background:#a0aec0}
+.hi-btn-del{background:#fc8181;color:#fff}
+.hi-btn-del:hover{background:#f56565}
+
+.empty-history{text-align:center;padding:40px 20px;color:#a0aec0}
+.empty-history .icon{font-size:40px;margin-bottom:8px}
+.empty-history h3{color:#4a5568;font-size:15px;margin-bottom:4px}
+.empty-history p{font-size:12px}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:13px 20px;border-radius:10px;color:#fff;font-weight:600;font-size:13px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:340px;animation:slideUp .3s}
+.toast.success{background:#48bb78}
+.toast.error{background:#fc8181}
+.toast.info{background:#4299e1}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.loading{text-align:center;padding:30px;color:#718096;font-size:13px}
+.spinner{width:32px;height:32px;border:3px solid #e2e8f0;border-top:3px solid #805ad5;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 10px}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+@media(max-width:768px){
+  .search-container{order:3;width:100%;max-width:none;margin:10px 0 0 0;}
+}
+@media(max-width:600px){
+  body{padding:8px}
+  header{padding:12px 16px}
+  .category-card{padding:14px 16px;gap:12px}
+  .cat-icon-large{font-size:28px}
+  .cat-title{font-size:14px}
+  .cat-count{font-size:11px;padding:5px 10px}
+  .modal{padding:16px;margin-top:20px}
+  .btn,.hi-btn,.hi-btn-copy,.hi-btn-edit{padding:8px 12px;font-size:12px}
+  .cat-actions .btn{flex:1;justify-content:center}
+  .hi-link-row{flex-direction:column;align-items:stretch}
+  .hi-link-input{width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-overlay active" id="loginOverlay">
+  <div class="login-box">
+    <span style="font-size:40px;display:block;text-align:center;margin-bottom:6px">🛠️</span>
+    <h2>AI Prompt Tools</h2>
+    <p>Login untuk mulai membuat prompt</p>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="loginUsername" placeholder="Username">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">Login</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-content" id="mainContent">
+  <header>
+    <h1>🛠️ AI Prompt Tools <span>Simple</span></h1>
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Cari kategori / framework / pilihan..." oninput="filterCategories()">
+    </div>
+    <div class="header-actions">
+      <span class="user-chip">👤 <span id="headerUser">-</span></span>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </header>
+  <div id="categoriesContainer"></div>
+</div>
+
+<!-- CATEGORY MODAL (form + tombol) -->
+<div class="modal-overlay" id="categoryModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>
+        <span class="cat-icon-badge" id="catIconBadge">📌</span>
+        <span id="catTitleText">Kategori</span>
+      </h2>
+      <button class="modal-close" onclick="closeCategoryModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="categoryModalIde" class="cat-textarea" placeholder="Tulis ide di sini..."></textarea>
+      <div class="cat-actions">
+        <button class="btn btn-copy" onclick="copyPromptFromModal()">📋 Copy Prompt</button>
+        <button class="btn btn-save" id="categoryModalSaveBtn" onclick="saveFromModal()">💾 Simpan</button>
+        <button class="btn btn-history" onclick="openHistoryFromModal()">📚 Riwayat</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY MODAL -->
+<div class="modal-overlay" id="historyModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="historyTitle">Riwayat</h2>
+      <button class="modal-close" onclick="closeHistory()">✕</button>
+    </div>
+    <div class="modal-body" id="historyBody">
+      <div class="loading"><div class="spinner"></div>Memuat riwayat...</div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PROMPT MODAL -->
+<div class="modal-overlay" id="editPromptModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="editPromptTitle">✏️ Edit Prompt</h2>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="editPromptText" class="edit-textarea" placeholder="Edit prompt di sini..."></textarea>
+      <div class="edit-actions">
+        <button class="btn" style="background:#e2e8f0;color:#4a5568" onclick="closeEditModal()">Batal</button>
+        <button class="btn btn-save" id="saveEditBtn" onclick="saveEditedPrompt()">💾 Simpan Prompt</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// KONFIGURASI GLOBAL
+// ============================================================
+const API_URL = 'https://lidan-co-id.pages.dev/api/contacts_filter_dinamis7';
+const TABLE = 'ai_prompt_unified';
+const USERS_TABLE = 'users';
+const SECRET = 'admin';
+const STORAGE_KEY = 'ai_tools_user';
+
+// ============================================================
+// LIBRARY MODUL OUTPUT
+// ============================================================
+const OUTPUT_MODULES = {
+  analisis_utama: {
+    title: 'ANALISIS UTAMA',
+    desc:  'Berisi analisis {pickLabel} secara mendalam sesuai format baku untuk tool tersebut.'
+  },
+  naskah_utama: {
+    title: 'NASKAH UTAMA',
+    desc:  'Berisi naskah lengkap sesuai standar terbaik untuk {pickLabel} yang dipilih.'
+  },
+  artikel: {
+    title: 'ARTIKEL (Kesimpulan & Saran)',
+    desc:  'Artikel mengalir 500-800 kata yang merangkum hasil bagian sebelumnya. Wajib memuat sub-judul: Pendahuluan, Pembahasan, Kesimpulan, dan Saran tindakan konkret.'
+  },
+  surat_proposal: {
+    title: 'SURAT PENGANTAR & PROPOSAL KERJASAMA',
+    desc:  'Draft surat pengantar resmi + ringkasan proposal kerjasama yang disesuaikan dengan hasil di bagian sebelumnya.'
+  },
+  deskripsi_gambar: {
+    title: 'DESKRIPSI GAMBAR + TEKS OVERLAY (3 Varian)',
+    desc:  'Tiga deskripsi visual detail yang siap di-copy ke AI pembuat gambar (Midjourney/DALL-E). Setiap gambar WAJIB menyertakan teks overlay/tulisan di dalam gambar yang relevan dengan konten yang dihasilkan. Format: "Gambar 1 — deskripsi visual + teks overlay: ..." dst. Tulis sebagai TEKS deskripsi, bukan gambar asli.'
+  },
+  caption_tagar: {
+    title: 'CAPTION & TAGAR',
+    desc:  'Tiga caption media sosial dengan tone berbeda + tagar relevan. Siap copy-paste.'
+  }
+};
+
+// ============================================================
+// TEMPLATE UNIVERSAL PROMPT
+// ============================================================
+const PROMPT_TEMPLATE = {
+  intro: 'Anda adalah {role}. Saya ingin Anda menyusun {outputName} SECARA BERTAHAP untuk ide/topik berikut:',
+  ideHeader: '=== IDE / TOPIK ===',
+  rulesHeader: '=== ATURAN KERJA (WAJIB DIPATUHI) ===',
+  rule1: `Di balasan PERTAMA, Anda HANYA BOLEH bertanya dan menampilkan daftar pilihan berikut:
+"Silakan pilih nomor {pickLabel} yang ingin Anda buatkan:
+{menu}
+
+Ketik nomornya (misal: 1)."
+
+JANGAN membuat apapun di balasan pertama.`,
+  rule2: 'Tunggu saya membalas dengan angka.',
+  rule3: 'Setelah saya membalas angka, buatkan output sesuai pilihan. {extraRules}',
+  rule4: `Perhatikan STRUKTUR OUTPUT berikut — buat SEMUA bagian aktif dalam SATU respons, berurutan sesuai nomor, JANGAN berhenti di bagian pertama:
+{outputFormat}`,
+  rule5: `Setelah selesai, WAJIB tulis status seperti ini:
+---
+✅ SELESAI — [Nama yang dibuat]
+
+Yang sudah dibuat: [nomor dan nama]
+Yang tersisa: [nomor dan nama yang belum]
+
+Pilih nomor selanjutnya, atau ketik "STOP" jika sudah selesai.
+---`,
+  rule6: 'BERHENTI setelah status itu. JANGAN membuat yang berikutnya sampai saya membalas lagi.',
+  rule7: 'Jika saya membalas "STOP", ucapkan terima kasih dan akhiri sesi.',
+  rule8Header: 'FORMAT OUTPUT:',
+  formatRulesDefault: [
+    'Gunakan format Markdown yang rapi (heading, bold, bullet points).',
+    'DILARANG membuat gambar. Cukup teks saja.',
+    'Gunakan bahasa Indonesia yang indah dan profesional.'
+  ]
+};
+
+// ============================================================
+// KATEGORI & MENU (config-driven)
+// ============================================================
+const CATEGORIES = {
+
+  khotbah: {
+    aktif: true,
+    theme: { icon: '🕊️', color: '#805ad5' },
+    ui: {
+      label: 'Khotbah & Renungan',
+      placeholder: `Tulis ide/topik khotbah di sini...
+Contoh: Tema Kasih dan Pengampunan berdasarkan Matius 18:21-35. Target: Jemaat umum.`
+    },
+    prompt: {
+      role: 'Pengkhotbah & Penulis Khotbah Profesional berpengalaman',
+      outputName: 'NASKAH KHOTBAH LENGKAP',
+      pickLabel: 'jenis khotbah',
+      extraRules: 'Buat naskah khotbah yang sangat menyentuh, berdasarkan Alkitab, dan siap dibawakan. Bahasa Indonesia yang indah dan mengalir.',
+      formatRules: []
+    },
+    modules: [
+  { key: 'naskah_utama', enabled: true,
+    desc: `Naskah khotbah liturgi Calvinis lengkap dengan URUTAN WAJIB dari atas ke bawah:
+- Pendahuluan (hook, tujuan khotbah, relevansi topik bagi jemaat)
+- Invocatio (Panggilan Beribadah: ayat panggilan, doa singkat, ajakan menyembah, penjelasan singkat makna invocatio bagi jemaat)
+- Pembacaan Pertama — Perjanjian Lama:
+    • Latar Belakang Ayat (konteks historis, budaya, gramatikal, siapa penulis, siapa penerima, situasi saat ayat ditulis)
+    • Pembahasan / Eksposisi ayat per ayat
+- Pembacaan Kedua — Perjanjian Baru / Injil:
+    • Latar Belakang Ayat (konteks historis, budaya, gramatikal, siapa penulis, siapa penerima, situasi saat ayat ditulis)
+    • Pembahasan / Eksposisi ayat per ayat
+- Benang Merah & Aplikasi praktis bagi jemaat (kaitkan kedua bacaan menjadi satu kesatuan teologis, lalu terapkan konkret)
+- Penutup & tantangan
+
+CATATAN: Bila lebih natural secara alur teologis, AI boleh membahas Pembacaan Kedua lebih dulu (mis. Injil sebagai puncak), lalu Pembacaan Pertama — asalkan KEDUA bacaan tetap dibahas lengkap dengan latar belakang + pembahasan masing-masing.`
+  }
+],
+    menu: [
+      { label: 'Khotbah Ekspositori', desc: 'Fokus satu perikop, gali konteks historis-gramatikal, eksegesis ayat per ayat, aplikasi praktis.' },
+      { label: 'Khotbah Topikal', desc: 'Satu tema lintas ayat, kumpulkan referensi dari beberapa kitab, satukan dalam satu gagasan.' },
+      { label: 'Khotbah Naratif', desc: 'Bercerita mengikuti alur kisah Alkitab, tonjolkan tokoh, plot, konflik, dan resolusi.' },
+      { label: 'Khotbah Tekstual', desc: 'Satu ayat kunci menjadi inti, uraikan setiap frasa, kaitkan dengan konteks.' },
+      { label: 'Renungan Harian', desc: 'Singkat, reflektif, satu kebenaran rohani untuk direnungkan hari itu.' },
+      { label: 'Renungan Keluarga', desc: 'Praktis, hangat, bisa dipandu orang tua untuk ibadah keluarga di rumah.' },
+      { label: 'Khotbah Pemuda', desc: 'Bahasa relevan, ilustrasi modern, aplikasi untuk pergumulan anak muda.' },
+      { label: 'Khotbah Perayaan', desc: 'Nada sukacita dan syukur — Natal, Paskah, HUT, dan perayaan iman lainnya.' },
+      { label: 'Khotbah Penghiburan', desc: 'Nada menenangkan dan penuh pengharapan untuk ibadah duka/penghiburan.' },
+      { label: 'Khotbah Pernikahan', desc: 'Teologis dan hangat, prinsip pernikahan Kristen, berkat bagi mempelai.' },
+      { label: 'Khotbah Rumah Baru', desc: 'Ucapan syukur dan doa berkat untuk rumah atau ruang usaha baru.' }
+    ]
+  },
+  // ────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────
+  // KHOTBAH LITURGI CALVINIS — 2 Pembacaan + Invocatio
+  // Alur: Pendahuluan → Invocatio → Pembacaan 1 → Pembacaan 2
+  //       (masing-masing: Latar Belakang → Pembahasan)
+  //       → Benang Merah & Aplikasi → Penutup
+  // ────────────────────────────────────────────────────────
+  khotbah_liturgi: {
+    aktif: true,
+    theme: { icon: '🕊️', color: '#805ad5' },
+    ui: {
+      label: 'Khotbah Liturgi Calvinis',
+      placeholder: `Tulis ide/topik khotbah liturgi Calvinis di sini...
+Contoh: Tema Kasih dan Pengampunan — Pembacaan Pertama: Kejadian 50:15-21, Pembacaan Kedua: Matius 18:21-35. Target: Jemaat umum.`
+    },
+    prompt: {
+      role: 'Pengkhotbah & Penulis Khotbah Profesional berpengalaman',
+      outputName: 'NASKAH KHOTBAH LENGKAP',
+      pickLabel: 'jenis khotbah',
+      extraRules: 'Buat naskah khotbah yang sangat menyentuh, berdasarkan Alkitab, dan siap dibawakan. Bahasa Indonesia yang indah dan mengalir.',
+      formatRules: []
+    },
+    modules: [
+      { key: 'naskah_utama', enabled: true,
+        desc: `Naskah khotbah liturgi Calvinis lengkap dengan URUTAN WAJIB dari atas ke bawah:
+- Pendahuluan (hook, tujuan khotbah, relevansi topik bagi jemaat)
+- Invocatio (Panggilan Beribadah: ayat panggilan + penjelasan singkat makna invocatio bagi jemaat — TANPA doa singkat, TANPA ajakan menyembah)
+- Pembacaan Pertama — Perjanjian Lama:
+    • Latar Belakang Ayat (konteks historis, budaya, gramatikal, siapa penulis, siapa penerima, situasi saat ayat ditulis)
+    • Pembahasan / Eksposisi ayat per ayat
+- Pembacaan Kedua — Perjanjian Baru / Injil:
+    • Latar Belakang Ayat (konteks historis, budaya, gramatikal, siapa penulis, siapa penerima, situasi saat ayat ditulis)
+    • Pembahasan / Eksposisi ayat per ayat
+- Benang Merah & Aplikasi praktis bagi jemaat (kaitkan KEDUA bacaan menjadi satu kesatuan teologis, lalu terapkan konkret)
+- Penutup & tantangan
+
+CATATAN: Cukup DUA pembacaan Alkitab (Pertama: PL, Kedua: PB/Injil). Bila lebih natural secara alur teologis, AI boleh membahas Pembacaan Kedua lebih dulu (mis. Injil sebagai puncak), lalu Pembacaan Pertama — asalkan KEDUA bacaan tetap dibahas lengkap masing-masing dengan Latar Belakang + Pembahasan.`
+      }
+    ],
+    menu: [
+      { label: 'Khotbah Ekspositori', desc: 'Fokus satu perikop, gali konteks historis-gramatikal, eksegesis ayat per ayat, aplikasi praktis.' },
+      { label: 'Khotbah Topikal', desc: 'Satu tema lintas ayat, kumpulkan referensi dari beberapa kitab, satukan dalam satu gagasan.' },
+      { label: 'Khotbah Naratif', desc: 'Bercerita mengikuti alur kisah Alkitab, tonjolkan tokoh, plot, konflik, dan resolusi.' },
+      { label: 'Khotbah Tekstual', desc: 'Satu ayat kunci menjadi inti, uraikan setiap frasa, kaitkan dengan konteks.' },
+      { label: 'Renungan Harian', desc: 'Singkat, reflektif, satu kebenaran rohani untuk direnungkan hari itu.' },
+      { label: 'Renungan Keluarga', desc: 'Praktis, hangat, bisa dipandu orang tua untuk ibadah keluarga di rumah.' },
+      { label: 'Khotbah Pemuda', desc: 'Bahasa relevan, ilustrasi modern, aplikasi untuk pergumulan anak muda.' },
+      { label: 'Khotbah Perayaan', desc: 'Nada sukacita dan syukur — Natal, Paskah, HUT, dan perayaan iman lainnya.' },
+      { label: 'Khotbah Penghiburan', desc: 'Nada menenangkan dan penuh pengharapan untuk ibadah duka/penghiburan.' },
+      { label: 'Khotbah Pernikahan', desc: 'Teologis dan hangat, prinsip pernikahan Kristen, berkat bagi mempelai.' },
+      { label: 'Khotbah Rumah Baru', desc: 'Ucapan syukur dan doa berkat untuk rumah atau ruang usaha baru.' }
+    ]
+  },
+  ps_v2: {
+    aktif: true,
+    theme: { icon: '🎤', color: '#38b2ac' },
+    ui: {
+      label: 'Public Speaking v2',
+      placeholder: `Tulis ide/topik public speaking...
+Contoh: Presentasi tentang kesehatan mental di tempat kerja untuk audiens HRD dan manajer, durasi 30 menit.`
+    },
+    prompt: {
+      role: 'Pakar Public Speaking dan Speechwriter Senior',
+      outputName: 'NASKAH PUBLIC SPEAKING LENGKAP',
+      pickLabel: 'framework',
+      extraRules: 'Buat naskah yang sangat menjual, inspiratif, dan siap pakai. Bahasa Indonesia persuasif dan profesional.',
+      formatRules: []
+    },
+    modules: [
+      { key: 'naskah_utama', enabled: true }
+    ],
+    menu: [
+      { label: 'IBC (Introduction-Body-Conclusion)', desc: 'Struktur klasik tiga bagian: pembuka memikat, isi terstruktur, penutup berkesan.' },
+      { label: 'PREP (Point-Reason-Example-Point)', desc: 'Poin utama → alasan → contoh konkret → tegaskan kembali poin.' },
+      { label: 'TED Talk (Storytelling & Inspiratif)', desc: 'Alur naratif, hook emosional, "ide besar" yang menyebar.' },
+      { label: "Monroe's Motivated Sequence", desc: 'Attention → Need → Satisfaction → Visualization → Action.' },
+      { label: "Storytelling (Hero's Journey)", desc: 'Perjalanan pahlawan: panggilan, tantangan, transformasi, kembali.' },
+      { label: 'PSB (Problem-Solution-Benefit)', desc: 'Identifikasi masalah audiens → tawarkan solusi → tunjukkan manfaat konkret.' }
+    ]
+  },
+
+  ps_v3: {
+    aktif: true,
+    theme: { icon: '🎤', color: '#4299e1' },
+    ui: {
+      label: 'Public Speaking v3',
+      placeholder: `Tulis ide/topik public speaking...
+Contoh: Presentasi tentang kesehatan mental di tempat kerja untuk audiens HRD dan manajer, durasi 30 menit.`
+    },
+    prompt: {
+      role: 'Pakar Public Speaking dan Speechwriter Senior',
+      outputName: 'NASKAH PUBLIC SPEAKING LENGKAP',
+      pickLabel: 'paket framework',
+      extraRules: 'Struktur wajib: OPENING → BODY (Sub 1 + ilustrasi, Sub 2 + ilustrasi, Sub 3 + ilustrasi) → CLOSING. Bahasa Indonesia persuasif dan profesional.',
+      formatRules: []
+    },
+    modules: [
+      { key: 'naskah_utama', enabled: true }
+    ],
+    menu: [
+      { label: 'Motivasi-Inspiratif', desc: 'Opening: Story/Fakta → Body 3 Sub: 5W+1H / Power of Dream (tiap sub + ilustrasi) → Closing: Cerita/Kutipan.' },
+      { label: 'Edukasi/Training', desc: 'Opening: Powerful Question/Fakta → Body 3 Sub: 5W+1H / Problem-Solution (tiap sub + ilustrasi) → Closing: Review + Ajakan.' },
+      { label: 'Persuasif/Sales', desc: 'Opening: Visual Impact/Participation → Body 3 Sub: Problem-Solution / Fitur-Manfaat (tiap sub + ilustrasi) → Closing: Janji/Komitmen/Ajakan.' },
+      { label: 'Korporat/Bisnis', desc: 'Opening: Kutipan/Fakta → Body 3 Sub: Problem-Solution / Fungsional (tiap sub + ilustrasi) → Closing: Kutipan/Ajakan.' },
+      { label: 'Formal/Sambutan', desc: 'Opening: Pujian/Kutipan → Body 3 Sub: Kronologis Past-Present-Future (tiap sub + ilustrasi) → Closing: Pantun/Kutipan.' },
+      { label: 'Workshop Interaktif', desc: 'Opening: Audience Participation → Body 3 Sub: Segitiga/Fungsional (tiap sub + ilustrasi Game/Simulasi) → Closing: Ikrar/Ajakan.' },
+      { label: 'Impromptu', desc: 'Opening: Definisi/Fakta → Body 3 Sub: Timeline / Problem-Solution / 5W+1H (tiap sub + ilustrasi) → Closing: Kutipan/Ajakan.' }
+    ]
+  },
+
+  business: {
+    aktif: true,
+    theme: { icon: '🏢', color: '#9f7aea' },
+    ui: {
+      label: 'Business Tools',
+      placeholder: `Tulis deskripsi bisnis di sini...
+Contoh: Kopi Kekinian adalah bisnis F&B yang menjual kopi susu untuk target Gen Z di Medan. Modal awal 50 juta, sudah punya 2 cabang, kompetitor Kopi A dan Kopi B. Goals: ekspansi 5 cabang dalam 1 tahun, revenue 100 juta/bulan.`
+    },
+    prompt: {
+      role: 'Business Consultant & Analis Bisnis profesional berpengalaman',
+      outputName: 'DOKUMEN BISNIS LENGKAP',
+      pickLabel: 'tool analisis',
+      extraRules: 'Buat analisis yang sangat tajam, actionable, dan realistis untuk pasar Indonesia. Setiap tool punya format baku (SWOT 2x2, BMC 9 blok, PESTEL 6 faktor, dst) — ikuti standar tersebut. Tabel SANGAT DIIZINKAN dan dianjurkan (format GFM markdown pipe table). Bahasa Indonesia profesional yang tajam.',
+      formatRules: []
+    },
+    modules: [
+      { key: 'analisis_utama',   enabled: true  },
+      { key: 'artikel',          enabled: true  },
+      { key: 'surat_proposal',   enabled: true  },
+      { key: 'deskripsi_gambar', enabled: false },
+      { key: 'caption_tagar',    enabled: false }
+    ],
+    menu: [
+      { label: 'SWOT Analysis', desc: '4 kuadran: Strengths, Weaknesses, Opportunities, Threats.' },
+      { label: 'PESTEL Analysis', desc: '6 faktor makro: Political, Economic, Social, Technological, Environmental, Legal.' },
+      { label: 'Business Model Canvas (BMC)', desc: '9 blok model bisnis: Customer Segments s.d. Cost Structure.' },
+      { label: 'Lean Canvas', desc: '9 blok versi lean: Problem, Solution, Key Metrics, Unfair Advantage, dll.' },
+      { label: "Porter's Five Forces", desc: 'Analisis 5 kekuatan industri: rivalry, new entrants, substitutes, supplier, buyer.' },
+      { label: 'Marketing Mix (4P/7P)', desc: 'Product, Price, Place, Promotion (+ People, Process, Physical Evidence).' },
+      { label: 'OKR (Objectives & Key Results)', desc: 'Tujuan kualitatif + 3-5 key results terukur.' },
+      { label: 'Value Proposition Canvas (VPC)', desc: 'Customer Profile vs Value Map; uji fit antara keduanya.' },
+      { label: 'Competitive Analysis', desc: 'Bandingkan kompetitor kunci: positioning, harga, kekuatan, celah.' },
+      { label: 'Risk Assessment', desc: 'Identifikasi risiko, probabilitas, dampak, dan mitigasi.' },
+      { label: 'KPI Dashboard', desc: 'Rancang KPI per fungsi: marketing, sales, operasional, keuangan.' },
+      { label: 'Customer Journey Map', desc: 'Peta perjalanan pelanggan: awareness → consideration → purchase → loyalty.' },
+      { label: 'Brainstorming Board', desc: 'Ide-ide liar & terstruktur untuk masalah atau tujuan tertentu.' },
+      { label: 'Public Speaking (Business Context)', desc: 'Naskah presentasi bisnis formal: pitch, laporan, atau sambutan.' }
+    ]
+  },
+  // ────────────────────────────────────────────────────────
+  sales_strategy: {
+    aktif: true,
+    theme: { icon: '📈', color: '#2b6cb0' },
+    ui: {
+      label: 'Sales Strategy',
+      placeholder: `Tulis KONTEKS PENJUALAN Anda selengkap mungkin...
+
+Contoh:
+- Layanan/Produk: Psikotes Rekrutmen & Assessment Center
+- Target Market: HR Manager perusahaan 100-500 karyawan
+- Buyer Persona: Bu Sarah, HR Manager 35-45 tahun, FMCG, 10 tahun pengalaman
+- Pain Points: Sulit nilai kandidat, turnover tinggi, biaya bad hire mahal
+- Keunggulan: Psikolog berlisensi HIMPSI, metode terstandar, 15+ tahun pengalaman
+- Harga: Rp 500rb - Rp 2 juta per kandidat
+- Sales Cycle: 1-3 bulan dari first contact ke deal
+- Target Sales: 5 klien baru/bulan dengan kontrak tahunan
+- Kompetitor: Vendor A, Vendor B
+
+Semakin lengkap, semakin tajam strateginya.`
+    },
+    prompt: {
+      role: 'Sales Strategist profesional berpengalaman di pasar B2B Indonesia',
+      outputName: 'DOKUMEN SALES STRATEGY LENGKAP',
+      pickLabel: 'model sales strategy',
+      extraRules: 'Ekstrak dari deskripsi user: Layanan, Target Market, Buyer Persona, Pain Points, Keunggulan, Harga, Sales Cycle, Target, Kompetitor. Jika field KRUSIAL kosong (terutama Layanan, Target Market, Buyer Persona, Pain Points), TANYAKAN dulu — jangan generate asal. Semua output dalam Bahasa Indonesia profesional, actionable, siap dipakai tim sales lapangan. Sertakan SCRIPT PERCAKAPAN nyata (dialog [SALES] & [CALON KLIEN]) dan 20+ pertanyaan siap pakai. Tabel GFM markdown untuk framework, scoring, comparison. Panjang output 3000-5000 kata per dokumen.',
+      formatRules: []
+    },
+    modules: [
+      { key: 'naskah_utama', enabled: true,
+        desc: `Buat DOKUMEN SALES STRATEGY LENGKAP sesuai model yang dipilih, mengikuti struktur BAKU berikut:
+
+STRUKTUR DASAR (WAJIB ada di semua model):
+1. Filosofi Model (prinsip utama, beda dengan sales tradisional, mindset yang harus dipegang, kenapa cocok untuk konteks user)
+2. Framework / Metodologi (step-by-step model yang dipilih, jelas urutannya)
+3. Script Percakapan Lengkap (dialog [SALES] & [CALON KLIEN] mengikuti framework, tone: profesional + empatik, disesuaikan dengan Buyer Persona)
+4. 20+ Pertanyaan Discovery (dikategorikan sesuai model, siap pakai)
+5. Objection Handling (10 keberatan umum + respon spesifik model ini, bukan defensif)
+6. Tools & Resources (sales kit, CRM, template follow-up, proposal)
+7. KPI & Metrics (angka target konkret per tahap, cara ukur)
+8. Roadmap Implementasi (30-90 hari, milestone mingguan)
+
+CATATAN "FRAMEWORK" PER MODEL:
+
+▸ Consultative Selling: Framework 5 Tahap — CONNECT (bangun kepercayaan 5 menit pertama: riset sebelum call + personal greeting + common ground + 3 script opening) → EXPLORE (gali masalah dengan SPIN questioning + active listening + 20 discovery questions) → ADVISE (edukasi tanpa jualan: insight sharing + benchmark industri + mini case study) → RECOMMEND (solusi TAILORED: formula [Pain]+[Impact]+[Solusi]+[Bukti] + 2 contoh presentasi + handling keberatan) → SUPPORT (onboarding + follow-up 30-60-90 + referral ask). Fokus: "Diagnose before prescribe".
+
+▸ SPIN Selling: Framework 4 jenis pertanyaan — SITUATION (12 pertanyaan kondisi saat ini, kategorisasi: rekrutmen/assessment/turnover/pengembangan) → PROBLEM (12 pertanyaan gali masalah, kategorisasi: kualitas/biaya/waktu/kepuasan) → IMPLICATION (12 pertanyaan perluas dampak — INI PALING PENTING, harus disampaikan dengan empati) → NEED-PAYOFF (12 pertanyaan bikin klien sendiri lihat nilai solusi). Script 20-30 menit dengan tanda (S)(P)(I)(N). Tips mendalam: kapan berhenti tanya & mulai presentasi, baca buying signal, kapan SPIN tidak cocok.
+
+▸ Solution Selling: Framework Diagnosa 5 Step — SYMPTOMS (apa yang klien keluhkan) → IMPACT (dampak ke institusi) → ROOT CAUSE (penyebab sebenarnya) → DESIRED STATE (kondisi ideal) → SOLUTION (baru masuk solusi tailored). + Pain-to-Solution Map (10 mapping: pain → impact → solution → expected result) + Solution Modules (pecah layanan jadi modul yang bisa dikombinasi) + 3 Paket (Starter/Professional/Enterprise dengan isi+harga+positioning) + Script Presentasi Solusi (rekap pain → impact → solusi → bukti → harga value-based → handling → closing) + Storytelling Framework (Hero-Villain-Guide-Plan-Success) + ROI Calculator.
+
+▸ Challenger Sale: Prinsip Teach-Tailor-Take Control. CORE TEACHING: ketidaknyamanan pasar (fakta mengejutkan) + mengapa konvensional gagal + solusi baru (reframe) + bukti. 6-TAHAP TEACHING PITCH: THE WARMER (opening tidak biasa + kredibilitas) → THE REFRAME (tantang cara pandang klien) → RATIONAL DROWNING (5 fakta mengejutkan) → EMOTIONAL IMPACT (storytelling kerugian + angka nyata) → A NEW WAY (solusi sebagai "cara baru", bukan "lebih baik") → YOUR SOLUTION (tailored + ROI + next steps). + Tailor Message per Persona (HRD/Direktur/Kepsek/Universitas: fokus + insight + hook berbeda) + 20 Commercial Insight Bank + Take Control (cara memimpin percakapan).
+
+▸ MEDDIC Framework: 6 komponen — METRICS (per layanan: metrics yang klien pedulikan + cara quantify dari X ke Y + 5-7 pertanyaan gali) + ECONOMIC BUYER (daftar kemungkinan EB + cara identifikasi + 5 pertanyaan validasi + strategi approach via champion) + DECISION CRITERIA (kategori: kredibilitas/metode/reporting/harga/after-sales/referensi/integrasi + 5-7 pertanyaan) + DECISION PROCESS (map step-by-step + timeline + stakeholder per step + approval layer + 5 pertanyaan + red flags) + IDENTIFY PAIN (6 pain umum + cara validasi + 10 pertanyaan + impact quantification) + CHAMPION (ciri champion sejati + 3 test validasi + cara empower + kapan ganti). + Checklist Kualifikasi 30 pertanyaan + Red Flags + Deal Scoring 0-100 + Roadmap 90 hari.
+
+▸ BANT Qualification: 4 komponen — BUDGET (challenge: bertanya terdengar tidak sopan → solution: tanya tidak langsung, 10 pertanyaan halus, kategori 🟢🟡🔴) + AUTHORITY (4 tipe contact: DM/Influencer/User/Gatekeeper, 10 pertanyaan validasi, multi-threading min 3 stakeholder) + NEED (Explicit/Latent/No Need, 10 pertanyaan, pain vs nice-to-have) + TIMELINE (kategori 🟢<1bln / 🟡1-3 / 🟠3-6 / 🔴>6 / ⚫no timeline, 10 pertanyaan, follow-up cadence kalau jauh). + Script 15-20 menit + Scoring System (0-25 per komponen, total 100: 80-100 HOT, 60-79 WARM, 40-59 COOL, <40 COLD) + Integration dengan sales process & CRM.
+
+▸ Account-Based Selling: Prinsip "Fewer accounts, deeper relationships". ICP (firmographic + technographic + behavioral + disqualifier) + Target Account List (kriteria prioritas: Fit ICP 1-10, Potential 1-10, Accessibility 1-10, Timing 1-10 → Tier A/B/C) + Account Profiling (template riset per akun: leadership + program + budget + trigger + pain hypothesis) + Stakeholder Mapping (5-8 stakeholder per akun: role + pengaruh + sikap + strategi) + Personalized Outreach per Persona (Kepsek/BK/Wakil Kurikulum/Direktur: 3 template masing-masing) + Multi-Channel Cadence 90 hari (Bulan 1 Awareness, Bulan 2 Consideration, Bulan 3 Conversion) + Content & Asset per Akun (one-pager + case study + ROI calc + video 30 detik + proposal) + Account Plan Template + Metrics ABS.
+
+▸ Value-Based Selling: Prinsip "Never justify price, articulate value". VALUE FRAMEWORK (Tangible: cost saving/revenue/time/risk + Intangible: keputusan/branding/kepuasan/data + Future: benchmark/improvement) + ROI CALCULATOR (formula umum + 3 contoh kalkulasi lengkap dengan angka untuk psikotes/tes minat bakat/konseling) + VALUE-BASED PITCH SCRIPT (Tahap 1 Understand Value Priorities → 2 Quantify Current State → 3 Present Future State → 4 Bridge with Value → 5 Offer & Justify, 20 menit) + BUSINESS CASE TEMPLATE (untuk klien pakai internal: Executive Summary + Current State + Solution + Financial Analysis NPV/IRR/Payback + Risk + Recommendation) + Handling "MAHAL" (10 variasi objeksi harga + respon value-based) + PRICE PRESENTATION (sebelum angka: recap value; saat angka: tenang, INVESTMENT bukan COST, sandingkan, berhenti bicara; setelah angka: jangan langsung diskon) + REFRAME COMPETITOR (jangan rendahkan, bandingkan apple-to-apple) + KPI Value-Based.
+
+PENTING: Semua script HARUS terdengar seperti konsultan/partner, bukan sales yang memaksa. Fokus pada KEBUTUHAN klien, bukan fitur. Sertakan contoh konkret & angka realistis. Tone: profesional, empatik, kredibel. Sesuaikan semua bahasa dengan Buyer Persona yang diberikan user.`
+      }
+    ],
+    menu: [
+      { label: 'Consultative Selling', desc: 'Bangun kepercayaan dulu, jual solusi belakangan — framework 5 tahap (Connect → Explore → Advise → Recommend → Support) dengan 20 discovery questions dan script percakapan lengkap.' },
+      { label: 'SPIN Selling', desc: 'Metode 4 pertanyaan (Situation, Problem, Implication, Need-payoff) untuk B2B kompleks — 48 pertanyaan siap pakai + script percakapan bertanda (S)(P)(I)(N).' },
+      { label: 'Solution Selling', desc: 'Diagnosa masalah dulu, presentasi solusi tailored — framework diagnosa 5 step, pain-to-solution map, 3 paket modular, ROI calculator, storytelling Hero-Villain-Guide.' },
+      { label: 'The Challenger Sale', desc: 'Tantang asumsi klien dengan insight baru — Teach, Tailor, Take Control + 6-tahap teaching pitch + 20 commercial insight bank + tailor message per persona.' },
+      { label: 'MEDDIC Framework', desc: 'Kualifikasi lead enterprise: Metrics, Economic Buyer, Decision Criteria/Process, Identify Pain, Champion — dengan deal scoring 0-100, red flags, checklist 30 pertanyaan.' },
+      { label: 'BANT Qualification', desc: 'Screening lead cepat: Budget, Authority, Need, Timeline — 40 pertanyaan halus, scoring 0-100 (HOT/WARM/COOL/COLD), script 15-20 menit, integrasi CRM.' },
+      { label: 'Account-Based Selling', desc: 'Fokus akun besar dengan multi-threading — ICP, target account list (Tier A/B/C), stakeholder mapping, personalized outreach per persona, cadence 90 hari.' },
+      { label: 'Value-Based Selling', desc: 'Jual VALUE & ROI, bukan harga — value framework, ROI calculator dengan contoh kalkulasi, business case template, handling "mahal" 10 variasi, price presentation script.' }
+    ]
+  },
+    // ────────────────────────────────────────────────────────
+  marketing_plan: {
+    aktif: true,
+    theme: { icon: '📊', color: '#d53f8c' },
+    ui: {
+      label: 'Marketing Plan',
+      placeholder: `Tulis PROFIL BISNIS/PRODUK Anda selengkap mungkin...
+
+Contoh:
+- Nama Brand: Kopi Kekinian
+- Produk: Kopi susu kekinian, target Gen Z, harga terjangkau, kemasan instagramable
+- Target Pasar: Gen Z 18-25, urban, penggemar kopi
+- Industri: F&B / Kopi
+- Budget: Rp 50 juta / 6 bulan
+- Tujuan: Ekspansi 5 cabang, revenue 100 juta/bulan
+- USP: Rasa unik, kemasan instagramable, harga terjangkau
+- Kompetitor: Kopi A, Kopi B
+- Kondisi: Sudah 2 cabang di Medan
+
+Semakin lengkap info, semakin tajam output.`
+    },
+    prompt: {
+      role: 'Marketing Strategist profesional berpengalaman di pasar Indonesia',
+      outputName: 'DOKUMEN MARKETING PLAN LENGKAP',
+      pickLabel: 'model marketing',
+      extraRules: 'Ekstrak dari deskripsi user: Nama Brand, Produk, Target Pasar, Industri, Budget, Durasi, Tujuan, USP, Kompetitor, Kondisi existing. Jika field KRUSIAL kosong (terutama Nama Brand, Produk, Target Pasar, Tujuan), TANYAKAN dulu — jangan generate asal. Semua output dalam Bahasa Indonesia profesional, angka REALISTIS untuk pasar Indonesia, setiap strategi ACTIONABLE dan siap dieksekusi. Tabel GFM markdown SANGAT DIANJURKAN untuk budget, KPI, timeline, comparison, scoring. Panjang output 3000-5000 kata per dokumen.',
+      formatRules: []
+    },
+    modules: [
+      { key: 'naskah_utama', enabled: true,
+        desc: `Buat DOKUMEN MARKETING PLAN LENGKAP sesuai model yang dipilih, mengikuti struktur BAKU berikut:
+
+STRUKTUR DASAR (WAJIB ada di semua model):
+1. Executive Summary (1 halaman: kondisi, tujuan, strategi utama, ekspektasi, budget ringkas)
+2. Analisis Situasi (overview pasar, tren industri, kompetitor 3-5 pemain, SWOT singkat, persona target)
+3. Strategi Utama — SPESIFIK per model (lihat catatan di bawah)
+4. Timeline & Roadmap (milestone bulanan sesuai durasi)
+5. Budget Breakdown (tabel: aktivitas | budget | % | expected result)
+6. KPI & Metrics (angka target konkret + cara ukur)
+7. Risk & Mitigation (5-10 risiko + cara atasi)
+8. Action Plan 30-90 hari pertama (mingguan, detail, PIC)
+
+CATATAN "STRATEGI UTAMA" PER MODEL:
+▸ Marketing Plan 4P/7P: Product Strategy (portfolio, packaging, positioning, USP, roadmap) + Price Strategy (harga jual, margin, diskon, price positioning) + Place Strategy (channel distribusi, online/offline, marketplace, reseller) + Promotion Strategy (media mix, content plan, 5 campaign idea, influencer, budget per channel). Jika 7P: + People, Process, Physical Evidence.
+
+▸ STP: Segmenting (5-6 segmen lengkap: demografi+psikografi+behavior+needs+size) + Evaluasi Segmen (tabel scoring) + Targeting (1-3 target + persona lengkap + segmen yang TIDAK diincar) + Positioning (statement formula + essence + value prop + personality) + Positioning Map (2 dimensi, plot brand + 5-7 kompetitor) + Differentiation & Proof (3-5 poin pembeda + bukti) + Messaging (tagline + elevator pitch + key messages per channel).
+
+▸ Digital Marketing: Funnel TOFU/MOFU/BOFU (channel + target per tahap) + SEO Strategy (20 keyword + cluster + on-page + off-page + timeline) + Paid Ads Strategy (per platform: objective, target, budget, format, 3 contoh copy, expected CPL/CPA) + Content Marketing (4-5 pillar + kalender 4 minggu + 5 judul SEO-optimized) + Email Marketing (welcome sequence 5 email + nurture 5 email + 10 subject A/B) + Social Media Strategy + CRO (landing page + A/B test) + Tools recommendation.
+
+▸ Content Marketing: Content Mission (mission statement + 3 tujuan + unique angle) + 4-5 Content Pillar (nama+deskripsi+5-10 contoh topik+% konten) + Audience Deep Dive (persona + platform + jam aktif + pain) + Format Mix per platform + Content Funnel (TOFU/MOFU/BOFU ratio 60/30/10) + Content Calendar 4 minggu (tanggal-platform-format-topik-hook-CTA) + Hook & CTA Library (20 hook + 10 CTA) + Repurposing Strategy (1 konten → 10 aset) + Distribution & Timing + Production Process + 30 ide konten siap eksekusi.
+
+▸ Social Media Marketing: Platform Strategy (per platform: kenapa + konten efektif + frekuensi + best time + KPI) + Content Strategy (4-5 pillar + mix edukasi/hiburan/inspirasi/promosi + format mix + 30 ide konten) + Hook Library (30 hook viral) + Posting Schedule 4 minggu + Growth Hacking (10 taktik: collab, giveaway, UGC, trending, comment marketing, DM outreach, community, repost, live, SEO social) + Paid Ads (Meta/TikTok/YouTube: objective + target + budget + expected CPM/CPC/ROAS) + KOL Strategy (tier + budget + brief) + Engagement & Community + Crisis Management SOP + Checklist harian.
+
+▸ Product Launch: Launch Overview (big idea + positioning + persona + USP + KPI) + Fase 1 Pre-Launch (Minggu 1-2 Riset & Fondasi, Minggu 3-4 Teaser, Minggu 5-6 Build Anticipation, Minggu 7-8 Final Prep) + Fase 2 Launch Day (jam per jam) + Launch Week + Fase 3 Post-Launch (retention + referral + testimonials + iterasi) + Channel Strategy + Budget Breakdown per fase + Content & Messaging (key messages + tagline + press release draft + 10 social copy + 5 email sequence) + PR & Media (media list + angle + embargo) + KOL & Ambassador + Launch Day Runbook + Risk & Contingency.
+
+▸ AIDA Marketing Funnel: Funnel Overview (visualization dengan angka estimasi + conversion target per tahap) + ATTENTION (ads + content + PR + influencer + 5 hook + 5 ide TOFU + CPM/CTR target) + INTEREST (5 Lead Magnet + LP + email welcome 5 + retargeting + 10 ide MOFU) + DESIRE (testimoni + case study + webinar + comparison + FAQ + scarcity + 10 ide) + ACTION (Sales Page Anatomy: headline-VSL-outline-problem-solution-social-proof-offer-pricing-guarantee-FAQ-CTA + taktik closing + 7 email closing sequence) + Retention (onboarding + upsell + referral + NPS) + Budget + Metrics per tahap + Content Calendar + Optimization Plan + Templates.
+
+▸ Brand Strategy Plan: Brand Foundation (purpose + mission + vision + 5 values + promise) + Brand Identity (name analysis + 5 tagline + 5 brand statement + brand story 300 kata + archetype dari 12) + Brand Personality (5 traits + tone of voice 4 dimensi + do/don't + brand character) + Brand Positioning (statement + persona + competitive landscape + differentiation + reason to believe) + Visual Identity (color palette HEX + typography + logo direction + photography + graphic elements) + Brand Messaging (5 key messages + elevator pitch + vocabulary + anti-vocabulary + contoh copy) + Brand Experience (customer journey + sensory + packaging + after-sales) + Brand Guideline (rules + do/don't + contoh aplikasi) + Brand Activation (5 campaign + partnership + community + content pillar) + Brand Measurement (awareness + recall + NPS + sentiment + share of voice) + Roadmap 12 bulan.
+
+▸ Customer Journey Marketing: Journey Overview (5-7 stage + durasi + visual map + persona) + Detail per Stage (untuk AWARENESS, CONSIDERATION, PURCHASE, ONBOARDING, RETENTION, ADVOCACY: apa yang customer lakukan + touchpoint + channel + emotion 1-10 + pain + moment of truth + strategi marketing + contoh eksekusi) + Emotion Curve (grafik + peak/valley + kapan churn) + Moments of Truth (3-5 + cara menangkan + konsekuensi) + Touchpoint Inventory (tabel: touchpoint-stage-channel-owner-KPI) + Pain Point Analysis (deskripsi + impact customer + impact bisnis + root cause + solusi) + Strategy per Stage (objective + message + content + channel + frequency + automation + KPI) + Content Mapping (tabel) + Automation & CRM (email sequence per stage + push + in-app + CRM journey) + KPIs per Stage (tabel) + Quick Wins 30 hari + Long-term Roadmap.
+
+▸ Growth Hacking Plan: Growth Diagnosis (North Star Metric + supporting metrics + growth model + bottleneck) + AARRR Funnel Analysis (per tahap: current-target-gaps) + Growth Loops (3-5 loop: Trigger→Action→Reward→Investment→Loop, contoh: viral/content/paid/product loop) + 15 Growth Experiments (tabel: eksperimen-channel-ICE score-effort-expected lift; detail per eksperimen: hipotesis + metrics + cara test + durasi + success criteria) + Growth Playbook (ritual mingguan + Test-Learn-Scale) + Viral Mechanics (k-factor + viral loop + referral + shareability) + Retention Tactics (cohort + churn prediction + win-back + habit formation + feature adoption) + Channel Experiments (SEO/Content/Community/Paid/Partnership/Referral) + Tech & Tools + Growth Model & Projection 12 bulan (worst/base/best scenario) + Budget 70/20/10 + Team & Roles + 90-Day Sprint (Bulan 1 Foundation, Bulan 2 Scale winners, Bulan 3 Compound growth).
+
+PENTING: Setiap strategi harus punya CARA UKUR (KPI + target konkret). Angka harus REALISTIS untuk pasar Indonesia. Output panjang, detail, siap presentasi ke stakeholder.`
+      }
+    ],
+    menu: [
+      { label: 'Marketing Plan 4P / 7P', desc: 'Framework klasik lengkap: Product, Price, Place, Promotion (+ People, Process, Physical Evidence untuk jasa/retail), dengan analisis situasi, SWOT, timeline, budget breakdown, KPI.' },
+      { label: 'STP (Segmenting, Targeting, Positioning)', desc: 'Fondasi strategi brand: segmentasi pasar (5-6 segmen), evaluasi attractiveness, pilih target, dan positioning statement yang tajam + positioning map.' },
+      { label: 'Digital Marketing Plan', desc: 'Fokus digital: funnel TOFU/MOFU/BOFU, SEO (20 keyword), Paid Ads per platform, Content Marketing, Email Marketing, Social Media, CRO, Tools.' },
+      { label: 'Content Marketing Plan', desc: 'Strategi konten: content pillar, kalender 4 minggu, hook library, repurposing 1 konten → 10 aset, distribusi, KPI per platform, 30 ide konten siap eksekusi.' },
+      { label: 'Social Media Marketing Plan', desc: 'Strategi medsos: platform strategy, 30 hook viral, posting schedule, 10 growth hacks, Meta/TikTok/YouTube Ads, KOL strategy, community management.' },
+      { label: 'Product Launch Plan', desc: 'Peluncuran produk: 8 minggu pre-launch (riset→teaser→anticipation→final prep), launch day runbook, launch week, post-launch retention, PR, KOL, budget per fase.' },
+      { label: 'AIDA Marketing Funnel', desc: 'Sales funnel: Attention → Interest → Desire → Action dengan optimasi konversi per tahap, lead magnet, webinar, sales page anatomy, 7 email closing sequence.' },
+      { label: 'Brand Strategy Plan', desc: 'Bangun brand: foundation (purpose/mission/values), identity (archetype/story), personality (tone of voice), positioning, visual identity, brand guideline, roadmap 12 bulan.' },
+      { label: 'Customer Journey Marketing', desc: 'Petakan journey customer dari awareness sampai advocacy dengan emotion curve, moments of truth, touchpoint inventory, pain analysis, strategi per touchpoint.' },
+      { label: 'Growth Hacking Plan', desc: 'Growth eksperimen-driven: North Star Metric, AARRR funnel, 3-5 growth loops, 15 eksperimen dengan ICE scoring, viral mechanics, projection 12 bulan, 90-day sprint.' }
+    ]
+  },
+  copywriting: {
+    aktif: true,
+    theme: { icon: '✍️', color: '#ed64a6' },
+    ui: {
+      label: 'Copywriting',
+      placeholder: `Tulis ide copywriting di sini...
+Contoh: Tes minat bakat anak yang ditujukan untuk audiens orang tua, usia anak 6-12 tahun.`
+    },
+    prompt: {
+      role: 'Copywriter Senior dan Pakar Marketing',
+      outputName: 'PAKET KONTEN COPYWRITING',
+      pickLabel: 'framework copywriting',
+      extraRules: 'Buat copywriting yang sangat menjual, persuasif, dan siap pakai. Bahasa Indonesia persuasif dan profesional.',
+      formatRules: []
+    },
+    modules: [
+      { key: 'naskah_utama',     enabled: true  },
+      { key: 'deskripsi_gambar', enabled: true  },
+      { key: 'caption_tagar',    enabled: true  },
+      { key: 'artikel',          enabled: false },
+      { key: 'surat_proposal',   enabled: false }
+    ],
+    menu: [
+      { label: 'HBT (Hook-Book-Look-Took)', desc: 'Hook: pancing perhatian → Book: bangun kredibilitas → Look: tunjukkan bukti → Took: ajakan aksi.' },
+      { label: 'AIDA (Attention-Interest-Desire-Action)', desc: 'Attention → Interest → Desire → Action.' },
+      { label: 'PAS (Problem-Agitate-Solution)', desc: 'Angkat masalah → perbesar rasa sakit → tawarkan solusi.' },
+      { label: '4P (Promise-Picture-Proof-Push)', desc: 'Janji → gambaran hasil → bukti → dorong aksi.' },
+      { label: 'APP (Aware-Promise-Prove-Push)', desc: 'Sadarkan → janjikan → buktikan → dorong.' },
+      { label: 'PASTOR (Problem-Agitate-Solution-Testimonial-Offer-Response)', desc: 'Versi panjang PAS dengan testimoni dan penawaran.' },
+      { label: 'BAB (Before-After-Bridge)', desc: 'Kondisi sebelum → kondisi sesudah → jembatan solusi.' },
+      { label: 'FAB (Features-Advantages-Benefits)', desc: 'Fitur → keunggulan → manfaat bagi user.' },
+      { label: 'QUEST (Question-Understand-Educate-Stimulate-Transition)', desc: 'Tanya → pahami → edukasi → stimulasi → transisi ke aksi.' },
+      { label: 'SCQA (Situation-Complication-Question-Answer)', desc: 'Situasi → komplikasi → pertanyaan → jawaban.' },
+      { label: '4U (Useful-Urgent-Unique-Ultra-specific)', desc: 'Checklist headline: berguna, mendesak, unik, sangat spesifik.' }
+    ]
+  }
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let currentUser = null;
+let isAdmin = false;
+let historyCategory = null;
+let historyRows = [];
+let categoryCounts = {};
+let editingPromptId = null;
+
+// ============================================================
+// SESSION & LOGIN
+// ============================================================
+function getStoredUser(){
+  try{
+    const d = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
+    if(d){
+      const p = JSON.parse(d);
+      if(p.username && p.timestamp){
+        const days = (Date.now() - p.timestamp) / (1000*60*60*24);
+        if(days < 7) return p.username;
+      }
+    }
+  }catch(e){}
+  return null;
+}
+function saveUserToStorage(u){localStorage.setItem(STORAGE_KEY, JSON.stringify({username:u,timestamp:Date.now()}));}
+function clearUserStorage(){localStorage.removeItem(STORAGE_KEY);sessionStorage.removeItem(STORAGE_KEY);}
+
+function checkAutoLogin(){
+  const u = getStoredUser();
+  if(u){ currentUser = u; isAdmin = (u === 'admin'); showApp(); return true; }
+  return false;
+}
+
+function showApp(){
+  document.getElementById('loginOverlay').classList.remove('active');
+  document.getElementById('mainContent').classList.add('visible');
+  document.getElementById('headerUser').textContent = currentUser + (isAdmin ? ' 👑' : '');
+  renderCategories();
+  fetchCategoryCounts();
+}
+
+async function doLogin(){
+  const u = document.getElementById('loginUsername').value.trim();
+  const p = document.getElementById('loginPassword').value.trim();
+  const err = document.getElementById('loginError');
+  err.classList.remove('show');
+  if(!u || !p){
+    err.textContent = '❌ Username dan password wajib diisi!';
+    err.classList.add('show');
+    return;
+  }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Memeriksa...';
+  try{
+    const r = await fetch(API_URL + '?table=' + USERS_TABLE, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Custom-Auth': SECRET,
+        'X-Table-Name': USERS_TABLE,
+        'X-Role': 'admin'
+      }
+    });
+    const res = await r.json();
+    if(res.success && res.data){
+      const user = res.data.find(x => x.x_01 === u && x.x_02 === p);
+      if(user){
+        currentUser = u;
+        isAdmin = (u === 'admin');
+        saveUserToStorage(u);
+        showApp();
+        showToast('✅ Login berhasil', 'success');
+      } else {
+        err.textContent = '❌ Username atau password salah!';
+        err.classList.add('show');
+      }
+    } else {
+      err.textContent = '❌ Gagal mengambil data user';
+      err.classList.add('show');
+    }
+  } catch(e){
+    err.textContent = '❌ Gagal login: ' + e.message;
+    err.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Login';
+  }
+}
+
+function doLogout(){
+  if(!confirm('Yakin ingin logout?')) return;
+  clearUserStorage();
+  currentUser = null; isAdmin = false;
+  document.getElementById('loginOverlay').classList.add('active');
+  document.getElementById('mainContent').classList.remove('visible');
+  showToast('👋 Logout berhasil', 'info');
+}
+
+// ============================================================
+// RENDER KARTU KATEGORI (ringkas — klik untuk buka form)
+// ============================================================
+function renderCategories(){
+  const container = document.getElementById('categoriesContainer');
+  const entries = Object.entries(CATEGORIES).filter(([,c]) => c.aktif !== false);
+
+  if(!entries.length){
+    container.innerHTML = `
+      <div class="empty-history" style="background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.06)">
+        <div class="icon">📭</div>
+        <h3>Belum ada kategori aktif</h3>
+        <p>Aktifkan minimal satu kategori di config <code>CATEGORIES</code>.</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = entries.map(([key, cat]) => {
+    const count = categoryCounts[key] || 0;
+    const borderColor = (cat.theme && cat.theme.color) || '#805ad5';
+    const icon = (cat.theme && cat.theme.icon) || '📌';
+    const enabledModCount = (cat.modules || []).filter(m => m.enabled).length;
+    const countBadge = count > 0 ? `<span class="cat-count">📚 ${count} tersimpan</span>` : '';
+
+    return `
+      <div class="category-card" data-cat="${key}"
+           style="border-left-color:${borderColor}"
+           onclick="openCategory('${key}')"
+           title="Klik untuk membuka form">
+        <div class="cat-icon-large">${icon}</div>
+        <div class="cat-info">
+          <div class="cat-title">${escapeHtml(cat.ui.label)}</div>
+          <div class="cat-meta">${cat.menu.length} pilihan · ${enabledModCount} bagian output</div>
+        </div>
+        ${countBadge}
+      </div>
+    `;
+  }).join('');
+
+  filterCategories();
+}
+
+function filterCategories() {
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  const cards = document.querySelectorAll('.category-card');
+
+  cards.forEach(card => {
+    const catKey = card.getAttribute('data-cat');
+    const cat = CATEGORIES[catKey];
+    if(!cat){ card.classList.add('hidden'); return; }
+
+    const haystack = [
+      cat.ui.label,
+      cat.ui.placeholder,
+      cat.prompt.role,
+      cat.prompt.outputName,
+      ...cat.menu.map(m => `${m.label} ${m.desc || ''}`)
+    ].join(' ').toLowerCase();
+
+    card.classList.toggle('hidden', !haystack.includes(query));
+  });
+}
+
+// ============================================================
+// CATEGORY MODAL
+// ============================================================
+function openCategory(key){
+  const cat = CATEGORIES[key];
+  if(!cat){ showToast('❌ Kategori tidak ditemukan', 'error'); return; }
+
+  const borderColor = (cat.theme && cat.theme.color) || '#805ad5';
+  const icon = (cat.theme && cat.theme.icon) || '📌';
+
+  const badge = document.getElementById('catIconBadge');
+  badge.textContent = icon;
+  badge.style.background = borderColor + '22'; // hex + alpha (≈13%)
+
+  document.getElementById('catTitleText').textContent = cat.ui.label;
+
+  const ta = document.getElementById('categoryModalIde');
+  ta.value = '';
+  ta.placeholder = cat.ui.placeholder;
+
+  document.getElementById('categoryModal').dataset.cat = key;
+  document.getElementById('categoryModal').classList.add('active');
+  setTimeout(() => ta.focus(), 50);
+}
+
+function closeCategoryModal(){
+  document.getElementById('categoryModal').classList.remove('active');
+  document.getElementById('categoryModal').dataset.cat = '';
+}
+
+function getCurrentCatKey(){
+  return document.getElementById('categoryModal').dataset.cat || null;
+}
+
+function copyPromptFromModal(){
+  const key = getCurrentCatKey();
+  if(!key) return;
+  const ide = document.getElementById('categoryModalIde').value.trim();
+  if(!ide){ showToast('❌ Isi ide dulu sebelum copy prompt', 'error'); return; }
+  let prompt;
+  try { prompt = buildPrompt(key, ide); }
+  catch(e){ showToast('❌ ' + e.message, 'error'); return; }
+  copyToClipboard(prompt, '✅ Prompt disalin — paste ke AI');
+}
+
+async function saveFromModal(){
+  const key = getCurrentCatKey();
+  if(!key) return;
+  const ide = document.getElementById('categoryModalIde').value.trim();
+  if(!ide){ showToast('❌ Isi ide dulu sebelum simpan', 'error'); return; }
+
+  let prompt;
+  try { prompt = buildPrompt(key, ide); }
+  catch(e){ showToast('❌ ' + e.message, 'error'); return; }
+
+  const btn = document.getElementById('categoryModalSaveBtn');
+  const origText = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+
+  const today = new Date();
+  const todayStr = today.getFullYear() + '-' +
+    String(today.getMonth()+1).padStart(2,'0') + '-' +
+    String(today.getDate()).padStart(2,'0');
+
+  const body = {
+    x_01: key, x_02: ide, x_03: prompt, x_04: '',
+    x_05: currentUser, x_06: todayStr
+  };
+
+  try {
+    await apiFetch('', { method: 'POST', body: JSON.stringify(body) });
+    showToast('✅ Tersimpan ke database', 'success');
+    document.getElementById('categoryModalIde').value = '';
+    fetchCategoryCounts();  // akan re-render kartu & perbarui badge
+  } catch(e) {
+    showToast('❌ Gagal simpan: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = origText;
+  }
+}
+
+function openHistoryFromModal(){
+  const key = getCurrentCatKey();
+  if(!key) return;
+  // Modal history akan tampil di atas modal form (z-index)
+  openHistory(key);
+}
+
+// ============================================================
+// HITUNG JUMLAH RIWAYAT
+// ============================================================
+async function fetchCategoryCounts(){
+  try {
+    const res = await apiFetch('');
+    let rows = (res.success && res.data) ? res.data : [];
+    if(!isAdmin && currentUser) rows = rows.filter(r => r.x_05 === currentUser);
+
+    const counts = {};
+    rows.forEach(r => {
+      const cat = r.x_01;
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+
+    categoryCounts = counts;
+
+    // Re-render kartu untuk update badge jumlah tersimpan
+    const container = document.getElementById('categoriesContainer');
+    if(container && document.getElementById('mainContent').classList.contains('visible')){
+      renderCategories();
+    }
+  } catch(e) {
+    console.error("Gagal ambil jumlah riwayat:", e);
+  }
+}
+
+// ============================================================
+// PROMPT BUILDER
+// ============================================================
+function buildPrompt(catKey, ide){
+  const cat = CATEGORIES[catKey];
+  if(!cat) throw new Error('Kategori tidak ditemukan: ' + catKey);
+
+  const T = PROMPT_TEMPLATE;
+
+  const enabledMods = (cat.modules || []).filter(m => m.enabled);
+  if(!enabledMods.length){
+    throw new Error(`Kategori "${cat.ui.label}" tidak punya bagian output aktif. Aktifkan minimal satu modul.`);
+  }
+
+  const outputFormat = enabledMods.map((m, i) => {
+    const libMod = OUTPUT_MODULES[m.key];
+    if(!libMod){
+      throw new Error(`Modul "${m.key}" tidak terdaftar di OUTPUT_MODULES (dipakai "${catKey}").`);
+    }
+    const title = m.title || libMod.title;
+    const desc  = (m.desc || libMod.desc).replace(/\{pickLabel\}/g, cat.prompt.pickLabel);
+    return `## BAGIAN ${i+1} — ${title}\n(${desc})`;
+  }).join('\n\n');
+
+  const menuLines = cat.menu.map((m, i) => {
+    const desc = m.desc ? ' — ' + m.desc : '';
+    return `   ${i+1}. ${m.label}${desc}`;
+  }).join('\n');
+
+  const fmtRules = [
+    ...T.formatRulesDefault,
+    ...(cat.prompt.formatRules || [])
+  ];
+  const fmtRulesText = fmtRules.map(r => '   - ' + r).join('\n');
+
+  return [
+    T.intro
+      .replace('{role}', cat.prompt.role)
+      .replace('{outputName}', cat.prompt.outputName),
+    T.ideHeader + '\n' + ide,
+    T.rulesHeader,
+    '1. ' + T.rule1
+      .replace('{pickLabel}', cat.prompt.pickLabel)
+      .replace('{menu}', menuLines),
+    '2. ' + T.rule2,
+    '3. ' + T.rule3.replace('{extraRules}', cat.prompt.extraRules),
+    '4. ' + T.rule4.replace('{outputFormat}', outputFormat),
+    '5. ' + T.rule5,
+    '6. ' + T.rule6,
+    '7. ' + T.rule7,
+    '8. ' + T.rule8Header + '\n' + fmtRulesText
+  ].join('\n\n');
+}
+
+// ============================================================
+// COPY & EDIT PROMPT
+// ============================================================
+function copyHistoryPrompt(id){
+  const row = historyRows.find(r => r.id_x == id);
+  if(!row) return;
+  copyToClipboard(row.x_03, '✅ Prompt disalin dari riwayat');
+}
+
+function copyToClipboard(text, successMsg){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text)
+      .then(() => showToast(successMsg, 'success'))
+      .catch(() => fallbackCopy(text, successMsg));
+  } else {
+    fallbackCopy(text, successMsg);
+  }
+}
+function fallbackCopy(text, msg){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand('copy'); showToast(msg, 'success'); }
+  catch(e){ showToast('❌ Gagal copy', 'error'); }
+  document.body.removeChild(ta);
+}
+
+function openEditPrompt(id){
+  const row = historyRows.find(r => r.id_x == id);
+  if(!row) return;
+  editingPromptId = id;
+  document.getElementById('editPromptText').value = row.x_03;
+  document.getElementById('editPromptModal').classList.add('active');
+}
+
+function closeEditModal(){
+  document.getElementById('editPromptModal').classList.remove('active');
+  editingPromptId = null;
+}
+
+async function saveEditedPrompt(){
+  if(!editingPromptId) return;
+  const newPrompt = document.getElementById('editPromptText').value.trim();
+  if(!newPrompt){ showToast('❌ Prompt tidak boleh kosong', 'error'); return; }
+
+  const row = historyRows.find(r => r.id_x == editingPromptId);
+  if(!row) return;
+
+  const btn = document.getElementById('saveEditBtn');
+  const origText = btn.textContent;
+  btn.textContent = 'Menyimpan...';
+  btn.disabled = true;
+
+  try {
+    await apiFetch('&id_x=' + editingPromptId, {
+      method: 'PUT',
+      body: JSON.stringify({
+        x_01: row.x_01, x_02: row.x_02, x_03: newPrompt,
+        x_04: row.x_04, x_05: row.x_05, x_06: row.x_06
+      })
+    });
+    row.x_03 = newPrompt;
+    showToast('✅ Prompt berhasil diperbarui', 'success');
+    closeEditModal();
+  } catch(e) {
+    showToast('❌ Gagal update prompt: ' + e.message, 'error');
+  } finally {
+    btn.textContent = origText;
+    btn.disabled = false;
+  }
+}
+
+// ============================================================
+// API
+// ============================================================
+function getHeaders(){
+  return {
+    'Content-Type': 'application/json',
+    'X-Custom-Auth': SECRET,
+    'X-Table-Name': TABLE,
+    'X-Role': 'admin'
+  };
+}
+async function apiFetch(endpoint, options = {}){
+  const url = API_URL + '?table=' + TABLE + endpoint;
+  const r = await fetch(url, { ...options, headers: { ...getHeaders(), ...(options.headers || {}) } });
+  if(!r.ok){
+    const e = await r.json().catch(() => ({}));
+    throw new Error(e.error || e.message || 'HTTP ' + r.status);
+  }
+  return r.json();
+}
+
+// ============================================================
+// HISTORY
+// ============================================================
+async function openHistory(catKey){
+  historyCategory = catKey;
+  const cat = CATEGORIES[catKey];
+  if(!cat){ showToast('❌ Kategori tidak ditemukan', 'error'); return; }
+
+  const icon = (cat.theme && cat.theme.icon) || '📌';
+  document.getElementById('historyTitle').textContent = `📚 Riwayat — ${icon} ${cat.ui.label}`;
+  document.getElementById('historyModal').classList.add('active');
+  document.getElementById('historyBody').innerHTML = '<div class="loading"><div class="spinner"></div>Memuat riwayat...</div>';
+
+  try {
+    const res = await apiFetch('');
+    let rows = (res.success && res.data) ? res.data : [];
+    rows = rows.filter(r => r.x_01 === catKey);
+    if(!isAdmin && currentUser) rows = rows.filter(r => r.x_05 === currentUser);
+    rows.sort((a,b) => (b.x_06 || '').localeCompare(a.x_06 || ''));
+
+    historyRows = rows;
+    renderHistoryItems(rows);
+  } catch(e) {
+    document.getElementById('historyBody').innerHTML = `
+      <div class="empty-history">
+        <div class="icon">❌</div>
+        <h3>Gagal memuat</h3>
+        <p>${escapeHtml(e.message)}</p>
+      </div>`;
+  }
+}
+
+function renderHistoryItems(rows){
+  const body = document.getElementById('historyBody');
+  if(!rows.length){
+    body.innerHTML = `
+      <div class="empty-history">
+        <div class="icon">📭</div>
+        <h3>Belum ada riwayat</h3>
+        <p>Riwayat akan muncul di sini setelah Anda menyimpan ide.</p>
+      </div>`;
+    return;
+  }
+
+  body.innerHTML = rows.map(r => {
+    const id = r.id_x;
+    const ide = r.x_02 || '';
+    const link = r.x_04 || '';
+    const created = r.x_06 || '-';
+    const createdBy = r.x_05 || '-';
+    const ideShort = ide.length > 150 ? ide.substring(0, 150) + '...' : ide;
+    const hasLink = link.trim().length > 0;
+
+    return `
+      <div class="history-item" data-id="${id}">
+        <div class="hi-header">
+          <div class="hi-meta">
+            <span>📅 ${created}</span>
+            <span>👤 ${escapeHtml(createdBy)}</span>
+          </div>
+        </div>
+        <div class="hi-ide-row">
+          <div class="hi-ide" onclick="this.classList.toggle('expanded')" title="Klik untuk expand/collapse">
+            ${escapeHtml(ideShort)}
+          </div>
+          <div class="hi-btn-group">
+            <button class="hi-btn-copy" onclick="copyHistoryPrompt(${id})" title="Copy Prompt ke Clipboard">📋 Copy</button>
+            <button class="hi-btn-edit" onclick="openEditPrompt(${id})" title="Edit Prompt">✏️ Edit</button>
+          </div>
+        </div>
+        <div class="hi-link-row">
+          <input type="text" class="hi-link-input" id="link_${id}"
+                 placeholder="Paste link hasil (misal Google Doc)..."
+                 value="${escapeHtml(link)}"
+                 onkeydown="if(event.key==='Enter'){event.preventDefault();saveLink(${id});}">
+          <button class="hi-btn hi-btn-save" onclick="saveLink(${id})">💾 Simpan Link</button>
+          <button class="hi-btn hi-btn-open" id="openBtn_${id}" onclick="openLink(${id})" ${hasLink ? '' : 'disabled'}>🔗 Buka</button>
+          <button class="hi-btn hi-btn-del" onclick="deleteEntry(${id})">🗑️</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function saveLink(id){
+  const input = document.getElementById('link_' + id);
+  if(!input) return;
+  const newLink = input.value.trim();
+
+  const row = historyRows.find(r => r.id_x == id);
+  if(!row){ showToast('❌ Data tidak ditemukan', 'error'); return; }
+
+  const btn = input.nextElementSibling;
+  const origText = btn.textContent;
+  btn.textContent = '...';
+  btn.disabled = true;
+
+  try {
+    await apiFetch('&id_x=' + id, {
+      method: 'PUT',
+      body: JSON.stringify({
+        x_01: row.x_01, x_02: row.x_02, x_03: row.x_03,
+        x_04: newLink, x_05: row.x_05, x_06: row.x_06
+      })
+    });
+    row.x_04 = newLink;
+    const openBtn = document.getElementById('openBtn_' + id);
+    if(openBtn) openBtn.disabled = !newLink;
+    showToast('✅ Link berhasil disimpan', 'success');
+  } catch(e) {
+    showToast('❌ Gagal simpan link: ' + e.message, 'error');
+  } finally {
+    btn.textContent = origText;
+    btn.disabled = false;
+  }
+}
+
+function openLink(id){
+  const input = document.getElementById('link_' + id);
+  if(!input) return;
+  const link = input.value.trim();
+  if(!link){ showToast('❌ Link masih kosong', 'error'); return; }
+  window.open(link, '_blank');
+}
+
+async function deleteEntry(id){
+  if(!confirm('Hapus riwayat ini?')) return;
+  try {
+    await apiFetch('&id_x=' + id, { method: 'DELETE' });
+    showToast('✅ Terhapus', 'success');
+    historyRows = historyRows.filter(r => r.id_x != id);
+    const el = document.querySelector('.history-item[data-id="' + id + '"]');
+    if(el) el.remove();
+
+    fetchCategoryCounts(); // update badge di kartu
+
+    if(historyRows.length === 0){
+      document.getElementById('historyBody').innerHTML = `
+        <div class="empty-history">
+          <div class="icon">📭</div>
+          <h3>Belum ada riwayat</h3>
+          <p>Riwayat akan muncul di sini setelah Anda menyimpan ide.</p>
+        </div>`;
+    }
+  } catch(e) {
+    showToast('❌ Gagal hapus: ' + e.message, 'error');
+  }
+}
+
+function closeHistory(){
+  document.getElementById('historyModal').classList.remove('active');
+  historyCategory = null;
+  historyRows = [];
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function escapeHtml(s){
+  if(s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+function showToast(msg, type = 'info'){
+  const ex = document.querySelector('.toast');
+  if(ex) ex.remove();
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateY(20px)';
+    t.style.transition = '.3s';
+    setTimeout(() => t.remove(), 300);
+  }, 3000);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  if(!checkAutoLogin()){
+    document.getElementById('loginOverlay').classList.add('active');
+  }
+
+  // Klik di luar modal untuk menutup
+  document.getElementById('categoryModal').addEventListener('click', e => {
+    if(e.target.id === 'categoryModal') closeCategoryModal();
+  });
+  document.getElementById('historyModal').addEventListener('click', e => {
+    if(e.target.id === 'historyModal') closeHistory();
+  });
+  document.getElementById('editPromptModal').addEventListener('click', e => {
+    if(e.target.id === 'editPromptModal') closeEditModal();
+  });
+
+  // ESC: tutup modal paling atas dulu
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape'){
+      if(document.getElementById('editPromptModal').classList.contains('active')){
+        closeEditModal();
+      } else if(document.getElementById('historyModal').classList.contains('active')){
+        closeHistory();
+      } else if(document.getElementById('categoryModal').classList.contains('active')){
+        closeCategoryModal();
+      }
+    }
+  });
+});
+</script>
+</body>
+</html>
