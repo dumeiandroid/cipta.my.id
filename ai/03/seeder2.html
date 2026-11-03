@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seeder Sistem 3 — Web App Generator (4 Output)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4f8;min-height:100vh;padding:20px;color:#2d3748}
+.container{max-width:800px;margin:0 auto}
+.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,.08);margin-bottom:16px}
+h1{font-size:22px;margin-bottom:4px;color:#1a2332}
+.subtitle{color:#718096;font-size:13px;margin-bottom:20px}
+h2{font-size:16px;margin-bottom:12px;color:#2d3748}
+input,textarea{padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;width:100%;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:#10b981}
+.btn{padding:10px 20px;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;transition:.15s}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#10b981;color:#fff}
+.btn-success{background:#48bb78;color:#fff}
+.btn-danger{background:#fc8181;color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+label{font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px}
+.form-group{margin-bottom:12px}
+.status{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:12px;display:none;line-height:1.5}
+.status.show{display:block}
+.status.ok{background:#f0fff4;color:#22543d;border-left:4px solid #48bb78}
+.status.err{background:#fff5f5;color:#c53030;border-left:4px solid #fc8181}
+.status.info{background:#ebf8ff;color:#2c5282;border-left:4px solid #4299e1}
+.info-box{background:#f7fafc;padding:14px 16px;border-radius:10px;font-size:12px;line-height:1.7;color:#4a5568;border-left:4px solid #10b981;margin-bottom:16px}
+.code{background:#edf2f7;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:11px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>🌱 Seeder Sistem 3 (4 Output)</h1>
+    <p class="subtitle">Seed config ke <code class="code">kontrol_admin</code> baris <code class="code">id_x = 11</code></p>
+    <div class="info-box">
+      <strong>⚙️ File ini hanya dijalankan SEKALI.</strong><br>
+      Menghasilkan 4 Output: Kode Index, Kode Admin, Panduan IT, dan Panduan Pengguna.
+    </div>
+
+    <h2>🔐 Login Admin</h2>
+    <div class="form-group"><label>Username</label><input type="text" id="u" placeholder="admin"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="p" placeholder="password"></div>
+    <div class="row">
+      <button class="btn btn-primary" id="btnCheck" onclick="checkCurrent()">🔍 Cek Config</button>
+      <button class="btn btn-success" id="btnSeed" onclick="doSeed()" disabled>🌱 Seed ke id_x=11</button>
+      <button class="btn btn-danger" id="btnDelete" onclick="doDelete()" disabled>🗑️ Hapus Row id_x=11</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://mysupplier.my.id/api/contacts_filter_dinamis6';
+const USERS_TABLE = 'admins'; // Menggunakan tabel admins untuk seeder
+const KONTROL_TABLE = 'kontrol_admin';
+const KONTROL_ID = 11; 
+const SECRET = 'admin';
+
+const DEFAULT_MODULES = {
+  kode_index:      { title:'KODE INDEX.HTML (USER)', desc:'Kode HTML lengkap untuk user (login users, input data, UI).' },
+  kode_admin:      { title:'KODE ADMIN.HTML', desc:'Kode HTML lengkap untuk admin (login admins, tabel data, edit/hapus).' },
+  panduan_it:      { title:'PANDUAN IT (Setup Database & API)', desc:'Panduan teknis untuk IT: cara membuat tabel di database, setting API, dan upload R2.' },
+  panduan_pengguna: { title:'PANDUAN ADMIN & USER (Aplikasi)', desc:'Panduan non-teknis untuk orang awam: latar belakang, tujuan, dan cara pakai aplikasi sehari-hari.' }
+};
+
+// PROMPT ATURAN KERAS (WAJIB DIPATUHI AI)
+const BASE_RULES = `
+=== ATURAN KERAS SISTEM (WAJIB DIPATUHI) ===
+1. Anda WAJIB menghasilkan TEPAT 4 BAGIAN output: KODE INDEX.HTML, KODE ADMIN.HTML, PANDUAN IT, dan PANDUAN PENGGUNA.
+2. API_URL: 'https://mysupplier.my.id/api/contacts_filter_dinamis6'
+3. UPLOAD_R2: 'https://mysupplier.my.id/api/upload_r2_lidan'
+4. CDN_URL: 'https://assets.mysupplier.my.id/'
+5. AUTENTIKASI:
+   - index.html WAJIB login menggunakan tabel 'users' (GET ?table=users&x_01_eq=user&x_02_eq=pass).
+   - admin.html WAJIB login menggunakan tabel 'admins' (GET ?table=admins&x_01_eq=user&x_02_eq=pass).
+6. DATABASE (SANGAT PENTING):
+   - Aplikasi HANYA BOLEH menggunakan 1 tabel database. Buat nama tabel yang relevan (misal: app_inventaris).
+   - Tabel HANYA memiliki kolom: id_x (auto), x_01 s.d x_20.
+   - KARENA KOLOM TERBATAS, JIKA ADA DATA LEBIH DARI 20 KOLOM ATAU DATA BERBENTUK LIST/ARRAY, WAJIB DISIMPAN SEBAGAI JSON STRING (JSON.stringify) KE DALAM SALAH SATU KOLOM x_01 s.d x_20.
+7. DESAIN: Gunakan Tailwind CSS (CDN) atau CSS murni yang modern, responsif, dan rapi.
+8. UPLOAD FILE: Jika butuh upload, gunakan fetch ke UPLOAD_R2 dengan FormData, simpan URL yang dikembalikan ke database.
+9. BAGIAN 3 (PANDUAN IT): Berisi instruksi teknis cara buat tabel, penjelasan struktur JSON kolom, dan cara hosting.
+10. BAGIAN 4 (PANDUAN PENGGUNA): JANGAN bahas pemrograman/database sama sekali. Fokus pada: Latar Belakang aplikasi, Tujuan dibuatnya, dan Tata Cara Penggunaan Aplikasi (langkah demi langkah dari login, input, sampai logout) dengan bahasa yang sangat mudah dipahami orang awam.
+`;
+
+const DEFAULT_CATEGORIES = {
+  // GRUP 1: DATA & INVENTARIS (CRUD)
+  app_profil: {
+    group: 'Data & Inventaris', aktif: true, theme: { icon:'👤', color:'#3b82f6' },
+    info: { desc: 'Aplikasi pendataan profil (CRUD) dengan foto.', history: 'Dasar dari semua aplikasi.', author: 'System', use_for: 'Data siswa, karyawan, dll.' },
+    ui: { label:'Pendataan Profil', placeholder:`Contoh: Buatkan aplikasi data siswa. User menginput Nama, Alamat, No HP, dan Foto Profil. Admin bisa melihat, mengedit, dan menghapus data tersebut.` },
+    prompt: { role:'Fullstack Web Developer & Tech Writer', outputName:'4 FILE APP', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'panduan_it', enabled:true }, { key:'panduan_pengguna', enabled:true }],
+    menu: [{
+      label: 'Generate Aplikasi',
+      desc: 'Membuat aplikasi pendataan profil lengkap (4 File Output).',
+      prompt_override: `Buatkan aplikasi pendataan profil. Skema DB (tabel app_profil): x_01=Nama, x_02=Alamat, x_03=NoHP, x_04=URL Foto R2.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  app_inventaris: {
+    group: 'Data & Inventaris', aktif: true, theme: { icon:'📦', color:'#3b82f6' },
+    info: { desc: 'Aplikasi pencatatan stok barang.', history: 'Dasar manajemen gudang.', author: 'System', use_for: 'Toko, gudang, dll.' },
+    ui: { label:'Inventaris Barang', placeholder:`Contoh: Buatkan sistem inventaris. User input Nama Barang, Stok, Harga, dan Foto Barang. Admin bisa update stok dan hapus.` },
+    prompt: { role:'Fullstack Web Developer & Tech Writer', outputName:'4 FILE APP', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'panduan_it', enabled:true }, { key:'panduan_pengguna', enabled:true }],
+    menu: [{
+      label: 'Generate Aplikasi',
+      desc: 'Membuat aplikasi inventaris gudang.',
+      prompt_override: `Buatkan aplikasi inventaris. Skema DB (tabel app_inventaris): x_01=Nama Barang, x_02=Stok, x_03=Harga, x_04=URL Foto R2.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  app_tugas: {
+    group: 'Data & Inventaris', aktif: true, theme: { icon:'📋', color:'#3b82f6' },
+    info: { desc: 'Aplikasi manajemen tugas dengan lampiran.', history: 'Task Management.', author: 'System', use_for: 'Proyek, tugas harian.' },
+    ui: { label:'Manajemen Tugas', placeholder:`Contoh: Aplikasi manajemen tugas. User input Judul Tugas, Deskripsi, Lampiran File PDF, dan Status (Aktif/Selesai).` },
+    prompt: { role:'Fullstack Web Developer & Tech Writer', outputName:'4 FILE APP', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'panduan_it', enabled:true }, { key:'panduan_pengguna', enabled:true }],
+    menu: [{
+      label: 'Generate Aplikasi',
+      desc: 'Membuat aplikasi tugas.',
+      prompt_override: `Buatkan aplikasi tugas. Skema DB (tabel app_tugas): x_01=Judul, x_02=Deskripsi, x_03=Status, x_04=JSON Array File Lampiran R2.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  app_event: {
+    group: 'Data & Inventaris', aktif: true, theme: { icon:'🎟️', color:'#3b82f6' },
+    info: { desc: 'Formulir pendaftaran event.', history: 'Event Management.', author: 'System', use_for: 'Seminar, webinar.' },
+    ui: { label:'Pendaftaran Event', placeholder:`Contoh: Buatkan form pendaftaran seminar. User input Nama, Email, Instansi. Admin bisa lihat daftar peserta.` },
+    prompt: { role:'Fullstack Web Developer & Tech Writer', outputName:'4 FILE APP', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'panduan_it', enabled:true }, { key:'panduan_pengguna', enabled:true }],
+    menu: [{
+      label: 'Generate Aplikasi',
+      desc: 'Membuat form pendaftaran event.',
+      prompt_override: `Buatkan form pendaftaran event. Skema DB (tabel app_event): x_01=Nama, x_02=Email, x_03=Instansi, x_04=Tanggal Daftar.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+
+  // GRUP 2: MEDIA & FILE
+  app_galeri: {
+    group: 'Media & File', aktif: true, theme: { icon:'🖼️', color:'#8b5cf6' },
+    info: { desc: 'Galeri foto.', history: 'Portfolio.', author: 'System', use_for: 'Upload banyak foto.' },
+    ui: { label:'Galeri Portofolio', placeholder:`Contoh: Aplikasi galeri foto. User bisa upload banyak foto sekaligus dengan judul foto. Tampilkan dalam bentuk grid.` },
+    prompt: { role:'Fullstack Web Developer & Tech Writer', outputName:'4 FILE APP', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'panduan_it', enabled:true }, { key:'panduan_pengguna', enabled:true }],
+    menu: [{
+      label: 'Generate Aplikasi',
+      desc: 'Membuat galeri foto.',
+      prompt_override: `Buatkan aplikasi galeri foto. Skema DB (tabel app_galeri): x_01=Judul, x_02=JSON Array URL Foto R2, x_03=Tanggal.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  app_dokumen: {
+    group: 'Media & File', aktif: true, theme: { icon:'📁', color:'#8b5cf6' },
+    info: { desc: 'Sistem upload dokumen.', history: 'Cloud Storage.', author: 'System', use_for: 'Arsip PDF, Word.' },
+    ui: { label:'Unggah Dokumen', placeholder:`Contoh: Aplikasi arsip dokumen. User upload file PDF/Word beserta keterangan.` },
+    prompt: { role:'Fullstack Web Developer & Tech Writer', outputName:'4 FILE APP', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'panduan_it', enabled:true }, { key:'panduan_pengguna', enabled:true }],
+    menu: [{
+      label: 'Generate Aplikasi',
+      desc: 'Membuat sistem upload dokumen.',
+      prompt_override: `Buatkan sistem upload dokumen. Skema DB (tabel app_dokumen): x_01=Keterangan, x_02=URL File R2, x_03=Tipe File.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  app_bukutamu: {
+    group: 'Media & File', aktif: true, theme: { icon:'💌', color:'#8b5cf6' },
+    info: { desc: 'Buku tamu digital.', history: 'Guest Book.', author: 'System', use_for: 'Ucapan, pesan.' },
+    ui: { label:'Buku Tamu Digital', placeholder:`Contoh: Buku tamu pernikahan digital. User isi nama, pesan, dan foto selfie. Tampil sebagai kartu.` },
+    prompt: { role:'Fullstack Web Developer & Tech Writer', outputName:'4 FILE APP', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'panduan_it', enabled:true }, { key:'panduan_pengguna', enabled:true }],
+    menu: [{
+      label: 'Generate Aplikasi',
+      desc: 'Membuat buku tamu digital.',
+      prompt_override: `Buatkan buku tamu digital. Skema DB (tabel app_bukutamu): x_01=Nama, x_02=Pesan, x_03=URL Foto Selfie, x_04=Waktu.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+
+  // GRUP 3: INTERAKSI & KUIS
+  app_kuis: {
+    group: 'Interaksi & Kuis', aktif: true, theme: { icon:'📝', color:'#f59e0b' },
+    info: { desc: 'Aplikasi kuis otomatis.', history: 'E-learning.', author: 'System', use_for: 'Ujian, latihan soal.' },
+    ui: { label:'Aplikasi Kuis', placeholder:`Contoh: Buat kuis pilihan ganda 5 soal. Hitung skor di akhir dan simpan riwayat.` },
+    prompt: { role:'Fullstack Web Developer & Tech Writer', outputName:'4 FILE APP', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'panduan_it', enabled:true }, { key:'panduan_pengguna', enabled:true }],
+    menu: [{
+      label: 'Generate Aplikasi',
+      desc: 'Membuat aplikasi kuis.',
+      prompt_override: `Buatkan aplikasi kuis. Skema DB (tabel app_kuis): x_01=Nama Peserta, x_02=Skor, x_03=JSON Jawaban, x_04=Waktu Selesai.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  app_saran: {
+    group: 'Interaksi & Kuis', aktif: true, theme: { icon:'💬', color:'#f59e0b' },
+    info: { desc: 'Kotak saran & keluhan.', history: 'Feedback loop.', author: 'System', use_for: 'Saran, keluhan.' },
+    ui: { label:'Kotak Saran', placeholder:`Contoh: Kotak saran anonim. User kirim saran. Admin bisa ubah status (Dibaca/Belum).` },
+    prompt: { role:'Fullstack Web Developer & Tech Writer', outputName:'4 FILE APP', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'panduan_it', enabled:true }, { key:'panduan_pengguna', enabled:true }],
+    menu: [{
+      label: 'Generate Aplikasi',
+      desc: 'Membuat kotak saran.',
+      prompt_override: `Buatkan kotak saran. Skema DB (tabel app_saran): x_01=Saran, x_02=Status (Baru/Dibaca), x_03=Tanggal.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  app_survei: {
+    group: 'Interaksi & Kuis', aktif: true, theme: { icon:'⭐', color:'#f59e0b' },
+    info: { desc: 'Survei kepuasan (rating).', history: 'CSAT.', author: 'System', use_for: 'Kepuasan layanan.' },
+    ui: { label:'Survei Kepuasan', placeholder:`Contoh: Form survei. User pilih bintang 1-5 dan isi ulasan.` },
+    prompt: { role:'Fullstack Web Developer & Tech Writer', outputName:'4 FILE APP', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'panduan_it', enabled:true }, { key:'panduan_pengguna', enabled:true }],
+    menu: [{
+      label: 'Generate Aplikasi',
+      desc: 'Membuat form survei rating.',
+      prompt_override: `Buatkan survei kepuasan. Skema DB (tabel app_survei): x_01=Rating (1-5), x_02=Ulasan, x_03=Tanggal.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+
+  // GRUP 4: SISTEM KHUSUS
+  app_absensi: {
+    group: 'Sistem Khusus', aktif: true, theme: { icon:'⏰', color:'#10b981' },
+    info: { desc: 'Sistem absensi selfie.', history: 'HRIS.', author: 'System', use_for: 'Kehadiran.' },
+    ui: { label:'Sistem Absensi', placeholder:`Contoh: Aplikasi absensi. User klik absen (rekam waktu dan foto selfie). Admin lihat rekap.` },
+    prompt: { role:'Fullstack Web Developer & Tech Writer', outputName:'4 FILE APP', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'panduan_it', enabled:true }, { key:'panduan_pengguna', enabled:true }],
+    menu: [{
+      label: 'Generate Aplikasi',
+      desc: 'Membuat aplikasi absensi.',
+      prompt_override: `Buatkan aplikasi absensi. Skema DB (tabel app_absensi): x_01=Tipe (Masuk/Pulang), x_02=Waktu, x_03=URL Foto R2, x_04=Tanggal.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  app_pemesanan: {
+    group: 'Sistem Khusus', aktif: true, theme: { icon:'🛒', color:'#10b981' },
+    info: { desc: 'Pemesanan barang/jasa.', history: 'E-commerce mini.', author: 'System', use_for: 'Order form.' },
+    ui: { label:'Sistem Pemesanan', placeholder:`Contoh: Form order. User pilih layanan, isi nama. Admin ubah status pesanan.` },
+    prompt: { role:'Fullstack Web Developer & Tech Writer', outputName:'4 FILE APP', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'panduan_it', enabled:true }, { key:'panduan_pengguna', enabled:true }],
+    menu: [{
+      label: 'Generate Aplikasi',
+      desc: 'Membuat sistem pemesanan.',
+      prompt_override: `Buatkan sistem pemesanan. Skema DB (tabel app_pemesanan): x_01=Nama Pemesan, x_02=Layanan, x_03=Status (Pending/Selesai), x_04=Tanggal.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  app_todo: {
+    group: 'Sistem Khusus', aktif: true, theme: { icon:'✅', color:'#10b981' },
+    info: { desc: 'To-Do list pribadi.', history: 'Task tracker.', author: 'System', use_for: 'Aktivitas harian.' },
+    ui: { label:'To-Do List', placeholder:`Contoh: Aplikasi catatan harian. User tambah list, centang selesai.` },
+    prompt: { role:'Fullstack Web Developer & Tech Writer', outputName:'4 FILE APP', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'panduan_it', enabled:true }, { key:'panduan_pengguna', enabled:true }],
+    menu: [{
+      label: 'Generate Aplikasi',
+      desc: 'Membuat to-do list.',
+      prompt_override: `Buatkan aplikasi to-do list. Skema DB (tabel app_todo): x_01=Task, x_02=Status (Done/Undone), x_03=Tanggal.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  app_tiket: {
+    group: 'Sistem Khusus', aktif: true, theme: { icon:'🎫', color:'#10b981' },
+    info: { desc: 'Pengaduan sarana (Ticketing).', history: 'Helpdesk.', author: 'System', use_for: 'Laporan kerusakan.' },
+    ui: { label:'Ticketing Pengaduan', placeholder:`Contoh: Aplikasi lapor kerusakan. User isi laporan. Admin balas dan tutup tiket.` },
+    prompt: { role:'Fullstack Web Developer & Tech Writer', outputName:'4 FILE APP', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'panduan_it', enabled:true }, { key:'panduan_pengguna', enabled:true }],
+    menu: [{
+      label: 'Generate Aplikasi',
+      desc: 'Membuat sistem tiket pengaduan.',
+      prompt_override: `Buatkan sistem tiket pengaduan. Skema DB (tabel app_tiket): x_01=Judul, x_02=Deskripsi, x_03=Status (Open/Closed), x_04=JSON Balasan Admin.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  }
+};
+
+const DEFAULT_MASTER_TOGGLES = { kode_index: true, kode_admin: true, panduan_it: true, panduan_pengguna: true };
+
+function status(msg, type='info'){
+  const el = document.getElementById('status'); el.textContent = msg; el.className = 'status show ' + type;
+}
+function getHeaders(table){
+  return { 'Content-Type':'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': table, 'X-Role': 'admin' };
+}
+
+async function checkCurrent(){
+  const u = document.getElementById('u').value.trim(); const p = document.getElementById('p').value.trim();
+  if(!u || !p){ status('❌ Isi username & password dulu', 'err'); return; }
+  const btn = document.getElementById('btnCheck'); btn.disabled = true; btn.textContent = 'Memeriksa...'; status('⏳ Memeriksa user...', 'info');
+  try{
+    const r = await fetch(`${API_URL}?table=${USERS_TABLE}&x_01_eq=${u}&x_02_eq=${p}`, { headers: getHeaders(USERS_TABLE) });
+    const res = await r.json();
+    if(!res.success || !res.data || res.data.length === 0){ status('❌ Username atau password salah / Bukan Admin', 'err'); return; }
+    
+    status('✅ Login OK. Mengambil config...', 'ok');
+    document.getElementById('btnSeed').disabled = false; document.getElementById('btnDelete').disabled = false;
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x_eq=${KONTROL_ID}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res2 = await r2.json();
+    if(res2.success && res2.data && res2.data.length > 0){
+      status(`✅ Row id_x=${KONTROL_ID} sudah ada. Klik "Seed" untuk MENGGANTI.`, 'ok');
+    } else {
+      status(`ℹ️ Row id_x=${KONTROL_ID} belum ada. Klik "Seed".`, 'info');
+    }
+  } catch(e){ status('❌ Error: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '🔍 Cek Config'; }
+}
+
+async function doSeed(){
+  if(!confirm(`⚠️ Seed akan MENGGANTI seluruh config di id_x=${KONTROL_ID}. Lanjut?`)) return;
+  const btn = document.getElementById('btnSeed'); btn.disabled = true; btn.textContent = '⏳ Menyimpan...'; status('⏳ Menyimpan...', 'info');
+  try{
+    const payload = {
+      x_01: JSON.stringify({ categories: DEFAULT_CATEGORIES, outputModules: DEFAULT_MODULES }),
+      x_02: new Date().toISOString(), x_03: document.getElementById('u').value.trim() || 'seeder', x_04: '1.0',
+      x_05: '1', x_06: '1', x_07: '1', x_08: '1', x_09: '1', x_10: '1'
+    };
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x_eq=${KONTROL_ID}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    const exists = res.success && res.data && res.data.length > 0;
+    const method = exists ? 'PUT' : 'POST';
+    const endpoint = exists ? `&id_x=${KONTROL_ID}` : '';
+    
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}${endpoint}`, { method, headers: getHeaders(KONTROL_TABLE), body: JSON.stringify(payload) });
+    const res2 = await r2.json();
+    if(!res2.success) throw new Error(res2.error || res2.message || 'Gagal simpan');
+    status(`✅ BERHASIL! Config ter-${exists ? 'update' : 'buat'} di id_x=${KONTROL_ID}.\n\nSilakan buka index2.html.`, 'ok');
+  } catch(e){ status('❌ Gagal seed: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '🌱 Seed ke id_x=11'; }
+}
+
+async function doDelete(){
+  if(!confirm(`⚠️ Hapus row id_x=${KONTROL_ID}?`)) return;
+  const btn = document.getElementById('btnDelete'); btn.disabled = true; btn.textContent = '⏳ Menghapus...';
+  try{
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x=${KONTROL_ID}`, { method: 'DELETE', headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    if(res.success) status('✅ Row terhapus', 'ok'); else throw new Error(res.error || res.message || 'Gagal hapus');
+  } catch(e){ status('❌ Gagal hapus: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '🗑️ Hapus Row id_x=11'; }
+}
+</script>
+</body>
+</html>
