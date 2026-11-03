@@ -1,0 +1,76 @@
+<!-- Di dalam <head>, ganti API_URL -->
+<script>
+const API_URL = 'https://mysupplier.my.id/api/contacts_filter_dinamis6';
+const USERS_TABLE = 'users';
+const KONTROL_TABLE = 'kontrol_admin';
+const KONTROL_ID = 9;
+const SECRET = 'admin';
+const STORAGE_KEY = 'ai_tools_admin_user';
+</script>
+
+<!-- Tambahkan field info di form Edit Kategori -->
+<div class="form-section">
+  <div class="form-section-title">ℹ️ Info Tooltip</div>
+  <div class="form-group"><label>Deskripsi Singkat</label><textarea id="editInfoDesc" rows="2"></textarea></div>
+  <div class="form-group"><label>Sejarah Singkat</label><textarea id="editInfoHistory" rows="2"></textarea></div>
+  <div class="form-group"><label>Pengembang / Tokoh</label><input id="editInfoAuthor"></div>
+  <div class="form-group"><label>Cocok Untuk Apa</label><textarea id="editInfoUseFor" rows="2"></textarea></div>
+</div>
+
+<!-- Di dalam JS, sesuaikan openEditCategory dan syncTab1ToData -->
+<script>
+// ... (kode sebelumnya) ...
+
+function openEditCategory(key){
+  const isNew = !key;
+  document.getElementById('editCatTitle').textContent = isNew ? '➕ Tambah Kategori Baru' : '✏️ Edit Kategori';
+  document.getElementById('editCatKey').value = key || '';
+
+  if(isNew){
+    editingCategoryData = {
+      group: 'Lainnya', aktif: true, theme: { icon:'📌', color:'#805ad5' },
+      info: { desc: '', history: '', author: '', use_for: '' },
+      ui: { label:'Kategori Baru', placeholder:'Tulis ide di sini...' },
+      prompt: { role:'', outputName:'', pickLabel:'jenis pilihan', extraRules:'', formatRules:[] },
+      modules: [{ key:'naskah_utama', enabled:true }], menu: []
+    };
+  } else {
+    editingCategoryData = JSON.parse(JSON.stringify(CATEGORIES[key]));
+  }
+
+  editingMenuItems = editingCategoryData.menu || [];
+  renderEditCatTab1(); renderEditCatTab2(); switchEditCatTab(1);
+  document.getElementById('editCategoryModal').classList.add('active');
+}
+
+function syncTab1ToData() {
+  const modules = [];
+  document.querySelectorAll('#editModulesList input[type="checkbox"]').forEach(cb => { if(cb.checked) modules.push({ key: cb.dataset.modKey, enabled: true }); });
+  
+  editingCategoryData.group = document.getElementById('editGroup').value.trim() || 'Lainnya';
+  editingCategoryData.theme = { icon: document.getElementById('editIcon').value || '📌', color: document.getElementById('editColor').value || '#805ad5' };
+  editingCategoryData.info = {
+    desc: document.getElementById('editInfoDesc').value,
+    history: document.getElementById('editInfoHistory').value,
+    author: document.getElementById('editInfoAuthor').value,
+    use_for: document.getElementById('editInfoUseFor').value
+  };
+  editingCategoryData.ui = { label: document.getElementById('editLabel').value, placeholder: document.getElementById('editPlaceholder').value };
+  editingCategoryData.prompt = { ...editingCategoryData.prompt, role: document.getElementById('editRole').value, outputName: document.getElementById('editOutputName').value, pickLabel: document.getElementById('editPickLabel').value || 'jenis pilihan', extraRules: document.getElementById('editExtraRules').value };
+  editingCategoryData.modules = modules;
+  editingCategoryData.menu = editingMenuItems.filter(m => m.label && m.label.trim());
+}
+
+function renderEditCatTab1() {
+  document.getElementById('editIcon').value = editingCategoryData.theme?.icon || '📌';
+  document.getElementById('editColor').value = editingCategoryData.theme?.color || '#805ad5';
+  document.getElementById('editInfoDesc').value = editingCategoryData.info?.desc || '';
+  document.getElementById('editInfoHistory').value = editingCategoryData.info?.history || '';
+  document.getElementById('editInfoAuthor').value = editingCategoryData.info?.author || '';
+  document.getElementById('editInfoUseFor').value = editingCategoryData.info?.use_for || '';
+  document.getElementById('editLabel').value = editingCategoryData.ui?.label || '';
+  document.getElementById('editGroup').value = editingCategoryData.group || 'Lainnya';
+  document.getElementById('editPlaceholder').value = editingCategoryData.ui?.placeholder || '';
+  // ... (sisanya sama)
+}
+</script>

@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel 2 — Soft Skills</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;min-height:100vh;color:#2d3748;padding:16px}
+
+.login-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:9999;justify-content:center;align-items:center;padding:20px}
+.login-overlay.active{display:flex}
+.login-box{background:#fff;border-radius:20px;padding:32px;max-width:400px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.4)}
+.login-box h2{text-align:center;font-size:22px;margin-bottom:6px}
+.login-box p{text-align:center;color:#718096;font-size:13px;margin-bottom:18px}
+.login-box input{width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;margin-bottom:10px}
+.login-box input:focus{outline:none;border-color:#e53e3e}
+.login-box button{width:100%;padding:12px;background:#e53e3e;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer}
+.login-box button:hover{background:#c53030}
+.login-box button:disabled{opacity:.6;cursor:not-allowed}
+.login-error{color:#fc8181;font-size:12px;text-align:center;margin-top:10px;display:none}
+.login-error.show{display:block}
+
+.main-content{display:none;max-width:1300px;margin:0 auto}
+.main-content.visible{display:block}
+
+header{background:#fff;padding:14px 22px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+header h1{font-size:18px;color:#1a2332;display:flex;align-items:center;gap:8px}
+header h1 span{background:#e53e3e;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px}
+.header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.user-chip{font-size:12px;background:#f7fafc;padding:5px 12px;border-radius:16px;font-weight:600}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border:none;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s;text-align:center;position:relative}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#e53e3e;color:#fff}
+.btn-primary:hover:not(:disabled){background:#c53030}
+.btn-success{background:#48bb78;color:#fff}
+.btn-success:hover:not(:disabled){background:#38a169}
+.btn-danger{background:#fc8181;color:#fff}
+.btn-danger:hover:not(:disabled){background:#f56565}
+.btn-warning{background:#ed8936;color:#fff}
+.btn-warning:hover:not(:disabled){background:#dd6b20}
+.btn-outline{background:transparent;color:#4a5568;border:2px solid #e2e8f0}
+.btn-outline:hover{background:#f7fafc}
+.btn-sm{padding:5px 12px;font-size:11px}
+.btn-xs{padding:4px 8px;font-size:10px}
+
+.btn-tooltip::after{content:attr(data-label);position:absolute;bottom:120%;left:50%;transform:translateX(-50%) scale(0.9);background:#2d3748;color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;white-space:nowrap;opacity:0;pointer-events:none;transition:all 0.2s ease;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+.btn-tooltip:active::after,.btn-tooltip:focus::after{opacity:1;transform:translateX(-50%) scale(1)}
+
+.tabs{background:#fff;border-radius:14px 14px 0 0;display:flex;padding:0 20px;box-shadow:0 2px 8px rgba(0,0,0,.06);gap:4px;overflow-x:auto}
+.tab-btn{padding:14px 20px;border:none;background:transparent;font-weight:700;font-size:13px;color:#a0aec0;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;font-family:inherit}
+.tab-btn:hover{color:#2d3748}
+.tab-btn.active{color:#e53e3e;border-bottom-color:#e53e3e}
+
+.tab-content{display:none;background:#fff;border-radius:0 0 14px 14px;padding:22px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:16px}
+.tab-content.active{display:block}
+
+.action-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid #edf2f7;margin-bottom:16px}
+.save-status{font-size:12px;font-weight:600;padding:4px 12px;border-radius:8px;margin-left:auto}
+.save-status.saved{background:#f0fff4;color:#276749}
+.save-status.dirty{background:#fffaf0;color:#c05621}
+.save-status.error{background:#fff5f5;color:#c53030}
+
+.admin-group-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;margin-bottom:16px;border-bottom:1px solid #edf2f7}
+.admin-group-tab-btn{padding:6px 14px;border:none;background:#f7fafc;border-radius:8px;font-weight:600;font-size:12px;color:#4a5568;cursor:pointer;white-space:nowrap;transition:.15s;font-family:inherit}
+.admin-group-tab-btn:hover{background:#edf2f7}
+.admin-group-tab-btn.active{background:#e53e3e;color:#fff}
+
+.category-list{display:flex;flex-direction:column;gap:10px}
+.category-item{background:#f7fafc;border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;transition:all .15s;position:relative}
+.category-item:hover{border-color:#e53e3e;box-shadow:0 4px 12px rgba(229,62,62,.1)}
+.category-item.inactive{opacity:.55;background:#edf2f7}
+.cat-drag{display:flex;flex-direction:column;gap:2px}
+.cat-drag button{background:#e2e8f0;border:none;width:20px;height:20px;border-radius:4px;cursor:pointer;font-size:9px;line-height:1}
+.cat-drag button:hover{background:#cbd5e0}
+.cat-icon{font-size:28px;flex-shrink:0}
+.cat-body{flex:1;min-width:0}
+.cat-name{font-weight:700;font-size:15px;color:#1a2332}
+.cat-meta{font-size:11px;color:#718096;margin-top:2px}
+.cat-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
+
+.empty-state{text-align:center;padding:50px 20px;color:#a0aec0}
+.empty-state .icon{font-size:48px;margin-bottom:10px}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:flex-start;padding:20px;overflow-y:auto}
+.modal-overlay.active{display:flex}
+.modal{background:#fff;border-radius:16px;max-width:900px;width:100%;margin-top:30px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:92vh;display:flex;flex-direction:column}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #edf2f7}
+.modal-header h2{font-size:18px;color:#1a2332}
+.modal-close{background:#fc8181;color:#fff;border:none;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;flex-shrink:0}
+.modal-close:hover{background:#f56565}
+.modal-body{overflow-y:auto;flex:1;padding-right:4px}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;padding-top:16px;border-top:2px solid #edf2f7}
+
+.edit-cat-tabs{display:flex;gap:8px;border-bottom:2px solid #edf2f7;margin-bottom:16px;padding-bottom:0;overflow-x:auto}
+.edit-cat-tab-btn{padding:10px 16px;background:transparent;border:none;border-bottom:3px solid transparent;font-weight:700;font-size:13px;color:#a0aec0;cursor:pointer;margin-bottom:-2px;font-family:inherit;white-space:nowrap}
+.edit-cat-tab-btn:hover{color:#2d3748}
+.edit-cat-tab-btn.active{color:#e53e3e;border-bottom-color:#e53e3e}
+.edit-cat-tab-content{display:none}
+.edit-cat-tab-content.active{display:block}
+
+.json-textarea{width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:8px;font-family:monospace;font-size:12px;line-height:1.5;resize:vertical;background:#f8fafc}
+.json-textarea:focus{outline:none;border-color:#e53e3e;background:#fff}
+
+.form-section{background:#f7fafc;border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.form-section-title{font-weight:700;font-size:13px;color:#4a5568;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}
+.form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.form-group label{font-weight:600;font-size:12px;color:#4a5568}
+.form-group input,.form-group textarea,.form-group select{padding:8px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;width:100%}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{outline:none;border-color:#e53e3e}
+.form-group textarea{resize:vertical;min-height:60px;line-height:1.5}
+
+.menu-item-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:10px;margin-bottom:8px;display:flex;gap:8px;align-items:flex-start}
+.menu-item-fields{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.menu-item-fields input,.menu-item-fields textarea{padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:12px;font-family:inherit;width:100%}
+.menu-item-fields input:focus,.menu-item-fields textarea:focus{outline:none;border-color:#e53e3e}
+.menu-item-actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+
+.module-check{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:6px;cursor:pointer}
+.module-check:hover{background:#f7fafc}
+.module-check input[type="checkbox"]{width:16px;height:16px;accent-color:#e53e3e;cursor:pointer;flex-shrink:0}
+.module-check .mod-key{font-family:monospace;font-size:11px;color:#718096;background:#edf2f7;padding:1px 6px;border-radius:4px;white-space:nowrap}
+.module-check .mod-title{font-weight:600;font-size:12px;flex:1;min-width:0}
+
+.toggle-card{background:#fff;border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.toggle-card.on{border-color:#48bb78;background:#f0fff4}
+.toggle-card.off{opacity:.85;background:#fff5f5}
+.toggle-card input[type="checkbox"]{width:22px;height:22px;accent-color:#48bb78;cursor:pointer;flex-shrink:0}
+.toggle-info{flex:1;min-width:0}
+.toggle-title{font-weight:700;font-size:14px;color:#1a2332}
+.toggle-key{font-family:monospace;font-size:11px;color:#718096}
+.toggle-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;flex-shrink:0}
+.toggle-badge.on{background:#48bb78;color:#fff}
+.toggle-badge.off{background:#fc8181;color:#fff}
+
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;color:#fff;font-weight:600;font-size:13px;z-index:2000;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:340px;animation:slideUp .3s}
+.toast.success{background:#48bb78}
+.toast.error{background:#fc8181}
+.toast.info{background:#4299e1}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.hint{font-size:12px;color:#718096;background:#f7fafc;padding:10px 14px;border-radius:8px;border-left:3px solid #ed8936;margin-bottom:14px;line-height:1.5}
+
+@media (max-width: 768px){
+  body{padding:10px} 
+  header{flex-direction:column;align-items:stretch;padding:16px;gap:12px} 
+  .header-actions{justify-content:space-between} 
+  .header-actions .btn{flex:1;padding:8px 4px;font-size:11px}
+  .tabs{border-radius:12px 12px 0 0} 
+  .tab-btn{padding:12px 14px;font-size:12px} 
+  .tab-content{padding:16px}
+  .action-bar{flex-direction:column;align-items:stretch;gap:10px} 
+  .action-bar .btn{width:100%;padding:10px} 
+  .save-status{margin-left:0;text-align:center;margin-top:4px}
+  .category-item{flex-direction:column;align-items:stretch;padding:16px 14px 14px;gap:8px}
+  .cat-drag{position:absolute;top:10px;right:10px;flex-direction:row;gap:4px} 
+  .cat-drag button{width:26px;height:26px;font-size:11px}
+  .cat-icon{font-size:24px;float:left;margin-right:10px} 
+  .cat-name{font-size:14px;line-height:1.3;padding-right:60px} 
+  .cat-meta{font-size:10px;margin-top:4px}
+  .cat-actions{display:grid;grid-template-columns:repeat(4, 1fr);gap:6px;margin-top:6px}
+  .cat-actions .btn{width:100%;padding:10px 0;font-size:16px;display:flex;justify-content:center;align-items:center}
+  .cat-actions .btn-text{display:none}
+  .modal{margin:0;padding:16px;max-height:100vh;border-radius:0;height:100vh} 
+  .modal-header{padding-top:10px;margin-bottom:12px} 
+  .modal-header h2{font-size:16px}
+  .form-row{grid-template-columns:1fr;gap:0} 
+  .menu-item-card{flex-direction:column;gap:8px} 
+  .menu-item-actions{flex-direction:row;justify-content:flex-end}
+  .toggle-card{padding:12px;gap:10px} 
+  .toggle-title{font-size:13px}
+}
+@media (max-width: 480px){
+  .header-actions{flex-direction:column;gap:6px} 
+  .header-actions .btn{width:100%} 
+  .modal-footer{flex-direction:column-reverse;gap:8px} 
+  .modal-footer .btn{width:100%}
+}
+</style>
+</head>
+<body>
+
+<div class="login-overlay active" id="loginOverlay">
+  <div class="login-box">
+    <h2>⚙️ Admin Panel 2</h2>
+    <p>Problem Solving & Soft Skills</p>
+    <input type="text" id="loginUsername" placeholder="Username">
+    <input type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()" id="loginBtn">Login</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<div class="main-content" id="mainContent">
+  <header>
+    <h1>⚙️ Admin Panel 2 <span>Sistem 2 (id_x=10)</span></h1>
+    <div class="header-actions">
+      <span class="user-chip">👤 <span id="headerUser">-</span></span>
+      <button class="btn btn-outline" onclick="exportConfig()">📤 Export</button>
+      <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">📥 Import</button>
+      <input type="file" id="importFile" style="display:none" accept=".json" onchange="importConfig(event)">
+      <button class="btn btn-danger" onclick="doLogout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="kategori" onclick="switchTab('kategori')">📚 Kategori</button>
+    <button class="tab-btn" data-tab="global" onclick="switchTab('global')">🌐 Global Toggle</button>
+    <button class="tab-btn" data-tab="modules" onclick="switchTab('modules')">🧩 Output Modules</button>
+  </div>
+
+  <div class="tab-content active" id="tab-kategori">
+    <div class="action-bar">
+      <button class="btn btn-primary" onclick="openEditCategory(null)">➕ Tambah Kategori</button>
+      <button class="btn btn-warning" onclick="seedDefault()">🌱 Seed Default</button>
+      <button class="btn btn-success" onclick="saveToDb()">💾 Simpan Semua</button>
+      <span class="save-status" id="saveStatus">-</span>
+    </div>
+    
+    <div class="admin-group-tabs" id="adminGroupTabsContainer"></div>
+    <div id="categoryList" class="category-list"></div>
+  </div>
+
+  <div class="tab-content" id="tab-global">
+    <div class="hint">💡 <strong>Master Toggle</strong> — Jika OFF, modul ini <b>tidak muncul di kategori mana pun</b>.</div>
+    <div id="globalToggleList"></div>
+  </div>
+
+  <div class="tab-content" id="tab-modules">
+    <div class="hint">💡 Edit <b>title</b> dan <b>desc</b> per modul. Perubahan otomatis berlaku ke semua kategori.</div>
+    <div id="moduleLibrary"></div>
+    <button class="btn btn-success" onclick="saveToDb()" style="margin-top:14px; width: 100%">💾 Simpan Perubahan Modules</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editCategoryModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="editCatTitle">Edit Kategori</h2>
+      <button class="modal-close" onclick="closeEditCategory()">✕</button>
+    </div>
+    
+    <div class="edit-cat-tabs">
+      <button class="edit-cat-tab-btn active" onclick="switchEditCatTab(1)">📝 Form</button>
+      <button class="edit-cat-tab-btn" onclick="switchEditCatTab(2)">{ } JSON</button>
+    </div>
+
+    <div class="modal-body">
+      <input type="hidden" id="editCatKey">
+
+      <div id="editCatTab1" class="edit-cat-tab-content active">
+        <div class="form-section">
+          <div class="form-section-title">🎨 Tampilan & Grup</div>
+          <div class="form-row">
+            <div class="form-group"><label>Icon (emoji)</label><input id="editIcon" placeholder="📌"></div>
+            <div class="form-group"><label>Warna (hex)</label><input id="editColor" type="color" style="height:38px"></div>
+          </div>
+          <div class="form-group"><label>Label Kategori</label><input id="editLabel" placeholder="Problem Solving"></div>
+          <div class="form-group"><label>Nama Grup (Untuk Tab Menu)</label><input id="editGroup" placeholder="Misal: Negosiasi, Konflik"></div>
+          <div class="form-group"><label>Placeholder Textarea</label><textarea id="editPlaceholder" rows="3"></textarea></div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">ℹ️ Info Tooltip</div>
+          <div class="form-group"><label>Deskripsi Singkat</label><textarea id="editInfoDesc" rows="2"></textarea></div>
+          <div class="form-group"><label>Sejarah Singkat</label><textarea id="editInfoHistory" rows="2"></textarea></div>
+          <div class="form-group"><label>Pengembang / Tokoh</label><input id="editInfoAuthor"></div>
+          <div class="form-group"><label>Cocok Untuk Apa</label><textarea id="editInfoUseFor" rows="2"></textarea></div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">🤖 Prompt Configuration</div>
+          <div class="form-group"><label>Role AI</label><input id="editRole" placeholder="Anda adalah ..."></div>
+          <div class="form-group"><label>Output Name</label><input id="editOutputName" placeholder="NASKAH LENGKAP"></div>
+          <div class="form-group"><label>Pick Label</label><input id="editPickLabel" placeholder="jenis metode"></div>
+          <div class="form-group"><label>Extra Rules</label><textarea id="editExtraRules" rows="3"></textarea></div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">🧩 Output Modules (enable per kategori)</div>
+          <div id="editModulesList"></div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">📋 Menu Pilihan</div>
+          <div id="editMenuList"></div>
+          <button class="btn btn-outline btn-sm" onclick="addMenuItem()" style="margin-top:6px; width: 100%">➕ Tambah Menu Item</button>
+        </div>
+      </div>
+
+      <div id="editCatTab2" class="edit-cat-tab-content">
+        <div class="hint">Paste/Edit JSON keseluruhan kategori di sini. Pastikan format JSON valid.</div>
+        <textarea id="editCatJson" class="json-textarea" rows="18" placeholder="{}"></textarea>
+        <button class="btn btn-outline btn-sm" onclick="formatJsonTextarea()" style="margin-top:8px; width: 100%">✨ Format JSON</button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeEditCategory()">Batal</button>
+      <button class="btn btn-primary" onclick="saveCategoryEdit()">💾 Simpan Kategori</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://mysupplier.my.id/api/contacts_filter_dinamis6';
+const USERS_TABLE = 'users';
+const KONTROL_TABLE = 'kontrol_admin';
+const KONTROL_ID = 10;
+const SECRET = 'admin';
+const STORAGE_KEY = 'ai_tools_admin_user_2';
+
+const DEFAULT_MODULES = {
+  analisis_utama:   { title:'ANALISIS & FRAMEWORK', desc:'Berisi analisis mendalam.' },
+  naskah_utama:     { title:'NASKAH / PANDUAN', desc:'Berisi naskah lengkap.' },
+  script_komunikasi:{ title:'SCRIPT PERCAKAPAN', desc:'Draft percakapan siap pakai.' },
+  action_plan:      { title:'ACTION PLAN', desc:'Langkah konkret.' }
+};
+const DEFAULT_MASTER_TOGGLES = { analisis_utama: true, naskah_utama: true, script_komunikasi: true, action_plan: true };
+
+const DEFAULT_CATEGORIES = {
+  problem_solving: { group:'Problem Solving', aktif:true, theme:{icon:'🧩',color:'#3182ce'}, info:{desc:'Metode mencari akar masalah.',history:'Toyota 1950-an.',author:'Taiichi Ohno',use_for:'Perbaikan proses.'}, ui:{label:'Problem Solving',placeholder:'Tulis masalah...'}, prompt:{role:'Problem Solver',outputName:'SOLUSI',pickLabel:'metode',extraRules:'',formatRules:[]}, modules:[{key:'analisis_utama',enabled:true}], menu:[{label:'5 Whys',desc:'...'}] },
+  negotiation: { group:'Negotiation', aktif:true, theme:{icon:'🤝',color:'#38a169'}, info:{desc:'Teknik win-win.',history:'Harvard Project 1970-an.',author:'Roger Fisher',use_for:'Negosiasi bisnis.'}, ui:{label:'Negotiation Strategy',placeholder:'Tulis negosiasi...'}, prompt:{role:'Negotiator',outputName:'STRATEGI',pickLabel:'teknik',extraRules:'',formatRules:[]}, modules:[{key:'naskah_utama',enabled:true}], menu:[{label:'Harvard',desc:'...'}] }
+};
+
+let currentUser = null;
+let isAdmin = false;
+let CATEGORIES = {};
+let OUTPUT_MODULES = {};
+let MASTER_TOGGLES = {};
+let hasUnsavedChanges = false;
+let editingMenuItems = [];
+let editingCategoryData = null;
+let currentEditCatTab = 1;
+let currentAdminGroup = 'Semua'; 
+
+function getStoredUser(){
+  try{ const d = localStorage.getItem(STORAGE_KEY); if(d){ const p = JSON.parse(d); if(p.username && p.timestamp && (Date.now()-p.timestamp)/(1000*60*60*24) < 7) return p.username; } }catch(e){}
+  return null;
+}
+function saveUser(u){ localStorage.setItem(STORAGE_KEY, JSON.stringify({ username:u, timestamp:Date.now() })); }
+function clearUser(){ localStorage.removeItem(STORAGE_KEY); }
+
+function checkAutoLogin(){
+  const u = getStoredUser();
+  if(u){ currentUser = u; isAdmin = (u === 'admin'); showApp(); return true; }
+  return false;
+}
+
+function showApp(){
+  document.getElementById('loginOverlay').classList.remove('active');
+  document.getElementById('mainContent').classList.add('visible');
+  document.getElementById('headerUser').textContent = currentUser + (isAdmin ? ' 👑' : '');
+  loadConfig();
+}
+
+async function doLogin(){
+  const u = document.getElementById('loginUsername').value.trim();
+  const p = document.getElementById('loginPassword').value.trim();
+  if(!u || !p){ showLoginError('Username & password wajib'); return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Memeriksa...';
+  try{
+    const r = await fetch(`${API_URL}?table=${USERS_TABLE}`, { headers: { 'Content-Type':'application/json','X-Custom-Auth':SECRET,'X-Table-Name':USERS_TABLE,'X-Role':'admin' } });
+    const res = await r.json();
+    if(res.success && res.data){
+      const user = res.data.find(x => x.x_01 === u && x.x_02 === p);
+      if(user){
+        if(u !== 'admin'){ showLoginError('Hanya admin yang bisa akses panel ini'); return; }
+        currentUser = u; isAdmin = true; saveUser(u); showApp();
+        showToast('✅ Login berhasil', 'success');
+      } else showLoginError('Username atau password salah');
+    } else showLoginError('Gagal ambil data user');
+  } catch(e){ showLoginError('Gagal: ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = 'Login'; }
+}
+
+function showLoginError(msg){ const el = document.getElementById('loginError'); el.textContent = '❌ ' + msg; el.classList.add('show'); }
+function doLogout(){
+  if(!confirm('Logout dari admin panel?')) return;
+  clearUser(); currentUser = null; isAdmin = false;
+  document.getElementById('loginOverlay').classList.add('active');
+  document.getElementById('mainContent').classList.remove('visible');
+  showToast('👋 Logout', 'info');
+}
+
+function getHeaders(){ return { 'Content-Type':'application/json','X-Custom-Auth':SECRET,'X-Table-Name':KONTROL_TABLE,'X-Role':'admin' }; }
+async function apiFetch(endpoint, options = {}){
+  const url = `${API_URL}?table=${KONTROL_TABLE}${endpoint}`;
+  const r = await fetch(url, { ...options, headers: { ...getHeaders(), ...(options.headers||{}) } });
+  if(!r.ok){ const e = await r.json().catch(() => ({})); throw new Error(e.error || e.message || 'HTTP ' + r.status); }
+  return r.json();
+}
+
+async function loadConfig(){
+  try{
+    const res = await apiFetch('');
+    if(res.success && res.data){
+      const row = res.data.find(r => r.id_x == KONTROL_ID);
+      if(row && row.x_01){
+        try{ const cfg = JSON.parse(row.x_01); CATEGORIES = cfg.categories || {}; OUTPUT_MODULES = cfg.outputModules || DEFAULT_MODULES; }
+        catch(e){ CATEGORIES = {}; OUTPUT_MODULES = DEFAULT_MODULES; }
+        MASTER_TOGGLES = {
+          analisis_utama: row.x_05 === '1' || row.x_05 === 1, naskah_utama: row.x_06 === '1' || row.x_06 === 1,
+          script_komunikasi: row.x_07 === '1' || row.x_07 === 1, action_plan: row.x_08 === '1' || row.x_08 === 1
+        };
+      } else {
+        CATEGORIES = {}; OUTPUT_MODULES = DEFAULT_MODULES; MASTER_TOGGLES = { ...DEFAULT_MASTER_TOGGLES };
+        showToast('ℹ️ Config kosong. Klik "Seed Default" atau "Tambah Kategori"', 'info');
+      }
+    }
+  } catch(e){
+    console.error('Load error:', e);
+    CATEGORIES = {}; OUTPUT_MODULES = DEFAULT_MODULES; MASTER_TOGGLES = { ...DEFAULT_MASTER_TOGGLES };
+    showToast('⚠️ Gagal load dari DB, mulai kosong', 'error');
+  }
+  renderAll(); setSaveStatus('saved');
+}
+
+async function saveToDb(){
+  setSaveStatus('saving');
+  try{
+    const payload = {
+      x_01: JSON.stringify({ categories: CATEGORIES, outputModules: OUTPUT_MODULES }),
+      x_02: new Date().toISOString(), x_03: currentUser, x_04: '1.0',
+      x_05: MASTER_TOGGLES.analisis_utama ? '1' : '0', x_06: MASTER_TOGGLES.naskah_utama ? '1' : '0',
+      x_07: MASTER_TOGGLES.script_komunikasi ? '1' : '0', x_08: MASTER_TOGGLES.action_plan ? '1' : '0'
+    };
+    const check = await apiFetch('');
+    const exists = check.success && check.data && check.data.some(r => r.id_x == KONTROL_ID);
+    if(exists) await apiFetch(`&id_x=${KONTROL_ID}`, { method:'PUT', body: JSON.stringify(payload) });
+    else await apiFetch('', { method:'POST', body: JSON.stringify(payload) });
+    hasUnsavedChanges = false; setSaveStatus('saved');
+    showToast('✅ Config berhasil disimpan ke DB', 'success');
+  } catch(e){ setSaveStatus('error'); showToast('❌ Gagal simpan: ' + e.message, 'error'); }
+}
+
+function setSaveStatus(state){
+  const el = document.getElementById('saveStatus');
+  if(state === 'saved'){ el.className = 'save-status saved'; el.textContent = '✓ Tersimpan'; }
+  else if(state === 'dirty'){ el.className = 'save-status dirty'; el.textContent = '⚠️ Belum disimpan'; hasUnsavedChanges = true; }
+  else if(state === 'saving'){ el.className = 'save-status'; el.textContent = '⏳ Menyimpan...'; }
+  else if(state === 'error'){ el.className = 'save-status error'; el.textContent = '❌ Gagal simpan'; }
+}
+
+function renderAll(){ 
+  renderAdminGroupTabs(); 
+  renderCategoryList(); 
+  renderGlobalToggles(); 
+  renderModuleLibrary(); 
+}
+
+function renderAdminGroupTabs() {
+  const container = document.getElementById('adminGroupTabsContainer');
+  if (!container) return;
+  const groupCounts = {}; let total = 0;
+  Object.values(CATEGORIES).forEach(c => {
+    const gName = c.group ? c.group.trim() : 'Lainnya';
+    groupCounts[gName] = (groupCounts[gName] || 0) + 1; total++;
+  });
+  let html = `<button class="admin-group-tab-btn ${currentAdminGroup === 'Semua' ? 'active' : ''}" onclick="switchAdminGroup('Semua')">Semua (${total})</button>`;
+  for (const [gName, count] of Object.entries(groupCounts)) {
+    html += `<button class="admin-group-tab-btn ${currentAdminGroup === gName ? 'active' : ''}" onclick="switchAdminGroup('${gName}')">${gName} (${count})</button>`;
+  }
+  container.innerHTML = html;
+}
+
+function switchAdminGroup(groupName) {
+  currentAdminGroup = groupName; renderAdminGroupTabs(); renderCategoryList();
+}
+
+function renderCategoryList(){
+  const container = document.getElementById('categoryList');
+  let keys = Object.keys(CATEGORIES);
+  if (currentAdminGroup !== 'Semua') {
+    keys = keys.filter(k => (CATEGORIES[k].group || 'Lainnya') === currentAdminGroup);
+  }
+  if(!keys.length){ 
+    container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><h3>Tidak ada kategori</h3><p>Belum ada kategori di grup ini.</p></div>'; 
+    return; 
+  }
+  container.innerHTML = keys.map((key, i) => {
+    const c = CATEGORIES[key];
+    const icon = (c.theme && c.theme.icon) || '📌';
+    const color = (c.theme && c.theme.color) || '#e53e3e';
+    const modCount = (c.modules || []).filter(m => m.enabled).length;
+    const isInactive = c.aktif === false;
+    const toggleLabel = isInactive ? 'Aktifkan' : 'Nonaktifkan';
+    const toggleIcon = isInactive ? '👁️' : '🚫';
+
+    return `
+      <div class="category-item ${isInactive ? 'inactive' : ''}" style="border-left:5px solid ${color}">
+        <div class="cat-drag">
+          <button onclick="moveCat('${key}', -1)" title="Naik">▲</button>
+          <button onclick="moveCat('${key}', 1)" title="Turun">▼</button>
+        </div>
+        <div class="cat-icon">${icon}</div>
+        <div class="cat-body">
+          <div class="cat-name">${escapeHtml(c.ui.label)} ${isInactive ? '<span style="font-size:10px;color:#fc8181">(nonaktif)</span>' : ''}</div>
+          <div class="cat-meta">🗂️ Grup: <b>${c.group || 'Lainnya'}</b> <br> 🔑 ${key} · ${(c.menu||[]).length} menu · ${modCount} module</div>
+        </div>
+        <div class="cat-actions">
+          <button class="btn btn-outline btn-xs btn-tooltip" data-label="${toggleLabel}" onclick="toggleCategoryActive('${key}')">
+            <span>${toggleIcon}</span> <span class="btn-text">${toggleLabel}</span>
+          </button>
+          <button class="btn btn-primary btn-xs btn-tooltip" data-label="Edit" onclick="openEditCategory('${key}')">
+            <span>✏️</span> <span class="btn-text">Edit</span>
+          </button>
+          <button class="btn btn-outline btn-xs btn-tooltip" data-label="Duplikat" onclick="duplicateCategory('${key}')">
+            <span>📋</span> <span class="btn-text">Duplikat</span>
+          </button>
+          <button class="btn btn-danger btn-xs btn-tooltip" data-label="Hapus" onclick="deleteCategory('${key}')">
+            <span>🗑️</span> <span class="btn-text">Hapus</span>
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderGlobalToggles(){
+  const container = document.getElementById('globalToggleList');
+  container.innerHTML = Object.keys(DEFAULT_MODULES).map(key => {
+    const on = MASTER_TOGGLES[key] !== false;
+    const mod = OUTPUT_MODULES[key] || DEFAULT_MODULES[key];
+    return `
+      <div class="toggle-card ${on ? 'on' : 'off'}">
+        <input type="checkbox" ${on?'checked':''} onchange="toggleMaster('${key}', this.checked)">
+        <div class="toggle-info"><div class="toggle-title">${escapeHtml(mod.title || key)}</div><div class="toggle-key">key: ${key}</div></div>
+        <span class="toggle-badge ${on?'on':'off'}">${on ? 'ON' : 'OFF'}</span>
+      </div>`;
+  }).join('');
+}
+
+function renderModuleLibrary(){
+  const container = document.getElementById('moduleLibrary');
+  container.innerHTML = Object.keys(OUTPUT_MODULES).map(key => {
+    const m = OUTPUT_MODULES[key];
+    return `
+      <div class="module-lib-card">
+        <h4>🔑 ${key}</h4>
+        <input type="text" value="${escapeHtml(m.title||'')}" placeholder="Title modul" onchange="updateModule('${key}', 'title', this.value)">
+        <textarea rows="2" placeholder="Desc modul" onchange="updateModule('${key}', 'desc', this.value)">${escapeHtml(m.desc||'')}</textarea>
+      </div>`;
+  }).join('');
+}
+
+function moveCat(key, dir){
+  const keys = Object.keys(CATEGORIES); const i = keys.indexOf(key); const j = i + dir;
+  if(j < 0 || j >= keys.length) return;
+  const newObj = {}; [keys[i], keys[j]] = [keys[j], keys[i]];
+  keys.forEach(k => { newObj[k] = CATEGORIES[k]; }); CATEGORIES = newObj;
+  renderCategoryList(); setSaveStatus('dirty');
+}
+
+function toggleCategoryActive(key){ CATEGORIES[key].aktif = !CATEGORIES[key].aktif; renderCategoryList(); setSaveStatus('dirty'); }
+
+function duplicateCategory(key){
+  const newKey = prompt('Key untuk duplikat:', key + '_copy');
+  if(!newKey || !newKey.trim()) return;
+  if(CATEGORIES[newKey]){ showToast('Key sudah ada', 'error'); return; }
+  CATEGORIES[newKey] = JSON.parse(JSON.stringify(CATEGORIES[key]));
+  CATEGORIES[newKey].ui.label = CATEGORIES[newKey].ui.label + ' (Copy)';
+  renderCategoryList(); renderAdminGroupTabs(); setSaveStatus('dirty'); showToast('✅ Kategori diduplikat', 'success');
+}
+
+function deleteCategory(key){
+  if(!confirm(`Hapus kategori "${key}"?`)) return;
+  delete CATEGORIES[key]; renderCategoryList(); renderAdminGroupTabs(); setSaveStatus('dirty'); showToast('✅ Kategori dihapus', 'info');
+}
+
+function openEditCategory(key){
+  const isNew = !key;
+  document.getElementById('editCatTitle').textContent = isNew ? '➕ Tambah Kategori Baru' : '✏️ Edit Kategori';
+  document.getElementById('editCatKey').value = key || '';
+  if(isNew){
+    editingCategoryData = {
+      group: 'Lainnya', aktif: true, theme: { icon:'📌', color:'#e53e3e' },
+      info: { desc: '', history: '', author: '', use_for: '' },
+      ui: { label:'Kategori Baru', placeholder:'Tulis ide di sini...' },
+      prompt: { role:'', outputName:'', pickLabel:'jenis pilihan', extraRules:'', formatRules:[] },
+      modules: [{ key:'naskah_utama', enabled:true }], menu: []
+    };
+  } else {
+    editingCategoryData = JSON.parse(JSON.stringify(CATEGORIES[key]));
+    if(!editingCategoryData.info) editingCategoryData.info = { desc:'', history:'', author:'', use_for:'' };
+  }
+  editingMenuItems = editingCategoryData.menu || [];
+  renderEditCatTab1(); renderEditCatTab2(); switchEditCatTab(1);
+  document.getElementById('editCategoryModal').classList.add('active');
+}
+
+function switchEditCatTab(tabNum) {
+  if (currentEditCatTab === 1 && tabNum === 2) { syncTab1ToData(); renderEditCatTab2(); }
+  else if (currentEditCatTab === 2 && tabNum === 1) { if (!syncTab2ToData()) return; renderEditCatTab1(); }
+  currentEditCatTab = tabNum;
+  document.querySelectorAll('.edit-cat-tab-btn').forEach((btn, idx) => btn.classList.toggle('active', idx === tabNum - 1));
+  document.querySelectorAll('.edit-cat-tab-content').forEach((content, idx) => content.classList.toggle('active', idx === tabNum - 1));
+}
+
+function syncTab1ToData() {
+  const modules = [];
+  document.querySelectorAll('#editModulesList input[type="checkbox"]').forEach(cb => { if(cb.checked) modules.push({ key: cb.dataset.modKey, enabled: true }); });
+  editingCategoryData.group = document.getElementById('editGroup').value.trim() || 'Lainnya';
+  editingCategoryData.theme = { icon: document.getElementById('editIcon').value || '📌', color: document.getElementById('editColor').value || '#e53e3e' };
+  editingCategoryData.info = {
+    desc: document.getElementById('editInfoDesc').value,
+    history: document.getElementById('editInfoHistory').value,
+    author: document.getElementById('editInfoAuthor').value,
+    use_for: document.getElementById('editInfoUseFor').value
+  };
+  editingCategoryData.ui = { label: document.getElementById('editLabel').value, placeholder: document.getElementById('editPlaceholder').value };
+  editingCategoryData.prompt = { ...editingCategoryData.prompt, role: document.getElementById('editRole').value, outputName: document.getElementById('editOutputName').value, pickLabel: document.getElementById('editPickLabel').value || 'jenis pilihan', extraRules: document.getElementById('editExtraRules').value };
+  editingCategoryData.modules = modules;
+  editingCategoryData.menu = editingMenuItems.filter(m => m.label && m.label.trim());
+}
+
+function syncTab2ToData() {
+  const jsonStr = document.getElementById('editCatJson').value.trim();
+  if(!jsonStr) return false;
+  try {
+    const parsed = JSON.parse(jsonStr);
+    if (!parsed.ui || !parsed.prompt || !parsed.theme) throw new Error('Struktur JSON tidak valid.');
+    editingCategoryData = parsed; editingMenuItems = editingCategoryData.menu || []; return true;
+  } catch(e) { showToast('❌ JSON tidak valid: ' + e.message, 'error'); return false; }
+}
+
+function formatJsonTextarea() {
+  try { const parsed = JSON.parse(document.getElementById('editCatJson').value); document.getElementById('editCatJson').value = JSON.stringify(parsed, null, 2); showToast('✅ JSON diformat', 'success'); }
+  catch(e) { showToast('❌ JSON tidak valid: ' + e.message, 'error'); }
+}
+
+function renderEditCatTab1() {
+  document.getElementById('editIcon').value = editingCategoryData.theme?.icon || '📌';
+  document.getElementById('editColor').value = editingCategoryData.theme?.color || '#e53e3e';
+  document.getElementById('editInfoDesc').value = editingCategoryData.info?.desc || '';
+  document.getElementById('editInfoHistory').value = editingCategoryData.info?.history || '';
+  document.getElementById('editInfoAuthor').value = editingCategoryData.info?.author || '';
+  document.getElementById('editInfoUseFor').value = editingCategoryData.info?.use_for || '';
+  document.getElementById('editLabel').value = editingCategoryData.ui?.label || '';
+  document.getElementById('editGroup').value = editingCategoryData.group || 'Lainnya';
+  document.getElementById('editPlaceholder').value = editingCategoryData.ui?.placeholder || '';
+  document.getElementById('editRole').value = editingCategoryData.prompt?.role || '';
+  document.getElementById('editOutputName').value = editingCategoryData.prompt?.outputName || '';
+  document.getElementById('editPickLabel').value = editingCategoryData.prompt?.pickLabel || '';
+  document.getElementById('editExtraRules').value = editingCategoryData.prompt?.extraRules || '';
+
+  const modContainer = document.getElementById('editModulesList');
+  const catModuleKeys = (editingCategoryData.modules || []).map(m => m.key);
+  modContainer.innerHTML = Object.keys(OUTPUT_MODULES).map(k => {
+    const on = catModuleKeys.includes(k);
+    return `<label class="module-check"><input type="checkbox" ${on?'checked':''} data-mod-key="${k}"><span class="mod-title">${escapeHtml(OUTPUT_MODULES[k].title || k)}</span><span class="mod-key">${k}</span></label>`;
+  }).join('');
+  renderEditMenuList();
+}
+
+function renderEditCatTab2() { document.getElementById('editCatJson').value = JSON.stringify(editingCategoryData, null, 2); }
+
+function renderEditMenuList(){
+  editingCategoryData.menu = editingMenuItems;
+  const container = document.getElementById('editMenuList');
+  if(!editingMenuItems.length){ container.innerHTML = '<p style="color:#a0aec0;font-size:12px;text-align:center;padding:10px">Belum ada menu.</p>'; return; }
+  container.innerHTML = editingMenuItems.map((m, i) => `
+    <div class="menu-item-card">
+      <span style="font-weight:700;color:#e53e3e;font-size:12px;padding-top:6px">${i+1}.</span>
+      <div class="menu-item-fields">
+        <input type="text" value="${escapeHtml(m.label||'')}" placeholder="Label menu" onchange="editingMenuItems[${i}].label = this.value; setSaveStatus('dirty')">
+        <textarea rows="2" placeholder="Deskripsi" onchange="editingMenuItems[${i}].desc = this.value; setSaveStatus('dirty')">${escapeHtml(m.desc||'')}</textarea>
+      </div>
+      <div class="menu-item-actions">
+        <button class="btn btn-outline btn-xs" onclick="moveMenuItem(${i}, -1)" ${i===0?'disabled':''}>▲</button>
+        <button class="btn btn-outline btn-xs" onclick="moveMenuItem(${i}, 1)" ${i===editingMenuItems.length-1?'disabled':''}>▼</button>
+        <button class="btn btn-danger btn-xs" onclick="removeMenuItem(${i})">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+function addMenuItem(){ editingMenuItems.push({ label:'', desc:'' }); renderEditMenuList(); setSaveStatus('dirty'); }
+function removeMenuItem(i){ editingMenuItems.splice(i, 1); renderEditMenuList(); setSaveStatus('dirty'); }
+function moveMenuItem(i, dir){ const j = i + dir; if(j < 0 || j >= editingMenuItems.length) return; [editingMenuItems[i], editingMenuItems[j]] = [editingMenuItems[j], editingMenuItems[i]]; renderEditMenuList(); setSaveStatus('dirty'); }
+
+function saveCategoryEdit(){
+  if (currentEditCatTab === 1) syncTab1ToData(); else { if (!syncTab2ToData()) return; }
+  const key = document.getElementById('editCatKey').value;
+  if(!editingCategoryData.ui.label || !editingCategoryData.ui.label.trim()){ showToast('❌ Label kategori wajib diisi', 'error'); return; }
+  if(!editingCategoryData.modules || !editingCategoryData.modules.length){ showToast('❌ Minimal 1 module aktif', 'error'); return; }
+
+  let finalKey = key;
+  if(!finalKey){
+    finalKey = prompt('Key kategori (huruf kecil, tanpa spasi):', 'kategori_baru');
+    if(!finalKey || !finalKey.trim()) return;
+    finalKey = finalKey.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    if(CATEGORIES[finalKey]){ showToast('❌ Key sudah ada', 'error'); return; }
+  }
+
+  editingCategoryData.aktif = key ? CATEGORIES[key].aktif : true;
+  CATEGORIES[finalKey] = editingCategoryData;
+  closeEditCategory(); renderCategoryList(); renderAdminGroupTabs(); setSaveStatus('dirty');
+  showToast('✅ Kategori disimpan. Klik "Simpan Semua" untuk commit.', 'success');
+}
+
+function closeEditCategory(){ document.getElementById('editCategoryModal').classList.remove('active'); editingMenuItems = []; editingCategoryData = null; }
+function toggleMaster(key, on){ MASTER_TOGGLES[key] = on; renderGlobalToggles(); setSaveStatus('dirty'); }
+function updateModule(key, field, value){ if(!OUTPUT_MODULES[key]) OUTPUT_MODULES[key] = {}; OUTPUT_MODULES[key][field] = value; setSaveStatus('dirty'); }
+
+function seedDefault(){
+  if(Object.keys(CATEGORIES).length && !confirm('Ini akan MENGGANTI semua kategori yang ada dengan DEFAULT_CONFIG. Lanjut?')) return;
+  CATEGORIES = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+  OUTPUT_MODULES = JSON.parse(JSON.stringify(DEFAULT_MODULES));
+  MASTER_TOGGLES = { ...DEFAULT_MASTER_TOGGLES };
+  renderAll(); setSaveStatus('dirty'); showToast('✅ Seed default dimuat. Klik "Simpan Semua" untuk commit.', 'success');
+}
+
+function exportConfig(){
+  const data = { categories: CATEGORIES, outputModules: OUTPUT_MODULES, masterToggles: MASTER_TOGGLES, exported_at: new Date().toISOString(), version: '1.1' };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob); const a = document.createElement('a');
+  a.href = url; a.download = `kontrol_admin_2_backup_${Date.now()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('📤 Config diexport', 'success');
+}
+function importConfig(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try{
+      const data = JSON.parse(ev.target.result);
+      if(!data.categories){ showToast('❌ File tidak valid (missing categories)', 'error'); return; }
+      if(!confirm('Import akan MENGGANTI config saat ini di memory. Lanjut?')) return;
+      CATEGORIES = data.categories || {}; OUTPUT_MODULES = data.outputModules || DEFAULT_MODULES; MASTER_TOGGLES = data.masterToggles || { ...DEFAULT_MASTER_TOGGLES };
+      renderAll(); setSaveStatus('dirty'); showToast('✅ Import berhasil. Klik "Simpan Semua" untuk commit.', 'success');
+    } catch(err){ showToast('❌ Gagal parse JSON: ' + err.message, 'error'); }
+  };
+  reader.readAsText(file); e.target.value = '';
+}
+
+function switchTab(tabId){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+}
+
+function escapeHtml(s){ if(s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function showToast(msg, type='info'){
+  const ex = document.querySelector('.toast'); if(ex) ex.remove();
+  const t = document.createElement('div'); t.className = 'toast ' + type; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(20px)'; t.style.transition = '.3s'; setTimeout(() => t.remove(), 300); }, 3500);
+}
+
+window.addEventListener('beforeunload', e => { if(hasUnsavedChanges){ e.preventDefault(); e.returnValue = ''; } });
+document.addEventListener('DOMContentLoaded', () => {
+  if(!checkAutoLogin()) document.getElementById('loginOverlay').classList.add('active');
+  document.getElementById('loginPassword').addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
+  document.getElementById('editCategoryModal').addEventListener('click', e => { if(e.target.id === 'editCategoryModal') closeEditCategory(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && document.getElementById('editCategoryModal').classList.contains('active')) closeEditCategory(); });
+});
+</script>
+</body>
+</html>
