@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seeder Sistem 4 — Design Style Generator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4f8;min-height:100vh;padding:20px;color:#2d3748}
+.container{max-width:800px;margin:0 auto}
+.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,.08);margin-bottom:16px}
+h1{font-size:22px;margin-bottom:4px;color:#1a2332}
+.subtitle{color:#718096;font-size:13px;margin-bottom:20px}
+h2{font-size:16px;margin-bottom:12px;color:#2d3748}
+input,textarea{padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;width:100%;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:#8b5cf6}
+.btn{padding:10px 20px;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;transition:.15s}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#8b5cf6;color:#fff}
+.btn-success{background:#48bb78;color:#fff}
+.btn-danger{background:#fc8181;color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+label{font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px}
+.form-group{margin-bottom:12px}
+.status{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:12px;display:none;line-height:1.5}
+.status.show{display:block}
+.status.ok{background:#f0fff4;color:#22543d;border-left:4px solid #48bb78}
+.status.err{background:#fff5f5;color:#c53030;border-left:4px solid #fc8181}
+.status.info{background:#ebf8ff;color:#2c5282;border-left:4px solid #4299e1}
+.info-box{background:#f7fafc;padding:14px 16px;border-radius:10px;font-size:12px;line-height:1.7;color:#4a5568;border-left:4px solid #8b5cf6;margin-bottom:16px}
+.code{background:#edf2f7;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:11px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>🌱 Seeder Sistem 4 (Design Style)</h1>
+    <p class="subtitle">Seed config ke <code class="code">kontrol_admin</code> baris <code class="code">id_x = 12</code></p>
+    <div class="info-box">
+      <strong>⚙️ File ini hanya dijalankan SEKALI.</strong><br>
+      Menghasilkan 3 Output: Kode Index (Statis), Kode Admin (Manajemen Form & Upload), dan Deskripsi Gambar.
+    </div>
+
+    <h2>🔐 Login Admin</h2>
+    <div class="form-group"><label>Username</label><input type="text" id="u" placeholder="admin"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="p" placeholder="password"></div>
+    <div class="row">
+      <button class="btn btn-primary" id="btnCheck" onclick="checkCurrent()">🔍 Cek Config</button>
+      <button class="btn btn-success" id="btnSeed" onclick="doSeed()" disabled>🌱 Seed ke id_x=12</button>
+      <button class="btn btn-danger" id="btnDelete" onclick="doDelete()" disabled>🗑️ Hapus Row id_x=12</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://mysupplier.my.id/api/contacts_filter_dinamis6';
+const USERS_TABLE = 'admins'; 
+const KONTROL_TABLE = 'kontrol_admin';
+const KONTROL_ID = 12; 
+const SECRET = 'admin';
+
+const DEFAULT_MODULES = {
+  kode_index:      { title:'KODE INDEX.HTML (STATIS)', desc:'Kode HTML landing page statis (tanpa login). Wajib ada form yang mengirim data ke database.' },
+  kode_admin:      { title:'KODE ADMIN.HTML', desc:'Kode HTML admin (login admins). Untuk melihat data form masuk & upload gambar R2.' },
+  deskripsi_gambar:{ title:'DESKRIPSI GAMBAR (TXT)', desc:'Daftar deskripsi/prompt gambar siap pakai untuk AI Image Generator.' }
+};
+
+// PROMPT ATURAN KERAS
+const BASE_RULES = `
+=== ATURAN KERAS SISTEM (WAJIB DIPATUHI) ===
+1. Anda WAJIB menghasilkan TEPAT 3 BAGIAN output: KODE INDEX.HTML, KODE ADMIN.HTML, dan DESKRIPSI GAMBAR.
+2. API_URL: 'https://mysupplier.my.id/api/contacts_filter_dinamis6'
+3. UPLOAD_R2: 'https://mysupplier.my.id/api/upload_r2_lidan'
+4. CDN_URL: 'https://assets.mysupplier.my.id/'
+5. KONSEP INDEX.HTML (SANGAT PENTING):
+   - Desain HTML sepenuhnya STATIS (teks, gambar, warna di-hardcode).
+   - TIDAK BOLEH ada proses fetch data dari database saat halaman dimuat.
+   - WAJIB memiliki minimal 1 FORM (Contact/Order/Waitlist) di bagian bawah.
+   - Form tersebut menggunakan JavaScript fetch() untuk POST data ke tabel (misal: leads_namaapp) dengan kolom x_01 (Nama), x_02 (Email/WA), x_03 (Pesan).
+6. KONSEP ADMIN.HTML:
+   - Login menggunakan tabel 'admins' (GET ?table=admins&x_01_eq=user&x_02_eq=pass).
+   - Menampilkan tabel data dari form yang dikirim user (leads_namaapp).
+   - WAJIB memiliki fitur utilitas "Upload Gambar R2" (untuk mendapatkan URL gambar yang akan dipaste manual ke index.html).
+7. DESKRIPSI GAMBAR:
+   - Berikan format teks (.txt) berisi prompt bahasa Inggris untuk AI Image Generator (Midjourney/DALL-E) sesuai gaya desain yang dipilih.
+8. Gunakan Tailwind CSS (CDN) untuk desain yang super modern, elegan, dan responsif.
+9. TERAPKAN GAYA DESAIN (STYLE) YANG DIPILIH USER DENGAN SANGAT KETAT.
+`;
+
+const DEFAULT_CATEGORIES = {
+  // GRUP 1: MODERN & MINIMALIST
+  style_neuomorphism: {
+    group: 'Modern & Minimalist', aktif: true, theme: { icon:'🧊', color:'#3b82f6' },
+    info: { desc: 'Gaya 3D lembut dengan bayangan dalam dan luar (emboss).', history: 'UI Trend 2020-an.', author: 'Design Trend', use_for: 'Aplikasi mobile, dashboard.' },
+    ui: { label:'Neumorphism', placeholder:`Contoh: Buatkan landing page untuk aplikasi keuangan "DuitKu". Gunakan gaya Neumorphism (tombol terlihat seperti timbul/3D dengan bayangan lembut).` },
+    prompt: { role:'Expert Frontend & UI/UX Designer', outputName:'3 FILE LANDING PAGE', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'deskripsi_gambar', enabled:true }],
+    menu: [{
+      label: 'Generate Landing Page',
+      desc: 'Membuat Landing Page gaya Neumorphism.',
+      prompt_override: `Buatkan Landing Page SaaS. Gunakan gaya desain **Neumorphism** (warna background abu-abu terang, bayangan box-shadow ganda untuk efek timbul/cekung). Form di index.html akan POST ke tabel 'leads_saas'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  style_glassmorphism: {
+    group: 'Modern & Minimalist', aktif: true, theme: { icon:'🪟', color:'#3b82f6' },
+    info: { desc: 'Efek kaca transparan dengan blur (frosted glass).', history: 'UI Trend 2021-an (Apple).', author: 'Design Trend', use_for: 'Website startup, teknologi.' },
+    ui: { label:'Glassmorphism', placeholder:`Contoh: Landing page startup AI. Gunakan gaya Glassmorphism (kartu transparan, blur, warna gradient di background).` },
+    prompt: { role:'Expert Frontend & UI/UX Designer', outputName:'3 FILE LANDING PAGE', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'deskripsi_gambar', enabled:true }],
+    menu: [{
+      label: 'Generate Landing Page',
+      desc: 'Membuat Landing Page gaya Glassmorphism.',
+      prompt_override: `Buatkan Landing Page. Gunakan gaya desain **Glassmorphism** (background gradient cerah, kartu dengan efek backdrop-blur, border putih transparan). Form di index.html akan POST ke tabel 'leads_startup'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  style_flat_design: {
+    group: 'Modern & Minimalist', aktif: true, theme: { icon:'🎨', color:'#3b82f6' },
+    info: { desc: 'Warna solid tanpa bayangan (shadowless).', history: 'UI Trend 2013 (Apple iOS 7).', author: 'Design Trend', use_for: 'Website korporat, institusi.' },
+    ui: { label:'Flat Design', placeholder:`Contoh: Landing page layanan desain. Gunakan gaya Flat Design (warna-warna solid, tanpa bayangan, ikon simpel).` },
+    prompt: { role:'Expert Frontend & UI/UX Designer', outputName:'3 FILE LANDING PAGE', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'deskripsi_gambar', enabled:true }],
+    menu: [{
+      label: 'Generate Landing Page',
+      desc: 'Membuat Landing Page gaya Flat Design.',
+      prompt_override: `Buatkan Landing Page. Gunakan gaya desain **Flat Design** (warna solid kontras, tanpa box-shadow, tipografi sans-serif yang tegas). Form di index.html akan POST ke tabel 'leads_agensi'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  style_minimalist: {
+    group: 'Modern & Minimalist', aktif: true, theme: { icon:'⬜', color:'#3b82f6' },
+    info: { desc: 'Sangat bersih, banyak ruang kosong (white space).', history: 'Desain abadi.', author: 'Design Trend', use_for: 'Portofolio, agensi premium.' },
+    ui: { label:'Ultra Minimalist', placeholder:`Contoh: Landing page arsitek. Gunakan gaya Ultra Minimalist (hanya hitam-putih, banyak ruang kosong, tipografi elegan).` },
+    prompt: { role:'Expert Frontend & UI/UX Designer', outputName:'3 FILE LANDING PAGE', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'deskripsi_gambar', enabled:true }],
+    menu: [{
+      label: 'Generate Landing Page',
+      desc: 'Membuat Landing Page gaya Ultra Minimalist.',
+      prompt_override: `Buatkan Landing Page. Gunakan gaya desain **Ultra Minimalist** (dominan warna putih/hitam, font serif/sans-serif elegan, sangat sedikit elemen visual, fokus pada teks). Form di index.html akan POST ke tabel 'leads_arsitek'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+
+  // GRUP 2: BOLD & CREATIVE
+  style_brutalism: {
+    group: 'Bold & Creative', aktif: true, theme: { icon:'🧱', color:'#f59e0b' },
+    info: { desc: 'Gaya mentah, kontras tinggi, warna mencolok, border tebal.', history: 'Web Design Trend 2017.', author: 'Design Trend', use_for: 'Seniman, agensi kreatif, brand anti-mainstream.' },
+    ui: { label:'Neo-Brutalism', placeholder:`Contoh: Landing page agensi desain anak muda. Gunakan gaya Neo-Brutalism (warna kuning/pink neon, border hitam tebal, font besar).` },
+    prompt: { role:'Expert Frontend & UI/UX Designer', outputName:'3 FILE LANDING PAGE', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'deskripsi_gambar', enabled:true }],
+    menu: [{
+      label: 'Generate Landing Page',
+      desc: 'Membuat Landing Page gaya Brutalism.',
+      prompt_override: `Buatkan Landing Page. Gunakan gaya desain **Neo-Brutalism** (warna background kuning/pink neon, border hitam solid tebal 3-4px, typography sans-serif tebal, layout yang sengaja terlihat "kasar"). Form di index.html akan POST ke tabel 'leads_creative'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  style_retro: {
+    group: 'Bold & Creative', aktif: true, theme: { icon:'📻', color:'#f59e0b' },
+    info: { desc: 'Nuansa tahun 80-an/90-an dengan warna vintage.', history: 'Retro Trend 2020.', author: 'Design Trend', use_for: 'Kafe, clothing line, event.' },
+    ui: { label:'Retro / Vintage', placeholder:`Contoh: Landing page brand pakaian. Gunakan gaya Retro 80-an (warna pastel, gradient sunset, font retro).` },
+    prompt: { role:'Expert Frontend & UI/UX Designer', outputName:'3 FILE LANDING PAGE', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'deskripsi_gambar', enabled:true }],
+    menu: [{
+      label: 'Generate Landing Page',
+      desc: 'Membuat Landing Page gaya Retro.',
+      prompt_override: `Buatkan Landing Page. Gunakan gaya desain **Retro/Vintage 80-an** (warna gradient sunset ungu-oranye, font bergaya arcade/retro, elemen geometris). Form di index.html akan POST ke tabel 'leads_fashion'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  style_cyberpunk: {
+    group: 'Bold & Creative', aktif: true, theme: { icon:'🌆', color:'#f59e0b' },
+    info: { desc: 'Nuansa futuristik, neon, gelap, teknologi tinggi.', history: 'Sci-fi Genre.', author: 'Design Trend', use_for: 'Game, crypto, tech startup.' },
+    ui: { label:'Cyberpunk', placeholder:`Contoh: Landing page game mobile. Gunakan gaya Cyberpunk (background hitam, teks neon cyan/magenta, efek glow).` },
+    prompt: { role:'Expert Frontend & UI/UX Designer', outputName:'3 FILE LANDING PAGE', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'deskripsi_gambar', enabled:true }],
+    menu: [{
+      label: 'Generate Landing Page',
+      desc: 'Membuat Landing Page gaya Cyberpunk.',
+      prompt_override: `Buatkan Landing Page. Gunakan gaya desain **Cyberpunk** (background hitam pekat, teks dan border dengan efek neon glow cyan/magenta, font monospace/tech). Form di index.html akan POST ke tabel 'leads_game'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  style_maximalism: {
+    group: 'Bold & Creative', aktif: true, theme: { icon:'🎪', color:'#f59e0b' },
+    info: { desc: 'Penuh warna, penuh elemen, tidak takut ramai.', history: 'Kebalikan dari minimalis.', author: 'Design Trend', use_for: 'Event, festival, brand ramai.' },
+    ui: { label:'Maximalism', placeholder:`Contoh: Landing page festival musik. Gunakan gaya Maximalism (sangat banyak elemen visual, warna cerah, animasi).` },
+    prompt: { role:'Expert Frontend & UI/UX Designer', outputName:'3 FILE LANDING PAGE', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'deskripsi_gambar', enabled:true }],
+    menu: [{
+      label: 'Generate Landing Page',
+      desc: 'Membuat Landing Page gaya Maximalism.',
+      prompt_override: `Buatkan Landing Page. Gunakan gaya desain **Maximalism** (layout padat, banyak ornamen visual, warna-warni cerah, tipografi bervariasi). Form di index.html akan POST ke tabel 'leads_event'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+
+  // GRUP 3: CORPORATE & PROFESSIONAL
+  style_bento: {
+    group: 'Corporate & Professional', aktif: true, theme: { icon:'🍱', color:'#8b5cf6' },
+    info: { desc: 'Layout kotak-kotak rapi seperti kotak bento (khas Apple).', history: 'UI Trend 2023.', author: 'Apple Event', use_for: 'Showcase produk, portofolio, tech.' },
+    ui: { label:'Bento Box', placeholder:`Contoh: Landing page aplikasi produktivitas. Gunakan gaya Bento Box (grid kotak-kotak rapi, tiap kotak ada info/fitur).` },
+    prompt: { role:'Expert Frontend & UI/UX Designer', outputName:'3 FILE LANDING PAGE', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'deskripsi_gambar', enabled:true }],
+    menu: [{
+      label: 'Generate Landing Page',
+      desc: 'Membuat Landing Page gaya Bento Box.',
+      prompt_override: `Buatkan Landing Page. Gunakan gaya desain **Bento Box** (layout grid kotak-kotak rapi seperti kotak makan bento, tiap kotak berisi satu fitur/gambar dengan border-radius besar). Form di index.html akan POST ke tabel 'leads_app'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  style_material: {
+    group: 'Corporate & Professional', aktif: true, theme: { icon:'📱', color:'#8b5cf6' },
+    info: { desc: 'Gaya Google (kertas, bayangan halus, warna cerah).', history: 'Google (2014).', author: 'Google', use_for: 'Aplikasi Android, web enterprise.' },
+    ui: { label:'Material Design', placeholder:`Contoh: Landing page layanan edukasi. Gunakan gaya Material Design (bayangan elevasi, warna primary tegas, FAB).` },
+    prompt: { role:'Expert Frontend & UI/UX Designer', outputName:'3 FILE LANDING PAGE', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'deskripsi_gambar', enabled:true }],
+    menu: [{
+      label: 'Generate Landing Page',
+      desc: 'Membuat Landing Page gaya Material Design.',
+      prompt_override: `Buatkan Landing Page. Gunakan gaya desain **Material Design** (bayangan elevasi/box-shadow, warna primary dan accent yang tegas, tombol rounded, font Roboto). Form di index.html akan POST ke tabel 'leads_edukasi'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  style_swiss: {
+    group: 'Corporate & Professional', aktif: true, theme: { icon:'🇨🇭', color:'#8b5cf6' },
+    info: { desc: 'Tipografi tebal, layout grid kaku, warna minimalis.', history: 'Desain Swiss 1950-an.', author: 'Josef Müller-Brockmann', use_for: 'Institusi, perusahaan formal.' },
+    ui: { label:'Swiss Style', placeholder:`Contoh: Landing page firma hukum. Gunakan gaya Swiss Style (font sans-serif tebal, layout grid kaku, warna merah-hitam-putih).` },
+    prompt: { role:'Expert Frontend & UI/UX Designer', outputName:'3 FILE LANDING PAGE', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'deskripsi_gambar', enabled:true }],
+    menu: [{
+      label: 'Generate Landing Page',
+      desc: 'Membuat Landing Page gaya Swiss.',
+      prompt_override: `Buatkan Landing Page. Gunakan gaya desain **Swiss/International Typographic Style** (tipografi sans-serif tebal dan besar, grid layout yang kaku/rapi, warna minimalis seperti hitam-putih-merah). Form di index.html akan POST ke tabel 'leads_hukum'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+
+  // GRUP 4: ELEGANT & ORGANIC
+  style_luxury: {
+    group: 'Elegant & Organic', aktif: true, theme: { icon:'💎', color:'#10b981' },
+    info: { desc: 'Desain gelap elegan dengan aksen emas/perak.', history: 'Luxury Branding.', author: 'Design Trend', use_for: 'Produk mewah, properti, jam tangan.' },
+    ui: { label:'Luxury Dark', placeholder:`Contoh: Landing page perhiasan. Gunakan gaya Luxury Dark (background hitam, font serif emas, elegan).` },
+    prompt: { role:'Expert Frontend & UI/UX Designer', outputName:'3 FILE LANDING PAGE', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'deskripsi_gambar', enabled:true }],
+    menu: [{
+      label: 'Generate Landing Page',
+      desc: 'Membuat Landing Page gaya Luxury Dark.',
+      prompt_override: `Buatkan Landing Page. Gunakan gaya desain **Luxury Dark** (background hitam/dark grey, aksen emas/perak, font serif elegan, foto produk berkualitas tinggi). Form di index.html akan POST ke tabel 'leads_luxury'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  style_organic: {
+    group: 'Elegant & Organic', aktif: true, theme: { icon:'🌿', color:'#10b981' },
+    info: { desc: 'Warna alam (hijau, coklat), bentuk melengkung (blob).', history: 'Eco-friendly Trend.', author: 'Design Trend', use_for: 'Klinik, produk organik, pertanian.' },
+    ui: { label:'Organic Natural', placeholder:`Contoh: Landing page produk skincare organik. Gunakan gaya Organic (warna hijau earth-tone, bentuk blob, font lembut).` },
+    prompt: { role:'Expert Frontend & UI/UX Designer', outputName:'3 FILE LANDING PAGE', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'deskripsi_gambar', enabled:true }],
+    menu: [{
+      label: 'Generate Landing Page',
+      desc: 'Membuat Landing Page gaya Organic Natural.',
+      prompt_override: `Buatkan Landing Page. Gunakan gaya desain **Organic Natural** (warna earth-tone hijau/coklat, bentuk elemen melengkung/blob, font sans-serif lembut, gambar alam). Form di index.html akan POST ke tabel 'leads_organik'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  },
+  style_aurora: {
+    group: 'Elegant & Organic', aktif: true, theme: { icon:'🌌', color:'#10b981' },
+    info: { desc: 'Gradient warna-warni bercahaya seperti aurora.', history: 'UI Trend 2021.', author: 'Design Trend', use_for: 'Startup, web3, aplikasi kreatif.' },
+    ui: { label:'Aurora Gradients', placeholder:`Contoh: Landing page aplikasi AI. Gunakan gaya Aurora (background gradient ungu-biru-pink yang bercahaya).` },
+    prompt: { role:'Expert Frontend & UI/UX Designer', outputName:'3 FILE LANDING PAGE', pickLabel:'fitur', extraRules:'', formatRules:[] },
+    modules: [{ key:'kode_index', enabled:true }, { key:'kode_admin', enabled:true }, { key:'deskripsi_gambar', enabled:true }],
+    menu: [{
+      label: 'Generate Landing Page',
+      desc: 'Membuat Landing Page gaya Aurora.',
+      prompt_override: `Buatkan Landing Page. Gunakan gaya desain **Aurora Gradients** (background dengan gradient warna-warni cerah bercahaya seperti aurora, efek blur/glow, kartu transparan). Form di index.html akan POST ke tabel 'leads_ai'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}`
+    }]
+  }
+};
+
+const DEFAULT_MASTER_TOGGLES = { kode_index: true, kode_admin: true, deskripsi_gambar: true };
+
+function status(msg, type='info'){
+  const el = document.getElementById('status'); el.textContent = msg; el.className = 'status show ' + type;
+}
+function getHeaders(table){
+  return { 'Content-Type':'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': table, 'X-Role': 'admin' };
+}
+
+async function checkCurrent(){
+  const u = document.getElementById('u').value.trim(); const p = document.getElementById('p').value.trim();
+  if(!u || !p){ status('❌ Isi username & password dulu', 'err'); return; }
+  const btn = document.getElementById('btnCheck'); btn.disabled = true; btn.textContent = 'Memeriksa...'; status('⏳ Memeriksa user...', 'info');
+  try{
+    const r = await fetch(`${API_URL}?table=${USERS_TABLE}&x_01_eq=${u}&x_02_eq=${p}`, { headers: getHeaders(USERS_TABLE) });
+    const res = await r.json();
+    if(!res.success || !res.data || res.data.length === 0){ status('❌ Username atau password salah / Bukan Admin', 'err'); return; }
+    
+    status('✅ Login OK. Mengambil config...', 'ok');
+    document.getElementById('btnSeed').disabled = false; document.getElementById('btnDelete').disabled = false;
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x_eq=${KONTROL_ID}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res2 = await r2.json();
+    if(res2.success && res2.data && res2.data.length > 0){
+      status(`✅ Row id_x=${KONTROL_ID} sudah ada. Klik "Seed" untuk MENGGANTI.`, 'ok');
+    } else {
+      status(`ℹ️ Row id_x=${KONTROL_ID} belum ada. Klik "Seed".`, 'info');
+    }
+  } catch(e){ status('❌ Error: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '🔍 Cek Config'; }
+}
+
+async function doSeed(){
+  if(!confirm(`⚠️ Seed akan MENGGANTI seluruh config di id_x=${KONTROL_ID}. Lanjut?`)) return;
+  const btn = document.getElementById('btnSeed'); btn.disabled = true; btn.textContent = '⏳ Menyimpan...'; status('⏳ Menyimpan...', 'info');
+  try{
+    const payload = {
+      x_01: JSON.stringify({ categories: DEFAULT_CATEGORIES, outputModules: DEFAULT_MODULES }),
+      x_02: new Date().toISOString(), x_03: document.getElementById('u').value.trim() || 'seeder', x_04: '1.0',
+      x_05: '1', x_06: '1', x_07: '1', x_08: '1', x_09: '1', x_10: '1'
+    };
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x_eq=${KONTROL_ID}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    const exists = res.success && res.data && res.data.length > 0;
+    const method = exists ? 'PUT' : 'POST';
+    const endpoint = exists ? `&id_x=${KONTROL_ID}` : '';
+    
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}${endpoint}`, { method, headers: getHeaders(KONTROL_TABLE), body: JSON.stringify(payload) });
+    const res2 = await r2.json();
+    if(!res2.success) throw new Error(res2.error || res2.message || 'Gagal simpan');
+    status(`✅ BERHASIL! Config ter-${exists ? 'update' : 'buat'} di id_x=${KONTROL_ID}.\n\nSilakan buka index3.html.`, 'ok');
+  } catch(e){ status('❌ Gagal seed: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '🌱 Seed ke id_x=12'; }
+}
+
+async function doDelete(){
+  if(!confirm(`⚠️ Hapus row id_x=${KONTROL_ID}?`)) return;
+  const btn = document.getElementById('btnDelete'); btn.disabled = true; btn.textContent = '⏳ Menghapus...';
+  try{
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x=${KONTROL_ID}`, { method: 'DELETE', headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    if(res.success) status('✅ Row terhapus', 'ok'); else throw new Error(res.error || res.message || 'Gagal hapus');
+  } catch(e){ status('❌ Gagal hapus: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '🗑️ Hapus Row id_x=12'; }
+}
+</script>
+</body>
+</html>

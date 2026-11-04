@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seeder Sistem 4 — Web Generator (Step-by-Step)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4f8;min-height:100vh;padding:20px;color:#2d3748}
+.container{max-width:800px;margin:0 auto}
+.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,.08);margin-bottom:16px}
+h1{font-size:22px;margin-bottom:4px;color:#1a2332}
+.subtitle{color:#718096;font-size:13px;margin-bottom:20px}
+h2{font-size:16px;margin-bottom:12px;color:#2d3748}
+input,textarea{padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;width:100%;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:#8b5cf6}
+.btn{padding:10px 20px;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;transition:.15s}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#8b5cf6;color:#fff}
+.btn-success{background:#48bb78;color:#fff}
+.btn-danger{background:#fc8181;color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+label{font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px}
+.form-group{margin-bottom:12px}
+.status{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:12px;display:none;line-height:1.5}
+.status.show{display:block}
+.status.ok{background:#f0fff4;color:#22543d;border-left:4px solid #48bb78}
+.status.err{background:#fff5f5;color:#c53030;border-left:4px solid #fc8181}
+.status.info{background:#ebf8ff;color:#2c5282;border-left:4px solid #4299e1}
+.info-box{background:#f7fafc;padding:14px 16px;border-radius:10px;font-size:12px;line-height:1.7;color:#4a5568;border-left:4px solid #8b5cf6;margin-bottom:16px}
+.code{background:#edf2f7;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:11px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>🌱 Seeder Sistem 4 (Web Generator)</h1>
+    <p class="subtitle">Seed config ke <code class="code">kontrol_admin</code> baris <code class="code">id_x = 13</code></p>
+    <div class="info-box">
+      <strong>⚙️ File ini hanya dijalankan SEKALI.</strong><br>
+      AI akan dipaksa membuat website secara bertahap (halaman per halaman) layaknya seorang Project Manager.
+    </div>
+
+    <h2>🔐 Login Admin</h2>
+    <div class="form-group"><label>Username</label><input type="text" id="u" placeholder="admin"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="p" placeholder="password"></div>
+    <div class="row">
+      <button class="btn btn-primary" id="btnCheck" onclick="checkCurrent()">🔍 Cek Config</button>
+      <button class="btn btn-success" id="btnSeed" onclick="doSeed()" disabled>🌱 Seed ke id_x=13</button>
+      <button class="btn btn-danger" id="btnDelete" onclick="doDelete()" disabled>🗑️ Hapus Row id_x=13</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://mysupplier.my.id/api/contacts_filter_dinamis6';
+const USERS_TABLE = 'admins'; 
+const KONTROL_TABLE = 'kontrol_admin';
+const KONTROL_ID = 13; 
+const SECRET = 'admin';
+
+const DEFAULT_MODULES = {
+  file_html:       { title:'FILE HTML (STATIS)', desc:'Kode HTML halaman statis (tanpa login).' },
+  file_admin:      { title:'FILE ADMIN (MANAJEMEN)', desc:'Kode HTML admin untuk lihat form masuk & upload R2.' },
+  file_teks:       { title:'FILE TEKS (ASET)', desc:'Deskripsi gambar atau aset teks pendukung.' }
+};
+
+// PROMPT ATURAN KERAS - PROJECT MANAGER (HALAMAN PER HALAMAN)
+const BASE_RULES = `
+=== ATURAN INTERAKSI (SANGAT PENTING - ANDA ADALAH PROJECT MANAGER) ===
+Anda TIDAK BOLEH membuat semua kode sekaligus. Website ini adalah website STATIS (tanpa login user) yang memiliki beberapa halaman. Anda harus membangunnya SELANGKAH DEMI SELANGKAH.
+
+TAHAP 1 (RENCANA HALAMAN):
+- Di balasan PERTAMA, tentukan halaman apa saja yang dibutuhkan (misal: index.html, about.html, services.html, contact.html, admin.html, dan deskripsigambar.txt).
+- Tampilkan daftar halaman tersebut dengan rapi.
+- Tanyakan: "Apakah kita mulai dari halaman pertama (index.html)?"
+- BERHENTI dan tunggu jawaban saya.
+
+TAHAP 2 (BUAT HALAMAN 1):
+- Jika saya membalas "Ya/Lanjut", buatkan kode lengkap untuk halaman pertama (misal index.html).
+- Ingat: Website ini STATIS. Buat desain yang indah & responsif dengan Tailwind CSS.
+- Di akhir balasan, tanyakan: "Halaman index.html sudah selesai. Apakah kita lanjut ke halaman berikutnya (about.html)?"
+- BERHENTI dan tunggu jawaban saya.
+
+TAHAP 3 (BUAT HALAMAN 2, 3, dst):
+- Terus ulangi proses ini untuk setiap halaman yang ada di rencana Anda sampai semua halaman HTML statis selesai.
+
+TAHAP AKHIR (ADMIN & ASET):
+- Setelah semua halaman statis selesai, buatkan file 'admin.html' (untuk login admin, melihat data form dari website statis, dan alat upload R2).
+- Terakhir, buatkan file 'deskripsigambar.txt' (berisi prompt gambar bahasa Inggris).
+
+=== ATURAN TEKNIS KODE ===
+1. API_URL: 'https://mysupplier.my.id/api/contacts_filter_dinamis6'
+2. UPLOAD_R2: 'https://mysupplier.my.id/api/upload_r2_lidan'
+3. CDN_URL: 'https://assets.mysupplier.my.id/'
+4. WEBSITE STATIS: Tidak ada sistem login untuk user. Teks/gambar di-hardcode di HTML.
+5. FORM: Setiap halaman yang butuh form, gunakan fetch() POST ke tabel (misal 'leads_namaapp' dengan kolom x_01, x_02, x_03).
+6. ADMIN: Login via tabel 'admins' (GET x_01_eq=user, x_02_eq=pass). Tampilkan data leads & fitur upload gambar R2.
+`;
+
+const DEFAULT_CATEGORIES = {
+  company_profile: {
+    group: 'Company & Profil', aktif: true, theme: { icon:'🏢', color:'#3b82f6' },
+    info: { desc: 'Website profil perusahaan (multi-halaman).', history: 'Corporate Web.', author: 'System', use_for: 'PT, CV, Startup.' },
+    ui: { label:'Company Profile', placeholder:`Contoh: Buatkan website profil perusahaan konstruksi "Bangun Jaya". Butuh halaman Home, Tentang Kami, Layanan, dan Kontak.` },
+    prompt: { role:'Project Manager & Expert Frontend', outputName:'WEBSITE STATIS', pickLabel:'halaman', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_html', enabled:true }, { key:'file_admin', enabled:true }, { key:'file_teks', enabled:true }],
+    menu: [{ label: 'Generate Website', desc: 'Membuat Website Company Profile (Step-by-Step).', prompt_override: `Buatkan Website Company Profile. Form POST ke tabel 'leads_company'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  agensi_kreatif: {
+    group: 'Company & Profil', aktif: true, theme: { icon:'🚀', color:'#3b82f6' },
+    info: { desc: 'Website agensi digital/kreatif.', history: 'Agency Web.', author: 'System', use_for: 'Agensi Marketing, Desain.' },
+    ui: { label:'Agensi Kreatif', placeholder:`Contoh: Buatkan website agensi digital marketing "Kreatif.id". Butuh halaman Home, Portofolio, Layanan, dan Kontak.` },
+    prompt: { role:'Project Manager & Expert Frontend', outputName:'WEBSITE STATIS', pickLabel:'halaman', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_html', enabled:true }, { key:'file_admin', enabled:true }, { key:'file_teks', enabled:true }],
+    menu: [{ label: 'Generate Website', desc: 'Membuat Website Agensi (Step-by-Step).', prompt_override: `Buatkan Website Agensi. Form POST ke tabel 'leads_agensi'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  jasa_profesional: {
+    group: 'Company & Profil', aktif: true, theme: { icon:'⚖️', color:'#3b82f6' },
+    info: { desc: 'Website firma hukum/konsultan.', history: 'Professional Web.', author: 'System', use_for: 'Konsultan, Hukum, Akuntan.' },
+    ui: { label:'Jasa Profesional', placeholder:`Contoh: Buatkan website firma hukum "Lex & Partners". Butuh halaman Home, Tim, Layanan, dan Kontak.` },
+    prompt: { role:'Project Manager & Expert Frontend', outputName:'WEBSITE STATIS', pickLabel:'halaman', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_html', enabled:true }, { key:'file_admin', enabled:true }, { key:'file_teks', enabled:true }],
+    menu: [{ label: 'Generate Website', desc: 'Membuat Website Jasa Profesional (Step-by-Step).', prompt_override: `Buatkan Website Jasa Profesional. Form POST ke tabel 'leads_jasa'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  klinik_kesehatan: {
+    group: 'Company & Profil', aktif: true, theme: { icon:'🏥', color:'#3b82f6' },
+    info: { desc: 'Website klinik atau layanan medis.', history: 'Healthcare Web.', author: 'System', use_for: 'Klinik, Dokter, Apotek.' },
+    ui: { label:'Klinik & Kesehatan', placeholder:`Contoh: Buatkan website klinik gigi "Senyum Sehat". Butuh halaman Home, Layanan, Dokter, dan Kontak.` },
+    prompt: { role:'Project Manager & Expert Frontend', outputName:'WEBSITE STATIS', pickLabel:'halaman', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_html', enabled:true }, { key:'file_admin', enabled:true }, { key:'file_teks', enabled:true }],
+    menu: [{ label: 'Generate Website', desc: 'Membuat Website Klinik (Step-by-Step).', prompt_override: `Buatkan Website Klinik. Form POST ke tabel 'leads_klinik'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  saas_software: {
+    group: 'Produk & Commerce', aktif: true, theme: { icon:'💻', color:'#8b5cf6' },
+    info: { desc: 'Website aplikasi SaaS / Software.', history: 'SaaS Marketing.', author: 'System', use_for: 'Aplikasi web, Startup.' },
+    ui: { label:'SaaS / Software', placeholder:`Contoh: Buatkan website aplikasi keuangan "DuitKu". Butuh halaman Home, Fitur, Harga, dan Kontak.` },
+    prompt: { role:'Project Manager & Expert Frontend', outputName:'WEBSITE STATIS', pickLabel:'halaman', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_html', enabled:true }, { key:'file_admin', enabled:true }, { key:'file_teks', enabled:true }],
+    menu: [{ label: 'Generate Website', desc: 'Membuat Website SaaS (Step-by-Step).', prompt_override: `Buatkan Website SaaS. Form POST ke tabel 'leads_saas'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  mobile_app: {
+    group: 'Produk & Commerce', aktif: true, theme: { icon:'📱', color:'#8b5cf6' },
+    info: { desc: 'Website peluncuran aplikasi mobile.', history: 'App Marketing.', author: 'System', use_for: 'Aplikasi Android/iOS.' },
+    ui: { label:'Mobile App Launch', placeholder:`Contoh: Buatkan website aplikasi meditasi "Tenang". Butuh halaman Home, Fitur, Testimoni, dan Kontak.` },
+    prompt: { role:'Project Manager & Expert Frontend', outputName:'WEBSITE STATIS', pickLabel:'halaman', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_html', enabled:true }, { key:'file_admin', enabled:true }, { key:'file_teks', enabled:true }],
+    menu: [{ label: 'Generate Website', desc: 'Membuat Website Mobile App (Step-by-Step).', prompt_override: `Buatkan Website Mobile App. Form POST ke tabel 'leads_app'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  toko_online: {
+    group: 'Produk & Commerce', aktif: true, theme: { icon:'🛍️', color:'#8b5cf6' },
+    info: { desc: 'Website katalog produk / toko online.', history: 'E-commerce.', author: 'System', use_for: 'Toko baju, elektronik.' },
+    ui: { label:'Toko Online / Katalog', placeholder:`Contoh: Buatkan website toko sepatu "SneakerHead". Butuh halaman Home, Katalog Produk, Tentang, dan Kontak.` },
+    prompt: { role:'Project Manager & Expert Frontend', outputName:'WEBSITE STATIS', pickLabel:'halaman', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_html', enabled:true }, { key:'file_admin', enabled:true }, { key:'file_teks', enabled:true }],
+    menu: [{ label: 'Generate Website', desc: 'Membuat Website Toko Online (Step-by-Step).', prompt_override: `Buatkan Website Toko Online. Form POST ke tabel 'leads_toko'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  restoran_kafe: {
+    group: 'Produk & Commerce', aktif: true, theme: { icon:'🍽️', color:'#8b5cf6' },
+    info: { desc: 'Website restoran / kafe.', history: 'F&B Web.', author: 'System', use_for: 'Restoran, Kafe, Katering.' },
+    ui: { label:'Restoran / Kafe', placeholder:`Contoh: Buatkan website kafe "Kopi Senja". Butuh halaman Home, Menu, Tentang, dan Kontak.` },
+    prompt: { role:'Project Manager & Expert Frontend', outputName:'WEBSITE STATIS', pickLabel:'halaman', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_html', enabled:true }, { key:'file_admin', enabled:true }, { key:'file_teks', enabled:true }],
+    menu: [{ label: 'Generate Website', desc: 'Membuat Website Restoran (Step-by-Step).', prompt_override: `Buatkan Website Restoran. Form POST ke tabel 'leads_resto'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  personal_brand: {
+    group: 'Personal & Portofolio', aktif: true, theme: { icon:'👤', color:'#10b981' },
+    info: { desc: 'Website personal branding.', history: 'Personal Web.', author: 'System', use_for: 'Coach, Mentor, Influencer.' },
+    ui: { label:'Personal Brand / Coach', placeholder:`Contoh: Buatkan website coach karier "Budi Santoso". Butuh halaman Home, Tentang Saya, Layanan, dan Kontak.` },
+    prompt: { role:'Project Manager & Expert Frontend', outputName:'WEBSITE STATIS', pickLabel:'halaman', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_html', enabled:true }, { key:'file_admin', enabled:true }, { key:'file_teks', enabled:true }],
+    menu: [{ label: 'Generate Website', desc: 'Membuat Website Personal Brand (Step-by-Step).', prompt_override: `Buatkan Website Personal Brand. Form POST ke tabel 'leads_personal'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  portofolio_kreatif: {
+    group: 'Personal & Portofolio', aktif: true, theme: { icon:'📸', color:'#10b981' },
+    info: { desc: 'Website portofolio visual.', history: 'Creative Showcase.', author: 'System', use_for: 'Fotografer, Desainer.' },
+    ui: { label:'Portofolio Kreatif', placeholder:`Contoh: Buatkan website fotografer "Momen Indah". Butuh halaman Home, Galeri, Tentang, dan Kontak.` },
+    prompt: { role:'Project Manager & Expert Frontend', outputName:'WEBSITE STATIS', pickLabel:'halaman', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_html', enabled:true }, { key:'file_admin', enabled:true }, { key:'file_teks', enabled:true }],
+    menu: [{ label: 'Generate Website', desc: 'Membuat Website Portofolio (Step-by-Step).', prompt_override: `Buatkan Website Portofolio. Form POST ke tabel 'leads_portofolio'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  cv_resume: {
+    group: 'Personal & Portofolio', aktif: true, theme: { icon:'📄', color:'#10b981' },
+    info: { desc: 'Website CV / Resume interaktif.', history: 'Interactive CV.', author: 'System', use_for: 'Job Seeker, Freelancer.' },
+    ui: { label:'CV / Resume Web', placeholder:`Contoh: Buatkan website CV "Andi Web Developer". Butuh halaman Home, Pengalaman, Skill, dan Kontak.` },
+    prompt: { role:'Project Manager & Expert Frontend', outputName:'WEBSITE STATIS', pickLabel:'halaman', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_html', enabled:true }, { key:'file_admin', enabled:true }, { key:'file_teks', enabled:true }],
+    menu: [{ label: 'Generate Website', desc: 'Membuat Website CV (Step-by-Step).', prompt_override: `Buatkan Website CV Interaktif. Form POST ke tabel 'leads_cv'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  komunitas_blog: {
+    group: 'Personal & Portofolio', aktif: true, theme: { icon:'✍️', color:'#10b981' },
+    info: { desc: 'Website untuk komunitas atau blog.', history: 'Community Web.', author: 'System', use_for: 'Blogger, Komunitas.' },
+    ui: { label:'Komunitas / Blog', placeholder:`Contoh: Buatkan website komunitas pembaca "Baca Bareng". Butuh halaman Home, Artikel, Tentang, dan Kontak.` },
+    prompt: { role:'Project Manager & Expert Frontend', outputName:'WEBSITE STATIS', pickLabel:'halaman', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_html', enabled:true }, { key:'file_admin', enabled:true }, { key:'file_teks', enabled:true }],
+    menu: [{ label: 'Generate Website', desc: 'Membuat Website Komunitas (Step-by-Step).', prompt_override: `Buatkan Website Komunitas. Form POST ke tabel 'leads_komunitas'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  event_webinar: {
+    group: 'Event & Khusus', aktif: true, theme: { icon:'🎟️', color:'#f59e0b' },
+    info: { desc: 'Website pendaftaran event/webinar.', history: 'Event Marketing.', author: 'System', use_for: 'Seminar, Webinar.' },
+    ui: { label:'Webinar / Event', placeholder:`Contoh: Buatkan website webinar "Sukses Investasi 2026". Butuh halaman Home, Pembicara, Jadwal, dan Pendaftaran.` },
+    prompt: { role:'Project Manager & Expert Frontend', outputName:'WEBSITE STATIS', pickLabel:'halaman', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_html', enabled:true }, { key:'file_admin', enabled:true }, { key:'file_teks', enabled:true }],
+    menu: [{ label: 'Generate Website', desc: 'Membuat Website Event (Step-by-Step).', prompt_override: `Buatkan Website Event. Form POST ke tabel 'leads_event'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  properti: {
+    group: 'Event & Khusus', aktif: true, theme: { icon:'🏠', color:'#f59e0b' },
+    info: { desc: 'Website penjualan properti.', history: 'Real Estate.', author: 'System', use_for: 'Rumah, Tanah, Apartemen.' },
+    ui: { label:'Properti / Real Estate', placeholder:`Contoh: Buatkan website perumahan "Cluster Asri". Butuh halaman Home, Unit Rumah, Fasilitas, dan Kontak.` },
+    prompt: { role:'Project Manager & Expert Frontend', outputName:'WEBSITE STATIS', pickLabel:'halaman', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_html', enabled:true }, { key:'file_admin', enabled:true }, { key:'file_teks', enabled:true }],
+    menu: [{ label: 'Generate Website', desc: 'Membuat Website Properti (Step-by-Step).', prompt_override: `Buatkan Website Properti. Form POST ke tabel 'leads_properti'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  coming_soon: {
+    group: 'Event & Khusus', aktif: true, theme: { icon:'⏳', color:'#f59e0b' },
+    info: { desc: 'Website peluncuran produk (Coming Soon).', history: 'Pre-launch Web.', author: 'System', use_for: 'Produk baru.' },
+    ui: { label:'Coming Soon / Waitlist', placeholder:`Contoh: Buatkan website "Segera Hadir" aplikasi baru. Butuh halaman Home (Coming Soon) dan Kontak.` },
+    prompt: { role:'Project Manager & Expert Frontend', outputName:'WEBSITE STATIS', pickLabel:'halaman', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_html', enabled:true }, { key:'file_admin', enabled:true }, { key:'file_teks', enabled:true }],
+    menu: [{ label: 'Generate Website', desc: 'Membuat Website Coming Soon (Step-by-Step).', prompt_override: `Buatkan Website Coming Soon. Form POST ke tabel 'leads_waitlist'.\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  }
+};
+
+const DEFAULT_MASTER_TOGGLES = { file_html: true, file_admin: true, file_teks: true };
+
+function status(msg, type='info'){
+  const el = document.getElementById('status'); el.textContent = msg; el.className = 'status show ' + type;
+}
+function getHeaders(table){
+  return { 'Content-Type':'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': table, 'X-Role': 'admin' };
+}
+
+async function checkCurrent(){
+  const u = document.getElementById('u').value.trim(); const p = document.getElementById('p').value.trim();
+  if(!u || !p){ status('❌ Isi username & password dulu', 'err'); return; }
+  const btn = document.getElementById('btnCheck'); btn.disabled = true; btn.textContent = 'Memeriksa...'; status('⏳ Memeriksa user...', 'info');
+  try{
+    const r = await fetch(`${API_URL}?table=${USERS_TABLE}&x_01_eq=${u}&x_02_eq=${p}`, { headers: getHeaders(USERS_TABLE) });
+    const res = await r.json();
+    if(!res.success || !res.data || res.data.length === 0){ status('❌ Username atau password salah / Bukan Admin', 'err'); return; }
+    
+    status('✅ Login OK. Mengambil config...', 'ok');
+    document.getElementById('btnSeed').disabled = false; document.getElementById('btnDelete').disabled = false;
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x_eq=${KONTROL_ID}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res2 = await r2.json();
+    if(res2.success && res2.data && res2.data.length > 0){
+      status(`✅ Row id_x=${KONTROL_ID} sudah ada. Klik "Seed" untuk MENGGANTI.`, 'ok');
+    } else {
+      status(`ℹ️ Row id_x=${KONTROL_ID} belum ada. Klik "Seed".`, 'info');
+    }
+  } catch(e){ status('❌ Error: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '🔍 Cek Config'; }
+}
+
+async function doSeed(){
+  if(!confirm(`⚠️ Seed akan MENGGANTI seluruh config di id_x=${KONTROL_ID}. Lanjut?`)) return;
+  const btn = document.getElementById('btnSeed'); btn.disabled = true; btn.textContent = '⏳ Menyimpan...'; status('⏳ Menyimpan...', 'info');
+  try{
+    const payload = {
+      x_01: JSON.stringify({ categories: DEFAULT_CATEGORIES, outputModules: DEFAULT_MODULES }),
+      x_02: new Date().toISOString(), x_03: document.getElementById('u').value.trim() || 'seeder', x_04: '1.0',
+      x_05: '1', x_06: '1', x_07: '1', x_08: '1', x_09: '1', x_10: '1'
+    };
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x_eq=${KONTROL_ID}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    const exists = res.success && res.data && res.data.length > 0;
+    const method = exists ? 'PUT' : 'POST';
+    const endpoint = exists ? `&id_x=${KONTROL_ID}` : '';
+    
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}${endpoint}`, { method, headers: getHeaders(KONTROL_TABLE), body: JSON.stringify(payload) });
+    const res2 = await r2.json();
+    if(!res2.success) throw new Error(res2.error || res2.message || 'Gagal simpan');
+    status(`✅ BERHASIL! Config ter-${exists ? 'update' : 'buat'} di id_x=${KONTROL_ID}.\n\nSilakan buka index4.html.`, 'ok');
+  } catch(e){ status('❌ Gagal seed: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '🌱 Seed ke id_x=13'; }
+}
+
+async function doDelete(){
+  if(!confirm(`⚠️ Hapus row id_x=${KONTROL_ID}?`)) return;
+  const btn = document.getElementById('btnDelete'); btn.disabled = true; btn.textContent = '⏳ Menghapus...';
+  try{
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x=${KONTROL_ID}`, { method: 'DELETE', headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    if(res.success) status('✅ Row terhapus', 'ok'); else throw new Error(res.error || res.message || 'Gagal hapus');
+  } catch(e){ status('❌ Gagal hapus: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '🗑️ Hapus Row id_x=13'; }
+}
+</script>
+</body>
+</html>

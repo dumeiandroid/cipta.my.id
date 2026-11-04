@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seeder Sistem 5 — Blog HTML Interlinking</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4f8;min-height:100vh;padding:20px;color:#2d3748}
+.container{max-width:800px;margin:0 auto}
+.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,.08);margin-bottom:16px}
+h1{font-size:22px;margin-bottom:4px;color:#1a2332}
+.subtitle{color:#718096;font-size:13px;margin-bottom:20px}
+h2{font-size:16px;margin-bottom:12px;color:#2d3748}
+input,textarea{padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;width:100%;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:#ec4899}
+.btn{padding:10px 20px;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;transition:.15s}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#ec4899;color:#fff}
+.btn-success{background:#48bb78;color:#fff}
+.btn-danger{background:#fc8181;color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+label{font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px}
+.form-group{margin-bottom:12px}
+.status{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:12px;display:none;line-height:1.5}
+.status.show{display:block}
+.status.ok{background:#f0fff4;color:#22543d;border-left:4px solid #48bb78}
+.status.err{background:#fff5f5;color:#c53030;border-left:4px solid #fc8181}
+.status.info{background:#ebf8ff;color:#2c5282;border-left:4px solid #4299e1}
+.info-box{background:#f7fafc;padding:14px 16px;border-radius:10px;font-size:12px;line-height:1.7;color:#4a5568;border-left:4px solid #ec4899;margin-bottom:16px}
+.code{background:#edf2f7;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:11px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>🌱 Seeder Sistem 5 (Blog Interlinking)</h1>
+    <p class="subtitle">Seed config ke <code class="code">kontrol_admin</code> baris <code class="code">id_x = 14</code></p>
+    <div class="info-box">
+      <strong>⚙️ File ini hanya dijalankan SEKALI.</strong><br>
+      AI akan membuat 6 File HTML (1 Home + 5 Artikel) yang saling terhubung (Next/Prev/Card).
+    </div>
+
+    <h2>🔐 Login Admin</h2>
+    <div class="form-group"><label>Username</label><input type="text" id="u" placeholder="admin"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="p" placeholder="password"></div>
+    <div class="row">
+      <button class="btn btn-primary" id="btnCheck" onclick="checkCurrent()">🔍 Cek Config</button>
+      <button class="btn btn-success" id="btnSeed" onclick="doSeed()" disabled>🌱 Seed ke id_x=14</button>
+      <button class="btn btn-danger" id="btnDelete" onclick="doDelete()" disabled>🗑️ Hapus Row id_x=14</button>
+    </div>
+    <div class="status" id="statusDiv"></div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://mysupplier.my.id/api/contacts_filter_dinamis6';
+const USERS_TABLE = 'admins'; 
+const KONTROL_TABLE = 'kontrol_admin';
+const KONTROL_ID = 14; 
+const SECRET = 'admin';
+
+const DEFAULT_MODULES = {
+  file_home: { title:'FILE HOME (index.html)', desc:'Halaman daftar artikel / Home.' },
+  artikel_1: { title:'FILE ARTIKEL 1 (artikel-1.html)', desc:'Kode HTML artikel 1.' },
+  artikel_2: { title:'FILE ARTIKEL 2 (artikel-2.html)', desc:'Kode HTML artikel 2.' },
+  artikel_3: { title:'FILE ARTIKEL 3 (artikel-3.html)', desc:'Kode HTML artikel 3.' },
+  artikel_4: { title:'FILE ARTIKEL 4 (artikel-4.html)', desc:'Kode HTML artikel 4.' },
+  artikel_5: { title:'FILE ARTIKEL 5 (artikel-5.html)', desc:'Kode HTML artikel 5.' }
+};
+
+const BASE_RULES = `
+=== ATURAN INTERAKSI (SANGAT PENTING - ANDA ADALAH PENULIS BLOG & WEB DESIGNER) ===
+Anda TIDAK BOLEH membuat semua file sekaligus. Anda harus membuatnya SELANGKAH DEMI SELANGKAH.
+
+TAHAP 1 (RENCANA FILE):
+- Di balasan PERTAMA, sampaikan rencana Anda. Sebutkan bahwa Anda akan membuat 6 File HTML yang saling terhubung:
+  1. index.html (Home / Daftar Artikel)
+  2. artikel-1.html
+  3. artikel-2.html
+  4. artikel-3.html
+  5. artikel-4.html
+  6. artikel-5.html
+- Tanyakan kepada saya: "Apakah kita mulai dari file index.html?".
+- BERHENTI dan tunggu jawaban saya.
+
+TAHAP 2 - 7 (BUAT FILE SATU PER SATU):
+- Jika saya membalas "Ya/Lanjut", buatkan kode HTML LENGKAP untuk file tersebut.
+- SANGAT PENTING (INTERLINKING): SETIAP file HTML yang Anda buat (baik index maupun artikel) WAJIB memiliki bagian navigasi yang mengarah ke file lainnya.
+  - Di index.html: Tampilkan daftar card/link menuju artikel-1.html, artikel-2.html, dst.
+  - Di artikel-1.html s.d artikel-5.html: 
+    - Sertakan link "Beranda" (href="index.html").
+    - Sertakan link "Artikel Selanjutnya" (Next) dan "Artikel Sebelumnya" (Prev). Contoh di artikel-1: Prev menuju artikel-5.html, Next menuju artikel-2.html.
+    - Sertakan juga sidebar atau footer yang berisi "Daftar Artikel Lainnya" (Card ke index.html atau langsung ke artikel lain).
+- Terapkan Style yang dipilih user menggunakan Tailwind CSS (via CDN). Pastikan desainnya cantik, rapi, dan responsif.
+- Di akhir balasan, tanyakan: "File [nama_file] selesai. Apakah kita lanjut ke file berikutnya?".
+- BERHENTI dan tunggu jawaban saya.
+
+=== ATURAN TEKNIS ===
+1. Gaya penulisan (Style): Sesuaikan dengan gaya yang diminta user.
+2. Output WAJIB berupa BLOK KODE HTML (diawali dengan \`\`\`html dan diakhiri \`\`\`).
+3. Setiap artikel harus memiliki minimal 500-800 kata di dalam tag HTML-nya.
+4. Gunakan nama file persis seperti ini untuk link: index.html, artikel-1.html, artikel-2.html, artikel-3.html, artikel-4.html, artikel-5.html.
+`;
+
+const DEFAULT_CATEGORIES = {
+  style_tech: {
+    group: 'Modern & Minimalist', aktif: true, theme: { icon:'💻', color:'#3b82f6' },
+    info: { desc: 'Gaya penulisan Tech & Gadget.', history: 'Tech Blogging.', author: 'System', use_for: 'Review Gadget, Berita AI.' },
+    ui: { label:'Tech & Gadget', placeholder:`Contoh: Buatkan 5 artikel blog tentang review gadget terbaru 2024 dan perkembangan AI.` },
+    prompt: { role:'Tech Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Tech (HTML).', prompt_override: `Buatkan Blog Teknologi. Gunakan gaya desain HTML "Modern & Minimalist" (bersih, rapi, font sans-serif).\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_produktivitas: {
+    group: 'Modern & Minimalist', aktif: true, theme: { icon:'⏱️', color:'#3b82f6' },
+    info: { desc: 'Gaya penulisan Produktivitas.', history: 'Self-Improvement.', author: 'System', use_for: 'Tips Produktif.' },
+    ui: { label:'Produktivitas', placeholder:`Contoh: Buatkan 5 artikel tentang cara meningkatkan fokus kerja untuk freelancer.` },
+    prompt: { role:'Productivity Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Produktivitas (HTML).', prompt_override: `Buatkan Blog Produktivitas. Gunakan gaya desain HTML "Modern & Minimalist" (layout rapi, checklist, bullet points).\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_tips: {
+    group: 'Modern & Minimalist', aktif: true, theme: { icon:'💡', color:'#3b82f6' },
+    info: { desc: 'Gaya penulisan Tips & Trik.', history: 'How-to Guide.', author: 'System', use_for: 'Tutorial.' },
+    ui: { label:'Tips & Trik', placeholder:`Contoh: Buatkan 5 artikel berisi tips hemat ala anak kos.` },
+    prompt: { role:'How-to Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Tips (HTML).', prompt_override: `Buatkan Blog Tips & Trik. Gunakan gaya desain HTML "Modern & Minimalist" (list bernomor, ikon, clean).\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_minimalis: {
+    group: 'Modern & Minimalist', aktif: true, theme: { icon:'⬜', color:'#3b82f6' },
+    info: { desc: 'Gaya penulisan Super Minimalis.', history: 'Desain abadi.', author: 'System', use_for: 'Blog sastra.' },
+    ui: { label:'Ultra Minimalist', placeholder:`Contoh: Buatkan 5 artikel tentang filosofi hidup minimalis.` },
+    prompt: { role:'Writer & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Minimalis (HTML).', prompt_override: `Buatkan Blog. Gunakan gaya desain HTML "Ultra Minimalist" (hitam-putih, banyak white space, font serif elegan).\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_travel: {
+    group: 'Bold & Creative', aktif: true, theme: { icon:'✈️', color:'#f59e0b' },
+    info: { desc: 'Gaya penulisan Travel.', history: 'Travel Blog.', author: 'System', use_for: 'Destinasi Wisata.' },
+    ui: { label:'Travel & Wisata', placeholder:`Contoh: Buatkan 5 artikel tentang pengalaman backpacking ke Bali.` },
+    prompt: { role:'Travel Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Travel (HTML).', prompt_override: `Buatkan Blog Travel. Gunakan gaya desain HTML "Bold & Creative" (foto besar, tipografi tebal, layout asimetris).\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_lifestyle: {
+    group: 'Bold & Creative', aktif: true, theme: { icon:'☕', color:'#f59e0b' },
+    info: { desc: 'Gaya penulisan Lifestyle.', history: 'Lifestyle Blog.', author: 'System', use_for: 'Opini, Tren.' },
+    ui: { label:'Lifestyle & Opini', placeholder:`Contoh: Buatkan 5 artikel tentang fenomena flexing di media sosial.` },
+    prompt: { role:'Lifestyle Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Lifestyle (HTML).', prompt_override: `Buatkan Blog Lifestyle. Gunakan gaya desain HTML "Bold & Creative" (warna kontras, blockquote besar, tipografi ekspresif).\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_entertainment: {
+    group: 'Bold & Creative', aktif: true, theme: { icon:'🎬', color:'#f59e0b' },
+    info: { desc: 'Gaya penulisan Entertainment.', history: 'Pop Culture.', author: 'System', use_for: 'Review Film.' },
+    ui: { label:'Entertainment', placeholder:`Contoh: Buatkan 5 artikel review film horor Indonesia terbaru.` },
+    prompt: { role:'Entertainment Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Entertainment (HTML).', prompt_override: `Buatkan Blog Entertainment. Gunakan gaya desain HTML "Bold & Creative" (banyak gambar, rating bintang, warna neon/hype).\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_retro: {
+    group: 'Bold & Creative', aktif: true, theme: { icon:'📻', color:'#f59e0b' },
+    info: { desc: 'Gaya Retro 80-an/90-an.', history: 'Retro Trend.', author: 'System', use_for: 'Blog Musik.' },
+    ui: { label:'Retro / Vintage', placeholder:`Contoh: Buatkan 5 artikel tentang sejarah musik rock era 90-an.` },
+    prompt: { role:'Retro Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Retro (HTML).', prompt_override: `Buatkan Blog. Gunakan gaya desain HTML "Retro 80-an" (warna pastel sunset, font arcade, border tebal).\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_bisnis: {
+    group: 'Corporate & Professional', aktif: true, theme: { icon:'📈', color:'#8b5cf6' },
+    info: { desc: 'Gaya penulisan Bisnis.', history: 'Business Blog.', author: 'System', use_for: 'Analisis Pasar.' },
+    ui: { label:'Bisnis & Startup', placeholder:`Contoh: Buatkan 5 artikel tentang strategi ekspansi bisnis F&B.` },
+    prompt: { role:'Business Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Bisnis (HTML).', prompt_override: `Buatkan Blog Bisnis. Gunakan gaya desain HTML "Corporate & Professional" (layout grid, tabel data, font formal, warna biru/abu).\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_keuangan: {
+    group: 'Corporate & Professional', aktif: true, theme: { icon:'💰', color:'#8b5cf6' },
+    info: { desc: 'Gaya penulisan Keuangan.', history: 'Finance Blog.', author: 'System', use_for: 'Investasi.' },
+    ui: { label:'Keuangan & Investasi', placeholder:`Contoh: Buatkan 5 artikel edukasi tentang cara mengatur gaji untuk investasi.` },
+    prompt: { role:'Finance Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Keuangan (HTML).', prompt_override: `Buatkan Blog Keuangan. Gunakan gaya desain HTML "Corporate & Professional" (infografis sederhana, tebal pada angka, layout bersih).\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_karier: {
+    group: 'Corporate & Professional', aktif: true, theme: { icon:'💼', color:'#8b5cf6' },
+    info: { desc: 'Gaya penulisan Karier.', history: 'Career Blog.', author: 'System', use_for: 'Tips Kerja.' },
+    ui: { label:'Karier & HR', placeholder:`Contoh: Buatkan 5 artikel tentang cara lolos interview kerja.` },
+    prompt: { role:'Career Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Karier (HTML).', prompt_override: `Buatkan Blog Karier. Gunakan gaya desain HTML "Corporate & Professional" (checklist, layout formal, tipografi tegas).\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_bento: {
+    group: 'Corporate & Professional', aktif: true, theme: { icon:'🍱', color:'#8b5cf6' },
+    info: { desc: 'Gaya Bento Box.', history: 'Apple Event.', author: 'System', use_for: 'Review Produk.' },
+    ui: { label:'Bento Box', placeholder:`Contoh: Buatkan 5 artikel review gadget terbaru dengan layout Bento.` },
+    prompt: { role:'Tech Reviewer & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Bento (HTML).', prompt_override: `Buatkan Blog. Gunakan gaya desain HTML "Bento Box" (layout grid kotak-kotak, border-radius besar, gambar dan teks terpisah rapi).\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_kesehatan: {
+    group: 'Elegant & Organic', aktif: true, theme: { icon:'🌿', color:'#10b981' },
+    info: { desc: 'Gaya Kesehatan.', history: 'Health Blog.', author: 'System', use_for: 'Mental Health.' },
+    ui: { label:'Kesehatan & Mental', placeholder:`Contoh: Buatkan 5 artikel tentang pentingnya menjaga kesehatan mental.` },
+    prompt: { role:'Health Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Kesehatan (HTML).', prompt_override: `Buatkan Blog Kesehatan. Gunakan gaya desain HTML "Elegant & Organic" (warna hijau earth-tone, font lembut, bentuk melengkung/blob).\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_kuliner: {
+    group: 'Elegant & Organic', aktif: true, theme: { icon:'🍲', color:'#10b981' },
+    info: { desc: 'Gaya Kuliner.', history: 'Food Blog.', author: 'System', use_for: 'Resep Masakan.' },
+    ui: { label:'Kuliner & Resep', placeholder:`Contoh: Buatkan 5 artikel tentang resep masakan tradisional Indonesia.` },
+    prompt: { role:'Culinary Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Kuliner (HTML).', prompt_override: `Buatkan Blog Kuliner. Gunakan gaya desain HTML "Elegant & Organic" (foto makanan besar, daftar bahan & cara masak yang rapi, warna hangat).\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_luxury: {
+    group: 'Elegant & Organic', aktif: true, theme: { icon:'💎', color:'#10b981' },
+    info: { desc: 'Gaya Luxury.', history: 'Luxury Branding.', author: 'System', use_for: 'Lifestyle Mewah.' },
+    ui: { label:'Luxury Dark', placeholder:`Contoh: Buatkan 5 artikel tentang gaya hidup mewah dan arsitektur.` },
+    prompt: { role:'Luxury Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Luxury (HTML).', prompt_override: `Buatkan Blog. Gunakan gaya desain HTML "Luxury Dark" (background gelap, font serif emas, gambar berkualitas tinggi, layout elegan).\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_edukasi: {
+    group: 'Elegant & Organic', aktif: true, theme: { icon:'📚', color:'#10b981' },
+    info: { desc: 'Gaya Edukasi.', history: 'Education Blog.', author: 'System', use_for: 'Sejarah, Sains.' },
+    ui: { label:'Edukasi & Sains', placeholder:`Contoh: Buatkan 5 artikel tentang penemuan sains paling mengubah dunia.` },
+    prompt: { role:'Educator & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Edukasi (HTML).', prompt_override: `Buatkan Blog Edukasi. Gunakan gaya desain HTML "Elegant & Organic" (layout mengalir, blockquote, tipografi yang nyaman dibaca, insightful).\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  }
+};
+
+const DEFAULT_MASTER_TOGGLES = { file_home: true, artikel_1: true, artikel_2: true, artikel_3: true, artikel_4: true, artikel_5: true };
+
+function setStatus(msg, type='info'){
+  const el = document.getElementById('statusDiv'); 
+  if (el) {
+    el.textContent = msg; 
+    el.className = 'status show ' + type;
+  }
+}
+
+function getHeaders(table){
+  return { 
+    'Content-Type':'application/json', 
+    'X-Custom-Auth': SECRET, 
+    'X-Table-Name': table, 
+    'X-Role': 'admin' 
+  };
+}
+
+async function checkCurrent(){
+  try {
+    const u = document.getElementById('u').value.trim(); 
+    const p = document.getElementById('p').value.trim();
+    
+    if(!u || !p){ setStatus('❌ Isi username & password dulu', 'err'); return; }
+    
+    const btn = document.getElementById('btnCheck'); 
+    btn.disabled = true; 
+    btn.textContent = 'Memeriksa...'; 
+    setStatus('⏳ Memeriksa user...', 'info');
+    
+    const r = await fetch(`${API_URL}?table=${USERS_TABLE}&x_01_eq=${u}&x_02_eq=${p}`, { headers: getHeaders(USERS_TABLE) });
+    const res = await r.json();
+    
+    if(!res.success || !res.data || res.data.length === 0){ 
+      setStatus('❌ Username atau password salah / Bukan Admin', 'err'); 
+      return; 
+    }
+    
+    setStatus('✅ Login OK. Mengambil config...', 'ok');
+    document.getElementById('btnSeed').disabled = false; 
+    document.getElementById('btnDelete').disabled = false;
+    
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x_eq=${KONTROL_ID}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res2 = await r2.json();
+    
+    if(res2.success && res2.data && res2.data.length > 0){
+      setStatus(`✅ Row id_x=${KONTROL_ID} sudah ada. Klik "Seed" untuk MENGGANTI.`, 'ok');
+    } else {
+      setStatus(`ℹ️ Row id_x=${KONTROL_ID} belum ada. Klik "Seed".`, 'info');
+    }
+  } catch(e) { 
+    setStatus('❌ Error: ' + e.message, 'err'); 
+    console.error(e);
+  } finally { 
+    const btn = document.getElementById('btnCheck'); 
+    btn.disabled = false; 
+    btn.textContent = '🔍 Cek Config'; 
+  }
+}
+
+async function doSeed(){
+  if(!confirm(`⚠️ Seed akan MENGGANTI seluruh config di id_x=${KONTROL_ID}. Lanjut?`)) return;
+  const btn = document.getElementById('btnSeed'); 
+  btn.disabled = true; 
+  btn.textContent = '⏳ Menyimpan...'; 
+  setStatus('⏳ Menyimpan...', 'info');
+  
+  try{
+    const payload = {
+      x_01: JSON.stringify({ categories: DEFAULT_CATEGORIES, outputModules: DEFAULT_MODULES }),
+      x_02: new Date().toISOString(), 
+      x_03: document.getElementById('u').value.trim() || 'seeder', 
+      x_04: '1.0',
+      x_05: '1', x_06: '1', x_07: '1', x_08: '1', x_09: '1', x_10: '1'
+    };
+    
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x_eq=${KONTROL_ID}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    const exists = res.success && res.data && res.data.length > 0;
+    const method = exists ? 'PUT' : 'POST';
+    const endpoint = exists ? `&id_x=${KONTROL_ID}` : '';
+    
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}${endpoint}`, { 
+      method, 
+      headers: getHeaders(KONTROL_TABLE), 
+      body: JSON.stringify(payload) 
+    });
+    const res2 = await r2.json();
+    
+    if(!res2.success) throw new Error(res2.error || res2.message || 'Gagal simpan');
+    
+    setStatus(`✅ BERHASIL! Config ter-${exists ? 'update' : 'buat'} di id_x=${KONTROL_ID}.\n\nSilakan buka index5.html.`, 'ok');
+  } catch(e){ 
+    setStatus('❌ Gagal seed: ' + e.message, 'err'); 
+    console.error(e);
+  } finally { 
+    btn.disabled = false; 
+    btn.textContent = '🌱 Seed ke id_x=14'; 
+  }
+}
+
+async function doDelete(){
+  if(!confirm(`⚠️ Hapus row id_x=${KONTROL_ID}?`)) return;
+  const btn = document.getElementById('btnDelete'); 
+  btn.disabled = true; 
+  btn.textContent = '⏳ Menghapus...';
+  
+  try{
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x=${KONTROL_ID}`, { method: 'DELETE', headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    
+    if(res.success) setStatus('✅ Row terhapus', 'ok'); 
+    else throw new Error(res.error || res.message || 'Gagal hapus');
+  } catch(e){ 
+    setStatus('❌ Gagal hapus: ' + e.message, 'err'); 
+    console.error(e);
+  } finally { 
+    btn.disabled = false; 
+    btn.textContent = '🗑️ Hapus Row id_x=14'; 
+  }
+}
+</script>
+</body>
+</html>
