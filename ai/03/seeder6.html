@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seeder Sistem 6 — Blog Psikologi Lidan (SEO)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4f8;min-height:100vh;padding:20px;color:#2d3748}
+.container{max-width:800px;margin:0 auto}
+.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,.08);margin-bottom:16px}
+h1{font-size:22px;margin-bottom:4px;color:#1a2332}
+.subtitle{color:#718096;font-size:13px;margin-bottom:20px}
+h2{font-size:16px;margin-bottom:12px;color:#2d3748}
+input,textarea{padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;width:100%;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:#0ea5e9}
+.btn{padding:10px 20px;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;transition:.15s}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#0ea5e9;color:#fff}
+.btn-success{background:#48bb78;color:#fff}
+.btn-danger{background:#fc8181;color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+label{font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px}
+.form-group{margin-bottom:12px}
+.status{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:12px;display:none;line-height:1.5}
+.status.show{display:block}
+.status.ok{background:#f0fff4;color:#22543d;border-left:4px solid #48bb78}
+.status.err{background:#fff5f5;color:#c53030;border-left:4px solid #fc8181}
+.status.info{background:#ebf8ff;color:#2c5282;border-left:4px solid #4299e1}
+.info-box{background:#f7fafc;padding:14px 16px;border-radius:10px;font-size:12px;line-height:1.7;color:#4a5568;border-left:4px solid #0ea5e9;margin-bottom:16px}
+.code{background:#edf2f7;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:11px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>🌱 Seeder Sistem 6 (Blog Psikologi Lidan)</h1>
+    <p class="subtitle">Seed config ke <code class="code">kontrol_admin</code> baris <code class="code">id_x = 15</code></p>
+    <div class="info-box">
+      <strong>⚙️ File ini hanya dijalankan SEKALI.</strong><br>
+      AI akan membuat Blog Psikologi dengan <strong>SEO, OG Image, Slug URL, dan Branding Lidan</strong> yang saling terhubung.
+    </div>
+
+    <h2>🔐 Login Admin</h2>
+    <div class="form-group"><label>Username</label><input type="text" id="u" placeholder="admin"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="p" placeholder="password"></div>
+    <div class="row">
+      <button class="btn btn-primary" id="btnCheck" onclick="checkCurrent()">🔍 Cek Config</button>
+      <button class="btn btn-success" id="btnSeed" onclick="doSeed()" disabled>🌱 Seed ke id_x=15</button>
+      <button class="btn btn-danger" id="btnDelete" onclick="doDelete()" disabled>🗑️ Hapus Row id_x=15</button>
+    </div>
+    <div class="status" id="statusDiv"></div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://mysupplier.my.id/api/contacts_filter_dinamis6';
+const USERS_TABLE = 'admins'; 
+const KONTROL_TABLE = 'kontrol_admin';
+const KONTROL_ID = 15; 
+const SECRET = 'admin';
+
+const DEFAULT_MODULES = {
+  file_home: { title:'FILE HOME (index.html)', desc:'Halaman daftar artikel / Home.' },
+  artikel_1: { title:'FILE ARTIKEL 1 (slug-url.html)', desc:'Kode HTML artikel 1.' },
+  artikel_2: { title:'FILE ARTIKEL 2 (slug-url.html)', desc:'Kode HTML artikel 2.' },
+  artikel_3: { title:'FILE ARTIKEL 3 (slug-url.html)', desc:'Kode HTML artikel 3.' },
+  artikel_4: { title:'FILE ARTIKEL 4 (slug-url.html)', desc:'Kode HTML artikel 4.' },
+  artikel_5: { title:'FILE ARTIKEL 5 (slug-url.html)', desc:'Kode HTML artikel 5.' }
+};
+
+const LIDAN_BRANDING = `
+=== BRANDING LIDAN PSIKOLOGI (WAJIB ADA DI SETIAP FILE HTML) ===
+Nama Brand: Lidan Psikologi
+Logo (Header): https://lidan.co.id/gambar/logo-psikologi.png
+Foto Kantor (Home Hero): https://lidan.co.id/gambar/kantor-lidan.jpeg
+
+=== INFORMASI KONTAK (WAJIB DI FOOTER) ===
+Alamat: Regus - Forum Nine, Jl. Imam Bonjol No. 9, Forum Nine 9th Floor, Medan
+Telepon: +62 851 5960 1400
+Email: info@lidan.co.id
+WhatsApp: +62 851 5960 1400 (link: https://wa.me/6285159601400)
+
+=== JAM OPERASIONAL (WAJIB DI FOOTER) ===
+Senin - Jumat: 08:00 - 17:00
+Sabtu: 08:00 - 15:00
+Minggu: Tutup
+
+=== LAYANAN ONLINE (WAJIB DI FOOTER) ===
+- Tes online 24/7
+- Konseling online by appointment
+- WhatsApp support
+
+=== LAYANAN LIDAN ===
+Tes Minat Bakat, Tes Kesiapan Kerja, Psikotes Rekrutmen, Konseling Psikologi, Training & Workshop, Assessment Center.
+`;
+
+const BASE_RULES = `
+=== ATURAN INTERAKSI (SANGAT PENTING - ANDA ADALAH PENULIS BLOG & WEB DESIGNER) ===
+Anda TIDAK BOLEH membuat semua file sekaligus. Anda harus membuatnya SELANGKAH DEMI SELANGKAH.
+
+${LIDAN_BRANDING}
+
+=== TAHAP 1 (RENCANA FILE, GAMBAR, & SEO) ===
+Di balasan PERTAMA, sampaikan rencana Anda.
+Tampilkan tabel berisi:
+1. Judul Artikel (SEO Friendly, maks 60 karakter)
+2. Nama File HTML (Slug: huruf kecil, spasi diganti strip. Contoh: pentingnya-tes-kesiapan-kerja.html)
+3. Nama File Gambar (Slug + .jpg, Contoh: pentingnya-tes-kesiapan-kerja.jpg)
+4. Prompt Gambar (Deskripsi detail bahasa Inggris untuk AI Image Generator, misal Midjourney)
+
+Setelah tabel, tulis instruksi untuk user:
+"Silakan upload gambar-gambar di atas ke folder: https://lidan.co.id/gambar/ (atau tentukan path kustom Anda di deskripsi). File HTML akan diupload ke: https://lidan.co.id/artikel/"
+Lalu tanyakan: "Apakah kita mulai membuat file index.html sekarang?".
+BERHENTI dan tunggu jawaban saya.
+
+=== TAHAP 2 - 7 (BUAT FILE SATU PER SATU) ===
+Jika saya membalas "Ya/Lanjut", buatkan kode HTML LENGKAP untuk file tersebut.
+
+SANGAT PENTING (SEO & OG):
+- Setiap file WAJIB punya <title> (maks 60 karakter).
+- WAJIB punya <meta name="description"> (maks 160 karakter).
+- WAJIB punya <meta name="keywords">.
+- WAJIB punya OG Tags: <meta property="og:title">, <meta property="og:description">, <meta property="og:image">, <meta property="og:type"> (article/website).
+- Pada og:image, gunakan URL: https://lidan.co.id/gambar/[nama-file-gambar].
+
+SANGAT PENTING (INTERLINKING & SLUG):
+- Link "Beranda" -> index.html
+- Link Next / Prev -> [nama-file-slug].html (sesuai tabel Tahap 1).
+- Card daftar artikel -> [nama-file-slug].html.
+
+SANGAT PENTING (GAMBAR):
+- Setiap artikel WAJIB menampilkan gambar utama di paling atas (di bawah judul).
+- Gunakan URL: https://lidan.co.id/gambar/[nama-file-gambar] (KECUALI user menentukan path lain di deskripsi).
+- Alt text gambar harus berisi judul artikel.
+
+Terapkan Style yang dipilih user menggunakan Tailwind CSS (via CDN). Desain harus cantik, rapi, responsif, dan profesional.
+Di akhir balasan, tanyakan: "File [nama_file] selesai. Apakah kita lanjut ke file berikutnya?".
+BERHENTI dan tunggu jawaban saya.
+
+=== ATURAN TEKNIS ===
+1. Output WAJIB berupa BLOK KODE HTML (diawali dengan \`\`\`html dan diakhiri \`\`\`).
+2. Setiap artikel harus memiliki minimal 500-800 kata.
+3. Tone dan konten: Profesional, empatik, edukatif, sesuai konteks layanan psikologi Indonesia.
+`;
+
+const DEFAULT_CATEGORIES = {
+  style_tech: {
+    group: 'Modern & Minimalist', aktif: true, theme: { icon:'💻', color:'#3b82f6' },
+    info: { desc: 'Gaya penulisan Modern Minimalist untuk topik teknologi psikologi.', history: 'Tech Blogging.', author: 'System', use_for: 'Psikotes online, AI dalam psikologi.' },
+    ui: { label:'Tech & Digital', placeholder:`Contoh: Buatkan 5 artikel tentang pemanfaatan AI dan teknologi digital dalam layanan psikologi.` },
+    prompt: { role:'Tech Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Psikologi (HTML) gaya Modern Minimalist.', prompt_override: `Buatkan Blog Psikologi. Gunakan gaya desain HTML "Modern & Minimalist".\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_produktivitas: {
+    group: 'Modern & Minimalist', aktif: true, theme: { icon:'⏱️', color:'#3b82f6' },
+    info: { desc: 'Gaya penulisan Produktivitas.', history: 'Self-Improvement.', author: 'System', use_for: 'Tips psikologi kerja.' },
+    ui: { label:'Produktivitas Kerja', placeholder:`Contoh: Buatkan 5 artikel tentang manajemen stres dan produktivitas kerja.` },
+    prompt: { role:'Productivity Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Psikologi gaya Produktivitas.', prompt_override: `Buatkan Blog Psikologi. Gunakan gaya desain HTML "Modern & Minimalist".\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_tips: {
+    group: 'Modern & Minimalist', aktif: true, theme: { icon:'💡', color:'#3b82f6' },
+    info: { desc: 'Gaya penulisan Tips & Trik.', history: 'How-to Guide.', author: 'System', use_for: 'Tips psikologi praktis.' },
+    ui: { label:'Tips & Trik Psikologi', placeholder:`Contoh: Buatkan 5 artikel tips praktis mengatasi kecemasan.` },
+    prompt: { role:'Psikologi Educator & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Psikologi gaya Tips & Trik.', prompt_override: `Buatkan Blog Psikologi. Gunakan gaya desain HTML "Modern & Minimalist".\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_minimalis: {
+    group: 'Modern & Minimalist', aktif: true, theme: { icon:'⬜', color:'#3b82f6' },
+    info: { desc: 'Gaya penulisan Super Minimalis.', history: 'Desain abadi.', author: 'System', use_for: 'Refleksi psikologi.' },
+    ui: { label:'Ultra Minimalist', placeholder:`Contoh: Buatkan 5 artikel reflektif tentang mindfulness.` },
+    prompt: { role:'Writer & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Psikologi gaya Ultra Minimalist.', prompt_override: `Buatkan Blog Psikologi. Gunakan gaya desain HTML "Ultra Minimalist".\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_storytelling: {
+    group: 'Bold & Creative', aktif: true, theme: { icon:'✈️', color:'#f59e0b' },
+    info: { desc: 'Gaya penulisan Storytelling.', history: 'Storytelling Blog.', author: 'System', use_for: 'Kisah klien.' },
+    ui: { label:'Kisah & Storytelling', placeholder:`Contoh: Buatkan 5 artikel kisah klien yang berhasil mengatasi burnout.` },
+    prompt: { role:'Storyteller & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Psikologi gaya Storytelling.', prompt_override: `Buatkan Blog Psikologi. Gunakan gaya desain HTML "Bold & Creative".\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_lifestyle: {
+    group: 'Bold & Creative', aktif: true, theme: { icon:'☕', color:'#f59e0b' },
+    info: { desc: 'Gaya penulisan Lifestyle & Opini.', history: 'Lifestyle Blog.', author: 'System', use_for: 'Opini psikologi populer.' },
+    ui: { label:'Lifestyle & Opini', placeholder:`Contoh: Buatkan 5 artikel opini tentang fenomena flexing.` },
+    prompt: { role:'Lifestyle Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Psikologi gaya Lifestyle.', prompt_override: `Buatkan Blog Psikologi. Gunakan gaya desain HTML "Bold & Creative".\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_popculture: {
+    group: 'Bold & Creative', aktif: true, theme: { icon:'🎬', color:'#f59e0b' },
+    info: { desc: 'Gaya penulisan Pop Culture.', history: 'Pop Culture.', author: 'System', use_for: 'Psikologi film.' },
+    ui: { label:'Pop Culture & Psikologi', placeholder:`Contoh: Buatkan 5 artikel analisis psikologi karakter film.` },
+    prompt: { role:'Entertainment Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Psikologi gaya Pop Culture.', prompt_override: `Buatkan Blog Psikologi. Gunakan gaya desain HTML "Bold & Creative".\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_retro: {
+    group: 'Bold & Creative', aktif: true, theme: { icon:'📻', color:'#f59e0b' },
+    info: { desc: 'Gaya Retro 80-an/90-an.', history: 'Retro Trend.', author: 'System', use_for: 'Nostalgia psikologi.' },
+    ui: { label:'Retro & Nostalgia', placeholder:`Contoh: Buatkan 5 artikel tentang kenangan masa kecil.` },
+    prompt: { role:'Retro Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Psikologi gaya Retro.', prompt_override: `Buatkan Blog Psikologi. Gunakan gaya desain HTML "Bold & Creative".\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_bisnis: {
+    group: 'Corporate & Professional', aktif: true, theme: { icon:'📈', color:'#8b5cf6' },
+    info: { desc: 'Gaya penulisan Bisnis & HR.', history: 'Business Blog.', author: 'System', use_for: 'Psikologi industri.' },
+    ui: { label:'Psikologi Bisnis & HR', placeholder:`Contoh: Buatkan 5 artikel tentang psikotes rekrutmen untuk HR.` },
+    prompt: { role:'HR & Business Blogger', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Psikologi gaya Corporate.', prompt_override: `Buatkan Blog Psikologi. Gunakan gaya desain HTML "Corporate & Professional".\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_keuangan: {
+    group: 'Corporate & Professional', aktif: true, theme: { icon:'💰', color:'#8b5cf6' },
+    info: { desc: 'Gaya penulisan Keuangan & Psikologi.', history: 'Behavioral Finance.', author: 'System', use_for: 'Mental health finansial.' },
+    ui: { label:'Keuangan & Psikologi', placeholder:`Contoh: Buatkan 5 artikel tentang stres finansial dengan kesehatan mental.` },
+    prompt: { role:'Financial Psychologist & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Psikologi gaya Keuangan.', prompt_override: `Buatkan Blog Psikologi. Gunakan gaya desain HTML "Corporate & Professional".\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_karier: {
+    group: 'Corporate & Professional', aktif: true, theme: { icon:'💼', color:'#8b5cf6' },
+    info: { desc: 'Gaya penulisan Karier & HRD.', history: 'Career Blog.', author: 'System', use_for: 'Kesiapan kerja.' },
+    ui: { label:'Karier & Kesiapan Kerja', placeholder:`Contoh: Buatkan 5 artikel tentang tes kesiapan kerja untuk fresh graduate.` },
+    prompt: { role:'Career Coach & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Psikologi gaya Karier.', prompt_override: `Buatkan Blog Psikologi. Gunakan gaya desain HTML "Corporate & Professional".\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_bento: {
+    group: 'Corporate & Professional', aktif: true, theme: { icon:'🍱', color:'#8b5cf6' },
+    info: { desc: 'Gaya Bento Box (Kotak-kotak rapi).', history: 'Apple Event.', author: 'System', use_for: 'Showcase layanan.' },
+    ui: { label:'Bento Box Layanan', placeholder:`Contoh: Buatkan 5 artikel yang memperkenalkan tiap layanan Lidan Psikologi.` },
+    prompt: { role:'Content Designer & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Psikologi gaya Bento Box.', prompt_override: `Buatkan Blog Psikologi. Gunakan gaya desain HTML "Bento Box".\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_kesehatan: {
+    group: 'Elegant & Organic', aktif: true, theme: { icon:'🌿', color:'#10b981' },
+    info: { desc: 'Gaya Kesehatan Mental.', history: 'Mental Health Blog.', author: 'System', use_for: 'Kesehatan mental.' },
+    ui: { label:'Kesehatan Mental', placeholder:`Contoh: Buatkan 5 artikel tentang pentingnya menjaga kesehatan mental di tempat kerja.` },
+    prompt: { role:'Mental Health Blogger & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Psikologi gaya Kesehatan.', prompt_override: `Buatkan Blog Psikologi. Gunakan gaya desain HTML "Elegant & Organic".\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_mindful: {
+    group: 'Elegant & Organic', aktif: true, theme: { icon:'🍲', color:'#10b981' },
+    info: { desc: 'Gaya Mindful Living.', history: 'Mindful Living.', author: 'System', use_for: 'Mindfulness.' },
+    ui: { label:'Mindful Living', placeholder:`Contoh: Buatkan 5 artikel tentang praktik mindfulness.` },
+    prompt: { role:'Mindfulness Coach & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Psikologi gaya Mindful Living.', prompt_override: `Buatkan Blog Psikologi. Gunakan gaya desain HTML "Elegant & Organic".\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_luxury: {
+    group: 'Elegant & Organic', aktif: true, theme: { icon:'💎', color:'#10b981' },
+    info: { desc: 'Gaya Luxury & Premium.', history: 'Luxury Branding.', author: 'System', use_for: 'Layanan premium.' },
+    ui: { label:'Premium & Eksekutif', placeholder:`Contoh: Buatkan 5 artikel tentang konseling psikologi untuk eksekutif.` },
+    prompt: { role:'Executive Coach & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Psikologi gaya Luxury.', prompt_override: `Buatkan Blog Psikologi. Gunakan gaya desain HTML "Luxury Dark".\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  },
+  style_edukasi: {
+    group: 'Elegant & Organic', aktif: true, theme: { icon:'📚', color:'#10b981' },
+    info: { desc: 'Gaya Edukasi & Sains Psikologi.', history: 'Education Blog.', author: 'System', use_for: 'Teori psikologi.' },
+    ui: { label:'Edukasi & Riset', placeholder:`Contoh: Buatkan 5 artikel edukasi tentang teori-teori psikologi populer.` },
+    prompt: { role:'Psikologi Educator & Web Designer', outputName:'6 FILE BLOG HTML', pickLabel:'file', extraRules:'', formatRules:[] },
+    modules: [{ key:'file_home', enabled:true }, { key:'artikel_1', enabled:true }, { key:'artikel_2', enabled:true }, { key:'artikel_3', enabled:true }, { key:'artikel_4', enabled:true }, { key:'artikel_5', enabled:true }],
+    menu: [{ label: 'Generate Blog', desc: 'Membuat 6 File Blog Psikologi gaya Edukasi.', prompt_override: `Buatkan Blog Psikologi. Gunakan gaya desain HTML "Elegant & Organic".\n\n${BASE_RULES}\n\n=== INSTRUKSI USER ===\n{ide}` }]
+  }
+};
+
+const DEFAULT_MASTER_TOGGLES = { file_home: true, artikel_1: true, artikel_2: true, artikel_3: true, artikel_4: true, artikel_5: true };
+
+function setStatus(msg, type='info'){
+  const el = document.getElementById('statusDiv'); 
+  if (el) { el.textContent = msg; el.className = 'status show ' + type; }
+}
+function getHeaders(table){
+  return { 'Content-Type':'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': table, 'X-Role': 'admin' };
+}
+
+async function checkCurrent(){
+  try {
+    const u = document.getElementById('u').value.trim(); 
+    const p = document.getElementById('p').value.trim();
+    if(!u || !p){ setStatus('❌ Isi username & password dulu', 'err'); return; }
+    
+    const btn = document.getElementById('btnCheck'); 
+    btn.disabled = true; btn.textContent = 'Memeriksa...'; 
+    setStatus('⏳ Memeriksa user...', 'info');
+    
+    const r = await fetch(`${API_URL}?table=${USERS_TABLE}&x_01_eq=${u}&x_02_eq=${p}`, { headers: getHeaders(USERS_TABLE) });
+    const res = await r.json();
+    if(!res.success || !res.data || res.data.length === 0){ 
+      setStatus('❌ Username atau password salah / Bukan Admin', 'err'); return; 
+    }
+    
+    setStatus('✅ Login OK. Mengambil config...', 'ok');
+    document.getElementById('btnSeed').disabled = false; 
+    document.getElementById('btnDelete').disabled = false;
+    
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x_eq=${KONTROL_ID}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res2 = await r2.json();
+    if(res2.success && res2.data && res2.data.length > 0){
+      setStatus(`✅ Row id_x=${KONTROL_ID} sudah ada. Klik "Seed" untuk MENGGANTI.`, 'ok');
+    } else {
+      setStatus(`ℹ️ Row id_x=${KONTROL_ID} belum ada. Klik "Seed".`, 'info');
+    }
+  } catch(e) { 
+    setStatus('❌ Error: ' + e.message, 'err'); console.error(e);
+  } finally { 
+    const btn = document.getElementById('btnCheck'); 
+    btn.disabled = false; btn.textContent = '🔍 Cek Config'; 
+  }
+}
+
+async function doSeed(){
+  if(!confirm(`⚠️ Seed akan MENGGANTI seluruh config di id_x=${KONTROL_ID}. Lanjut?`)) return;
+  const btn = document.getElementById('btnSeed'); 
+  btn.disabled = true; btn.textContent = '⏳ Menyimpan...'; 
+  setStatus('⏳ Menyimpan...', 'info');
+  
+  try{
+    const payload = {
+      x_01: JSON.stringify({ categories: DEFAULT_CATEGORIES, outputModules: DEFAULT_MODULES }),
+      x_02: new Date().toISOString(), 
+      x_03: document.getElementById('u').value.trim() || 'seeder', 
+      x_04: '1.0',
+      x_05: '1', x_06: '1', x_07: '1', x_08: '1', x_09: '1', x_10: '1'
+    };
+    
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x_eq=${KONTROL_ID}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    const exists = res.success && res.data && res.data.length > 0;
+    const method = exists ? 'PUT' : 'POST';
+    const endpoint = exists ? `&id_x=${KONTROL_ID}` : '';
+    
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}${endpoint}`, { 
+      method, headers: getHeaders(KONTROL_TABLE), body: JSON.stringify(payload) 
+    });
+    const res2 = await r2.json();
+    if(!res2.success) throw new Error(res2.error || res2.message || 'Gagal simpan');
+    
+    setStatus(`✅ BERHASIL! Config ter-${exists ? 'update' : 'buat'} di id_x=${KONTROL_ID}.\n\nSilakan buka index.html (unified).`, 'ok');
+  } catch(e){ 
+    setStatus('❌ Gagal seed: ' + e.message, 'err'); console.error(e);
+  } finally { 
+    btn.disabled = false; btn.textContent = '🌱 Seed ke id_x=15'; 
+  }
+}
+
+async function doDelete(){
+  if(!confirm(`⚠️ Hapus row id_x=${KONTROL_ID}?`)) return;
+  const btn = document.getElementById('btnDelete'); 
+  btn.disabled = true; btn.textContent = '⏳ Menghapus...';
+  try{
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x=${KONTROL_ID}`, { method: 'DELETE', headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    if(res.success) setStatus('✅ Row terhapus', 'ok'); 
+    else throw new Error(res.error || res.message || 'Gagal hapus');
+  } catch(e){ 
+    setStatus('❌ Gagal hapus: ' + e.message, 'err'); console.error(e);
+  } finally { 
+    btn.disabled = false; btn.textContent = '🗑️ Hapus Row id_x=15'; 
+  }
+}
+</script>
+</body>
+</html>

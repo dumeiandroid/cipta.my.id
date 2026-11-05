@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seeder Master — Daftar Sistem</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4f8;min-height:100vh;padding:20px;color:#2d3748}
+.container{max-width:800px;margin:0 auto}
+.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,.08);margin-bottom:16px}
+h1{font-size:22px;margin-bottom:4px;color:#1a2332}
+.subtitle{color:#718096;font-size:13px;margin-bottom:20px}
+input,textarea{padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;width:100%;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:#3b82f6}
+.btn{padding:10px 20px;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;transition:.15s}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#3b82f6;color:#fff}
+.btn-success{background:#48bb78;color:#fff}
+.btn-danger{background:#fc8181;color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+label{font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px}
+.form-group{margin-bottom:12px}
+.status{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:12px;display:none;line-height:1.5}
+.status.show{display:block}
+.status.ok{background:#f0fff4;color:#22543d;border-left:4px solid #48bb78}
+.status.err{background:#fff5f5;color:#c53030;border-left:4px solid #fc8181}
+.status.info{background:#ebf8ff;color:#2c5282;border-left:4px solid #4299e1}
+.info-box{background:#f7fafc;padding:14px 16px;border-radius:10px;font-size:12px;line-height:1.7;color:#4a5568;border-left:4px solid #3b82f6;margin-bottom:16px}
+.code{background:#edf2f7;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:11px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>🌱 Seeder Master (Daftar Sistem)</h1>
+    <p class="subtitle">Seed config ke <code class="code">kontrol_admin</code> baris <code class="code">id_x = 1</code></p>
+    <div class="info-box">
+      <strong>⚙️ File ini hanya dijalankan SEKALI.</strong><br>
+      Mendaftarkan daftar sistem (General, Soft Skills, App Gen, dll) ke database agar Index & Admin tahu harus menampilkan apa.
+    </div>
+
+    <h2>🔐 Login Admin</h2>
+    <div class="form-group"><label>Username</label><input type="text" id="u" placeholder="admin"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="p" placeholder="password"></div>
+    <div class="row">
+      <button class="btn btn-primary" id="btnCheck" onclick="checkCurrent()">🔍 Cek Config</button>
+      <button class="btn btn-success" id="btnSeed" onclick="doSeed()" disabled>🌱 Seed ke id_x=1</button>
+      <button class="btn btn-danger" id="btnDelete" onclick="doDelete()" disabled>🗑️ Hapus Row id_x=1</button>
+    </div>
+    <div class="status" id="statusDiv"></div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://mysupplier.my.id/api/contacts_filter_dinamis6';
+const USERS_TABLE = 'admins'; 
+const KONTROL_TABLE = 'kontrol_admin';
+const KONTROL_ID = 1; 
+const SECRET = 'admin';
+
+const DEFAULT_SYSTEMS = [
+  { key: 'general',    id_x: 9,  label: 'General Tools',    icon: '🛠️', color: '#805ad5', desc: 'Khotbah, Bisnis, Copywriting' },
+  { key: 'softskills', id_x: 10, label: 'Soft Skills',      icon: '🧠', color: '#e53e3e', desc: 'Negosiasi, Konflik, Problem Solving' },
+  { key: 'appgen',     id_x: 11, label: 'Web App Gen',      icon: '🌐', color: '#10b981', desc: 'Generator kode aplikasi HTML' },
+  { key: 'design',     id_x: 12, label: 'Design Style',     icon: '🎨', color: '#8b5cf6', desc: 'Landing page per gaya desain' },
+  { key: 'webgen',     id_x: 13, label: 'Web Multi-Page',   icon: '🎯', color: '#6366f1', desc: 'Website multi-halaman statis' },
+  { key: 'blog',       id_x: 14, label: 'Blog Article',     icon: '📝', color: '#ec4899', desc: 'Artikel blog dengan interlinking' }
+];
+
+function setStatus(msg, type='info'){
+  const el = document.getElementById('statusDiv'); 
+  if (el) { el.textContent = msg; el.className = 'status show ' + type; }
+}
+function getHeaders(table){
+  return { 'Content-Type':'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': table, 'X-Role': 'admin' };
+}
+
+async function checkCurrent(){
+  try {
+    const u = document.getElementById('u').value.trim(); 
+    const p = document.getElementById('p').value.trim();
+    if(!u || !p){ setStatus('❌ Isi username & password dulu', 'err'); return; }
+    
+    const btn = document.getElementById('btnCheck'); 
+    btn.disabled = true; btn.textContent = 'Memeriksa...'; 
+    setStatus('⏳ Memeriksa user...', 'info');
+    
+    const r = await fetch(`${API_URL}?table=${USERS_TABLE}&x_01_eq=${u}&x_02_eq=${p}`, { headers: getHeaders(USERS_TABLE) });
+    const res = await r.json();
+    if(!res.success || !res.data || res.data.length === 0){ 
+      setStatus('❌ Username atau password salah / Bukan Admin', 'err'); return; 
+    }
+    
+    setStatus('✅ Login OK. Mengambil config...', 'ok');
+    document.getElementById('btnSeed').disabled = false; 
+    document.getElementById('btnDelete').disabled = false;
+    
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x_eq=${KONTROL_ID}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res2 = await r2.json();
+    if(res2.success && res2.data && res2.data.length > 0){
+      setStatus(`✅ Row id_x=${KONTROL_ID} sudah ada. Klik "Seed" untuk MENGGANTI.`, 'ok');
+    } else {
+      setStatus(`ℹ️ Row id_x=${KONTROL_ID} belum ada. Klik "Seed".`, 'info');
+    }
+  } catch(e) { 
+    setStatus('❌ Error: ' + e.message, 'err'); console.error(e);
+  } finally { 
+    const btn = document.getElementById('btnCheck'); 
+    btn.disabled = false; btn.textContent = '🔍 Cek Config'; 
+  }
+}
+
+async function doSeed(){
+  if(!confirm(`⚠️ Seed akan MENGGANTI daftar sistem di id_x=${KONTROL_ID}. Lanjut?`)) return;
+  const btn = document.getElementById('btnSeed'); 
+  btn.disabled = true; btn.textContent = '⏳ Menyimpan...'; 
+  setStatus('⏳ Menyimpan...', 'info');
+  
+  try{
+    const payload = {
+      x_01: JSON.stringify({ systems: DEFAULT_SYSTEMS }),
+      x_02: new Date().toISOString(), 
+      x_03: document.getElementById('u').value.trim() || 'seeder', 
+      x_04: '1.0'
+    };
+    
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x_eq=${KONTROL_ID}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    const exists = res.success && res.data && res.data.length > 0;
+    const method = exists ? 'PUT' : 'POST';
+    const endpoint = exists ? `&id_x=${KONTROL_ID}` : '';
+    
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}${endpoint}`, { 
+      method, headers: getHeaders(KONTROL_TABLE), body: JSON.stringify(payload) 
+    });
+    const res2 = await r2.json();
+    if(!res2.success) throw new Error(res2.error || res2.message || 'Gagal simpan');
+    
+    setStatus(`✅ BERHASIL! Daftar sistem ter-${exists ? 'update' : 'buat'} di id_x=${KONTROL_ID}.`, 'ok');
+  } catch(e){ 
+    setStatus('❌ Gagal seed: ' + e.message, 'err'); console.error(e);
+  } finally { 
+    btn.disabled = false; btn.textContent = '🌱 Seed ke id_x=1'; 
+  }
+}
+
+async function doDelete(){
+  if(!confirm(`⚠️ Hapus row id_x=${KONTROL_ID}?`)) return;
+  const btn = document.getElementById('btnDelete'); btn.disabled = true; btn.textContent = '⏳ Menghapus...';
+  try{
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x=${KONTROL_ID}`, { method: 'DELETE', headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    if(res.success) setStatus('✅ Row terhapus', 'ok'); else throw new Error(res.error || res.message || 'Gagal hapus');
+  } catch(e){ setStatus('❌ Gagal hapus: ' + e.message, 'err'); console.error(e); }
+  finally { btn.disabled = false; btn.textContent = '🗑️ Hapus Row id_x=1'; }
+}
+</script>
+</body>
+</html>
