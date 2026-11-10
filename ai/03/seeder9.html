@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seeder Sistem 9 — Liturgi 3 Bacaan (4 Mode)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4f8;min-height:100vh;padding:20px;color:#2d3748}
+.container{max-width:820px;margin:0 auto}
+.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,.08);margin-bottom:16px}
+h1{font-size:22px;margin-bottom:4px;color:#1a2332}
+.subtitle{color:#718096;font-size:13px;margin-bottom:20px}
+h2{font-size:16px;margin-bottom:12px;color:#2d3748}
+input,textarea{padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;width:100%;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:#0ea5e9}
+.btn{padding:10px 20px;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;transition:.15s}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#0ea5e9;color:#fff}
+.btn-success{background:#48bb78;color:#fff}
+.btn-danger{background:#fc8181;color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+label{font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px}
+.form-group{margin-bottom:12px}
+.status{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:12px;display:none;line-height:1.5;white-space:pre-wrap}
+.status.show{display:block}
+.status.ok{background:#f0fff4;color:#22543d;border-left:4px solid #48bb78}
+.status.err{background:#fff5f5;color:#c53030;border-left:4px solid #fc8181}
+.status.info{background:#ebf8ff;color:#2c5282;border-left:4px solid #4299e1}
+.info-box{background:#f7fafc;padding:14px 16px;border-radius:10px;font-size:12px;line-height:1.7;color:#4a5568;border-left:4px solid #0ea5e9;margin-bottom:16px}
+.code{background:#edf2f7;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:11px}
+.role-preview{background:#f0f9ff;border:1px dashed #0ea5e9;border-radius:8px;padding:10px 14px;font-size:12px;line-height:1.7;color:#075985;margin-top:8px}
+.order-preview{background:#fffaf0;border:1px dashed #ed8936;border-radius:8px;padding:10px 14px;font-size:12px;line-height:1.7;color:#7b341e;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>📖 Seeder Sistem 9 (Liturgi 3 Bacaan)</h1>
+    <p class="subtitle">Seed config ke <code class="code">kontrol_admin</code> baris <code class="code">id_x = 18</code></p>
+    <div class="info-box">
+      <strong>⚙️ File ini hanya dijalankan SEKALI.</strong><br>
+      Sistem 9 = Generator <strong>PEMBAHASAN LITURGI 3 BACAAN</strong> dengan <strong>4 MODE</strong>.<br>
+      Urutan penyampaian khotbah: <strong>Pembacaan II → Pembacaan I → Invocatio</strong>.
+    </div>
+
+    <div class="role-preview">
+      <strong>🎭 Framework Peran Dinamis (wajib berbeda per bagian):</strong><br>
+      🚪 Panggilan · 🏛️ Fondasi · ✨ Penggenapan · ⚠️ Peringatan · 💐 Penghiburan · 🙌 Doksologi
+    </div>
+
+    <div class="order-preview">
+      <strong>📋 Urutan Penyampaian:</strong><br>
+      I. PEMBUKAAN → II. PEMBACAAN II → III. PEMBACAAN I → IV. INVOCATIO → V. APLIKASI → VI. PENUTUP<br>
+      <em>Catatan: urutan liturgi tetap Invocatio → Pembacaan I → Pembacaan II. Yang diatur di sini adalah urutan PEMBAHASAN di khotbah.</em>
+    </div>
+
+    <h2 style="margin-top:16px">🔐 Login Admin</h2>
+    <div class="form-group"><label>Username</label><input type="text" id="u" placeholder="admin"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="p" placeholder="password"></div>
+    <div class="row">
+      <button class="btn btn-primary" id="btnCheck" onclick="checkCurrent()">🔍 Cek Config</button>
+      <button class="btn btn-success" id="btnSeed" onclick="doSeed()" disabled>🌱 Seed ke id_x=18</button>
+      <button class="btn btn-danger" id="btnDelete" onclick="doDelete()" disabled>🗑️ Hapus Row id_x=18</button>
+    </div>
+    <div class="status" id="statusDiv"></div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://mysupplier.my.id/api/contacts_filter_dinamis6';
+const USERS_TABLE = 'admins';
+const KONTROL_TABLE = 'kontrol_admin';
+const KONTROL_ID = 18;
+const SECRET = 'admin';
+
+const DEFAULT_MODULES = {
+  liturgi_utama: { title: 'PEMBAHASAN LITURGI 3 BACAAN', desc: 'Invocatio + Pembacaan I + Pembacaan II yang saling terhubung, dalam 4 mode pilihan.' }
+};
+
+// ============================================================
+// ATURAN BERSAMA
+// ============================================================
+const ATURAN_BERSAMA = `=== ATURAN PERIKOP / AYAT ALKITAB (WAJIB) ===
+- Jika user menyebut ayat untuk bagian tertentu (Invocatio / Pembacaan I / Pembacaan II), WAJIB dipakai persis.
+- DILARANG MUTLAK mengganti ayat yang disebut user.
+- DILARANG MUTLAK MEMPERSEMPIT RENTANG: jika user memberi rentang (misal Mazmur 100:1-5), tulis UTUH rentang tersebut di field Ayat.
+- Jika user TIDAK menyebut ayat untuk suatu bagian, AI WAJIB memilih ayat yang paling relevan dengan tema & jujutan.
+- SEMUA pembahasan (per kelompok ayat / per poin / per frasa / per adegan) WAJIB berada di DALAM rentang ayat bagian tersebut.
+
+=== ROLE DINAMIS (WAJIB BERBEDA TIAP BAGIAN) ===
+Setiap bagian WAJIB mendapat peran yang BERBEDA dari bagian lain. Pilih dari daftar:
+🚪 Panggilan / Undangan
+🏛️ Fondasi / Janji
+✨ Penggenapan / Klimaks
+⚠️ Peringatan / Koreksi
+💐 Penghiburan
+🙌 Doksologi / Pujian
+
+Tentukan peran dari ISI TEKS, bukan dari posisi liturgi. Jika dua bagian isinya mirip, ubah sudut pandang agar peran tetap berbeda.
+
+=== URUTAN PENYAMPAIAN DALAM KHOTBAH (WAJIB DIPATUHI) ===
+Berbeda dari urutan liturgi. Urutan PEMBAHASAN di khotbah:
+I. PEMBUKAAN → II. PEMBACAAN II → III. PEMBACAAN I → IV. INVOCATIO → V. APLIKASI PRAKTIS → VI. PENUTUP.
+
+Alasan: Pembacaan II baru saja dibaca tepat sebelum khotbah, jadi jemaat masih segar. Alur mundur ini secara retoris kuat — penggenapan → fondasi → panggilan.
+
+=== URUTAN LITURGI (TETAP) ===
+Ibadah: Invocatio → Pembacaan I → Pembacaan II → Khotbah.
+JANGAN meminta user mengubah urutan bacaan di liturgi.
+
+=== DETEKSI MISMATCH (disesuaikan urutan penyampaian) ===
+Alur ideal untuk penyampaian khotbah:
+- Pembacaan II = ✨ Penggenapan
+- Pembacaan I = 🏛️ Fondasi
+- Invocatio = 🚪 Panggilan
+
+Jika BERTOLAK (misal Pembacaan II = Fondasi, Pembacaan I = Penggenapan):
+  a) Susun jembatan adaptif di antara bagian
+  b) Tampilkan CATATAN PENYESUAIAN di akhir dengan 2 strategi (Rewind & Flashback)
+Jika SELARAS: JANGAN tampilkan Catatan Penyesuaian.
+
+=== ATURAN LATAR BELAKANG AYAT ===
+- WAJIB ada di Pembacaan II dan Pembacaan I (di awal bagian, sebelum masuk detail mode).
+- TIDAK ADA di Invocatio (Invocatio langsung ke Peran dan Makna Ayat).
+- Cukup 1 kalimat (±15-20 kata).
+- Berisi konteks historis, sastra, atau situasional dari ayat tersebut.
+- Boleh menyebut kaitan dengan bagian sebelumnya jika relevan (misal Pembacaan I boleh menyebut "seperti yang kita lihat di Pembacaan II...").
+
+=== ATURAN PERGUMULAN HIDUP ===
+- Situasi nyata dengan TEGANGAN — bukan situasi netral.
+- Konkret, terjadi di rumah, kantor, sekolah, gereja, jalan, atau keluarga.
+- 1 kalimat (boleh 2 klausa).
+- Masalah LAHIR DARI TEKS — bukan dari tren populer.
+- Setiap bagian WAJIB punya Pergumulan Hidup yang BERBEDA.
+
+=== ATURAN PESAN AYAT ===
+- Jawaban firman Tuhan untuk Pergumulan Hidup tersebut.
+- Bernada KASIH KARUNIA — bukan perintah moralistik.
+- 1 kalimat singkat, tegas, berdampak.
+- Menjelaskan MENGAPA kita bisa, bukan hanya APA yang harus dilakukan.
+
+=== ATURAN UMUM ===
+- Semua field: SATU KALIMAT SINGKAT (±15 kata).
+- Setiap bagian WAJIB punya peran BERBEDA.
+- Setiap bagian WAJIB punya poin yang TIDAK muncul di bagian lain.
+- Bahasa Indonesia yang hangat, jelas, memberdayakan.
+- Format markdown rapi.
+
+=== STATUS AKHIR ===
+Setelah semua selesai, tulis:
+
+---
+SELESAI — Pembahasan Liturgi 3 Bacaan (Mode: [nama mode])
+
+Ketik "REGENERATE" jika ingin membuat ulang dengan ayat berbeda, atau "STOP" jika sudah selesai.
+---
+
+BERHENTI dan tunggu jawaban saya.`;
+
+// ============================================================
+// TEMPLATE PEMBUKAAN (sama di semua mode)
+// ============================================================
+const TPL_PEMBUKAAN = `I. PEMBUKAAN
+
+   - Salam dan doa pembuka: [satu kalimat]
+
+   - Pengantar Tema: [harapan universal yang didambakan] — namun [realitas/pergumulan yang menghambat].
+
+   - Ajakan: Oleh karena itu, hari ini kita akan merenungkan firman Tuhan dengan tema "[tema dari user]" — yang akan membimbing kita untuk [tujuan/jujutan dari user, ditulis ulang sebagai ajakan].`;
+
+// ============================================================
+// TEMPLATE INVOCATIO (SELALU RINGKAS, dengan Panggilan Final, TANPA Latar Belakang)
+// ============================================================
+const TPL_INVOCATIO = `=== IV. INVOCATIO ===
+Ayat: [referensi ayat — WAJIB utuh jika user menyebut]
+
+Peran Bagian Ini: [emoji + nama peran] — [satu kalimat penjelasan]
+
+Makna Ayat: [satu kalimat — tafsiran singkat dalam terang tema]
+
+Kalimat Kunci: [satu kalimat — untuk diucapkan pembaca/pengkhotbah]
+
+Panggilan Final: [satu kalimat ajakan merespons firman hari ini — mengalirkan ke penutup]`;
+
+// ============================================================
+// TEMPLATE PEMBACAAN I & II PER MODE (dengan Latar Belakang Ayat)
+// ============================================================
+
+// MODE 1 — EKSPOSITORI
+const TPL_MODE_EKSPOSITORI = `=== [LABEL_BAGIAN] ===
+Ayat: [referensi ayat — WAJIB utuh jika user menyebut]
+
+Peran Bagian Ini: [emoji + nama peran] — [satu kalimat penjelasan]
+
+Latar Belakang Ayat: [konteks historis/sastra/situasional — satu kalimat]
+
+⚠️ MODE: EKSPOSITORI — bahas per kelompok ayat.
+
+Pecah rentang Ayat menjadi 2-3 kelompok ayat. Untuk SETIAP kelompok, tulis dengan format PERSIS:
+
+Kelompok N — Ayat X-Y: [Ringkasan singkat isi ayat dalam satu frasa]
+
+Teks: [Tuliskan bunyi ayat X-Y — kutipan Alkitab]
+
+Makna: [Tafsiran ayat dalam terang tema — satu kalimat]
+
+Point Utama: [Inti pesan ayat untuk tema — satu kalimat]
+
+Pergumulan Hidup: [Situasi nyata dengan tegangan — satu kalimat]
+
+Pesan Ayat: [Jawaban firman bernada kasih karunia — satu kalimat]
+
+[ulangi untuk SEMUA kelompok ayat]
+
+[JEMBATAN]`;
+
+// MODE 2 — TOPIKAL
+const TPL_MODE_TOPIKAL = `=== [LABEL_BAGIAN] ===
+Ayat: [referensi ayat — WAJIB utuh jika user menyebut]
+
+Peran Bagian Ini: [emoji + nama peran] — [satu kalimat penjelasan]
+
+Latar Belakang Ayat: [konteks historis/sastra/situasional — satu kalimat]
+
+⚠️ MODE: TOPIKAL — bahas per topik dari dalam ayat.
+
+Bahas Ayat menjadi TEPAT 3 POIN utama. Semua poin WAJIB dari DALAM rentang ayat. Urutan poin mengikuti urutan ayat. Untuk SETIAP poin, tulis dengan format PERSIS:
+
+Poin N — Ayat X-Y
+
+[Kalimat singkat topik — satu kalimat]
+
+Makna: [Tafsiran topik dalam terang ayat — satu kalimat]
+
+Point Utama: [Inti pesan topik ini — satu kalimat]
+
+Pergumulan Hidup: [Situasi nyata dengan tegangan — satu kalimat]
+
+Pesan Ayat: [Jawaban firman bernada kasih karunia — satu kalimat]
+
+Ayat Pendukung: "[bunyi ayat X-Y dari DALAM rentang]" ([referensi]) — didukung juga oleh [ayat silang 1 dari LUAR rentang]; [ayat silang 2].
+
+[ulangi untuk Poin 1, Poin 2, dan Poin 3]
+
+[JEMBATAN]`;
+
+// MODE 3 — TEKSTUAL
+const TPL_MODE_TEKSTUAL = `=== [LABEL_BAGIAN] ===
+Ayat: [referensi ayat — WAJIB utuh jika user menyebut]
+
+Peran Bagian Ini: [emoji + nama peran] — [satu kalimat penjelasan]
+
+Latar Belakang Ayat: [konteks historis/sastra/situasional — satu kalimat]
+
+Nats (dianalisis): [WAJIB SATU ayat kunci dari DALAM rentang Ayat di atas]
+
+⚠️ MODE: TEKSTUAL — gali frasa per frasa dari Nats di atas.
+
+Pecah NATS menjadi 2-4 frasa kunci. Setiap frasa WAJIB dari dalam NATS. Urutan frasa mengikuti urutan ayat. Untuk SETIAP frasa, tulis dengan format PERSIS:
+
+Frasa N: "[potongan ayat]"
+
+Makna Kata & Konteks: [Makna kata kunci/frasa dalam konteksnya — satu kalimat]
+
+Point Utama: [Inti pesan dari frasa — satu kalimat]
+
+Pergumulan Hidup: [Situasi nyata dengan tegangan — satu kalimat]
+
+Pesan Ayat: [Jawaban firman bernada kasih karunia — satu kalimat]
+
+[ulangi untuk SEMUA frasa]
+
+[JEMBATAN]`;
+
+// MODE 4 — NARATIF
+const TPL_MODE_NARATIF = `=== [LABEL_BAGIAN] ===
+Ayat: [referensi ayat — WAJIB utuh jika user menyebut]
+
+Peran Bagian Ini: [emoji + nama peran] — [satu kalimat penjelasan]
+
+Latar Belakang Ayat: [konteks historis/sastra/situasional — satu kalimat]
+
+⚠️ MODE: NARATIF — ceritakan per adegan.
+
+Bagi rentang Ayat menjadi 3-5 adegan sesuai panjang kisah. Semua adegan WAJIB dari dalam rentang ayat. Urutan adegan mengikuti alur cerita. Untuk SETIAP adegan, tulis dengan format PERSIS:
+
+Adegan N: [Judul adegan singkat — 2-4 kata]
+
+Ayat X-Y: [referensi]
+
+Gambaran Adegan: [adegan konkret — satu kalimat]
+
+Tegangan Jemaat: [masalah yang dihadapi tokoh, yang juga dialami jemaat — satu kalimat]
+
+Pesan Firman: [kebenaran yang muncul dari adegan ini, bernada kasih karunia — satu kalimat]
+
+[ulangi untuk SEMUA adegan]
+
+[JEMBATAN]`;
+
+// ============================================================
+// Helper: isi placeholder LABEL_BAGIAN & JEMBATAN sesuai urutan
+// Urutan penyampaian: Pembacaan II → Pembacaan I
+// ============================================================
+function fillPembacaan(tpl, bagian) {
+  let label, jembatan;
+  if (bagian === 'II') {
+    label = 'II. PEMBACAAN II';
+    jembatan = 'Jembatan ke Pembacaan I: [satu kalimat — mengalirkan tema dari Pembacaan II ke Pembacaan I]';
+  } else {
+    label = 'III. PEMBACAAN I';
+    jembatan = 'Jembatan ke Invocatio: [satu kalimat — mengalirkan tema dari Pembacaan I ke Invocatio]';
+  }
+  return tpl
+    .replace('[LABEL_BAGIAN]', label)
+    .replace('[JEMBATAN]', jembatan);
+}
+
+// ============================================================
+// PROMPT UTAMA — Tahap 1: menu, Tahap 2: generate
+// ============================================================
+const PROMPT_LITURGI = `ANDA ADALAH ASISTEN PERANCANG LITURGI & KHOTBAH.
+
+=== INPUT USER ===
+{ide}
+
+=== ATURAN INTERAKSI (SANGAT PENTING) ===
+Anda TIDAK BOLEH membuat pembahasan di balasan pertama. Ikuti 2 TAHAP:
+
+TAHAP 1 — BALASAN PERTAMA (WAJIB):
+Tampilkan HANYA daftar berikut, tanpa membuat pembahasan apapun:
+
+"Silakan pilih MODE pembahasan untuk Pembacaan I & II:
+
+  1. 📖 Ekspositori — menggali per kelompok ayat
+  2. 🎯 Topikal — tema dengan 3 poin dari dalam ayat
+  3. 📝 Tekstual — satu ayat digali frasa per frasa
+  4. 📚 Naratif — kisah Alkitab diceritakan adegan per adegan
+
+Ketik nomornya (misal: 1)."
+
+Lalu BERHENTI dan tunggu jawaban saya.
+
+TAHAP 2 — SETELAH USER MEMBALAS DENGAN ANGKA:
+- Cocokkan angka dengan mode di atas.
+- Tulis konfirmasi: "Pilihan: [nomor] — Mode [nama mode]"
+- Generate pembahasan LENGKAP dengan format di bawah.
+
+${ATURAN_BERSAMA}
+
+=== FORMAT OUTPUT LENGKAP (URUTAN PENYAMPAIAN) ===
+
+=== TEMA ===
+[satu kalimat — ringkasan tema dari user]
+
+=== JUJUTAN ===
+[satu kalimat — tujuan yang akan dicapai]
+
+---
+
+${TPL_PEMBUKAAN}
+
+---
+
+${fillPembacaan(TPL_MODE_EKSPOSITORI, 'II')}
+[atau gunakan template Topikal/Tekstual/Naratif sesuai mode pilihan user]
+
+---
+
+${fillPembacaan(TPL_MODE_EKSPOSITORI, 'I')}
+[atau gunakan template Topikal/Tekstual/Naratif sesuai mode pilihan user]
+
+---
+
+${TPL_INVOCATIO}
+
+---
+
+=== V. APLIKASI PRAKTIS ===
+   - Penerapan sehari-hari: [satu kalimat]
+   - Tantangan dan komitmen: [satu kalimat]
+
+---
+
+=== VI. PENUTUP ===
+   - Ringkasan: [satu kalimat]
+   - Doa penutup: [satu kalimat]
+   - Berkat: [satu kalimat]
+
+---
+
+=== BENANG MERAH ===
+Alur Keseluruhan: [satu kalimat — bagaimana 3 bagian (II → I → Invocatio) membentuk 1 pesan]
+
+Pesan Utama (Jujutan): [satu kalimat — yang harus dibawa pulang jemaat]
+
+Arah Khotbah: [satu kalimat — arah pengembangan yang bisa dipakai pengkhotbah]
+
+=== CATATAN PENYESUAIAN (HANYA jika mismatch) ===
+⚠️ Terdeteksi: peran teks BERTOLAK dengan alur penyampaian ideal (Pembacaan II = Penggenapan → Pembacaan I = Fondasi → Invocatio = Panggilan).
+
+- [Bagian] = [Peran aktual]
+- [Bagian] = [Peran aktual]
+
+🔁 Strategi REWIND (default):
+[penjelasan 1-2 kalimat tentang cara membawakan dengan urutan penyampaian apa adanya, jembatan disesuaikan]
+
+🎬 Strategi FLASHBACK (opsional):
+[penjelasan 1-2 kalimat + contoh kalimat pembuka yang membingkai urutan sebagai teknik naratif sengaja]
+
+=== PENTING: TEMPLATE MODE ===
+Sesuaikan format Pembacaan II dan Pembacaan I dengan mode yang dipilih user:
+- Mode 1 (Ekspositori): format Kelompok N — Ayat X-Y + Teks/Makna/Point Utama/Pergumulan Hidup/Pesan Ayat.
+- Mode 2 (Topikal): format Poin N — Ayat X-Y + Kalimat topik/Makna/Point Utama/Pergumulan Hidup/Pesan Ayat/Ayat Pendukung.
+- Mode 3 (Tekstual): format Nats + Frasa N + Makna Kata & Konteks/Point Utama/Pergumulan Hidup/Pesan Ayat.
+- Mode 4 (Naratif): format Adegan N + Ayat X-Y + Gambaran Adegan/Tegangan Jemaat/Pesan Firman.
+
+Invocatio SELALU memakai format ringkas (Ayat, Peran, Makna Ayat, Kalimat Kunci, Panggilan Final) — TIDAK berubah apapun mode-nya. TIDAK ADA Latar Belakang Ayat di Invocatio.
+
+Latar Belakang Ayat WAJIB ada di Pembacaan II dan Pembacaan I — letaknya SETELAH "Peran Bagian Ini", SEBELUM detail mode.
+
+URUTAN WAJIB: PEMBUKAAN → PEMBACAAN II → PEMBACAAN I → INVOCATIO → APLIKASI → PENUTUP.
+JANGAN membahas Pembacaan I sebelum Pembacaan II meskipun urutan liturginya Invocatio → I → II.
+
+JANGAN menulis label "=== PEMBACAAN II. PEMBACAAN II ===" — cukup "=== II. PEMBACAAN II ===".
+
+BERHENTI dan tunggu jawaban saya.`;
+
+// ============================================================
+// KATEGORI
+// ============================================================
+const DEFAULT_CATEGORIES = {
+  liturgi_3_bacaan: {
+    group: 'Liturgi',
+    aktif: true,
+    theme: { icon:'📖', color:'#0ea5e9' },
+    info: {
+      desc: 'Pembahasan selaras 3 bacaan liturgi (Invocatio, Pembacaan I, Pembacaan II) dengan 4 mode pilihan. Urutan penyampaian: II → I → Invocatio.',
+      history: 'Mengikuti pola redemptive-historical & role dinamis.',
+      author: 'Sistem 9',
+      use_for: 'Ibadah Minggu, ibadah syukur, kebaktian liturgis dengan 3 bacaan.'
+    },
+    ui: {
+      label: 'Liturgi 3 Bacaan',
+      placeholder: `Tuliskan Tema, Jujutan, dan (opsional) 3 ayat.
+
+Contoh Lengkap:
+Tema: Hidup dalam Hidup Keluarga Tuhan
+Jujutan: Membimbing jemaat memahami panggilan, dasar, dan tatanan rohani sebagai keluarga Allah.
+Ayat Invocatio: 1 Petrus 1:2a
+Ayat Pembacaan I: 2 Samuel 7:13-16
+Ayat Pembacaan II: 1 Timotius 3:14-16
+
+Contoh Minimal (AI pilih sendiri):
+Tema: Kasih yang Mengubahkan
+Jujutan: Jemaat menyadari bahwa kasih Allah bukan hanya untuk diterima, tapi untuk diteruskan.`
+    },
+    prompt: { role:'Perancang Liturgi 3 Bacaan', outputName:'PEMBAHASAN LITURGI', pickLabel:'mode pembahasan', extraRules:'', formatRules:[] },
+    modules: [{ key:'liturgi_utama', enabled:true }],
+    menu: [
+      {
+        label: '📖 Generate Pembahasan Liturgi',
+        desc: 'Buat pembahasan Invocatio + Pembacaan I + Pembacaan II dengan 4 mode pilihan (urutan penyampaian: II → I → Invocatio).',
+        prompt_override: PROMPT_LITURGI
+      }
+    ]
+  }
+};
+
+// ============================================================
+// SEEDER LOGIC
+// ============================================================
+function setStatus(msg, type='info'){
+  const el = document.getElementById('statusDiv');
+  if (el) { el.textContent = msg; el.className = 'status show ' + type; }
+}
+function getHeaders(table){
+  return { 'Content-Type':'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': table, 'X-Role': 'admin' };
+}
+
+async function checkCurrent(){
+  try {
+    const u = document.getElementById('u').value.trim();
+    const p = document.getElementById('p').value.trim();
+    if(!u || !p){ setStatus('❌ Isi username & password dulu', 'err'); return; }
+    const btn = document.getElementById('btnCheck');
+    btn.disabled = true; btn.textContent = 'Memeriksa...';
+    setStatus('⏳ Memeriksa user...', 'info');
+
+    const r = await fetch(`${API_URL}?table=${USERS_TABLE}&x_01_eq=${u}&x_02_eq=${p}`, { headers: getHeaders(USERS_TABLE) });
+    const res = await r.json();
+    if(!res.success || !res.data || res.data.length === 0){
+      setStatus('❌ Username atau password salah / Bukan Admin', 'err'); return;
+    }
+    setStatus('✅ Login OK. Mengambil config...', 'ok');
+    document.getElementById('btnSeed').disabled = false;
+    document.getElementById('btnDelete').disabled = false;
+
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x_eq=${KONTROL_ID}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res2 = await r2.json();
+    if(res2.success && res2.data && res2.data.length > 0){
+      setStatus(`✅ Row id_x=${KONTROL_ID} sudah ada. Klik "Seed" untuk MENGGANTI.`, 'ok');
+    } else {
+      setStatus(`ℹ️ Row id_x=${KONTROL_ID} belum ada. Klik "Seed".`, 'info');
+    }
+  } catch(e) {
+    setStatus('❌ Error: ' + e.message, 'err'); console.error(e);
+  } finally {
+    const btn = document.getElementById('btnCheck');
+    btn.disabled = false; btn.textContent = '🔍 Cek Config';
+  }
+}
+
+async function doSeed(){
+  if(!confirm(`⚠️ Seed akan MENGGANTI seluruh config di id_x=${KONTROL_ID}. Lanjut?`)) return;
+  const btn = document.getElementById('btnSeed');
+  btn.disabled = true; btn.textContent = '⏳ Menyimpan...';
+  setStatus('⏳ Menyimpan...', 'info');
+
+  try {
+    const payload = {
+      x_01: JSON.stringify({ categories: DEFAULT_CATEGORIES, outputModules: DEFAULT_MODULES }),
+      x_02: new Date().toISOString(),
+      x_03: document.getElementById('u').value.trim() || 'seeder',
+      x_04: '1.0',
+      x_05: '1', x_06: '1', x_07: '1', x_08: '1', x_09: '1', x_10: '1'
+    };
+
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x_eq=${KONTROL_ID}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    const exists = res.success && res.data && res.data.length > 0;
+    const method = exists ? 'PUT' : 'POST';
+    const endpoint = exists ? `&id_x=${KONTROL_ID}` : '';
+
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}${endpoint}`, {
+      method, headers: getHeaders(KONTROL_TABLE), body: JSON.stringify(payload)
+    });
+    const res2 = await r2.json();
+    if(!res2.success) throw new Error(res2.error || res2.message || 'Gagal simpan');
+
+    setStatus(`✅ BERHASIL! Config ter-${exists ? 'update' : 'buat'} di id_x=${KONTROL_ID}.\n\n1 kategori × 1 menu item telah di-seed.\n\nSilakan buka index.html (unified) dan klik tab "Liturgi 3 Bacaan".`, 'ok');
+  } catch(e) {
+    setStatus('❌ Gagal seed: ' + e.message, 'err'); console.error(e);
+  } finally {
+    btn.disabled = false; btn.textContent = '🌱 Seed ke id_x=18';
+  }
+}
+
+async function doDelete(){
+  if(!confirm(`⚠️ Hapus row id_x=${KONTROL_ID}?`)) return;
+  const btn = document.getElementById('btnDelete');
+  btn.disabled = true; btn.textContent = '⏳ Menghapus...';
+  try {
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x=${KONTROL_ID}`, { method: 'DELETE', headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    if(res.success) setStatus('✅ Row terhapus', 'ok');
+    else throw new Error(res.error || res.message || 'Gagal hapus');
+  } catch(e) {
+    setStatus('❌ Gagal hapus: ' + e.message, 'err'); console.error(e);
+  } finally {
+    btn.disabled = false; btn.textContent = '🗑️ Hapus Row id_x=18';
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seeder Sistem 8 — Khotbah & Renungan (Final)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4f8;min-height:100vh;padding:20px;color:#2d3748}
+.container{max-width:820px;margin:0 auto}
+.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,.08);margin-bottom:16px}
+h1{font-size:22px;margin-bottom:4px;color:#1a2332}
+.subtitle{color:#718096;font-size:13px;margin-bottom:20px}
+h2{font-size:16px;margin-bottom:12px;color:#2d3748}
+input,textarea{padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;width:100%;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:#c026d3}
+.btn{padding:10px 20px;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;transition:.15s}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#c026d3;color:#fff}
+.btn-success{background:#48bb78;color:#fff}
+.btn-danger{background:#fc8181;color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+label{font-weight:600;font-size:13px;color:#4a5568;display:block;margin-bottom:4px}
+.form-group{margin-bottom:12px}
+.status{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:12px;display:none;line-height:1.5;white-space:pre-wrap}
+.status.show{display:block}
+.status.ok{background:#f0fff4;color:#22543d;border-left:4px solid #48bb78}
+.status.err{background:#fff5f5;color:#c53030;border-left:4px solid #fc8181}
+.status.info{background:#ebf8ff;color:#2c5282;border-left:4px solid #4299e1}
+.info-box{background:#f7fafc;padding:14px 16px;border-radius:10px;font-size:12px;line-height:1.7;color:#4a5568;border-left:4px solid #c026d3;margin-bottom:16px}
+.code{background:#edf2f7;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:11px}
+.menu-preview{background:#faf5ff;border:1px dashed #c026d3;border-radius:8px;padding:10px 14px;font-size:12px;line-height:1.7;color:#553c9a;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>🌱 Seeder Sistem 8 (Khotbah &amp; Renungan)</h1>
+    <p class="subtitle">Seed config ke <code class="code">kontrol_admin</code> baris <code class="code">id_x = 17</code></p>
+    <div class="info-box">
+      <strong>⚙️ File ini hanya dijalankan SEKALI.</strong><br>
+      Sistem 8 = Generator <strong>KERANGKA KHOTBAH &amp; RENUNGAN</strong> interaktif.<br>
+      User isi tema → AI tampilkan daftar jenis → user balas angka → AI generate kerangka.
+    </div>
+
+    <div class="menu-preview">
+      <strong>📋 Total yang akan di-seed:</strong><br>
+      • 🎤 Ibadah Umum — <b>4 menu</b> (Ekspositori, Topikal, Tekstual, Naratif)<br>
+      • 🎉 Momen Khusus — <b>4 menu</b> (Perayaan, Pernikahan, Penghiburan, Rumah Baru)<br>
+      • 🕊️ Renungan Pribadi — <b>3 menu</b> (Renungan Harian, Keluarga, Pemuda)<br>
+      <b>= 11 menu items</b> dalam 3 kategori<br>
+      <em>Ibadah Umum: Ekspositori per kelompok ayat · Topikal per poin · Tekstual per frasa · Naratif per adegan.</em>
+    </div>
+
+    <h2 style="margin-top:16px">🔐 Login Admin</h2>
+    <div class="form-group"><label>Username</label><input type="text" id="u" placeholder="admin"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="p" placeholder="password"></div>
+    <div class="row">
+      <button class="btn btn-primary" id="btnCheck" onclick="checkCurrent()">🔍 Cek Config</button>
+      <button class="btn btn-success" id="btnSeed" onclick="doSeed()" disabled>🌱 Seed ke id_x=17</button>
+      <button class="btn btn-danger" id="btnDelete" onclick="doDelete()" disabled>🗑️ Hapus Row id_x=17</button>
+    </div>
+    <div class="status" id="statusDiv"></div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://mysupplier.my.id/api/contacts_filter_dinamis6';
+const USERS_TABLE = 'admins';
+const KONTROL_TABLE = 'kontrol_admin';
+const KONTROL_ID = 17;
+const SECRET = 'admin';
+
+const DEFAULT_MODULES = {
+  kerangka_utama: { title: 'KERANGKA RINGKAS', desc: 'Kerangka khotbah/renungan dengan satu kalimat per poin.' }
+};
+
+// ============================================================
+// ATURAN INTERAKSI DASAR
+// ============================================================
+const ATURAN_INTERAKSI = `=== ATURAN INTERAKSI (SANGAT PENTING) ===
+Anda TIDAK BOLEH membuat kerangka di balasan pertama. Ikuti 2 TAHAP:
+
+TAHAP 1 — BALASAN PERTAMA (WAJIB):
+Tampilkan HANYA daftar berikut, tanpa membuat kerangka apapun:
+
+"Silakan pilih nomor JENIS yang ingin dibuatkan kerangka:
+
+{MENU}
+
+Ketik nomornya (misal: 1)."
+
+Lalu BERHENTI dan tunggu jawaban saya.
+
+TAHAP 2 — SETELAH USER MEMBALAS DENGAN ANGKA:
+- Cocokkan angka dengan jenis di atas.
+- Tulis konfirmasi: "Pilihan: [nomor] — [nama jenis]"
+- Generate KERANGKA lengkap sesuai template jenis tersebut di bawah.
+
+=== ATURAN OUTPUT KERANGKA (WAJIB) ===
+- Secara umum setiap poin/butir ditulis dalam SATU KALIMAT SINGKAT (sekitar 15 kata).
+- KECUALI bagian-bagian berformat multi-field di bawah ini yang WAJIB diisi lengkap — setiap field tetap satu kalimat:
+  · Ekspositori: Teks, Makna, Point Utama, Pergumulan Hidup, Pesan Ayat (per kelompok ayat)
+  · Topikal: Kalimat topik, Makna, Point Utama, Pergumulan Hidup, Pesan Ayat, Ayat Pendukung (per poin)
+  · Tekstual: Makna Kata & Konteks, Point Utama, Pergumulan Hidup, Pesan Ayat, Ayat Pendukung (per frasa)
+  · Naratif: Gambaran Adegan, Tegangan Jemaat, Pesan Firman (per adegan)
+- JANGAN menulis paragraf panjang atau penjelasan bertele-tele.
+- Ini KERANGKA untuk dikembangkan sendiri oleh pengguna.
+- Format markdown rapi.
+
+=== STATUS AKHIR (WAJIB SETIAP KALI SELESAI) ===
+Setelah kerangka selesai, tulis:
+
+---
+SELESAI — [Nama Jenis]
+
+Ketik nomor lain untuk membuat kerangka jenis lain dengan tema yang sama, atau ketik "STOP" jika sudah selesai.
+---
+
+BERHENTI dan tunggu jawaban saya.`;
+
+// ============================================================
+// ATURAN PERIKOP / AYAT ALKITAB
+// ============================================================
+const PERIKOP_RULES = `=== ATURAN PERIKOP / AYAT ALKITAB (WAJIB UNTUK JENIS 1-4) ===
+
+Jika di "TEMA / IDE DARI USER" terdapat kata "ayat alkitab", "perikop", "ayat", "kisah", atau referensi Alkitab (misal: 2 Samuel 7:13-16, Filipi 4:4-9, 1 Samuel 17:1-58):
+
+1. Referensi tersebut WAJIB dipakai sebagai perikop/kisah/ayat utama.
+2. DILARANG MUTLAK mengganti dengan perikop lain atau memilih ayat lain di luar referensi tersebut.
+3. NATS WAJIB dipilih dari DALAM perikop yang diberikan (satu ayat kunci yang paling mewakili tema).
+4. SEMUA poin/analisis/eksposisi WAJIB berasal dari DALAM perikop tersebut — bukan dari ayat luar.
+5. Ayat silang dari luar perikop BOLEH dipakai hanya sebagai PENDUKUNG, bukan sebagai sumber poin.
+6. DILARANG MUTLAK MEMPERSEMPIT RENTANG. Jika user memberikan RENTANG ayat (misal 2 Samuel 7:13-16), tuliskan rentang itu UTUH di field Perikop / Ayat / Kisah — JANGAN dipersempit menjadi satu ayat.
+7. Yang berisi SATU ayat HANYA field "Nats" (ayat kunci pilihan dari dalam rentang). Semua field lain (Perikop / Ayat / Kisah) WAJIB memuat rentang penuh persis seperti yang user tulis.
+
+Contoh pemakaian yang BENAR:
+✅ User menulis "Ayat Alkitab: 2 Samuel 7:13-16" → di header tulis "Ayat: 2 Samuel 7:13-16" (UTUH).
+✅ Nats boleh "2 Samuel 7:16" (satu ayat kunci dari dalam rentang).
+
+Contoh pemakaian yang SALAH:
+❌ User menulis "Ayat Alkitab: 2 Samuel 7:13-16" → tapi header hanya menulis "Ayat: 2 Samuel 7:16" (sudah dipersempit).
+❌ User menulis "Kisah: 1 Samuel 17:1-58" → tapi header hanya menulis "Kisah: 1 Samuel 17:45-47" (sudah dipersempit).
+
+Jika user TIDAK menyebutkan perikop/ayat:
+- AI WAJIB memilih satu perikop yang paling relevan dengan tema.
+- Beritahukan pilihan perikop di awal output.
+- Terapkan aturan 3-7 di atas terhadap perikop pilihan AI tersebut.`;
+
+// ============================================================
+// ATURAN PENGANTAR
+// ============================================================
+const PENGANTAR_RULES = `=== ATURAN PENGANTAR TEMA / AYAT / KISAH (SANGAT PENTING) ===
+
+Setiap field berikut WAJIB ditulis dalam SATU KALIMAT dengan DUA KLAUSA:
+- "Pengantar Tema" (Topikal, Perayaan, Pernikahan, Penghiburan, Rumah Baru, Pemuda, Ekspositori)
+- "Pengantar Ayat" (Tekstual)
+- "Pengantar Kisah" (Naratif)
+
+FORMAT PERSIS:
+[harapan universal yang didambakan jemaat] — namun [realitas/pergumulan yang menghambat].
+
+Tujuan: membangun TEGANGAN di pembukaan — bukan hanya harapan datar. Jemaat langsung merasa "ini hidup saya."
+
+Contoh BENAR:
+- "Setiap orang mendambakan keluarga yang kokoh — namun realitanya banyak keluarga retak karena kesibukan, ego, dan luka yang tidak pernah selesai."
+- "Kita semua ingin hidup tenang dan tidak cemas — namun pikiran kita terus dibajak kekhawatiran tentang hari esok."
+- "Setiap orang rindu dikasihi tanpa syarat — namun kita sering justru menyakiti orang yang paling mengasihi kita."
+
+Contoh SALAH (hanya harapan, tanpa pergumulan):
+❌ "Setiap orang mendambakan keluarga yang kokoh dan memiliki masa depan yang aman di dalam pemeliharaan Tuhan."
+❌ "Kita semua ingin hidup yang penuh damai sejahtera."`;
+
+// ============================================================
+// ATURAN PERGUMULAN HIDUP & PESAN AYAT
+// ============================================================
+const PERGUMULAN_RULES = `=== ATURAN PERGUMULAN & PESAN AYAT (SANGAT PENTING) ===
+
+Berlaku untuk: Khotbah Ekspositori, Topikal, Tekstual, dan Naratif.
+
+▸ PERGUMULAN UTAMA JEMAAT (di bagian header — CATATAN INTERNAL PENGKHOTBAH)
+- Field ini adalah catatan pribadi pengkhotbah — TIDAK dibacakan ke jemaat.
+- Fungsi: menjadi kompas/kategori besar masalah yang dijawab seluruh khotbah.
+- Satu kalimat.
+- Ditulis dengan label "📋 CATATAN INTERNAL PENGKHOTBAH (jangan dibacakan ke jemaat):".
+
+▸ PERGUMULAN HIDUP / TEGANGAN JEMAAT (DISAMPAIKAN ke jemaat)
+- Ekspositori, Topikal, Tekstual: gunakan label "Pergumulan Hidup"
+- Naratif: gunakan label "Tegangan Jemaat" (karena konteksnya adegan cerita)
+- Inti sama: situasi nyata dengan TEGANGAN yang dialami jemaat, sebagai wujud masalah/dosa/kelemahan yang disentuh firman.
+
+Ciri yang BENAR:
+✅ Konkret, mudah dibayangkan jemaat awam.
+✅ Terjadi di rumah, kantor, sekolah, gereja, jalan, atau keluarga.
+✅ Melibatkan orang biasa — bukan tokoh Alkitab atau tokoh terkenal.
+✅ 1 kalimat (boleh 2 klausa).
+✅ Menggambarkan TEGANGAN, bukan sekadar situasi netral.
+✅ Masalah LAHIR DARI TEKS/TOPIK — bukan dari tren populer yang dipaksakan.
+
+Contoh BENAR:
+- "Kita mudah tersinggung saat pasangan atau rekan kerja tidak sesuai harapan kita."
+- "Kita sulit mengampuni orang yang pernah menyakiti kita, meski sudah bertahun-tahun."
+- "Kita cenderung memamerkan kebaikan kita di media sosial agar diakui orang lain."
+
+Contoh SALAH:
+❌ Situasi netral tanpa tegangan ("Kita semua pernah bertemu orang sabar.")
+❌ Perumpamaan atau cerita fabel.
+❌ Metafora abstrak ("Hidup ini seperti embun pagi...")
+❌ Masalah yang dipaksakan (ayat tentang doa → masalah tentang investasi)
+
+▸ PESAN AYAT / PESAN FIRMAN (DISAMPAIKAN ke jemaat)
+- Ekspositori, Topikal, Tekstual: gunakan label "Pesan Ayat"
+- Naratif: gunakan label "Pesan Firman" (karena keluar dari adegan cerita)
+- Inti sama: jawaban firman Tuhan untuk Pergumulan Hidup / Tegangan Jemaat.
+
+Ciri yang BENAR:
+✅ Bernada KASIH KARUNIA — bukan sekadar perintah moralistik.
+✅ Bisa berbentuk koreksi, penghiburan, panggilan, atau janji — tergantung teksnya.
+✅ 1 kalimat singkat, tegas, berdampak.
+✅ Menjelaskan MENGAPA kita bisa, bukan hanya APA yang harus dilakukan.
+
+Contoh BENAR (bukan moralistik):
+- "Sabar bukan soal menahan emosi, tapi soal mengingat kita pun telah diampuni Tuhan dengan kesabaran yang sama."
+- "Mengampuni bukan berarti melupakan luka, tapi melepaskan hak kita untuk membalas karena Kristus lebih dulu melakukannya bagi kita."
+- "Kebaikan sejati tidak butuh pengakuan manusia, karena Bapa yang melihat secara tersembunyi sudah cukup."
+
+Contoh SALAH (moralistik):
+❌ "Oleh karena itu, jadilah orang yang sabar."
+❌ "Kita harus lebih rajin berdoa setiap hari."
+❌ "Marilah kita berubah mulai sekarang." (tanpa dasar kasih karunia)
+
+▸ ATURAN KHUSUS UNTUK AYAT DOKTRINAL
+Jika suatu ayat lebih bersifat doktrinal dan tidak punya "masalah" jelas, gunakan label PERGUMULAN YANG DIJAWAB AYAT INI — misalnya:
+- "Kita mudah meragukan apakah Tuhan benar-benar peduli pada hidup kita yang kecil ini."
+- "Kita cenderung membayangkan Tuhan menurut standar manusia, bukan menurut firman-Nya."
+
+▸ Setiap bagian WAJIB punya Pergumulan Hidup / Tegangan Jemaat yang BERBEDA.
+
+▸ AYAT PENDUKUNG (khusus Topikal per poin dan Tekstual per frasa)
+Berisi DUA bagian dengan aturan KETAT:
+1. BUNYI AYAT UTAMA — WAJIB dari DALAM perikop/ayat utama (untuk Topikal) atau dari ayat silang di luar ayat utama (untuk Tekstual).
+2. AYAT SILANG 1-2 referensi pendukung.
+
+Format untuk TOPIKAL:
+Ayat Pendukung: "[bunyi ayat X-Y dari DALAM perikop]" ([referensi dalam perikop]) — didukung juga oleh [ayat silang 1]; [ayat silang 2].
+
+Format untuk TEKSTUAL:
+Ayat Pendukung (Opsional): "[bunyi ayat silang dari LUAR ayat utama]" ([referensi]) — didukung juga oleh [ayat silang 1]; [ayat silang 2].`;
+
+// ============================================================
+// TEMPLATE JENIS — KHOTBAH IBADAH UMUM
+// ============================================================
+const TPL_EKSPOSITORI = `[1] KHOTBAH EKSPOSITORI
+=== KERANGKA KHOTBAH EKSPOSITORI ===
+Judul: [sesuai tema user]
+Perikop: [WAJIB tulis PERSIS seperti yang diberikan user — jika user memberi RENTANG (misal 2 Samuel 7:13-16), tulis UTUH rentang tersebut. JANGAN dipersempit. Jika user tidak menyebut, AI pilih satu pasal & rentang ayat]
+Nats: [WAJIB SATU ayat kunci yang dipilih dari DALAM rentang Perikop di atas]
+
+📋 CATATAN INTERNAL PENGKHOTBAH (jangan dibacakan ke jemaat):
+Pergumulan Utama Jemaat: [masalah besar yang dijawab seluruh perikop — satu kalimat]
+
+I. PEMBUKAAN
+   - Salam dan doa pembuka: [satu kalimat]
+   - Pengantar Tema: [harapan universal yang didambakan] — namun [realitas/pergumulan yang menghambat].
+   - Latar belakang perikop: [satu kalimat]
+
+II. EKSPOSISI PERIKOP ([tulis perikop lengkap di sini])
+
+⚠️ ATURAN: Pecah perikop menjadi 3-4 kelompok ayat (ideal 2-3 ayat per kelompok). Semua kelompok ayat WAJIB berada dalam rentang perikop — DILARANG keluar.
+
+Untuk SETIAP kelompok ayat, tulis dengan format PERSIS seperti ini:
+
+Ayat X-Y: [Ringkasan singkat isi ayat dalam satu frasa]
+
+Teks: [Tuliskan bunyi ayat X-Y — kutipan Alkitab]
+
+Makna: [Jelaskan makna/tafsiran ayat secara mendalam — satu kalimat]
+
+Point Utama: [Inti pesan utama dari ayat tersebut — satu kalimat]
+
+Pergumulan Hidup: [Situasi nyata dengan tegangan — satu kalimat]
+
+Pesan Ayat: [Jawaban firman bernada kasih karunia — satu kalimat]
+
+[ulangi untuk SEMUA kelompok ayat dalam perikop]
+
+III. APLIKASI PRAKTIS
+   - Penerapan sehari-hari: [satu kalimat]
+   - Tantangan dan komitmen: [satu kalimat]
+
+IV. PENUTUP
+   - Ringkasan: [satu kalimat]
+   - Doa penutup: [satu kalimat]
+   - Berkat: [satu kalimat]`;
+
+const TPL_TOPIKAL = `[2] KHOTBAH TOPIKAL
+=== KERANGKA KHOTBAH TOPIKAL ===
+Judul: [sesuai tema user]
+Perikop: [WAJIB tulis PERSIS seperti yang diberikan user — jika user memberi RENTANG (misal 2 Samuel 7:13-16), tulis UTUH rentang tersebut. JANGAN dipersempit. Jika user tidak menyebut, AI pilih satu pasal & rentang ayat]
+Nats: [WAJIB SATU ayat kunci yang dipilih dari DALAM rentang Perikop di atas]
+
+📋 CATATAN INTERNAL PENGKHOTBAH (jangan dibacakan ke jemaat):
+Pergumulan Utama Jemaat: [masalah besar yang dijawab seluruh topik — satu kalimat]
+
+I. PEMBUKAAN
+   - Salam dan doa: [satu kalimat]
+   - Pengantar Tema: [harapan universal yang didambakan] — namun [realitas/pergumulan yang menghambat].
+   - Relevansi topik dengan kehidupan: [satu kalimat]
+
+II. PEMBAHASAN TOPIK (Perikop: [perikop])
+
+⚠️ ATURAN POIN TOPIKAL (SANGAT KETAT):
+1. WAJIB pecah perikop menjadi TEPAT 3 POIN utama.
+2. Setiap poin BUKAN harus satu ayat — boleh rentang beberapa ayat.
+3. SEMUA poin WAJIB berada di DALAM rentang perikop.
+4. DILARANG MUTLAK memakai ayat pokok dari LUAR perikop.
+5. Total rentang antar poin sebaiknya mencakup SELURUH isi perikop.
+6. Urutan poin WAJIB mengikuti urutan ayat dalam perikop.
+
+Format tiap poin PERSIS seperti ini:
+
+Poin N — Ayat X-Y
+
+[Kalimat singkat topik — satu kalimat]
+
+Makna: [Tafsiran topik dalam terang ayat tersebut — satu kalimat]
+
+Point Utama: [Inti pesan topik ini — satu kalimat]
+
+Pergumulan Hidup: [Situasi nyata dengan tegangan — satu kalimat]
+
+Pesan Ayat: [Jawaban firman bernada kasih karunia — satu kalimat]
+
+Ayat Pendukung: "[bunyi ayat X-Y dari DALAM perikop]" ([referensi]) — didukung juga oleh [ayat silang 1 dari LUAR perikop]; [ayat silang 2].
+
+[ulangi untuk Poin 1, Poin 2, dan Poin 3]
+
+III. APLIKASI PRAKTIS
+   - Penerapan dalam kehidupan: [satu kalimat]
+   - Komitmen dan tantangan: [satu kalimat]
+
+IV. PENUTUP
+   - Ringkasan: [satu kalimat]
+   - Doa penutup: [satu kalimat]
+   - Berkat: [satu kalimat]`;
+
+const TPL_TEKSTUAL = `[3] KHOTBAH TEKSTUAL
+=== KERANGKA KHOTBAH TEKSTUAL ===
+Judul: [sesuai tema user]
+Ayat: [WAJIB tulis PERSIS seperti yang diberikan user — jika user memberi RENTANG (misal 2 Samuel 7:13-16), tulis UTUH rentang tersebut. JANGAN dipersempit menjadi satu ayat. Jika user tidak menyebut, AI pilih satu pasal & rentang ayat]
+Nats: [WAJIB SATU ayat kunci yang dipilih dari DALAM rentang Ayat di atas — inilah satu-satunya field yang berisi satu ayat, dan inilah yang akan dianalisis per frasa]
+
+📋 CATATAN INTERNAL PENGKHOTBAH (jangan dibacakan ke jemaat):
+Pergumulan Utama Jemaat: [masalah besar yang dijawab ayat ini — satu kalimat]
+
+I. PEMBUKAAN
+   - Salam dan doa: [satu kalimat]
+   - Pengantar Ayat: [harapan universal yang didambakan] — namun [realitas/pergumulan yang menghambat].
+   - Latar belakang: [satu kalimat — sebutkan konteks dari rentang Ayat di atas]
+
+II. ANALISIS TEKS — Per Frasa Kunci ([tulis NATS di sini])
+
+⚠️ ATURAN ANALISIS PER FRASA (SANGAT KETAT):
+1. Pecah NATS menjadi 2-4 frasa kunci.
+2. Setiap frasa WAJIB dari dalam NATS tersebut.
+3. Urutan frasa mengikuti urutan ayat.
+4. Total frasa mencakup seluruh inti NATS.
+
+Untuk SETIAP frasa, tulis dengan format PERSIS seperti ini:
+
+Frasa N: "[potongan ayat]"
+
+Makna Kata & Konteks: [Makna kata kunci/frasa tersebut dalam konteksnya — satu kalimat]
+
+Point Utama: [Inti pesan dari frasa tersebut — satu kalimat]
+
+Pergumulan Hidup: [Situasi nyata dengan tegangan — satu kalimat]
+
+Pesan Ayat: [Jawaban firman bernada kasih karunia — satu kalimat]
+
+Ayat Pendukung (Opsional): "[bunyi ayat silang dari luar NATS]" ([referensi]) — didukung juga oleh [ayat silang 1]; [ayat silang 2].
+
+[ulangi untuk SEMUA frasa]
+
+III. PESAN UTAMA AYAT
+   - Kebenaran utama: [ringkasan seluruh NATS — satu kalimat]
+   - Implikasi teologis: [satu kalimat]
+
+IV. APLIKASI PRAKTIS
+   - Penerapan praktis: [satu kalimat]
+   - Komitmen: [satu kalimat]
+
+V. PENUTUP
+   - Doa penutup: [satu kalimat]
+   - Berkat: [satu kalimat]`;
+
+const TPL_NARATIF = `[4] KHOTBAH NARATIF
+=== KERANGKA KHOTBAH NARATIF ===
+Judul: [sesuai tema user]
+Kisah: [WAJIB tulis PERSIS seperti yang diberikan user — jika user memberi RENTANG (misal 1 Samuel 17:1-58), tulis UTUH rentang tersebut. JANGAN dipersempit. Jika user tidak menyebut, AI pilih satu pasal & rentang ayat]
+Nats: [WAJIB SATU ayat kunci yang dipilih dari DALAM rentang Kisah di atas]
+
+📋 CATATAN INTERNAL PENGKHOTBAH (jangan dibacakan ke jemaat):
+Pergumulan Utama Jemaat: [masalah besar yang dijawab kisah ini — satu kalimat]
+
+I. PEMBUKAAN
+   - Salam dan doa: [satu kalimat]
+   - Pengantar Kisah: [harapan universal yang didambakan] — namun [realitas/pergumulan yang menghambat].
+   - Setting adegan pembuka: [satu kalimat]
+
+II. ALUR CERITA — Per Adegan ([tulis kisah lengkap di sini])
+
+⚠️ ATURAN ALUR PER ADEGAN (SANGAT KETAT):
+1. Bagi kisah menjadi 3-5 adegan sesuai panjang kisah.
+2. Semua adegan WAJIB dari dalam rentang kisah — DILARANG menambah detail di luar Alkitab.
+3. Urutan adegan mengikuti alur cerita dalam Alkitab.
+4. Adegan terakhir sebaiknya mencakup resolusi / titik balik utama.
+
+Untuk SETIAP adegan, tulis dengan format PERSIS seperti ini:
+
+Adegan N: [Judul adegan singkat — 2-4 kata]
+
+Ayat X-Y: [referensi]
+
+Gambaran Adegan: [adegan konkret — apa yang dilihat, didengar, dirasakan tokoh — satu kalimat]
+
+Tegangan Jemaat: [masalah yang dihadapi tokoh dalam adegan ini, yang juga dialami jemaat — satu kalimat]
+
+Pesan Firman: [kebenaran yang muncul dari adegan ini, bernada kasih karunia — satu kalimat]
+
+[ulangi untuk SEMUA adegan]
+
+III. PESAN UTAMA KISAH
+   - Pelajaran dari kisah secara utuh: [satu kalimat]
+   - Sifat Allah / karakter Kristus yang dinyatakan: [satu kalimat]
+
+IV. APLIKASI PRAKTIS
+   - Penerapan dalam kehidupan: [satu kalimat]
+   - Komitmen: [satu kalimat]
+
+V. PENUTUP
+   - Doa penutup: [satu kalimat]
+   - Berkat: [satu kalimat]`;
+
+// ============================================================
+// TEMPLATE JENIS — KHOTBAH MOMEN KHUSUS
+// ============================================================
+const TPL_PERAYAAN = `[1] KHOTBAH PERAYAAN
+=== KERANGKA KHOTBAH PERAYAAN ===
+Judul: [sesuai tema user]
+Nats: [AI pilih]
+Ayat: [AI pilih satu pasal & rentang ayat]
+Momen: [tentukan Natal / Paskah / Pentakosta / Tahun Baru / lainnya sesuai tema]
+
+I. PEMBUKAAN
+   - Salam perayaan: [satu kalimat]
+   - Pengantar Tema: [harapan universal yang didambakan] — namun [realitas/pergumulan yang menghambat].
+   - Relevansi dengan kehidupan: [satu kalimat]
+
+II. MAKNA PERAYAAN
+   - Latar belakang perayaan: [satu kalimat]
+   - Makna teologis: [satu kalimat]
+   - Poin utama 1: [satu kalimat]
+   - Poin utama 2: [satu kalimat]
+
+III. APLIKASI PRAKTIS
+   - Penerapan dalam kehidupan: [satu kalimat]
+   - Komitmen perayaan: [satu kalimat]
+
+IV. PENUTUP
+   - Doa syukur: [satu kalimat]
+   - Berkat perayaan: [satu kalimat]`;
+
+const TPL_PERKAWINAN = `[2] KHOTBAH PERNIKAHAN
+=== KERANGKA KHOTBAH PERNIKAHAN ===
+Judul: [sesuai tema user]
+Nats: [AI pilih]
+Ayat: [AI pilih satu pasal & rentang ayat]
+
+I. PEMBUKAAN
+   - Salam dan doa: [satu kalimat]
+   - Pengantar Tema: [harapan universal yang didambakan] — namun [realitas/pergumulan yang menghambat].
+   - Relevansi firman Tuhan: [satu kalimat]
+
+II. RENUNGAN PERNIKAHAN
+   - Makna pernikahan menurut Alkitab: [satu kalimat]
+   - Peran suami dan isteri: [satu kalimat]
+   - Kasih Kristus sebagai teladan: [satu kalimat]
+
+III. NASIHAT UNTUK MEMPELAI
+   - Nasihat bagi mempelai pria: [satu kalimat]
+   - Nasihat bagi mempelai wanita: [satu kalimat]
+   - Komitmen pernikahan: [satu kalimat]
+
+IV. NASIHAT UNTUK ORANG TUA
+   - Peran orang tua dalam pernikahan anak: [satu kalimat]
+   - Doa restu dan dukungan: [satu kalimat]
+   - Nasihat bijak dari firman Tuhan: [satu kalimat]
+
+V. PENUTUP
+   - Doa restu: [satu kalimat]
+   - Berkat pernikahan: [satu kalimat]`;
+
+const TPL_PENGHIBURAN = `[3] KHOTBAH PENGHIBURAN
+=== KERANGKA KHOTBAH PENGHIBURAN ===
+Judul: [sesuai tema user]
+Nats: [AI pilih]
+Ayat: [AI pilih satu pasal & rentang ayat]
+
+I. PEMBUKAAN
+   - Salam penghiburan: [satu kalimat]
+   - Pengantar Tema: [harapan universal yang didambakan] — namun [realitas/pergumulan yang menghambat].
+   - Mengenang almarhum/almarhumah: [satu kalimat]
+
+II. RENUNGAN DARI FIRMAN
+   - Penghiburan dari ayat per ayat: [satu kalimat]
+   - Janji Tuhan tentang kehidupan kekal: [satu kalimat]
+   - Kasih Tuhan yang tidak berubah: [satu kalimat]
+
+III. APLIKASI PRAKTIS
+   - Kekuatan untuk keluarga yang ditinggalkan: [satu kalimat]
+   - Pengharapan di dalam Kristus: [satu kalimat]
+
+IV. PENUTUP
+   - Doa penghiburan: [satu kalimat]
+   - Berkat: [satu kalimat]`;
+
+const TPL_RUMAH_BARU = `[4] KHOTBAH RUMAH BARU
+=== KERANGKA KHOTBAH RUMAH BARU ===
+Judul: [sesuai tema user]
+Nats: [AI pilih]
+Ayat: [AI pilih satu pasal & rentang ayat]
+
+I. PEMBUKAAN
+   - Salam dan doa syukur: [satu kalimat]
+   - Pengantar Tema: [harapan universal yang didambakan] — namun [realitas/pergumulan yang menghambat].
+   - Ucapan syukur atas berkat Tuhan: [satu kalimat]
+
+II. RENUNGAN DARI FIRMAN
+   - Makna rumah menurut Alkitab: [satu kalimat]
+   - Tuhan sebagai pembangun rumah sejati: [satu kalimat]
+   - Berkat dan tanggung jawab: [satu kalimat]
+
+III. APLIKASI PRAKTIS
+   - Menjadikan rumah sebagai tempat ibadah: [satu kalimat]
+   - Kasih dan keharmonisan keluarga: [satu kalimat]
+   - Doa penyerahan rumah: [satu kalimat]
+
+IV. PENUTUP
+   - Doa berkat: [satu kalimat]
+   - Ucapan syukur: [satu kalimat]`;
+
+// ============================================================
+// TEMPLATE JENIS — RENUNGAN PRIBADI
+// ============================================================
+const TPL_RENUNGAN_HARIAN = `[1] RENUNGAN HARIAN
+=== KERANGKA RENUNGAN HARIAN ===
+Judul: [sesuai tema user]
+Nats: [AI pilih]
+Ayat: [AI pilih satu pasal & rentang ayat]
+
+RENUNGAN:
+   - Poin renungan 1: [satu kalimat]
+   - Poin renungan 2: [satu kalimat]
+   - Poin renungan 3: [satu kalimat]
+
+PERENUNGAN:
+   - Pertanyaan refleksi 1: [satu kalimat]
+   - Pertanyaan refleksi 2: [satu kalimat]
+   - Pertanyaan refleksi 3: [satu kalimat]
+
+DOA:
+   - Pokok doa 1: [satu kalimat]
+   - Pokok doa 2: [satu kalimat]`;
+
+const TPL_RENUNGAN_KELUARGA = `[2] RENUNGAN KELUARGA
+=== KERANGKA RENUNGAN KELUARGA ===
+Judul: [sesuai tema user]
+Nats: [AI pilih]
+Ayat: [AI pilih satu pasal & rentang ayat]
+
+RENUNGAN:
+   - Poin renungan 1: [satu kalimat]
+   - Poin renungan 2: [satu kalimat]
+
+DISKUSI KELUARGA:
+   - Pertanyaan untuk ayah: [satu kalimat]
+   - Pertanyaan untuk ibu: [satu kalimat]
+   - Pertanyaan untuk anak: [satu kalimat]
+
+DOA KELUARGA:
+   - Pokok doa 1: [satu kalimat]
+   - Pokok doa 2: [satu kalimat]
+
+KOMITMEN KELUARGA:
+   - Komitmen bersama: [satu kalimat]`;
+
+const TPL_KHOTBAH_PEMUDA = `[3] KHOTBAH PEMUDA
+=== KERANGKA KHOTBAH PEMUDA ===
+Judul: [sesuai tema user]
+Nats: [AI pilih]
+Ayat: [AI pilih satu pasal & rentang ayat]
+
+I. PEMBUKAAN (5 menit)
+   - Ice breaker / hook: [satu kalimat]
+   - Pengantar Tema: [harapan universal yang didambakan anak muda] — namun [realitas/pergumulan yang menghambat].
+
+II. ISI (20 menit)
+   - Poin 1 + contoh kehidupan sehari-hari: [satu kalimat]
+   - Poin 2 + contoh nyata: [satu kalimat]
+   - Poin 3 + tantangan: [satu kalimat]
+
+III. APLIKASI (5 menit)
+   - Penerapan praktis: [satu kalimat]
+   - Challenge mingguan: [satu kalimat]
+
+IV. PENUTUP
+   - Doa: [satu kalimat]
+   - Berkat: [satu kalimat]`;
+
+// ============================================================
+// Builder prompt override
+// ============================================================
+function buildOverride(role, menuLines, templateBody) {
+  const aturan = ATURAN_INTERAKSI.replace('{MENU}', menuLines);
+  return `ANDA ADALAH ${role}.
+
+=== TEMA / IDE DARI USER ===
+{ide}
+
+${aturan}
+
+${PERIKOP_RULES}
+
+${PENGANTAR_RULES}
+
+${templateBody}
+
+${PERGUMULAN_RULES}
+
+BERHENTI dan tunggu jawaban saya.`;
+}
+
+// Daftar menu (untuk ditampilkan di balasan AI)
+const MENU_IBADAH = `  1. 📖 Khotbah Ekspositori — menggali satu perikop ayat per ayat
+  2. 🎯 Khotbah Topikal — tema dengan beberapa ayat pendukung
+  3. 📝 Khotbah Tekstual — satu ayat digali frasa per frasa
+  4. 📚 Khotbah Naratif — kisah Alkitab diceritakan adegan per adegan`;
+
+const MENU_MOMEN = `  1. 🎉 Khotbah Perayaan — Natal, Paskah, Pentakosta, Tahun Baru
+  2. 💍 Khotbah Pernikahan — untuk mempelai & orang tua
+  3. 💐 Khotbah Penghiburan — untuk keluarga yang berduka
+  4. 🏠 Khotbah Rumah Baru — doa penyerahan rumah`;
+
+const MENU_RENUNGAN = `  1. 🌅 Renungan Harian — untuk devosi pribadi
+  2. 👨‍👩‍👧‍👦 Renungan Keluarga — untuk mezbah keluarga
+  3. 🔥 Khotbah Pemuda — bahasa & konteks anak muda`;
+
+// Prompt override per kategori
+const OVERRIDE_IBADAH = buildOverride(
+  'ASISTEN PERANCANG KERANGKA KHOTBAH IBADAH UMUM',
+  MENU_IBADAH,
+  [TPL_EKSPOSITORI, TPL_TOPIKAL, TPL_TEKSTUAL, TPL_NARATIF].join('\n\n')
+);
+
+const OVERRIDE_MOMEN = buildOverride(
+  'ASISTEN PERANCANG KERANGKA KHOTBAH MOMEN KHUSUS',
+  MENU_MOMEN,
+  [TPL_PERAYAAN, TPL_PERKAWINAN, TPL_PENGHIBURAN, TPL_RUMAH_BARU].join('\n\n')
+);
+
+const OVERRIDE_RENUNGAN = buildOverride(
+  'ASISTEN PERANCANG KERANGKA RENUNGAN PRIBADI',
+  MENU_RENUNGAN,
+  [TPL_RENUNGAN_HARIAN, TPL_RENUNGAN_KELUARGA, TPL_KHOTBAH_PEMUDA].join('\n\n')
+);
+
+// ============================================================
+// KATEGORI
+// ============================================================
+const DEFAULT_CATEGORIES = {
+
+  ibadah_umum: {
+    group: 'Ibadah Umum',
+    aktif: true,
+    theme: { icon:'🎤', color:'#805ad5' },
+    info: {
+      desc: 'Kerangka khotbah untuk ibadah umum mingguan.',
+      history: 'Ekspositori, topikal, tekstual, dan naratif.',
+      author: 'Sistem 8',
+      use_for: 'Kebaktian Minggu, PA, ibadah rumah tangga, kebaktian doa.'
+    },
+    ui: {
+      label: 'Ibadah Umum',
+      placeholder: `Tuliskan tema/ide khotbah Anda di sini...\n\nJika Anda punya ayat/perikop tertentu, tuliskan juga — AI WAJIB memakainya.\n\nContoh:\n- Tema: Hidup dalam Hidup Keluarga Tuhan\n- Ayat Alkitab: 2 Samuel 7:13-16\n\nContoh (tanpa perikop — AI pilih sendiri):\n- Tema: Kasih yang Mengubahkan\n- Fokus: Kasih karunia Tuhan memakai orang biasa.`
+    },
+    prompt: { role:'Perancang Kerangka Khotbah', outputName:'KERANGKA KHOTBAH', pickLabel:'jenis khotbah', extraRules:'', formatRules:[] },
+    modules: [{ key:'kerangka_utama', enabled:true }],
+    menu: [
+      { label:'📖 Khotbah Ekspositori', desc:'Gali perikop ayat per ayat (Pergumulan Hidup + Pesan Ayat)', prompt_override: OVERRIDE_IBADAH },
+      { label:'🎯 Khotbah Topikal',     desc:'3 poin dari DALAM perikop + Ayat Pendukung', prompt_override: OVERRIDE_IBADAH },
+      { label:'📝 Khotbah Tekstual',    desc:'Satu ayat (Nats) digali FRASA PER FRASA dari perikop utuh', prompt_override: OVERRIDE_IBADAH },
+      { label:'📚 Khotbah Naratif',     desc:'Kisah Alkitab diceritakan ADEGAN PER ADEGAN', prompt_override: OVERRIDE_IBADAH }
+    ]
+  },
+
+  momen_khusus: {
+    group: 'Momen Khusus',
+    aktif: true,
+    theme: { icon:'🎉', color:'#d69e2e' },
+    info: {
+      desc: 'Kerangka khotbah untuk momen-momen istimewa.',
+      history: 'Perayaan, pernikahan, penghiburan, rumah baru.',
+      author: 'Sistem 8',
+      use_for: 'Ibadah Natal, Paskah, Pentakosta, pernikahan, penghiburan, rumah baru.'
+    },
+    ui: {
+      label: 'Momen Khusus',
+      placeholder: `Tuliskan tema momen khusus Anda...\n\nContoh:\n- Tema: Kasih Allah yang Nyata di Natal\n- Momen: Natal\n- Fokus: Allah memilih datang sebagai bayi kecil di kandang domba.`
+    },
+    prompt: { role:'Perancang Kerangka Khotbah', outputName:'KERANGKA KHOTBAH', pickLabel:'jenis khotbah', extraRules:'', formatRules:[] },
+    modules: [{ key:'kerangka_utama', enabled:true }],
+    menu: [
+      { label:'🎉 Khotbah Perayaan',    desc:'Natal, Paskah, Pentakosta, Tahun Baru', prompt_override: OVERRIDE_MOMEN },
+      { label:'💍 Khotbah Pernikahan',  desc:'Untuk mempelai & orang tua', prompt_override: OVERRIDE_MOMEN },
+      { label:'💐 Khotbah Penghiburan', desc:'Untuk keluarga yang berduka', prompt_override: OVERRIDE_MOMEN },
+      { label:'🏠 Khotbah Rumah Baru',  desc:'Doa penyerahan rumah baru', prompt_override: OVERRIDE_MOMEN }
+    ]
+  },
+
+  renungan_pribadi: {
+    group: 'Renungan Pribadi',
+    aktif: true,
+    theme: { icon:'🕊️', color:'#38b2ac' },
+    info: {
+      desc: 'Kerangka renungan untuk devosi pribadi dan keluarga.',
+      history: 'Renungan harian, keluarga, dan pemuda.',
+      author: 'Sistem 8',
+      use_for: 'Devosi harian, mezbah keluarga, ibadah pemuda.'
+    },
+    ui: {
+      label: 'Renungan Pribadi',
+      placeholder: `Tuliskan tema renungan pribadi Anda...\n\nContoh:\n- Tema: Bersyukur di Tengah Kesulitan\n- Ayat Alkitab: 1 Tesalonika 5:16-18\n- Target: Renungan pribadi / keluarga.`
+    },
+    prompt: { role:'Perancang Kerangka Renungan', outputName:'KERANGKA RENUNGAN', pickLabel:'jenis renungan', extraRules:'', formatRules:[] },
+    modules: [{ key:'kerangka_utama', enabled:true }],
+    menu: [
+      { label:'🌅 Renungan Harian',    desc:'Untuk devosi pribadi setiap hari', prompt_override: OVERRIDE_RENUNGAN },
+      { label:'👨‍👩‍👧‍👦 Renungan Keluarga',  desc:'Untuk mezbah keluarga', prompt_override: OVERRIDE_RENUNGAN },
+      { label:'🔥 Khotbah Pemuda',     desc:'Bahasa & konteks anak muda', prompt_override: OVERRIDE_RENUNGAN }
+    ]
+  }
+
+};
+
+// ============================================================
+// SEEDER LOGIC
+// ============================================================
+function setStatus(msg, type='info'){
+  const el = document.getElementById('statusDiv');
+  if (el) { el.textContent = msg; el.className = 'status show ' + type; }
+}
+function getHeaders(table){
+  return { 'Content-Type':'application/json', 'X-Custom-Auth': SECRET, 'X-Table-Name': table, 'X-Role': 'admin' };
+}
+
+async function checkCurrent(){
+  try {
+    const u = document.getElementById('u').value.trim();
+    const p = document.getElementById('p').value.trim();
+    if(!u || !p){ setStatus('❌ Isi username & password dulu', 'err'); return; }
+    const btn = document.getElementById('btnCheck');
+    btn.disabled = true; btn.textContent = 'Memeriksa...';
+    setStatus('⏳ Memeriksa user...', 'info');
+
+    const r = await fetch(`${API_URL}?table=${USERS_TABLE}&x_01_eq=${u}&x_02_eq=${p}`, { headers: getHeaders(USERS_TABLE) });
+    const res = await r.json();
+    if(!res.success || !res.data || res.data.length === 0){
+      setStatus('❌ Username atau password salah / Bukan Admin', 'err'); return;
+    }
+    setStatus('✅ Login OK. Mengambil config...', 'ok');
+    document.getElementById('btnSeed').disabled = false;
+    document.getElementById('btnDelete').disabled = false;
+
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x_eq=${KONTROL_ID}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res2 = await r2.json();
+    if(res2.success && res2.data && res2.data.length > 0){
+      setStatus(`✅ Row id_x=${KONTROL_ID} sudah ada. Klik "Seed" untuk MENGGANTI.`, 'ok');
+    } else {
+      setStatus(`ℹ️ Row id_x=${KONTROL_ID} belum ada. Klik "Seed".`, 'info');
+    }
+  } catch(e) {
+    setStatus('❌ Error: ' + e.message, 'err'); console.error(e);
+  } finally {
+    const btn = document.getElementById('btnCheck');
+    btn.disabled = false; btn.textContent = '🔍 Cek Config';
+  }
+}
+
+async function doSeed(){
+  if(!confirm(`⚠️ Seed akan MENGGANTI seluruh config di id_x=${KONTROL_ID}. Lanjut?`)) return;
+  const btn = document.getElementById('btnSeed');
+  btn.disabled = true; btn.textContent = '⏳ Menyimpan...';
+  setStatus('⏳ Menyimpan...', 'info');
+
+  try {
+    const payload = {
+      x_01: JSON.stringify({ categories: DEFAULT_CATEGORIES, outputModules: DEFAULT_MODULES }),
+      x_02: new Date().toISOString(),
+      x_03: document.getElementById('u').value.trim() || 'seeder',
+      x_04: '1.0',
+      x_05: '1', x_06: '1', x_07: '1', x_08: '1', x_09: '1', x_10: '1'
+    };
+
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x_eq=${KONTROL_ID}`, { headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    const exists = res.success && res.data && res.data.length > 0;
+    const method = exists ? 'PUT' : 'POST';
+    const endpoint = exists ? `&id_x=${KONTROL_ID}` : '';
+
+    const r2 = await fetch(`${API_URL}?table=${KONTROL_TABLE}${endpoint}`, {
+      method, headers: getHeaders(KONTROL_TABLE), body: JSON.stringify(payload)
+    });
+    const res2 = await r2.json();
+    if(!res2.success) throw new Error(res2.error || res2.message || 'Gagal simpan');
+
+    setStatus(`✅ BERHASIL! Config ter-${exists ? 'update' : 'buat'} di id_x=${KONTROL_ID}.\n\n3 kategori × 11 menu items telah di-seed.\n\nSilakan buka index.html (unified) dan klik tab "Khotbah & Renungan".`, 'ok');
+  } catch(e) {
+    setStatus('❌ Gagal seed: ' + e.message, 'err'); console.error(e);
+  } finally {
+    btn.disabled = false; btn.textContent = '🌱 Seed ke id_x=17';
+  }
+}
+
+async function doDelete(){
+  if(!confirm(`⚠️ Hapus row id_x=${KONTROL_ID}?`)) return;
+  const btn = document.getElementById('btnDelete');
+  btn.disabled = true; btn.textContent = '⏳ Menghapus...';
+  try {
+    const r = await fetch(`${API_URL}?table=${KONTROL_TABLE}&id_x=${KONTROL_ID}`, { method: 'DELETE', headers: getHeaders(KONTROL_TABLE) });
+    const res = await r.json();
+    if(res.success) setStatus('✅ Row terhapus', 'ok');
+    else throw new Error(res.error || res.message || 'Gagal hapus');
+  } catch(e) {
+    setStatus('❌ Gagal hapus: ' + e.message, 'err'); console.error(e);
+  } finally {
+    btn.disabled = false; btn.textContent = '🗑️ Hapus Row id_x=17';
+  }
+}
+</script>
+</body>
+</html>

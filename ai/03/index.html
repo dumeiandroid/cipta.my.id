@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Prompt Tools — Unified</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <style>
 :root { --primary: #805ad5; --primary-hover: #6b46c1; }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -33,6 +36,9 @@ header h1 span{background:var(--primary);color:#fff;font-size:10px;padding:2px 8
 .search-container::before{content:"🔍";position:absolute;left:12px;font-size:14px;pointer-events:none}
 .header-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
 .user-chip{display:flex;align-items:center;gap:6px;font-size:12px;background:#f7fafc;padding:4px 12px;border-radius:16px;font-weight:600}
+.btn-refresh{background:#ed8936;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;min-height:32px;transition:background .15s}
+.btn-refresh:hover{background:#dd6b20}
+.btn-refresh:disabled{opacity:.6;cursor:not-allowed}
 .btn-logout{background:#fc8181;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer}
 .btn-logout:hover{background:#f56565}
 .system-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;border-bottom:2px solid #e2e8f0;}
@@ -115,12 +121,50 @@ header h1 span{background:var(--primary);color:#fff;font-size:10px;padding:2px 8
 @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 .loading-config{padding:40px 20px;text-align:center;background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);color:#718096;font-size:13px}
 .loading-config .spinner{margin-bottom:12px}
-@media(max-width:768px){ .search-container{order:3;width:100%;max-width:none;margin:10px 0 0 0} }
+
+/* ═══════════════ RESPONSIVE ═══════════════ */
+@media(max-width:768px){
+  .search-container{order:3;width:100%;max-width:none;margin:10px 0 0 0}
+  .system-tabs,.group-tabs{-webkit-overflow-scrolling:touch}
+}
 @media(max-width:600px){
-  body{padding:8px} header{padding:12px 16px} .category-card{padding:14px 16px;gap:12px} .cat-icon-large{font-size:28px} .cat-title{font-size:14px} .cat-count{font-size:11px;padding:5px 10px}
-  .modal{padding:16px;margin-top:20px} .btn,.hi-btn,.hi-btn-copy,.hi-btn-edit{padding:8px 12px;font-size:12px} .cat-actions .btn{flex:1;justify-content:center}
-  .hi-link-row{flex-direction:column;align-items:stretch} .hi-link-input{width:100%}
-  .system-tab-btn{padding:8px 12px;font-size:12px}
+  body{padding:8px}
+  header{padding:12px 14px;gap:10px}
+  header h1{font-size:15px;flex-wrap:wrap;gap:6px}
+  header h1 span{font-size:9px;padding:2px 6px}
+  .search-container input{font-size:15px;padding:11px 14px 11px 36px}
+  .user-chip{font-size:11px;padding:3px 10px}
+  .btn-refresh,.btn-logout{padding:8px 12px;font-size:12px;min-height:36px}
+  .system-tabs{padding-bottom:6px;gap:6px}
+  .system-tab-btn{padding:10px 14px;font-size:13px;min-height:40px}
+  .group-tabs{padding-bottom:6px;gap:6px}
+  .group-tab-btn{padding:9px 14px;font-size:12px;min-height:36px}
+  .category-card{padding:14px;gap:12px;border-radius:12px;align-items:flex-start}
+  .cat-icon-large{font-size:26px}
+  .cat-title{font-size:14px;flex-wrap:wrap}
+  .cat-meta{font-size:10px}
+  .cat-count{font-size:10px;padding:5px 9px;align-self:flex-start}
+  .modal{padding:16px 14px;margin-top:8px;max-height:96vh;border-radius:14px;width:calc(100% - 4px)}
+  .modal-header h2{font-size:15px}
+  .cat-textarea{font-size:15px;min-height:110px;padding:12px 14px}
+  .cat-actions{gap:6px}
+  .cat-actions .btn{flex:1 1 100%;justify-content:center;padding:11px;min-height:42px}
+  .btn{padding:9px 14px;font-size:13px;min-height:38px}
+  .hi-ide-row{flex-direction:column;gap:8px}
+  .hi-btn-group{width:100%;display:flex;gap:6px}
+  .hi-btn-group .hi-btn-copy,.hi-btn-group .hi-btn-edit{flex:1;justify-content:center;padding:10px}
+  .hi-link-row{flex-direction:column;align-items:stretch;gap:6px}
+  .hi-link-input{width:100%;font-size:14px;padding:10px 12px}
+  .hi-link-row .hi-btn{width:100%;padding:10px;font-size:12px}
+}
+@media(max-width:420px){
+  header h1{font-size:14px}
+  .system-tab-btn{padding:9px 11px;font-size:12px}
+  .group-tab-btn{padding:8px 11px;font-size:11px}
+  .cat-count{display:none}
+  .cat-icon-large{font-size:24px}
+  .cat-title{font-size:13px}
+  .btn-refresh,.btn-logout{padding:7px 10px;font-size:11px}
 }
 </style>
 </head>
@@ -146,10 +190,11 @@ header h1 span{background:var(--primary);color:#fff;font-size:10px;padding:2px 8
     </div>
     <div class="header-actions">
       <span class="user-chip">👤 <span id="headerUser">-</span></span>
+      <button class="btn-refresh" onclick="refreshConfig()" title="Muat ulang config dari database">🔄</button>
       <button class="btn-logout" onclick="doLogout()">Logout</button>
     </div>
   </header>
-  
+
   <div class="system-tabs" id="systemTabsContainer"></div>
   <div class="group-tabs" id="groupTabsContainer"></div>
   <div id="categoriesContainer">
@@ -220,19 +265,21 @@ const SYSTEMS = [
   { key: 'appgen',     id_x: 11, label: 'Web App Gen',      icon: '🌐', color: '#10b981' },
   { key: 'design',     id_x: 12, label: 'Design Style',     icon: '🎨', color: '#8b5cf6' },
   { key: 'webgen',     id_x: 13, label: 'Web Multi-Page',   icon: '🎯', color: '#6366f1' },
-  { key: 'blog',       id_x: 14, label: 'Blog Article',     icon: '📝', color: '#ec4899' }
-  ,
+  { key: 'blog',       id_x: 14, label: 'Blog Article',     icon: '📝', color: '#ec4899' },
   { key: 'psikologi', id_x: 15, label: 'Blog Psikologi', icon: '🧠', color: '#0ea5e9' },
   { key: 'psikologi-anim', id_x: 16, label: 'Psikologi (Animated)', icon: '✨', color: '#d946ef' },
+  { key: 'khotbah', id_x: 17, label: 'Khotbah & Renungan', icon: '🕊️', color: '#c026d3' },
+  { key: 'liturgi', id_x: 18, label: 'Liturgi 3 Bacaan', icon: '📖', color: '#0ea5e9' }
 ];
 // ══════════════════════════════════════════════════════════════════
 
 const API_URL = 'https://mysupplier.my.id/api/contacts_filter_dinamis6';
-const TABLE = 'ai_prompt_unified'; 
-const USERS_TABLE = 'users'; 
+const TABLE = 'ai_prompt_unified';
+const USERS_TABLE = 'users';
 const KONTROL_TABLE = 'kontrol_admin';
 const SECRET = 'admin';
-const STORAGE_KEY = 'ai_tools_user_unified'; 
+const STORAGE_KEY = 'ai_tools_user_unified';
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 menit
 
 let activeSystem = null;
 let CATEGORIES = {};
@@ -253,7 +300,7 @@ async function loadSystemConfig(id_x){
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       const { data, ts } = JSON.parse(cached);
-      if (Date.now() - ts < 3600000) return data;
+      if (Date.now() - ts < CACHE_TTL_MS) return data;
     }
   } catch(e) {}
   try {
@@ -279,6 +326,12 @@ async function loadSystemConfig(id_x){
 function applyConfig(cfg){
   CATEGORIES = JSON.parse(JSON.stringify(cfg.categories || {}));
   OUTPUT_MODULES = cfg.outputModules || {};
+}
+
+function clearAllConfigCache(){
+  const keys = Object.keys(localStorage).filter(k => k.startsWith('ai_tools_config_cache_'));
+  keys.forEach(k => localStorage.removeItem(k));
+  return keys.length;
 }
 
 function getStoredUser(){
@@ -340,6 +393,25 @@ function adjustColor(hex, percent) {
   return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1);
 }
 
+// ═══════════════ REFRESH CONFIG ═══════════════
+async function refreshConfig(){
+  if (!activeSystem) {
+    showToast('⚠️ Tidak ada sistem aktif', 'info');
+    return;
+  }
+  const btn = document.querySelector('.btn-refresh');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  try {
+    localStorage.removeItem(`ai_tools_config_cache_${activeSystem.id_x}`);
+    await switchSystem(activeSystem.key);
+    showToast(`✅ Config "${activeSystem.label}" dimuat ulang dari database`, 'success');
+  } catch(e) {
+    showToast('❌ Gagal refresh: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔄'; }
+  }
+}
+
 async function doLogin(){
   const u = document.getElementById('loginUsername').value.trim();
   const p = document.getElementById('loginPassword').value.trim();
@@ -358,7 +430,9 @@ async function doLogin(){
 
 function doLogout(){
   if(!confirm('Yakin ingin logout?')) return;
-  clearUserStorage(); currentUser = null; isAdmin = false;
+  clearUserStorage();
+  clearAllConfigCache();
+  currentUser = null; isAdmin = false;
   document.getElementById('loginOverlay').classList.add('active');
   document.getElementById('mainContent').classList.remove('visible');
   showToast('👋 Logout berhasil', 'info');
@@ -455,7 +529,6 @@ function buildPrompt(catKey, ide){
   const enabledMods = (cat.modules || []).filter(m => m.enabled);
   if(!enabledMods.length){ throw new Error(`Kategori "${cat.ui.label}" tidak punya output aktif`); }
 
-  // Jika ada prompt_override (Sistem 3/4/5), langsung gunakan
   if (cat.menu[0] && cat.menu[0].prompt_override) {
     return cat.menu[0].prompt_override.replace(/\{ide\}/g, ide);
   }
@@ -504,45 +577,45 @@ function copyPromptFromModal(){
   copyToClipboard(prompt, '✅ Prompt disalin — paste ke AI');
 }
 async function saveFromModal(){
-  const key = getCurrentCatKey(); 
+  const key = getCurrentCatKey();
   if(!key) return;
-  
-  const ide = document.getElementById('categoryModalIde').value.trim(); 
+
+  const ide = document.getElementById('categoryModalIde').value.trim();
   if(!ide){ showToast('❌ Isi ide dulu sebelum simpan', 'error'); return; }
-  
-  let prompt; 
-  try { prompt = buildPrompt(key, ide); } 
+
+  let prompt;
+  try { prompt = buildPrompt(key, ide); }
   catch(e){ showToast('❌ ' + e.message, 'error'); return; }
-  
-  const btn = document.getElementById('categoryModalSaveBtn'); 
-  const origText = btn.textContent; 
-  btn.disabled = true; 
+
+  const btn = document.getElementById('categoryModalSaveBtn');
+  const origText = btn.textContent;
+  btn.disabled = true;
   btn.textContent = 'Menyimpan...';
-  
-  const today = new Date(); 
-  const todayStr = today.getFullYear() + '-' + 
-    String(today.getMonth()+1).padStart(2,'0') + '-' + 
+
+  const today = new Date();
+  const todayStr = today.getFullYear() + '-' +
+    String(today.getMonth()+1).padStart(2,'0') + '-' +
     String(today.getDate()).padStart(2,'0');
-  
-  const body = { 
-    x_01: key, 
-    x_02: ide, 
-    x_03: prompt, 
-    x_04: '', 
-    x_05: currentUser, 
-    x_06: todayStr 
+
+  const body = {
+    x_01: key,
+    x_02: ide,
+    x_03: prompt,
+    x_04: '',
+    x_05: currentUser,
+    x_06: todayStr
   };
-  
+
   try {
     await apiFetch('', { method: 'POST', body: JSON.stringify(body) });
-    showToast('✅ Tersimpan ke database', 'success'); 
-    document.getElementById('categoryModalIde').value = ''; 
+    showToast('✅ Tersimpan ke database', 'success');
+    document.getElementById('categoryModalIde').value = '';
     fetchCategoryCounts();
-  } catch(e) { 
-    showToast('❌ Gagal simpan: ' + e.message, 'error'); 
-  } finally { 
-    btn.disabled = false; 
-    btn.textContent = origText; 
+  } catch(e) {
+    showToast('❌ Gagal simpan: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
   }
 }
 function openHistoryFromModal(){ const key = getCurrentCatKey(); if(!key) return; openHistory(key); }
@@ -683,7 +756,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('categoryModal').addEventListener('click', e => { if(e.target.id === 'categoryModal') closeCategoryModal(); });
   document.getElementById('historyModal').addEventListener('click', e => { if(e.target.id === 'historyModal') closeHistory(); });
   document.getElementById('editPromptModal').addEventListener('click', e => { if(e.target.id === 'editPromptModal') closeEditModal(); });
-  document.getElementById('infoModal').addEventListener('click', e => { if(e.target.id === 'infoModal') closeInfoModal(); }); 
+  document.getElementById('infoModal').addEventListener('click', e => { if(e.target.id === 'infoModal') closeInfoModal(); });
   document.addEventListener('keydown', e => {
     if(e.key === 'Escape'){
       if(document.getElementById('infoModal').classList.contains('active')) closeInfoModal();
